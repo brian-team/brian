@@ -1,0 +1,229 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Connections &mdash; Brian v1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+          URL_ROOT:    '',
+          VERSION:     '1.0.0',
+          COLLAPSE_MODINDEX: false,
+          FILE_SUFFIX: ''
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/interface.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="contents" title="Global table of contents" href="contents.html" />
+    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
+    <link rel="up" title="User manual" href="usermanual.html" />
+    <link rel="next" title="Recording" href="recording.html" />
+    <link rel="prev" title="Models and neuron groups" href="models.html" />
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="recording.html" title="Recording"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Models and neuron groups"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="usermanual.html" accesskey="U">User manual</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <div class="section" id="connections">
+<h1 id="connections">Connections<a class="headerlink" href="#connections" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="building-connections">
+<h2 id="building-connections">Building connections<a class="headerlink" href="#building-connections" title="Permalink to this headline">¶</a></h2>
+<p>First, one must define which neuron groups are connected and which state variable receives the spikes.
+The following instruction:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">)</span>
+</pre></div>
+<p>defines a connection from group <tt class="docutils literal"><span class="pre">group1</span></tt> to <tt class="docutils literal"><span class="pre">group2</span></tt>, acting on variable <tt class="docutils literal"><span class="pre">ge</span></tt>. When
+neurons from group <tt class="docutils literal"><span class="pre">group1</span></tt> spike, the variable <tt class="docutils literal"><span class="pre">ge</span></tt> of the target neurons in group
+<tt class="docutils literal"><span class="pre">group2</span></tt> are incremented. When the connection object is initialised, the list of connections
+is empty. It can be created in several ways. First, explicitly:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="p">[</span><span class="mf">2</span><span class="p">,</span><span class="mf">5</span><span class="p">]</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">nS</span>
+</pre></div>
+<p>This instruction connects neuron 2 from <tt class="docutils literal"><span class="pre">group1</span></tt> to neuron 5 from <tt class="docutils literal"><span class="pre">group2</span></tt> with synaptic weight
+3 nS. Units should match the units of the variable defined at initialisation time (<tt class="docutils literal"><span class="pre">ge</span></tt>).</p>
+<p>The matrix of synaptic weights can be defined directly with the method <tt class="xref docutils literal"><span class="pre">Connection.connect()</span></tt>:</p>
+<div class="highlight"><pre><span class="n">W</span><span class="o">=</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group1</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">group2</span><span class="p">))</span><span class="o">*</span><span class="n">nS</span>
+<span class="n">myconnection</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="n">W</span><span class="p">)</span>
+</pre></div>
+<p>Here a matrix with random elements is used to define the synaptic weights from <tt class="docutils literal"><span class="pre">group1</span></tt>
+to <tt class="docutils literal"><span class="pre">group2</span></tt>. It is possible to build the matrix by block by using subgroups, e.g.:</p>
+<div class="highlight"><pre><span class="n">W</span><span class="o">=</span><span class="n">rand</span><span class="p">(</span><span class="mf">20</span><span class="p">,</span><span class="mf">30</span><span class="p">)</span><span class="o">*</span><span class="n">nS</span>
+<span class="n">myconnection</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">group1</span><span class="p">[</span><span class="mf">0</span><span class="p">:</span><span class="mf">20</span><span class="p">],</span><span class="n">group2</span><span class="p">[</span><span class="mf">10</span><span class="p">:</span><span class="mf">40</span><span class="p">],</span><span class="n">W</span><span class="p">)</span>
+</pre></div>
+<p>There are several handy functions available to set the synaptic weights:
+<tt class="xref docutils literal"><span class="pre">connect_full()</span></tt>, <tt class="xref docutils literal"><span class="pre">connect_random()</span></tt> and
+<tt class="xref docutils literal"><span class="pre">connect_one_to_one()</span></tt>. The first one
+is used to set uniform weights for all pairs of neurons in the (sub)groups:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="o">.</span><span class="n">connect_full</span><span class="p">(</span><span class="n">group1</span><span class="p">[</span><span class="mf">0</span><span class="p">:</span><span class="mf">20</span><span class="p">],</span><span class="n">group2</span><span class="p">[</span><span class="mf">10</span><span class="p">:</span><span class="mf">40</span><span class="p">],</span><span class="n">weight</span><span class="o">=</span><span class="mf">5</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span>
+</pre></div>
+<p>The second one is used to set uniform weights for random pairs of neurons in the (sub)groups:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">group1</span><span class="p">[</span><span class="mf">0</span><span class="p">:</span><span class="mf">20</span><span class="p">],</span><span class="n">group2</span><span class="p">[</span><span class="mf">10</span><span class="p">:</span><span class="mf">40</span><span class="p">],</span><span class="mf">0.02</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="mf">5</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span>
+</pre></div>
+<p>Here the third argument (0.02) is the probability that a synaptic connection exists between two neurons.
+The number of presynaptic neurons can be made constant by setting the keyword <tt class="docutils literal"><span class="pre">fixed=True</span></tt>
+(probability * number of neurons in <tt class="docutils literal"><span class="pre">group1</span></tt>).
+Finally, the method <tt class="xref docutils literal"><span class="pre">connect_one_to_one()</span></tt> connects neuron i from the first
+group to neuron i from the second group:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="o">.</span><span class="n">connect_one_to_one</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span>
+</pre></div>
+<p>Both groups must have the same number of neurons.</p>
+<div class="section" id="building-connections-with-connectivity-functions">
+<h3 id="building-connections-with-connectivity-functions">Building connections with connectivity functions<a class="headerlink" href="#building-connections-with-connectivity-functions" title="Permalink to this headline">¶</a></h3>
+<p>There is a simple and efficient way to build heterogeneous connections, by passing functions
+instead of constants to the methods <tt class="xref docutils literal"><span class="pre">connect_full()</span></tt> and <tt class="xref docutils literal"><span class="pre">connect_random()</span></tt>.
+The function must return the synaptic weight for a given pair of neuron (i,j).
+For example:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="o">.</span><span class="n">connect_full</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">:(</span><span class="mf">1</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">))</span><span class="o">*</span><span class="mf">2</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span>
+</pre></div>
+<p>where i (j) indexes neurons in <tt class="docutils literal"><span class="pre">group1</span></tt> (<tt class="docutils literal"><span class="pre">group2</span></tt>). This is the same as doing by hand:</p>
+<div class="highlight"><pre><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group1</span><span class="p">)):</span>
+  <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group2</span><span class="p">)):</span>
+    <span class="n">myconnection</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="mf">1</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">))</span><span class="o">*</span><span class="mf">2</span><span class="o">*</span><span class="n">nS</span>
+</pre></div>
+<p>but it is much faster because the construction is vectorised, i.e., the function is called for every i
+with j being the entire row of target indexes. Thus, the implementation is closer to:</p>
+<pre>for i in range(len(group1)):
+    myconnection[i,j]=(1+cos(i-arange(len(group2)))*2*nS</pre>
+<p>The method <tt class="xref docutils literal"><span class="pre">connect_random()</span></tt> also accepts functional arguments for the
+weights (not the connection probability yet). For that method, it is possible to pass a function
+with no argument, as in the following example:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span><span class="n">rand</span><span class="p">()</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span>
+</pre></div>
+<p>Here each synaptic weight is random (between 0 and 1 nS).</p>
+</div>
+</div>
+<div class="section" id="delays">
+<h2 id="delays">Delays<a class="headerlink" href="#delays" title="Permalink to this headline">¶</a></h2>
+<p>Transmission delays can be introduced with the keyword <tt class="docutils literal"><span class="pre">delay</span></tt>, passed at initialisation time:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">delay</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+</pre></div>
+<p>Note that all synaptic connections have the same delay. To define connections with different delays,
+several Connection objects must be introduced, e.g.:</p>
+<div class="highlight"><pre><span class="n">myconnection_fast</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">delay</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<span class="n">myconnection_slow</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">delay</span><span class="o">=</span><span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="connection-structure">
+<h2 id="connection-structure">Connection structure<a class="headerlink" href="#connection-structure" title="Permalink to this headline">¶</a></h2>
+<p>The underlying data structure used to store the synaptic connections is by default a sparse
+matrix. If the connections are dense, it is more efficient to use a dense matrix, which can be
+set at initialisation time:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">structure</span><span class="o">=</span><span class="s">&#39;dense&#39;</span><span class="p">)</span>
+</pre></div>
+<p>Currently, long-term plasticity (STDP) can only be implemented with dense matrices.
+The <tt class="docutils literal"><span class="pre">structure</span></tt> keyword can take the following values: sparse (default), dense and
+computed. The last one correspond to synaptic connections which are calculated on the fly,
+but this feature is not implemented yet.</p>
+</div>
+<div class="section" id="modulation">
+<h2 id="modulation">Modulation<a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h2>
+<p>The synaptic weights can be modulated by a state variable of the presynaptic neurons with
+the keyword <tt class="docutils literal"><span class="pre">modulation</span></tt>:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">modulation</span><span class="o">=</span><span class="s">&#39;u&#39;</span><span class="p">)</span>
+</pre></div>
+<p>When a spike is produced by a presynaptic neuron (<tt class="docutils literal"><span class="pre">group1</span></tt>), the variable ge of each postsynaptic
+neuron (<tt class="docutils literal"><span class="pre">group2</span></tt>) is incremented by the synaptic weight multiplied by the value of the variable u
+of the presynaptic neuron. This is useful to implement short-term plasticity.</p>
+</div>
+<div class="section" id="direct-connection">
+<h2 id="direct-connection">Direct connection<a class="headerlink" href="#direct-connection" title="Permalink to this headline">¶</a></h2>
+<p>In some cases, it is useful to connect a group directly to another one, in a one-to-one fashion.
+The most efficient way to implement it is with the class <tt class="xref docutils literal"><span class="pre">IdentityConnection</span></tt>:</p>
+<div class="highlight"><pre><span class="n">myconnection</span><span class="o">=</span><span class="n">IdentityConnection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span>
+</pre></div>
+<p>With this structure, the synaptic weights are homogeneous (it is not possible to define them
+independently). When neuron i from <tt class="docutils literal"><span class="pre">group1</span></tt> spikes, the variable ge of neuron i from <tt class="docutils literal"><span class="pre">group2</span></tt>
+is increased by 1 nS. A typical application is when defining inputs to a network.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3>Table Of Contents</h3>
+            <ul>
+<li><a class="reference external" href="">Connections</a><ul>
+<li><a class="reference external" href="#building-connections">Building connections</a><ul>
+<li><a class="reference external" href="#building-connections-with-connectivity-functions">Building connections with connectivity functions</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#delays">Delays</a></li>
+<li><a class="reference external" href="#connection-structure">Connection structure</a></li>
+<li><a class="reference external" href="#modulation">Modulation</a></li>
+<li><a class="reference external" href="#direct-connection">Direct connection</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="models.html" title="previous chapter">Models and neuron groups</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="recording.html" title="next chapter">Recording</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/connections.txt">Show Source</a></li>
+            </ul>
+            <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="recording.html" title="Recording"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Models and neuron groups"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="usermanual.html" accesskey="U">User manual</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2008, Romain Brette, Dan Goodman.
+      Last updated on Sep 23, 2008.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+    </div>
+  </body>
+</html>

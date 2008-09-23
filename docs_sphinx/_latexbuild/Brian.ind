@@ -1,0 +1,475 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item alias
+    \subitem equations, \hyperpage{68}
+  \item analysis
+    \subitem numpy, \hyperpage{65}
+    \subitem scipy, \hyperpage{65}
+  \item applying
+    \subitem equations, \hyperpage{83}
+  \item array
+    \subitem quantity, \hyperpage{102}
+    \subitem units, \hyperpage{102}
+
+  \indexspace
+  \bigletter B
+  \item {\texttt  {brian}} (module), \hyperpage{1}
+
+  \indexspace
+  \bigletter C
+  \item {\texttt  {check\_units()}}, \hyperpage{101}
+  \item Clock
+    \subitem example usage, \hyperpage{44}, \hyperpage{48}, \hyperpage{59}
+  \item {\texttt  {Clock}} (class), \hyperpage{103}
+  \item clock, \hyperpage{78}, \hyperpage{102}
+    \subitem default clock, \hyperpage{102, 103}
+    \subitem multiple clocks, \hyperpage{103}
+  \item clusters, \hyperpage{91}
+  \item combining
+    \subitem equations, \hyperpage{81}
+  \item compilation
+    \subitem differential equations, \hyperpage{83}
+    \subitem equations, \hyperpage{83}
+  \item computed
+    \subitem connection, \hyperpage{115}
+  \item Connection
+    \subitem example usage, \hyperpage{29--32}, \hyperpage{34}, \hyperpage{36}, \hyperpage{38}, 
+		\hyperpage{42--45}, \hyperpage{48}, \hyperpage{50, 51}, \hyperpage{56, 57}, 
+		\hyperpage{59--63}
+  \item {\texttt  {Connection}} (class), \hyperpage{114}
+  \item connection
+    \subitem computed, \hyperpage{115}
+    \subitem matrix, \hyperpage{115}
+  \item connection matrix, \hyperpage{115}
+  \item contained objects protocol
+    \subitem extending brian, \hyperpage{95}, \hyperpage{128}
+  \item control
+    \subitem simulation, \hyperpage{79}
+  \item Current
+    \subitem example usage, \hyperpage{30}, \hyperpage{38}, \hyperpage{40, 41}
+  \item {\texttt  {CustomRefractoriness}} (class), \hyperpage{109}
+
+  \indexspace
+  \bigletter D
+  \item default clock, \hyperpage{102, 103}
+  \item {\texttt  {defaultclock}} (data), \hyperpage{104}
+  \item {\texttt  {define\_default\_clock()}}, \hyperpage{104}
+  \item derived classes
+    \subitem extending brian, \hyperpage{94}, \hyperpage{128}
+    \subitem multiple files, \hyperpage{94}, \hyperpage{128}
+  \item differential
+    \subitem equations, \hyperpage{68}
+  \item differential equations
+    \subitem compilation, \hyperpage{83}
+    \subitem freezing, \hyperpage{83}
+    \subitem non-autonomous, \hyperpage{83}
+    \subitem stochastic, \hyperpage{82}
+    \subitem time-dependent, \hyperpage{83}
+  \item {\texttt  {DimensionMismatchError}} (exception), \hyperpage{101}
+  \item dimensions
+    \subitem inconsistent, \hyperpage{101}
+    \subitem units, \hyperpage{101}
+  \item direct control
+    \subitem spikes, \hyperpage{112}
+  \item {\texttt  {dt}} (Clock\ attribute), \hyperpage{103}
+
+  \indexspace
+  \bigletter E
+  \item efficient code, \hyperpage{91}
+    \subitem vectorisation, \hyperpage{92}
+  \item empirical
+    \subitem threshold, \hyperpage{110}
+  \item EmpiricalThreshold
+    \subitem example usage, \hyperpage{32}, \hyperpage{34}
+  \item {\texttt  {EmpiricalThreshold}} (class), \hyperpage{110}
+  \item {\texttt  {end}} (Clock\ attribute), \hyperpage{103}
+  \item equation, \hyperpage{68}
+    \subitem equations, \hyperpage{68}
+  \item Equations
+    \subitem example usage, \hyperpage{31, 32}, \hyperpage{34}, \hyperpage{36, 37}, \hyperpage{60}
+  \item {\texttt  {Equations}} (class), \hyperpage{104}
+  \item equations, \hyperpage{80}, \hyperpage{104}
+    \subitem alias, \hyperpage{68}
+    \subitem applying, \hyperpage{83}
+    \subitem combining, \hyperpage{81}
+    \subitem compilation, \hyperpage{83}
+    \subitem differential, \hyperpage{68}
+    \subitem equation, \hyperpage{68}
+    \subitem external variables, \hyperpage{80}
+    \subitem fixed points, \hyperpage{83}
+    \subitem freezing, \hyperpage{83}
+    \subitem linear, \hyperpage{81}
+    \subitem membrane potential, \hyperpage{81}
+    \subitem model, \hyperpage{104}
+    \subitem namespaces, \hyperpage{80}
+    \subitem neuron, \hyperpage{104}
+    \subitem non-autonomous, \hyperpage{83}
+    \subitem numerical integration, \hyperpage{81}
+    \subitem parameter, \hyperpage{68}
+    \subitem stochastic, \hyperpage{82}
+    \subitem time-dependent, \hyperpage{83}
+  \item Euler
+    \subitem numerical integration, \hyperpage{82}
+  \item exact
+    \subitem numerical integration, \hyperpage{81}
+  \item example usage
+    \subitem Clock, \hyperpage{44}, \hyperpage{48}, \hyperpage{59}
+    \subitem Connection, \hyperpage{29--32}, \hyperpage{34}, \hyperpage{36}, \hyperpage{38}, 
+		\hyperpage{42--45}, \hyperpage{48}, \hyperpage{50, 51}, \hyperpage{56, 57}, 
+		\hyperpage{59--63}
+    \subitem Current, \hyperpage{30}, \hyperpage{38}, \hyperpage{40, 41}
+    \subitem EmpiricalThreshold, \hyperpage{32}, \hyperpage{34}
+    \subitem Equations, \hyperpage{31, 32}, \hyperpage{34}, \hyperpage{36, 37}, \hyperpage{60}
+    \subitem IdentityConnection, \hyperpage{38}, \hyperpage{41}
+    \subitem MembraneEquation, \hyperpage{30}, \hyperpage{40}
+    \subitem Model, \hyperpage{42}, \hyperpage{44}, \hyperpage{52}, \hyperpage{59}
+    \subitem MultipleSpikeGeneratorGroup, \hyperpage{42}
+    \subitem Network, \hyperpage{48}, \hyperpage{52}
+    \subitem network\_operation, \hyperpage{39}, \hyperpage{44}, \hyperpage{59}
+    \subitem NeuronGroup, \hyperpage{29--32}, \hyperpage{34}, \hyperpage{36--45}, 
+		\hyperpage{47, 48}, \hyperpage{50, 51}, \hyperpage{56, 57}, \hyperpage{59--63}
+    \subitem Parameters, \hyperpage{52}
+    \subitem PoissonGroup, \hyperpage{29, 30}, \hyperpage{38}, \hyperpage{49, 50}, 
+		\hyperpage{58, 59}, \hyperpage{61, 62}
+    \subitem PoissonThreshold, \hyperpage{51}, \hyperpage{57}
+    \subitem PopulationRateMonitor, \hyperpage{35, 36}, \hyperpage{39}, \hyperpage{50, 51}, 
+		\hyperpage{57}, \hyperpage{59}, \hyperpage{63}
+    \subitem PopulationSpikeCounter, \hyperpage{31, 32}, \hyperpage{36}, \hyperpage{63}
+    \subitem ppfunction, \hyperpage{46}
+    \subitem PulsePacket, \hyperpage{50}, \hyperpage{60}
+    \subitem raster\_plot, \hyperpage{35}, \hyperpage{38, 39}, \hyperpage{43--45}, 
+		\hyperpage{47--51}, \hyperpage{57, 58}, \hyperpage{60--63}
+    \subitem Refractoriness, \hyperpage{45}
+    \subitem run, \hyperpage{29--32}, \hyperpage{34--45}, \hyperpage{47--51}, \hyperpage{56--63}
+    \subitem SpikeCounter, \hyperpage{41}
+    \subitem SpikeGeneratorGroup, \hyperpage{42}, \hyperpage{50}
+    \subitem SpikeMonitor, \hyperpage{29}, \hyperpage{35}, \hyperpage{38, 39}, \hyperpage{43--45}, 
+		\hyperpage{47--51}, \hyperpage{57, 58}, \hyperpage{60--63}
+    \subitem StateMonitor, \hyperpage{29, 30}, \hyperpage{32}, \hyperpage{34, 35}, \hyperpage{37}, 
+		\hyperpage{39--42}, \hyperpage{44, 45}, \hyperpage{47}, \hyperpage{50}, 
+		\hyperpage{56, 57}, \hyperpage{63}
+    \subitem Threshold, \hyperpage{45}
+  \item exponential Euler
+    \subitem numerical integration, \hyperpage{82}
+  \item extending brian
+    \subitem contained objects protocol, \hyperpage{95}, \hyperpage{128}
+    \subitem derived classes, \hyperpage{94}, \hyperpage{128}
+    \subitem magic functions, \hyperpage{94}, \hyperpage{127}
+    \subitem magic\_register, \hyperpage{94}, \hyperpage{127}
+    \subitem magic\_return, \hyperpage{94}, \hyperpage{127}
+  \item external variables
+    \subitem equations, \hyperpage{80}
+
+  \indexspace
+  \bigletter F
+  \item {\texttt  {FileSpikeMonitor}} (class), \hyperpage{123}
+  \item fixed points
+    \subitem equations, \hyperpage{83}
+  \item freezing
+    \subitem differential equations, \hyperpage{83}
+    \subitem equations, \hyperpage{83}
+  \item {\texttt  {FunReset}} (class), \hyperpage{109}
+  \item {\texttt  {FunThreshold}} (class), \hyperpage{111}
+
+  \indexspace
+  \bigletter G
+  \item gaussian noise, \hyperpage{105}
+  \item {\texttt  {generate()}} (PulsePacket\ method), \hyperpage{112}
+  \item {\texttt  {get\_default\_clock()}}, \hyperpage{104}
+  \item {\texttt  {get\_duration()}} (Clock\ method), \hyperpage{103}
+  \item {\texttt  {get\_global\_preference()}}, \hyperpage{96}
+  \item group
+    \subitem neuron, \hyperpage{104}
+    \subitem poisson, \hyperpage{112}
+
+  \indexspace
+  \bigletter H
+  \item {\texttt  {have\_same\_dimensions()}}, \hyperpage{101}
+  \item {\texttt  {hist\_plot()}}, \hyperpage{124}
+  \item histogram
+    \subitem plotting, \hyperpage{124}
+  \item Hodgin-Huxley type equations
+    \subitem numerical integration, \hyperpage{82}
+  \item hodgkin-huxley
+    \subitem threshold, \hyperpage{110}
+
+  \indexspace
+  \bigletter I
+  \item IdentityConnection
+    \subitem example usage, \hyperpage{38}, \hyperpage{41}
+  \item input
+    \subitem poisson, \hyperpage{112}
+    \subitem pulse packet, \hyperpage{112}
+  \item integration
+    \subitem linear, \hyperpage{111}
+    \subitem methods, \hyperpage{111}
+  \item {\texttt  {is\_dimensionless()}}, \hyperpage{101}
+  \item {\texttt  {ISIHistogramMonitor}} (class), \hyperpage{123}
+
+  \indexspace
+  \bigletter L
+  \item {\texttt  {LazyStateUpdater}} (class), \hyperpage{111}
+  \item linear
+    \subitem equations, \hyperpage{81}
+    \subitem integration, \hyperpage{111}
+    \subitem threshold, \hyperpage{109}
+  \item {\texttt  {LinearStateUpdater}} (class), \hyperpage{111}
+  \item log, \hyperpage{97}
+  \item {\texttt  {log\_level\_debug()}}, \hyperpage{97}
+  \item {\texttt  {log\_level\_error()}}, \hyperpage{97}
+  \item {\texttt  {log\_level\_info()}}, \hyperpage{97}
+  \item {\texttt  {log\_level\_warn()}}, \hyperpage{97}
+  \item logging, \hyperpage{97}
+
+  \indexspace
+  \bigletter M
+  \item magic, \hyperpage{124}
+  \item magic functions
+    \subitem extending brian, \hyperpage{94}, \hyperpage{127}
+    \subitem multiple files, \hyperpage{93}, \hyperpage{127}
+  \item magic\_register
+    \subitem extending brian, \hyperpage{94}, \hyperpage{127}
+    \subitem multiple files, \hyperpage{94}, \hyperpage{127}
+  \item {\texttt  {magic\_register()}}, \hyperpage{125}
+  \item magic\_return
+    \subitem extending brian, \hyperpage{94}, \hyperpage{127}
+    \subitem multiple files, \hyperpage{94}, \hyperpage{127}
+  \item {\texttt  {magic\_return()}}, \hyperpage{125}
+  \item {\texttt  {MagicNetwork}} (class), \hyperpage{120}
+  \item matrix
+    \subitem connection, \hyperpage{115}
+  \item membrane potential
+    \subitem equations, \hyperpage{81}
+  \item MembraneEquation
+    \subitem example usage, \hyperpage{30}, \hyperpage{40}
+  \item methods
+    \subitem integration, \hyperpage{111}
+  \item Model
+    \subitem example usage, \hyperpage{42}, \hyperpage{44}, \hyperpage{52}, \hyperpage{59}
+  \item {\texttt  {Model}} (class), \hyperpage{105}
+  \item model, \hyperpage{105}
+    \subitem equations, \hyperpage{104}
+    \subitem neuron, \hyperpage{104}
+  \item multiple clocks, \hyperpage{103}
+  \item multiple files, \hyperpage{93}, \hyperpage{127}
+    \subitem derived classes, \hyperpage{94}, \hyperpage{128}
+    \subitem magic functions, \hyperpage{93}, \hyperpage{127}
+    \subitem magic\_register, \hyperpage{94}, \hyperpage{127}
+    \subitem magic\_return, \hyperpage{94}, \hyperpage{127}
+    \subitem network, \hyperpage{94}, \hyperpage{127}
+  \item MultipleSpikeGeneratorGroup
+    \subitem example usage, \hyperpage{42}
+  \item {\texttt  {MultipleSpikeGeneratorGroup}} (class), \hyperpage{113}
+
+  \indexspace
+  \bigletter N
+  \item namespaces
+    \subitem equations, \hyperpage{80}
+  \item Network
+    \subitem example usage, \hyperpage{48}, \hyperpage{52}
+  \item {\texttt  {Network}} (class), \hyperpage{117}
+  \item network
+    \subitem multiple files, \hyperpage{94}, \hyperpage{127}
+  \item network\_operation
+    \subitem example usage, \hyperpage{39}, \hyperpage{44}, \hyperpage{59}
+  \item {\texttt  {network\_operation()}}, \hyperpage{118}
+  \item {\texttt  {NetworkOperation}} (class), \hyperpage{119}
+  \item neuron
+    \subitem equations, \hyperpage{104}
+    \subitem group, \hyperpage{104}
+    \subitem model, \hyperpage{104}
+  \item NeuronGroup
+    \subitem example usage, \hyperpage{29--32}, \hyperpage{34}, \hyperpage{36--45}, 
+		\hyperpage{47, 48}, \hyperpage{50, 51}, \hyperpage{56, 57}, \hyperpage{59--63}
+  \item {\texttt  {NeuronGroup}} (class), \hyperpage{106}
+  \item noise, \hyperpage{105}
+    \subitem gaussian, \hyperpage{105}
+    \subitem white, \hyperpage{105}
+    \subitem xi, \hyperpage{105}
+  \item non-autonomous
+    \subitem differential equations, \hyperpage{83}
+    \subitem equations, \hyperpage{83}
+  \item {\texttt  {NoReset}} (class), \hyperpage{109}
+  \item {\texttt  {NoThreshold}} (class), \hyperpage{111}
+  \item {\texttt  {nspikes}} (StateSpikeMonitor\ attribute), \hyperpage{122}
+  \item numerical computation
+    \subitem numpy, \hyperpage{65}
+  \item numerical integration
+    \subitem equations, \hyperpage{81}
+    \subitem Euler, \hyperpage{82}
+    \subitem exact, \hyperpage{81}
+    \subitem exponential Euler, \hyperpage{82}
+    \subitem Hodgin-Huxley type equations, \hyperpage{82}
+    \subitem semi-exact, \hyperpage{81}
+  \item numpy
+    \subitem analysis, \hyperpage{65}
+    \subitem numerical computation, \hyperpage{65}
+
+  \indexspace
+  \bigletter P
+  \item parallel python, \hyperpage{91}
+  \item parameter
+    \subitem equations, \hyperpage{68}
+  \item Parameters
+    \subitem example usage, \hyperpage{52}
+  \item {\texttt  {Parameters}} (class), \hyperpage{95}
+  \item plotting, \hyperpage{77}, \hyperpage{123}
+    \subitem histogram, \hyperpage{124}
+    \subitem pylab, \hyperpage{65}, \hyperpage{78}, \hyperpage{124}
+    \subitem raster, \hyperpage{124}
+  \item poisson
+    \subitem group, \hyperpage{112}
+    \subitem input, \hyperpage{112}
+  \item PoissonGroup
+    \subitem example usage, \hyperpage{29, 30}, \hyperpage{38}, \hyperpage{49, 50}, 
+		\hyperpage{58, 59}, \hyperpage{61, 62}
+  \item {\texttt  {PoissonGroup}} (class), \hyperpage{112}
+  \item PoissonThreshold
+    \subitem example usage, \hyperpage{51}, \hyperpage{57}
+  \item PopulationRateMonitor
+    \subitem example usage, \hyperpage{35, 36}, \hyperpage{39}, \hyperpage{50, 51}, \hyperpage{57}, 
+		\hyperpage{59}, \hyperpage{63}
+  \item {\texttt  {PopulationRateMonitor}} (class), \hyperpage{123}
+  \item PopulationSpikeCounter
+    \subitem example usage, \hyperpage{31, 32}, \hyperpage{36}, \hyperpage{63}
+  \item {\texttt  {PopulationSpikeCounter}} (class), \hyperpage{121}
+  \item ppfunction
+    \subitem example usage, \hyperpage{46}
+  \item {\texttt  {ppfunction()}}, \hyperpage{91}
+  \item preferences, \hyperpage{96}
+  \item pulse packet, \hyperpage{112}
+  \item PulsePacket
+    \subitem example usage, \hyperpage{50}, \hyperpage{60}
+  \item {\texttt  {PulsePacket}} (class), \hyperpage{112}
+  \item pylab
+    \subitem plotting, \hyperpage{65}, \hyperpage{78}, \hyperpage{124}
+
+  \indexspace
+  \bigletter Q
+  \item {\texttt  {Quantity}} (class), \hyperpage{102}
+  \item quantity, \hyperpage{101}
+    \subitem array, \hyperpage{102}
+
+  \indexspace
+  \bigletter R
+  \item {\texttt  {random\_row\_func()}}, \hyperpage{116}
+  \item {\texttt  {random\_sparse\_row\_func()}}, \hyperpage{116}
+  \item raster
+    \subitem plotting, \hyperpage{124}
+  \item raster\_plot
+    \subitem example usage, \hyperpage{35}, \hyperpage{38, 39}, \hyperpage{43--45}, 
+		\hyperpage{47--51}, \hyperpage{57, 58}, \hyperpage{60--63}
+  \item {\texttt  {raster\_plot()}}, \hyperpage{124}
+  \item Refractoriness
+    \subitem example usage, \hyperpage{45}
+  \item {\texttt  {Refractoriness}} (class), \hyperpage{108}
+  \item refractory, \hyperpage{108}
+  \item {\texttt  {reinit()}}, \hyperpage{119}
+  \item {\texttt  {reinit()}} (Clock\ method), \hyperpage{103}
+  \item {\texttt  {reinit\_default\_clock()}}, \hyperpage{104}
+  \item {\texttt  {Reset}} (class), \hyperpage{108}
+  \item reset, \hyperpage{107}
+    \subitem variable, \hyperpage{108}
+  \item run
+    \subitem example usage, \hyperpage{29--32}, \hyperpage{34--45}, \hyperpage{47--51}, 
+		\hyperpage{56--63}
+  \item {\texttt  {run()}}, \hyperpage{119}
+  \item {\texttt  {run\_all\_tests()}}, \hyperpage{126}
+
+  \indexspace
+  \bigletter S
+  \item scipy
+    \subitem analysis, \hyperpage{65}
+  \item semi-exact
+    \subitem numerical integration, \hyperpage{81}
+  \item {\texttt  {set\_dt()}} (Clock\ method), \hyperpage{103}
+  \item {\texttt  {set\_duration()}} (Clock\ method), \hyperpage{103}
+  \item {\texttt  {set\_end()}} (Clock\ method), \hyperpage{103}
+  \item {\texttt  {set\_global\_preferences()}}, \hyperpage{96}
+  \item {\texttt  {set\_t()}} (Clock\ method), \hyperpage{103}
+  \item {\texttt  {SimpleCustomRefractoriness}} (class), \hyperpage{108}
+  \item {\texttt  {SimpleFunThreshold}} (class), \hyperpage{110}
+  \item simulation
+    \subitem control, \hyperpage{79}
+    \subitem update schedule, \hyperpage{79}
+  \item speed
+    \subitem vectorisation, \hyperpage{92}
+  \item SpikeCounter
+    \subitem example usage, \hyperpage{41}
+  \item {\texttt  {SpikeCounter}} (class), \hyperpage{121}
+  \item SpikeGeneratorGroup
+    \subitem example usage, \hyperpage{42}, \hyperpage{50}
+  \item {\texttt  {SpikeGeneratorGroup}} (class), \hyperpage{112}
+  \item SpikeMonitor
+    \subitem example usage, \hyperpage{29}, \hyperpage{35}, \hyperpage{38, 39}, \hyperpage{43--45}, 
+		\hyperpage{47--51}, \hyperpage{57, 58}, \hyperpage{60--63}
+  \item {\texttt  {SpikeMonitor}} (class), \hyperpage{120}
+  \item spikes
+    \subitem direct control, \hyperpage{112}
+  \item {\texttt  {spikes}} (StateSpikeMonitor\ attribute), \hyperpage{122}
+  \item {\texttt  {state()}} (NeuronGroup\ method), \hyperpage{107}
+  \item {\texttt  {state\_()}} (NeuronGroup\ method), \hyperpage{107}
+  \item StateMonitor
+    \subitem example usage, \hyperpage{29, 30}, \hyperpage{32}, \hyperpage{34, 35}, \hyperpage{37}, 
+		\hyperpage{39--42}, \hyperpage{44, 45}, \hyperpage{47}, \hyperpage{50}, 
+		\hyperpage{56, 57}, \hyperpage{63}
+  \item {\texttt  {StateMonitor}} (class), \hyperpage{122}
+  \item {\texttt  {StateSpikeMonitor}} (class), \hyperpage{121}
+  \item {\texttt  {still\_running()}} (Clock\ method), \hyperpage{103}
+  \item stochastic
+    \subitem differential equations, \hyperpage{82}
+  \item {\texttt  {stop()}}, \hyperpage{120}
+  \item {\texttt  {subgroup()}} (NeuronGroup\ method), \hyperpage{107}
+
+  \indexspace
+  \bigletter T
+  \item {\texttt  {t}} (Clock\ attribute), \hyperpage{103}
+  \item tests, \hyperpage{126}
+  \item Threshold
+    \subitem example usage, \hyperpage{45}
+  \item {\texttt  {Threshold}} (class), \hyperpage{109}
+  \item threshold, \hyperpage{109}
+    \subitem empirical, \hyperpage{110}
+    \subitem functional, \hyperpage{110}
+    \subitem hodgkin-huxley, \hyperpage{110}
+    \subitem linear, \hyperpage{109}
+    \subitem variable, \hyperpage{110}
+  \item {\texttt  {tick()}} (Clock\ method), \hyperpage{103}
+  \item time-dependent
+    \subitem differential equations, \hyperpage{83}
+    \subitem equations, \hyperpage{83}
+  \item {\texttt  {times()}} (StateSpikeMonitor\ method), \hyperpage{122}
+
+  \indexspace
+  \bigletter U
+  \item {\texttt  {Unit}} (class), \hyperpage{102}
+  \item unit tests, \hyperpage{126}
+  \item units, \hyperpage{101}
+    \subitem array, \hyperpage{102}
+    \subitem inconsistent, \hyperpage{101}
+  \item {\texttt  {UserComputedConnectionMatrix}} (class), \hyperpage{115}
+  \item {\texttt  {UserComputedSparseConnectionMatrix}} (class), \hyperpage{115}
+
+  \indexspace
+  \bigletter V
+  \item {\texttt  {values()}} (StateSpikeMonitor\ method), \hyperpage{122}
+  \item variable
+    \subitem reset, \hyperpage{108}
+    \subitem threshold, \hyperpage{110}
+  \item {\texttt  {VariableReset}} (class), \hyperpage{108}
+  \item {\texttt  {VariableThreshold}} (class), \hyperpage{110}
+  \item vectorisation, \hyperpage{92}
+    \subitem efficient code, \hyperpage{92}
+
+  \indexspace
+  \bigletter W
+  \item white noise, \hyperpage{105}
+
+  \indexspace
+  \bigletter X
+  \item xi, \hyperpage{105}
+    \subitem noise, \hyperpage{105}
+
+\end{theindex}

@@ -1,0 +1,21 @@
+.. currentmodule:: brian
+
+unitsafefunctions
+*****************
+
+Each of the following functions f(x) should use units if they are passed a
+:class:`Quantity` or :class:`QuantityArray` object or fall back on their numpy versions
+otherwise.
+
+    sqrt, log, exp, sin, cos, tan, arcsin, arccos, arctan,
+    sinh, cosh, tanh, arcsinh, arccosh, arctanh
+
+Each of these numpy functions should return a :class:`qarray` formed from the
+numpy original:
+
+* ones, ones_like, zeros, zeros_like, empty, empty_like
+* linspace, logspace
+* arange
+* beta, random_sample, uniform, standard_normal
+* rand, randn, vonmises, weibull, gumbel
+

@@ -1,0 +1,222 @@
+.. currentmodule:: brian
+
+Models and neuron groups
+========================
+
+:class:`Equations`
+------------------
+:class:`Equations` objects are initialised with a string as follows::
+
+  eqs=Equations('''
+  dx/dt=(y-x)/tau + a : volt   # differential equation
+  y=2*x : volt                 # equation
+  z=x                          # alias
+  a : volt/second              # parameter
+  ''')
+
+.. index::
+	pair: equations; differential
+	pair: equations; equation
+	single: equation
+	pair: equations; alias
+	pair: equations; parameter
+
+It is possible to pass a string instead of an :class:`Equations` object when initialising
+a neuron group. In that case, the string is implicitly converted to an :class:`Equations` object.
+There are 4 different types of equations:
+
+* Differential equations: a differential equation, also defining the variable as a state
+  variable in neuron groups.
+* Equations: a non-differential equation, which is useful for defining complicated models.
+  The variables are also accessible for reading in neuron groups, which is useful for
+  monitoring. The graph of dependencies of all equations must have no cycle.
+* Aliases: the two variables are equivalent. This is implemented as an equation,
+  with write access in neuron groups.
+* Parameters: these are constant variables, but their values can differ from one neuron
+  to the next. They are implemented internally as differential equations with zero
+  derivative.
+
+Right hand sides must be valid Python expressions, possibly including comments and
+multiline characters (``\``).
+
+The units of all variables except aliases must be specified. Note that in first line,
+the units *volt* are meant for x, not dx/dt. The consistency of all units is checked
+with the method :meth:`~Equations.check_units`, which is automatically called
+when initialising a neuron group (through the method :meth:`~Equations.prepare`).
+
+When an :class:`Equations` object is finalised (through the method :meth:`~equations.Equations.prepare`,
+automatically called the :class:`NeuronGroup` initialiser), the names of variables defined by
+non-differential equations are replaced by their (string) values, so that differential equations
+are self-consistent. In the process, names of external variables are also modified to avoid
+conflicts (by adding a prefix).
+
+Neuron groups
+-------------
+The key idea for efficient simulations is to update synchronously the state variables
+of all identical neuron models. A neuron group is defined by the model equations, and
+optionnally a threshold condition and a reset. For example for 100 neurons::
+
+  eqs=Equations('dv/dt=-v/tau : volt')
+  group=NeuronGroup(100,model=eqs,reset=0*mV,threshold=10*mV)
+
+The ``model`` keyword also accepts strings (in that case it is converted to an :class:`Equations`
+object), e.g.:: 
+
+  group=NeuronGroup(100,model='dv/dt=-v/tau : volt',reset=0*mV,threshold=10*mV)
+
+The units of both the reset and threshold are checked for consistency with the equations.
+The code above defines a group of 100 integrate-and-fire neurons with threshold 10 mV and
+reset 0 mV. The second line defines an object named ``group`` which contains all the state
+variables, which can be accessed with the dot notation, i.e. ``group.v`` is a vector with
+the values of variable ``v`` for all of the 100 neurons. It is an array with units as defined
+in the equations (here, volt). By default, all state variables are initialised at value 0.
+It can be initialised by the user as in the following example::
+
+  group.v=linspace(0*mV,10*mV,100)
+
+Here the values of ``v`` for all the neurons are evenly spaced between 0 mV and 10 mV
+(``linspace`` is a NumPy function). The method ``group.rest()`` may also be used to set the
+resting point of the equations, but convergence is not always guaranteed.
+
+Important options
+^^^^^^^^^^^^^^^^^
+
+* ``refractory``: a refractory period (default 0 ms), to be used in combination with the ``reset`` value.
+* ``implicit`` (default ``False``): if True, then an implicit method is used. This is useful
+  for Hodgkin-Huxley equations, which are stiff.
+
+Subgroups
+^^^^^^^^^
+Subgroups can be created with the slice operator::
+
+  subgroup1=group[0:50]
+  subgroup2=group[50:100]
+
+Then ``subgroup2.v[i]`` equals ``group.v[50+i]``.
+An alternative equivalent method is the following::
+
+  subgroup1=group.subgroup(50)
+  subgroup2=group.subgroup(50)
+
+The parent group keeps track of the allocated subgroups. But note that the two methods are
+mutually exclusive, e.g. in the following example::
+
+  subgroup1=group[0:50]
+  subgroup2=group.subgroup(50)
+
+both subgroups are actually identical.
+
+Subgroups are useful when creating connections or monitoring the state variables or spikes.
+The best practice is to define groups as large as possible, then divide them in subgroups if necessary. 
+Indeed, the larger the groups are, the faster the simulation runs. For example, for a network with a feedforward
+architecture, one should first define one group holding all the neurons in the network, then define the layers as
+subgroups of this big group. 
+
+.. removed for Brian 1.0
+	Unitless variables
+	^^^^^^^^^^^^^^^^^^
+	If an underscore is added to the name of a state variable (``P.v_``) then the units are removed.
+	This can be useful when writing custom reset or threshold functions, to make the code faster.
+
+Reset
+-----
+More complex resets can be defined. The value of the ``reset`` keyword can be:
+
+* a quantity (``0*mV``)
+* a function
+* a :class:`Reset` object, which can be used for resetting a specific state variable or
+  for resetting a state variable to the value of another variable.
+
+Functional reset
+^^^^^^^^^^^^^^^^
+To define a specific reset, the generic method is define a function as follows::
+
+  def myreset(P,spikes):
+    P.v[spikes]=rand(len(spikes))*5*mV
+  group=NeuronGroup(100,model=eqs,reset=myreset,threshold=10*mV)
+
+or faster::
+
+  def myreset(P,spikes):
+    P.v_[spikes]=rand(len(spikes))*5*mV
+
+Every time step, the user-defined function is called with arguments
+``P``, the neuron group, and ``spikes``, the list of indexes of the neurons that just spiked.
+The function above resets the neurons that just spiked to a random value.
+
+Resetting another variable
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+It is possible to specify the reset variable explicitly::
+
+  group=NeuronGroup(100,model=eqs,reset=Reset(0*mV,state='w'),threshold=10*mV)
+
+Here the variable ``w`` is reset.
+
+Resetting to the value of another variable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The value of the reset can be given by another state variable::
+
+  group=NeuronGroup(100,model=eqs,reset=VariableReset(0*mV,state='v',resetvaluestate='w'),threshold=10*mV)
+
+Here the value of the variable ``w`` is used to reset the variable ``v``.
+
+Threshold
+---------
+As for the reset, the threshold can be customised.
+
+Functional threshold
+^^^^^^^^^^^^^^^^^^^^
+The generic method to define a custom threshold condition is to pass a function of the
+state variables which returns a boolean (true if the threshold condition is met), for example::
+
+  eqs='''
+  dv/dt=-v/tau : volt
+  dw/dt=(v-w)/tau : volt
+  '''
+  group=NeuronGroup(100,model=eqs,reset=0*mV,threshold=lambda v,w:v>=w)
+  
+Here we used an anonymous function (``lambda`` keyword) but of course a named function can also
+be used. In this example, spikes are generated when v is greater than w.
+Note that the arguments of the function must be the state variables with the same order as
+in the :class:`Equations` string.
+
+Thresholding another variable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+It is possible to specify the threshold variable explicitly::
+
+  group=NeuronGroup(100,model=eqs,reset=0*mV,threshold=Threshold(0*mV,state='w'))
+
+Here the variable ``w`` is checked.
+
+Using another variable as the threshold value
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The same model as in the functional threshold example can be defined as follows::
+
+  group=NeuronGroup(100,model=eqs,reset=0*mV,threshold=\
+        VariableThreshold(state='v',threshold_state='w'))
+
+Empirical threshold
+^^^^^^^^^^^^^^^^^^^
+For Hodgkin-Huxley models, one needs to determine the threshold empirically. Here the
+*threshold* should really be understood rather as the onset of the spikes (used to propagate
+the spikes to the other neurons), since there is no explicit reset. There is a
+:class:`Threshold` subclass for this purpose::
+
+  group=NeuronGroup(100,model=eqs,threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms))
+
+Spikes are triggered when the membrane potential reaches the value -20 mV, but only if it
+has not spiked in the last 3 ms (otherwise there would be spikes every time step during the action
+potential). The ``state`` keyword may be used to specify the state variable which should be checked
+for the threshold condition.
+
+Poisson threshold
+^^^^^^^^^^^^^^^^^
+It is possible to generate spikes with a given probability rather than when a threshold condition
+is met, by using the class :class:`PoissonThreshold`, as in the following example::
+
+  group=NeuronGroup(100,model='x : Hz',threshold=PoissonThreshold(state='x'))
+  x=linspace(0*Hz,10*Hz,100)
+
+Here spikes are generated as Poisson processes with rates given by the variable x 
+(the ``state`` keyword is optional: default = first variable defined). Note that x can
+change over time (inhomogeneous Poisson processes). The units of variable x must be Hertz.

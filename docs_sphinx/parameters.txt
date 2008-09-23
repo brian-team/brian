@@ -1,0 +1,12 @@
+.. currentmodule:: brian
+
+Parameters
+----------
+Brian includes a simple tool for keeping track of parameters. If you only need
+something simple, then a dict or an empty class could be used. The point of the
+parameters class is that allows you to define a cascade of computed parameters
+that depend on the values of other parameters, so that changing one will
+automatically update the others. See the synfire chain example
+``examples/sfc.py`` for a demonstration of how it can be used.
+
+.. autoclass:: Parameters

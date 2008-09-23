@@ -1,0 +1,51 @@
+Connection matrix:
+------------------
+* dense
+* sparse
+* calculated (e.g. with random seeds)
+* probabilistic (release probabilities)
+
+ Should have operations for STDP / short-term plasticity
+
+Operations:
+** Construction **
+* W[i,j]=... (setitem)
+* W[i,j] (getitem) (view?)
+* W[s1,s2]=... where s1,s2=slices (-> submatrix; connect function)
+* freeze() (e.g. lil_matrix to faster version)
+-> used when the structure (graph) will not change anymore
+(use instead of compress())
+
+** Propagation **
+* X+=W[i,:] (propagation), where X is dense
+  e.g. W.addrow(i,X)
+* Short-term plasticity (modulation): X+=W[i,:]*scalar
+  
+** Plasticity **
+Careful: dendritic or axonal delay?
+* W[i,:]+=scalar or vector
+* W[i,:]*=idem
+* idem for columns
+  maybe: W.set_row(i,x), set_column(j,x), add_row, etc.
+
+Do we need views?
+
+Event-driven algorithms
+-----------------------
+With homogeneous synaptic delays, event-driven algorithms should be possible
+(otherwise it would be too slow because non-vectorisable).
+The idea is that each tick of the clock is an emitted spike (next neuron to spike).
+Algorithm for one spike:
+* Find which neuron is spiking next (top of priority queue)
+* Synchronous update of all target neurons (possibly delayed)
+* Updates of spike timings of target neurons in priority queue
+The last bit only needs to be done in C (e.g. inline function for a start).
+It is even possible that spike timing updates are rare enough to be done in Python.
+
+Is it possible to mix clock-driven and event-driven networks? (maybe)
+
+The data structure should be very different. What is needed for a neuron group:
+* Advance to a given time
+* Spike timing calculation
+* Reset function
+Possibly, these could replace model, threshold and reset objects?

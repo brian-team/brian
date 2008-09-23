@@ -1,0 +1,37 @@
+.. currentmodule:: brian
+
+.. index::
+	single: units
+	single: quantity
+	single: dimensions; units
+
+Units system
+------------
+
+.. autofunction:: have_same_dimensions
+.. autofunction:: is_dimensionless
+
+.. index::
+	single: dimensions; inconsistent
+	single: units; inconsistent
+
+.. autoexception:: DimensionMismatchError
+.. autofunction:: check_units
+
+Typically, you shouldn't need to use any details about the following
+two classes, and their implementations are subject to change in
+future releases of Brian.
+
+.. autoclass:: Quantity
+.. autoclass:: Unit
+
+.. index::
+	pair: array; units
+	pair: array; quantity
+
+.. removed for Brian 1.0
+	You can also work with arrays of quantities.
+	
+	.. autoclass:: QuantityArray
+	.. autoclass:: qarray
+	.. autoclass:: safeqarray

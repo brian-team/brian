@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Logging &mdash; Brian v1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+          URL_ROOT:    '',
+          VERSION:     '1.0.0',
+          COLLAPSE_MODINDEX: false,
+          FILE_SUFFIX: ''
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/interface.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="contents" title="Global table of contents" href="contents.html" />
+    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
+    <link rel="up" title="Advanced concepts" href="advanced.html" />
+    <link rel="next" title="Extending Brian" href="extending.html" />
+    <link rel="prev" title="Preferences" href="reference-preferences.html" />
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="extending.html" title="Extending Brian"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference-preferences.html" title="Preferences"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="advanced.html" accesskey="U">Advanced concepts</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <div class="section" id="logging">
+<span id="index-71"></span><h1 id="logging"><span id="index-71"></span>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h1>
+<p>Brian uses the standard Python <tt class="docutils literal"><span class="pre">logging</span></tt> package to generate information
+and warnings. All messages are sent to the logger named <tt class="docutils literal"><span class="pre">brian</span></tt> or loggers
+derived from this one, and you can use the standard logging functions to
+set options, write the logs to files, etc. Alternatively, Brian has four
+simple functions to set the level of the displayed log (see below). There
+are four different levels for log messages, in decreasing order of severity
+they are ERROR, WARN, INFO and DEBUG. By default, Brian displays only the
+WARN and ERROR level messages. Some useful information is at the INFO level,
+so if you are having problems with your program, setting the level to INFO
+may help.</p>
+<dl class="function">
+<dt id="brian.log_level_error">
+<!--[brian.log_level_error]--><tt class="descclassname">brian.</tt><tt class="descname">log_level_error</tt><big>(</big><big>)</big><a class="headerlink" href="#brian.log_level_error" title="Permalink to this definition">¶</a></dt>
+<dd>Shows log messages only of level ERROR or higher.</dd></dl>
+
+<dl class="function">
+<dt id="brian.log_level_warn">
+<!--[brian.log_level_warn]--><tt class="descclassname">brian.</tt><tt class="descname">log_level_warn</tt><big>(</big><big>)</big><a class="headerlink" href="#brian.log_level_warn" title="Permalink to this definition">¶</a></dt>
+<dd>Shows log messages only of level WARNING or higher (including ERROR level).</dd></dl>
+
+<dl class="function">
+<dt id="brian.log_level_info">
+<!--[brian.log_level_info]--><tt class="descclassname">brian.</tt><tt class="descname">log_level_info</tt><big>(</big><big>)</big><a class="headerlink" href="#brian.log_level_info" title="Permalink to this definition">¶</a></dt>
+<dd>Shows log messages only of level INFO or higher (including WARNING and ERROR levels).</dd></dl>
+
+<dl class="function">
+<dt id="brian.log_level_debug">
+<!--[brian.log_level_debug]--><tt class="descclassname">brian.</tt><tt class="descname">log_level_debug</tt><big>(</big><big>)</big><a class="headerlink" href="#brian.log_level_debug" title="Permalink to this definition">¶</a></dt>
+<dd>Shows log messages only of level DEBUG or higher (including INFO, WARNING and ERROR levels).</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="reference-preferences.html" title="previous chapter">Preferences</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="extending.html" title="next chapter">Extending Brian</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/reference-logging.txt">Show Source</a></li>
+            </ul>
+            <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="extending.html" title="Extending Brian"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference-preferences.html" title="Preferences"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="advanced.html" accesskey="U">Advanced concepts</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2008, Romain Brette, Dan Goodman.
+      Last updated on Sep 23, 2008.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+    </div>
+  </body>
+</html>

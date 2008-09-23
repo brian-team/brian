@@ -1,0 +1,7 @@
+.. currentmodule:: brian
+
+Extending the library
+---------------------
+
+For names, we try to follow the standard Python convention, that is, ``function_and_variable_names``
+and ``ClassNames``.

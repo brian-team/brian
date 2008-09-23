@@ -1,0 +1,145 @@
+.. currentmodule:: brian
+
+.. index::
+	single: multiple files
+	pair: multiple files; magic functions
+
+.. _projects-with-multiple-files:
+
+Projects with multiple files or functions
+=========================================
+
+Brian works with the minimal hassle if the whole of your code is in a
+single Python module (``.py`` file). This is fine when learning Brian
+or for quick projects, but for larger, more realistic projects with
+the source code separated into multiple files, there are some small
+issues you need to be aware of. These issues essentially revolve
+around the use of the ''magic'' functions :func:`run`, etc. The way
+these functions work is to look for objects of the required type that
+have been instantiated (created) in the same ''execution frame'' as
+the :func:`run` function. In a small script, that is normally just
+any objects that have been defined in that script. However, if you
+define objects in a different module, or in a function, then the
+magic functions won't be able to find them.
+
+There are three main approaches then to splitting code over multiple
+files (or functions).
+
+.. index::
+	pair: multiple files; network
+
+Use the :class:`Network` object explicitly
+------------------------------------------
+
+The magic :func:`run` function works by creating a :class:`Network`
+object automatically, and then running that network. Instead of doing
+this automatically, you can create your own :class:`Network` object.
+Rather than writing something like::
+
+	group1 = ...
+	group2 = ...
+	C = Connection(group1,group2)
+	...
+	run(1*second)
+	
+You do this::
+
+	group1 = ...
+	group2 = ...
+	C = Connection(group1, group2)
+	...
+	net = Network(group1, group2, C)
+	net.run(1*second)
+
+In other words, you explicitly say which objects are in your network.
+Note that any :class:`NeuronGroup`, :class:`Connection`, :class:`Monitor` or
+function decorated with :func:`network_operation` should be included in the
+:class:`Network`. See the documentation for :class:`Network` for more details.
+
+This is the preferred solution for almost all cases. You may want to use either
+of the following two solutions if you think your code may be used by someone
+else, or if you want to make it into an extension to Brian.
+
+.. index::
+	pair: extending brian; magic functions
+	pair: extending brian; magic_return
+	pair: extending brian; magic_register
+	pair: multiple files; magic_return
+	pair: multiple files; magic_register
+
+Use the :func:`magic_return` decorator or :func:`magic_register` function
+-------------------------------------------------------------------------
+
+The :func:`magic_return` decorator is used as follows::
+
+	@magic_return
+	def f():
+		...
+		return obj
+
+Any object returned by a function decorated by :func:`magic_return` will be
+considered to have been instantiated in the execution frame that called the
+function. In other words, the magic functions will find that object even
+though it was really instantiated in a different execution frame.
+
+In more complicated scenarios, you may want to use the :func:`magic_register`
+function. For example::
+
+	def f():
+		...
+		magic_register(obj1, obj2)
+		return (obj1, obj2)
+
+This does the same thing as :func:`magic_return` but can be used with
+multiple objects. Also, you can specify a ``level`` (see documentation on
+:func:`magic_register` for more details).
+
+.. index::
+	pair: extending brian; derived classes
+	pair: multiple files; derived classes
+
+Use derived classes
+-------------------
+
+Rather than writing a function which returns an object, you could instead
+write a derived class of the object type. So, suppose you wanted to have an
+object that emitted N equally spaced spikes, with an interval dt between
+them, you could use the :class:`SpikeGeneratorGroup` class as follows::
+
+	@magic_return
+	def equally_spaced_spike_group(N, dt):
+		spikes = [(0,i*dt) for i in range(N)]
+		return SpikeGeneratorGroup(spikes)
+
+Or alternatively, you could derive a class from :class:`SpikeGeneratorGroup`
+as follows::
+
+	class EquallySpacedSpikeGroup(SpikeGeneratorGroup):
+		def __init__(self, N, t):
+			spikes = [(0,i*dt) for i in range(N)]
+			SpikeGeneratorGroup.__init__(self, spikes)
+
+You would use these objects in the following ways::
+
+	obj1 = equally_spaced_spike_group(100, 10*ms)
+	obj2 = EquallySpacedSpikeGroup(100, 10*ms)
+
+For simple examples like the one above, there's no particular benefit to
+using derived classes, but using derived classes allows you to add
+methods to your derived class for example, which might be useful. For
+more experienced Python programmers, or those who are thinking about
+making their code into an extension for Brian, this is probably the
+preferred approach.
+
+.. index::
+	pair: extending brian; contained objects protocol
+
+Finally, it may be useful to note that there is a protocol for one object
+to 'contain' other objects. That is, suppose you want to have an object
+that can be treated as a simple :class:`NeuronGroup` by the person using it,
+but actually instantiates several objects (perhaps internal :class:`Connection`
+objects). These objects need to be added to the :class:`Network` object
+in order for them to be run with the simulation, but the user shouldn't need
+to have to know about them. To this end, for any object added to a
+:class:`Network`, if it has an attribute ``contained_objects``, then any
+objects in that container will also be added to the network.

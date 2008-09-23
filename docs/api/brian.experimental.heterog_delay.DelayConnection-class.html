@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>brian.experimental.heterog_delay.DelayConnection</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="brian-module.html">Package&nbsp;brian</a> ::
+        <a href="brian.experimental-module.html">Package&nbsp;experimental</a> ::
+        <a href="brian.experimental.heterog_delay-module.html">Module&nbsp;heterog_delay</a> ::
+        Class&nbsp;DelayConnection
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class DelayConnection</h1><br /><br />
+<pre class="base-tree">
+           object --+        
+                    |        
+magic.InstanceTracker --+    
+                        |    
+    <a href="brian.connection.Connection-class.html">connection.Connection</a> --+
+                            |
+                           <strong class="uidshort">DelayConnection</strong>
+</pre>
+
+<hr />
+<pre class="literalblock">
+
+Connection which implements heterogeneous postsynaptic delays
+
+Initialised as for a :class:`Connection`, but with the additional
+keywords:
+
+``max_delay``
+    Specifies the maximum delay time for any
+    neuron. Note, the smaller you make this the less memory will be
+    used.
+``delay_dimension``
+    By default, delays are specified as a 2D array giving the delays
+    for every synapse ``i`` to ``j``. By specifying ``delay_dimension=1``
+    you can set delays as a 1D array giving the delays for every source
+    neuron only. Note though that the delays are implemented
+    postsynaptically, so this setting may not always give the expected
+    results.
+
+NOTE: At the moment, the ``modulation`` keyword is ignored, as this has
+not yet been implemented.
+
+Has one attribute other than those in a :class:`Connection`:
+
+.. attribute:: delays
+
+    An array of delays. If ``delay_dimension=1``, then this is a
+    1D array of delays for each neuron in the source group, if ``2``
+    then this is a 2D array of delays for each synapse, so that
+    ``delays[i,j]`` is the delay from source neuron ``i`` to target
+    neuron ``j``. In either case, this array can be changed during a run,
+    but at no point should it be greater than ``max_delay``. In the 2D
+    case, if ``structure='sparse'`` then ``delays`` is also a sparse
+    matrix in the numpy ``lil_matrix`` format, which may not be very
+    efficient - if you do not plan on changing the values of ``delays``
+    during a run, do this for improved efficiency::
+    
+        C.delays.freeze()
+
+**Notes**
+
+This class implements post-synaptic delays. This means that the spike is
+propagated immediately from the presynaptic neuron with the synaptic
+weight at the time of the spike, but arrives at the postsynaptic neuron
+with the given delay. At the moment, Brian only provides support for
+presynaptic delays if they are homogeneous, using the ``delay`` keyword
+of a standard ``Connection``.
+
+**Implementation**
+
+:class:`DelayConnection` stores an array of size ``(n,m)`` where
+``n`` is ``max_delay/dt`` for ``dt`` of the target :class:`NeuronGroup`'s clock,
+and ``m`` is the number of neurons in the target. This array can potentially
+be quite large. Each row in this array represents the array that should be
+added to the target state variable at some particular future time. Which
+row corresponds to which time is tracked using a circular indexing scheme.
+
+When a spike from neuron ``i`` in the source is encountered, the delay time
+of neuron ``i`` is looked up, the row corresponding to the current time
+plus that delay time is found using the circular indexing scheme, and then
+the spike is propagated to that row as for a standard connection (although
+this won't be propagated to the target until a later time). 
+
+</pre><br /><br />
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Instance Methods</span></td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.experimental.heterog_delay.DelayConnection-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">source</span>,
+        <span class="summary-sig-arg">target</span>,
+        <span class="summary-sig-arg">state</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">modulation</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">structure</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">sparse</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">max_delay</span>=<span class="summary-sig-default">5.0 ms</span>,
+        <span class="summary-sig-arg">delay_dimension</span>=<span class="summary-sig-default">2</span>,
+        <span class="summary-sig-arg">**kwds</span>)</span><br />
+      x.__init__(...) initializes x; see x.__class__.__doc__ for signature</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.experimental.heterog_delay.DelayConnection-class.html#propagate" class="summary-sig-name">propagate</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">spikes</span>)</span><br />
+      Propagates the spikes to the target.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="set_delays"></a><span class="summary-sig-name">set_delays</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">val</span>)</span></td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="brian.connection.Connection-class.html">connection.Connection</a></code></b>:
+      <code><a href="brian.connection.Connection-class.html#__getitem__">__getitem__</a></code>,
+      <code><a href="brian.connection.Connection-class.html#__setitem__">__setitem__</a></code>,
+      <code><a href="brian.connection.Connection-class.html#compress">compress</a></code>,
+      <code><a href="brian.connection.Connection-class.html#connect">connect</a></code>,
+      <code><a href="brian.connection.Connection-class.html#connect_full">connect_full</a></code>,
+      <code><a href="brian.connection.Connection-class.html#connect_one_to_one">connect_one_to_one</a></code>,
+      <code><a href="brian.connection.Connection-class.html#connect_random">connect_random</a></code>,
+      <code><a href="brian.connection.Connection-class.html#do_propagate">do_propagate</a></code>,
+      <code><a href="brian.connection.Connection-class.html#origin">origin</a></code>,
+      <code><a href="brian.connection.Connection-class.html#reinit">reinit</a></code>
+      </p>
+    <p class="indent-wrapped-lines"><b>Inherited from <code>magic.InstanceTracker</code></b>:
+      <code>set_instance_id</code>
+      </p>
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__repr__</code>,
+      <code>__setattr__</code>,
+      <code>__str__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== STATIC METHODS ==================== -->
+<a name="section-StaticMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Static Methods</span></td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>magic.InstanceTracker</code></b>:
+      <code>__new__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS VARIABLES ==================== -->
+<a name="section-ClassVariables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Class Variables</span></td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>magic.InstanceTracker</code></b>:
+      <code>__instancefollower__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Properties</span></td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.experimental.heterog_delay.DelayConnection-class.html#delays" class="summary-name">delays</a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Method Details</span></td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">source</span>,
+        <span class="sig-arg">target</span>,
+        <span class="sig-arg">state</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">modulation</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">structure</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">sparse</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">max_delay</span>=<span class="sig-default">5.0 ms</span>,
+        <span class="sig-arg">delay_dimension</span>=<span class="sig-default">2</span>,
+        <span class="sig-arg">**kwds</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+x.__init__(...) initializes x; see x.__class__.__doc__ for signature
+
+</pre>
+  <dl class="fields">
+    <dt>Overrides:
+      <a href="brian.connection.Connection-class.html#__init__">connection.Connection.__init__</a>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="propagate"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">propagate</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">spikes</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Propagates the spikes to the target.
+
+</pre>
+  <dl class="fields">
+    <dt>Overrides:
+      <a href="brian.connection.Connection-class.html#propagate">connection.Connection.propagate</a>
+        <dd><em class="note">(inherited documentation)</em></dd>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== PROPERTY DETAILS ==================== -->
+<a name="section-PropertyDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Property Details</span></td>
+</tr>
+</table>
+<a name="delays"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">delays</h3>
+  
+  <dl class="fields">
+    <dt>Get Method:</dt>
+    <dd class="value"><span class="summary-sig"><i>unreachable</i>(<span class="summary-sig-arg">self</span>)</span>
+    </dd>
+    <dt>Set Method:</dt>
+    <dd class="value"><span class="summary-sig"><a href="brian.experimental.heterog_delay.DelayConnection-class.html#set_delays" class="summary-sig-name">brian.experimental.heterog_delay.DelayConnection.set_delays</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">val</span>)</span>
+    </dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0beta1 on Tue Sep 23 13:38:02 2008
+    </td>
+    <td align="right" class="footer">
+      <a href="http://epydoc.sourceforge.net">http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie()
+  // -->
+</script>
+  
+</body>
+</html>

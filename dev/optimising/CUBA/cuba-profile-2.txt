@@ -1,0 +1,283 @@
+Version with weave optimisations in circular and threshold and algebraic
+optimisation in LinearModel.__call__. Total saving is about 22% over
+previous run.
+
+WARNING: Turning off units.
+262.766000032
+         18366361 function calls (18366063 primitive calls) in 270.795 CPU seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+
+   400000   25.990    0.000  102.545    0.000 model.py:261(__call__)
+   400007   76.554    0.000   76.554    0.000 {numpy.core._dotblas.dot}
+		Comment: down from 121s before
+
+   400000    5.104    0.000   18.639    0.000 threshold.py:32(__call__)
+   		Comment: down from 52s before
+
+   800000    5.252    0.000   49.593    0.000 neurongroup.py:185(getSpikes)
+		Comment: down from 55s before
+
+        1    0.017    0.017  270.800  270.800 <string>:1(<module>)
+        1    0.000    0.000  270.783  270.783 CUBA-optimising.py:15(main)
+        7    0.000    0.000    0.000    0.000 CUBA-optimising.py:21(<lambda>)
+        7    0.000    0.000    0.000    0.000 CUBA-optimising.py:22(<lambda>)
+        7    0.000    0.000    0.000    0.000 CUBA-optimising.py:23(<lambda>)
+        2    0.000    0.000    0.000    0.000 __init__.py:158(__init__)
+        2    0.000    0.000    0.000    0.000 __init__.py:180(__del__)
+        4    0.000    0.000    0.000    0.000 __init__.py:194(_closeCursors)
+        8    0.000    0.000    0.000    0.000 __init__.py:210(_checkOpen)
+        4    0.000    0.000    0.000    0.000 __init__.py:221(__getitem__)
+        4    0.000    0.000    0.000    0.000 __init__.py:223(<lambda>)
+        4    0.002    0.000    0.002    0.000 __init__.py:239(close)
+        2    0.000    0.000    0.000    0.000 __init__.py:254(has_key)
+        2    0.000    0.000    0.000    0.000 __init__.py:287(sync)
+        2    0.000    0.000    0.009    0.005 __init__.py:295(hashopen)
+        2    0.000    0.000    0.004    0.002 __init__.py:348(_openDBEnv)
+        2    0.000    0.000    0.000    0.000 __init__.py:359(_checkflag)
+        1    0.000    0.000    0.054    0.054 anydbm.py:43(<module>)
+        1    0.000    0.000    0.000    0.000 anydbm.py:45(error)
+        2    0.011    0.005    0.043    0.022 anydbm.py:66(open)
+        1    0.000    0.000    0.000    0.000 basic.py:314(norm)
+        1    0.002    0.002    0.002    0.002 basic.py:401(lstsq)
+        1    0.000    0.000    0.001    0.001 basic.py:82(solve)
+        2    0.000    0.000    0.000    0.000 catalog.py:160(default_dir)
+        2    0.000    0.000    0.000    0.000 catalog.py:232(os_dependent_catalog_name)
+        2    0.000    0.000    0.000    0.000 catalog.py:246(catalog_path)
+        2    0.000    0.000    0.110    0.055 catalog.py:273(get_catalog)
+        2    0.000    0.000    0.000    0.000 catalog.py:350(set_module_directory)
+        2    0.000    0.000    0.000    0.000 catalog.py:361(clear_module_directory)
+        2    0.000    0.000    0.000    0.000 catalog.py:366(get_environ_path)
+        2    0.000    0.000    0.000    0.000 catalog.py:382(build_search_order)
+        2    0.000    0.000    0.000    0.000 catalog.py:481(path_key)
+        2    0.000    0.000    0.000    0.000 catalog.py:486(configure_path)
+        2    0.000    0.000    0.000    0.000 catalog.py:500(unconfigure_path)
+        2    0.000    0.000    0.322    0.161 catalog.py:508(get_cataloged_functions)
+        2    0.000    0.000    0.000    0.000 catalog.py:579(get_functions_fast)
+        2    0.000    0.000    0.322    0.161 catalog.py:586(get_functions)
+        2    0.000    0.000    0.000    0.000 catalog.py:701(fast_cache)
+        1    0.000    0.000    0.000    0.000 circular.py:124(__init__)
+   400000    7.180    0.000   13.729    0.000 circular.py:137(push)
+   400000    5.503    0.000    9.400    0.000 circular.py:164(lastspikes)
+        2    0.000    0.000    0.000    0.000 circular.py:17(__init__)
+   800000   12.913    0.000   44.341    0.000 circular.py:179(getSpikes)
+   800000    2.387    0.000    2.387    0.000 circular.py:33(advance)
+   373519    0.805    0.000    0.805    0.000 circular.py:36(__len__)
+  2000000    6.593    0.000    6.593    0.000 circular.py:39(__getitem__)
+   400000    1.301    0.000    1.301    0.000 circular.py:45(__setitem__)
+   400000    1.710    0.000    1.712    0.000 circular.py:51(__getslice__)
+   800000   11.436    0.000   26.215    0.000 circular.py:60(getConditional)
+   400000    2.035    0.000    2.036    0.000 circular.py:96(__setslice__)
+        1    0.000    0.000    0.000    0.000 clock.py:103(<lambda>)
+        6    0.000    0.000    0.000    0.000 clock.py:104(<lambda>)
+   400000    1.435    0.000    1.435    0.000 clock.py:119(tick)
+        1    0.000    0.000    0.000    0.000 clock.py:137(setDuration)
+   400002    1.142    0.000    1.142    0.000 clock.py:143(stillRunning)
+        1    0.000    0.000    0.310    0.310 clock.py:148(guessClock)
+        2    0.000    0.000    0.014    0.007 connection.py:19(__init__)
+        2    0.108    0.054    7.108    3.554 connection.py:256(randomMatrix)
+   800000   29.959    0.000   29.959    0.000 connection.py:39(propagate)
+        2    0.000    0.000    0.000    0.000 connection.py:55(origin)
+        2    0.186    0.093    0.410    0.205 connection.py:62(compress)
+        2    0.223    0.111    0.258    0.129 connection.py:74(connect)
+        2    0.028    0.014    7.394    3.697 connection.py:98(connectRandom)
+        2    0.000    0.000    0.082    0.041 copy.py:299(_reconstruct)
+        2    0.000    0.000    0.082    0.041 copy.py:65(copy)
+        2    0.000    0.000    0.082    0.041 copy_reg.py:91(__newobj__)
+        1    0.000    0.000    0.000    0.000 copy_reg.py:94(_slotnames)
+        2    0.000    0.000    0.009    0.005 dbhash.py:15(open)
+       10    0.000    0.000    0.000    0.000 dbutils.py:41(DeadlockWrap)
+        1    0.000    0.000    0.000    0.000 dumbdbm.py:22(<module>)
+        1    0.000    0.000    0.000    0.000 dumbdbm.py:34(_Database)
+        1    0.000    0.000    0.000    0.000 fromnumeric.py:1025(amax)
+        2    0.000    0.000    0.000    0.000 fromnumeric.py:32(_wrapit)
+        1    0.000    0.000    0.000    0.000 fromnumeric.py:812(sum)
+        1    0.000    0.000    0.000    0.000 fromnumeric.py:954(any)
+        1    0.000    0.000    0.000    0.000 fromnumeric.py:969(all)
+        5    0.000    0.000    0.001    0.000 function_base.py:392(asarray_chkfinite)
+        3    0.000    0.000    0.000    0.000 globalprefs.py:33(getGlobalPreference)
+        1    0.000    0.000    0.000    0.000 globalprefs.py:38(existsGlobalPreference)
+  1200000   12.628    0.000   28.313    0.000 inline_tools.py:134(inline)
+        2    0.000    0.000    0.322    0.161 inline_tools.py:345(attempt_function_call)
+      810    0.003    0.000    0.005    0.000 inspect.py:126(isfunction)
+     1071    0.005    0.000    0.007    0.000 inspect.py:139(istraceback)
+     1071    0.005    0.000    0.007    0.000 inspect.py:149(isframe)
+      810    0.003    0.000    0.005    0.000 inspect.py:167(iscode)
+      907    0.013    0.000    0.045    0.000 inspect.py:342(getfile)
+    62530    0.284    0.000    0.419    0.000 inspect.py:35(ismodule)
+  820/522    0.021    0.000    0.781    0.001 inspect.py:381(getsourcefile)
+      613    0.006    0.000    0.092    0.000 inspect.py:396(getabsfile)
+      315    0.333    0.001    1.025    0.003 inspect.py:408(getmodule)
+      810    0.005    0.000    0.010    0.000 inspect.py:43(isclass)
+      261    0.009    0.000    0.702    0.003 inspect.py:454(findsource)
+      810    0.004    0.000    0.005    0.000 inspect.py:51(ismethod)
+      261    0.006    0.000    1.157    0.004 inspect.py:806(getframeinfo)
+       27    0.002    0.000    1.159    0.043 inspect.py:844(getouterframes)
+        3    0.000    0.000    0.000    0.000 inspection.py:118(__div__)
+        3    0.000    0.000    0.000    0.000 inspection.py:164(isaffine)
+        3    0.000    0.000    0.000    0.000 inspection.py:182(dependson)
+        1    0.000    0.000    0.000    0.000 inspection.py:42(checkModelUnits)
+        1    0.000    0.000    0.000    0.000 inspection.py:55(getvarnames)
+       11    0.000    0.000    0.000    0.000 inspection.py:72(__init__)
+        2    0.000    0.000    0.000    0.000 inspection.py:79(__add__)
+        2    0.000    0.000    0.000    0.000 inspection.py:91(__neg__)
+        1    0.000    0.000    0.000    0.000 inspection.py:94(__sub__)
+        4    0.000    0.000    0.000    0.000 lapack.py:26(cast_to_lapack_prefix)
+        2    0.000    0.000    0.000    0.000 lapack.py:48(find_best_lapack_type)
+        2    0.000    0.000    0.000    0.000 lapack.py:63(get_lapack_funcs)
+      261    0.001    0.000    0.008    0.000 linecache.py:33(getlines)
+       32    0.000    0.000    0.007    0.000 linecache.py:68(updatecache)
+       15    0.000    0.000    0.000    0.000 magic.py:149(__init__)
+       15    0.000    0.000    0.000    0.000 magic.py:152(setID)
+       10    0.000    0.000    0.000    0.000 magic.py:154(getID)
+       15    0.000    0.000    0.000    0.000 magic.py:161(add)
+        4    0.000    0.000    0.000    0.000 magic.py:170(get)
+        5    0.000    0.000    0.000    0.000 magic.py:181(add)
+       18    0.000    0.000    0.000    0.000 magic.py:190(get)
+        5    0.000    0.000    0.000    0.000 magic.py:202(_trackInstances)
+        5    0.000    0.000    0.281    0.056 magic.py:208(__new__)
+       18    0.000    0.000    0.711    0.039 magic.py:215(getInstances)
+        4    0.000    0.000    0.880    0.220 magic.py:228(findInstances)
+        1    0.000    0.000    0.001    0.001 matfuncs.py:22(expm)
+        1    0.000    0.000    0.004    0.004 model.py:21(magicModel)
+        1    0.000    0.000    0.004    0.004 model.py:223(__init__)
+   400000   25.990    0.000  102.545    0.000 model.py:261(__call__)
+        2    0.000    0.000    0.000    0.000 model.py:286(__len__)
+   400000   12.693    0.000  255.571    0.001 network.py:125(update)
+        1    3.651    3.651  262.208  262.208 network.py:217(run)
+        1    0.000    0.000    0.000    0.000 network.py:25(__init__)
+        3    0.000    0.000    0.000    0.000 network.py:257(sameClocks)
+        1    0.000    0.000    0.000    0.000 network.py:265(setClock)
+        1    0.000    0.000    0.570    0.570 network.py:435(__init__)
+        1    0.000    0.000  262.778  262.778 network.py:450(run)
+        1    0.000    0.000    0.410    0.410 network.py:89(prepare)
+   400000    5.711    0.000  140.624    0.000 neurongroup.py:177(update)
+   800000    5.252    0.000   49.593    0.000 neurongroup.py:185(getSpikes)
+   400000    2.306    0.000   20.447    0.000 neurongroup.py:199(reset)
+        2    0.000    0.000    0.082    0.041 neurongroup.py:205(subgroup)
+       15    0.000    0.000    0.000    0.000 neurongroup.py:212(__len__)
+        1    0.000    0.000    0.000    0.000 neurongroup.py:235(__setitem__)
+        2    0.000    0.000    0.082    0.041 neurongroup.py:246(__getslice__)
+        1    0.000    0.000    0.315    0.315 neurongroup.py:36(__init__)
+      915    0.003    0.000    0.003    0.000 ntpath.py:116(splitdrive)
+      793    0.004    0.000    0.031    0.000 ntpath.py:252(exists)
+        2    0.000    0.000    0.000    0.000 ntpath.py:267(isdir)
+        2    0.000    0.000    0.000    0.000 ntpath.py:346(expanduser)
+      613    0.004    0.000    0.007    0.000 ntpath.py:38(normcase)
+        2    0.000    0.000    0.000    0.000 ntpath.py:380(expandvars)
+      913    0.031    0.000    0.056    0.000 ntpath.py:439(normpath)
+      913    0.007    0.000    0.070    0.000 ntpath.py:495(abspath)
+        2    0.000    0.000    0.000    0.000 ntpath.py:51(isabs)
+        2    0.000    0.000    0.000    0.000 ntpath.py:59(join)
+        9    0.000    0.000    0.000    0.000 numeric.py:126(asarray)
+        1    0.000    0.000    0.000    0.000 numeric.py:134(asanyarray)
+        2    0.000    0.000    0.000    0.000 numeric.py:181(isfortran)
+        1    0.000    0.000    0.000    0.000 numeric.py:516(isscalar)
+        2    0.000    0.000    0.000    0.000 os.py:439(has_key)
+     8000    3.813    0.000    6.884    0.001 random.py:264(sample)
+      234    0.001    0.000    0.003    0.000 re.py:178(compile)
+      234    0.001    0.000    0.002    0.000 re.py:219(_compile)
+        1    0.000    0.000    0.000    0.000 reset.py:15(__init__)
+   400000    8.741    0.000   18.141    0.000 reset.py:18(__call__)
+        4    0.000    0.000    0.209    0.052 shelve.py:108(__getitem__)
+        4    0.000    0.000    0.002    0.001 shelve.py:133(close)
+        2    0.000    0.000    0.000    0.000 shelve.py:141(__del__)
+        4    0.000    0.000    0.000    0.000 shelve.py:147(sync)
+        2    0.012    0.006    0.109    0.055 shelve.py:207(__init__)
+        2    0.000    0.000    0.109    0.055 shelve.py:212(open)
+        2    0.000    0.000    0.000    0.000 shelve.py:83(__init__)
+        2    0.000    0.000    0.000    0.000 shelve.py:97(has_key)
+        4    0.000    0.000    0.000    0.000 sparse.py:102(set_shape)
+        4    0.069    0.017    0.069    0.017 sparse.py:2189(__init__)
+        8    0.000    0.000    0.000    0.000 sparse.py:2616(isintlike)
+        4    0.000    0.000    0.000    0.000 sparse.py:2628(isshape)
+        4    0.000    0.000    0.000    0.000 sparse.py:2641(getdtype)
+        4    0.000    0.000    0.000    0.000 sparse.py:93(__init__)
+        2    0.000    0.000    0.000    0.000 stat.py:29(S_IFMT)
+        2    0.000    0.000    0.000    0.000 stat.py:45(S_ISDIR)
+     2427    0.010    0.000    0.015    0.000 string.py:218(lower)
+        1    0.000    0.000    0.000    0.000 struct.py:35(_compile)
+        4    0.000    0.000    0.000    0.000 struct.py:77(unpack)
+        1    0.000    0.000    0.000    0.000 threshold.py:28(__init__)
+   400000    5.104    0.000   18.639    0.000 threshold.py:32(__call__)
+        2    0.000    0.000    0.000    0.000 twodim_base.py:43(eye)
+        1    0.000    0.000    0.000    0.000 ufunclike.py:49(log2)
+        2    0.000    0.000    0.000    0.000 units.py:307(isScalarType)
+        2    0.000    0.000    0.004    0.002 whichdb.py:17(whichdb)
+        1    0.019    0.019    0.019    0.019 whichdb.py:2(<module>)
+        6    0.054    0.009    0.054    0.009 {__import__}
+     8000    0.035    0.000    0.035    0.000 {_bisect.bisect}
+        2    0.000    0.000    0.000    0.000 {_bsddb.DBEnv}
+        2    0.000    0.000    0.000    0.000 {_bsddb.DB}
+        1    0.000    0.000    0.000    0.000 {abs}
+        3    0.000    0.000    0.000    0.000 {all}
+  1200000   12.490    0.000   12.490    0.000 {apply}
+        1    0.000    0.000    0.000    0.000 {built-in method fromkeys}
+        4    0.209    0.052    0.209    0.052 {built-in method load}
+      261    0.001    0.000    0.001    0.000 {built-in method match}
+        2    0.004    0.002    0.004    0.002 {built-in method open}
+        2    0.000    0.000    0.000    0.000 {built-in method set_flags}
+        2    0.000    0.000    0.000    0.000 {built-in method set_get_returns_none}
+        2    0.000    0.000    0.000    0.000 {built-in method set_lk_detect}
+        4    0.000    0.000    0.000    0.000 {cPickle.Unpickler}
+        4    0.000    0.000    0.000    0.000 {cStringIO.StringIO}
+        3    0.000    0.000    0.000    0.000 {filter}
+        9    0.000    0.000    0.000    0.000 {getattr}
+    47340    0.121    0.000    0.121    0.000 {hasattr}
+       25    0.000    0.000    0.000    0.000 {id}
+      820    0.003    0.000    0.003    0.000 {imp.get_suffixes}
+   868218    2.402    0.000    2.402    0.000 {isinstance}
+        8    0.000    0.000    0.000    0.000 {issubclass}
+   415257    0.856    0.000    0.856    0.000 {len}
+       38    0.000    0.000    0.001    0.000 {map}
+     8000    0.019    0.000    0.019    0.000 {math.ceil}
+     8000    0.027    0.000    0.027    0.000 {math.log}
+      469    0.001    0.000    0.001    0.000 {max}
+        2    0.000    0.000    0.000    0.000 {method '__reduce_ex__' of 'object' objects}
+   640300    1.592    0.000    1.592    0.000 {method 'add' of 'set' objects}
+       10    0.000    0.000    0.000    0.000 {method 'any' of 'numpy.ndarray' objects}
+      271    0.001    0.000    0.001    0.000 {method 'append' of 'list' objects}
+        2    0.000    0.000    0.000    0.000 {method 'astype' of 'numpy.ndarray' objects}
+     8000    0.061    0.000    0.061    0.000 {method 'binomial' of 'mtrand.RandomState' objects}
+        7    0.000    0.000    0.000    0.000 {method 'close' of 'file' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+    35073    0.073    0.000    0.073    0.000 {method 'get' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 {method 'get' of 'dictproxy' objects}
+       12    0.000    0.000    0.000    0.000 {method 'has_key' of 'dict' objects}
+       81    0.005    0.000    0.005    0.000 {method 'items' of 'dict' objects}
+      913    0.002    0.000    0.002    0.000 {method 'join' of 'str' objects}
+     3040    0.007    0.000    0.007    0.000 {method 'lower' of 'str' objects}
+      913    0.002    0.000    0.002    0.000 {method 'lstrip' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 {method 'max' of 'numpy.ndarray' objects}
+        2    0.000    0.000    0.000    0.000 {method 'outer' of 'numpy.ufunc' objects}
+        1    0.000    0.000    0.000    0.000 {method 'rand' of 'mtrand.RandomState' objects}
+   646843    1.389    0.000    1.389    0.000 {method 'random' of '_random.Random' objects}
+        2    0.000    0.000    0.000    0.000 {method 'read' of 'file' objects}
+        5    0.002    0.000    0.002    0.000 {method 'readlines' of 'file' objects}
+     1526    0.004    0.000    0.004    0.000 {method 'replace' of 'str' objects}
+        2    0.000    0.000    0.000    0.000 {method 'sort' of 'list' objects}
+      917    0.003    0.000    0.003    0.000 {method 'split' of 'str' objects}
+      913    0.002    0.000    0.002    0.000 {method 'startswith' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 {method 'sum' of 'numpy.ndarray' objects}
+        4    0.000    0.000    0.000    0.000 {method 'unpack' of 'Struct' objects}
+        2    0.000    0.000    0.000    0.000 {method 'update' of 'dict' objects}
+        2    0.000    0.000    0.000    0.000 {method 'upper' of 'str' objects}
+        5    0.000    0.000    0.000    0.000 {method 'values' of 'dict' objects}
+      234    0.001    0.000    0.001    0.000 {min}
+      913    0.008    0.000    0.008    0.000 {nt._getfullpathname}
+      802    0.027    0.000    0.027    0.000 {nt.stat}
+   400007   76.554    0.000   76.554    0.000 {numpy.core._dotblas.dot}
+        4    0.000    0.000    0.000    0.000 {numpy.core.multiarray.arange}
+     8007    0.224    0.000    0.224    0.000 {numpy.core.multiarray.array}
+        9    0.000    0.000    0.000    0.000 {numpy.core.multiarray.zeros}
+       11    0.009    0.001    0.009    0.001 {open}
+        2    0.000    0.000    0.000    0.000 {operator.isNumberType}
+        4    0.000    0.000    0.000    0.000 {operator.isSequenceType}
+      592    0.002    0.000    0.002    0.000 {range}
+  1200027    2.873    0.000    2.873    0.000 {sys._getframe}
+        2    0.000    0.000    0.000    0.000 {time.time}
+        2    0.000    0.000    0.000    0.000 {zip}
+
+

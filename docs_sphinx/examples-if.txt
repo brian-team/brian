@@ -1,0 +1,45 @@
+.. currentmodule:: brian
+
+.. _example-if:
+
+.. index::
+   pair: example usage; NeuronGroup
+   pair: example usage; run
+   pair: example usage; SpikeGeneratorGroup
+   pair: example usage; Connection
+   pair: example usage; Model
+   pair: example usage; StateMonitor
+
+Example: if
+===========
+
+A very simple example Brian script to show how to implement
+an integrate and fire model. In this example, we also
+drive the single integrate and fire neuron with
+regularly spaced spikes from the :class:`SpikeGeneratorGroup`.
+
+::
+
+    from brian import *
+    
+    tau = 10*ms
+    Vr = -70*mV
+    Vt = -55*mV
+    
+    model = Model(equations='''
+        V : volt
+        ''', threshold=Vt, reset=Vr)
+    G = NeuronGroup(1,model)
+    
+    input = SpikeGeneratorGroup(1,[(0,t*ms) for t in linspace(10,100,25)])
+    
+    C = Connection(input, G)
+    C[0,0] = 2*mV
+    
+    M = StateMonitor(G, 'V', record=True)
+    
+    G.V = Vr
+    run(100*ms)
+    plot(M.times/ms,M[0]/mV)
+    show()
+

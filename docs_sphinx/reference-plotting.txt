@@ -1,0 +1,29 @@
+.. currentmodule:: brian
+
+.. index:: plotting
+
+Plotting
+--------
+
+.. index::
+	pair: plotting; pylab
+
+Most plotting should be done with the PyLab commands, all of
+which are loaded when you import Brian. See:
+
+	http://matplotlib.sourceforge.net/matplotlib.pylab.html
+	
+for help on PyLab.
+
+Brian currently defines just two plotting functions of its own,
+:func:`raster_plot` and :func:`hist_plot`.
+
+.. index::
+	pair: plotting; raster
+
+.. autofunction:: raster_plot
+
+.. index::
+	pair: plotting; histogram
+	
+.. autofunction:: hist_plot

@@ -1,0 +1,60 @@
+.. currentmodule:: brian
+
+.. index::
+	pair: simulation; control
+
+Simulation control
+==================
+
+.. index::
+	single: simulation; update schedule
+
+The update schedule
+-------------------
+When a simulation is run, the operations are done in the following order by default:
+
+#. Update every :class:`NeuronGroup`, this typically performs an integration time step for the differential equations defining the neuron model.
+#. Check the threshold condition and propagate the spikes to the target neurons.
+#. Reset all neurons that spiked.
+#. Call all user-defined operations and state monitors.
+
+The user-defined operations and state monitors can be placed at other places in this schedule, by
+using the keyword ``when``. The values can be ``start``, ``before_groups``, ``after_groups``,
+``middle``, ``before_connections``, ``after_connections``, ``before_resets``, ``after_resets`` or
+``end`` (default: end). For example, to call a function ``f`` at the beginning of every timestep::
+
+  @network_operation(when='start')
+  def f():
+    do_something()
+    
+or to record the value of a state variable just before the resets::
+
+  M=StateMonitor(group,'x',record=True,when='before_resets')
+  
+Basic simulation control
+------------------------
+The simulation is run simply as follows::
+
+  run(1000*ms)
+  
+where 1000 ms is the duration of the run. It can be stopped during the simulation with the instruction
+``stop()``, and the network can be reinitialised with the instruction ``reinit()``.
+
+When the :func:`run` function is called, Brian looks for all relevant
+objects in the namespace (groups, connections, monitors, user operations), and runs them.
+In complex scripts, the user might want to run only selected objects. In that case, a :class:`Network` object
+needs to be created.
+
+The Network class
+-----------------
+A :class:`Network` object holds a collection of objets that can be run, i.e., objects with class :class:`NeuronGroup`,
+:class:`Connection`, :class:`SpikeMonitor`, :class:`StateMonitor` (or subclasses) or any user-defined operation with the decorator
+:func:`network_operation`. Thoses objects can then be simulated. Example::
+
+  G = NeuronGroup(...)
+  C = Connection(...)
+  net = Network(G,C)
+  net.run(1*second)
+
+You can also pass lists of objects. The simulation can be controlled with the methods
+``stop`` and ``reinit``.

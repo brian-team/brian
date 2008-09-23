@@ -1,0 +1,47 @@
+List of examples
+----------------
+* adaptive_threshold: an integrate-and-fire model with a threshold that increases
+with each spike and relaxes exponentially, and Poisson input.
+* adaptive: an integrate-and-fire model with adaptation.
+* cable: a passive dendrite.
+* COBA: a network of IF models with synaptic conductances.
+* cobahh_simplified: a network of Hodgkin-Huxley models.
+* COBAHH: a network of Hodgkin-Huxley models.
+* correlated_inputs: an example of correlated spike trains.
+* current_clamp: a current clamp recording with bridge compensation.
+* CUBA: a network of IF models with synaptic currents.
+* delays: a network with external noise and transmission delays.
+* expIF_network: a network of exponential IF models with synaptic conductances and
+Poisson input to subsets of the network.
+* HodgkinHuxley: the original Hodgkin-Huxley model.
+* I-F_curve: current-frequency curve of the Brette-Gerstner model.
+* I-F_curve2: current-frequency curve of the leaky integrator.
+* if: demonstrating a single integrate and fire neuron
+* interface/*: how to write a html interface to a script using CherryPy.
+* leaky_if: demonstrating a single leaky integrate and fire neuron
+* minimalexample: same as CUBA.
+* mirollo_strogatz: fully connected network of IF oscillators.
+* multipleclocks: an example demonstrating the use of multiple clocks.
+* named_threshold: example with named threshold and reset variables.
+* noisy_ring: a ring of noisy perfect IF neurons.
+* online_imaging: an example demonstrating online imaging of state variables (experimental).
+* parallelpython: how to run scripts on a cluster using parallelpython.
+* phase_locking: IF models phase locking to a periodic input.
+* pickle_loadnet: how to load and continue running an incomplete simulation.
+* pickle_savenet: how to save an incomplete simulation.
+* poisson: Poisson spike trains with variable rates.
+* poissongroup: Poisson input to an IF neuron.
+* pulsepacket: demonstrates the use of PulsePacket and SpikeGenerator objects.
+* rate_model: model where spikes are produced with probability v*dt.
+* ring: a ring of IF oscillators.
+* sfc: a synfire chain.
+* STDP1: STDP example adapted from Song, Miller and Abbott (2000).
+* stim2d: how to do a layer of neurons responding to a 2D stimulus
+* stopping: demonstration of how to stop a stimulation during a run.
+* synfire_chains: a synfire chain (simpler).
+* topographic_map: a two-layer network with topographic random connections, including
+lateral connections.
+* topographic_map2: a two-layer network with topographic random connections, including
+lateral connections.
+* transient_sync: a ring network of noisy IF neurons with distance-dependent synaptic weights.
+* two_neurons: two connected neurons with delays.

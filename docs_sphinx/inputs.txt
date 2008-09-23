@@ -1,0 +1,95 @@
+.. currentmodule:: brian
+
+Inputs
+======
+Some specific types of neuron groups are available to provide inputs to a network.
+
+Poisson inputs
+--------------
+Poisson spike trains can be generated as follows::
+
+  group=PoissonGroup(100,rates=10*Hz)
+
+Here 100 neurons are defined, which emit spikes independently according to Poisson
+processes with rates 10 Hz. To have different rates across the group,
+initialise with an array of rates:
+
+  group=PoissonGroup(100,rates=linspace(0*Hz,10*Hz,100))
+
+Inhomogeneous Poisson processes can be defined by passing a function of time that returns the
+rates::
+
+  group=PoissonGroup(100,rates=lambda t:(1+cos(t))*10*Hz)
+
+or::
+
+  r0=linspace(0*Hz,10*Hz,100)
+  group=PoissonGroup(100,rates=lambda t:(1+cos(t))*r0)
+
+Correlated inputs
+-----------------
+Generation of correlated spike trains is partially implemented, using algorithms from the
+the following paper: Brette, R. (2008) `Generation of correlated spike trains <http://www.di.ens.fr/~brette/papers/Brette2008NC.html>`__, Neural Computation.
+
+To generate correlated spike trains with identical rates and homogeneous exponential correlations,
+use the class :class:`HomogeneousCorrelatedSpikeTrains`::
+  
+  group=HomogeneousCorrelatedSpikeTrains(100,r=10*Hz,c=0.1,tauc=10*ms)
+
+where ``r`` is the rate, ``c`` is the total correlation strength and ``tauc`` is the correlation time constant.
+The implementation uses Cox processes (or doubly stochastic processes) to generate the spike trains.
+
+Heterogeneous spike trains have not been implemented yet (but will be).
+
+Input spike trains
+------------------
+A set of spike trains can be explicitly defined as list of pairs (i,t)
+(meaning neuron i fires at time t), which used to initialise a
+:class:`SpikeGeneratorGroup`::
+
+  spiketimes=[(0,1*ms), (1,2*ms)]
+  input=SpikeGeneratorGroup(5,spiketimes)
+
+The neuron 0 fires at time 1 ms and neuron 1 fires at time 2 ms (there are 5 neurons,
+but 3 of them never spike).
+One may also pass a generator instead of a list (in that case the pairs should be
+ordered in time).
+
+Spike times may also be provided separately for each neuron, using the
+:class:`MultipleSpikeGeneratorGroup` class::
+
+  S0=[1*ms, 2*ms]
+  S1=[3*ms]
+  S2=[1*ms, 3*ms, 5*ms]
+  input=MultipleSpikeGeneratorGroup([S0,S1,S2])
+
+The object is initialised with a list of spike containers, one for each neuron.
+Each container can be a sorted list of spike times or any iterable object returning
+the spike times (ordered in time).
+
+Gaussian spike packets
+^^^^^^^^^^^^^^^^^^^^^^
+There is a subclass of :class:`SpikeGeneratorGroup` for generating spikes with a Gaussian
+distribution::
+
+  input=PulsePacket(t=10*ms,n=10,sigma=3*ms)
+
+Here 10 spikes are produced, with spike times distributed according a Gaussian distribution with
+mean 10 ms and standard deviation 3 ms.
+
+Direct input
+------------
+Inputs may also be defined by accessing directly the state variables of a neuron group. The standard way
+to do this is to insert parameters in the equations::
+
+  eqs='''
+  dv/dt=(I-x)/tau : volt
+  I : volt
+  '''
+  group=NeuronGroup(100,model=eqs,reset=0*mV,threshold=15*mV)
+  group.I=linspace(0*mV,20*mV,100)
+
+Here the value of the parameter I for each neuron is provided at initialisation time
+(evenly distributed between 0 mV and 20 mV).
+It is possible to change the value of I every timestep by using a user-defined operation (see next
+section).

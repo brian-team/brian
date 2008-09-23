@@ -1,0 +1,59 @@
+.. currentmodule:: brian
+
+Interface
+=========
+
+The Brian package can be used at three different levels. The safest level
+is to use only functions and classes from the **assured interface**. This is
+a subset of the full functionality of Brian whose behaviour and syntax is
+guaranteed not to change in future minor releases (e.g. from version 1.0 to
+version 1.1), and will probably not change in future major releases (e.g.
+from version 1.0 to 2.0). In other words, it's the subset which we will do
+our absolute best not to change. Restricting your code to using just these
+functions and classes is the best guarantee that it will work with future
+releases of Brian with the minimum hassle.
+
+The next safest level is to use only functions and classes from
+the **documented interface**. This is the subset of functions and classes
+documented in the Reference chapter of the main documentation. Typically,
+functions and method documented here should work as expected and will only
+undergo fairly minor changes with new releases of Brian, but names and
+the precise syntax may well change.
+
+Finally, there is the **full interface**, consisting of all the functions and
+classes in the Brian package. These are documented in the automatically
+generated `API documentation <api/index.html>`_. There are no guarantees
+that things you find in here will always work as expected and they are
+subject to arbitrary change at any time.
+
+Our recommendation is to use the assured interface where possible, but
+since this will typically lag behind new features you should certainly use
+the documented interface as well where necessary. We would recommend against
+using the full interface unless absolutely necessary.
+
+Assured Interface
+-----------------
+
+This section describes the assured interface for each module of the
+Brian package which defines one. To further understand the somewhat
+terse definitions below, take a look at the source code for the
+functions named `_define_and_test_interface` in each module which
+has one. These functions are designed to test that the interface
+really behaves the way it is supposed to before we make each new release
+of Brian.
+
+.. ASSURED_INTERFACE_TOCTREE
+
+.. toctree::
+   :maxdepth: 2
+
+   interface-clock
+   interface-magic
+   interface-units
+   interface-quantityarray
+   interface-directcontrol
+   interface-unitsafefunctions
+   interface-reset
+   interface-threshold
+   interface-monitor
+   interface-connection

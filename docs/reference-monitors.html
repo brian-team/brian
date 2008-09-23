@@ -1,0 +1,377 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Monitors &mdash; Brian v1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+          URL_ROOT:    '',
+          VERSION:     '1.0.0',
+          COLLAPSE_MODINDEX: false,
+          FILE_SUFFIX: ''
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/interface.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="contents" title="Global table of contents" href="contents.html" />
+    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
+    <link rel="up" title="Reference" href="reference.html" />
+    <link rel="next" title="Plotting" href="reference-plotting.html" />
+    <link rel="prev" title="Network" href="reference-network.html" />
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="reference-plotting.html" title="Plotting"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference-network.html" title="Network"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <div class="section" id="monitors">
+<h1 id="monitors">Monitors<a class="headerlink" href="#monitors" title="Permalink to this headline">¶</a></h1>
+<p>Monitors are used to record properties of your network. The two
+most important are <a title="brian.SpikeMonitor" class="reference internal" href="#brian.SpikeMonitor"><tt class="xref docutils literal"><span class="pre">SpikeMonitor</span></tt></a> which records spikes, and
+<a title="brian.StateMonitor" class="reference internal" href="#brian.StateMonitor"><tt class="xref docutils literal"><span class="pre">StateMonitor</span></tt></a> which records values of state variables. These
+objects are just added to the network like a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a> or
+<a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a>.</p>
+<p>Implementation note: monitors that record spikes are classes
+derived from <a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a>, and overwrite the <tt class="docutils literal"><span class="pre">propagate</span></tt> method
+to store spikes. If you want to write your own custom spike
+monitors, you can do the same (or just use <a title="brian.SpikeMonitor" class="reference internal" href="#brian.SpikeMonitor"><tt class="xref docutils literal"><span class="pre">SpikeMonitor</span></tt></a> with
+a custom function). Monitors that record values are classes
+derived from <a title="brian.NetworkOperation" class="reference external" href="reference-network.html#brian.NetworkOperation"><tt class="xref docutils literal"><span class="pre">NetworkOperation</span></tt></a> and implement the <tt class="docutils literal"><span class="pre">__call__</span></tt>
+method to store values each time the network updates. Custom
+state monitors are most easily written by just writing your
+own network operation using the <tt class="docutils literal"><span class="pre">network_operation</span></tt>
+decorator.</p>
+<dl class="class">
+<dt id="brian.SpikeMonitor">
+<!--[brian.SpikeMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">SpikeMonitor</tt><big>(</big><em>source</em>, <em>record=True</em>, <em>delay=0</em>, <em>function=None</em><big>)</big><a class="headerlink" href="#brian.SpikeMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counts or records spikes from a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a></p>
+<p>Initialised as one of:</p>
+<pre>SpikeMonitor(source(,record=True))
+SpikeMonitor(source,function=function)</pre>
+<p>Where:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
+<dd>A <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a> to record from</dd>
+<dt><tt class="docutils literal"><span class="pre">record</span></tt></dt>
+<dd><tt class="xref docutils literal"><span class="pre">True</span></tt> or <tt class="xref docutils literal"><span class="pre">False</span></tt> to record all the spikes or just summary
+statistics.</dd>
+<dt><tt class="docutils literal"><span class="pre">function</span></tt></dt>
+<dd>A function <tt class="docutils literal"><span class="pre">f(spikes)</span></tt> which is passed the array of neuron
+numbers that have fired called each step, to define
+custom spike monitoring.</dd>
+</dl>
+<p>Has two attributes:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">nspikes</span></tt></dt>
+<dd>The number of recorded spikes</dd>
+<dt><tt class="docutils literal"><span class="pre">spikes</span></tt></dt>
+<dd>A time ordered list of pairs <tt class="docutils literal"><span class="pre">(i,t)</span></tt> where neuron <tt class="docutils literal"><span class="pre">i</span></tt> fired
+at time <tt class="docutils literal"><span class="pre">t</span></tt>.</dd>
+</dl>
+<p>For <tt class="docutils literal"><span class="pre">M</span></tt> a <a title="brian.SpikeMonitor" class="reference internal" href="#brian.SpikeMonitor"><tt class="xref docutils literal"><span class="pre">SpikeMonitor</span></tt></a>, you can also write:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">M[i]</span></tt></dt>
+<dd>A qarray of the spike times of neuron <tt class="docutils literal"><span class="pre">i</span></tt>.</dd>
+</dl>
+<p>Notes:</p>
+<p><a title="brian.SpikeMonitor" class="reference internal" href="#brian.SpikeMonitor"><tt class="xref docutils literal"><span class="pre">SpikeMonitor</span></tt></a> is subclassed from <a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a>.
+To define a custom monitor, either define a subclass and
+rewrite the <tt class="docutils literal"><span class="pre">propagate</span></tt> method, or pass the monitoring function
+as an argument (<tt class="docutils literal"><span class="pre">function=myfunction</span></tt>, with <tt class="docutils literal"><span class="pre">def</span> <span class="pre">myfunction(spikes):...</span></tt>)</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="brian.SpikeCounter">
+<!--[brian.SpikeCounter]-->class <tt class="descclassname">brian.</tt><tt class="descname">SpikeCounter</tt><big>(</big><em>source</em><big>)</big><a class="headerlink" href="#brian.SpikeCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counts spikes from a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a></p>
+<p>Initialised as:</p>
+<div class="highlight"><pre><span class="n">SpikeCounter</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+</pre></div>
+<p>With argument:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
+<dd>A <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a> to record from</dd>
+</dl>
+<p>Has two attributes:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">nspikes</span></tt></dt>
+<dd>The number of recorded spikes</dd>
+<dt><tt class="docutils literal"><span class="pre">count</span></tt></dt>
+<dd>An array of spike counts for each neuron</dd>
+</dl>
+<p>For a <a title="brian.SpikeCounter" class="reference internal" href="#brian.SpikeCounter"><tt class="xref docutils literal"><span class="pre">SpikeCounter</span></tt></a> <tt class="docutils literal"><span class="pre">M</span></tt> you can also write <tt class="docutils literal"><span class="pre">M[i]</span></tt> for the
+number of spikes counted for neuron <tt class="docutils literal"><span class="pre">i</span></tt>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="brian.PopulationSpikeCounter">
+<!--[brian.PopulationSpikeCounter]-->class <tt class="descclassname">brian.</tt><tt class="descname">PopulationSpikeCounter</tt><big>(</big><em>source</em>, <em>delay=0</em><big>)</big><a class="headerlink" href="#brian.PopulationSpikeCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counts spikes from a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a></p>
+<p>Initialised as:</p>
+<div class="highlight"><pre><span class="n">PopulationSpikeCounter</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+</pre></div>
+<p>With argument:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
+<dd>A <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a> to record from</dd>
+</dl>
+<p>Has one attribute:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">nspikes</span></tt></dt>
+<dd>The number of recorded spikes</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="brian.StateSpikeMonitor">
+<!--[brian.StateSpikeMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">StateSpikeMonitor</tt><big>(</big><em>source</em>, <em>var</em><big>)</big><a class="headerlink" href="#brian.StateSpikeMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counts or records spikes and state variables at spike times from a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a></p>
+<p>Initialised as:</p>
+<div class="highlight"><pre><span class="n">StateSpikeMonitor</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+</pre></div>
+<p>Where:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
+<dd>A <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a> to record from</dd>
+<dt><tt class="docutils literal"><span class="pre">var</span></tt></dt>
+<dd>The variable name or number to record from, or a tuple of variable names or numbers
+if you want to record multiple variables for each spike.</dd>
+</dl>
+<p>Has two attributes:</p>
+<dl class="attribute">
+<dt id="brian.StateSpikeMonitor.nspikes">
+<!--[brian.StateSpikeMonitor.nspikes]--><tt class="descname">nspikes</tt><a class="headerlink" href="#brian.StateSpikeMonitor.nspikes" title="Permalink to this definition">¶</a></dt>
+<dd>The number of recorded spikes</dd></dl>
+
+<dl class="attribute">
+<dt id="brian.StateSpikeMonitor.spikes">
+<!--[brian.StateSpikeMonitor.spikes]--><tt class="descname">spikes</tt><a class="headerlink" href="#brian.StateSpikeMonitor.spikes" title="Permalink to this definition">¶</a></dt>
+<dd>A time ordered list of tuples <tt class="docutils literal"><span class="pre">(i,t,v)</span></tt> where neuron <tt class="docutils literal"><span class="pre">i</span></tt> fired
+at time <tt class="docutils literal"><span class="pre">t</span></tt> and the specified variable had value <tt class="docutils literal"><span class="pre">v</span></tt>. If you
+specify multiple variables, each tuple will be of the form
+<tt class="docutils literal"><span class="pre">(i,t,v0,v1,v2,...)</span></tt> where the <tt class="docutils literal"><span class="pre">vi</span></tt> are the values corresponding
+in order to the variables you specified in the <tt class="docutils literal"><span class="pre">var</span></tt> keyword.</dd></dl>
+
+<p>And two methods:</p>
+<dl class="method">
+<dt id="brian.StateSpikeMonitor.times">
+<!--[brian.StateSpikeMonitor.times]--><tt class="descname">times</tt><big>(</big><em>i=None</em><big>)</big><a class="headerlink" href="#brian.StateSpikeMonitor.times" title="Permalink to this definition">¶</a></dt>
+<dd>Returns a <tt class="xref docutils literal"><span class="pre">qarray</span></tt> of the spike times for the whole monitored
+group, or just for neuron <tt class="docutils literal"><span class="pre">i</span></tt> if specified.</dd></dl>
+
+<dl class="method">
+<dt id="brian.StateSpikeMonitor.values">
+<!--[brian.StateSpikeMonitor.values]--><tt class="descname">values</tt><big>(</big><em>var</em>, <em>i=None</em><big>)</big><a class="headerlink" href="#brian.StateSpikeMonitor.values" title="Permalink to this definition">¶</a></dt>
+<dd>Returns a <tt class="xref docutils literal"><span class="pre">qarray</span></tt> of the values of variable <tt class="docutils literal"><span class="pre">var</span></tt> for the
+whole monitored group, or just for neuron <tt class="docutils literal"><span class="pre">i</span></tt> if specified.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="brian.StateMonitor">
+<!--[brian.StateMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">StateMonitor</tt><big>(</big><em>P</em>, <em>varname</em>, <em>clock=None</em>, <em>record=False</em>, <em>timestep=1</em>, <em>when='end'</em><big>)</big><a class="headerlink" href="#brian.StateMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records the values of a state variable from a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>.</p>
+<p>Initialise as:</p>
+<pre>StateMonitor(P,varname(,record=False)
+    (,when='end)(,timestep=1)(,clock=clock))</pre>
+<p>Where:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">P</span></tt></dt>
+<dd>The group to be recorded from</dd>
+<dt><tt class="docutils literal"><span class="pre">varname</span></tt></dt>
+<dd>The state variable name or number to be recorded</dd>
+<dt><tt class="docutils literal"><span class="pre">record</span></tt></dt>
+<dd>What to record. The default value is <tt class="xref docutils literal"><span class="pre">False</span></tt> and the monitor will
+only record summary statistics for the variable. You can choose
+<tt class="docutils literal"><span class="pre">record=integer</span></tt> to record every value of the neuron with that
+number, <tt class="docutils literal"><span class="pre">record=``list</span> <span class="pre">of</span> <span class="pre">integers</span> <span class="pre">to</span> <span class="pre">record</span> <span class="pre">every</span> <span class="pre">value</span> <span class="pre">of</span> <span class="pre">each</span> <span class="pre">of</span>
+<span class="pre">those</span> <span class="pre">neurons,</span> <span class="pre">or</span> <span class="pre">``record=True</span></tt> to record every value of every
+neuron (although beware that this may use a lot of memory).</dd>
+<dt><tt class="docutils literal"><span class="pre">when</span></tt></dt>
+<dd>When the recording should be made in the network update, possible
+values are any of the strings: <tt class="docutils literal"><span class="pre">'start'</span></tt>, <tt class="docutils literal"><span class="pre">'before_groups'</span></tt>, <tt class="docutils literal"><span class="pre">'after_groups'</span></tt>,
+<tt class="docutils literal"><span class="pre">'before_connections'</span></tt>, <tt class="docutils literal"><span class="pre">'after_connections'</span></tt>, <tt class="docutils literal"><span class="pre">'before_resets'</span></tt>,
+<tt class="docutils literal"><span class="pre">'after_resets'</span></tt>, <tt class="docutils literal"><span class="pre">'end'</span></tt> (in order of when they are run).</dd>
+<dt><tt class="docutils literal"><span class="pre">timestep</span></tt></dt>
+<dd>A recording will be made each timestep clock updates (so <tt class="docutils literal"><span class="pre">timestep</span></tt>
+should be an integer).</dd>
+<dt><tt class="docutils literal"><span class="pre">clock</span></tt></dt>
+<dd>A clock for the update schedule, use this if you have specified a
+clock other than the default one in your network, or to update at a
+lower frequency than the update cycle. Note though that if the clock
+here is different from the main clock, the when parameter will not
+be taken into account, as network updates are done clock by clock.
+Use the <tt class="docutils literal"><span class="pre">timestep</span></tt> parameter if you need recordings to be made at a
+precise point in the network update step.</dd>
+</dl>
+<p>The <a title="brian.StateMonitor" class="reference internal" href="#brian.StateMonitor"><tt class="xref docutils literal"><span class="pre">StateMonitor</span></tt></a> object has the following properties (where names
+without an underscore return <tt class="xref docutils literal"><span class="pre">QuantityArray</span></tt> objects with appropriate
+units and names with an underscore return <tt class="docutils literal"><span class="pre">array</span></tt> objects without
+units):</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">times</span></tt>, <tt class="docutils literal"><span class="pre">times_</span></tt></dt>
+<dd>The times at which recordings were made</dd>
+<dt><tt class="docutils literal"><span class="pre">mean</span></tt>, <tt class="docutils literal"><span class="pre">mean_</span></tt></dt>
+<dd>The mean value of the state variable for every neuron in the
+group (not just the ones specified in the <tt class="docutils literal"><span class="pre">record</span></tt> keyword)</dd>
+<dt><tt class="docutils literal"><span class="pre">var</span></tt>, <tt class="docutils literal"><span class="pre">var_</span></tt></dt>
+<dd>The unbiased estimate of the variances, as in <tt class="docutils literal"><span class="pre">mean</span></tt></dd>
+<dt><tt class="docutils literal"><span class="pre">std</span></tt>, <tt class="docutils literal"><span class="pre">std_</span></tt></dt>
+<dd>The square root of <tt class="docutils literal"><span class="pre">var</span></tt>, as in <tt class="docutils literal"><span class="pre">mean</span></tt></dd>
+<dt><tt class="docutils literal"><span class="pre">values</span></tt>, <tt class="docutils literal"><span class="pre">values_</span></tt></dt>
+<dd>A 2D array of the values of all the recorded neurons, each row is a
+single neuron&#8217;s values.</dd>
+</dl>
+<p>In addition, if <tt class="xref docutils literal"><span class="pre">M`</span></tt> is a <a title="brian.StateMonitor" class="reference internal" href="#brian.StateMonitor"><tt class="xref docutils literal"><span class="pre">StateMonitor</span></tt></a> object, you write:</p>
+<div class="highlight"><pre><span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</pre></div>
+<p>for the recorded values of neuron <tt class="docutils literal"><span class="pre">i</span></tt> (if it was specified with the
+<tt class="docutils literal"><span class="pre">record</span></tt> keyword). It returns a <tt class="xref docutils literal"><span class="pre">QuantityArray</span></tt> object with units. Downcast
+to an array without units by writing <tt class="docutils literal"><span class="pre">asarray(M[i])</span></tt>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="brian.FileSpikeMonitor">
+<!--[brian.FileSpikeMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">FileSpikeMonitor</tt><big>(</big><em>source</em>, <em>filename</em>, <em>record=False</em>, <em>delay=0</em><big>)</big><a class="headerlink" href="#brian.FileSpikeMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records spikes to a file</p>
+<p>Initialised as:</p>
+<pre>FileSpikeMonitor(source, filename[, record=False])</pre>
+<p>Does everything that a <a title="brian.SpikeMonitor" class="reference internal" href="#brian.SpikeMonitor"><tt class="xref docutils literal"><span class="pre">SpikeMonitor</span></tt></a> does except also records
+the spikes to the named file. note that spikes are recorded
+as an ASCII file of lines each of the form:</p>
+<blockquote>
+<tt class="docutils literal"><span class="pre">i,</span> <span class="pre">t</span></tt></blockquote>
+<p>Where <tt class="docutils literal"><span class="pre">i</span></tt> is the neuron that fired, and <tt class="docutils literal"><span class="pre">t</span></tt> is the time in seconds.</p>
+<p>Has one additional method:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">close_file()</span></tt></dt>
+<dd>Closes the file manually (will happen automatically when
+the program ends).</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="brian.ISIHistogramMonitor">
+<!--[brian.ISIHistogramMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">ISIHistogramMonitor</tt><big>(</big><em>source</em>, <em>bins</em>, <em>delay=0</em><big>)</big><a class="headerlink" href="#brian.ISIHistogramMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records the interspike interval histograms of a group.</p>
+<p>Initialised as:</p>
+<div class="highlight"><pre><span class="n">ISIHistogramMonitor</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">bins</span><span class="p">)</span>
+</pre></div>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
+<dd>The source group to record from.</dd>
+<dt><tt class="docutils literal"><span class="pre">bins</span></tt></dt>
+<dd>The lower bounds for each bin, so that e.g.
+<tt class="docutils literal"><span class="pre">bins</span> <span class="pre">=</span> <span class="pre">[0*ms,</span> <span class="pre">10*ms,</span> <span class="pre">20*ms]</span></tt> would correspond to
+bins with intervals 0-10ms, 10-20ms and
+20+ms.</dd>
+</dl>
+<p>Has properties:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">bins</span></tt></dt>
+<dd>The <tt class="docutils literal"><span class="pre">bins</span></tt> array passed at initialisation.</dd>
+<dt><tt class="docutils literal"><span class="pre">count</span></tt></dt>
+<dd>An array of length <tt class="docutils literal"><span class="pre">len(bins)</span></tt> counting how many ISIs
+were in each bin.</dd>
+</dl>
+<p>This object can be passed directly to the plotting function
+<a title="brian.hist_plot" class="reference external" href="reference-plotting.html#brian.hist_plot"><tt class="xref docutils literal"><span class="pre">hist_plot()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="brian.PopulationRateMonitor">
+<!--[brian.PopulationRateMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">PopulationRateMonitor</tt><big>(</big><em>source</em>, <em>bin=None</em><big>)</big><a class="headerlink" href="#brian.PopulationRateMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Monitors and stores the (time-varying) population rate</p>
+<p>Initialised as:</p>
+<div class="highlight"><pre><span class="n">PopulationRateMonitor</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="n">bin</span><span class="p">)</span>
+</pre></div>
+<p>Records the average activity of the group for every bin.</p>
+<p>Properties:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">rate</span></tt>, <tt class="docutils literal"><span class="pre">rate_</span></tt></dt>
+<dd>A <tt class="xref docutils literal"><span class="pre">qarray</span></tt> of the rates in Hz.</dd>
+<dt><tt class="docutils literal"><span class="pre">times</span></tt>, <tt class="docutils literal"><span class="pre">times_</span></tt></dt>
+<dd>The times of the bins.</dd>
+<dt><tt class="docutils literal"><span class="pre">bin</span></tt></dt>
+<dd>The duration of a bin (in second).</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="reference-network.html" title="previous chapter">Network</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="reference-plotting.html" title="next chapter">Plotting</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/reference-monitors.txt">Show Source</a></li>
+            </ul>
+            <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="reference-plotting.html" title="Plotting"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference-network.html" title="Network"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2008, Romain Brette, Dan Goodman.
+      Last updated on Sep 23, 2008.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+    </div>
+  </body>
+</html>

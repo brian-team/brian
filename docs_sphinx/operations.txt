@@ -1,0 +1,20 @@
+.. currentmodule:: brian
+
+User-defined operations
+=======================
+
+In addition to neuron models, the user can provide functions that are to be called every timestep
+during the simulation, using the decorator :func:`network_operation`::
+
+  @network_operation
+  def myoperation():
+      do_something_every_timestep()
+
+The operation may be called at regular intervals by defining a clock::
+
+  myclock=Clock(dt=1*ms)
+  
+  @network_operation(myclock)
+  def myoperation():
+      do_something_every_ms()
+

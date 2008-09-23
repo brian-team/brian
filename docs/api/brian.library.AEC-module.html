@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>brian.library.AEC</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="brian-module.html">Package&nbsp;brian</a> ::
+        <a href="brian.library-module.html">Package&nbsp;library</a> ::
+        Module&nbsp;AEC
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module AEC</h1><br /><br />
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Functions</span></td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.library.AEC-module.html#offline_AEC" class="summary-sig-name">offline_AEC</a>(<span class="summary-sig-arg">v</span>,
+        <span class="summary-sig-arg">i</span>,
+        <span class="summary-sig-arg">ke</span>)</span><br />
+      Active Electrode Compensation, done offline.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.library.AEC-module.html#correlations" class="summary-sig-name">correlations</a>(<span class="summary-sig-arg">v</span>,
+        <span class="summary-sig-arg">i</span>,
+        <span class="summary-sig-arg">ksize</span>)</span><br />
+      Calculates the correlation vector &lt;v(n)i(n-k)&gt;
+and the autocorrelation vector &lt;i(n)i(n-k)&gt;
+from the recording v and the current i.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.library.AEC-module.html#raw_kernel" class="summary-sig-name">raw_kernel</a>(<span class="summary-sig-arg">vi</span>,
+        <span class="summary-sig-arg">ii</span>)</span><br />
+      Calculates the raw kernel from the autocorrelation of the input current
+II and correlation between current and recorded potential VI
+i.e.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="raw_kernel_general"></a><span class="summary-sig-name">raw_kernel_general</span>(<span class="summary-sig-arg">v</span>,
+        <span class="summary-sig-arg">i</span>,
+        <span class="summary-sig-arg">ksize</span>)</span><br />
+      Calculates the raw kernel by solving directly the least square problem
+for vi = K*ii (convolution).</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.library.AEC-module.html#electrode_kernel" class="summary-sig-name">electrode_kernel</a>(<span class="summary-sig-arg">Karg</span>,
+        <span class="summary-sig-arg">start_tail</span>,
+        <span class="summary-sig-arg">dt</span>=<span class="summary-sig-default">0.1 ms</span>,
+        <span class="summary-sig-arg">online</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">first_guess</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Extracts the electrode kernel Ke from the raw kernel K
+by removing the membrane kernel, estimated from the
+indexes &gt;= start_tail of the raw kernel.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.library.AEC-module.html#kernel_from_step" class="summary-sig-name">kernel_from_step</a>(<span class="summary-sig-arg">V</span>,
+        <span class="summary-sig-arg">I</span>,
+        <span class="summary-sig-arg">dt</span>=<span class="summary-sig-default">0.1 ms</span>)</span><br />
+      Calculates the (full) kernel from the response (V) to a step input
+(I, constant).</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Function Details</span></td>
+</tr>
+</table>
+<a name="offline_AEC"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">offline_AEC</span>(<span class="sig-arg">v</span>,
+        <span class="sig-arg">i</span>,
+        <span class="sig-arg">ke</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Active Electrode Compensation, done offline.
+v = recorded potential
+i = injected current
+ke = electrode kernel
+Returns the compensated potential.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="correlations"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">correlations</span>(<span class="sig-arg">v</span>,
+        <span class="sig-arg">i</span>,
+        <span class="sig-arg">ksize</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Calculates the correlation vector &lt;v(n)i(n-k)&gt;
+and the autocorrelation vector &lt;i(n)i(n-k)&gt;
+from the recording v and the current i.
+ksize is the size of the full kernel (typically 150-200 points)
+Returns (vi,ii) (two vectors).
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="raw_kernel"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">raw_kernel</span>(<span class="sig-arg">vi</span>,
+        <span class="sig-arg">ii</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Calculates the raw kernel from the autocorrelation of the input current
+II and correlation between current and recorded potential VI
+i.e. finds the best linear filter which transforms I into V.
+N.B.: we do not use the Levinson-Durbin algorithm here, which would be
+faster (but needs to be implemented in C)
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="electrode_kernel"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">electrode_kernel</span>(<span class="sig-arg">Karg</span>,
+        <span class="sig-arg">start_tail</span>,
+        <span class="sig-arg">dt</span>=<span class="sig-default">0.1 ms</span>,
+        <span class="sig-arg">online</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">first_guess</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Extracts the electrode kernel Ke from the raw kernel K
+by removing the membrane kernel, estimated from the
+indexes &gt;= start_tail of the raw kernel.
+If online is True, then the first two steps are considered
+as the feedback delay of the system.
+
+Returns Ke,Km (electrode filter, membrane filter)
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="kernel_from_step"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">kernel_from_step</span>(<span class="sig-arg">V</span>,
+        <span class="sig-arg">I</span>,
+        <span class="sig-arg">dt</span>=<span class="sig-default">0.1 ms</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Calculates the (full) kernel from the response (V) to a step input
+(I, constant).
+If the timestep dt is specified, then the output is in resistance/time.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0beta1 on Wed Apr 23 18:23:20 2008
+    </td>
+    <td align="right" class="footer">
+      <a href="http://epydoc.sourceforge.net">http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie()
+  // -->
+</script>
+  
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Network &mdash; Brian v1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+          URL_ROOT:    '',
+          VERSION:     '1.0.0',
+          COLLAPSE_MODINDEX: false,
+          FILE_SUFFIX: ''
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/interface.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="contents" title="Global table of contents" href="contents.html" />
+    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
+    <link rel="up" title="Reference" href="reference.html" />
+    <link rel="next" title="Monitors" href="reference-monitors.html" />
+    <link rel="prev" title="Connections" href="reference-connections.html" />
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="reference-monitors.html" title="Monitors"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference-connections.html" title="Connections"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <div class="section" id="network">
+<h1 id="network">Network<a class="headerlink" href="#network" title="Permalink to this headline">¶</a></h1>
+<p>The <a title="brian.Network" class="reference internal" href="#brian.Network"><tt class="xref docutils literal"><span class="pre">Network</span></tt></a> object stores simulation objects and runs simulations. Usage
+is described in detail below. For simple scripts, you don&#8217;t even need to
+use the <a title="brian.Network" class="reference internal" href="#brian.Network"><tt class="xref docutils literal"><span class="pre">Network</span></tt></a> object itself, just directly use the &#8216;&#8217;magic&#8217;&#8217; functions
+<a title="brian.run" class="reference internal" href="#brian.run"><tt class="xref docutils literal"><span class="pre">run()</span></tt></a> and <a title="brian.reinit" class="reference internal" href="#brian.reinit"><tt class="xref docutils literal"><span class="pre">reinit()</span></tt></a> described below.</p>
+<dl class="class">
+<dt id="brian.Network">
+<!--[brian.Network]-->class <tt class="descclassname">brian.</tt><tt class="descname">Network</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#brian.Network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains simulation objects and runs simulations</p>
+<p><strong>Initialised as:</strong></p>
+<div class="highlight"><pre><span class="n">Network</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+<p>with <tt class="docutils literal"><span class="pre">...</span></tt> any collection of objects that should be added to the <a title="brian.Network" class="reference internal" href="#brian.Network"><tt class="xref docutils literal"><span class="pre">Network</span></tt></a>.
+You can also pass lists of objects, lists of lists of objects, etc. Objects
+that need to passed to the <a title="brian.Network" class="reference internal" href="#brian.Network"><tt class="xref docutils literal"><span class="pre">Network</span></tt></a> object are:</p>
+<ul class="simple">
+<li><a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a> and anything derived from it such as <a title="brian.PoissonGroup" class="reference external" href="reference-standard-groups.html#brian.PoissonGroup"><tt class="xref docutils literal"><span class="pre">PoissonGroup</span></tt></a>.</li>
+<li><a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a> and anything derived from it.</li>
+<li>Any monitor such as <a title="brian.SpikeMonitor" class="reference external" href="reference-monitors.html#brian.SpikeMonitor"><tt class="xref docutils literal"><span class="pre">SpikeMonitor</span></tt></a> or <a title="brian.StateMonitor" class="reference external" href="reference-monitors.html#brian.StateMonitor"><tt class="xref docutils literal"><span class="pre">StateMonitor</span></tt></a>.</li>
+<li>Any network operation defined with the <a title="brian.network_operation" class="reference internal" href="#brian.network_operation"><tt class="xref docutils literal"><span class="pre">network_operation()</span></tt></a> decorator.</li>
+</ul>
+<p>Models, equations, etc. do not need to be passed to the <a title="brian.Network" class="reference internal" href="#brian.Network"><tt class="xref docutils literal"><span class="pre">Network</span></tt></a> object.</p>
+<p>The most important method is the <tt class="docutils literal"><span class="pre">run(duration)</span></tt> method which runs the simulation
+for the given length of time (see below for details about what happens when you
+do this).</p>
+<p><strong>Example usage:</strong></p>
+<div class="highlight"><pre><span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">net</span> <span class="o">=</span> <span class="n">Network</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">C</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mf">1</span><span class="o">*</span><span class="n">second</span><span class="p">)</span>
+</pre></div>
+<p><strong>Methods</strong></p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">add(...)</span></tt></dt>
+<dd>Add additional objects after initialisation, works the same way
+as initialisation.</dd>
+<dt><tt class="docutils literal"><span class="pre">run(duration)</span></tt></dt>
+<dd>Runs the network for the given duration. See below for details about
+what happens when you do this.</dd>
+<dt><tt class="docutils literal"><span class="pre">reinit()</span></tt></dt>
+<dd>Reinitialises the network, runs each object&#8217;s <tt class="docutils literal"><span class="pre">reinit()</span></tt> and each
+clock&#8217;s <tt class="docutils literal"><span class="pre">reinit()</span></tt> method (resetting them to 0).</dd>
+<dt><tt class="docutils literal"><span class="pre">stop()</span></tt></dt>
+<dd>Can be called from a <a title="brian.network_operation" class="reference internal" href="#brian.network_operation"><tt class="xref docutils literal"><span class="pre">network_operation()</span></tt></a> for example to stop the
+network from running.</dd>
+<dt><tt class="docutils literal"><span class="pre">__len__()</span></tt></dt>
+<dd>Returns the number of neurons in the network.</dd>
+<dt><tt class="docutils literal"><span class="pre">__call__(obj)</span></tt></dt>
+<dd><p class="first">Similar to <tt class="docutils literal"><span class="pre">add</span></tt>, but you can only pass one object and that
+object is returned. You would only need this in obscure
+circumstances where objects needed to be added to the network
+but were either not stored elsewhere or were stored in a way
+that made them difficult to extract, for example below the
+NeuronGroup object is only added to the network if certain
+conditions hold:</p>
+<div class="highlight"><pre><span class="n">net</span> <span class="o">=</span> <span class="n">Network</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">some_condition</span><span class="p">:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">net</span><span class="p">(</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+</pre></div>
+</dd>
+</dl>
+<p><strong>What happens when you run</strong></p>
+<p>For an overview, see the Concepts chapter of the main documentation.</p>
+<p>When you run the network, the first thing that happens is that it
+checks if it has been prepared and calls the <tt class="docutils literal"><span class="pre">prepare()</span></tt> method
+if not. This just does various housekeeping tasks and optimisations
+to make the simulation run faster. Also, an update schedule is
+built at this point (see below).</p>
+<p>Now the <tt class="docutils literal"><span class="pre">update()</span></tt> method is repeatedly called until every clock
+has run for the given length of time. After each call of the
+<tt class="docutils literal"><span class="pre">update()</span></tt> method, the clock is advanced by one tick, and if
+multiple clocks are being used, the next clock is determined (this
+is the clock whose value of <tt class="docutils literal"><span class="pre">t</span></tt> is minimal amongst all the clocks).
+For example, if you had two clocks in operation, say <tt class="docutils literal"><span class="pre">clock1</span></tt> with
+<tt class="docutils literal"><span class="pre">dt=3*ms</span></tt> and <tt class="docutils literal"><span class="pre">clock2</span></tt> with <tt class="docutils literal"><span class="pre">dt=5*ms</span></tt> then this will happen:</p>
+<ol class="arabic simple">
+<li><tt class="docutils literal"><span class="pre">update()</span></tt> for <tt class="docutils literal"><span class="pre">clock1</span></tt>, tick <tt class="docutils literal"><span class="pre">clock1</span></tt> to <tt class="docutils literal"><span class="pre">t=3*ms</span></tt>, next
+clock is <tt class="docutils literal"><span class="pre">clock2</span></tt> with <tt class="docutils literal"><span class="pre">t=0*ms</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">update()</span></tt> for <tt class="docutils literal"><span class="pre">clock2</span></tt>, tick <tt class="docutils literal"><span class="pre">clock2</span></tt> to <tt class="docutils literal"><span class="pre">t=5*ms</span></tt>, next
+clock is <tt class="docutils literal"><span class="pre">clock1</span></tt> with <tt class="docutils literal"><span class="pre">t=3*ms</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">update()</span></tt> for <tt class="docutils literal"><span class="pre">clock1</span></tt>, tick <tt class="docutils literal"><span class="pre">clock1</span></tt> to <tt class="docutils literal"><span class="pre">t=6*ms</span></tt>, next
+clock is <tt class="docutils literal"><span class="pre">clock2</span></tt> with <tt class="docutils literal"><span class="pre">t=5*ms</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">update()</span></tt> for <tt class="docutils literal"><span class="pre">clock2</span></tt>, tick <tt class="docutils literal"><span class="pre">clock2</span></tt> to <tt class="docutils literal"><span class="pre">t=10*ms</span></tt>, next
+clock is <tt class="docutils literal"><span class="pre">clock1</span></tt> with <tt class="docutils literal"><span class="pre">t=6*ms</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">update()</span></tt> for <tt class="docutils literal"><span class="pre">clock1</span></tt>, tick <tt class="docutils literal"><span class="pre">clock1</span></tt> to <tt class="docutils literal"><span class="pre">t=9*ms</span></tt>, next
+clock is <tt class="docutils literal"><span class="pre">clock1</span></tt> with <tt class="docutils literal"><span class="pre">t=9*ms</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">update()</span></tt> for <tt class="docutils literal"><span class="pre">clock1</span></tt>, tick <tt class="docutils literal"><span class="pre">clock1</span></tt> to <tt class="docutils literal"><span class="pre">t=12*ms</span></tt>, next
+clock is <tt class="docutils literal"><span class="pre">clock2</span></tt> with <tt class="docutils literal"><span class="pre">t=10*ms</span></tt>. etc.</li>
+</ol>
+<p>The <tt class="docutils literal"><span class="pre">update()</span></tt> method simply runs each operation in the current clock&#8217;s
+update schedule. See below for details on the update schedule.</p>
+<p><strong>Update schedules</strong></p>
+<p>An update schedule is the sequence of operations that are
+called for each <tt class="docutils literal"><span class="pre">update()</span></tt> step. The standard update schedule is:</p>
+<ul class="simple">
+<li>Network operations with <tt class="docutils literal"><span class="pre">when</span> <span class="pre">=</span> <span class="pre">'start'</span></tt></li>
+<li>Network operations with <tt class="docutils literal"><span class="pre">when</span> <span class="pre">=</span> <span class="pre">'before_groups'</span></tt></li>
+<li>Call <tt class="docutils literal"><span class="pre">update()</span></tt> method for each <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>, this typically
+performs an integration time step for the differential equations
+defining the neuron model.</li>
+<li>Network operations with <tt class="docutils literal"><span class="pre">when</span> <span class="pre">=</span> <span class="pre">'after_groups'</span></tt></li>
+<li>Network operations with <tt class="docutils literal"><span class="pre">when</span> <span class="pre">=</span> <span class="pre">'middle'</span></tt></li>
+<li>Network operations with <tt class="docutils literal"><span class="pre">when</span> <span class="pre">=</span> <span class="pre">'before_connections'</span></tt></li>
+<li>Call <tt class="docutils literal"><span class="pre">do_propagate()</span></tt> method for each <a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a>, this
+typically adds a value to the target state variable of each neuron
+that a neuron that has fired is connected to. See Tutorial 2: Connections for
+a more detailed explanation of this.</li>
+<li>Network operations with <tt class="docutils literal"><span class="pre">when</span> <span class="pre">=</span> <span class="pre">'after_connections'</span></tt></li>
+<li>Network operations with <tt class="docutils literal"><span class="pre">when</span> <span class="pre">=</span> <span class="pre">'before_resets'</span></tt></li>
+<li>Call <tt class="docutils literal"><span class="pre">reset()</span></tt> method for each <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>, typically resets a
+given state variable to a given reset value for each neuron that fired
+in this update step.</li>
+<li>Network operations with <tt class="docutils literal"><span class="pre">when</span> <span class="pre">=</span> <span class="pre">'after_resets'</span></tt></li>
+<li>Network operations with <tt class="docutils literal"><span class="pre">when</span> <span class="pre">=</span> <span class="pre">'end'</span></tt></li>
+</ul>
+<p>There is one predefined alternative schedule, which you can choose by calling
+the <tt class="docutils literal"><span class="pre">update_schedule_groups_resets_connections()</span></tt> method before running the
+network for the first time. As the name suggests, the reset operations are
+done before connections (and the appropriately named network operations are
+called relative to this rearrangement). You can also define your own update
+schedule with the <tt class="docutils literal"><span class="pre">set_update_schedule</span></tt> method (see that method&#8217;s API documentation for
+details). This might be useful for example if you have a sequence of network
+operations which need to be run in a given order.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian.network_operation">
+<!--[brian.network_operation]--><tt class="descclassname">brian.</tt><tt class="descname">network_operation</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#brian.network_operation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to make a function into a <a title="brian.NetworkOperation" class="reference internal" href="#brian.NetworkOperation"><tt class="xref docutils literal"><span class="pre">NetworkOperation</span></tt></a></p>
+<p>A <a title="brian.NetworkOperation" class="reference internal" href="#brian.NetworkOperation"><tt class="xref docutils literal"><span class="pre">NetworkOperation</span></tt></a> is a callable class which is called every
+time step by the <a title="brian.Network" class="reference internal" href="#brian.Network"><tt class="xref docutils literal"><span class="pre">Network</span></tt></a> <tt class="docutils literal"><span class="pre">run</span></tt> method. Sometimes it is useful
+to just define a function which is to be run every update step. This
+decorator can be used to turn a function into a <a title="brian.NetworkOperation" class="reference internal" href="#brian.NetworkOperation"><tt class="xref docutils literal"><span class="pre">NetworkOperation</span></tt></a>
+to be added to a <a title="brian.Network" class="reference internal" href="#brian.Network"><tt class="xref docutils literal"><span class="pre">Network</span></tt></a> object.</p>
+<p><strong>Example usages</strong></p>
+<p>Operation doesn&#8217;t need a clock:</p>
+<div class="highlight"><pre><span class="nd">@network_operation</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+    <span class="o">...</span>
+</pre></div>
+<p>Automagically detect clock:</p>
+<div class="highlight"><pre><span class="nd">@network_operation</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">clock</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+<p>Specify a clock:</p>
+<div class="highlight"><pre><span class="nd">@network_operation</span><span class="p">(</span><span class="n">specifiedclock</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">clock</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+<p>Specify when the network operation is run (default is <tt class="docutils literal"><span class="pre">'end'</span></tt>):</p>
+<div class="highlight"><pre><span class="nd">@network_operation</span><span class="p">(</span><span class="n">when</span><span class="o">=</span><span class="s">&#39;start&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+    <span class="o">...</span>
+</pre></div>
+<p>Then add to a network as follows:</p>
+<div class="highlight"><pre><span class="n">net</span> <span class="o">=</span> <span class="n">Network</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</dd></dl>
+
+<dl class="class">
+<dt id="brian.NetworkOperation">
+<!--[brian.NetworkOperation]-->class <tt class="descclassname">brian.</tt><tt class="descname">NetworkOperation</tt><big>(</big><em>function</em>, <em>clock=None</em>, <em>when='end'</em><big>)</big><a class="headerlink" href="#brian.NetworkOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callable class for operations that should be called every update step</p>
+<p>Typically, you should just use the <a title="brian.network_operation" class="reference internal" href="#brian.network_operation"><tt class="xref docutils literal"><span class="pre">network_operation()</span></tt></a> decorator, but if you
+can&#8217;t for whatever reason, use this. Note: current implementation only works for
+functions, not any callable object.</p>
+<p><strong>Initialisation:</strong></p>
+<pre>NetworkOperation(function[,clock])</pre>
+<p>If your function takes an argument, the clock will be passed
+as that argument.</p>
+</dd></dl>
+
+<p>The &#8216;&#8217;magic&#8217;&#8217; functions <a title="brian.run" class="reference internal" href="#brian.run"><tt class="xref docutils literal"><span class="pre">run()</span></tt></a> and <a title="brian.reinit" class="reference internal" href="#brian.reinit"><tt class="xref docutils literal"><span class="pre">reinit()</span></tt></a> work by searching for
+objects which could be added to a network, constructing a network with all
+these objects, and working with that. They are suitable for simple scripts
+only. If you have problems where objects are unexpectedly not being added
+to the network, the  best thing to do would probably be to just use an
+explicit <a title="brian.Network" class="reference internal" href="#brian.Network"><tt class="xref docutils literal"><span class="pre">Network</span></tt></a> object as above rather than trying to tweak your
+program to make the magic functions work. However, details are available
+in the <tt class="docutils literal"><span class="pre">brian/magic.py</span></tt> source code.</p>
+<dl class="function">
+<dt id="brian.run">
+<!--[brian.run]--><tt class="descclassname">brian.</tt><tt class="descname">run</tt><big>(</big><em>duration</em>, <em>threads=1</em><big>)</big><a class="headerlink" href="#brian.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a network created from any suitable objects that can be found</p>
+<p><strong>Usage:</strong></p>
+<div class="highlight"><pre><span class="n">run</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span>
+</pre></div>
+<p>where <tt class="docutils literal"><span class="pre">duration</span></tt> is the length of time to run the network for.</p>
+<p>Works by constructing a <a title="brian.MagicNetwork" class="reference internal" href="#brian.MagicNetwork"><tt class="xref docutils literal"><span class="pre">MagicNetwork</span></tt></a> object from all the suitable
+objects that could be found (<a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>, <a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a>, etc.) and
+then running that network. Not suitable for repeated runs or situations
+in which you need precise control.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian.reinit">
+<!--[brian.reinit]--><tt class="descclassname">brian.</tt><tt class="descname">reinit</tt><big>(</big><big>)</big><a class="headerlink" href="#brian.reinit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reinitialises any suitable objects that can be found</p>
+<p><strong>Usage:</strong></p>
+<div class="highlight"><pre><span class="n">reinit</span><span class="p">()</span>
+</pre></div>
+<p>Works by constructing a <a title="brian.MagicNetwork" class="reference internal" href="#brian.MagicNetwork"><tt class="xref docutils literal"><span class="pre">MagicNetwork</span></tt></a> object from all the suitable
+objects that could be found (<a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>, <a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a>, etc.) and
+then calling <tt class="docutils literal"><span class="pre">reinit()</span></tt> for each of them. Not suitable for repeated
+runs or situations in which you need precise control.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian.stop">
+<!--[brian.stop]--><tt class="descclassname">brian.</tt><tt class="descname">stop</tt><big>(</big><big>)</big><a class="headerlink" href="#brian.stop" title="Permalink to this definition">¶</a></dt>
+<dd>Globally stops any running network, this is reset the next time a network is run</dd></dl>
+
+<dl class="class">
+<dt id="brian.MagicNetwork">
+<!--[brian.MagicNetwork]-->class <tt class="descclassname">brian.</tt><tt class="descname">MagicNetwork</tt><big>(</big><em>verbose=False</em>, <em>level=1</em><big>)</big><a class="headerlink" href="#brian.MagicNetwork" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <a title="brian.Network" class="reference internal" href="#brian.Network"><tt class="xref docutils literal"><span class="pre">Network</span></tt></a> object from any suitable objects</p>
+<p><strong>Initialised as:</strong></p>
+<div class="highlight"><pre><span class="n">MagicNetwork</span><span class="p">()</span>
+</pre></div>
+<p>The object returned can then be used just as a regular
+<a title="brian.Network" class="reference internal" href="#brian.Network"><tt class="xref docutils literal"><span class="pre">Network</span></tt></a> object. It works by finding any object in
+the &#8216;&#8217;execution frame&#8217;&#8217; (i.e. in the same function, script
+or section of module code where the <a title="brian.MagicNetwork" class="reference internal" href="#brian.MagicNetwork"><tt class="xref docutils literal"><span class="pre">MagicNetwork</span></tt></a> was
+created) derived from <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>, <a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a> or
+<a title="brian.NetworkOperation" class="reference internal" href="#brian.NetworkOperation"><tt class="xref docutils literal"><span class="pre">NetworkOperation</span></tt></a>.</p>
+<p><strong>Sample usage:</strong></p>
+<div class="highlight"><pre><span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="nd">@network_operation</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+    <span class="o">...</span>
+<span class="n">net</span> <span class="o">=</span> <span class="n">MagicNetwork</span><span class="p">()</span>
+</pre></div>
+<p>Each of the objects <tt class="docutils literal"><span class="pre">G</span></tt>, <tt class="docutils literal"><span class="pre">C</span></tt> and <tt class="docutils literal"><span class="pre">f</span></tt> are added to <tt class="docutils literal"><span class="pre">net</span></tt>.</p>
+<p><strong>Advanced usage:</strong></p>
+<pre>MagicNetwork([verbose=False[,level=1]])</pre>
+<p>with arguments:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">verbose</span></tt></dt>
+<dd>Set to <tt class="xref docutils literal"><span class="pre">True</span></tt> to print out a list of objects that were
+added to the network, for debugging purposes.</dd>
+<dt><tt class="docutils literal"><span class="pre">level</span></tt></dt>
+<dd>Where to find objects. <tt class="docutils literal"><span class="pre">level=1</span></tt> means look for objects
+where the <a title="brian.MagicNetwork" class="reference internal" href="#brian.MagicNetwork"><tt class="xref docutils literal"><span class="pre">MagicNetwork</span></tt></a> object was created. The <tt class="docutils literal"><span class="pre">level</span></tt>
+argument says how many steps back in the stack to look.</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="reference-connections.html" title="previous chapter">Connections</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="reference-monitors.html" title="next chapter">Monitors</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/reference-network.txt">Show Source</a></li>
+            </ul>
+            <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="reference-monitors.html" title="Monitors"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference-connections.html" title="Connections"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2008, Romain Brette, Dan Goodman.
+      Last updated on Sep 23, 2008.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+    </div>
+  </body>
+</html>

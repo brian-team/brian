@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>brian.globalprefs</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="brian-module.html">Package&nbsp;brian</a> ::
+        Module&nbsp;globalprefs
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module globalprefs</h1><br /><br />
+<p>The following global preferences have been defined:</p>
+<dl class="rst-docutils">
+<dt><tt class="rst-docutils literal"><span class="pre">defaultclock</span> <span class="pre">=</span> <span class="pre">Clock(dt=0.1*msecond)</span></tt></dt>
+<dd>The default clock to use if none is provided or defined
+in any enclosing scope.</dd>
+<dt><tt class="rst-docutils literal"><span class="pre">useweave_linear_diffeq</span> <span class="pre">=</span> <span class="pre">False</span></tt></dt>
+<dd>Whether to use weave C++ acceleration for the solution
+of linear differential equations. Note that on some
+platforms, typically older ones, this is faster and on
+some platforms, typically new ones, this is actually
+slower.</dd>
+<dt><tt class="rst-docutils literal"><span class="pre">useweave</span> <span class="pre">=</span> <span class="pre">False</span></tt></dt>
+<dd>Defines whether or not functions should use inlined compiled
+C code where defined. Requires a compatible C++ compiler.
+The <tt class="rst-docutils literal"><span class="pre">gcc</span></tt> and <tt class="rst-docutils literal"><span class="pre">g++</span></tt> compilers are probably the easiest
+option (use Cygwin on Windows machines). See also the
+<tt class="rst-docutils literal"><span class="pre">weavecompiler</span></tt> global preference.</dd>
+<dt><tt class="rst-docutils literal"><span class="pre">weavecompiler</span> <span class="pre">=</span> <span class="pre">gcc</span></tt></dt>
+<dd>Defines the compiler to use for weave compilation. On Windows machines, installing
+Cygwin is the easiest way to get access to the gcc compiler.</dd>
+<dt><tt class="rst-docutils literal"><span class="pre">magic_useframes</span> <span class="pre">=</span> <span class="pre">True</span></tt></dt>
+<dd>Defines whether or not the magic functions should search
+for objects defined only in the calling frame or if they
+should find all objects defined in any frame. This should
+be set to <tt class="rst-docutils literal"><span class="pre">False</span></tt> if you are using Brian from an interactive
+shell like IDLE or IPython where each command has its own
+frame, otherwise set it to <tt class="rst-docutils literal"><span class="pre">True</span></tt>.</dd>
+</dl><br /><br />
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Functions</span></td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.globalprefs-module.html#set_global_preferences" class="summary-sig-name">set_global_preferences</a>(<span class="summary-sig-arg">**kwds</span>)</span><br />
+      Set global preferences for Brian</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_global_preference"></a><span class="summary-sig-name">get_global_preference</span>(<span class="summary-sig-arg">k</span>)</span><br />
+      Get the value of the named global preference</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="exists_global_preference"></a><span class="summary-sig-name">exists_global_preference</span>(<span class="summary-sig-arg">k</span>)</span><br />
+      Determine if named global preference exists</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.globalprefs-module.html#define_global_preference" class="summary-sig-name">define_global_preference</a>(<span class="summary-sig-arg">k</span>,
+        <span class="summary-sig-arg">defaultvaluedesc</span>,
+        <span class="summary-sig-arg">desc</span>)</span><br />
+      Define documentation for a new global preference</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Function Details</span></td>
+</tr>
+</table>
+<a name="set_global_preferences"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">set_global_preferences</span>(<span class="sig-arg">**kwds</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <p>Set global preferences for Brian</p>
+<p>Usage:</p>
+<pre class="rst-literal-block">
+``set_global_preferences(...)``
+</pre>
+<p>where ... is a list of keyword assignments.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="define_global_preference"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">define_global_preference</span>(<span class="sig-arg">k</span>,
+        <span class="sig-arg">defaultvaluedesc</span>,
+        <span class="sig-arg">desc</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <p>Define documentation for a new global preference</p>
+<p>Arguments:</p>
+<dl class="rst-docutils">
+<dt><tt class="rst-docutils literal"><span class="pre">k</span></tt></dt>
+<dd>The name of the preference (a string)</dd>
+<dt><tt class="rst-docutils literal"><span class="pre">defaultvaluedesc</span></tt></dt>
+<dd>A string description of the default value</dd>
+<dt><tt class="rst-docutils literal"><span class="pre">desc</span></tt></dt>
+<dd>A multiline description of the preference in
+docstring format</dd>
+</dl>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0beta1 on Tue Sep 23 13:37:59 2008
+    </td>
+    <td align="right" class="footer">
+      <a href="http://epydoc.sourceforge.net">http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie()
+  // -->
+</script>
+  
+</body>
+</html>

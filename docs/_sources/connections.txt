@@ -1,0 +1,129 @@
+.. currentmodule:: brian
+
+Connections
+===========
+
+Building connections
+--------------------
+First, one must define which neuron groups are connected and which state variable receives the spikes.
+The following instruction::
+
+  myconnection=Connection(group1,group2,'ge')
+
+defines a connection from group ``group1`` to ``group2``, acting on variable ``ge``. When
+neurons from group ``group1`` spike, the variable ``ge`` of the target neurons in group
+``group2`` are incremented. When the connection object is initialised, the list of connections
+is empty. It can be created in several ways. First, explicitly::
+
+  myconnection[2,5]=3*nS
+
+This instruction connects neuron 2 from ``group1`` to neuron 5 from ``group2`` with synaptic weight
+3 nS. Units should match the units of the variable defined at initialisation time (``ge``).
+
+The matrix of synaptic weights can be defined directly with the method :meth:`Connection.connect`::
+
+  W=rand(len(group1),len(group2))*nS
+  myconnection.connect(group1,group2,W)
+
+Here a matrix with random elements is used to define the synaptic weights from ``group1``
+to ``group2``. It is possible to build the matrix by block by using subgroups, e.g.::
+
+  W=rand(20,30)*nS
+  myconnection.connect(group1[0:20],group2[10:40],W)
+
+There are several handy functions available to set the synaptic weights:
+:meth:`~Connection.connect_full`, :meth:`~Connection.connect_random` and
+:meth:`~Connection.connect_one_to_one`. The first one
+is used to set uniform weights for all pairs of neurons in the (sub)groups::
+
+  myconnection.connect_full(group1[0:20],group2[10:40],weight=5*nS)
+
+The second one is used to set uniform weights for random pairs of neurons in the (sub)groups::
+
+  myconnection.connect_random(group1[0:20],group2[10:40],0.02,weight=5*nS)
+
+Here the third argument (0.02) is the probability that a synaptic connection exists between two neurons.
+The number of presynaptic neurons can be made constant by setting the keyword ``fixed=True`` 
+(probability * number of neurons in ``group1``).
+Finally, the method :meth:`~Connection.connect_one_to_one` connects neuron i from the first
+group to neuron i from the second group::
+
+  myconnection.connect_one_to_one(group1,group2,weight=3*nS)
+  
+Both groups must have the same number of neurons.
+
+Building connections with connectivity functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+There is a simple and efficient way to build heterogeneous connections, by passing functions
+instead of constants to the methods :meth:`~Connection.connect_full` and :meth:`~Connection.connect_random`.
+The function must return the synaptic weight for a given pair of neuron (i,j).
+For example::
+
+  myconnection.connect_full(group1,group2,weight=lambda i,j:(1+cos(i-j))*2*nS)
+
+where i (j) indexes neurons in ``group1`` (``group2``). This is the same as doing by hand::
+
+  for i in range(len(group1)):
+    for j in range(len(group2)):
+      myconnection[i,j]=(1+cos(i-j))*2*nS
+
+but it is much faster because the construction is vectorised, i.e., the function is called for every i
+with j being the entire row of target indexes. Thus, the implementation is closer to::
+
+  for i in range(len(group1)):
+      myconnection[i,j]=(1+cos(i-arange(len(group2)))*2*nS
+      
+The method :meth:`~Connection.connect_random` also accepts functional arguments for the
+weights (not the connection probability yet). For that method, it is possible to pass a function
+with no argument, as in the following example::
+
+  myconnection.connect_random(group1,group2,0.1,weight=lambda:rand()*nS)
+
+Here each synaptic weight is random (between 0 and 1 nS).
+
+Delays
+------
+Transmission delays can be introduced with the keyword ``delay``, passed at initialisation time::
+
+  myconnection=Connection(group1,group2,'ge',delay=3*ms)
+
+Note that all synaptic connections have the same delay. To define connections with different delays,
+several Connection objects must be introduced, e.g.::
+
+  myconnection_fast=Connection(group1,group2,'ge',delay=1*ms)
+  myconnection_slow=Connection(group1,group2,'ge',delay=5*ms)
+
+Connection structure
+--------------------
+The underlying data structure used to store the synaptic connections is by default a sparse
+matrix. If the connections are dense, it is more efficient to use a dense matrix, which can be
+set at initialisation time::
+
+  myconnection=Connection(group1,group2,'ge',structure='dense')
+
+Currently, long-term plasticity (STDP) can only be implemented with dense matrices.
+The ``structure`` keyword can take the following values: sparse (default), dense and
+computed. The last one correspond to synaptic connections which are calculated on the fly,
+but this feature is not implemented yet.
+
+Modulation
+----------
+The synaptic weights can be modulated by a state variable of the presynaptic neurons with
+the keyword ``modulation``::
+
+  myconnection=Connection(group1,group2,'ge',modulation='u')
+
+When a spike is produced by a presynaptic neuron (``group1``), the variable ge of each postsynaptic
+neuron (``group2``) is incremented by the synaptic weight multiplied by the value of the variable u
+of the presynaptic neuron. This is useful to implement short-term plasticity.
+
+Direct connection
+-----------------
+In some cases, it is useful to connect a group directly to another one, in a one-to-one fashion.
+The most efficient way to implement it is with the class :class:`IdentityConnection`::
+
+  myconnection=IdentityConnection(group1,group2,'ge',weight=1*nS)
+  
+With this structure, the synaptic weights are homogeneous (it is not possible to define them
+independently). When neuron i from ``group1`` spikes, the variable ge of neuron i from ``group2``
+is increased by 1 nS. A typical application is when defining inputs to a network.

@@ -1,0 +1,399 @@
+WARNING: Turning off units.
+         18399068 function calls (18398770 primitive calls) in 358.309 CPU seconds
+
+t=40s, dt = 0.1ms, so update steps = 400000
+
+NOTE: it's not clear to me that all of NumPy's functions are being properly
+profiled by cProfile. For instance, I suspect that array addition, etc. are
+not being profiled.
+
+NOTE: some of these timings have been changed over multiple runs so it might
+not be entirely consistent, but it should be mostly so.
+
+SUMMARY:
+
+22.6%	BLAS dot routine				No optimisation possible			None possible.
+15.7%	NeuronGroup.getSpikes			4-5% likely							1.7% achieved, rewrite circular in C++ for more
+14.7%	Threshold.__call__				3-6% likely							10-15% achieved (3x)
+12.0%	LinearModel.__call__, even		Optimisable, not clear how much.	Small improvement (2-5%?)
+		without the BLAS dot
+ 7.1%   Connection.propagate			Not analysed yet
+ 5.7%	NeuronGroup.reset				Not analysed yet
+ 3.9%   SpikeContainer.push				Not analysed yet
+ 3.7%   Network.update					Not analysed yet
+ 
+= 85% accounted for															approx 19% improvement
+ 
+Note: the circular module appears to add up to a lot, and seems like a
+good candidate for turning into a C++ module.
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+
+The worst:
+   
+   400006   78.774    0.000   78.774    0.000 {numpy.core._dotblas.dot}
+   400000   42.764    0.000  121.538    0.000 model.py:256(__call__)
+   		Code:
+			        if not self.B==None:
+			            P.S[:]=dot(self.A,P.S-self.B)+self.B
+			        else:
+			            P.S[:]=dot(self.A,P.S)   		
+   		Comment: The dot routine presumably cannot be optimised, and this
+   		amounts to approximately 22.6% of the running time. The call function
+   		is taking 42s which seems on the long side given what it's doing.
+   		Perhaps the profiler is counting operations like - and + which are
+   		done by NumPy in too? One way to reduce the calling time is to
+   		remove the if else check. This can be done by dynamically redefining
+   		the __call__ method depending on whether or not there is a B variable.
+   		Also, the expression could be revaluated to:
+   			dot(self.A,P.S)+(self.B-dot(self.A,self.B))
+   		where the latter expression can be precalculated. I haven't profiled
+   		this to see how much difference it would make though.
+   		NOTE: __call__ cannot be dynamically redefined because special methods
+   		are looked up in the class definition not the instance.
+   		---- Prospects: unclear, although some of the 42s (12% of the total
+   			 running time) could be reduced. ------------------------------
+   		**** Progress: rewrote expression as above, saved maybe 2-5% ******
+
+
+   400000   12.112    0.000   51.883    0.000 threshold.py:27(__call__)
+   400000   39.529    0.000   39.529    0.000 {method 'nonzero' of 'numpy.ndarray' objects}
+   		The code: threshold call: return ((P.S[0]>self.Vt).nonzero())[0]
+   		Comment: there are various candidates for optimisation here.
+   		There are two candidate algorithms for the nonzero() operation,
+   		the first is to search through the array and construct a linked
+   		list of indices. The alternative is to search through the array
+   		twice, the first time just counting how many are nonzero, then
+   		allocating a fixed length array, and then searching again filling
+   		out the array. It turns out that the first method is faster if
+   		the number of nonzero items is small, and the second method is
+   		(much) faster if the number is large. The second algorithm is
+   		the one that the NumPy nonzero() method uses. Both algorithms increase
+   		linearly in running time as the number of nonzero items
+   		increases. My C++ implementation of both algorithms suggests
+   		that if the number of nonzero items is less than about 15-20
+   		then the first algorithm is about twice as fast, otherwise the
+   		second algorithm is faster. For the CUBA network with dt=0.1ms
+   		there are roughly 2 spikes per time step, so the first
+   		algorithm would be roughly twice as fast. For an equivalent
+   		network size and average firing rate, the linked list algorithm
+   		takes roughly 11s to complete, instead of the 40s of the numpy
+   		algorithm (although this doesn't include overheads). We should
+   		expect that NumPy's core nonzero() algorithm is taking at least
+   		22s to complete, giving about 18s of overheads of one sort or
+   		another. We might be able to avoid some of these overheads
+   		because we can make explicit assumptions about the type of array,
+   		etc. but it's unlikely we can make much difference here. This
+   		suggests that custom coding just this in C++ would save about
+   		11s, taking the total from 51s to 40s. On the other hand, custom
+   		coding the entire threshold call mechanism would (assuming the
+   		same 18s overhead of the NumPy routine) reduce it from 51s to 29s.
+   		Ideally, we wouldn't want to be relying on writing C++ code for
+   		things which can be extended like the Threshold mechanism, but
+   		since a fixed threshold is a fairly common type, perhaps it's
+   		justified?
+   		See threshold-call.py, threshold-call.cpp and
+   		threshold-call-c-times-for-different-rates.txt for more.
+   		NOTE: the time spent in threshold call function itself seems to
+   		be very variable, from 10s to 40s, from run to run.
+   		----- Prospects: 51s ---> 40s or 29s = 3-6% of total time ------
+   		***** Progress: wrote inline accelerated version with weave for
+   			  a substantial speed increase (3x, or about 10-15% of
+   			  the total running time)
+
+   		
+   800000   25.145    0.000   25.145    0.000 connection.py:39(propagate)
+   		Comment: not analysed yet
+
+
+   800000   17.227    0.000   54.762    0.000 neurongroup.py:178(getSpikes)
+  1600000    6.420    0.000    6.420    0.000 {_bisect.bisect_left}
+   800000   14.782    0.000   24.617    0.000 circular.py:128(__getitem__)
+   800015    2.434    0.000    2.434    0.000 neurongroup.py:204(__len__)
+  1212411    4.927    0.000    7.361    0.000 {len}
+  (of which 800000 due to getSpikes, or 4.9s cumulative)
+  		Code for neuron group getSpikes:
+			        if self._owner==self:
+			            # Group
+			            return self.LS[delay] # last spikes
+			        else:
+			            # Subgroup
+			            spikes=self.LS[delay]-self._origin
+			            return spikes[bisect.bisect_left(spikes,0):\
+			                          bisect.bisect_left(spikes,len(self))]
+		Comments: getSpikes called twice at each update, once for the
+		excitatory, and once for the inhibitory. Each time, it runs the
+		second version of the if statement above, involving calling
+		bisect_left twice, len and neurongroup.len once. Replacing the
+		len(self) with neurongroup.N (and making sure that neurongroup
+		has such an N) would shave off up to 4.9s or 1.4% of the total.
+		Avoiding the bisect method by restructing the program so that it
+		wasn't necessary would save up to 6.4s or 1.8% of the total,
+		although probably not all of that. Romain has a note that the
+		SpikeContainer __getitem__ method can be optimised, which could
+		be well worth doing as it is taking 24.6s or 7% of the time.
+		The if else is the main Python section could be avoided by having
+		the getSpikes method assume it isn't a subgroup, and having the
+		subgroup creation mechanism overwrite the getSpikes method with
+		another method that assumes it isn't the owner. Equivalently,
+		if subgroups were a different class to groups you wouldn't need
+		this inner loop if else check (which is apparently slow in Python
+		although I haven't profiled it). The potential saving here is
+		unclear, but it's unlikely to be huge.
+		---- Prospects: 54s, of which 11.3s can definitely be saved (3.2%)
+		     24.6s (7%) can likely be reduced (Romain?), but not sure by how much
+		     17s (4.8%) can possibly be reduced, although probably not much
+		     Let's say a 4-5% reduction seems possible here. ------------
+		**** Progress: 54s down to 48s by removing the len and rewriting
+		     the getSpikes method to use new methods added to SpikeContainer
+		     and CircularVector, the latter with inline weave. The total improvement
+		     is about 1.7%. It's probably better to wait and rewrite the whole of
+		     the circular library in C++. *******************************
+
+
+   400000    2.281    0.000   19.995    0.000 neurongroup.py:191(reset)
+   400000    8.821    0.000   17.714    0.000 reset.py:18(__call__)
+
+
+   400000   12.836    0.000  347.666    0.001 network.py:125(update)
+
+
+   400000    5.484    0.000  232.821    0.001 neurongroup.py:170(update)
+   400000    7.001    0.000   13.515    0.000 circular.py:95(push)
+   		Code:
+		        self._model(self) # update the variables
+		        spikes=self._threshold(self) # get spikes
+		        self.LS.push(spikes) # Store spikes
+		Comments: calling the model takes 121s, the threshold takes 52s.
+		Is the SpikeContainer push method optimisable? It's currently taking
+		13.5s or about 3.9%.
+		---- Prospects: no more than 3.9%, and that's unlikely ---------------
+
+Middle:  
+ 
+  2000000    6.445    0.000    6.445    0.000 circular.py:34(__getitem__)
+   400000    5.234    0.000    8.893    0.000 circular.py:122(lastspikes)
+  1212411    4.927    0.000    7.361    0.000 {len}
+  1200000    4.747    0.000    4.750    0.000 circular.py:46(__getslice__)
+
+The rest:
+   
+        1    0.007    0.007  358.309  358.309 <string>:1(<module>)
+        1    0.000    0.000  358.302  358.302 CUBA.py:14(main)
+   800000    2.281    0.000    2.281    0.000 circular.py:28(advance)
+  1081359    2.299    0.000    2.299    0.000 circular.py:31(__len__)
+   400000    1.307    0.000    1.307    0.000 circular.py:40(__setitem__)
+   400000    2.085    0.000    2.085    0.000 circular.py:55(__setslice__)
+   400000    1.407    0.000    1.407    0.000 clock.py:119(tick)
+   400002    1.104    0.000    1.104    0.000 clock.py:143(stillRunning)
+        2    0.051    0.025    3.048    1.524 connection.py:256(randomMatrix)
+    62206    0.265    0.000    0.390    0.000 inspect.py:35(ismodule)
+  820/522    0.021    0.000    0.742    0.001 inspect.py:381(getsourcefile)
+        1    3.624    3.624  354.001  354.001 network.py:217(run)
+        1    0.000    0.000  354.529  354.529 network.py:450(run)
+     4000    1.676    0.000    2.964    0.001 random.py:264(sample)
+   867851    2.244    0.000    2.244    0.000 {isinstance}
+   319824    0.618    0.000    0.618    0.000 {method 'add' of 'set' objects}
+    35059    0.069    0.000    0.069    0.000 {method 'get' of 'dict' objects}
+   323104    0.629    0.000    0.629    0.000 {method 'random' of '_random.Random' objects}
+
+Note: there are more functions, but I've deleted all the ones that are more
+neglible than the ones above. Complete output from a separate run given below.
+
+
+
+-- A separate run ----------------------------------------------------------------------
+
+         18384482 function calls (18384184 primitive calls) in 343.819 CPU seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.008    0.008  343.819  343.819 <string>:1(<module>)
+        1    0.000    0.000  343.811  343.811 CUBA.py:14(main)
+        7    0.001    0.000    0.001    0.000 CUBA.py:20(<lambda>)
+        7    0.000    0.000    0.000    0.000 CUBA.py:21(<lambda>)
+        7    0.000    0.000    0.000    0.000 CUBA.py:22(<lambda>)
+        1    0.000    0.000    0.000    0.000 basic.py:314(norm)
+        1    0.176    0.176    0.176    0.176 basic.py:401(lstsq)
+        1    0.046    0.046    0.046    0.046 basic.py:82(solve)
+   400000    5.085    0.000    8.751    0.000 circular.py:122(lastspikes)
+   800000   14.290    0.000   23.814    0.000 circular.py:128(__getitem__)
+        2    0.000    0.000    0.000    0.000 circular.py:15(__init__)
+   800000    2.265    0.000    2.265    0.000 circular.py:28(advance)
+  1067427    2.241    0.000    2.241    0.000 circular.py:31(__len__)
+  2000000    6.268    0.000    6.268    0.000 circular.py:34(__getitem__)
+   400000    1.216    0.000    1.216    0.000 circular.py:40(__setitem__)
+  1200000    4.677    0.000    4.681    0.000 circular.py:46(__getslice__)
+   400000    2.050    0.000    2.050    0.000 circular.py:55(__setslice__)
+        1    0.000    0.000    0.000    0.000 circular.py:83(__init__)
+   400000    6.887    0.000   13.245    0.000 circular.py:95(push)
+        1    0.000    0.000    0.000    0.000 clock.py:103(<lambda>)
+        6    0.000    0.000    0.000    0.000 clock.py:104(<lambda>)
+   400000    1.365    0.000    1.365    0.000 clock.py:119(tick)
+        1    0.000    0.000    0.000    0.000 clock.py:137(setDuration)
+   400002    1.150    0.000    1.150    0.000 clock.py:143(stillRunning)
+        1    0.000    0.000    0.296    0.296 clock.py:148(guessClock)
+        2    0.000    0.000    0.008    0.004 connection.py:19(__init__)
+        2    0.055    0.027    3.063    1.532 connection.py:256(randomMatrix)
+   800000   24.118    0.000   24.118    0.000 connection.py:39(propagate)
+        2    0.000    0.000    0.000    0.000 connection.py:55(origin)
+        2    0.090    0.045    0.198    0.099 connection.py:62(compress)
+        2    0.104    0.052    0.123    0.061 connection.py:74(connect)
+        2    0.013    0.007    3.200    1.600 connection.py:98(connectRandom)
+        2    0.000    0.000    0.103    0.052 copy.py:299(_reconstruct)
+        2    0.000    0.000    0.104    0.052 copy.py:65(copy)
+        2    0.000    0.000    0.103    0.052 copy_reg.py:91(__newobj__)
+        1    0.000    0.000    0.000    0.000 copy_reg.py:94(_slotnames)
+        1    0.000    0.000    0.000    0.000 fromnumeric.py:1025(amax)
+        2    0.000    0.000    0.000    0.000 fromnumeric.py:32(_wrapit)
+        1    0.000    0.000    0.000    0.000 fromnumeric.py:812(sum)
+        1    0.000    0.000    0.000    0.000 fromnumeric.py:954(any)
+        1    0.000    0.000    0.000    0.000 fromnumeric.py:969(all)
+        5    0.000    0.000    0.000    0.000 function_base.py:392(asarray_chkfinite)
+        1    0.000    0.000    0.000    0.000 globalprefs.py:29(getGlobalPreference)
+        1    0.000    0.000    0.000    0.000 globalprefs.py:34(existsGlobalPreference)
+      810    0.003    0.000    0.005    0.000 inspect.py:126(isfunction)
+     1071    0.004    0.000    0.007    0.000 inspect.py:139(istraceback)
+     1071    0.004    0.000    0.007    0.000 inspect.py:149(isframe)
+      810    0.003    0.000    0.005    0.000 inspect.py:167(iscode)
+      907    0.014    0.000    0.047    0.000 inspect.py:342(getfile)
+    62206    0.263    0.000    0.388    0.000 inspect.py:35(ismodule)
+  820/522    0.025    0.000    0.787    0.002 inspect.py:381(getsourcefile)
+      613    0.007    0.000    0.134    0.000 inspect.py:396(getabsfile)
+      315    0.315    0.001    1.017    0.003 inspect.py:408(getmodule)
+      810    0.005    0.000    0.009    0.000 inspect.py:43(isclass)
+      261    0.009    0.000    0.691    0.003 inspect.py:454(findsource)
+      810    0.003    0.000    0.005    0.000 inspect.py:51(ismethod)
+      261    0.006    0.000    1.170    0.004 inspect.py:806(getframeinfo)
+       27    0.002    0.000    1.172    0.043 inspect.py:844(getouterframes)
+        3    0.000    0.000    0.000    0.000 inspection.py:118(__div__)
+        3    0.000    0.000    0.000    0.000 inspection.py:164(isaffine)
+        3    0.000    0.000    0.000    0.000 inspection.py:182(dependson)
+        1    0.000    0.000    0.000    0.000 inspection.py:42(checkModelUnits)
+        1    0.000    0.000    0.000    0.000 inspection.py:55(getvarnames)
+       11    0.000    0.000    0.000    0.000 inspection.py:72(__init__)
+        2    0.000    0.000    0.000    0.000 inspection.py:79(__add__)
+        2    0.000    0.000    0.000    0.000 inspection.py:91(__neg__)
+        1    0.000    0.000    0.000    0.000 inspection.py:94(__sub__)
+        4    0.000    0.000    0.000    0.000 lapack.py:26(cast_to_lapack_prefix)
+        2    0.000    0.000    0.000    0.000 lapack.py:48(find_best_lapack_type)
+        2    0.000    0.000    0.000    0.000 lapack.py:63(get_lapack_funcs)
+      261    0.001    0.000    0.031    0.000 linecache.py:33(getlines)
+       32    0.000    0.000    0.030    0.001 linecache.py:68(updatecache)
+       15    0.000    0.000    0.000    0.000 magic.py:149(__init__)
+       15    0.000    0.000    0.000    0.000 magic.py:152(setID)
+       10    0.000    0.000    0.000    0.000 magic.py:154(getID)
+       15    0.000    0.000    0.000    0.000 magic.py:161(add)
+        4    0.000    0.000    0.000    0.000 magic.py:170(get)
+        5    0.000    0.000    0.000    0.000 magic.py:181(add)
+       18    0.000    0.000    0.000    0.000 magic.py:190(get)
+        5    0.000    0.000    0.000    0.000 magic.py:202(_trackInstances)
+        5    0.000    0.000    0.358    0.072 magic.py:208(__new__)
+       18    0.000    0.000    0.668    0.037 magic.py:215(getInstances)
+        4    0.000    0.000    0.815    0.204 magic.py:228(findInstances)
+        1    0.000    0.000    0.059    0.059 matfuncs.py:22(expm)
+        1    0.000    0.000    0.259    0.259 model.py:21(magicModel)
+        1    0.022    0.022    0.258    0.258 model.py:223(__init__)
+   400000   42.302    0.000  119.909    0.000 model.py:256(__call__)
+        2    0.000    0.000    0.000    0.000 model.py:270(__len__)
+   400000   12.699    0.000  332.921    0.001 network.py:125(update)
+        1    3.535    3.535  339.170  339.170 network.py:217(run)
+        1    0.000    0.000    0.000    0.000 network.py:25(__init__)
+        3    0.000    0.000    0.000    0.000 network.py:257(sameClocks)
+        1    0.000    0.000    0.000    0.000 network.py:265(setClock)
+        1    0.000    0.000    0.520    0.520 network.py:435(__init__)
+        1    0.000    0.000  339.690  339.690 network.py:450(run)
+        1    0.000    0.000    0.198    0.198 network.py:89(prepare)
+   400000    5.351    0.000  220.858    0.001 neurongroup.py:170(update)
+   800000   17.095    0.000   53.535    0.000 neurongroup.py:178(getSpikes)
+   400000    2.270    0.000   19.620    0.000 neurongroup.py:191(reset)
+        2    0.000    0.000    0.104    0.052 neurongroup.py:197(subgroup)
+   800015    2.464    0.000    2.464    0.000 neurongroup.py:204(__len__)
+        1    0.000    0.000    0.000    0.000 neurongroup.py:226(__setitem__)
+        2    0.000    0.000    0.104    0.052 neurongroup.py:237(__getslice__)
+        1    0.000    0.000    0.555    0.555 neurongroup.py:34(__init__)
+      911    0.003    0.000    0.003    0.000 ntpath.py:116(splitdrive)
+      787    0.005    0.000    0.045    0.000 ntpath.py:252(exists)
+      613    0.004    0.000    0.009    0.000 ntpath.py:38(normcase)
+      911    0.044    0.000    0.076    0.000 ntpath.py:439(normpath)
+      911    0.008    0.000    0.098    0.000 ntpath.py:495(abspath)
+        9    0.000    0.000    0.000    0.000 numeric.py:126(asarray)
+        1    0.000    0.000    0.000    0.000 numeric.py:134(asanyarray)
+        2    0.000    0.000    0.000    0.000 numeric.py:181(isfortran)
+        1    0.000    0.000    0.000    0.000 numeric.py:516(isscalar)
+     4000    1.728    0.000    2.974    0.001 random.py:264(sample)
+      234    0.001    0.000    0.003    0.000 re.py:178(compile)
+      234    0.001    0.000    0.002    0.000 re.py:219(_compile)
+        1    0.000    0.000    0.000    0.000 reset.py:15(__init__)
+   400000    8.600    0.000   17.350    0.000 reset.py:18(__call__)
+        4    0.000    0.000    0.000    0.000 sparse.py:102(set_shape)
+        4    0.014    0.003    0.014    0.004 sparse.py:2189(__init__)
+        8    0.000    0.000    0.000    0.000 sparse.py:2616(isintlike)
+        4    0.000    0.000    0.000    0.000 sparse.py:2628(isshape)
+        4    0.000    0.000    0.000    0.000 sparse.py:2641(getdtype)
+        4    0.000    0.000    0.000    0.000 sparse.py:93(__init__)
+     2427    0.011    0.000    0.016    0.000 string.py:218(lower)
+        1    0.000    0.000    0.000    0.000 threshold.py:24(__init__)
+   400000   43.112    0.000   82.354    0.000 threshold.py:27(__call__)
+        2    0.000    0.000    0.001    0.000 twodim_base.py:43(eye)
+        1    0.000    0.000    0.000    0.000 ufunclike.py:49(log2)
+        2    0.000    0.000    0.000    0.000 units.py:307(isScalarType)
+  1600000    6.165    0.000    6.165    0.000 {_bisect.bisect_left}
+     4000    0.019    0.000    0.019    0.000 {_bisect.bisect}
+        1    0.000    0.000    0.000    0.000 {abs}
+        3    0.000    0.000    0.000    0.000 {all}
+        1    0.000    0.000    0.000    0.000 {built-in method fromkeys}
+      261    0.001    0.000    0.001    0.000 {built-in method match}
+        3    0.000    0.000    0.000    0.000 {filter}
+        9    0.000    0.000    0.000    0.000 {getattr}
+    43332    0.102    0.000    0.102    0.000 {hasattr}
+       25    0.000    0.000    0.000    0.000 {id}
+      820    0.004    0.000    0.004    0.000 {imp.get_suffixes}
+   867839    2.227    0.000    2.227    0.000 {isinstance}
+        8    0.000    0.000    0.000    0.000 {issubclass}
+  1212411    4.849    0.000    7.313    0.000 {len}
+       38    0.000    0.000    0.000    0.000 {map}
+     4000    0.009    0.000    0.009    0.000 {math.ceil}
+     4000    0.014    0.000    0.014    0.000 {math.log}
+      469    0.001    0.000    0.001    0.000 {max}
+        2    0.000    0.000    0.000    0.000 {method '__reduce_ex__' of 'object' objects}
+   319553    0.614    0.000    0.614    0.000 {method 'add' of 'set' objects}
+       10    0.000    0.000    0.000    0.000 {method 'any' of 'numpy.ndarray' objects}
+      267    0.001    0.000    0.001    0.000 {method 'append' of 'list' objects}
+        2    0.000    0.000    0.000    0.000 {method 'astype' of 'numpy.ndarray' objects}
+     4000    0.028    0.000    0.028    0.000 {method 'binomial' of 'mtrand.RandomState' objects}
+        5    0.000    0.000    0.000    0.000 {method 'close' of 'file' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+    35059    0.067    0.000    0.067    0.000 {method 'get' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 {method 'get' of 'dictproxy' objects}
+       81    0.005    0.000    0.005    0.000 {method 'items' of 'dict' objects}
+      911    0.003    0.000    0.003    0.000 {method 'join' of 'str' objects}
+     3040    0.008    0.000    0.008    0.000 {method 'lower' of 'str' objects}
+      911    0.003    0.000    0.003    0.000 {method 'lstrip' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 {method 'max' of 'numpy.ndarray' objects}
+   400000   39.242    0.000   39.242    0.000 {method 'nonzero' of 'numpy.ndarray' objects}
+        2    0.000    0.000    0.000    0.000 {method 'outer' of 'numpy.ufunc' objects}
+        1    0.000    0.000    0.000    0.000 {method 'rand' of 'mtrand.RandomState' objects}
+   322805    0.586    0.000    0.586    0.000 {method 'random' of '_random.Random' objects}
+        5    0.026    0.005    0.026    0.005 {method 'readlines' of 'file' objects}
+     1524    0.005    0.000    0.005    0.000 {method 'replace' of 'str' objects}
+        2    0.000    0.000    0.000    0.000 {method 'sort' of 'list' objects}
+      915    0.004    0.000    0.004    0.000 {method 'split' of 'str' objects}
+      911    0.003    0.000    0.003    0.000 {method 'startswith' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 {method 'sum' of 'numpy.ndarray' objects}
+        2    0.000    0.000    0.000    0.000 {method 'update' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 {method 'values' of 'dict' objects}
+      234    0.000    0.000    0.000    0.000 {min}
+      911    0.013    0.000    0.013    0.000 {nt._getfullpathname}
+      792    0.040    0.000    0.040    0.000 {nt.stat}
+   400006   77.618    0.000   77.618    0.000 {numpy.core._dotblas.dot}
+        4    0.001    0.000    0.001    0.000 {numpy.core.multiarray.arange}
+     4007    0.108    0.000    0.108    0.000 {numpy.core.multiarray.array}
+        9    0.000    0.000    0.000    0.000 {numpy.core.multiarray.zeros}
+        5    0.003    0.001    0.003    0.001 {open}
+        2    0.000    0.000    0.000    0.000 {operator.isNumberType}
+        4    0.000    0.000    0.000    0.000 {operator.isSequenceType}
+     1402    0.004    0.000    0.004    0.000 {range}
+       27    0.000    0.000    0.000    0.000 {sys._getframe}
+        2    0.000    0.000    0.000    0.000 {zip}

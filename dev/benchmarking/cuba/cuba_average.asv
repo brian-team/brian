@@ -1,0 +1,10 @@
+function [avt, avn, runs] = cuba_average(N, repeats, best)
+runs = [];
+for i=1:repeats
+    [t, n] = cuba(N);
+    runs = [runs ; [t n]];
+end
+[sruns, i] = sort(runs);
+runs = runs(i(:,1),:);
+runs = runs(1:best,:);
+ = mean(runs);

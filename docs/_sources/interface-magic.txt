@@ -1,0 +1,87 @@
+.. currentmodule:: brian
+
+magic
+*****
+
+See the main documentation or the API documentation for details of the
+purpose, main functions and classes of the magic module.
+
+Functions
+~~~~~~~~~
+
+* :func:`get_instances(instancetype,level=1)`
+* :func:`find_instances(instancetype,startlevel=1)`
+* :func:`find_all_instances(instancetype,startlevel=1)`
+
+Here instancetype is a class derived from :class:`InstanceTracker`, including
+:class:`Clock`, :class:`NeuronGroup`, :class:`Connection`, :class:`NetworkOperation`.
+``level`` is an integer
+greater than 0 that tells the function how far back it should search
+in the sequence of called functions. ``level=0`` means it should find
+instances from the function calling one of the magic functions,
+``level=1`` means it should find instances from the function calling the
+function calling one of the magic functions, etc.
+
+:func:`get_instances` returns all instances at a specified level.
+:func:`find_instances`
+searches increasing levels starting from the given ``startlevel`` until it
+finds a nonzero number of instances, and then returns those.
+:func:`find_all_instances` finds all instances from a given level onwards.
+
+Classes
+~~~~~~~
+
+An object of a class ``cls`` derived from ``InstanceTracker`` will be tracked
+if ``cls._track_instances()`` returns ``True``. The default behaviour of
+``InstanceTracker`` is to always return ``True``, but this method can be
+redefined if you do not want to track instances of a particular
+subclass of a tracked class. Note that this method is a static method
+of a class, and cannot be used to stop particular instances being
+tracked. Redefine it using something like::
+    
+    class A(InstanceTracker):
+        pass
+    class B(A):
+        @staticmethod
+        def _track_instances(): return False
+
+A warning (technical detail)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The current implementation of instance tracking will return
+every variable that was created in a given execution frame (i.e. in
+a given function) that is still alive (i.e. a reference still exists
+to it somewhere). So for example, the following will not find any
+instance::
+
+    class A(InstanceTracker):
+        pass
+    def f(A):
+        return A()
+    a = f(A)
+    print get_instances(A,level=0)
+
+The reason is that the object a was created in the function ``f``, but
+the :func:`get_instances` statement is run in the main body. Similarly, the
+following will return two instances rather than one as you might
+expect::
+
+    class A(InstanceTracker):
+        pass
+    def f(A):
+        a = A()
+        return get_instances(A,level=0)
+    insts1 = f(A)
+    isnts2 = f(A)
+    print insts2
+
+The reason is that the first call to ``f`` defines an instance of ``A`` and
+returns (via :func:`get_instances`) an object which contains a reference to it.
+The object is still therefore alive. The second call to ``f`` creates a new
+``A`` object, but the :func:`get_instances` call returns both ``A`` objects, because they
+are both still alive (the first is stored in ``insts1``) and both created
+in the function ``f``.
+
+This behaviour is not part of the assured interface of the magic module,
+and you shouldn't rely on it.
+

@@ -1,0 +1,16 @@
+.. currentmodule:: brian
+
+.. index::
+	pair: scipy; analysis
+	pair: numpy; numerical computation
+	pair: numpy; analysis
+	pair: pylab; plotting
+
+SciPy, NumPy and PyLab
+----------------------
+
+See the following web sites:
+
+* http://www.scipy.org/Getting_Started
+* http://www.scipy.org/Documentation
+* http://matplotlib.sourceforge.net/matplotlib.pylab.html

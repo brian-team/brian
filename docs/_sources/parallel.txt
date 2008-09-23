@@ -1,0 +1,9 @@
+.. currentmodule:: brian
+
+.. index::
+	single: parallel python
+	single: clusters
+	
+Parallel computing
+==================
+.. autofunction:: ppfunction

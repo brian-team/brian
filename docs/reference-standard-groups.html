@@ -1,0 +1,254 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Standard Groups &mdash; Brian v1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+          URL_ROOT:    '',
+          VERSION:     '1.0.0',
+          COLLAPSE_MODINDEX: false,
+          FILE_SUFFIX: ''
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/interface.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="contents" title="Global table of contents" href="contents.html" />
+    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
+    <link rel="up" title="Reference" href="reference.html" />
+    <link rel="next" title="Connections" href="reference-connections.html" />
+    <link rel="prev" title="Integration" href="reference-integration.html" />
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="reference-connections.html" title="Connections"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference-integration.html" title="Integration"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <div class="section" id="standard-groups">
+<h1 id="standard-groups">Standard Groups<a class="headerlink" href="#standard-groups" title="Permalink to this headline">¶</a></h1>
+<p>Some standard types of <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a> have already been defined.
+<a title="brian.PoissonGroup" class="reference internal" href="#brian.PoissonGroup"><tt class="xref docutils literal"><span class="pre">PoissonGroup</span></tt></a> to generate spikes with Poisson statistics,
+<a title="brian.PulsePacket" class="reference internal" href="#brian.PulsePacket"><tt class="xref docutils literal"><span class="pre">PulsePacket</span></tt></a> to generate pulse packets with specified parameters,
+<a title="brian.SpikeGeneratorGroup" class="reference internal" href="#brian.SpikeGeneratorGroup"><tt class="xref docutils literal"><span class="pre">SpikeGeneratorGroup</span></tt></a> and <a title="brian.MultipleSpikeGeneratorGroup" class="reference internal" href="#brian.MultipleSpikeGeneratorGroup"><tt class="xref docutils literal"><span class="pre">MultipleSpikeGeneratorGroup</span></tt></a> to
+generate spikes which fire at prespecified times.</p>
+<dl class="class" id="index-91">
+<dt id="brian.PoissonGroup">
+<!--[brian.PoissonGroup]-->class <tt class="descclassname">brian.</tt><tt class="descname">PoissonGroup</tt><big>(</big><em>N</em>, <em>rates=0.0 Hz</em>, <em>clock=None</em><big>)</big><a class="headerlink" href="#brian.PoissonGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>A group that generates independent Poisson spike trains.</p>
+<p><strong>Initialised as:</strong></p>
+<pre>PoissonGroup(N,rates[,clock])</pre>
+<p>with arguments:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">N</span></tt></dt>
+<dd>The number of neurons in the group</dd>
+<dt><tt class="docutils literal"><span class="pre">rates</span></tt></dt>
+<dd>A scalar, array or function returning a scalar or array.
+The array should have the same length as the number of
+neurons in the group. The function should take one
+argument <tt class="docutils literal"><span class="pre">t</span></tt> the current simulation time.</dd>
+<dt><tt class="docutils literal"><span class="pre">clock</span></tt></dt>
+<dd>The clock which the group will update with, do not
+specify to use the default clock.</dd>
+</dl>
+</dd></dl>
+
+<dl class="class" id="index-92">
+<dt id="brian.PulsePacket">
+<!--[brian.PulsePacket]-->class <tt class="descclassname">brian.</tt><tt class="descname">PulsePacket</tt><big>(</big><em>t</em>, <em>n</em>, <em>sigma</em>, <em>clock=None</em><big>)</big><a class="headerlink" href="#brian.PulsePacket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fires a Gaussian distributed packet of n spikes with given spread</p>
+<p><strong>Initialised as:</strong></p>
+<pre>PulsePacket(t,n,sigma[,clock])</pre>
+<p>with arguments:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">t</span></tt></dt>
+<dd>The mean firing time</dd>
+<dt><tt class="docutils literal"><span class="pre">n</span></tt></dt>
+<dd>The number of spikes in the packet</dd>
+<dt><tt class="docutils literal"><span class="pre">sigma</span></tt></dt>
+<dd>The standard deviation of the firing times.</dd>
+<dt><tt class="docutils literal"><span class="pre">clock</span></tt></dt>
+<dd>The clock to use (omit to use default or local clock)</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<p>This class is derived from <a title="brian.SpikeGeneratorGroup" class="reference internal" href="#brian.SpikeGeneratorGroup"><tt class="xref docutils literal"><span class="pre">SpikeGeneratorGroup</span></tt></a> and has all its
+methods as well as one additional method:</p>
+<dl class="method">
+<dt id="brian.PulsePacket.generate">
+<!--[brian.PulsePacket.generate]--><tt class="descname">generate</tt><big>(</big><em>t</em>, <em>n</em>, <em>sigma</em><big>)</big><a class="headerlink" href="#brian.PulsePacket.generate" title="Permalink to this definition">¶</a></dt>
+<dd>Change the parameters and/or generate a new pulse packet.</dd></dl>
+
+</dd></dl>
+
+<dl class="class" id="index-93">
+<dt id="brian.SpikeGeneratorGroup">
+<!--[brian.SpikeGeneratorGroup]-->class <tt class="descclassname">brian.</tt><tt class="descname">SpikeGeneratorGroup</tt><big>(</big><em>N</em>, <em>spiketimes</em>, <em>clock=None</em>, <em>period=None</em><big>)</big><a class="headerlink" href="#brian.SpikeGeneratorGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Emits spikes at given times</p>
+<p>Initialised as:</p>
+<pre>SpikeGeneratorGroup(N,spiketimes[,clock[,period]])</pre>
+<p>with arguments:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">N</span></tt></dt>
+<dd>The number of neurons in the group.</dd>
+<dt><tt class="docutils literal"><span class="pre">spiketimes</span></tt></dt>
+<dd>An object specifying which neurons should fire and when. It can be a container
+such as a <tt class="docutils literal"><span class="pre">list</span></tt>, containing tuples <tt class="docutils literal"><span class="pre">(i,t)</span></tt> meaning neuron <tt class="docutils literal"><span class="pre">i</span></tt> fires at
+time <tt class="docutils literal"><span class="pre">t</span></tt>, or a callable object which returns such a container (which
+allows you to use generator objects, see below). If <tt class="docutils literal"><span class="pre">spiketimes</span></tt> is not
+a list or tuple, the pairs <tt class="docutils literal"><span class="pre">(i,t)</span></tt> need to be sorted in time. You can
+also pass a numpy array <tt class="docutils literal"><span class="pre">spiketimes</span></tt> where the first column of the
+array is the neuron indices, and the second column is the times in
+seconds. WARNING: units are not checked in this case, and you need to
+ensure that the spikes are sorted.</dd>
+<dt><tt class="docutils literal"><span class="pre">clock</span></tt></dt>
+<dd>An optional clock to update with (omit to use the default clock).</dd>
+<dt><tt class="docutils literal"><span class="pre">period</span></tt></dt>
+<dd>Optionally makes the spikes recur periodically with the given
+period. Note that iterator objects cannot be used as the <tt class="docutils literal"><span class="pre">spikelist</span></tt>
+with a period as they cannot be reinitialised.</dd>
+</dl>
+<p><strong>Sample usages</strong></p>
+<p>The simplest usage would be a list of pairs <tt class="docutils literal"><span class="pre">(i,t)</span></tt>:</p>
+<div class="highlight"><pre><span class="n">spiketimes</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">0</span><span class="p">,</span><span class="mf">1</span><span class="o">*</span><span class="n">ms</span><span class="p">),</span> <span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="o">*</span><span class="n">ms</span><span class="p">)]</span>
+<span class="n">SpikeGeneratorGroup</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">spiketimes</span><span class="p">)</span>
+</pre></div>
+<p>A more complicated example would be to pass a generator:</p>
+<div class="highlight"><pre><span class="k">import</span> <span class="nn">random</span>
+<span class="k">def</span> <span class="nf">nextspike</span><span class="p">():</span>
+    <span class="n">nexttime</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="mf">9</span><span class="p">),</span><span class="n">nexttime</span><span class="p">)</span>
+        <span class="n">nexttime</span> <span class="o">=</span> <span class="n">nexttime</span> <span class="o">+</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<span class="n">P</span> <span class="o">=</span> <span class="n">SpikeGeneratorGroup</span><span class="p">(</span><span class="mf">10</span><span class="p">,</span><span class="n">nextspike</span><span class="p">())</span>
+</pre></div>
+<p>This would give a neuron group <tt class="docutils literal"><span class="pre">P</span></tt> with 10 neurons, where a random one
+of the neurons fires at an average rate of one every 5ms.</p>
+<p><strong>Notes</strong></p>
+<p>Note that if a neuron fires more than one spike in a given interval <tt class="docutils literal"><span class="pre">dt</span></tt>, additional
+spikes will be discarded. If you want them to stack, consider using the less efficient
+<a title="brian.MultipleSpikeGeneratorGroup" class="reference internal" href="#brian.MultipleSpikeGeneratorGroup"><tt class="xref docutils literal"><span class="pre">MultipleSpikeGeneratorGroup</span></tt></a> object instead. A warning will be issued if this
+is detected.</p>
+<p>Also note that if you pass a generator, then reinitialising the group will not have the
+expected effect because a generator object cannot be reinitialised. Instead, you should
+pass a callable object which returns a generator. In the example above, that would be
+done by calling:</p>
+<div class="highlight"><pre><span class="n">P</span> <span class="o">=</span> <span class="n">SpikeGeneratorGroup</span><span class="p">(</span><span class="mf">10</span><span class="p">,</span><span class="n">nextspike</span><span class="p">)</span>
+</pre></div>
+<p>Whenever P is reinitialised, it will call <tt class="docutils literal"><span class="pre">nextspike()</span></tt> to create the required spike
+container.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="brian.MultipleSpikeGeneratorGroup">
+<!--[brian.MultipleSpikeGeneratorGroup]-->class <tt class="descclassname">brian.</tt><tt class="descname">MultipleSpikeGeneratorGroup</tt><big>(</big><em>spiketimes</em>, <em>clock=None</em>, <em>period=None</em><big>)</big><a class="headerlink" href="#brian.MultipleSpikeGeneratorGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Emits spikes at given times</p>
+<p><strong>Initialised as:</strong></p>
+<pre>MultipleSpikeGeneratorGroup(spiketimes[,clock[,period]])</pre>
+<p>with arguments:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">spiketimes</span></tt></dt>
+<dd>a list of spike time containers, one for each neuron in the group,
+although note that elements of <tt class="docutils literal"><span class="pre">spiketimes</span></tt> can also be callable objects which
+return spike time containers if you want to be able to reinitialise (see below).
+At it&#8217;s simplest, <tt class="docutils literal"><span class="pre">spiketimes</span></tt> could be a list of lists, where <tt class="docutils literal"><span class="pre">spiketimes[0]</span></tt> contains
+the firing times for neuron 0, <tt class="docutils literal"><span class="pre">spiketimes[1]</span></tt> for neuron 1, etc. But, any iterable
+object can be passed, so <tt class="docutils literal"><span class="pre">spiketimes[0]</span></tt> could be a generator for example. Each
+spike time container should be sorted in time. If the containers are numpy arrays units
+will not be checked (times should be in seconds).</dd>
+<dt><tt class="docutils literal"><span class="pre">clock</span></tt></dt>
+<dd>A clock, if omitted the default clock will be used.</dd>
+<dt><tt class="docutils literal"><span class="pre">period</span></tt></dt>
+<dd>Optionally makes the spikes recur periodically with the given
+period. Note that iterator objects cannot be used as the <tt class="docutils literal"><span class="pre">spikelist</span></tt>
+with a period as they cannot be reinitialised.</dd>
+</dl>
+<p>Note that if two or more spike times fall within the same <tt class="docutils literal"><span class="pre">dt</span></tt>, spikes will stack up
+and come out one per dt until the stack is exhausted. A warning will be generated
+if this happens.</p>
+<p>Also note that if you pass a generator, then reinitialising the group will not have the
+expected effect because a generator object cannot be reinitialised. Instead, you should
+pass a callable object which returns a generator, this will be called each time the
+object is reinitialised by calling the <tt class="docutils literal"><span class="pre">reinit()</span></tt> method.</p>
+<p><strong>Sample usage:</strong></p>
+<div class="highlight"><pre><span class="n">spiketimes</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1</span><span class="o">*</span><span class="n">msecond</span><span class="p">,</span> <span class="mf">2</span><span class="o">*</span><span class="n">msecond</span><span class="p">]]</span>
+<span class="n">P</span> <span class="o">=</span> <span class="n">MultipleSpikeGeneratorGroup</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">)</span>
+</pre></div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="reference-integration.html" title="previous chapter">Integration</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="reference-connections.html" title="next chapter">Connections</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/reference-standard-groups.txt">Show Source</a></li>
+            </ul>
+            <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="reference-connections.html" title="Connections"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference-integration.html" title="Integration"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2008, Romain Brette, Dan Goodman.
+      Last updated on Sep 23, 2008.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+    </div>
+  </body>
+</html>

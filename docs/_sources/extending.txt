@@ -1,0 +1,7 @@
+Extending Brian
+===============
+
+TODO: Description of how to extend Brian, add new model types, and maybe at
+some point how to upload them to a database, share with others, etc.
+
+For the moment, see the documentation on :ref:`projects-with-multiple-files`.

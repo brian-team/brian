@@ -1,0 +1,10 @@
+.. currentmodule:: brian
+
+Getting started
+===============
+
+.. toctree::
+   :maxdepth: 2
+   
+   tutorials
+   examples

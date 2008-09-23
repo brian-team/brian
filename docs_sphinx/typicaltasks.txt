@@ -1,0 +1,12 @@
+.. currentmodule:: brian
+
+Typical Tasks
+-------------
+
+TODO: typical things you want to achieve in running your simulation,
+and how to go about doing them.
+
+.. toctree::
+   :maxdepth: 2
+   
+   tasks_multiplefiles

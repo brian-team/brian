@@ -1,0 +1,246 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>How to write efficient Brian code &mdash; Brian v1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+          URL_ROOT:    '',
+          VERSION:     '1.0.0',
+          COLLAPSE_MODINDEX: false,
+          FILE_SUFFIX: ''
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/interface.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="contents" title="Global table of contents" href="contents.html" />
+    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
+    <link rel="up" title="Advanced concepts" href="advanced.html" />
+    <link rel="next" title="Projects with multiple files or functions" href="tasks_multiplefiles.html" />
+    <link rel="prev" title="Parallel computing" href="parallel.html" />
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="tasks_multiplefiles.html" title="Projects with multiple files or functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="parallel.html" title="Parallel computing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="advanced.html" accesskey="U">Advanced concepts</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <div class="section" id="how-to-write-efficient-brian-code">
+<span id="index-3"></span><h1 id="how-to-write-efficient-brian-code"><span id="index-3"></span>How to write efficient Brian code<a class="headerlink" href="#how-to-write-efficient-brian-code" title="Permalink to this headline">¶</a></h1>
+<p>There are a few keys to writing fast and efficient Brian code. The
+first is to use Brian itself efficiently. The second is to write
+good vectorised code, which is using Python and NumPy efficiently.</p>
+<div class="section" id="brian-specifics">
+<h2 id="brian-specifics">Brian specifics<a class="headerlink" href="#brian-specifics" title="Permalink to this headline">¶</a></h2>
+<p>You can switch off Brian&#8217;s entire unit checking module
+by including the line:</p>
+<div class="highlight"><pre><span class="k">import</span> <span class="nn">brian_no_units</span>
+</pre></div>
+<p>before importing Brian itself. Good practice is to leave unit checking
+on most of the time when developing and debugging a model, but
+switching it off for long runs once the basic model is stable.</p>
+<p>Another way to speed up code is to store references to arrays rather
+than extracting them from Brian objects each time you need them. For
+example, if you know the custom reset object in the code above is
+only ever applied to a group <tt class="docutils literal"><span class="pre">custom_group</span></tt> say, then you could
+do something like this:</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">myreset</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">spikes</span><span class="p">):</span>
+        <span class="n">custom_group_V_</span><span class="p">[</span><span class="n">spikes</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0</span><span class="o">*</span><span class="n">mV</span>
+        <span class="n">custom_group_Vt_</span><span class="p">[</span><span class="n">spikes</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2</span><span class="o">*</span><span class="n">mV</span>
+
+<span class="n">custom_group</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">custom_group_V_</span> <span class="o">=</span> <span class="n">custom_group</span><span class="o">.</span><span class="n">V_</span>
+<span class="n">custom_group_Vt_</span> <span class="o">=</span> <span class="n">custom_group</span><span class="o">.</span><span class="n">Vt_</span>
+</pre></div>
+<p>In this case, the speed increase will be quite small, and probably
+not worth doing because it makes it less readable, but in more
+complicated examples where you repeatedly refer to <tt class="docutils literal"><span class="pre">custom_group.V_</span></tt>
+it could add up.</p>
+</div>
+<div class="section" id="vectorisation">
+<span id="index-4"></span><h2 id="vectorisation"><span id="index-4"></span>Vectorisation<a class="headerlink" href="#vectorisation" title="Permalink to this headline">¶</a></h2>
+<p>Python is a fast language, but each line of Python code has an
+associated overhead attached to it. Sometimes you can get considerable
+increases in speed by writing a vectorised version of it. A good guide
+to this in general is the <a class="reference external" href="http://www.scipy.org/PerformancePython">Performance Python</a>
+page. Here we will do a single worked example in Brian.</p>
+<p>Suppose you wanted to multiplicatively depress the connection
+strengths every time step by some amount, you might do something like
+this:</p>
+<div class="highlight"><pre><span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="s">&#39;V&#39;</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="s">&#39;dense&#39;</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="nd">@network_operation</span><span class="p">(</span><span class="n">when</span><span class="o">=</span><span class="s">&#39;end&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">depress_C</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G1</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G2</span><span class="p">)):</span>
+                        <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">depression_factor</span>
+</pre></div>
+<p>This will work, but it will be very, very slow.</p>
+<p>The first thing to note is that the Python expression <tt class="docutils literal"><span class="pre">range(N)</span></tt>
+actually constructs a list <tt class="docutils literal"><span class="pre">[0,1,2,...,N-1]</span></tt> each time it is called,
+which is not really necessary if you are only iterating over the list.
+Instead, use the <tt class="docutils literal"><span class="pre">xrange</span></tt> iterator which doesn&#8217;t construct the list
+explicitly:</p>
+<div class="highlight"><pre><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G1</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G2</span><span class="p">)):</span>
+                <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">depression_factor</span>
+</pre></div>
+<p>The next thing to note is that when you call C[i,j] you are doing an
+operation on the <a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a> object, not directly on the underlying
+matrix. Instead, do something like this:</p>
+<div class="highlight"><pre><span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="s">&#39;V&#39;</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="s">&#39;dense&#39;</span><span class="p">)</span>
+<span class="n">C_matrix</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">W</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="nd">@network_operation</span><span class="p">(</span><span class="n">when</span><span class="o">=</span><span class="s">&#39;end&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">depress_C</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G1</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G2</span><span class="p">)):</span>
+                        <span class="n">C_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">*=</span> <span class="n">depression_factor</span>
+</pre></div>
+<p>What&#8217;s going on here? First of all, <tt class="docutils literal"><span class="pre">C.W</span></tt> refers to the <tt class="xref docutils literal"><span class="pre">ConnectionMatrix</span></tt>
+object, which is a 2D NumPy array with some extra stuff - we don&#8217;t need the extra
+stuff so we convert it to a straight NumPy array <tt class="docutils literal"><span class="pre">asarray(C.W)</span></tt>. We also store
+a copy of this as the variable <tt class="docutils literal"><span class="pre">C_matrix</span></tt> so we don&#8217;t need to do this every
+time step. The other thing we do is to use the <tt class="docutils literal"><span class="pre">*=</span></tt> operator instead of the <tt class="docutils literal"><span class="pre">*</span></tt>
+operator.</p>
+<p>The most important step of all though is to vectorise the entire operation. You
+don&#8217;t need to loop over <tt class="docutils literal"><span class="pre">i</span></tt> and <tt class="docutils literal"><span class="pre">j</span></tt> at all, you can manipulate the array
+object with a single NumPy expression:</p>
+<div class="highlight"><pre><span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="s">&#39;V&#39;</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="s">&#39;dense&#39;</span><span class="p">)</span>
+<span class="n">C_matrix</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">W</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="nd">@network_operation</span><span class="p">(</span><span class="n">when</span><span class="o">=</span><span class="s">&#39;end&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">depress_C</span><span class="p">():</span>
+        <span class="n">C_matrix</span> <span class="o">*=</span> <span class="n">depression_factor</span>
+</pre></div>
+<p>This final version will probably be hundreds if not thousands of times faster
+than the original. It&#8217;s usually possible to work out a way using NumPy
+expressions only to do whatever you want in a vectorised way, but in some
+very rare instances it might be necessary to have a loop. In this case, if
+this loop is slowing your code down, you might want to try writing that
+loop in inline C++ using the <a class="reference external" href="http://www.scipy.org/Weave">SciPy Weave</a>
+package. See the documentation at that link for more details, but as an
+example we could rewrite the code above using inline C++ as follows:</p>
+<div class="highlight"><pre><span class="k">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">weave</span>
+<span class="o">...</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="s">&#39;V&#39;</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="s">&#39;dense&#39;</span><span class="p">)</span>
+<span class="n">C_matrix</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">W</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="nd">@network_operation</span><span class="p">(</span><span class="n">when</span><span class="o">=</span><span class="s">&#39;end&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">depress_C</span><span class="p">():</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G1</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G2</span><span class="p">)</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">                for(int i=0;i&lt;n;i++)</span>
+<span class="s">                        for(int j=0;j&lt;m;j++)</span>
+<span class="s">                                C_matrix(i,j) *= depression_factor</span>
+<span class="s">                &#39;&#39;&#39;</span>
+        <span class="n">weave</span><span class="o">.</span><span class="n">inline</span><span class="p">(</span><span class="n">code</span><span class="p">,</span>
+                <span class="p">[</span><span class="s">&#39;C_matrix&#39;</span><span class="p">,</span> <span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="s">&#39;m&#39;</span><span class="p">,</span> <span class="s">&#39;depression_factor&#39;</span><span class="p">],</span>
+                <span class="n">type_converters</span><span class="o">=</span><span class="n">weave</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">blitz</span><span class="p">,</span>
+                <span class="n">compiler</span><span class="o">=</span><span class="s">&#39;gcc&#39;</span><span class="p">,</span>
+                <span class="n">extra_compile_args</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;-O3&#39;</span><span class="p">])</span>
+</pre></div>
+<p>The first time you run this it will be slower because it compiles the
+C++ code and stores a copy, but the second time will be much faster as
+it just loads the saved copy. The way it works is that Weave converts
+the listed Python and NumPy variables (<tt class="docutils literal"><span class="pre">C_matrix</span></tt>, <tt class="docutils literal"><span class="pre">n</span></tt>, <tt class="docutils literal"><span class="pre">m</span></tt>
+and <tt class="docutils literal"><span class="pre">depression_factor</span></tt>) into C++ compatible data types. <tt class="docutils literal"><span class="pre">n</span></tt> and
+<tt class="docutils literal"><span class="pre">m</span></tt> are turned into <tt class="docutils literal"><span class="pre">int``s,</span> <span class="pre">``depression_factor</span></tt> is turned into
+a <tt class="docutils literal"><span class="pre">double</span></tt>, and <tt class="docutils literal"><span class="pre">C_matrix</span></tt> is turned into a Weave
+<tt class="docutils literal"><span class="pre">Array</span></tt> class. The only thing you need to know about this is that
+elements of a Weave array are referenced with parentheses rather than
+brackets, i.e. <tt class="docutils literal"><span class="pre">C_matrix(i,j)</span></tt> rather than <tt class="docutils literal"><span class="pre">C_matrix[i,j]</span></tt>. In
+this example, I have used the <tt class="docutils literal"><span class="pre">gcc</span></tt> compiler and added the optimisation
+flag <tt class="docutils literal"><span class="pre">-O3</span></tt> for maximum optimisations. Again, in this case it&#8217;s much
+simpler to just use the <tt class="docutils literal"><span class="pre">C_matrix</span> <span class="pre">*=</span> <span class="pre">depression_factor</span></tt> NumPy expression,
+but in some cases using inline C++ might be necessary, and as you can see
+above, it&#8217;s very easy to do this with Weave, and the C++ code for a
+snippet like this is often almost as simple as the Python code would be.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3>Table Of Contents</h3>
+            <ul>
+<li><a class="reference external" href="">How to write efficient Brian code</a><ul>
+<li><a class="reference external" href="#brian-specifics">Brian specifics</a></li>
+<li><a class="reference external" href="#vectorisation">Vectorisation</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="parallel.html" title="previous chapter">Parallel computing</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="tasks_multiplefiles.html" title="next chapter">Projects with multiple files or functions</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/efficient.txt">Show Source</a></li>
+            </ul>
+            <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="tasks_multiplefiles.html" title="Projects with multiple files or functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="parallel.html" title="Parallel computing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="advanced.html" accesskey="U">Advanced concepts</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2008, Romain Brette, Dan Goodman.
+      Last updated on Sep 23, 2008.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+    </div>
+  </body>
+</html>

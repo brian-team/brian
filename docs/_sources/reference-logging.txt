@@ -1,0 +1,22 @@
+.. currentmodule:: brian
+
+.. index:: log, logging
+
+Logging
+-------
+
+Brian uses the standard Python ``logging`` package to generate information
+and warnings. All messages are sent to the logger named ``brian`` or loggers
+derived from this one, and you can use the standard logging functions to
+set options, write the logs to files, etc. Alternatively, Brian has four
+simple functions to set the level of the displayed log (see below). There
+are four different levels for log messages, in decreasing order of severity
+they are ERROR, WARN, INFO and DEBUG. By default, Brian displays only the
+WARN and ERROR level messages. Some useful information is at the INFO level,
+so if you are having problems with your program, setting the level to INFO
+may help.
+
+.. autofunction:: log_level_error
+.. autofunction:: log_level_warn
+.. autofunction:: log_level_info
+.. autofunction:: log_level_debug

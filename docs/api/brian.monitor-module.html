@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>brian.monitor</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="brian-module.html">Package&nbsp;brian</a> ::
+        Module&nbsp;monitor
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module monitor</h1><br /><br />
+<pre class="literalblock">
+
+Monitors (spikes and state variables).
+* Tip: Spike monitors should have non significant impact on simulation time
+if properly coded.
+
+</pre><br /><br />
+
+<!-- ==================== CLASSES ==================== -->
+<a name="section-Classes"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Classes</span></td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.monitor.SpikeMonitor-class.html" class="summary-name">SpikeMonitor</a><br />
+      Counts or records spikes from a :class:`NeuronGroup`
+
+Initialised as one of::
+
+    SpikeMonitor(source(,record=True))
+    SpikeMonitor(source,function=function)
+
+Where:
+
+``source``
+    A :class:`NeuronGroup` to record from
+``record``
+    ``True`` or ``False`` to record all the spikes or just summary
+    statistics.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.monitor.PopulationSpikeCounter-class.html" class="summary-name">PopulationSpikeCounter</a><br />
+      Counts spikes from a :class:`NeuronGroup`...
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.monitor.SpikeCounter-class.html" class="summary-name">SpikeCounter</a><br />
+      Counts spikes from a :class:`NeuronGroup`
+
+Initialised as::
+
+    SpikeCounter(source)
+
+With argument:
+
+``source``
+    A :class:`NeuronGroup` to record from
+
+Has two attributes:
+
+``nspikes``
+    The number of recorded spikes
+``count``
+    An array of spike counts for each neuron
+
+For a :class:`SpikeCounter` ``M`` you can also write ``M[i]`` for the
+number of spikes counted for neuron ``i``.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.monitor.StateSpikeMonitor-class.html" class="summary-name">StateSpikeMonitor</a><br />
+      Counts or records spikes and state variables at spike times from a :class:`NeuronGroup`
+
+Initialised as::
+
+    StateSpikeMonitor(source, var)
+
+Where:
+
+``source``
+    A :class:`NeuronGroup` to record from
+``var``
+    The variable name or number to record from, or a tuple of variable names or numbers
+    if you want to record multiple variables for each spike.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.monitor.ISIHistogramMonitor-class.html" class="summary-name">ISIHistogramMonitor</a><br />
+      Records the interspike interval histograms of a group.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.monitor.FileSpikeMonitor-class.html" class="summary-name">FileSpikeMonitor</a><br />
+      Records spikes to a file
+
+Initialised as::
+
+    FileSpikeMonitor(source, filename[, record=False])
+
+Does everything that a :class:`SpikeMonitor` does except also records
+the spikes to the named file.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.monitor.PopulationRateMonitor-class.html" class="summary-name">PopulationRateMonitor</a><br />
+      Monitors and stores the (time-varying) population rate
+
+Initialised as::
+
+    PopulationRateMonitor(source,bin)
+
+Records the average activity of the group for every bin.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.monitor.StateMonitor-class.html" class="summary-name">StateMonitor</a><br />
+      Records the values of a state variable from a :class:`NeuronGroup`.
+    </td>
+  </tr>
+</table>
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0beta1 on Tue Sep 23 13:38:00 2008
+    </td>
+    <td align="right" class="footer">
+      <a href="http://epydoc.sourceforge.net">http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie()
+  // -->
+</script>
+  
+</body>
+</html>

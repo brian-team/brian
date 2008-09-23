@@ -1,0 +1,6 @@
+.. currentmodule:: brian
+
+Quick start guide
+=================
+
+TODO

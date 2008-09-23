@@ -1,0 +1,28 @@
+.. currentmodule:: brian
+
+Reference
+=========
+
+For an overview of Brian, see the :ref:`user-manual` section.
+
+.. toctree::
+    :maxdepth: 2
+
+    reference-units
+    reference-clocks
+    reference-models-and-groups
+    reference-integration
+    reference-standard-groups
+    reference-connections
+    reference-network
+    reference-monitors
+    reference-plotting
+    reference-magic
+    reference-tests
+
+TODO: Reference documentation that still needs written:
+
+* Connection matrix types (dense, sparse, etc.)
+* STDP
+* STP
+* numpywrappers (and generally, the units stuff is incomplete)

@@ -1,0 +1,8 @@
+.. currentmodule:: brian
+
+.. index:: tests, unit tests
+
+Tests
+-----
+
+.. autofunction:: run_all_tests

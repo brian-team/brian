@@ -1,0 +1,15 @@
+.. currentmodule:: brian
+
+.. index:: magic
+
+Magic in Brian
+--------------
+
+.. autofunction:: magic_return
+.. autofunction:: magic_register
+
+.. seealso::
+
+	:ref:`projects-with-multiple-files`
+		Describes difficulties and solutions for using magic functions
+		on projects with multiple files or functions.

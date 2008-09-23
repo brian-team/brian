@@ -1,0 +1,50 @@
+Alternative Quantity and QuantityArray design notes
+===================================================
+
+For consideration for Brian releases after 1.0.
+
+The current Quantity and qarray design works as follows:
+
+The class Dimension is implemented entirely in Python and defines
+a tuple of indices of each of the 7 basic SI dimensions. The class
+Quantity is derived from numpy's float and adds a Dimension object.
+The class qarray is derived from numpy's ndarray and adds a unit
+array on top, which can be either homogeneous or not (corresponding
+to classes homog_unitarray or unitarray). These classes are derived
+from ndarray. Both store a copy of the units as Quantity objects with
+float value 1.0. This system has multiple levels of indirection, and
+the result is slow code. A qarray based on homogeneous units performs
+worse than 10 times slower than a straight numpy array, whereas one
+with nonhomogeneous units performs several thousand times slower (i.e.
+unusable in practice for anything other than tiny arrays).
+
+Alternative design strategy
+---------------------------
+
+This design strategy could be implemented in Python or C code, the
+latter would be considerably faster.
+
+Dimension class could be a numpy array.
+
+Could define a DimensionArray class, which could potentially be
+implemented directly as a numpy array with one extra dimension (so
+that the DimensionArray of a class with shape S would be an
+array with shape S+(7,). There would also be either a 
+HomogeneousDimensionArray class which would essentially just store
+one dimension and keep track of an appropriate shape, or the
+alternative qarray class could keep track of this (maybe this is
+actually better?).
+
+Finally, an alternative QuantityArray class would be based on a
+DimensionArray and an underlying ndarray. This would save many
+levels of indirection and redundant processing, and because
+everything would be based on numpy arrays, it should run much
+faster.
+
+Other considerations
+--------------------
+
+There is also the possibility of mixed homogeneous/non-homogeneous
+units. For example, one column may have all units the same, whereas
+another will have varying units. This ought to be possible to
+implement.

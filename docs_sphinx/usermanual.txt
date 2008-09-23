@@ -1,0 +1,37 @@
+.. currentmodule:: brian
+
+.. _user-manual:
+
+User manual
+***********
+
+.. index::
+	pair: scipy; analysis
+	pair: numpy; numerical computation
+	pair: numpy; analysis
+	pair: pylab; plotting
+
+The SciPy, NumPy and PyLab packages are documented on the following web sites:
+
+* http://www.scipy.org/Getting_Started
+* http://www.scipy.org/Documentation
+* http://matplotlib.sourceforge.net/matplotlib.pylab.html
+
+Brian itself is documented in the following sections:
+
+.. toctree::
+   :maxdepth: 1
+   
+   units
+   models
+   connections
+   recording
+   inputs
+   operations
+   analysis
+   clocks
+   simulation
+   equations
+
+For more detailed information, see the reference chapter.
+ 

@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>brian.library.electrophysiology</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="brian-module.html">Package&nbsp;brian</a> ::
+        <a href="brian.library-module.html">Package&nbsp;library</a> ::
+        Module&nbsp;electrophysiology
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module electrophysiology</h1><br /><br />
+<pre class="literalblock">
+
+Electrophysiology library for Brian.
+R. Brette 2008.
+
+Contains:
+* Electrode models
+* Current clamp and voltage amplifiers
+* DCC and SEVC amplifiers (discontinuous)
+* AEC (Active Electrode Compensation)
+* Acquisition board
+
+</pre><br /><br />
+
+<!-- ==================== CLASSES ==================== -->
+<a name="section-Classes"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Classes</span></td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.library.electrophysiology.AcquisitionBoard-class.html" class="summary-name">AcquisitionBoard</a><br />
+      Digital acquisition board (DSP).
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.library.electrophysiology.DCC-class.html" class="summary-name">DCC</a><br />
+      Discontinuous current-clamp.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.library.electrophysiology.SEVC-class.html" class="summary-name">SEVC</a><br />
+      Discontinuous voltage-clamp.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.library.electrophysiology.AEC-class.html" class="summary-name">AEC</a><br />
+      An acquisition board with AEC.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.library.electrophysiology.VC_AEC-class.html" class="summary-name">VC_AEC</a>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Functions</span></td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.library.electrophysiology-module.html#electrode" class="summary-sig-name">electrode</a>(<span class="summary-sig-arg">Re</span>,
+        <span class="summary-sig-arg">Ce</span>,
+        <span class="summary-sig-arg">v_el</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">v_el</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">vm</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">vm</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">i_inj</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">i_inj</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">i_cmd</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">i_cmd</code><code class="variable-quote">'</code></span>)</span><br />
+      An intracellular electrode modeled as an RC circuit,
+or multiple RC circuits in series (if Re, Ce are lists).</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.library.electrophysiology-module.html#voltage_clamp" class="summary-sig-name">voltage_clamp</a>(<span class="summary-sig-arg">vm</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">vm</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">v_cmd</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">v_cmd</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">i_rec</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">i_rec</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">i_inj</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">i_inj</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">Re</span>=<span class="summary-sig-default">20.0 Mohm</span>,
+        <span class="summary-sig-arg">Rs</span>=<span class="summary-sig-default">0.0 ohm</span>,
+        <span class="summary-sig-arg">tau_u</span>=<span class="summary-sig-default">1.0 ms</span>)</span><br />
+      Continuous voltage-clamp amplifier + ideal electrode
+(= input capacitance is already neutralized).</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.library.electrophysiology-module.html#current_clamp" class="summary-sig-name">current_clamp</a>(<span class="summary-sig-arg">vm</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">vm</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">i_inj</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">i_inj</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">v_rec</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">v_rec</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">i_cmd</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">i_cmd</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">Re</span>=<span class="summary-sig-default">80.0 Mohm</span>,
+        <span class="summary-sig-arg">Ce</span>=<span class="summary-sig-default">4.0 pF</span>,
+        <span class="summary-sig-arg">bridge</span>=<span class="summary-sig-default">0.0 ohm</span>,
+        <span class="summary-sig-arg">capa_comp</span>=<span class="summary-sig-default">0.0 F</span>)</span><br />
+      Continuous current-clamp amplifier + electrode.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Function Details</span></td>
+</tr>
+</table>
+<a name="electrode"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">electrode</span>(<span class="sig-arg">Re</span>,
+        <span class="sig-arg">Ce</span>,
+        <span class="sig-arg">v_el</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">v_el</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">vm</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">vm</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">i_inj</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">i_inj</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">i_cmd</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">i_cmd</code><code class="variable-quote">'</code></span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+An intracellular electrode modeled as an RC circuit,
+or multiple RC circuits in series (if Re, Ce are lists).
+v_el = electrode (=recording) potential
+vm = membrane potential
+i_inj = current entering the membrane
+i_cmd = electrode command current (None = no injection)
+Returns an Equations() object.
+
+</pre>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@check_units(v_rec= volt, vm= volt, i_inj= amp, i_cmd= amp)</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="voltage_clamp"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">voltage_clamp</span>(<span class="sig-arg">vm</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">vm</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">v_cmd</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">v_cmd</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">i_rec</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">i_rec</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">i_inj</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">i_inj</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">Re</span>=<span class="sig-default">20.0 Mohm</span>,
+        <span class="sig-arg">Rs</span>=<span class="sig-default">0.0 ohm</span>,
+        <span class="sig-arg">tau_u</span>=<span class="sig-default">1.0 ms</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Continuous voltage-clamp amplifier + ideal electrode
+(= input capacitance is already neutralized).
+
+vm = membrane potential (or electrode) variable
+v_cmd = command potential
+i_inj = injected current (into the neuron)
+i_rec = recorded current (= -i_inj)
+Re = electrode resistance
+Rs = series resistance compensation
+tau_u = delay of series compensation (for stability)
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="current_clamp"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">current_clamp</span>(<span class="sig-arg">vm</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">vm</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">i_inj</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">i_inj</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">v_rec</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">v_rec</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">i_cmd</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">i_cmd</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">Re</span>=<span class="sig-default">80.0 Mohm</span>,
+        <span class="sig-arg">Ce</span>=<span class="sig-default">4.0 pF</span>,
+        <span class="sig-arg">bridge</span>=<span class="sig-default">0.0 ohm</span>,
+        <span class="sig-arg">capa_comp</span>=<span class="sig-default">0.0 F</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Continuous current-clamp amplifier + electrode.
+
+vm = membrane potential (or electrode) variable
+i_inj = injected current (into the neuron)
+v_rec = recorded potential
+i_cmd = command current
+bridge = bridge resistance compensation
+capa_comp = capacitance neutralization
+Re = electrode resistance
+Ce = electrode capacitance (input capacitance)
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0beta1 on Tue Sep 23 13:38:00 2008
+    </td>
+    <td align="right" class="footer">
+      <a href="http://epydoc.sourceforge.net">http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie()
+  // -->
+</script>
+  
+</body>
+</html>

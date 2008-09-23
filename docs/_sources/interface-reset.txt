@@ -1,0 +1,51 @@
+.. currentmodule:: brian
+
+reset
+*****
+
+:class:`Reset`
+~~~~~~~~~~~~~~
+
+Initialised as::
+
+    R = Reset(resetvalue=0*mvolt, state=0)
+
+After a neuron from a group with this reset fires, it
+will set the specified state variable to the given value.
+State variable 0 is customarily the membrane voltage,
+but this isn't required. 
+
+:class:`FunReset`
+~~~~~~~~~~~~~~~~~
+
+Initialised as::
+
+    R = FunReset(resetfun)
+
+Where resetfun is a function taking two arguments, the group
+it is acting on, and the indices of the spikes to be reset.
+The following is an example reset function::
+
+    def f(P,spikeindices):
+        P._S[0,spikeindices]=array([i/10. for i in range(len(spikeindices))])    
+
+:class:`Refractoriness`
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Initialised as::
+
+    R = Refractoriness(resetvalue=0*mvolt,period=5*msecond,state=0)
+
+After a neuron from a group with this reset fires, the specified state
+variable of the neuron will be set to the specified resetvalue for the
+specified period.
+
+:class:`NoReset`
+~~~~~~~~~~~~~~~~
+
+Initialised as::
+
+    R = NoReset()
+    
+Does nothing.
+

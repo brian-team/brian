@@ -1,0 +1,59 @@
+New features since 1.0.0
+------------------------
+
+New features since 1.0.0 rc5
+----------------------------
+
+* 2nd order Runge-Kutta method (use order=2)
+* Quantity arrays are disabled (units only for scalars)
+* brian_global_config added
+* UserComputedConnectionMatrix and UserComputedSparseConnectionMatrix
+* SimpleCustomRefractoriness, CustomRefractoriness
+
+New features since 1.0.0 rc4
+----------------------------
+
+* Bugfix of sparse matrix problems
+* Compiled version of spike propagation (much faster for
+  networks with lots of spikes)
+* Assorted small improvements
+
+New features since 1.0.0 rc3
+----------------------------
+
+* Added StateSpikeMonitor
+* Changed QuantityArray behaviour to work better with numpy, scipy and pylab
+
+New features since 1.0.0 rc2
+----------------------------
+
+* Small bugfixes
+
+New features since 1.0.0 rc1
+----------------------------
+
+* Documentation system now much better, using Sphinx, includes
+  cross references, index, etc.
+* Added VariableReset
+* Added run_all_tests()
+* numpywrappers module added, but not in global namespace
+* Quantity comparison to zero doesn't check units (positivity/negativity)
+
+New features since 1.0.0 beta 
+-----------------------------
+
+* Connection: connect_full allows a functional weight argument (like connect_random)
+** Short-term plasticity **
+  In Connection: 'modulation' argument allows modulating weights by a state
+  variable from the source group (see examples).
+* HomogeneousCorrelatedSpikeTrains: input spike trains with exponential correlations.
+* Network.stop(): stops the simulation (can be called by a user script)
+* PopulationRateMonitor: smooth_rate method
+* Optimisation of Euler code: use compile=True when initialising NeuronGroup
+* More examples
+* Pickling now works (saving and loading states)
+* dot(a,b) now works correctly with qarray's with homogeneous units
+* Parallel simulations using Parallel Python (independent simulations only)
+* Example of html inferfaces to Brian scripts using CherryPy
+* Time dependence in equations (see phase_locking example)
+* SpikeCounter and PopulationSpikeCounter

@@ -1,0 +1,808 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>brian.network.Network</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="brian-module.html">Package&nbsp;brian</a> ::
+        <a href="brian.network-module.html">Module&nbsp;network</a> ::
+        Class&nbsp;Network
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Network</h1><br /><br />
+<pre class="base-tree">
+object --+
+         |
+        <strong class="uidshort">Network</strong>
+</pre>
+
+<dl><dt>Known Subclasses:</dt>
+<dd>
+    <a href="brian.network.MagicNetwork-class.html">MagicNetwork</a>
+</dd></dl>
+
+<hr />
+<pre class="literalblock">
+
+Contains simulation objects and runs simulations
+
+**Initialised as:** ::
+
+    Network(...)
+
+with ``...`` any collection of objects that should be added to the :class:`Network`.
+You can also pass lists of objects, lists of lists of objects, etc. Objects
+that need to passed to the :class:`Network` object are:
+
+* :class:`NeuronGroup` and anything derived from it such as :class:`PoissonGroup`.
+* :class:`Connection` and anything derived from it.
+* Any monitor such as :class:`SpikeMonitor` or :class:`StateMonitor`.
+* Any network operation defined with the :func:`network_operation` decorator.
+
+Models, equations, etc. do not need to be passed to the :class:`Network` object. 
+
+The most important method is the ``run(duration)`` method which runs the simulation
+for the given length of time (see below for details about what happens when you
+do this).
+
+**Example usage:** ::
+
+    G = NeuronGroup(...)
+    C = Connection(...)
+    net = Network(G,C)
+    net.run(1*second)
+
+**Methods**
+
+``add(...)``
+    Add additional objects after initialisation, works the same way
+    as initialisation.
+``run(duration)``
+    Runs the network for the given duration. See below for details about
+    what happens when you do this.
+``reinit()``
+    Reinitialises the network, runs each object's ``reinit()`` and each
+    clock's ``reinit()`` method (resetting them to 0).
+``stop()``
+    Can be called from a :func:`network_operation` for example to stop the
+    network from running.
+``__len__()``
+    Returns the number of neurons in the network.
+``__call__(obj)``
+    Similar to ``add``, but you can only pass one object and that
+    object is returned. You would only need this in obscure
+    circumstances where objects needed to be added to the network
+    but were either not stored elsewhere or were stored in a way
+    that made them difficult to extract, for example below the
+    NeuronGroup object is only added to the network if certain
+    conditions hold::
+    
+        net = Network(...)
+        if some_condition:
+            x = net(NeuronGroup(...))
+
+**What happens when you run**
+
+For an overview, see the Concepts chapter of the main documentation.
+
+When you run the network, the first thing that happens is that it
+checks if it has been prepared and calls the ``prepare()`` method
+if not. This just does various housekeeping tasks and optimisations
+to make the simulation run faster. Also, an update schedule is
+built at this point (see below).
+
+Now the ``update()`` method is repeatedly called until every clock
+has run for the given length of time. After each call of the
+``update()`` method, the clock is advanced by one tick, and if
+multiple clocks are being used, the next clock is determined (this
+is the clock whose value of ``t`` is minimal amongst all the clocks).
+For example, if you had two clocks in operation, say ``clock1`` with
+``dt=3*ms`` and ``clock2`` with ``dt=5*ms`` then this will happen:
+
+1. ``update()`` for ``clock1``, tick ``clock1`` to ``t=3*ms``, next
+   clock is ``clock2`` with ``t=0*ms``.
+2. ``update()`` for ``clock2``, tick ``clock2`` to ``t=5*ms``, next
+   clock is ``clock1`` with ``t=3*ms``.
+3. ``update()`` for ``clock1``, tick ``clock1`` to ``t=6*ms``, next
+   clock is ``clock2`` with ``t=5*ms``.
+4. ``update()`` for ``clock2``, tick ``clock2`` to ``t=10*ms``, next
+   clock is ``clock1`` with ``t=6*ms``.
+5. ``update()`` for ``clock1``, tick ``clock1`` to ``t=9*ms``, next
+   clock is ``clock1`` with ``t=9*ms``.
+6. ``update()`` for ``clock1``, tick ``clock1`` to ``t=12*ms``, next
+   clock is ``clock2`` with ``t=10*ms``. etc.
+
+The ``update()`` method simply runs each operation in the current clock's
+update schedule. See below for details on the update schedule.
+
+**Update schedules**
+
+An update schedule is the sequence of operations that are
+called for each ``update()`` step. The standard update schedule is:
+
+*  Network operations with ``when = 'start'``
+*  Network operations with ``when = 'before_groups'``
+*  Call ``update()`` method for each :class:`NeuronGroup`, this typically
+   performs an integration time step for the differential equations
+   defining the neuron model.
+*  Network operations with ``when = 'after_groups'``
+*  Network operations with ``when = 'middle'``
+*  Network operations with ``when = 'before_connections'``
+*  Call ``do_propagate()`` method for each :class:`Connection`, this
+   typically adds a value to the target state variable of each neuron
+   that a neuron that has fired is connected to. See Tutorial 2: Connections for
+   a more detailed explanation of this.
+*  Network operations with ``when = 'after_connections'``
+*  Network operations with ``when = 'before_resets'``
+*  Call ``reset()`` method for each :class:`NeuronGroup`, typically resets a
+   given state variable to a given reset value for each neuron that fired
+   in this update step.
+*  Network operations with ``when = 'after_resets'``
+*  Network operations with ``when = 'end'``
+
+There is one predefined alternative schedule, which you can choose by calling
+the ``update_schedule_groups_resets_connections()`` method before running the
+network for the first time. As the name suggests, the reset operations are
+done before connections (and the appropriately named network operations are
+called relative to this rearrangement). You can also define your own update
+schedule with the ``set_update_schedule`` method (see that method's API documentation for
+details). This might be useful for example if you have a sequence of network
+operations which need to be run in a given order.    
+
+</pre><br /><br />
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Instance Methods</span></td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.network.Network-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">*args</span>,
+        <span class="summary-sig-arg">**kwds</span>)</span><br />
+      x.__init__(...) initializes x; see x.__class__.__doc__ for signature</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="add"></a><span class="summary-sig-name">add</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">*objs</span>)</span><br />
+      Add an object or container of objects to the network</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__call__"></a><span class="summary-sig-name">__call__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">obj</span>)</span><br />
+      Add an object to the network and return it</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="reinit"></a><span class="summary-sig-name">reinit</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Resets the objects and clocks.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="prepare"></a><span class="summary-sig-name">prepare</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Prepares the network for simulation:
++ Checks the clocks of the neuron groups
++ Gather connections with identical subgroups
++ Compresses the connection matrices for faster simulation
+Calling this function is not mandatory but speeds up the simulation.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="update_schedule_standard"></a><span class="summary-sig-name">update_schedule_standard</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="update_schedule_groups_resets_connections"></a><span class="summary-sig-name">update_schedule_groups_resets_connections</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.network.Network-class.html#set_update_schedule" class="summary-sig-name">set_update_schedule</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">schedule</span>)</span><br />
+      Defines a custom update schedule
+
+A custom update schedule is a list of schedule items.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="update"></a><span class="summary-sig-name">update</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="update_threaded"></a><span class="summary-sig-name">update_threaded</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">queue</span>)</span><br />
+      EXPERIMENTAL (not useful for the moment)
+Parallel update of the network (using threads).</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="run"></a><span class="summary-sig-name">run</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">duration</span>,
+        <span class="summary-sig-arg">threads</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Runs the simulation for the given duration.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="stop"></a><span class="summary-sig-name">stop</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Stops the network from running, this is reset the next time ``run()`` is called.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="same_clocks"></a><span class="summary-sig-name">same_clocks</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns True if the clocks of all groups and operations are the same.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="set_clock"></a><span class="summary-sig-name">set_clock</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Sets the clock and checks that clocks of all groups are synchronized.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.network.Network-class.html#set_many_clocks" class="summary-sig-name">set_many_clocks</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Sets a list of clocks.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__len__"></a><span class="summary-sig-name">__len__</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Number of neurons in the network</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.network.Network-class.html#__repr__" class="summary-sig-name">__repr__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      repr(x)</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.network.Network-class.html#__reduce__" class="summary-sig-name">__reduce__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      helper for pickle</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__setattr__</code>,
+      <code>__str__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Properties</span></td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="brian.network.Network-class.html#operations" class="summary-name">operations</a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Method Details</span></td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">*args</span>,
+        <span class="sig-arg">**kwds</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+x.__init__(...) initializes x; see x.__class__.__doc__ for signature
+
+</pre>
+  <dl class="fields">
+    <dt>Overrides:
+      object.__init__
+        <dd><em class="note">(inherited documentation)</em></dd>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="set_update_schedule"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">set_update_schedule</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">schedule</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Defines a custom update schedule
+
+A custom update schedule is a list of schedule items. Each update
+step of the network, the schedule items will be run in turn. A
+schedule item can be defined as a string or tuple. The following
+string definitions are possible:
+
+'groups'
+    Calls the 'update' function of each group in turn, this is
+    typically the integration step of the simulation.
+'connections'
+    Calls the 'do_propagate' function of each connection in
+    turn, this is typically propagating spikes forward (and
+    backward in the case of STDP).
+'resets'
+    Calls the 'reset' function of each group in turn.
+'ops '+name
+    Calls each operation in turn whose 'when' parameter is
+    set to 'name'. The standard set of 'when' names is
+    start, before_groups, after_groups, before_resets,
+    after_resets, before_connections, after_connections,
+    end, but you can use any you like.
+
+If a tuple is provided, it should be of the form:
+
+    (objset, func, allclocks)
+
+with:
+
+objset
+    a list of objects to be processed
+func
+    Either None or a string. In the case of none, each
+    object in objset must be callable and will be called.
+    In the case of a string, obj.func will be called for
+    each obj in objset.
+allclocks
+    Either True or False. If it's set to True, then the
+    object will be placed in the update schedule of
+    every clock in the network. If False, it will be
+    placed in the update schedule only of the clock
+    obj.clock.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="set_many_clocks"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">set_many_clocks</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Sets a list of clocks.
+self.clock points to the current clock between considered.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="__repr__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__repr__</span>(<span class="sig-arg">self</span>)</span>
+    <br /><em class="fname">(Representation operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+repr(x)
+
+</pre>
+  <dl class="fields">
+    <dt>Overrides:
+      object.__repr__
+        <dd><em class="note">(inherited documentation)</em></dd>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__reduce__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__reduce__</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+helper for pickle
+
+</pre>
+  <dl class="fields">
+    <dt>Overrides:
+      object.__reduce__
+        <dd><em class="note">(inherited documentation)</em></dd>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== PROPERTY DETAILS ==================== -->
+<a name="section-PropertyDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Property Details</span></td>
+</tr>
+</table>
+<a name="operations"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">operations</h3>
+  
+  <dl class="fields">
+    <dt>Get Method:</dt>
+    <dd class="value"><span class="summary-sig"><i>unreachable</i>(<span class="summary-sig-arg">self</span>)</span>
+    </dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0beta1 on Tue Sep 23 13:38:03 2008
+    </td>
+    <td align="right" class="footer">
+      <a href="http://epydoc.sourceforge.net">http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie()
+  // -->
+</script>
+  
+</body>
+</html>

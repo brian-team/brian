@@ -1,0 +1,30 @@
+.. currentmodule:: brian
+
+Monitors
+--------
+
+Monitors are used to record properties of your network. The two
+most important are :class:`SpikeMonitor` which records spikes, and
+:class:`StateMonitor` which records values of state variables. These
+objects are just added to the network like a :class:`NeuronGroup` or
+:class:`Connection`.
+
+Implementation note: monitors that record spikes are classes
+derived from :class:`Connection`, and overwrite the ``propagate`` method
+to store spikes. If you want to write your own custom spike
+monitors, you can do the same (or just use :class:`SpikeMonitor` with
+a custom function). Monitors that record values are classes
+derived from :class:`NetworkOperation` and implement the ``__call__``
+method to store values each time the network updates. Custom
+state monitors are most easily written by just writing your
+own network operation using the ``network_operation``
+decorator.
+
+.. autoclass:: SpikeMonitor
+.. autoclass:: SpikeCounter
+.. autoclass:: PopulationSpikeCounter
+.. autoclass:: StateSpikeMonitor
+.. autoclass:: StateMonitor
+.. autoclass:: FileSpikeMonitor
+.. autoclass:: ISIHistogramMonitor
+.. autoclass:: PopulationRateMonitor

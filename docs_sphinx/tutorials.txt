@@ -1,0 +1,15 @@
+.. currentmodule:: brian
+
+Tutorials
+=========
+
+These tutorials cover some basic topics in writing Brian scripts in Python. The
+complete source code for the tutorials is available in the tutorials folder
+in the extras package.
+
+.. toctree::
+   :maxdepth: 2
+   
+   othertutorials
+   tutorial1_basic_concepts
+   tutorial2_connections

@@ -1,0 +1,117 @@
+New qarray unfinished business
+==============================
+
+Numpy functions not implemented
+-------------------------------
+
+Not working
+~~~~~~~~~~~
+
+accumulate: add.accumulate, etc.
+clip
+cumprod
+diff (relies on some slice stuff that doesn't work for qarray)
+fix
+median (relies on sorted)
+squeeze
+where
+
+Working but gives numpy results and no unit checking
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+allclose
+append (presumably insert, delete, concatenate)
+average (uses add.reduce)
+corrcoef
+cov (uses dot)
+digitize
+histogram
+permutation
+prod
+ptp
+reduce (add.reduce etc.)
+
+Working and gives wrong/meaningless results
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+arctan2
+fill
+shuffle
+
+Not implemented Brian version, but could do
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+mgrid
+
+Untested
+~~~~~~~~
+
+Higher priority:
+
+dot
+fft, fftfreq, fftshift, ifft
+inner
+outer
+loadtxt, savetxt
+lstsq
+searchsorted, sorted, sort
+
+Lower priority:
+
+array_split, split, dsplit, hsplit, vsplit
+column_stack, hstack, vstack
+as*
+atleast*
+bitwise_*
+binary_repr
+mat, bmat
+broadcast
+bytes
+c_, r_, s_
+cast[]
+choose
+column_stack
+compress
+conj, conjugate
+cross
+diag, diagflat, diagonal
+dtype
+expand_dims
+flat, flatten, fliplr, flipud
+from*:  fromarrays(),  frombuffer(),  fromfile(),  fromfunction(),  fromiter(),  loadtxt()
+identity
+imag
+index_exp
+indices
+inf
+inv
+item
+ix
+lexsort
+logical_*
+nan
+newaxis
+ogrid
+piecewise
+pinv
+poly*
+put, putmask, take
+ravel
+real
+repeat reshape resize rollaxis
+rot90
+select
+set_printoptions
+solve
+svd
+swapaxes
+transpose
+tensordot
+tile
+tofile, tolist
+trace
+trim_zeros
+unique
+vander
+vdot
+vectorize

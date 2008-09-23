@@ -1,0 +1,17 @@
+.. currentmodule:: brian
+
+Random processes
+----------------
+To import the random processes library::
+
+  from brian.library.random_processes import *
+  
+For the moment, only the Ornstein-Uhlenbeck process has been included.
+The function :func:`OrnsteinUhlenbeck` returns an :class:`Equations` object. The following example
+defines a membrane equation with an Ornstein-Uhlenbeck current ``I`` (= coloured noise)::
+
+  eqs=Equations('dv/dt=-v/tau+I/C : volt')
+  eqs+=OrnsteinUhlenbeck('I',mu=1*nA,sigma=2*nA,tau=10*ms)
+
+where ``mu`` is the mean of the current, ``sigma`` is the standard deviation and
+``tau`` is autocorrelation time constant.

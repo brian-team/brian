@@ -1,0 +1,218 @@
+Proposal for new Connection/ConnectionMatrix scheme
+---------------------------------------------------
+
+The idea is to have a nice scheme for Connection and
+ConnectionMatrix objects that is fairly general and
+efficient. At the moment, Brian only has a small
+number of Connection and ConnectionMatrix objects
+so it is relatively easy to hand code things that
+use them with that in mind. However, with things like
+STDP connections, heterogeneous delay connections,
+computed connections, etc. on the way, it is getting
+more and more unwieldy to try to handle all of these
+different types. A standardised mechanism for
+these classes to interact would make this process
+much easier.
+
+Considerations:
+
+* The primary means of accessing and setting the
+  values in a ConnectionMatrix are via rows, as rows
+  correspond to the set of outgoing synaptic
+  connections. However, columns are also important
+  especially for STDP or anything that requires
+  backpropagation.
+
+* Propagation of spikes is most efficiently done on
+  multiple spikes at once, rather than by looping
+  spike by spike.
+
+* Different types of Connection object should be
+  able to use different types of ConnectionMatrix
+  objects without having to know too much about the
+  internal functioning of each one (for generality
+  and extensibility).
+
+Practicalities:
+ 
+* For dense matrices, column access
+  is trivial. For sparse matrices, it's more
+  troublesome. The SparseSTDPConnectionMatrix class
+  I designed and put in brian.experimental.stdp_sparse
+  shows that column access can be made highly
+  efficient even for a sparse matrix. In fact,
+  propagation for this class is faster than with the
+  current sparse matrix class built on lil_matrix.
+  The only catch is that you cannot add or delete new
+  synapses at runtime (but then you cannot do that
+  for our version of lil_matrix either). There are
+  some possibilities for data structures which allow
+  easier adding and removing of synapses. You could
+  have a class similar to SparseSTDPConnectionMatrix
+  but with extra storage space left aside for adding
+  new connections (i.e. an upper bound on the number
+  of synapses), and then a list of active synapses
+  could be maintained for both columns and rows, etc.
+  This wouldn't be as efficient as the current system
+  especially for row access, because rows would have
+  to be copied from the data structure rather than
+  sliced. Another possibility is a doubly linked 2D
+  list. Insertion and deletion is O(1) for this
+  structure, and row/col access is O(N), but unless
+  it was C++ coded you still have the problem of lots
+  of Python overheads associated with the list
+  structure.
+
+* Typically, a connection propagates spikes to a
+  single dense target array, but not in every case.
+  For example, my HeterogeneousDelayConnection uses
+  an array of target arrays depending on the value
+  of the delay vector. In the case of 1D delay vector,
+  this varies depending the source neuron only, in the
+  case of a 2D delay vector, this varies depending on
+  both source and target neuron. Vectorisation in this
+  case is more tricky. However, see the proposal for
+  all connection matrix types operating in both sparse
+  and dense modes - this would make coding for these
+  two scenarios more straightforward.
+
+* I think we never need to take slices of a ConnectionMatrix,
+  is this right? This allows us to have a more specific
+  connection matrix type than scipy/numpy, and quite likely
+  more optimised.
+
+* STDP requires either a sparse matrix class or a mask to
+  stop non-existent synapses from being potentiated.
+
+Proposals:
+
+* ConnectionMatrix should operate either in a sparse
+  mode or dense mode. In a sparse mode, row/col access
+  should accept or return a pair (indices, values) and
+  in dense mode should accept or return an array of the
+  full size of the row/col. Sparse mode setting of a
+  row/column could in principle accept just an array
+  of values without the indices if it is a frozen type.
+  
+  This could be done with methods:
+  	. get_row_dense(i)
+  	. set_row_dense(i, val)
+  	. get_row_sparse(i)
+  	. set_row_sparse(i, indices, val)
+  	. set_row_sparse(i, val)
+  	. Above with col instead of row
+  
+  The __getitem__ method could be used or not. In any
+  case it's fairly trivial to write a __getitem__ that
+  returns the value of the appropriate method. I guess
+  using the dense versions by default would make sense.
+  Similarly for __setitem__. If a matrix type doesn't
+  allow for these (e.g. frozen types cannot be set)
+  then the methods can return NotImplemented.
+  
+  In addition, you could have get_row and set_row
+  function which return values using the more appropriate
+  of the sparse and dense modes. Alternatively, you
+  could have a class attribute prefer_sparse=True/False
+  to tell code using these which is the more appropriate
+  in cases where both are possible but one is more
+  efficient. 
+  
+* Have the following matrix types:
+	- Sparse, of various types:
+		. lil_matrix, optimised for insertion and
+		  deletion at run-time. Column access is
+		  very slow but possible, row access is
+		  just slow.
+		. frozen, based on SparseSTDPConnectionMatrix,
+		  this still allows for run-time changing of
+		  weights at no computational cost. Row access
+		  is ultra-fast, column access is reasonable.
+		. Possibly include a version of
+		  the frozen sparse matrix which allows for
+		  insertion/deletion reasonably efficiently
+		  using storage space set aside for new synapses
+		  but at some runtime cost for row access.
+		. Possibly include 2D doubly linked list if
+		  it can be made efficient.
+	- Dense
+	- Computed, of various types based on the idea that
+	  the user provides a row function which returns a
+	  given row. The user is in charge of making sure
+	  this is consistent on each call, although we can
+	  help out in that as well as providing standard types
+	  like random connectivity. The two types of computed
+	  matrices would be:
+		. sparse, where row_funcs return tuples
+		  (indices, values)
+		. dense, where row_funcs return an entire
+		  row
+	  Column support for computed could be added in
+	  principle if there was a use case for it? I suppose
+	  backpropagation but not STDP? Seems unlikely.
+
+* Vectorised construction of connection matrices should
+  be encouraged to be row-by-row in most cases. The
+  current connect_random, connect_full and connect_one_to_one
+  can all be easily rewritten to accomodate this. Since
+  construction is already row-by-row, this means it's no
+  less efficient. Plus, it is more memory friendly - the
+  current methods build a matrix and then pass that to the
+  ConnectionMatrix object, which means you use double the
+  RAM. For large connection matrices, this leads either to
+  very slow performance (as a 1GB matrix is moved in and out
+  of virtual memory as the transfer takes place) or sets an
+  upper limit on possible RAM of only half what the system
+  actually has.
+
+More speculative proposals:
+
+* One possibility is an extension to the specification
+  of ConnectionMatrix objects returning rows and columns,
+  and also ask them to provide submatrices for any set
+  of rows. These submatrices could be given in various
+  forms, including dense, sparse, etc. Then, the
+  Connection object could be in charge of propagating
+  the spikes. The submatrices could either be proper
+  2D arrays / sparse matrices, or they could be a list
+  of (sparse)array rows. In some cases, when a copy
+  operation is inevitable, a single 2D structure would
+  be optimal, in other cases a list of rows would be
+  optimal. This would add considerably to the complexity
+  but I think it probably covers most conceivable cases.
+  It would require at most sparse/dense access for single
+  rows/cols, multiple rows/cols as a single object, and
+  multiple rows/cols as a list of objects. That's 12
+  cases maximum, although you wouldn't always need to
+  implement them all, just the most appropriate for
+  efficiency, which means in most cases only implementing
+  around 6 different cases.
+
+Issues:
+
+* Should ConnectionMatrix objects do their own spike
+  propagation, or should they just have methods for
+  accessing their data which allows spike propagation
+  routines to be written by Connection objects? In
+  most cases, the former seems sensible, but there are
+  big problems for the heterogeneous delay class
+  because it uses a very non-standard type of
+  propagation. In this case, using the latter seems
+  more sensible, but it makes it difficult to
+  vectorise over multiple source spikes (although
+  vectorisation over targets is straightforward).
+
+* What should be the scheme for vectorisation over
+  multiple spikes? Bearing in mind the needs of the
+  heterogeneous delay class and possibly others
+  too? See the speculative proposal above for a possible
+  resolution of this.
+  
+* The SparseSTDPConnectionMatrix also requires you to use
+  twice as much RAM as necessary because it has to be built
+  flexibly before being frozen to this form. Perhaps an
+  alternative form could ask you to set up an upper bound
+  before construction, and to construct it row by row, thus
+  allowing you to benefit from the data structure with fast
+  row access, but still using only as much RAM as you will
+  actually use.

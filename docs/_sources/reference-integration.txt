@@ -1,0 +1,31 @@
+.. currentmodule:: brian
+
+.. index::
+	pair: integration; methods
+
+.. _integration:
+
+Integration
+===========
+
+See :ref:`numerical-integration` for an overview. 
+
+StateUpdaters
+-------------
+
+Typically you don't need to worry about :class:`StateUpdater` objects
+because they are automatically created from the differential
+equations defining your model. TODO: more details about this.
+
+.. index::
+	pair: integration; linear
+
+.. autoclass:: LinearStateUpdater
+.. autoclass:: LazyStateUpdater
+
+TODO: write docs for these StateUpdaters:
+
+* StateUpdater, LinearStateUpdater more details, NonlinearStateUpdater,
+  NonlinearStateUpdater2, ExponentialEulerStateUpdater,
+  NonlinearStateUpdaterRK2, NonlinearStateUpdaterBE,
+  SynapticNoise

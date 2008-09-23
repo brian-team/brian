@@ -1,0 +1,122 @@
+Creating a new release of Brian
+===============================
+
+At the moment, these instructions are for Windows computers only.
+
+You need the following packages installed:
+
+* Epydoc - and make sure that epydoc.py is copied into your Python
+  Scripts/ folder, and that your PATH includes this folder.
+* reStructuredText, part of docutils - make sure that rst2html.py
+  is in your Python Scripts/ folder.
+  
+Before releasing
+----------------
+
+Make sure that the tests in the test/ directory run without errors.
+Also, it's better to run all of the tutorials and examples as well.
+
+Building the documentation
+--------------------------
+
+First of all, run the dev/tools/docs/generate_html.py script. This will
+generate all the relevant HTML files for the documentation other
+than the API documentation. It will also make a copy of the
+brian-all.html documentation in the website/manual.html file, which
+can then be uploaded to the website.
+
+Secondly, build the API documentation. You do this by running the
+dev/tools/docs/generate_api.py file in the root Brian directory. Note that
+if you want to exclude certain files from the API documentation,
+you should edit the generate_api.py file to add the names
+of the modules which should be excluded.
+
+Update README.txt
+-----------------
+
+In the base Brian directory is a file README.txt which should be
+updated with the latest version numbers, etc. Also include here
+a copy of the changes from brian/new_features.txt.
+
+Update setup.py
+---------------
+
+Version number
+~~~~~~~~~~~~~~
+
+Update the version=... string to reflect the new version. It should
+have no spaces, and follow the convention major.minor.patch followed
+by a text string alpha, beta, rc1, etc. if necessary.
+
+Extras folders
+~~~~~~~~~~~~~~
+
+Now update the extras_folders variable if necessary - it specifies
+which files are included in the extras zip file.
+
+The setup function
+~~~~~~~~~~~~~~~~~~
+
+Finally, update the setup function if any major changes have been
+introduced. The line py_module=... gives a list of the modules
+outside of the main package that need to be installed, which in
+our case is the three unit preference related files. The line
+packages=... defines which packages to include. Note that
+sub-packages are not automatically included, so if you add a new
+sub-package to the main Brian package, include it here.
+
+Creating the distribution files
+-------------------------------
+
+The easiest way to do this is to delete the file MANIFEST if it exists,
+run the dev/tools/create_dist.py file, then edit the
+automatically generated MANIFEST file to remove any files that shouldn't
+be included in the release. This is annoying, but as far as I can tell,
+there is no way to specify files which should be excluded, only files
+which should be included. After deleting the unwanted files from MANIFEST,
+you should run create_dist.py again.
+
+This step should have created three files brian-versionname.win32.exe,
+brian-versionname.tar.gz and brian-versionname.zip in the dist/
+directory.
+
+Creating the extras file
+------------------------
+
+Just run the create_extras.py file in the Brian root directory. This
+should create dist/brian-versionname-extras.zip.
+
+Test the distribution
+---------------------
+
+First uninstall any installed copy of Brian you have on your machine,
+but not the SVN version. Do this by going to Add/Remove programs in
+Windows settings, and looking for 'Python 2.5 brian' and removing it.
+
+Now install Brian using the Windows installer. Open IPython, type
+from brian import *, then import inspect. Now type::
+
+  inspect.getsourcefile(run)
+
+The output should be a filename something like::
+
+  'C:\\Python25\\Lib\\site-packages\\brian\\network.py'
+
+It should point to the Python site-packages folder, not to your SVN
+copy. This proves it's working from the installed copy, not the SVN
+copy.
+
+Finally, run the tests. Open a command prompt, go to the Brian/tests
+folder (preferably from the unzipped extras folder, but from the
+SVN version is OK too). Run testinterface.py and testverification.py.
+These two tests should run correctly, and print a message saying that
+they were using the site-packages version rather than the SVN version.
+
+Once you've verified that it all works, you can uninstall the installed
+version of Brian (which is used in preference to the SVN version).
+
+Uploading the files
+-------------------
+
+Upload all of the four created files and the README.txt file to the
+sourceforge site.

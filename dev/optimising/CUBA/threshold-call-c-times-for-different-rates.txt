@@ -1,0 +1,29 @@
+1,  1.11, 2.266
+2,  1.109, 2.203
+3,  1.109, 2.235
+4,  1.109, 2.25
+5,  1.125, 2.235
+6,  1.094, 2.265
+7,  1.344, 2.266
+8,  1.485, 2.25
+9,  1.578, 2.25
+10,  1.578, 2.234
+20,  2.484, 2.297
+30,  3.234, 2.329
+40,  4.438, 2.312
+50,  5.391, 2.375
+60,  6.141, 2.343
+70,  7.218, 2.391
+80,  8.078, 2.391
+90,  9.031, 2.438
+100,  9.734, 2.469
+150,  13.468, 2.594
+200,  17.328, 2.657
+250,  21.453, 2.75
+300,  26.047, 2.906
+350,  31.453, 3.016
+400,  34.672, 3.078
+
+These values strongly suggest that both algorithms have a linear running term as a function of
+the network rate. The first one is better if the firing rate per time step is less than 20,
+the second one is better otherwise.

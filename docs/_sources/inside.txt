@@ -1,0 +1,11 @@
+.. currentmodule:: brian
+
+Inside Brian
+============
+
+.. toctree::
+   :maxdepth: 1
+   
+   reference-magic
+   equations
+   running

@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>brian.magic</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="brian-module.html">Package&nbsp;brian</a> ::
+        Module&nbsp;magic
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module magic</h1><br /><br />
+<p>Magic function tools</p>
+<p>Use these functions to automagically find objects of a particular class. The way it works is that
+whenever a new object is created from a class derived from InstanceTracker, it is stored along
+with the 'frame' it was called from (loosely speaking, the function where the object is defined).
+When you call one of the functions below, it picks out all the objects of the required type in
+a frame a specified number of levels before the current one (e.g. in the frame of the calling
+function).</p>
+<div class="rst-section" id="rst-functions">
+<h1 class="heading">Functions</h1>
+<dl class="rst-docutils">
+<dt>get_instances(instancetype,level=1)</dt>
+<dd>This function finds all instances at the given level in the sequence of calling frames</dd>
+<dt>find_instances(instancetype,startlevel=1)</dt>
+<dd>This function searches the frames starting from the given startlevel until it finds at least
+one object of the required type, at which point it will return all objects of that type from
+that level</dd>
+<dt>find_all_instances(instancetype,startlevel=1):</dt>
+<dd>This function searches the frames starting from the given startlevel, and returns all objects of
+the required type from all levels. Noe that includeglobals is set to False by default so as not
+to pick up multiple copies of objects</dd>
+</dl>
+<p>Variables:</p>
+<dl class="rst-docutils">
+<dt>instancetype</dt>
+<dd>A class (must be derived from InstanceTracker)</dd>
+<dt>level</dt>
+<dd>The level in the sequence of calling frames. So, for a function f, calling with level=0 will
+find variables defined in that function f, whereas calling with level=1 will find variables
+defined in the function which called f. The latter is the default value because magic
+functions are usually used within Brian functions to find variables defined by the user.</dd>
+</dl>
+<p>Return values:</p>
+<p>All the functions return a tuple (objects, names) where objects is the list of matching objects,
+and names is a list of strings giving the objects' names if they are defined. At the moment, the
+only name returned is the id of the object.</p>
+<p>Notes:</p>
+<p>These functions return each object at most once.</p>
+</div>
+<div class="rst-section" id="rst-classes">
+<h1 class="heading">Classes</h1>
+<dl class="rst-docutils">
+<dt>InstanceTracker</dt>
+<dd>Derive your class from this one to automagically keep track of instances of it. If you
+want a subclass of a tracked class not to be tracked, define the method _track_instances
+to return False.</dd>
+</dl>
+</div><br /><br />
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Functions</span></td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.magic-module.html#magic_register" class="summary-sig-name">magic_register</a>(<span class="summary-sig-arg">*args</span>,
+        <span class="summary-sig-arg">**kwds</span>)</span><br />
+      Declare that a magically tracked object should be put in a particular frame
+
+**Standard usage**
+
+If ``A`` is a tracked class (derived from :class:`InstanceTracker`), then the following wouldn't
+work::
+
+    def f():
+        x = A('x')
+        return x
+    objs = f()
+    print get_instances(A,0)[0]
+
+Instead you write::
+
+    def f():
+        x = A('x')
+        magic_register(x)
+        return x    
+    objs = f()
+    print get_instances(A,0)[0]
+
+**Definition**
+
+Call as::
+
+    magic_register(...[,level=1])
+
+The ``...`` can be any sequence of tracked objects or containers of tracked objects,
+and each tracked object will have its instance id (the execution frame in which it was
+created) set to that of its parent (or to its parent at the given level).</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.magic-module.html#magic_return" class="summary-sig-name">magic_return</a>(<span class="summary-sig-arg">f</span>)</span><br />
+      Decorator to ensure that the returned object from a function is recognised by magic functions
+
+**Usage example:** ::
+
+    @magic_return
+    def f():
+        return PulsePacket(50*ms, 100, 10*ms)
+
+**Explanation**
+
+Normally, code like the following wouldn't work::
+
+    def f():
+        return PulsePacket(50*ms, 100, 10*ms)
+    pp = f()
+    M = SpikeMonitor(pp)
+    run(100*ms)
+    raster_plot()
+    show()
+
+The reason is that the magic function :func:`run()` only recognises objects created
+in the same execution frame that it is run from.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.magic-module.html#get_instances" class="summary-sig-name">get_instances</a>(<span class="summary-sig-arg">instancetype</span>,
+        <span class="summary-sig-arg">level</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Find all instances of a given class at a given level in the stack</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.magic-module.html#find_instances" class="summary-sig-name">find_instances</a>(<span class="summary-sig-arg">instancetype</span>,
+        <span class="summary-sig-arg">startlevel</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Find first instances of a given class in the stack</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="brian.magic-module.html#find_all_instances" class="summary-sig-name">find_all_instances</a>(<span class="summary-sig-arg">instancetype</span>,
+        <span class="summary-sig-arg">startlevel</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Find all instances of a given class in the stack</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td align="left" colspan="2" class="table-header">
+    <span class="table-header">Function Details</span></td>
+</tr>
+</table>
+<a name="magic_register"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">magic_register</span>(<span class="sig-arg">*args</span>,
+        <span class="sig-arg">**kwds</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+Declare that a magically tracked object should be put in a particular frame
+
+**Standard usage**
+
+If ``A`` is a tracked class (derived from :class:`InstanceTracker`), then the following wouldn't
+work::
+
+    def f():
+        x = A('x')
+        return x
+    objs = f()
+    print get_instances(A,0)[0]
+
+Instead you write::
+
+    def f():
+        x = A('x')
+        magic_register(x)
+        return x    
+    objs = f()
+    print get_instances(A,0)[0]
+
+**Definition**
+
+Call as::
+
+    magic_register(...[,level=1])
+
+The ``...`` can be any sequence of tracked objects or containers of tracked objects,
+and each tracked object will have its instance id (the execution frame in which it was
+created) set to that of its parent (or to its parent at the given level). This is
+equivalent to calling::
+
+    x.set_instance_id(level=level)
+
+For each object ``x`` passed to :func:`magic_register`.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="magic_return"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">magic_return</span>(<span class="sig-arg">f</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <pre class="literalblock">
+
+Decorator to ensure that the returned object from a function is recognised by magic functions
+
+**Usage example:** ::
+
+    @magic_return
+    def f():
+        return PulsePacket(50*ms, 100, 10*ms)
+
+**Explanation**
+
+Normally, code like the following wouldn't work::
+
+    def f():
+        return PulsePacket(50*ms, 100, 10*ms)
+    pp = f()
+    M = SpikeMonitor(pp)
+    run(100*ms)
+    raster_plot()
+    show()
+
+The reason is that the magic function :func:`run()` only recognises objects created
+in the same execution frame that it is run from. The :func:`magic_return` decorator
+corrects this, it registers the return value of a function with the magic
+module. The following code will work as expected::
+
+    @magic_return
+    def f():
+        return PulsePacket(50*ms, 100, 10*ms)
+    pp = f()
+    M = SpikeMonitor(pp)
+    run(100*ms)
+    raster_plot()
+    show()
+
+**Technical details**
+
+The :func:`magic_return` function uses :func:`magic_register` with the default ``level=1``
+on just the object returned by a function. See details for :func:`magic_register`.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_instances"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_instances</span>(<span class="sig-arg">instancetype</span>,
+        <span class="sig-arg">level</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <p>Find all instances of a given class at a given level in the stack</p>
+<p>See documentation for module Brian.magic</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="find_instances"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">find_instances</span>(<span class="sig-arg">instancetype</span>,
+        <span class="sig-arg">startlevel</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <p>Find first instances of a given class in the stack</p>
+<p>See documentation for module Brian.magic</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="find_all_instances"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">find_all_instances</span>(<span class="sig-arg">instancetype</span>,
+        <span class="sig-arg">startlevel</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </table>
+  
+  <p>Find all instances of a given class in the stack</p>
+<p>See documentation for module Brian.magic</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="brian-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0beta1 on Tue Sep 23 13:38:00 2008
+    </td>
+    <td align="right" class="footer">
+      <a href="http://epydoc.sourceforge.net">http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie()
+  // -->
+</script>
+  
+</body>
+</html>

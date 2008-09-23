@@ -1,0 +1,54 @@
+.. currentmodule:: brian
+
+connection
+**********
+
+:class:`Connection`
+~~~~~~~~~~~~~~~~~~~
+
+**Initialised as:** ::
+
+    Connection(source, target[, state=0[, delay=0*ms]])
+
+With arguments:
+
+``source``
+    The group from which spikes will be propagated.
+``target``
+    The group to which spikes will be propagated.
+``state``
+    The state variable name or number that spikes will be
+    propagated to in the target group.
+``delay``
+    The delay between a spike being generated at the source
+    and received at the target. At the moment, the mechanism
+    for delays only works for relatively short delays (an
+    error will be generated for delays that are too long), but
+    this is subject to change. The exact behaviour then is
+    not part of the assured interface, although it is very
+    likely that the syntax will not change (or will at least
+    be backwards compatible).
+
+**Methods**
+
+``connect_random(P,Q,p[,weight=1])``
+    Connects each neuron in ``P`` to each neuron in ``Q``.
+``connect_full(P,Q[,weight=1])``
+    Connect every neuron in ``P`` to every neuron in ``Q``.
+``connect_one_to_one(P,Q)``
+    If ``P`` and ``Q`` have the same number of neurons then neuron ``i``
+    in ``P`` will be connected to neuron ``i`` in ``Q`` with weight 1.
+
+Additionally, you can directly access the matrix of weights by writing::
+
+    C = Connection(P,Q)
+    print C[i,j]
+    C[i,j] = ...
+
+Where here ``i`` is the source neuron and ``j`` is the target neuron.
+Note: No unit checking is currently done if you use this method,
+but this is subject to change for future releases.
+
+The behaviour when a list of neuron ``spikes`` is received is to
+add ``W[i,:]`` to the target state variable for each ``i`` in ``spikes``.
+

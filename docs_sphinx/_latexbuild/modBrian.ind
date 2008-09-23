@@ -1,0 +1,7 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter B
+  \item {\texttt  {brian}}, \hyperpage{1}
+
+\end{theindex}

@@ -1,0 +1,68 @@
+.. currentmodule:: brian
+
+threshold
+*********
+
+:class:`Threshold`
+~~~~~~~~~~~~~~~~~~
+
+Initialised as ``Threshold(threshold[,state=0])``
+
+Causes a spike whenever the given state variable is above
+the threshold value.
+
+:class:`NoThreshold`
+~~~~~~~~~~~~~~~~~~~~
+
+Does nothing, initialised as ``NoThreshold()``
+
+Functional thresholds
+~~~~~~~~~~~~~~~~~~~~~
+
+Initialised as::
+
+    FunThreshold(thresholdfun)
+    SimpleFunThreshold(thresholdfun[,state=0])
+
+Threshold functions return a boolean array the same size as the
+number of neurons in the group, where if the returned array is
+True at index i then neuron i fires.
+
+The arguments passed to the :class:`FunThreshold` function are the
+full array of state variables for the group in order.
+
+The argument passed to the :class:`SimpleFunThreshold` function is the
+array of length N corresponding to the given state variable.
+
+:class:`VariableThreshold`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Initialised as ``VariableThreshold(threshold_state[,state=0])``
+
+Causes a spike whenever the state variable defined by state
+is above the state variable defined by threshold_state.
+
+:class:`EmpiricalThreshold`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Initialised as::
+
+    EmpiricalThreshold(threshold[,refractory=1*msecond[,state=0[,clock]]])
+
+Causes a spike when the given state variable exceeds the threshold value,
+but only if there has been no spike within the refractory period. Will
+use the given clock if specified, otherwise the standard guessing procedure
+is used.
+
+Poisson thresholds
+~~~~~~~~~~~~~~~~~~
+
+Initialised as::
+
+    PoissonThreshold([state=0])
+    HomogeneousPoissonThreshold([state=0])
+
+The Poisson process gets the rates from the specified state variable, the
+homogeneous version uses the rates from the specified variable of the first
+neuron in the group.
+
