@@ -143,6 +143,8 @@ class MultiLinearNeuronGroup(NeuronGroup):
         How many levels up to look for the equations' namespace.
     ``clock``
         If you want.
+    ``kwds``
+        Any additonal arguments to pass to :class:`NeuronGroup` init.
     '''
     def __init__(self, eqs, subs, clock=None, level=0, **kwds):
         neweqs = eqs
