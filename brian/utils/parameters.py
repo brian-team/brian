@@ -38,6 +38,7 @@ Classes and functions for storing and using parameters
 
 __all__ = ['attribdict','Parameters']
 
+from itertools import chain
 from inspect import *
 
 class attribdict(dict):
@@ -161,6 +162,14 @@ class Parameters(attribdict):
             if k[:9]!='computed_':
                 s+=k+'='+name+'.'+k+'\n'
         return s
+    def get_vars(self, *vars):
+        '''
+        Returns a tuple of variables given their names
+        
+        vars can be a list of string names, or a single space separated string of names.
+        '''
+        vars = [v.split(' ') for v in vars]
+        return tuple(getattr(self, v) for v in chain(*vars))
     def __repr__(self):
         s = 'Values:'
         for k,v in self.iteritems():
