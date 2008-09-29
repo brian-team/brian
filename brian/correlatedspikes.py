@@ -183,6 +183,8 @@ def mixture_process(nu,P,tauc,t):
     Returns a list of (neuron_number,spike_time) to be passed to SpikeGeneratorGroup.
     '''
     n=array(poisson(nu*t)) # number of spikes for each source spike train
+    if n.ndim==0:
+        n=array([n])
     # Only non-zero entries:
     nonzero=n.nonzero()[0]
     n=n[nonzero]
