@@ -2,8 +2,75 @@ from brian import *
 from brian.stateupdater import get_linear_equations_solution_numerically, get_linear_equations
 from scipy import linalg, weave
 import numpy
+import inspect
+from itertools import count
+import re
 
 __all__=['MultiLinearStateUpdater','get_multilinear_state_updater','MultiLinearNeuronGroup']
+
+__all__=['MultiLinearStateUpdater','get_multilinear_state_updater','MultiLinearNeuronGroup']
+
+def get_multilinear_matrices(eqs, subs, clock=None):
+    '''
+    Returns the matrices M and B for the linear model dX/dt = M(X-B),
+    where eqs is an Equations object. 
+    '''
+    if clock is None: clock=guess_clock()
+    nsubs = len(subs[subs.keys()[0]])
+    # Otherwise assumes it is given in functional form
+    n=len(eqs._diffeq_names) # number of state variables
+    dynamicvars=eqs._diffeq_names
+    # Calculate B
+    AB=zeros((n,1,nsubs))
+    d=dict.fromkeys(dynamicvars)
+    for j in range(n):
+        if dynamicvars[j] in subs:
+            d[dynamicvars[j]]=subs[j]
+        else:
+            d[dynamicvars[j]]=0.*eqs._units[dynamicvars[j]]
+    for var,i in zip(dynamicvars,count()):
+        AB[i,0,:]=-eqs.apply(var,d)
+    # Calculate A
+    M=zeros((n,n,nsubs))
+    for i in range(n):
+        for j in range(n):
+            if dynamicvars[j] in subs:
+                d[dynamicvars[j]]=subs[j]
+            else:
+                d[dynamicvars[j]]=0.*eqs._units[dynamicvars[j]]
+        if dynamicvars[i] in subs:
+            d[dynamicvars[i]]=subs[i]
+        else:
+            if isinstance(eqs._units[dynamicvars[i]],Quantity):
+                d[dynamicvars[i]]=Quantity.with_dimensions(1.,eqs._units[dynamicvars[i]].get_dimensions())
+            else:
+                d[dynamicvars[i]]=1.
+        for var,j in zip(dynamicvars,count()):
+            M[j,i,:]=eqs.apply(var,d)+AB[j]
+
+    allM = M
+    allAB = AB
+
+    AiBi = []
+    for i in xrange(nsubs):
+        try:
+            M = reshape(allM[:,:,i], allM.shape[:2])
+            AB = reshape(allAB[:,:,i], allAB.shape[:2])
+            C = linalg.solve(M, AB)
+            A = linalg.expm(M*clock.dt)
+            B = -dot(A,C)+C
+        except LinAlgError:
+            numeulersteps = 100
+            deltat = clock.dt/numeulersteps
+            E = eye(n)+deltat*M
+            C = eye(n)
+            D = zeros((n,1))
+            for step in xrange(numeulersteps):
+                C, D = dot(E,C), dot(E,D)-AB*deltat
+            A,B = C, D
+        AiBi.append((A, B))
+        
+    return AiBi
 
 def get_multilinear_state_updater(eqs, subs, level=0, clock=None):
     '''
@@ -14,54 +81,25 @@ def get_multilinear_state_updater(eqs, subs, level=0, clock=None):
     ``eqs``
         should be the equations, and must be a string not an :class:`Equations` object.
     ``subs``
-        A list of dictionaries, each dictionary gives the variable substitutions
-        to make. There should be one dictionary for each neuron in the final
-        group.
+        A dictionary of arrays, each key k is a variable name, each value is an equally
+        sized array of values it takes, this array should have the size of the number
+        of neurons in the group.
     ``level``
         How many levels up to look for the equations' namespace.
     ``clock``
         If you want.
     '''
-    AiBi = []
-    useB = False
-    for s in subs:
-        neweqs = eqs
-        for k, v in s.items():
-            neweqs = neweqs.replace(k,'('+str(v)+')')
-        neweqs = Equations(neweqs, level=level+1)
-        Ai, Bi = get_linear_matrices(neweqs, clock=clock)
-        AiBi.append((Ai, Bi))
-        useB = useB or Bi is not None
-        n = Ai.shape[0]
-    A = numpy.zeros((n, n, len(subs)))
-    if useB:
-        B = numpy.zeros((n, len(subs)))
-    else:
-        B = None
+    neweqs = Equations(eqs, level=level+1)
+    neweqs.prepare()
+    AiBi = get_multilinear_matrices(neweqs, subs, clock=clock)
+    n = AiBi[0][0].shape[0]
+    nsubs = len(subs[subs.keys()[0]])
+    A = numpy.zeros((n, n, nsubs))
+    B = numpy.zeros((n, nsubs))
     for i, (Ai, Bi) in enumerate(AiBi):
         A[:,:,i] = Ai
-        if useB and Bi is not None:
-            B[:,i] = Bi.squeeze()
+        B[:,i] = Bi.squeeze()
     return MultiLinearStateUpdater(A, B)
-
-def get_linear_matrices(eqs, clock=None):
-    '''
-    This is just a copy of what the main Brian linear equations code does, but self-contained
-    '''
-    eqs.prepare()
-    if clock==None:
-        clock = guess_clock()
-    try:
-        M, C = get_linear_equations(eqs)
-        A = linalg.expm(M*clock.dt)
-        if C is not None:
-            B = -dot(A,C)+C
-        else:
-            B = None
-        return A, B
-    except LinAlgError:
-        A, B = get_linear_equations_solution_numerically(eqs, clock.dt)
-        return A, B
 
 class MultiLinearStateUpdater(StateUpdater):
     '''
@@ -127,18 +165,18 @@ class MultiLinearNeuronGroup(NeuronGroup):
     '''
     Make a NeuronGroup with a linear differential equation for each neuron
     
-    You give a single set of differential equations with parameters, and you
-    also give a list of substitutions for those parameters, one set of
-    substitutions for each neuron in the group.
+    You give a single set of differential equations with parameters, the
+    variables you want substituted should be defined as parameters in the equations,
+    but they will not be treated as parameters, instead they will be substituted.
+    You also pass a list of variables to have their values substituted, and these
+    names should exist in the namespace initialising the MultiLinearNeuronGroup. 
     
     Arguments:
     
     ``eqs``
         should be the equations, and must be a string not an :class:`Equations` object.
     ``subs``
-        A list of dictionaries, each dictionary gives the variable substitutions
-        to make. There should be one dictionary for each neuron in the final
-        group.
+        A list of variables to be substituted with values.
     ``level``
         How many levels up to look for the equations' namespace.
     ``clock``
@@ -146,22 +184,53 @@ class MultiLinearNeuronGroup(NeuronGroup):
     ``kwds``
         Any additonal arguments to pass to :class:`NeuronGroup` init.
     '''
+    #TODO: for consistency put the units in the equations, and multilinearneurongroup can extract them.
     def __init__(self, eqs, subs, clock=None, level=0, **kwds):
+        subs_set = set(subs)
+        param_pattern = re.compile('\s*(\w+)\s*:\s*(.*)')
+        eqs = re.sub('\\\s*?\n',' ', eqs) # compact multiline equations
+        neweqs = ''
+        subs = {}
+        for line in eqs.splitlines():
+            line = re.sub('#.*','', line) # remove comments
+            result = param_pattern.match(line)
+            added = False
+            if result is not None:
+                name, unit = result.groups()
+                if name in subs_set:
+                    subs[name] = unit
+                    added = True
+            if not added:
+                neweqs += line + '\n'
+        eqs = neweqs
+        frame = inspect.stack()[level+1][0]
+        ns_global, ns_local = frame.f_globals, frame.f_locals
+        k0 = subs.keys()[0]
+        if k0 in ns_local:
+            nsubs = len(ns_local[k0])
+        else:
+            nsubs = len(ns_global[k0])
         neweqs = eqs
-        for k, v in subs[0].items():
-            neweqs = neweqs.replace(k,'('+str(v)+')')
+        for k, u in subs.iteritems():
+            neweqs = neweqs.replace(k,'(0.*('+u+'))')
         neweqs = Equations(neweqs, level=level+1)
-        NeuronGroup.__init__(self, len(subs), neweqs, clock=clock, **kwds)
-        self._state_updater = get_multilinear_state_updater(eqs, subs, level=level+1)     
+        NeuronGroup.__init__(self, nsubs, neweqs, clock=clock, **kwds)
+        subs2 = {}
+        for k, u in subs.iteritems():
+            if k in ns_local:
+                subs2[k] = ns_local[k]
+            else:
+                subs2[k] = ns_global[k]
+        self._state_updater = get_multilinear_state_updater(eqs, subs2, level=level+1, clock=clock)     
     
 if __name__=='__main__':
     eqs = '''
     dv/dt = k*v/(1*second) : 1
     dw/dt = k*w/(1*second) : 1
+    k : 1
     '''
-    subs = [{'k':-1},
-            {'k':-2},
-            {'k':-3}]
+    k = array([-1,-2,-3])
+    subs = ['k']
     G = MultiLinearNeuronGroup(eqs, subs)
     G.v = 1
     G.w = 0
