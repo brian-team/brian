@@ -637,22 +637,26 @@ class Connection(magic.InstanceTracker):
     # TODO: rewrite all the connection functions to work row by row for memory and time efficiency 
 
     # TODO: change this
-    def connect(self,P,Q,W):
+    def connect(self,source=None,target=None,W=None):
         '''
         Connects (sub)groups P and Q with the weight matrix W (any type).
         Internally: inserts W as a submatrix.
         TODO: checks if the submatrix has already been specified.
         '''
+        P=source or self.source
+        Q=target or self.target
         i0,j0=self.origin(P,Q)
         self.W[i0:i0+len(P),j0:j0+len(Q)]=W
         
-    def connect_random(self,P,Q,p,weight=1.,fixed=False, seed=None):
+    def connect_random(self,source=None,target=None,p=1.,weight=1.,fixed=False, seed=None):
         '''
         Connects the neurons in group P to neurons in group Q with probability p,
         with given weight (default 1).
         The weight can be a quantity or a function of i (in P) and j (in Q).
         If ``fixed`` is True, then the number of presynaptic neurons per neuron is constant.
         '''
+        P=source or self.source
+        Q=target or self.target
         if seed is not None:
             numpy.random.seed(seed) # numpy's random number seed
             pyrandom.seed(seed) # Python's random number seed
@@ -676,12 +680,14 @@ class Connection(magic.InstanceTracker):
                 raise DimensionMismatchError("Incorrects unit for the synaptic weights.",*inst._dims)
             self.connect(P,Q,random_matrix_function(len(P),len(Q),p,value=float(weight)))
 
-    def connect_full(self,P,Q,weight=1.):
+    def connect_full(self,source=None,target=None,weight=1.):
         '''
         Connects the neurons in group P to all neurons in group Q,
         with given weight (default 1).
         The weight can be a quantity or a function of i (in P) and j (in Q).
         '''
+        P=source or self.source
+        Q=target or self.target
         # TODO: check units
         if callable(weight):
             # Check units
@@ -717,10 +723,12 @@ class Connection(magic.InstanceTracker):
                 raise DimensionMismatchError("Incorrect unit for the synaptic weights.",*inst._dims)
             self.connect(P,Q,float(weight)*ones((len(P),len(Q))))
 
-    def connect_one_to_one(self,P,Q,weight=1):
+    def connect_one_to_one(self,source=None,target=None,weight=1):
         '''
-        Connects P[i] to Q[i] with weights 1 (or weight).
+        Connects source[i] to target[i] with weights 1 (or weight).
         '''
+        P=source or self.source
+        Q=target or self.target
         if (len(P)!=len(Q)):
             raise AttributeError,'The connected (sub)groups must have the same size.'
         # TODO: unit checking

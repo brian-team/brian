@@ -24,8 +24,8 @@ Pgp = [ P.subgroup(100) for i in range(10)]
 C = Connection(P,P,'y')
 for i in range(9):
     C.connect_full(Pgp[i],Pgp[i+1],weight)
-Cinput = Connection(Pinput,P,'y')
-Cinput.connect_full(Pinput,Pgp[0],weight)
+Cinput = Connection(Pinput,Pgp[0],'y')
+Cinput.connect_full(weight=weight)
 # Record the spikes
 Mgp = [SpikeMonitor(p,record=True) for p in Pgp]
 Minput = SpikeMonitor(Pinput,record=True)

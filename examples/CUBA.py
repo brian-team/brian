@@ -49,8 +49,8 @@ Ce=Connection(Pe,P,'ge')
 Ci=Connection(Pi,P,'gi')
 we=(60*0.27/10)*mV # excitatory synaptic weight (voltage)
 wi=(-20*4.5/10)*mV # inhibitory synaptic weight
-Ce.connect_random(Pe, P, 0.02,weight=we)
-Ci.connect_random(Pi, P, 0.02,weight=wi)
+Ce.connect_random(p=0.02,weight=we)
+Ci.connect_random(p=0.02,weight=wi)
 P.v=Vr+rand(len(P))*(Vt-Vr)
 
 # Record the number of spikes
