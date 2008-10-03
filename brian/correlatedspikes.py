@@ -100,6 +100,7 @@ class HomogeneousCorrelatedSpikeTrains(NeuronGroup):
         c = total correlation strength (in [0,1])
         tauc = correlation time constant (ms)
         '''
+        self.N=N
         # Correction of mu and sigma
         sigmar=(c*r/(2.*tauc))**.5
         mu,sigma=inv_rectified_gaussian(r,sigmar)
@@ -107,7 +108,6 @@ class HomogeneousCorrelatedSpikeTrains(NeuronGroup):
         NeuronGroup.__init__(self,1,model=eq,threshold=HomogeneousPoissonThreshold(),\
                              clock=clock)
         self.rate=mu
-        self.N=N
         self.LS=SpikeContainer(N,1) # Spike storage
         
     def __len__(self):
