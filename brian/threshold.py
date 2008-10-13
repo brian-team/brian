@@ -40,12 +40,13 @@ __all__= ['Threshold','FunThreshold','VariableThreshold','NoThreshold',
           'EmpiricalThreshold','SimpleFunThreshold','PoissonThreshold',
           'HomogeneousPoissonThreshold']
 
-from numpy import where,array,zeros
+from numpy import where,array,zeros,Inf
 from units import *
 from itertools import count
 from clock import guess_clock, get_default_clock, reinit_default_clock
 from random import sample # Python standard random module (sample is different)
 from scipy import random
+from numpy import clip
 import bisect
 from scipy import weave
 from globalprefs import *
@@ -518,7 +519,7 @@ class HomogeneousPoissonThreshold(PoissonThreshold):
     def __call__(self,P):
         # N.B.: is "float" necessary?
         # Other possibility to avoid sorting: use an exponential distribution
-        n=random.poisson(float(len(P)*P.clock.dt*P._S[self.state][0])) # number of spikes
+        n=random.poisson(float(len(P)*P.clock.dt*clip(P._S[self.state][0], 0, Inf))) # number of spikes
         if n>len(P):
             n=len(P)
             log_warn('brian.HomogeneousPoissonThreshold', 'HomogeneousPoissonThreshold cannot generate enough spikes.')
