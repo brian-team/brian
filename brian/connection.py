@@ -757,9 +757,10 @@ class IdentityConnection(Connection):
         else:
             self.nstate=state # target state index
         self.W=float(weight) # weight
+        source.set_max_delay(delay)
         self.delay=int(delay/source.clock.dt) # Synaptic delay in time bins
-        if self.delay>source._max_delay:
-            raise AttributeError,"Transmission delay is too long."
+        #if self.delay>source._max_delay:
+        #    raise AttributeError,"Transmission delay is too long."
         
     def propagate(self,spikes):
         '''
