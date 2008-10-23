@@ -478,7 +478,7 @@ class Equations(object):
         #    S[var]=call_with_dict(self._function[var],S)
         # Calculate derivatives
         buffer={}
-        S_half={}
+        S_half=S.copy()
         # Half a step
         for varname in self._diffeq_names_nonzero:
             f=self._function[varname]

@@ -351,6 +351,40 @@ class SpikeMonitor(Connection,Monitor):
     def __getitem__(self, i):
         return qarray([t for j,t in self.spikes if j==i])
 
+class AutoCorrelogram(SpikeMonitor):
+    '''
+    Calculates autocorrelograms for the selected neurons (online).
+    
+    Initialised as::
+    
+        AutoCorrelogram(source,record=[1,2,3], delay=10*ms)
+    
+    where ``delay`` is the size of the autocorrelogram.
+    
+    NOT FINISHED 
+    '''
+    def __init__(self,source,record=True,delay=0):
+        SpikeMonitor.__init__(self,source,record=record,delay=delay)
+        self.reinit()
+        if record is not False:
+            if record is not True and not isinstance(record,int):
+                self.recordindex = dict((i,j) for i,j in zip(self.record,range(len(self.record))))
+
+    def reinit(self):
+        if self.record==True:
+            self._autocorrelogram=zeros((len(self.record),len(self.source)))
+        else:
+            self._autocorrelogram=zeros((len(self.record),self.delay))
+
+    def propagate(self,spikes):
+        spikes_set=set(spikes)
+        if self.record==True:
+            for i in xrange(self.delay): # Not a brilliant implementation
+                self._autocorrelogram[spikes_set.intersection(self.source.LS[i]),i]+=1
+    
+    def __getitem__(self, i):
+        # TODO: returns the autocorrelogram of neuron i
+        pass
 
 class PopulationSpikeCounter(SpikeMonitor):
     '''
