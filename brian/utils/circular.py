@@ -34,6 +34,8 @@
 # 
 '''
 Circular arrays
+
+Ideas for speed improvements: use put, putmask and take with mode='wrap' and out=...
 '''
 from numpy import *
 from scipy import weave
@@ -91,6 +93,8 @@ class CircularVector(object):
             return self.X[i0:j0]
         else:
             return self.X[range(i0,n)+range(0,j0)] # Costly operation!
+            #return concatenate((self.X[i0:],self.X[0:j0])) # might be slightly faster
+            #return self.X.take(range(i0,j0+n),mode='wrap') # does not seem to work
 
     def get_conditional(self,i,j,min,max,offset=0):
         """
@@ -215,7 +219,7 @@ class SpikeContainer(object):
         """
         return self.S.get_conditional(self.ind[-delay-1]-self.S.cursor,\
                                      self.ind[-delay]-self.S.cursor+self.S.n,\
-                                     origin,origin+N,origin)        
+                                     origin,origin+N,origin)
     
     def __getslice__(self,i,j):
         return self.S[self.ind[-j]-self.S.cursor:self.ind[-i]-self.S.cursor+self.S.n]
