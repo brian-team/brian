@@ -464,10 +464,12 @@ class NeuronGroup(magic.InstanceTracker):
     def state(self,name):
         '''
         Gets the state variable named "name" as a safe qarray
+        [Romain: I got rid of safeqarray here, which makes a huge speed difference!]
         '''
-        if name=='t':
-            return safeqarray(self.state_('t'),units=second)
-        return safeqarray(self.state_(name),units=self.unit(name))
+        return self.state_(name)
+        #if name=='t':
+        #    return safeqarray(self.state_('t'),units=second)
+        #return safeqarray(self.state_(name),units=self.unit(name))
     
     def __getitem__(self,i):
         return self[i:i+1]
