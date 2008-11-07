@@ -80,6 +80,10 @@ Practicalities:
   is this right? This allows us to have a more specific
   connection matrix type than scipy/numpy, and quite likely
   more optimised.
+  
+  	We do sometimes, at construction time: C[0,:]=some_vector
+  	But this could be done by Connection when ConnectionMatrix
+  	does not have the required method.
 
 * STDP requires either a sparse matrix class or a mask to
   stop non-existent synapses from being potentiated.
