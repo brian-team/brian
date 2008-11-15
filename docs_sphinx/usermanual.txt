@@ -15,6 +15,7 @@ The SciPy, NumPy and PyLab packages are documented on the following web sites:
 
 * http://www.scipy.org/Getting_Started
 * http://www.scipy.org/Documentation
+* http://docs.scipy.org/
 * http://matplotlib.sourceforge.net/matplotlib.pylab.html
 
 Brian itself is documented in the following sections:
