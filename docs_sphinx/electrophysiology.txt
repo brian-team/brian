@@ -99,12 +99,55 @@ The ``tau_u`` keyword is optional and defaults to 1 ms.
 
 Acquisition board
 ^^^^^^^^^^^^^^^^^
+An acquisition board samples a recording
+and sends a command (e.g. injected current)
+at regular times. It is defined as
+:class:`NetworkOperation`.
+Use::
+
+  board=AcquisitionBoard(P=neuron,record='V',command='I',clock)
+ 
+where ``P`` = neuron group (possibly containing amplifier and electrode),
+``record`` = recording variable name,
+``command`` = command variable name,
+``clock`` = acquisition clock. The recording variable is then stored in
+``board.V`` and a command is sent with the instruction ``board.command(I)``.
 
 Discontinuous current clamp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The discontinuous current clamp (DCC) consists in alternatively injecting current
+and measuring the potential, in order to measure the potential when the voltage
+across the electrode has vanished. The sampling clock is mainly determined by the
+electrode time constant (the sampling period should be two orders of magnitude larger
+than the electrode time constant).
+It is defined and used in the same way as an acquisition board (above)::
+
+  board=DCC(P=neuron,record='V',command='I',frequency=2*kHz)
+
+where ``frequency`` is the sampling frequency. The duty cycle is 1/3
+(meaning current is injected during 1/3 of each sampling step).
 
 Discontinuous voltage clamp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The discontinuous voltage clamp or single-electrode voltage clamp (SEVC) is
+an implementation of the voltage clamp using a feedback current with a DCC
+amplifier. It is defined as the DCC::
+
+  board=SEVC(P=neuron,record='V',command='I',frequency=2*kHz,gain=10*nS)
+
+except that a gain parameter is included. The SEVC injects a negative
+feedback current I=gain*(Vcommand-V). The quality of the clamp improves with
+higher gains, but there is a maximum value above which the system is unstable,
+because of the finite temporal resolution.
+The recorded current is stored in ``board.I`` and the command voltage is sent
+with the instruction ``board.command(-20*mV)``.
+With this implementation of the SEVC, the membrane is never perfectly clamped.
+A better clamp is obtained by adding an integral controller with the keyword
+``gain2=10*nS/ms``. The additional current J(t) is governed by the differential
+equation dJ/dt=gain2*(Vcommand-V), so that it ensures perfect clamping in the
+stationary state.
+However, this controller does not improve the settling time of the clamp, but
+only the final voltage value.
 
 Active Electrode Compensation (AEC)
 -----------------------------------
@@ -112,11 +155,11 @@ The electrophysiology library includes the Active Electrode Compensation (AEC) t
 described in Brette et al (2008),
 `High-resolution intracellular recordings using a real-time computational model of the electrode
 <http://www.di.ens.fr/~brette/papers/Brette2008Neuron.html>`__,
-Neuron 2008; 59(3):379-91.
+Neuron 59(3):379-91.
 
 Offline AEC
 ^^^^^^^^^^^
-Given a digital recording of the (uncompensated) potential ``v``
+Given a digital current-clamp recording of the (uncompensated) potential ``v``
 (vector of values) and injected current ``i``, the following instructions
 calculate the full kernel of the system and the electrode kernel::
 
@@ -150,6 +193,19 @@ and ``ke`` is the electrode kernel.
 
 Online AEC
 ^^^^^^^^^^
+For dynamic-clamp or voltage-clamp recordings, the electrode compensation must be
+done online. An AEC board is initialized in the same way as an acquisition board::
+
+  board=AEC(neuron,'V','I',clock)
+  
+where ``clock`` is the acquisition clock. To start the white noise injection for
+kernel estimation, use the following instruction::
+
+  board.start_injection()
+
+and stop it with::
+
+  board.start_injection()
 
 Voltage-clamp with AEC
 ^^^^^^^^^^^^^^^^^^^^^^

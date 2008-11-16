@@ -32,10 +32,10 @@ def command():
     ampli.command(rand()*1*nA-.5*nA)
 
 run(1000*ms)
-v=mon_vr[0]
-i=mon_I[0]
-K=raw_kernel(*correlations(v,i,200))
-Ke,_=electrode_kernel(K,50,dt=0.1*ms,online=True)
+v=mon_vr[0]/mV
+i=mon_I[0]/nA
+K=full_kernel(v,i,200)
+Ke=electrode_kernel_soma(K,50)
 #plot(Ke/Mohm)
 print sum(Ke)
 #plot(mon.times/ms,mon[0]/mV,'b')

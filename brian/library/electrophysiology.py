@@ -19,7 +19,8 @@ from scipy import zeros,array,optimize,mean,arange,diff,rand,exp,sum,convolve
 from brian.clock import Clock
 
 __all__=['electrode','current_clamp','voltage_clamp','DCC','SEVC',
-         'AcquisitionBoard','AEC','VC_AEC']
+         'AcquisitionBoard','AEC','VC_AEC','full_kernel','full_kernel_from_step',
+         'electrode_kernel_soma','electrode_kernel_dendrite']
 
 '''
 ------------
@@ -192,7 +193,7 @@ class SEVC(DCC):
       frequency = sampling frequency
       gain = feedback gain
       gain2 = control gain (integral controller)
-    Recording: vm=board.I
+    Recording: i=board.I
     Setting the clamp potential: board.command(-20*mV)
     '''
     def __init__(self,P,record,command,frequency,gain=100*nS,gain2=0*nS/ms):
@@ -223,6 +224,7 @@ class SEVC(DCC):
 The technique was presented in the following paper:
 High-resolution intracellular recordings using a real-time computational model of the electrode
 R. Brette, Z. Piwkowska, C. Monier, M. Rudolph-Lilith, J. Fournier, M. Levy, Y. Fregnac, T. Bal, A. Destexhe
+Neuron (2008) 59(3):379-91.
 
 -------------------------------------
 '''
