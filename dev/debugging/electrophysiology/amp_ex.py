@@ -1,9 +1,7 @@
 # Test of amplifier module
+# NOT WORKING
 from brian import *
-from brian.library.amplifier import *
-from brian.library.electrodes import *
-from scipy import pi
-from brian.library.AEC import *
+from brian.library.electrophysiology import *
 
 model_clock=Clock(dt=.1*ms)
 sampling_clock=Clock(dt=.1*ms)

@@ -17,6 +17,11 @@ Use::
   H=hessian(f,(a,b))                   # hessian of f at (a,b) (returns a numpy array)
   
 TODO:
+* replace x by x0
+* merge HigherDifferentiable in Differentiable?
+* simplify code
+* gradient, taylor_series, hessian: x0 should be optional
+
 * iadd, etc. (more operators)
 * NonDifferentiableException and maybe use this on conditions (when cmp=0)
 * Differential operators: Laplacian...
@@ -24,7 +29,7 @@ TODO:
 * test with units, functions Rp->something, alternative differential operators,
   differential (f:Rp->Rn), complex numbers, arithmetic derivative
 * remove most dependency with numpy (except Hessian)
-* simplify the code
+* implicitly defined functions
 
 If several partial derivatives of the same function need to be
 calculated, it is faster to use the lower level object Differentiable.
@@ -34,7 +39,7 @@ will return a Differentiable object with y.val=f(3,2)
 and y.diff={'x': df/dx(3,2), 'y': df/dy(3,2)}
 '''
 
-from numpy import exp,sin,cos,log,zeros # todo: look in frame instead
+from numpy import exp,sin,cos,log,zeros # todo: look in frame instead?
 import types
 
 __all__=['differentiate','Differentiable','taylor_series','gradient','hessian']
@@ -60,8 +65,8 @@ def differentiate(f,x=None,order=1):
         n=sum(order) # total order
         args=[HigherDifferentiable(i,x[i],n) for i in range(len(x))]
         y=f(*args)
-        for i in range(len(x)):
-            for j in range(order[i]):
+        for i in xrange(len(x)):
+            for _ in xrange(order[i]):
                 if isinstance(y,Differentiable) and (i in y.diff):
                     y=y.diff[i]
                 else: # constant
@@ -165,9 +170,6 @@ class Differentiable(object):
         self.val=val # value
         if name==None: # constant
             self.diff={} # derivative
-        #elif isinstance(val,ndarray): # a vector
-            # TODO: different class? (DifferentiableVector)
-            #self.diff={name:eye_lil_matrix(len(val))} # Jacobian matrix
         else:
             self.diff={name:1.} # or jacobian? (eye)
             
@@ -406,3 +408,13 @@ class HigherDifferentiable(Differentiable):
         Differentiable.__init__(self,name,val)
         if order>1:
             self.val=HigherDifferentiable(name,val,order-1)
+
+if __name__=='__main__':
+    print "Derivative:"
+    print "> differentiate(lambda x:3*x*x+2,x=2,order=2)"
+    print differentiate(lambda x:3*x*x+2,x=2,order=2)
+    print "> differentiate(lambda x:3*x*x+2,order=2)(2)"
+    print differentiate(lambda x:3*x*x+2,order=2)(2)
+    print "Partial derivative:"
+    print "> differentiate(lambda x,y:x*y+2*y+1,x=(1,2),order=(0,1))"
+    print differentiate(lambda x,y:x*y+2*y+1,x=(1,2),order=(0,1))

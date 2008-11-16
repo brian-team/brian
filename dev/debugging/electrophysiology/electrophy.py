@@ -2,7 +2,7 @@
 from brian import *
 from brian.library.electrophysiology import *
 
-myclock=Clock(dt=.01*ms)
+defaultclock.dt=.01*ms
 
 #log_level_debug()
 

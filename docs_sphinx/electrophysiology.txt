@@ -2,3 +2,154 @@
 
 Electrophysiology
 =================
+The electrophysiology library contains a number of models of electrodes,
+amplifiers and recording protocols to simulate intracellular electrophysiological
+recordings.
+To import the electrophysiology library::
+
+  from brian.library.electrophysiology import *
+  
+Electrodes
+----------
+Electrodes are defined as resistor/capacitor (RC) circuits, or multiple
+RC circuits in series. Define a simple RC electrode with resistance Re
+and capacitance Ce (possibly 0 pF) as follows::
+
+  el=electrode(Re,Ce)
+
+The ``electrode`` function returns an :class:`Equations` object containing the
+electrode model, where
+the electrode potential is ``v_el`` (the recording), the membrane potential is ``vm``, the electrode current
+entering the membrane is ``i_inj`` and command current is ``i_cmd``.
+These names can be overriden using the corresponding keywords. For example, a membrane
+equation with a .5 nA current injected through an electrode is defined as follows::
+
+  eqs=Equations('dv/dt=(-gl*v+i_inj)/Cm : volt')+electrode(50*Mohm,10*pF,vm='v',i_cmd=.5*nA)
+
+Specify ``i_cmd=None`` if the electrode is only used to record (no current injection). More complex
+electrodes can be defined by passing lists of resistances and capacitances, e.g.::
+
+  el=electrode([50*Mohm,20*Mohm],[5*pF,3*pF])
+
+Amplifiers
+----------
+Current-clamp amplifier
+^^^^^^^^^^^^^^^^^^^^^^^
+A current-clamp amplifier injects a current through an intracellular electrode
+and records the membrane potential. Two standard circuits are included to compensate
+for the electrode voltage: bridge compensation and capacitance neutralization
+(see e.g. the `Axon guide <http://www.moleculardevices.com/pages/instruments/axon_guide.html>`__).
+The following command::
+
+  amp=current_clamp(Re=80*Mohm,Ce=10*pF)
+
+defines a current-clamp amplifier with an electrode modelled as a RC circuit. The function
+returns an :class:`Equations` object, where
+the recording potential is ``v_rec``, the membrane potential is ``vm``, the electrode current
+entering the membrane is ``i_inj`` and command current is ``i_cmd``.
+These names can be overriden using the corresponding keywords.
+For implementation reasons, the amplifier always includes an electrode.
+Optionally, bridge compensation, can be used with the ``bridge`` keyword and capacitance
+neutralization with the ``capa_comp`` keyword. For example, the following instruction defines
+a partially compensated recording::
+
+  amp=current_clamp(Re=80*Mohm,Ce=10*pF,bridge=78*Mohm,capa_comp=8*pF)
+
+The capacitance neutralization is a feedback circuit, so that it becomes unstable if
+the feedback capacitance is larger than the actual capacitance of the electrode.
+The bridge compensation is an input-dependent voltage offset (``bridge*i_cmd``), and
+thus is always stable (unless an additional feedback, such as dynamic clamp, is provided).
+Note that the bridge and capacitance neutralization parameters can be variable names, e.g.::
+
+  amp=current_clamp(Re=80*Mohm,Ce=10*pF,bridge='Rbridge',capa_comp=8*pF)
+
+and then the bridge compensation can be changed dynamically during the simulation.
+
+Voltage-clamp amplifier
+^^^^^^^^^^^^^^^^^^^^^^^
+The library includes a single-electrode voltage-clamp amplifier, which
+clamps the potential at a given value and records the current going through
+the electrode.
+The following command::
+
+  amp=voltage_clamp(Re=20*Mohm)
+
+defines a voltage-clamp amplifier with an electrode modelled as a pure
+resistance.
+The function
+returns an :class:`Equations` object, where
+the recording current is ``i_rec``, the membrane potential is ``vm``, the electrode current
+entering the membrane is ``i_inj`` and command voltage is ``v_cmd``
+(note that ``i_rec`` = - ``i_inj``).
+These names can be overriden using the corresponding keywords.
+For implementation reasons, the amplifier always includes an electrode.
+Electrode capacitance is not included, meaning that
+the capacitance neutralization circuit is always set at the maximum value.
+The quality of the clamp is limited by the electrode or ''series'' resistance,
+which can be compensated in a similar way as bridge compensation in current-clamp
+recordings. Series resistance compensation consists in adding a current-dependent
+voltage offset to the voltage command. Because of the feedback, that compensation needs
+to be slightly delayed (with a low-pass circuit). The following example defines a
+voltage-clamp amplifier with half-compensated series resistance and compensation delay
+1 ms::
+
+  amp=voltage_clamp(Re=20*Mohm,Rs=10*Mohm,tau_u=1*ms)
+
+The ``tau_u`` keyword is optional and defaults to 1 ms.
+
+Acquisition board
+^^^^^^^^^^^^^^^^^
+
+Discontinuous current clamp
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Discontinuous voltage clamp
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Active Electrode Compensation (AEC)
+-----------------------------------
+The electrophysiology library includes the Active Electrode Compensation (AEC) technique
+described in Brette et al (2008),
+`High-resolution intracellular recordings using a real-time computational model of the electrode
+<http://www.di.ens.fr/~brette/papers/Brette2008Neuron.html>`__,
+Neuron 2008; 59(3):379-91.
+
+Offline AEC
+^^^^^^^^^^^
+Given a digital recording of the (uncompensated) potential ``v``
+(vector of values) and injected current ``i``, the following instructions
+calculate the full kernel of the system and the electrode kernel::
+
+  K=full_kernel(v,i,ksize)
+  Ke=electrode_kernel_soma(K,start_tail)
+  
+``ksize`` is the size of the full kernel (number of sampling steps; typical size is
+about 15 ms) and ``start_tail`` is the size of the electrode kernel (start point
+of the ''tail'' of the full kernel; typical size if about 4 ms). The electrode
+should be compensated for capacitance (capacitance neutralization)
+but not resistance (bridge compensation). The best choice for the
+input current is a series of independent random values, and the last ``ksize``
+steps of ``v`` should be null (i.e., the injection should stop before the end).
+Here it was assumed that the recording was done at the soma; if it is done in a thin
+process such as a dendrite or axon, the function ``electrode_kernel_dendrite``
+should be used instead. The full kernel can also be obtained from a step current
+injection::
+
+  K=full_kernel_from_step(v,i,ksize)
+  Ke=electrode_kernel_soma(K,start_tail)
+
+where ``i`` is a constant value in this case (note that this is not the best choice for
+real recordings).
+
+Once the electrode kernel has been found, any recording can be compensated as follows::
+
+  vcomp=AEC_compensate(v,i,ke)
+
+where ``v`` is the raw voltage recording, ``i`` is the injected current
+and ``ke`` is the electrode kernel.
+
+Online AEC
+^^^^^^^^^^
+
+Voltage-clamp with AEC
+^^^^^^^^^^^^^^^^^^^^^^

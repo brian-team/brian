@@ -15,8 +15,7 @@ from operator import isSequenceType
 from brian.units import ohm,Mohm
 from brian.stdunits import pF,ms,nA,mV,nS
 from brian.network import NetworkOperation
-from scipy import zeros,array
-from scipy import optimize,mean,arange,diff,rand,exp,sum,convolve
+from scipy import zeros,array,optimize,mean,arange,diff,rand,exp,sum,convolve
 from brian.clock import Clock
 
 __all__=['electrode','current_clamp','voltage_clamp','DCC','SEVC',
@@ -88,6 +87,7 @@ def voltage_clamp(vm='vm',v_cmd='v_cmd',i_rec='i_rec',
     dU/dt=(Rs*I-U)/tau : volt
     ''',Vr=vm,Vc=v_cmd,I=i_inj,Rs=Rs,tau=tau_u,Irec=i_rec,Re=Re)
 
+# TODO: Re, Ce as lists
 def current_clamp(vm='vm',i_inj='i_inj',v_rec='v_rec',i_cmd='i_cmd',
                   Re=80*Mohm,Ce=4*pF,bridge=0*ohm,capa_comp=0*farad):
     '''
@@ -456,6 +456,16 @@ def electrode_kernel_soma(Karg,start_tail,full_output=False):
     else:
         return Ke[:start_tail]
 
+def AEC_compensate(v,i,ke):
+    '''
+    Active Electrode Compensation, done offline.
+    v = recorded potential
+    i = injected current
+    ke = electrode kernel
+    Returns the compensated potential.
+    '''
+    return v-convolve(ke,i)[:-(len(ke)-1)]
+
 def levinson_durbin(a,y):
     '''
     Solves AX=Y where A is a symetrical Toeplitz matrix with coefficients
@@ -477,3 +487,15 @@ def levinson_durbin(a,y):
         beta=y[i]-sum(a[i:0:-1]*x[:i])
         x+=beta*b
     return x
+
+if __name__=='__main__':
+    from brian import *
+    taum=20*ms
+    gl=20*nS
+    Cm=taum*gl
+    eqs=Equations('dv/dt=(-gl*v+i_inj)/Cm : volt')+electrode(50*Mohm,10*pF,vm='v',i_cmd=.5*nA)
+    neuron=NeuronGroup(1,model=eqs)
+    M=StateMonitor(neuron,'v_el',record=True)
+    run(100*ms)
+    plot(M.times/ms,M[0]/mV)
+    show()
