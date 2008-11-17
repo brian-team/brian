@@ -21,7 +21,7 @@ eqs+=electrode(.6*Re,Ce)
 eqs+=current_clamp(vm='v_el',i_inj='i_cmd',i_cmd='I',Re=.4*Re,Ce=Ce)
 setup=NeuronGroup(1,model=eqs,clock=myclock)
 board=VC_AEC(setup,'v_rec','I',gain=300*nS,gain2=20*nS/ms,clock=clock_rec)
-recording=StateMonitor(board,'I',record=True,clock=myclock)
+recording=StateMonitor(board,'record',record=True,clock=myclock)
 soma=StateMonitor(setup,'vm',record=True,clock=myclock)
 
 run(50*ms)
@@ -33,9 +33,9 @@ board.estimate()
 print 'Re=',sum(board.Ke)*ohm
 board.switch_on()
 run(50*ms)
-board.command(10*mV)
+board.command=10*mV
 run(200*ms)
-board.command(0*mV)
+board.command=0*mV
 run(150*ms)
 board.switch_off()
 figure()

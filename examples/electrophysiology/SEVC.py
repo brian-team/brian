@@ -2,9 +2,7 @@
 from brian import *
 from brian.library.electrophysiology import *
 
-myclock=Clock(dt=.01*ms)
-
-log_level_debug()
+defaultclock.dt=.01*ms
 
 taum=20*ms        # membrane time constant
 gl=1./(50*Mohm)   # leak conductance
@@ -19,10 +17,10 @@ I:amp
 eqs+=current_clamp(i_cmd='I',Re=Re,Ce=Ce)
 setup=NeuronGroup(1,model=eqs)
 ampli=SEVC(setup,'v_rec','I',1*kHz,gain=250*nS,gain2=50*nS/ms)
-recording=StateMonitor(ampli,'I',record=True)
+recording=StateMonitor(ampli,'record',record=True)
 soma=StateMonitor(setup,'vm',record=True)
 
-ampli.command(20*mV)
+ampli.command=20*mV
 run(200*ms)
 figure()
 plot(recording.times/ms,recording[0]/nA,'k')

@@ -14,7 +14,7 @@ from brian.equations import Equations,unique_id
 from operator import isSequenceType
 from brian.units import ohm,Mohm
 from brian.stdunits import pF,ms,nA,mV,nS
-from brian.network import NetworkOperation
+from brian.neurongroup import NeuronGroup
 from scipy import zeros,array,optimize,mean,arange,diff,rand,exp,sum,convolve
 from brian.clock import Clock
 
@@ -115,58 +115,50 @@ def current_clamp(vm='vm',i_inj='i_inj',v_rec='v_rec',i_cmd='i_cmd',
         I=Ic : amp # not exactly an alias because the units of Ic is unknown
         ''',Vr=v_rec,V=vm,I=i_inj,Ic=i_cmd,R=bridge,Re=Re)
        
-# TODO: remove unit checking? (only at init)
-# TODO: make it a NeuronGroup?
-# TODO: change to out/in instead of V/I
-class AcquisitionBoard(NetworkOperation):
+class AcquisitionBoard(NeuronGroup):
     '''
     Digital acquisition board (DSP).
-    Use: board=AcquisitionBoard(P=neuron,record='V',command='I',clock)
+    Use: board=AcquisitionBoard(P=neuron,V='V',I='I',clock)
     where
       P = neuron group
-      record = recording variable name
-      command = command variable name
+      V = potential variable name (in P)
+      I = current variable name (in P)
       clock = acquisition clock
-    Recording: vm=board.V
-    Injecting: board.command(I)
+    Recording: vm=board.record
+    Injecting: board.command=...
+    
+    Injects I, records V.
     '''
-    def __init__(self,P,record,command,clock=None):
-        NetworkOperation.__init__(self,None,clock=clock,when='start')
-        self._Vr_name=record
-        self._I=P._S[P.get_var_index(command)]
+    def __init__(self,P,V,I,clock=None):
+        eqs=Equations('''
+        record : units_record
+        command : units_command
+        ''',units_record=P.unit(V),units_command=P.unit(I))
+        NeuronGroup.__init__(self,len(P),model=eqs,clock=clock)
         self._P=P
-        self.I=zeros(len(P)) # no unit
-        self.V=zeros(len(P))
-        self._unit=dict(V=P.unit(record),I=P.unit(command))
-        self.unit=lambda name:self._unit[name]
-        self.state_=lambda name:self.__dict__[name]
+        self._V=V
+        self._I=I
         
-    def command(self,I):
-        self.I[:]=I
-        
-    def __call__(self):
-        self.V=self._P.state_(self._Vr_name).copy() # Record
-        self._I[:]=self.I # Inject
-
-    def __len__(self):
-        return len(self.V)
+    def update(self):
+        self.record=self._P.state(self._V) # Record
+        self._P.state(self._I)[:]=self.command # Inject
 
 class DCC(AcquisitionBoard):
     '''
     Discontinuous current-clamp.
-    Use: board=DCC(P=neuron,record='V',command='I',frequency=2*kHz)
+    Use: board=DCC(P=neuron,V='V',I='I',frequency=2*kHz)
     where
       P = neuron group
-      record = recording variable name
-      command = command variable name
+      V = potential variable name (in P)
+      I = current variable name (in P)
       frequency = sampling frequency
-    Recording: vm=board.V
-    Injecting: board.command(I)
+    Recording: vm=board.record
+    Injecting: board.command=I
     '''
-    def __init__(self,P,record,command,frequency):
+    def __init__(self,P,V,I,frequency):
         self.clock=Clock(dt=1./(3.*frequency))
-        AcquisitionBoard.__init__(self,P,record,command,self.clock)
-        self.cycle=0
+        AcquisitionBoard.__init__(self,P,V,I,self.clock)
+        self._cycle=0
         
     def set_frequency(self,frequency):
         '''
@@ -174,13 +166,13 @@ class DCC(AcquisitionBoard):
         '''
         self.clock.dt=1./(3.*frequency)
         
-    def __call__(self):
-        if self.cycle==0:
-            self.V=self._P.state_(self._Vr_name).copy() # Record
-            self._I[:]=3.*self.I # Inject
+    def update(self):
+        if self._cycle==0:
+            self.record=self._P.state(self._V) # Record
+            self._P.state(self._I)[:]=3*self.command # Inject
         else:
-            self._I[:]=0*nA
-        self.cycle=(self.cycle+1)%3
+            self._P.state(self._I)[:]=0 #*nA
+        self._cycle=(self._cycle+1)%3
 
 class SEVC(DCC):
     '''
@@ -188,34 +180,28 @@ class SEVC(DCC):
     Use: board=SEVC(P=neuron,record='V',command='I',frequency=2*kHz,gain=10*nS)
     where
       P = neuron group
-      record = recording variable name
-      command = command variable name
+      V = potential variable name (in P)
+      I = current variable name (in P)
       frequency = sampling frequency
       gain = feedback gain
       gain2 = control gain (integral controller)
-    Recording: i=board.I
-    Setting the clamp potential: board.command(-20*mV)
+    Recording: i=board.record
+    Setting the clamp potential: board.command=-20*mV
     '''
-    def __init__(self,P,record,command,frequency,gain=100*nS,gain2=0*nS/ms):
-        DCC.__init__(self,P,record,command,frequency)
-        self.Vc=zeros(len(P))
+    def __init__(self,P,V,I,frequency,gain=100*nS,gain2=0*nS/ms):
+        DCC.__init__(self,P,V,I,frequency)
         self._J=zeros(len(P)) # finer control
-        self._unit['Vc']=self._unit['V']
-        self.gain=gain
-        self.gain2=gain2
+        self._gain=gain
+        self._gain2=gain2
         
-    def command(self,Vc):
-        self.Vc[:]=Vc
-
-    def __call__(self):
-        if self.cycle==0:
-            self.V=self._P.state_(self._Vr_name).copy() # Record
-            self._J+=self.clock._dt*self.gain2*(self.V-self.Vc)
-            self.I=self.gain*(self.V-self.Vc)+self._J
-            self._I[:]=-3.*self.I # Inject
+    def update(self):
+        if self._cycle==0:
+            self._J+=self.clock._dt*self._gain2*(self._P.state(self._V)-self.command)
+            self.record=self._gain*(self._P.state(self._V)-self.command)+self._J
+            self._P.state(self._I)[:]=-3*self.record # Inject
         else:
-            self._I[:]=0*nA
-        self.cycle=(self.cycle+1)%3
+            self._P.state(self._I)[:]=0 #*nA
+        self._cycle=(self._cycle+1)%3
 
 '''
 -------------------------------------
@@ -236,15 +222,15 @@ class AEC(AcquisitionBoard):
     Use: board=AEC(neuron,'V','I',clock)
     where
       P = neuron group
-      record_var = recording variable name
-      command_var = command variable name
+      V = potential variable name (in P)
+      I = current variable name (in P)
       clock = acquisition clock
     Recording: vm=board.V
     Injecting: board.command(I)
     """
     
-    def __init__(self,P,record,command,clock=None):
-        AcquisitionBoard.__init__(self,P,record,command,clock=clock)
+    def __init__(self,P,V,I,clock=None):
+        AcquisitionBoard.__init__(self,P,V,I,clock=clock)
         self._estimation=False
         self._compensation=False
         self.Ke=None
@@ -265,7 +251,7 @@ class AEC(AcquisitionBoard):
         Stop white noise injection.
         '''
         self._estimation=False
-        self.I[:]=0*nA
+        self.command=0 #*nA
     
     def estimate(self,ksize=150,ktail=50,dendritic=False):
         '''
@@ -303,50 +289,51 @@ class AEC(AcquisitionBoard):
         '''
         self._compensation=False
     
-    def __call__(self):
-        AcquisitionBoard.__call__(self)
+    def update(self):
+        AcquisitionBoard.update(self)
         if self._estimation:
             I=2.*(rand()-.5)*self._amp+self._DC
-            self.command(I)
+            self.command=I
             # Record
-            self._Vrec.append(self.V[0])
+            self._Vrec.append(self.record[0])
             self._Irec.append(I)
         if self._compensation:
             # Compensate
-            self._lastI[self._posI]=self.I[0]
+            self._lastI[self._posI]=self.command[0]
             self._posI=(self._posI-1) % self._ktail
-            self.V[0]=self.V[0]-sum(self.Ke*self._lastI[range(self._posI,self._ktail)+
+            self.record[0]=self.record[0]-sum(self.Ke*self._lastI[range(self._posI,self._ktail)+
                                                         range(0,self._posI)])
 
 class VC_AEC(AEC):
-    def __init__(self,P,record,command,gain=50*nS,gain2=0*nS/ms,clock=None):
-        AEC.__init__(self,P,record,command,clock=clock)
-        self.gain=gain
-        self.gain2=gain2
+    def __init__(self,P,V,I,gain=50*nS,gain2=0*nS/ms,clock=None):
+        AEC.__init__(self,P,V,I,clock=clock)
+        self._gain=gain
+        self._gain2=gain2
         self._J=zeros(len(P))
-        self.Vc=zeros(len(P))
-        self._unit['Vc']=self._unit['V']
         
-    def command(self,Vc):
-        self.Vc[:]=Vc
+    def stop_injection(self):
+        '''
+        Stop white noise injection.
+        '''
+        self._estimation=False
+        self.record=0 #*nA
 
-    def __call__(self):
-        AcquisitionBoard.__call__(self)
+    def update(self):
+        V=self._P.state(self._V) # Record
+        self._P.state(self._I)[:]=-self.record # Inject
         if self._estimation:
             I=2.*(rand()-.5)*self._amp+self._DC
-            self.I[:]=I
+            self.record=-I
             # Record
-            self._Vrec.append(self.V[0])
+            self._Vrec.append(V[0])
             self._Irec.append(I)
         if self._compensation:
             # Compensate
-            self._lastI[self._posI]=self.I[0]
+            self._lastI[self._posI]=-self.record[0]
             self._posI=(self._posI-1) % self._ktail
-            self.V[0]=self.V[0]-sum(self.Ke*self._lastI[range(self._posI,self._ktail)+
-                                                        range(0,self._posI)])
-            
-            self._J+=self.clock._dt*self.gain2*(self.Vc-self.V)
-            self.I=self.gain*(self.Vc-self.V)+self._J
+            V[0]=V[0]-sum(self.Ke*self._lastI[range(self._posI,self._ktail)+range(0,self._posI)])
+            self._J+=self.clock._dt*self._gain2*(self.command-V)
+            self.record=-(self._gain*(self.command-V)+self._J)
 
 def full_kernel(v,i,ksize,full_output=False):
     '''

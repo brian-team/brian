@@ -3,9 +3,9 @@ An example of single-electrode current clamp recording
 with bridge compensation (using the electrophysiology library).
 '''
 from brian import *
-from electrophysiology import *
+from brian.library.electrophysiology import *
 
-myclock=Clock(dt=0.01*ms)
+defaultclock.dt=0.01*ms
 
 taum=20*ms        # membrane time constant
 gl=1./(50*Mohm)   # leak conductance
@@ -27,15 +27,15 @@ DCCrecording=StateMonitor(ampli,'record',record=True)
 
 # No compensation
 run(50*ms)
-ampli.I=.5*nA
+ampli.command=.5*nA
 run(100*ms)
-ampli.I=0*nA
+ampli.command=0*nA
 run(50*ms)
 
 ampli.set_frequency(2*kHz)
-ampli.I=.5*nA
+ampli.command=.5*nA
 run(100*ms)
-ampli.I=0*nA
+ampli.command=0*nA
 run(50*ms)
 
 plot(recording.times/ms,recording[0]/mV,'b')

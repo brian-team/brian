@@ -23,13 +23,13 @@ eqs+=current_clamp('vr','ic','v_bridge','I',bridge=0*ohm,capa_comp=.95*Ce)
 neuron=NeuronGroup(1,model=eqs,clock=model_clock)
 ampli=AcquisitionBoard(neuron,'v_bridge','I',sampling_clock)
 mon=StateMonitor(neuron,'v',record=0,clock=sampling_clock)
-mon_vr=StateMonitor(ampli,'V',record=0,clock=sampling_clock)
-mon_I=StateMonitor(ampli,'I',record=0,clock=sampling_clock)
+mon_vr=StateMonitor(ampli,'record',record=0,clock=sampling_clock)
+mon_I=StateMonitor(ampli,'command',record=0,clock=sampling_clock)
 
 @network_operation(clock=sampling_clock,when='middle')
 def command():
     #neuron.E=sin(sampling_clock.t*2*pi*freq)*10*mV
-    ampli.command(rand()*1*nA-.5*nA)
+    ampli.command=rand()*1*nA-.5*nA
 
 run(1000*ms)
 v=mon_vr[0]/mV
