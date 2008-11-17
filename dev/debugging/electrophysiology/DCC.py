@@ -3,7 +3,7 @@ An example of single-electrode current clamp recording
 with bridge compensation (using the electrophysiology library).
 '''
 from brian import *
-from brian.library.electrophysiology import *
+from electrophysiology import *
 
 myclock=Clock(dt=0.01*ms)
 
@@ -23,7 +23,7 @@ setup=NeuronGroup(1,model=eqs)
 ampli=DCC(setup,'v_rec','I',1*kHz)
 soma=StateMonitor(setup,'vm',record=True)
 recording=StateMonitor(setup,'v_rec',record=True)
-DCCrecording=StateMonitor(ampli,'V',record=True)
+DCCrecording=StateMonitor(ampli,'record',record=True)
 
 # No compensation
 run(50*ms)
