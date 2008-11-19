@@ -35,6 +35,7 @@ err=1e15*mV**2
 prev_err=err
 maxcur=2*(C/dt)*E
 run(10*ms)
+#E=E*(1-exp(-linspace(0*ms,50*ms,500)/(1*ms)))
 for i in range(100):
     j=0
     run(50*ms)
