@@ -1,0 +1,30 @@
+Ideas for automatic C++ code generation
+---------------------------------------
+
+- To start with, you still initialise the code with Python, but
+  if certain conditions are met then the run statement can be
+  converted into pure C++ code (if all of the operations
+  in the schedule have C++ versions).
+
+Could start by implementing:
+
+- LinearStateUpdater
+- Threshold, produces spike list
+- Reset and Refractoriness, takes argument spike list
+- Propagate
+- SpikeMonitor/StateMonitor
+
+Ideas for framework:
+
+- generate large inline C++ file and run it with weave.inline,
+  have a set of standard classes which can be included. I
+  think you can specify 'support' header files in weave, but
+  I'm not sure if it can dynamically use code that is already
+  compiled.
+
+- use SWIG, have a standard data structure for Network and
+  just pass data to it. This is nice because code only has
+  to be compiled once, and for Windows distributions the
+  user wouldn't even have to do that.
+  
+I would tend towards the SWIG option to start with.
