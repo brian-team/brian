@@ -2,20 +2,35 @@
 #include<sstream>
 using namespace std;
 
-LabelledArrays::LabelledArrays(string a, vector<double> b)
+void NeuronGroup::get_S_flat(double *S_out_flat, int nm)
 {
-	this->a = a;
-	this->b = b;
+	for(int i=0;i<nm;i++)
+		S_out_flat[i] = this->S[i];
 }
 
-string LabelledArrays::get_msg()
+void LinearStateUpdater::__call__(NeuronGroup *group)
 {
-	double x = 0.0;
-	for(vector<double>::iterator i=this->b.begin();i!=this->b.end();i++)
-		x += *i;
-	string s;
-	stringstream out;
-	out << "sum of array labelled " << this->a << " is " << x;
-	s = out.str();
-	return s;
+//    n = len(P)
+//    m = len(self)
+//    S = P._S
+//    A = self.A
+//    c = self._C
+	int m = this->M_n;
+	int n = group->S_m;
+	double *S = group->S;
+	double *A = this->M;
+	double *c = this->b;
+    double x[m];
+    for(int i=0;i<n;i++)  
+    {
+        for(int j=0;j<m;j++)
+        {
+            x[j] = c[j];
+            for(int k=0;k<m;k++)
+                //x[j] += A(j,k) * S(k,i);
+            	x[j] += A[j+k*m] * S[k+i*m];
+        }
+        for(int j=0;j<m;j++)
+            S[j+i*m] = x[j];
+    }	
 }
