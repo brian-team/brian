@@ -35,6 +35,24 @@ current. For the ionic current convention, use the :class:`IonicCurrent` class::
 
   eqs=MembraneEquation(200*pF)+IonicCurrent(I='(vm-V0)/R : amp')
 
+Compartmental modelling
+^^^^^^^^^^^^^^^^^^^^^^^
+Compartmental neuron models can be created by merging several :class:`MembraneEquation` objects,
+with the ``compartments`` module. If ``soma`` and ``dendrite`` are two compartments defined as
+:class:`MembraneEquation` objects, then a neuron with those 2 compartments can be created as follows::
+
+	from brian.compartments import *
+	neuron_eqs=Compartments({'soma':soma,'dendrite':dendrite})
+	neuron_eqs.connect('soma','dendrite',Ra)
+	neuron=NeuronGroup(1,model=neuron_eqs)
+
+The :class:`Compartments` object is initialised with a dictionary of :class:`MembraneEquation` objects.
+The returned object ``neuron_eqs`` is also a :class:`MembraneEquation` object, where the name of
+each compartment has been appended to variable names (with a leading underscore).
+For example, ``neuron.vm_soma`` refers to variable ``vm`` of the somatic compartment.
+The ``connect`` method adds a coupling current between the two named compartments, with the given
+resistance ``Ra``.
+
 Integrate-and-Fire models
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 A few standard Integrate-and-Fire models are implemented in the ``IF`` library module::
