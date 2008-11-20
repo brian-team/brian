@@ -2,11 +2,18 @@
 
 %include "std_string.i"
 %include "std_vector.i"
+%include "std_list.i"
 
 %{
 #define SWIG_FILE_WITH_INIT
 #include "brianlib.h"
 %}
+
+namespace std
+{
+    %template(SpikeList) list<int>;
+    %template(VectorDouble) vector<double>;
+}
 
 %include "numpy.i"
 %init %{

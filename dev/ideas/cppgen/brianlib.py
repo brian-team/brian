@@ -76,6 +76,99 @@ class PySwigIterator(_object):
 PySwigIterator_swigregister = _brianlib.PySwigIterator_swigregister
 PySwigIterator_swigregister(PySwigIterator)
 
+class SpikeList(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, SpikeList, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, SpikeList, name)
+    __repr__ = _swig_repr
+    def iterator(*args): return _brianlib.SpikeList_iterator(*args)
+    def __iter__(self): return self.iterator()
+    def __nonzero__(*args): return _brianlib.SpikeList___nonzero__(*args)
+    def __len__(*args): return _brianlib.SpikeList___len__(*args)
+    def pop(*args): return _brianlib.SpikeList_pop(*args)
+    def __getslice__(*args): return _brianlib.SpikeList___getslice__(*args)
+    def __setslice__(*args): return _brianlib.SpikeList___setslice__(*args)
+    def __delslice__(*args): return _brianlib.SpikeList___delslice__(*args)
+    def __delitem__(*args): return _brianlib.SpikeList___delitem__(*args)
+    def __getitem__(*args): return _brianlib.SpikeList___getitem__(*args)
+    def __setitem__(*args): return _brianlib.SpikeList___setitem__(*args)
+    def append(*args): return _brianlib.SpikeList_append(*args)
+    def empty(*args): return _brianlib.SpikeList_empty(*args)
+    def size(*args): return _brianlib.SpikeList_size(*args)
+    def clear(*args): return _brianlib.SpikeList_clear(*args)
+    def swap(*args): return _brianlib.SpikeList_swap(*args)
+    def get_allocator(*args): return _brianlib.SpikeList_get_allocator(*args)
+    def begin(*args): return _brianlib.SpikeList_begin(*args)
+    def end(*args): return _brianlib.SpikeList_end(*args)
+    def rbegin(*args): return _brianlib.SpikeList_rbegin(*args)
+    def rend(*args): return _brianlib.SpikeList_rend(*args)
+    def pop_back(*args): return _brianlib.SpikeList_pop_back(*args)
+    def erase(*args): return _brianlib.SpikeList_erase(*args)
+    def __init__(self, *args): 
+        this = _brianlib.new_SpikeList(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def push_back(*args): return _brianlib.SpikeList_push_back(*args)
+    def front(*args): return _brianlib.SpikeList_front(*args)
+    def back(*args): return _brianlib.SpikeList_back(*args)
+    def assign(*args): return _brianlib.SpikeList_assign(*args)
+    def resize(*args): return _brianlib.SpikeList_resize(*args)
+    def insert(*args): return _brianlib.SpikeList_insert(*args)
+    def pop_front(*args): return _brianlib.SpikeList_pop_front(*args)
+    def push_front(*args): return _brianlib.SpikeList_push_front(*args)
+    def reverse(*args): return _brianlib.SpikeList_reverse(*args)
+    __swig_destroy__ = _brianlib.delete_SpikeList
+    __del__ = lambda self : None;
+SpikeList_swigregister = _brianlib.SpikeList_swigregister
+SpikeList_swigregister(SpikeList)
+
+class VectorDouble(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, VectorDouble, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, VectorDouble, name)
+    __repr__ = _swig_repr
+    def iterator(*args): return _brianlib.VectorDouble_iterator(*args)
+    def __iter__(self): return self.iterator()
+    def __nonzero__(*args): return _brianlib.VectorDouble___nonzero__(*args)
+    def __len__(*args): return _brianlib.VectorDouble___len__(*args)
+    def pop(*args): return _brianlib.VectorDouble_pop(*args)
+    def __getslice__(*args): return _brianlib.VectorDouble___getslice__(*args)
+    def __setslice__(*args): return _brianlib.VectorDouble___setslice__(*args)
+    def __delslice__(*args): return _brianlib.VectorDouble___delslice__(*args)
+    def __delitem__(*args): return _brianlib.VectorDouble___delitem__(*args)
+    def __getitem__(*args): return _brianlib.VectorDouble___getitem__(*args)
+    def __setitem__(*args): return _brianlib.VectorDouble___setitem__(*args)
+    def append(*args): return _brianlib.VectorDouble_append(*args)
+    def empty(*args): return _brianlib.VectorDouble_empty(*args)
+    def size(*args): return _brianlib.VectorDouble_size(*args)
+    def clear(*args): return _brianlib.VectorDouble_clear(*args)
+    def swap(*args): return _brianlib.VectorDouble_swap(*args)
+    def get_allocator(*args): return _brianlib.VectorDouble_get_allocator(*args)
+    def begin(*args): return _brianlib.VectorDouble_begin(*args)
+    def end(*args): return _brianlib.VectorDouble_end(*args)
+    def rbegin(*args): return _brianlib.VectorDouble_rbegin(*args)
+    def rend(*args): return _brianlib.VectorDouble_rend(*args)
+    def pop_back(*args): return _brianlib.VectorDouble_pop_back(*args)
+    def erase(*args): return _brianlib.VectorDouble_erase(*args)
+    def __init__(self, *args): 
+        this = _brianlib.new_VectorDouble(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def push_back(*args): return _brianlib.VectorDouble_push_back(*args)
+    def front(*args): return _brianlib.VectorDouble_front(*args)
+    def back(*args): return _brianlib.VectorDouble_back(*args)
+    def assign(*args): return _brianlib.VectorDouble_assign(*args)
+    def resize(*args): return _brianlib.VectorDouble_resize(*args)
+    def insert(*args): return _brianlib.VectorDouble_insert(*args)
+    def reserve(*args): return _brianlib.VectorDouble_reserve(*args)
+    def capacity(*args): return _brianlib.VectorDouble_capacity(*args)
+    __swig_destroy__ = _brianlib.delete_VectorDouble
+    __del__ = lambda self : None;
+VectorDouble_swigregister = _brianlib.VectorDouble_swigregister
+VectorDouble_swigregister(VectorDouble)
+
 class NeuronGroup(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, NeuronGroup, name, value)
@@ -91,22 +184,52 @@ class NeuronGroup(_object):
     __swig_setmethods__["S_m"] = _brianlib.NeuronGroup_S_m_set
     __swig_getmethods__["S_m"] = _brianlib.NeuronGroup_S_m_get
     if _newclass:S_m = _swig_property(_brianlib.NeuronGroup_S_m_get, _brianlib.NeuronGroup_S_m_set)
+    __swig_setmethods__["su"] = _brianlib.NeuronGroup_su_set
+    __swig_getmethods__["su"] = _brianlib.NeuronGroup_su_get
+    if _newclass:su = _swig_property(_brianlib.NeuronGroup_su_get, _brianlib.NeuronGroup_su_set)
+    __swig_setmethods__["thr"] = _brianlib.NeuronGroup_thr_set
+    __swig_getmethods__["thr"] = _brianlib.NeuronGroup_thr_get
+    if _newclass:thr = _swig_property(_brianlib.NeuronGroup_thr_get, _brianlib.NeuronGroup_thr_set)
+    __swig_setmethods__["reset"] = _brianlib.NeuronGroup_reset_set
+    __swig_getmethods__["reset"] = _brianlib.NeuronGroup_reset_get
+    if _newclass:reset = _swig_property(_brianlib.NeuronGroup_reset_get, _brianlib.NeuronGroup_reset_set)
+    __swig_setmethods__["last_spikes"] = _brianlib.NeuronGroup_last_spikes_set
+    __swig_getmethods__["last_spikes"] = _brianlib.NeuronGroup_last_spikes_get
+    if _newclass:last_spikes = _swig_property(_brianlib.NeuronGroup_last_spikes_get, _brianlib.NeuronGroup_last_spikes_set)
     def __init__(self, *args): 
         this = _brianlib.new_NeuronGroup(*args)
         try: self.this.append(this)
         except: self.this = this
+    def update(*args): return _brianlib.NeuronGroup_update(*args)
     def get_S_flat(*args): return _brianlib.NeuronGroup_get_S_flat(*args)
     __swig_destroy__ = _brianlib.delete_NeuronGroup
     __del__ = lambda self : None;
 NeuronGroup_swigregister = _brianlib.NeuronGroup_swigregister
 NeuronGroup_swigregister(NeuronGroup)
 
-class LinearStateUpdater(_object):
+class StateUpdater(_object):
     __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, StateUpdater, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, StateUpdater, name)
+    __repr__ = _swig_repr
+    def __call__(*args): return _brianlib.StateUpdater___call__(*args)
+    def __init__(self, *args): 
+        this = _brianlib.new_StateUpdater(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _brianlib.delete_StateUpdater
+    __del__ = lambda self : None;
+StateUpdater_swigregister = _brianlib.StateUpdater_swigregister
+StateUpdater_swigregister(StateUpdater)
+
+class LinearStateUpdater(StateUpdater):
+    __swig_setmethods__ = {}
+    for _s in [StateUpdater]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
     __setattr__ = lambda self, name, value: _swig_setattr(self, LinearStateUpdater, name, value)
     __swig_getmethods__ = {}
+    for _s in [StateUpdater]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
     __getattr__ = lambda self, name: _swig_getattr(self, LinearStateUpdater, name)
-    __repr__ = _swig_repr
     __swig_setmethods__["M"] = _brianlib.LinearStateUpdater_M_set
     __swig_getmethods__["M"] = _brianlib.LinearStateUpdater_M_get
     if _newclass:M = _swig_property(_brianlib.LinearStateUpdater_M_get, _brianlib.LinearStateUpdater_M_set)
@@ -127,10 +250,123 @@ class LinearStateUpdater(_object):
         try: self.this.append(this)
         except: self.this = this
     def __call__(*args): return _brianlib.LinearStateUpdater___call__(*args)
+    def __repr__(*args): return _brianlib.LinearStateUpdater___repr__(*args)
     __swig_destroy__ = _brianlib.delete_LinearStateUpdater
     __del__ = lambda self : None;
 LinearStateUpdater_swigregister = _brianlib.LinearStateUpdater_swigregister
 LinearStateUpdater_swigregister(LinearStateUpdater)
+
+class Threshold(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Threshold, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Threshold, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["value"] = _brianlib.Threshold_value_set
+    __swig_getmethods__["value"] = _brianlib.Threshold_value_get
+    if _newclass:value = _swig_property(_brianlib.Threshold_value_get, _brianlib.Threshold_value_set)
+    __swig_setmethods__["state"] = _brianlib.Threshold_state_set
+    __swig_getmethods__["state"] = _brianlib.Threshold_state_get
+    if _newclass:state = _swig_property(_brianlib.Threshold_state_get, _brianlib.Threshold_state_set)
+    def __init__(self, *args): 
+        this = _brianlib.new_Threshold(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def __call__(*args): return _brianlib.Threshold___call__(*args)
+    __swig_destroy__ = _brianlib.delete_Threshold
+    __del__ = lambda self : None;
+Threshold_swigregister = _brianlib.Threshold_swigregister
+Threshold_swigregister(Threshold)
+
+class Reset(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Reset, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Reset, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["value"] = _brianlib.Reset_value_set
+    __swig_getmethods__["value"] = _brianlib.Reset_value_get
+    if _newclass:value = _swig_property(_brianlib.Reset_value_get, _brianlib.Reset_value_set)
+    __swig_setmethods__["state"] = _brianlib.Reset_state_set
+    __swig_getmethods__["state"] = _brianlib.Reset_state_get
+    if _newclass:state = _swig_property(_brianlib.Reset_state_get, _brianlib.Reset_state_set)
+    def __init__(self, *args): 
+        this = _brianlib.new_Reset(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def __call__(*args): return _brianlib.Reset___call__(*args)
+    __swig_destroy__ = _brianlib.delete_Reset
+    __del__ = lambda self : None;
+Reset_swigregister = _brianlib.Reset_swigregister
+Reset_swigregister(Reset)
+
+class NetworkOperation(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, NetworkOperation, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, NetworkOperation, name)
+    __repr__ = _swig_repr
+    def __call__(*args): return _brianlib.NetworkOperation___call__(*args)
+    def __init__(self, *args): 
+        this = _brianlib.new_NetworkOperation(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _brianlib.delete_NetworkOperation
+    __del__ = lambda self : None;
+NetworkOperation_swigregister = _brianlib.NetworkOperation_swigregister
+NetworkOperation_swigregister(NetworkOperation)
+
+class StateMonitor(NetworkOperation):
+    __swig_setmethods__ = {}
+    for _s in [NetworkOperation]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
+    __setattr__ = lambda self, name, value: _swig_setattr(self, StateMonitor, name, value)
+    __swig_getmethods__ = {}
+    for _s in [NetworkOperation]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
+    __getattr__ = lambda self, name: _swig_getattr(self, StateMonitor, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["group"] = _brianlib.StateMonitor_group_set
+    __swig_getmethods__["group"] = _brianlib.StateMonitor_group_get
+    if _newclass:group = _swig_property(_brianlib.StateMonitor_group_get, _brianlib.StateMonitor_group_set)
+    __swig_setmethods__["state"] = _brianlib.StateMonitor_state_set
+    __swig_getmethods__["state"] = _brianlib.StateMonitor_state_get
+    if _newclass:state = _swig_property(_brianlib.StateMonitor_state_get, _brianlib.StateMonitor_state_set)
+    __swig_setmethods__["values"] = _brianlib.StateMonitor_values_set
+    __swig_getmethods__["values"] = _brianlib.StateMonitor_values_get
+    if _newclass:values = _swig_property(_brianlib.StateMonitor_values_get, _brianlib.StateMonitor_values_set)
+    def __init__(self, *args): 
+        this = _brianlib.new_StateMonitor(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def __call__(*args): return _brianlib.StateMonitor___call__(*args)
+    def __getitem__(*args): return _brianlib.StateMonitor___getitem__(*args)
+    __swig_destroy__ = _brianlib.delete_StateMonitor
+    __del__ = lambda self : None;
+StateMonitor_swigregister = _brianlib.StateMonitor_swigregister
+StateMonitor_swigregister(StateMonitor)
+
+class Network(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Network, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Network, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["groups"] = _brianlib.Network_groups_set
+    __swig_getmethods__["groups"] = _brianlib.Network_groups_get
+    if _newclass:groups = _swig_property(_brianlib.Network_groups_get, _brianlib.Network_groups_set)
+    __swig_setmethods__["operations"] = _brianlib.Network_operations_set
+    __swig_getmethods__["operations"] = _brianlib.Network_operations_get
+    if _newclass:operations = _swig_property(_brianlib.Network_operations_get, _brianlib.Network_operations_set)
+    def add(*args): return _brianlib.Network_add(*args)
+    def update(*args): return _brianlib.Network_update(*args)
+    def run(*args): return _brianlib.Network_run(*args)
+    def __init__(self, *args): 
+        this = _brianlib.new_Network(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _brianlib.delete_Network
+    __del__ = lambda self : None;
+Network_swigregister = _brianlib.Network_swigregister
+Network_swigregister(Network)
 
 
 
