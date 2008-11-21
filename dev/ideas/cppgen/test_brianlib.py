@@ -35,14 +35,15 @@ from brian import *
 import brianlib as bl
 import time
 duration = 10*second
+N = 10000
 doplot = False
 domonitor = False
 ######### Define a network we want to simulate ###############
 eqs = '''
 dV/dt = -(V-11*mV)/(10*ms) : volt
 '''
-G = NeuronGroup(10, eqs, threshold=10*mV, reset=0*mV)
-G.V = rand(10)*10*mV
+G = NeuronGroup(N, eqs, threshold=10*mV, reset=0*mV)
+G.V = rand(N)*10*mV
 if domonitor: M = StateMonitor(G, 'V', record=True)
 net = Network()
 net.add(G)
