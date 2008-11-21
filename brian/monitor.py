@@ -439,6 +439,9 @@ class SpikeCounter(PopulationSpikeCounter):
     def propagate(self, spikes):
         PopulationSpikeCounter.propagate(self, spikes)
         self.count[spikes]+=1
+    def reinit(self):
+        self.count[:] = 0
+        PopulationSpikeCounter.reinit(self)
 
 class StateSpikeMonitor(SpikeMonitor):
     '''
