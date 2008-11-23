@@ -40,6 +40,14 @@ Notes:
       a static array to pass these. This is probably the most
       important point because it was adding the Refractoriness that
       caused the slowdown.
+
+Ideas:
+
++ An interesting alternative to generating SpikeLists as in Brian is to
+  just return a structure that points directly to the underlying
+  CircularVector array. As long as the rest of the C++ code is aware
+  that it is just getting a pointer to a CircularVector array you can
+  thereby avoid a hell of a lot of copy operations.
 '''
 from brian import *
 import brianlib as bl
