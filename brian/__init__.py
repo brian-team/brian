@@ -61,6 +61,7 @@ from stdunits import *
 from neuronmodel import *
 from utils.parameters import *
 from membrane_equations import *
+from compartments import *
 from log import *
 from credits import *
 from utils.parallelpython import *
