@@ -10,7 +10,7 @@ from distutils.core import setup, Extension
 brianlib_module = Extension('_brianlib',
                            sources=['brianlib_wrap.cxx', 'brianlib.cpp'],
                            include_dirs=['c:\\python25\\lib\\site-packages\\numpy\\core\\include'],
-                           extra_compile_args=['-O2']
+                           extra_compile_args=['-O3']
                            )
 
 setup (name = 'brianlib',

@@ -333,6 +333,14 @@ class LinearStateUpdater(StateUpdater):
                 self.A,self._C=get_linear_equations_solution_numerically(M, clock.dt)
                 self.B = NotImplemented # raises error on trying to use this
                 self._useB = True
+        # note the numpy dot command works faster if self.A has C ordering compared
+        # to fortran ordering (although maybe this depends on which implementation
+        # of BLAS you're using). The difference is only significant in small
+        # calculations because making a copy of self.A is usually not serious, its
+        # size is only the number of variables, not the number of neurons.
+        self.A = array(self.A, order='C')
+        if self._useB:
+            self._C = array(self._C, order='C')
 
     def rest(self,P):
         if self._useB:

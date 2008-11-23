@@ -147,10 +147,10 @@ class CircularVector(object):
                 self.X[0:j0]=W[n-i0:n-i0+j0]
 
     def __repr__(self):
-        return self[0:self.n].__repr__()
+        return repr(hstack((self[0:self.n-1], self[self.n-1:self.n])))
     
     def __print__(self):
-        return self[0:self.n].__print__()
+        return (hstack((self[0:self.n-1], self[self.n-1:self.n]))).__print__()
 
 class SpikeContainer(object):
     '''

@@ -2480,32 +2480,37 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define SWIGTYPE_p_LinearStateUpdater swig_types[0]
-#define SWIGTYPE_p_Network swig_types[1]
-#define SWIGTYPE_p_NetworkOperation swig_types[2]
-#define SWIGTYPE_p_NeuronGroup swig_types[3]
-#define SWIGTYPE_p_Reset swig_types[4]
-#define SWIGTYPE_p_StateMonitor swig_types[5]
-#define SWIGTYPE_p_StateUpdater swig_types[6]
-#define SWIGTYPE_p_Threshold swig_types[7]
-#define SWIGTYPE_p_allocator_type swig_types[8]
-#define SWIGTYPE_p_char swig_types[9]
-#define SWIGTYPE_p_difference_type swig_types[10]
-#define SWIGTYPE_p_double swig_types[11]
-#define SWIGTYPE_p_p_PyObject swig_types[12]
-#define SWIGTYPE_p_size_type swig_types[13]
-#define SWIGTYPE_p_std__invalid_argument swig_types[14]
-#define SWIGTYPE_p_std__listTNetworkOperation_p_std__allocatorTNetworkOperation_p_t_t swig_types[15]
-#define SWIGTYPE_p_std__listTNeuronGroup_p_std__allocatorTNeuronGroup_p_t_t swig_types[16]
-#define SWIGTYPE_p_std__listTint_std__allocatorTint_t_t swig_types[17]
-#define SWIGTYPE_p_std__listTint_std__allocatorTint_t_t__allocator_type swig_types[18]
-#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t swig_types[19]
-#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t__allocator_type swig_types[20]
-#define SWIGTYPE_p_std__vectorTstd__vectorTdouble_std__allocatorTdouble_t_t_std__allocatorTstd__vectorTdouble_std__allocatorTdouble_t_t_t_t swig_types[21]
-#define SWIGTYPE_p_swig__PySwigIterator swig_types[22]
-#define SWIGTYPE_p_value_type swig_types[23]
-static swig_type_info *swig_types[25];
-static swig_module_info swig_module = {swig_types, 24, 0, 0, 0, 0};
+#define SWIGTYPE_p_CircularVector swig_types[0]
+#define SWIGTYPE_p_LinearStateUpdater swig_types[1]
+#define SWIGTYPE_p_Network swig_types[2]
+#define SWIGTYPE_p_NetworkOperation swig_types[3]
+#define SWIGTYPE_p_NeuronGroup swig_types[4]
+#define SWIGTYPE_p_Refractoriness swig_types[5]
+#define SWIGTYPE_p_Reset swig_types[6]
+#define SWIGTYPE_p_ResetBase swig_types[7]
+#define SWIGTYPE_p_SpikeContainer swig_types[8]
+#define SWIGTYPE_p_StateMonitor swig_types[9]
+#define SWIGTYPE_p_StateUpdater swig_types[10]
+#define SWIGTYPE_p_Threshold swig_types[11]
+#define SWIGTYPE_p_allocator_type swig_types[12]
+#define SWIGTYPE_p_char swig_types[13]
+#define SWIGTYPE_p_difference_type swig_types[14]
+#define SWIGTYPE_p_double swig_types[15]
+#define SWIGTYPE_p_int swig_types[16]
+#define SWIGTYPE_p_p_PyObject swig_types[17]
+#define SWIGTYPE_p_size_type swig_types[18]
+#define SWIGTYPE_p_std__invalid_argument swig_types[19]
+#define SWIGTYPE_p_std__listTNetworkOperation_p_std__allocatorTNetworkOperation_p_t_t swig_types[20]
+#define SWIGTYPE_p_std__listTNeuronGroup_p_std__allocatorTNeuronGroup_p_t_t swig_types[21]
+#define SWIGTYPE_p_std__listTint_std__allocatorTint_t_t swig_types[22]
+#define SWIGTYPE_p_std__listTint_std__allocatorTint_t_t__allocator_type swig_types[23]
+#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t swig_types[24]
+#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t__allocator_type swig_types[25]
+#define SWIGTYPE_p_std__vectorTstd__vectorTdouble_std__allocatorTdouble_t_t_std__allocatorTstd__vectorTdouble_std__allocatorTdouble_t_t_t_t swig_types[26]
+#define SWIGTYPE_p_swig__PySwigIterator swig_types[27]
+#define SWIGTYPE_p_value_type swig_types[28]
+static swig_type_info *swig_types[30];
+static swig_module_info swig_module = {swig_types, 29, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -8731,7 +8736,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_NeuronGroup_S_n_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_NeuronGroup_num_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   NeuronGroup *arg1 = (NeuronGroup *) 0 ;
   int arg2 ;
@@ -8742,18 +8747,18 @@ SWIGINTERN PyObject *_wrap_NeuronGroup_S_n_set(PyObject *SWIGUNUSEDPARM(self), P
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_S_n_set",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_num_vars_set",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_S_n_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_num_vars_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
   }
   arg1 = reinterpret_cast< NeuronGroup * >(argp1);
   ecode2 = SWIG_AsVal_int(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "NeuronGroup_S_n_set" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "NeuronGroup_num_vars_set" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
-  if (arg1) (arg1)->S_n = arg2;
+  if (arg1) (arg1)->num_vars = arg2;
   
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -8762,7 +8767,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_NeuronGroup_S_n_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_NeuronGroup_num_vars_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   NeuronGroup *arg1 = (NeuronGroup *) 0 ;
   int result;
@@ -8770,13 +8775,13 @@ SWIGINTERN PyObject *_wrap_NeuronGroup_S_n_get(PyObject *SWIGUNUSEDPARM(self), P
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_S_n_get",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_num_vars_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_S_n_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_num_vars_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
   }
   arg1 = reinterpret_cast< NeuronGroup * >(argp1);
-  result = (int) ((arg1)->S_n);
+  result = (int) ((arg1)->num_vars);
   resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
@@ -8784,7 +8789,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_NeuronGroup_S_m_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_NeuronGroup_num_neurons_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   NeuronGroup *arg1 = (NeuronGroup *) 0 ;
   int arg2 ;
@@ -8795,18 +8800,18 @@ SWIGINTERN PyObject *_wrap_NeuronGroup_S_m_set(PyObject *SWIGUNUSEDPARM(self), P
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_S_m_set",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_num_neurons_set",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_S_m_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_num_neurons_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
   }
   arg1 = reinterpret_cast< NeuronGroup * >(argp1);
   ecode2 = SWIG_AsVal_int(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "NeuronGroup_S_m_set" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "NeuronGroup_num_neurons_set" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
-  if (arg1) (arg1)->S_m = arg2;
+  if (arg1) (arg1)->num_neurons = arg2;
   
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -8815,7 +8820,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_NeuronGroup_S_m_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_NeuronGroup_num_neurons_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   NeuronGroup *arg1 = (NeuronGroup *) 0 ;
   int result;
@@ -8823,13 +8828,13 @@ SWIGINTERN PyObject *_wrap_NeuronGroup_S_m_get(PyObject *SWIGUNUSEDPARM(self), P
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_S_m_get",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_num_neurons_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_S_m_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_num_neurons_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
   }
   arg1 = reinterpret_cast< NeuronGroup * >(argp1);
-  result = (int) ((arg1)->S_m);
+  result = (int) ((arg1)->num_neurons);
   resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
@@ -8943,10 +8948,10 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_NeuronGroup_reset_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_NeuronGroup_resetobj_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   NeuronGroup *arg1 = (NeuronGroup *) 0 ;
-  Reset *arg2 = (Reset *) 0 ;
+  ResetBase *arg2 = (ResetBase *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -8954,18 +8959,18 @@ SWIGINTERN PyObject *_wrap_NeuronGroup_reset_set(PyObject *SWIGUNUSEDPARM(self),
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_reset_set",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_resetobj_set",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_reset_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_resetobj_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
   }
   arg1 = reinterpret_cast< NeuronGroup * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_Reset, SWIG_POINTER_DISOWN |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_ResetBase, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "NeuronGroup_reset_set" "', argument " "2"" of type '" "Reset *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "NeuronGroup_resetobj_set" "', argument " "2"" of type '" "ResetBase *""'"); 
   }
-  arg2 = reinterpret_cast< Reset * >(argp2);
-  if (arg1) (arg1)->reset = arg2;
+  arg2 = reinterpret_cast< ResetBase * >(argp2);
+  if (arg1) (arg1)->resetobj = arg2;
   
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -8974,32 +8979,32 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_NeuronGroup_reset_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_NeuronGroup_resetobj_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   NeuronGroup *arg1 = (NeuronGroup *) 0 ;
-  Reset *result = 0 ;
+  ResetBase *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_reset_get",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_resetobj_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_reset_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_resetobj_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
   }
   arg1 = reinterpret_cast< NeuronGroup * >(argp1);
-  result = (Reset *) ((arg1)->reset);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Reset, 0 |  0 );
+  result = (ResetBase *) ((arg1)->resetobj);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_ResetBase, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_NeuronGroup_last_spikes_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_NeuronGroup_LS_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   NeuronGroup *arg1 = (NeuronGroup *) 0 ;
-  SpikeList *arg2 = (SpikeList *) 0 ;
+  SpikeContainer *arg2 = (SpikeContainer *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -9007,18 +9012,18 @@ SWIGINTERN PyObject *_wrap_NeuronGroup_last_spikes_set(PyObject *SWIGUNUSEDPARM(
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_last_spikes_set",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_LS_set",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_last_spikes_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_LS_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
   }
   arg1 = reinterpret_cast< NeuronGroup * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__listTint_std__allocatorTint_t_t, 0 |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_SpikeContainer, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "NeuronGroup_last_spikes_set" "', argument " "2"" of type '" "SpikeList *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "NeuronGroup_LS_set" "', argument " "2"" of type '" "SpikeContainer *""'"); 
   }
-  arg2 = reinterpret_cast< SpikeList * >(argp2);
-  if (arg1) (arg1)->last_spikes = *arg2;
+  arg2 = reinterpret_cast< SpikeContainer * >(argp2);
+  if (arg1) (arg1)->LS = arg2;
   
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -9027,22 +9032,22 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_NeuronGroup_last_spikes_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_NeuronGroup_LS_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   NeuronGroup *arg1 = (NeuronGroup *) 0 ;
-  SpikeList *result = 0 ;
+  SpikeContainer *result = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_last_spikes_get",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_LS_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_last_spikes_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_LS_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
   }
   arg1 = reinterpret_cast< NeuronGroup * >(argp1);
-  result = (SpikeList *)& ((arg1)->last_spikes);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__listTint_std__allocatorTint_t_t, 0 |  0 );
+  result = (SpikeContainer *) ((arg1)->LS);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_SpikeContainer, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -9056,7 +9061,9 @@ SWIGINTERN PyObject *_wrap_new_NeuronGroup(PyObject *SWIGUNUSEDPARM(self), PyObj
   int arg3 ;
   StateUpdater *arg4 = (StateUpdater *) 0 ;
   Threshold *arg5 = (Threshold *) 0 ;
-  Reset *arg6 = (Reset *) 0 ;
+  ResetBase *arg6 = (ResetBase *) 0 ;
+  int arg7 ;
+  int arg8 ;
   NeuronGroup *result = 0 ;
   PyArrayObject *array1 = NULL ;
   void *argp4 = 0 ;
@@ -9065,12 +9072,18 @@ SWIGINTERN PyObject *_wrap_new_NeuronGroup(PyObject *SWIGUNUSEDPARM(self), PyObj
   int res5 = 0 ;
   void *argp6 = 0 ;
   int res6 = 0 ;
+  int val7 ;
+  int ecode7 = 0 ;
+  int val8 ;
+  int ecode8 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOO:new_NeuronGroup",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:new_NeuronGroup",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
   {
     array1 = obj_to_array_no_conversion(obj0, NPY_DOUBLE);
     if (!array1 || !require_dimensions(array1,2) || !require_contiguous(array1)
@@ -9089,15 +9102,141 @@ SWIGINTERN PyObject *_wrap_new_NeuronGroup(PyObject *SWIGUNUSEDPARM(self), PyObj
     SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "new_NeuronGroup" "', argument " "5"" of type '" "Threshold *""'"); 
   }
   arg5 = reinterpret_cast< Threshold * >(argp5);
-  res6 = SWIG_ConvertPtr(obj3, &argp6,SWIGTYPE_p_Reset, 0 |  0 );
+  res6 = SWIG_ConvertPtr(obj3, &argp6,SWIGTYPE_p_ResetBase, 0 |  0 );
   if (!SWIG_IsOK(res6)) {
-    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "new_NeuronGroup" "', argument " "6"" of type '" "Reset *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "new_NeuronGroup" "', argument " "6"" of type '" "ResetBase *""'"); 
   }
-  arg6 = reinterpret_cast< Reset * >(argp6);
-  result = (NeuronGroup *)new NeuronGroup(arg1,arg2,arg3,arg4,arg5,arg6);
+  arg6 = reinterpret_cast< ResetBase * >(argp6);
+  ecode7 = SWIG_AsVal_int(obj4, &val7);
+  if (!SWIG_IsOK(ecode7)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_NeuronGroup" "', argument " "7"" of type '" "int""'");
+  } 
+  arg7 = static_cast< int >(val7);
+  ecode8 = SWIG_AsVal_int(obj5, &val8);
+  if (!SWIG_IsOK(ecode8)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_NeuronGroup" "', argument " "8"" of type '" "int""'");
+  } 
+  arg8 = static_cast< int >(val8);
+  result = (NeuronGroup *)new NeuronGroup(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_NeuronGroup, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_NeuronGroup(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_NeuronGroup",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_NeuronGroup" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  delete arg1;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_NeuronGroup_get_spikes__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  int arg2 ;
+  SpikeList result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_get_spikes",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_get_spikes" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "NeuronGroup_get_spikes" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  result = (arg1)->get_spikes(arg2);
+  resultobj = swig::from(static_cast< std::list<int,std::allocator<int > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_NeuronGroup_get_spikes__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  SpikeList result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_get_spikes",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_get_spikes" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  result = (arg1)->get_spikes();
+  resultobj = swig::from(static_cast< std::list<int,std::allocator<int > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_NeuronGroup_get_spikes(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[3];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_NeuronGroup, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_NeuronGroup_get_spikes__SWIG_1(self, args);
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_NeuronGroup, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_NeuronGroup_get_spikes__SWIG_0(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'NeuronGroup_get_spikes'.\n  Possible C/C++ prototypes are:\n""    get_spikes(NeuronGroup *,int)\n""    get_spikes(NeuronGroup *)\n");
   return NULL;
 }
 
@@ -9116,6 +9255,27 @@ SWIGINTERN PyObject *_wrap_NeuronGroup_update(PyObject *SWIGUNUSEDPARM(self), Py
   }
   arg1 = reinterpret_cast< NeuronGroup * >(argp1);
   (arg1)->update();
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_NeuronGroup_reset(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_reset",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_reset" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  (arg1)->reset();
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -9161,28 +9321,6 @@ SWIGINTERN PyObject *_wrap_NeuronGroup_get_S_flat(PyObject *SWIGUNUSEDPARM(self)
   {
     resultobj = SWIG_Python_AppendOutput(resultobj,array2);
   }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_NeuronGroup(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_NeuronGroup",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_NeuronGroup" "', argument " "1"" of type '" "NeuronGroup *""'"); 
-  }
-  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
-  delete arg1;
-  
-  resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
   return NULL;
@@ -9850,6 +9988,78 @@ SWIGINTERN PyObject *Threshold_swigregister(PyObject *SWIGUNUSEDPARM(self), PyOb
   return SWIG_Py_Void();
 }
 
+SWIGINTERN PyObject *_wrap_ResetBase___call__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  ResetBase *arg1 = (ResetBase *) 0 ;
+  NeuronGroup *arg2 = (NeuronGroup *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:ResetBase___call__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_ResetBase, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ResetBase___call__" "', argument " "1"" of type '" "ResetBase *""'"); 
+  }
+  arg1 = reinterpret_cast< ResetBase * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ResetBase___call__" "', argument " "2"" of type '" "NeuronGroup *""'"); 
+  }
+  arg2 = reinterpret_cast< NeuronGroup * >(argp2);
+  (arg1)->__call__(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_ResetBase(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  ResetBase *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_ResetBase")) SWIG_fail;
+  result = (ResetBase *)new ResetBase();
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_ResetBase, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_ResetBase(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  ResetBase *arg1 = (ResetBase *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_ResetBase",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_ResetBase, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_ResetBase" "', argument " "1"" of type '" "ResetBase *""'"); 
+  }
+  arg1 = reinterpret_cast< ResetBase * >(argp1);
+  delete arg1;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *ResetBase_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_ResetBase, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
 SWIGINTERN PyObject *_wrap_Reset_value_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Reset *arg1 = (Reset *) 0 ;
@@ -10043,6 +10253,158 @@ SWIGINTERN PyObject *Reset_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject
   PyObject *obj;
   if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
   SWIG_TypeNewClientData(SWIGTYPE_p_Reset, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_Refractoriness_period_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Refractoriness *arg1 = (Refractoriness *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Refractoriness_period_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Refractoriness, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Refractoriness_period_set" "', argument " "1"" of type '" "Refractoriness *""'"); 
+  }
+  arg1 = reinterpret_cast< Refractoriness * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Refractoriness_period_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->period = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Refractoriness_period_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Refractoriness *arg1 = (Refractoriness *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Refractoriness_period_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Refractoriness, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Refractoriness_period_get" "', argument " "1"" of type '" "Refractoriness *""'"); 
+  }
+  arg1 = reinterpret_cast< Refractoriness * >(argp1);
+  result = (int) ((arg1)->period);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_Refractoriness(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  double arg2 ;
+  int arg3 ;
+  Refractoriness *result = 0 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:new_Refractoriness",&obj0,&obj1,&obj2)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_Refractoriness" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_double(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_Refractoriness" "', argument " "2"" of type '" "double""'");
+  } 
+  arg2 = static_cast< double >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_Refractoriness" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  result = (Refractoriness *)new Refractoriness(arg1,arg2,arg3);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Refractoriness, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Refractoriness___call__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Refractoriness *arg1 = (Refractoriness *) 0 ;
+  NeuronGroup *arg2 = (NeuronGroup *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Refractoriness___call__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Refractoriness, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Refractoriness___call__" "', argument " "1"" of type '" "Refractoriness *""'"); 
+  }
+  arg1 = reinterpret_cast< Refractoriness * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Refractoriness___call__" "', argument " "2"" of type '" "NeuronGroup *""'"); 
+  }
+  arg2 = reinterpret_cast< NeuronGroup * >(argp2);
+  (arg1)->__call__(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_Refractoriness(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Refractoriness *arg1 = (Refractoriness *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_Refractoriness",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Refractoriness, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_Refractoriness" "', argument " "1"" of type '" "Refractoriness *""'"); 
+  }
+  arg1 = reinterpret_cast< Refractoriness * >(argp1);
+  delete arg1;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *Refractoriness_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_Refractoriness, SWIG_NewClientData(obj));
   return SWIG_Py_Void();
 }
 
@@ -10684,6 +11046,1322 @@ SWIGINTERN PyObject *Network_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObje
   return SWIG_Py_Void();
 }
 
+SWIGINTERN PyObject *_wrap_CircularVector_X_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int *arg2 = (int *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CircularVector_X_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_X_set" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_int, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CircularVector_X_set" "', argument " "2"" of type '" "int *""'"); 
+  }
+  arg2 = reinterpret_cast< int * >(argp2);
+  if (arg1) (arg1)->X = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector_X_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CircularVector_X_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_X_get" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  result = (int *) ((arg1)->X);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_int, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector_cursor_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CircularVector_cursor_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_cursor_set" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector_cursor_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->cursor = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector_cursor_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CircularVector_cursor_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_cursor_get" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  result = (int) ((arg1)->cursor);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector_n_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CircularVector_n_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_n_set" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector_n_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->n = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector_n_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CircularVector_n_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_n_get" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  result = (int) ((arg1)->n);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_CircularVector(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  CircularVector *result = 0 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:new_CircularVector",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_CircularVector" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  result = (CircularVector *)new CircularVector(arg1);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CircularVector, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_CircularVector(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_CircularVector",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CircularVector" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  delete arg1;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector_reinit(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CircularVector_reinit",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_reinit" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  (arg1)->reinit();
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector_advance(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CircularVector_advance",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_advance" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector_advance" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  (arg1)->advance(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector___len__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CircularVector___len__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___len__" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  result = (int)(arg1)->__len__();
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int arg2 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:CircularVector___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___getitem__" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector___getitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  result = (int)(arg1)->__getitem__(arg2);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector___setitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CircularVector___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___setitem__" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector___setitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "CircularVector___setitem__" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  (arg1)->__setitem__(arg2,arg3);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector___getslice__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  std::list<int > result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CircularVector___getslice__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___getslice__" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector___getslice__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "CircularVector___getslice__" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  result = (arg1)->__getslice__(arg2,arg3);
+  resultobj = swig::from(static_cast< std::list<int,std::allocator<int > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector_get_conditional__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  int arg4 ;
+  int arg5 ;
+  int arg6 ;
+  std::list<int > result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  int val5 ;
+  int ecode5 = 0 ;
+  int val6 ;
+  int ecode6 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:CircularVector_get_conditional",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_get_conditional" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector_get_conditional" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "CircularVector_get_conditional" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "CircularVector_get_conditional" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  ecode5 = SWIG_AsVal_int(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "CircularVector_get_conditional" "', argument " "5"" of type '" "int""'");
+  } 
+  arg5 = static_cast< int >(val5);
+  ecode6 = SWIG_AsVal_int(obj5, &val6);
+  if (!SWIG_IsOK(ecode6)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "CircularVector_get_conditional" "', argument " "6"" of type '" "int""'");
+  } 
+  arg6 = static_cast< int >(val6);
+  result = (arg1)->get_conditional(arg2,arg3,arg4,arg5,arg6);
+  resultobj = swig::from(static_cast< std::list<int,std::allocator<int > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector_get_conditional__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  int arg4 ;
+  int arg5 ;
+  std::list<int > result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  int val5 ;
+  int ecode5 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:CircularVector_get_conditional",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_get_conditional" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector_get_conditional" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "CircularVector_get_conditional" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "CircularVector_get_conditional" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  ecode5 = SWIG_AsVal_int(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "CircularVector_get_conditional" "', argument " "5"" of type '" "int""'");
+  } 
+  arg5 = static_cast< int >(val5);
+  result = (arg1)->get_conditional(arg2,arg3,arg4,arg5);
+  resultobj = swig::from(static_cast< std::list<int,std::allocator<int > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector_get_conditional(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[7];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 6); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 5) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_CircularVector, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            {
+              int res = SWIG_AsVal_int(argv[4], NULL);
+              _v = SWIG_CheckState(res);
+            }
+            if (_v) {
+              return _wrap_CircularVector_get_conditional__SWIG_1(self, args);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 6) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_CircularVector, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            {
+              int res = SWIG_AsVal_int(argv[4], NULL);
+              _v = SWIG_CheckState(res);
+            }
+            if (_v) {
+              {
+                int res = SWIG_AsVal_int(argv[5], NULL);
+                _v = SWIG_CheckState(res);
+              }
+              if (_v) {
+                return _wrap_CircularVector_get_conditional__SWIG_0(self, args);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'CircularVector_get_conditional'.\n  Possible C/C++ prototypes are:\n""    get_conditional(CircularVector *,int,int,int,int,int)\n""    get_conditional(CircularVector *,int,int,int,int)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector___setslice____SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  int *arg4 = (int *) 0 ;
+  int arg5 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:CircularVector___setslice__",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___setslice__" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector___setslice__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "CircularVector___setslice__" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  {
+    array4 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  (arg1)->__setslice__(arg2,arg3,arg4,arg5);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector___setslice____SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  std::list<int > *arg4 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:CircularVector___setslice__",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___setslice__" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector___setslice__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "CircularVector___setslice__" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_std__listTint_std__allocatorTint_t_t,  0 );
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "CircularVector___setslice__" "', argument " "4"" of type '" "std::list<int > &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CircularVector___setslice__" "', argument " "4"" of type '" "std::list<int > &""'"); 
+  }
+  arg4 = reinterpret_cast< std::list<int > * >(argp4);
+  (arg1)->__setslice__(arg2,arg3,*arg4);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector___setslice__(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[5];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 4); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 4) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_CircularVector, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          void *vptr = 0;
+          int res = SWIG_ConvertPtr(argv[3], &vptr, SWIGTYPE_p_std__listTint_std__allocatorTint_t_t, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            return _wrap_CircularVector___setslice____SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_CircularVector, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_INT);
+          }
+          if (_v) {
+            if (argc <= 4) {
+              return _wrap_CircularVector___setslice____SWIG_0(self, args);
+            }
+            return _wrap_CircularVector___setslice____SWIG_0(self, args);
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'CircularVector___setslice__'.\n  Possible C/C++ prototypes are:\n""    __setslice__(CircularVector *,int,int,int *,int)\n""    __setslice__(CircularVector *,int,int,std::list<int > &)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector___repr__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  std::string result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CircularVector___repr__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___repr__" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  result = (arg1)->__repr__();
+  resultobj = SWIG_From_std_string(static_cast< std::string >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_CircularVector___str__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  CircularVector *arg1 = (CircularVector *) 0 ;
+  std::string result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:CircularVector___str__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___str__" "', argument " "1"" of type '" "CircularVector *""'"); 
+  }
+  arg1 = reinterpret_cast< CircularVector * >(argp1);
+  result = (arg1)->__str__();
+  resultobj = SWIG_From_std_string(static_cast< std::string >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *CircularVector_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_CircularVector, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_SpikeContainer_S_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  CircularVector *arg2 = (CircularVector *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:SpikeContainer_S_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_S_set" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CircularVector, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "SpikeContainer_S_set" "', argument " "2"" of type '" "CircularVector *""'"); 
+  }
+  arg2 = reinterpret_cast< CircularVector * >(argp2);
+  if (arg1) (arg1)->S = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer_S_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  CircularVector *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:SpikeContainer_S_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_S_get" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  result = (CircularVector *) ((arg1)->S);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CircularVector, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer_ind_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  CircularVector *arg2 = (CircularVector *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:SpikeContainer_ind_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_ind_set" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CircularVector, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "SpikeContainer_ind_set" "', argument " "2"" of type '" "CircularVector *""'"); 
+  }
+  arg2 = reinterpret_cast< CircularVector * >(argp2);
+  if (arg1) (arg1)->ind = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer_ind_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  CircularVector *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:SpikeContainer_ind_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_ind_get" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  result = (CircularVector *) ((arg1)->ind);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CircularVector, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_SpikeContainer(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int arg2 ;
+  SpikeContainer *result = 0 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:new_SpikeContainer",&obj0,&obj1)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_SpikeContainer" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_SpikeContainer" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  result = (SpikeContainer *)new SpikeContainer(arg1,arg2);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_SpikeContainer, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_SpikeContainer(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_SpikeContainer",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_SpikeContainer" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  delete arg1;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer_reinit(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:SpikeContainer_reinit",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_reinit" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  (arg1)->reinit();
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer_push__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:SpikeContainer_push",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_push" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_INT);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (int*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  (arg1)->push(arg2,arg3);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer_push__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  std::list<int > *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:SpikeContainer_push",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_push" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__listTint_std__allocatorTint_t_t,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "SpikeContainer_push" "', argument " "2"" of type '" "std::list<int > &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "SpikeContainer_push" "', argument " "2"" of type '" "std::list<int > &""'"); 
+  }
+  arg2 = reinterpret_cast< std::list<int > * >(argp2);
+  (arg1)->push(*arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer_push(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[3];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_SpikeContainer, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_std__listTint_std__allocatorTint_t_t, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        return _wrap_SpikeContainer_push__SWIG_1(self, args);
+      }
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_SpikeContainer, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        _v = is_array(argv[1]) && PyArray_EquivTypenums(array_type(argv[1]),
+          NPY_INT);
+      }
+      if (_v) {
+        if (argc <= 2) {
+          return _wrap_SpikeContainer_push__SWIG_0(self, args);
+        }
+        return _wrap_SpikeContainer_push__SWIG_0(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'SpikeContainer_push'.\n  Possible C/C++ prototypes are:\n""    push(SpikeContainer *,int *,int)\n""    push(SpikeContainer *,std::list<int > &)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer_lastspikes(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  SpikeList result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:SpikeContainer_lastspikes",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_lastspikes" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  result = (arg1)->lastspikes();
+  resultobj = swig::from(static_cast< std::list<int,std::allocator<int > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer___getitem__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  int arg2 ;
+  SpikeList result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:SpikeContainer___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer___getitem__" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "SpikeContainer___getitem__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  result = (arg1)->__getitem__(arg2);
+  resultobj = swig::from(static_cast< std::list<int,std::allocator<int > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer_get_spikes(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  int arg4 ;
+  SpikeList result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:SpikeContainer_get_spikes",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_get_spikes" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "SpikeContainer_get_spikes" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "SpikeContainer_get_spikes" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "SpikeContainer_get_spikes" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  result = (arg1)->get_spikes(arg2,arg3,arg4);
+  resultobj = swig::from(static_cast< std::list<int,std::allocator<int > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer___getslice__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  SpikeList result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:SpikeContainer___getslice__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer___getslice__" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "SpikeContainer___getslice__" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "SpikeContainer___getslice__" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  result = (arg1)->__getslice__(arg2,arg3);
+  resultobj = swig::from(static_cast< std::list<int,std::allocator<int > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer___repr__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  std::string result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:SpikeContainer___repr__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer___repr__" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  result = (arg1)->__repr__();
+  resultobj = SWIG_From_std_string(static_cast< std::string >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_SpikeContainer___str__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  SpikeContainer *arg1 = (SpikeContainer *) 0 ;
+  std::string result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:SpikeContainer___str__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer___str__" "', argument " "1"" of type '" "SpikeContainer *""'"); 
+  }
+  arg1 = reinterpret_cast< SpikeContainer * >(argp1);
+  result = (arg1)->__str__();
+  resultobj = SWIG_From_std_string(static_cast< std::string >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *SpikeContainer_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_SpikeContainer, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"delete_PySwigIterator", _wrap_delete_PySwigIterator, METH_VARARGS, NULL},
 	 { (char *)"PySwigIterator_value", _wrap_PySwigIterator_value, METH_VARARGS, NULL},
@@ -10771,22 +12449,24 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"VectorDouble_swigregister", VectorDouble_swigregister, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_S_set", _wrap_NeuronGroup_S_set, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_S_get", _wrap_NeuronGroup_S_get, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_S_n_set", _wrap_NeuronGroup_S_n_set, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_S_n_get", _wrap_NeuronGroup_S_n_get, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_S_m_set", _wrap_NeuronGroup_S_m_set, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_S_m_get", _wrap_NeuronGroup_S_m_get, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_num_vars_set", _wrap_NeuronGroup_num_vars_set, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_num_vars_get", _wrap_NeuronGroup_num_vars_get, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_num_neurons_set", _wrap_NeuronGroup_num_neurons_set, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_num_neurons_get", _wrap_NeuronGroup_num_neurons_get, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_su_set", _wrap_NeuronGroup_su_set, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_su_get", _wrap_NeuronGroup_su_get, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_thr_set", _wrap_NeuronGroup_thr_set, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_thr_get", _wrap_NeuronGroup_thr_get, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_reset_set", _wrap_NeuronGroup_reset_set, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_reset_get", _wrap_NeuronGroup_reset_get, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_last_spikes_set", _wrap_NeuronGroup_last_spikes_set, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_last_spikes_get", _wrap_NeuronGroup_last_spikes_get, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_resetobj_set", _wrap_NeuronGroup_resetobj_set, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_resetobj_get", _wrap_NeuronGroup_resetobj_get, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_LS_set", _wrap_NeuronGroup_LS_set, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_LS_get", _wrap_NeuronGroup_LS_get, METH_VARARGS, NULL},
 	 { (char *)"new_NeuronGroup", _wrap_new_NeuronGroup, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_update", _wrap_NeuronGroup_update, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_get_S_flat", _wrap_NeuronGroup_get_S_flat, METH_VARARGS, NULL},
 	 { (char *)"delete_NeuronGroup", _wrap_delete_NeuronGroup, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_get_spikes", _wrap_NeuronGroup_get_spikes, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_update", _wrap_NeuronGroup_update, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_reset", _wrap_NeuronGroup_reset, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_get_S_flat", _wrap_NeuronGroup_get_S_flat, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_swigregister", NeuronGroup_swigregister, METH_VARARGS, NULL},
 	 { (char *)"StateUpdater___call__", _wrap_StateUpdater___call__, METH_VARARGS, NULL},
 	 { (char *)"new_StateUpdater", _wrap_new_StateUpdater, METH_VARARGS, NULL},
@@ -10815,6 +12495,10 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Threshold___call__", _wrap_Threshold___call__, METH_VARARGS, NULL},
 	 { (char *)"delete_Threshold", _wrap_delete_Threshold, METH_VARARGS, NULL},
 	 { (char *)"Threshold_swigregister", Threshold_swigregister, METH_VARARGS, NULL},
+	 { (char *)"ResetBase___call__", _wrap_ResetBase___call__, METH_VARARGS, NULL},
+	 { (char *)"new_ResetBase", _wrap_new_ResetBase, METH_VARARGS, NULL},
+	 { (char *)"delete_ResetBase", _wrap_delete_ResetBase, METH_VARARGS, NULL},
+	 { (char *)"ResetBase_swigregister", ResetBase_swigregister, METH_VARARGS, NULL},
 	 { (char *)"Reset_value_set", _wrap_Reset_value_set, METH_VARARGS, NULL},
 	 { (char *)"Reset_value_get", _wrap_Reset_value_get, METH_VARARGS, NULL},
 	 { (char *)"Reset_state_set", _wrap_Reset_state_set, METH_VARARGS, NULL},
@@ -10823,6 +12507,12 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Reset___call__", _wrap_Reset___call__, METH_VARARGS, NULL},
 	 { (char *)"delete_Reset", _wrap_delete_Reset, METH_VARARGS, NULL},
 	 { (char *)"Reset_swigregister", Reset_swigregister, METH_VARARGS, NULL},
+	 { (char *)"Refractoriness_period_set", _wrap_Refractoriness_period_set, METH_VARARGS, NULL},
+	 { (char *)"Refractoriness_period_get", _wrap_Refractoriness_period_get, METH_VARARGS, NULL},
+	 { (char *)"new_Refractoriness", _wrap_new_Refractoriness, METH_VARARGS, NULL},
+	 { (char *)"Refractoriness___call__", _wrap_Refractoriness___call__, METH_VARARGS, NULL},
+	 { (char *)"delete_Refractoriness", _wrap_delete_Refractoriness, METH_VARARGS, NULL},
+	 { (char *)"Refractoriness_swigregister", Refractoriness_swigregister, METH_VARARGS, NULL},
 	 { (char *)"NetworkOperation___call__", _wrap_NetworkOperation___call__, METH_VARARGS, NULL},
 	 { (char *)"new_NetworkOperation", _wrap_new_NetworkOperation, METH_VARARGS, NULL},
 	 { (char *)"delete_NetworkOperation", _wrap_delete_NetworkOperation, METH_VARARGS, NULL},
@@ -10848,23 +12538,70 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"new_Network", _wrap_new_Network, METH_VARARGS, NULL},
 	 { (char *)"delete_Network", _wrap_delete_Network, METH_VARARGS, NULL},
 	 { (char *)"Network_swigregister", Network_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CircularVector_X_set", _wrap_CircularVector_X_set, METH_VARARGS, NULL},
+	 { (char *)"CircularVector_X_get", _wrap_CircularVector_X_get, METH_VARARGS, NULL},
+	 { (char *)"CircularVector_cursor_set", _wrap_CircularVector_cursor_set, METH_VARARGS, NULL},
+	 { (char *)"CircularVector_cursor_get", _wrap_CircularVector_cursor_get, METH_VARARGS, NULL},
+	 { (char *)"CircularVector_n_set", _wrap_CircularVector_n_set, METH_VARARGS, NULL},
+	 { (char *)"CircularVector_n_get", _wrap_CircularVector_n_get, METH_VARARGS, NULL},
+	 { (char *)"new_CircularVector", _wrap_new_CircularVector, METH_VARARGS, NULL},
+	 { (char *)"delete_CircularVector", _wrap_delete_CircularVector, METH_VARARGS, NULL},
+	 { (char *)"CircularVector_reinit", _wrap_CircularVector_reinit, METH_VARARGS, NULL},
+	 { (char *)"CircularVector_advance", _wrap_CircularVector_advance, METH_VARARGS, NULL},
+	 { (char *)"CircularVector___len__", _wrap_CircularVector___len__, METH_VARARGS, NULL},
+	 { (char *)"CircularVector___getitem__", _wrap_CircularVector___getitem__, METH_VARARGS, NULL},
+	 { (char *)"CircularVector___setitem__", _wrap_CircularVector___setitem__, METH_VARARGS, NULL},
+	 { (char *)"CircularVector___getslice__", _wrap_CircularVector___getslice__, METH_VARARGS, NULL},
+	 { (char *)"CircularVector_get_conditional", _wrap_CircularVector_get_conditional, METH_VARARGS, NULL},
+	 { (char *)"CircularVector___setslice__", _wrap_CircularVector___setslice__, METH_VARARGS, NULL},
+	 { (char *)"CircularVector___repr__", _wrap_CircularVector___repr__, METH_VARARGS, NULL},
+	 { (char *)"CircularVector___str__", _wrap_CircularVector___str__, METH_VARARGS, NULL},
+	 { (char *)"CircularVector_swigregister", CircularVector_swigregister, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer_S_set", _wrap_SpikeContainer_S_set, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer_S_get", _wrap_SpikeContainer_S_get, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer_ind_set", _wrap_SpikeContainer_ind_set, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer_ind_get", _wrap_SpikeContainer_ind_get, METH_VARARGS, NULL},
+	 { (char *)"new_SpikeContainer", _wrap_new_SpikeContainer, METH_VARARGS, NULL},
+	 { (char *)"delete_SpikeContainer", _wrap_delete_SpikeContainer, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer_reinit", _wrap_SpikeContainer_reinit, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer_push", _wrap_SpikeContainer_push, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer_lastspikes", _wrap_SpikeContainer_lastspikes, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer___getitem__", _wrap_SpikeContainer___getitem__, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer_get_spikes", _wrap_SpikeContainer_get_spikes, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer___getslice__", _wrap_SpikeContainer___getslice__, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer___repr__", _wrap_SpikeContainer___repr__, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer___str__", _wrap_SpikeContainer___str__, METH_VARARGS, NULL},
+	 { (char *)"SpikeContainer_swigregister", SpikeContainer_swigregister, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
 
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
+static void *_p_RefractorinessTo_p_Reset(void *x) {
+    return (void *)((Reset *)  ((Refractoriness *) x));
+}
 static void *_p_LinearStateUpdaterTo_p_StateUpdater(void *x) {
     return (void *)((StateUpdater *)  ((LinearStateUpdater *) x));
 }
 static void *_p_StateMonitorTo_p_NetworkOperation(void *x) {
     return (void *)((NetworkOperation *)  ((StateMonitor *) x));
 }
+static void *_p_ResetTo_p_ResetBase(void *x) {
+    return (void *)((ResetBase *)  ((Reset *) x));
+}
+static void *_p_RefractorinessTo_p_ResetBase(void *x) {
+    return (void *)((ResetBase *) (Reset *) ((Refractoriness *) x));
+}
+static swig_type_info _swigt__p_CircularVector = {"_p_CircularVector", "CircularVector *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_LinearStateUpdater = {"_p_LinearStateUpdater", "LinearStateUpdater *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Network = {"_p_Network", "Network *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_NetworkOperation = {"_p_NetworkOperation", "NetworkOperation *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_NeuronGroup = {"_p_NeuronGroup", "NeuronGroup *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_Refractoriness = {"_p_Refractoriness", "Refractoriness *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Reset = {"_p_Reset", "Reset *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_ResetBase = {"_p_ResetBase", "ResetBase *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_SpikeContainer = {"_p_SpikeContainer", "SpikeContainer *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_StateMonitor = {"_p_StateMonitor", "StateMonitor *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_StateUpdater = {"_p_StateUpdater", "StateUpdater *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Threshold = {"_p_Threshold", "Threshold *", 0, 0, (void*)0, 0};
@@ -10872,6 +12609,7 @@ static swig_type_info _swigt__p_allocator_type = {"_p_allocator_type", "allocato
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_difference_type = {"_p_difference_type", "difference_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_double = {"_p_double", "double *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_int = {"_p_int", "int *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_PyObject = {"_p_p_PyObject", "PyObject **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_size_type = {"_p_size_type", "size_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__invalid_argument = {"_p_std__invalid_argument", "std::invalid_argument *", 0, 0, (void*)0, 0};
@@ -10886,11 +12624,15 @@ static swig_type_info _swigt__p_swig__PySwigIterator = {"_p_swig__PySwigIterator
 static swig_type_info _swigt__p_value_type = {"_p_value_type", "value_type *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
+  &_swigt__p_CircularVector,
   &_swigt__p_LinearStateUpdater,
   &_swigt__p_Network,
   &_swigt__p_NetworkOperation,
   &_swigt__p_NeuronGroup,
+  &_swigt__p_Refractoriness,
   &_swigt__p_Reset,
+  &_swigt__p_ResetBase,
+  &_swigt__p_SpikeContainer,
   &_swigt__p_StateMonitor,
   &_swigt__p_StateUpdater,
   &_swigt__p_Threshold,
@@ -10898,6 +12640,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_char,
   &_swigt__p_difference_type,
   &_swigt__p_double,
+  &_swigt__p_int,
   &_swigt__p_p_PyObject,
   &_swigt__p_size_type,
   &_swigt__p_std__invalid_argument,
@@ -10912,11 +12655,15 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_value_type,
 };
 
+static swig_cast_info _swigc__p_CircularVector[] = {  {&_swigt__p_CircularVector, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_LinearStateUpdater[] = {  {&_swigt__p_LinearStateUpdater, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Network[] = {  {&_swigt__p_Network, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_NetworkOperation[] = {  {&_swigt__p_StateMonitor, _p_StateMonitorTo_p_NetworkOperation, 0, 0},  {&_swigt__p_NetworkOperation, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_NeuronGroup[] = {  {&_swigt__p_NeuronGroup, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_Reset[] = {  {&_swigt__p_Reset, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_Refractoriness[] = {  {&_swigt__p_Refractoriness, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_Reset[] = {  {&_swigt__p_Reset, 0, 0, 0},  {&_swigt__p_Refractoriness, _p_RefractorinessTo_p_Reset, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_ResetBase[] = {  {&_swigt__p_ResetBase, 0, 0, 0},  {&_swigt__p_Reset, _p_ResetTo_p_ResetBase, 0, 0},  {&_swigt__p_Refractoriness, _p_RefractorinessTo_p_ResetBase, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_SpikeContainer[] = {  {&_swigt__p_SpikeContainer, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_StateMonitor[] = {  {&_swigt__p_StateMonitor, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_StateUpdater[] = {  {&_swigt__p_StateUpdater, 0, 0, 0},  {&_swigt__p_LinearStateUpdater, _p_LinearStateUpdaterTo_p_StateUpdater, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Threshold[] = {  {&_swigt__p_Threshold, 0, 0, 0},{0, 0, 0, 0}};
@@ -10924,6 +12671,7 @@ static swig_cast_info _swigc__p_allocator_type[] = {  {&_swigt__p_allocator_type
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_difference_type[] = {  {&_swigt__p_difference_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_double[] = {  {&_swigt__p_double, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_PyObject[] = {  {&_swigt__p_p_PyObject, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_size_type[] = {  {&_swigt__p_size_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__invalid_argument[] = {  {&_swigt__p_std__invalid_argument, 0, 0, 0},{0, 0, 0, 0}};
@@ -10938,11 +12686,15 @@ static swig_cast_info _swigc__p_swig__PySwigIterator[] = {  {&_swigt__p_swig__Py
 static swig_cast_info _swigc__p_value_type[] = {  {&_swigt__p_value_type, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
+  _swigc__p_CircularVector,
   _swigc__p_LinearStateUpdater,
   _swigc__p_Network,
   _swigc__p_NetworkOperation,
   _swigc__p_NeuronGroup,
+  _swigc__p_Refractoriness,
   _swigc__p_Reset,
+  _swigc__p_ResetBase,
+  _swigc__p_SpikeContainer,
   _swigc__p_StateMonitor,
   _swigc__p_StateUpdater,
   _swigc__p_Threshold,
@@ -10950,6 +12702,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_char,
   _swigc__p_difference_type,
   _swigc__p_double,
+  _swigc__p_int,
   _swigc__p_p_PyObject,
   _swigc__p_size_type,
   _swigc__p_std__invalid_argument,

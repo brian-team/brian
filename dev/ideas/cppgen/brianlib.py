@@ -178,32 +178,34 @@ class NeuronGroup(_object):
     __swig_setmethods__["S"] = _brianlib.NeuronGroup_S_set
     __swig_getmethods__["S"] = _brianlib.NeuronGroup_S_get
     if _newclass:S = _swig_property(_brianlib.NeuronGroup_S_get, _brianlib.NeuronGroup_S_set)
-    __swig_setmethods__["S_n"] = _brianlib.NeuronGroup_S_n_set
-    __swig_getmethods__["S_n"] = _brianlib.NeuronGroup_S_n_get
-    if _newclass:S_n = _swig_property(_brianlib.NeuronGroup_S_n_get, _brianlib.NeuronGroup_S_n_set)
-    __swig_setmethods__["S_m"] = _brianlib.NeuronGroup_S_m_set
-    __swig_getmethods__["S_m"] = _brianlib.NeuronGroup_S_m_get
-    if _newclass:S_m = _swig_property(_brianlib.NeuronGroup_S_m_get, _brianlib.NeuronGroup_S_m_set)
+    __swig_setmethods__["num_vars"] = _brianlib.NeuronGroup_num_vars_set
+    __swig_getmethods__["num_vars"] = _brianlib.NeuronGroup_num_vars_get
+    if _newclass:num_vars = _swig_property(_brianlib.NeuronGroup_num_vars_get, _brianlib.NeuronGroup_num_vars_set)
+    __swig_setmethods__["num_neurons"] = _brianlib.NeuronGroup_num_neurons_set
+    __swig_getmethods__["num_neurons"] = _brianlib.NeuronGroup_num_neurons_get
+    if _newclass:num_neurons = _swig_property(_brianlib.NeuronGroup_num_neurons_get, _brianlib.NeuronGroup_num_neurons_set)
     __swig_setmethods__["su"] = _brianlib.NeuronGroup_su_set
     __swig_getmethods__["su"] = _brianlib.NeuronGroup_su_get
     if _newclass:su = _swig_property(_brianlib.NeuronGroup_su_get, _brianlib.NeuronGroup_su_set)
     __swig_setmethods__["thr"] = _brianlib.NeuronGroup_thr_set
     __swig_getmethods__["thr"] = _brianlib.NeuronGroup_thr_get
     if _newclass:thr = _swig_property(_brianlib.NeuronGroup_thr_get, _brianlib.NeuronGroup_thr_set)
-    __swig_setmethods__["reset"] = _brianlib.NeuronGroup_reset_set
-    __swig_getmethods__["reset"] = _brianlib.NeuronGroup_reset_get
-    if _newclass:reset = _swig_property(_brianlib.NeuronGroup_reset_get, _brianlib.NeuronGroup_reset_set)
-    __swig_setmethods__["last_spikes"] = _brianlib.NeuronGroup_last_spikes_set
-    __swig_getmethods__["last_spikes"] = _brianlib.NeuronGroup_last_spikes_get
-    if _newclass:last_spikes = _swig_property(_brianlib.NeuronGroup_last_spikes_get, _brianlib.NeuronGroup_last_spikes_set)
+    __swig_setmethods__["resetobj"] = _brianlib.NeuronGroup_resetobj_set
+    __swig_getmethods__["resetobj"] = _brianlib.NeuronGroup_resetobj_get
+    if _newclass:resetobj = _swig_property(_brianlib.NeuronGroup_resetobj_get, _brianlib.NeuronGroup_resetobj_set)
+    __swig_setmethods__["LS"] = _brianlib.NeuronGroup_LS_set
+    __swig_getmethods__["LS"] = _brianlib.NeuronGroup_LS_get
+    if _newclass:LS = _swig_property(_brianlib.NeuronGroup_LS_get, _brianlib.NeuronGroup_LS_set)
     def __init__(self, *args): 
         this = _brianlib.new_NeuronGroup(*args)
         try: self.this.append(this)
         except: self.this = this
-    def update(*args): return _brianlib.NeuronGroup_update(*args)
-    def get_S_flat(*args): return _brianlib.NeuronGroup_get_S_flat(*args)
     __swig_destroy__ = _brianlib.delete_NeuronGroup
     __del__ = lambda self : None;
+    def get_spikes(*args): return _brianlib.NeuronGroup_get_spikes(*args)
+    def update(*args): return _brianlib.NeuronGroup_update(*args)
+    def reset(*args): return _brianlib.NeuronGroup_reset(*args)
+    def get_S_flat(*args): return _brianlib.NeuronGroup_get_S_flat(*args)
 NeuronGroup_swigregister = _brianlib.NeuronGroup_swigregister
 NeuronGroup_swigregister(NeuronGroup)
 
@@ -278,10 +280,28 @@ class Threshold(_object):
 Threshold_swigregister = _brianlib.Threshold_swigregister
 Threshold_swigregister(Threshold)
 
-class Reset(_object):
+class ResetBase(_object):
     __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, ResetBase, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, ResetBase, name)
+    __repr__ = _swig_repr
+    def __call__(*args): return _brianlib.ResetBase___call__(*args)
+    def __init__(self, *args): 
+        this = _brianlib.new_ResetBase(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _brianlib.delete_ResetBase
+    __del__ = lambda self : None;
+ResetBase_swigregister = _brianlib.ResetBase_swigregister
+ResetBase_swigregister(ResetBase)
+
+class Reset(ResetBase):
+    __swig_setmethods__ = {}
+    for _s in [ResetBase]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
     __setattr__ = lambda self, name, value: _swig_setattr(self, Reset, name, value)
     __swig_getmethods__ = {}
+    for _s in [ResetBase]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
     __getattr__ = lambda self, name: _swig_getattr(self, Reset, name)
     __repr__ = _swig_repr
     __swig_setmethods__["value"] = _brianlib.Reset_value_set
@@ -299,6 +319,27 @@ class Reset(_object):
     __del__ = lambda self : None;
 Reset_swigregister = _brianlib.Reset_swigregister
 Reset_swigregister(Reset)
+
+class Refractoriness(Reset):
+    __swig_setmethods__ = {}
+    for _s in [Reset]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Refractoriness, name, value)
+    __swig_getmethods__ = {}
+    for _s in [Reset]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
+    __getattr__ = lambda self, name: _swig_getattr(self, Refractoriness, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["period"] = _brianlib.Refractoriness_period_set
+    __swig_getmethods__["period"] = _brianlib.Refractoriness_period_get
+    if _newclass:period = _swig_property(_brianlib.Refractoriness_period_get, _brianlib.Refractoriness_period_set)
+    def __init__(self, *args): 
+        this = _brianlib.new_Refractoriness(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def __call__(*args): return _brianlib.Refractoriness___call__(*args)
+    __swig_destroy__ = _brianlib.delete_Refractoriness
+    __del__ = lambda self : None;
+Refractoriness_swigregister = _brianlib.Refractoriness_swigregister
+Refractoriness_swigregister(Refractoriness)
 
 class NetworkOperation(_object):
     __swig_setmethods__ = {}
@@ -367,6 +408,67 @@ class Network(_object):
     __del__ = lambda self : None;
 Network_swigregister = _brianlib.Network_swigregister
 Network_swigregister(Network)
+
+class CircularVector(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CircularVector, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, CircularVector, name)
+    __swig_setmethods__["X"] = _brianlib.CircularVector_X_set
+    __swig_getmethods__["X"] = _brianlib.CircularVector_X_get
+    if _newclass:X = _swig_property(_brianlib.CircularVector_X_get, _brianlib.CircularVector_X_set)
+    __swig_setmethods__["cursor"] = _brianlib.CircularVector_cursor_set
+    __swig_getmethods__["cursor"] = _brianlib.CircularVector_cursor_get
+    if _newclass:cursor = _swig_property(_brianlib.CircularVector_cursor_get, _brianlib.CircularVector_cursor_set)
+    __swig_setmethods__["n"] = _brianlib.CircularVector_n_set
+    __swig_getmethods__["n"] = _brianlib.CircularVector_n_get
+    if _newclass:n = _swig_property(_brianlib.CircularVector_n_get, _brianlib.CircularVector_n_set)
+    def __init__(self, *args): 
+        this = _brianlib.new_CircularVector(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _brianlib.delete_CircularVector
+    __del__ = lambda self : None;
+    def reinit(*args): return _brianlib.CircularVector_reinit(*args)
+    def advance(*args): return _brianlib.CircularVector_advance(*args)
+    def __len__(*args): return _brianlib.CircularVector___len__(*args)
+    def __getitem__(*args): return _brianlib.CircularVector___getitem__(*args)
+    def __setitem__(*args): return _brianlib.CircularVector___setitem__(*args)
+    def __getslice__(*args): return _brianlib.CircularVector___getslice__(*args)
+    def get_conditional(*args): return _brianlib.CircularVector_get_conditional(*args)
+    def __setslice__(*args): return _brianlib.CircularVector___setslice__(*args)
+    def __repr__(*args): return _brianlib.CircularVector___repr__(*args)
+    def __str__(*args): return _brianlib.CircularVector___str__(*args)
+CircularVector_swigregister = _brianlib.CircularVector_swigregister
+CircularVector_swigregister(CircularVector)
+
+class SpikeContainer(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, SpikeContainer, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, SpikeContainer, name)
+    __swig_setmethods__["S"] = _brianlib.SpikeContainer_S_set
+    __swig_getmethods__["S"] = _brianlib.SpikeContainer_S_get
+    if _newclass:S = _swig_property(_brianlib.SpikeContainer_S_get, _brianlib.SpikeContainer_S_set)
+    __swig_setmethods__["ind"] = _brianlib.SpikeContainer_ind_set
+    __swig_getmethods__["ind"] = _brianlib.SpikeContainer_ind_get
+    if _newclass:ind = _swig_property(_brianlib.SpikeContainer_ind_get, _brianlib.SpikeContainer_ind_set)
+    def __init__(self, *args): 
+        this = _brianlib.new_SpikeContainer(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _brianlib.delete_SpikeContainer
+    __del__ = lambda self : None;
+    def reinit(*args): return _brianlib.SpikeContainer_reinit(*args)
+    def push(*args): return _brianlib.SpikeContainer_push(*args)
+    def lastspikes(*args): return _brianlib.SpikeContainer_lastspikes(*args)
+    def __getitem__(*args): return _brianlib.SpikeContainer___getitem__(*args)
+    def get_spikes(*args): return _brianlib.SpikeContainer_get_spikes(*args)
+    def __getslice__(*args): return _brianlib.SpikeContainer___getslice__(*args)
+    def __repr__(*args): return _brianlib.SpikeContainer___repr__(*args)
+    def __str__(*args): return _brianlib.SpikeContainer___str__(*args)
+SpikeContainer_swigregister = _brianlib.SpikeContainer_swigregister
+SpikeContainer_swigregister(SpikeContainer)
 
 
 

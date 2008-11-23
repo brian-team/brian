@@ -8,7 +8,7 @@ print 'Compilation on', get_global_preference('useweave')
 duration = 2.5*second
 Nsyn = 80.
 we = 1.62*mV
-N = 32000
+N = 16000
 
 eqs='''
 dv/dt = (ge+gi-(v+49*mV))/(20*ms) : volt
@@ -48,11 +48,11 @@ def f():
     print 'Time taken', tend-tstart
     print 'Num spikes', M.nspikes
 
-#f()
-import cProfile as profile
-import pstats
-profile.run('f()','cuba_once.prof')
-stats = pstats.Stats('cuba_once.prof')
-#stats.strip_dirs()
-stats.sort_stats('cumulative', 'calls')
-stats.print_stats(50)
+f()
+#import cProfile as profile
+#import pstats
+#profile.run('f()','cuba_once.prof')
+#stats = pstats.Stats('cuba_once.prof')
+##stats.strip_dirs()
+#stats.sort_stats('cumulative', 'calls')
+#stats.print_stats(50)

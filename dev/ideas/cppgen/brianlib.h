@@ -8,7 +8,9 @@ using namespace std;
 
 class StateUpdater;
 class Threshold;
-class Reset;
+class ResetBase;
+class SpikeContainer;
+class CircularVector;
 
 typedef list<int> SpikeList;
 
@@ -16,16 +18,22 @@ class NeuronGroup
 {
 public:
 	double *S;
-	int S_n, S_m;
+	int num_vars, num_neurons;
 	StateUpdater *su;
 	Threshold *thr;
-	Reset *reset;
-	SpikeList last_spikes;
-	NeuronGroup(double *S, int n, int m, StateUpdater *su, Threshold *thr, Reset *reset) :
-		S(S), S_n(n), S_m(m), su(su), thr(thr), reset(reset) {}
+	ResetBase *resetobj;
+	SpikeContainer *LS;
+	NeuronGroup(double *S, int n, int m, StateUpdater *su,
+			    Threshold *thr, ResetBase *reset,
+			    int ls_n, int ls_m);
+	~NeuronGroup();
+	SpikeList get_spikes(int delay=0);
 	void update();
+	void reset();
 	void get_S_flat(double *S_out_flat, int nm);
 };
+
+//inline double& neuron_value(NeuronGroup *group, int neuron, int state);
 
 class StateUpdater
 {
@@ -55,13 +63,29 @@ public:
 	SpikeList __call__(NeuronGroup *group); // like in Python
 };
 
-class Reset
+class ResetBase
+{
+public:
+	virtual void __call__(NeuronGroup *group) {};
+};
+
+class Reset : public ResetBase
 {
 public:
 	double value;
 	int state;
 	Reset(int state, double value) : value(value), state(state) {}
-	void __call__(NeuronGroup *group); // like in Python
+	virtual void __call__(NeuronGroup *group); // like in Python
+};
+
+// Note that this Refractoriness has to be initialised with an integer period rather
+// than a float one. TODO: change this?
+class Refractoriness : public Reset
+{
+public:
+	int period;
+	Refractoriness(int state, double value, int period) : Reset(state, value), period(period) {}
+	virtual void __call__(NeuronGroup *group); // like in Python
 };
 
 class NetworkOperation
@@ -90,6 +114,45 @@ public:
 	void add(NetworkOperation *op);
 	void update();
 	void run(int timesteps);
+};
+
+class CircularVector
+{
+private:
+	inline int index(int i);
+	inline int getitem(int i);
+public:
+	int *X, cursor, n;
+	CircularVector(int n);
+	~CircularVector();
+	void reinit();
+	void advance(int k);
+	int __len__();
+	int __getitem__(int i);
+	void __setitem__(int i, int x);
+	list<int> __getslice__(int i, int j);
+	list<int> get_conditional(int i, int j, int min, int max, int offset=0);
+	void __setslice__(int i, int j, int *x, int n);
+	void __setslice__(int i, int j, list<int> &x);
+	string __repr__();
+	string __str__();
+};
+
+class SpikeContainer
+{
+public:
+	CircularVector *S, *ind;
+	SpikeContainer(int n, int m);
+	~SpikeContainer();
+	void reinit();
+	void push(int *x, int n);
+	void push(list<int> &x);
+	SpikeList lastspikes();
+	SpikeList __getitem__(int i);
+	SpikeList get_spikes(int delay, int origin, int N);
+	SpikeList __getslice__(int i, int j);
+	string __repr__();
+	string __str__();
 };
 
 #endif 

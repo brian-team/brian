@@ -6,13 +6,12 @@ Current progress:
       wrong (might be using the transpose of the matrix)
 + Threshold, working
 + Reset, working
++ CircularVector (only for dtype=int), working
++ SpikeContainer, working
 + NeuronGroup, only some bits implemented
     - so far a NeuronGroup has state, state updater, threshold and reset,
-      the latter three all optional.
-    - NeuronGroup implements last spikes by keeping a copy of the spike
-      list returned by the Threshold
-    - NeuronGroup has an update function which works correctly, except
-      that there is no circular array of spikes, only the last spikes
+      the latter three all optional. It also has a SpikeContainer.
+    - NeuronGroup has update and reset functions which work.
 + StateMonitor, very crude
     - Can only record a given state variable for all neurons at all
       time steps
@@ -27,61 +26,107 @@ Current progress:
 Still missing:
 
 + Clocks
-+ CircularVector and SpikeContainer
 + Connection
 + (everything else in Brian)
+
+Notes:
+
++ With refractoriness, C++ is actually slower than Brian for N=10000,
+  I think various factors are at play here.
+    - My C++ code is written without thought to optimisation at the
+      moment, in particular there are lots of pointer dereferences.
+    - The C++ code returns spikes as a list<int> which is even passed
+      by value rather than by reference, whereas the Brian code uses
+      a static array to pass these. This is probably the most
+      important point because it was adding the Refractoriness that
+      caused the slowdown.
 '''
 from brian import *
 import brianlib as bl
 import time
-duration = 10*second
+duration = 1*second
 N = 10000
 doplot = False
 domonitor = False
+debugmode = False
+if debugmode:
+    log_level_info()
 ######### Define a network we want to simulate ###############
 eqs = '''
 dV/dt = -(V-11*mV)/(10*ms) : volt
+dW/dt = -(W-5*mV)/(50*ms) : volt
 '''
-G = NeuronGroup(N, eqs, threshold=10*mV, reset=0*mV)
+G = NeuronGroup(N, eqs, threshold=10*mV, reset=0*mV, refractory=5*ms)
 G.V = rand(N)*10*mV
-if domonitor: M = StateMonitor(G, 'V', record=True)
+G.W = rand(N)*5*mV
+if domonitor:
+    M = StateMonitor(G, 'V', record=True)
+    M2 = StateMonitor(G, 'W', record=True)
 net = Network()
 net.add(G)
-if domonitor: net.add(M)
+if domonitor:
+    net.add(M)
+    net.add(M2)
 ######### Convert to C++ versions from brianlib ##############
 # This code is lengthy, but is obviously easily automatable (a user
 # would certainly never have to do anything like this).
 c = array(G._state_updater._C.flatten()) # if we don't do this the memory is corrupted
+if debugmode:
+    print 'c.flags', c.flags
+    print 'A.flags', G._state_updater.A.flags
 blGsu = bl.LinearStateUpdater(G._state_updater.A, c)
 blGthr = bl.Threshold(G._threshold.state, float(G._threshold.threshold))
-blGreset = bl.Reset(G._resetfun.state, float(G._resetfun.resetvalue))
-blG = bl.NeuronGroup(G._S, blGsu, blGthr, blGreset)
-if domonitor: blM = bl.StateMonitor(blG, 0)
+#blGreset = bl.Reset(G._resetfun.state, float(G._resetfun.resetvalue))
+period = int(G._resetfun.period/G.clock.dt)+1
+blGreset = bl.Refractoriness(G._resetfun.state, float(G._resetfun.resetvalue), period)
+blG = bl.NeuronGroup(G._S, blGsu, blGthr, blGreset, G.LS.S.n, G.LS.ind.n)
+if debugmode: print "brianlib.NeuronGroup instantiated OK:", G.LS.S.n, G.LS.ind.n
+if domonitor:
+    blM = bl.StateMonitor(blG, 0)
+    blM2 = bl.StateMonitor(blG, 1)
 blnet = bl.Network()
 blnet.add(blG)
-if domonitor: blnet.add(blM)
+if domonitor:
+    blnet.add(blM)
+    blnet.add(blM2)
+if debugmode:
+    print "brianlib.Network instantiated OK"
+    blG.update()
+    print 'test update completed'
+    blG.reset()
+    print 'test reset completed'
 ########## Run the network in C++ and Brian ##################
 # make a copy of V so we can run it twice
 V = copy(G.V)
+W = copy(G.W)
 # Run in C++
 start = time.time()
 blnet.run(int(duration/defaultclock.dt))
 end = time.time()
 print 'C++ time:', (end-start)*second
 if doplot and domonitor:
-    subplot(121)
+    subplot(221)
     for i in range(10):
         plot(blM[i])
-    title('C++')
+    title('V, C++')
+    subplot(222)
+    for i in range(10):
+        plot(blM2[i])
+    title('W, C++')
 # Run in Brian
 G.V = V
+G.W = W
 start = time.time()
 net.run(duration)
 end = time.time()
 print 'Brian time:', (end-start)*second
 if doplot and domonitor:
-    subplot(122)
+    subplot(223)
     for i in range(10):
         plot(M[i])
-    title('Brian')
+    title('V, Brian')
+    subplot(224)
+    for i in range(10):
+        plot(M2[i])
+    title('W, Brian')
     show()
