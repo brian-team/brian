@@ -88,6 +88,7 @@ def discretise_morphology(segments,dx,Rm,Ri):
     x=0
     x0=0
     # TODO: check indexes and embranchments
+    # change area, length etc
     for segment in segments:
         if segment['type']=='soma':
             x0=x
