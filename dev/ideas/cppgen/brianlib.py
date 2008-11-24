@@ -196,6 +196,9 @@ class NeuronGroup(_object):
     __swig_setmethods__["LS"] = _brianlib.NeuronGroup_LS_set
     __swig_getmethods__["LS"] = _brianlib.NeuronGroup_LS_get
     if _newclass:LS = _swig_property(_brianlib.NeuronGroup_LS_get, _brianlib.NeuronGroup_LS_set)
+    __swig_setmethods__["spikesarray"] = _brianlib.NeuronGroup_spikesarray_set
+    __swig_getmethods__["spikesarray"] = _brianlib.NeuronGroup_spikesarray_get
+    if _newclass:spikesarray = _swig_property(_brianlib.NeuronGroup_spikesarray_get, _brianlib.NeuronGroup_spikesarray_set)
     def __init__(self, *args): 
         this = _brianlib.new_NeuronGroup(*args)
         try: self.this.append(this)
@@ -423,6 +426,9 @@ class CircularVector(_object):
     __swig_setmethods__["n"] = _brianlib.CircularVector_n_set
     __swig_getmethods__["n"] = _brianlib.CircularVector_n_get
     if _newclass:n = _swig_property(_brianlib.CircularVector_n_get, _brianlib.CircularVector_n_set)
+    __swig_setmethods__["retarray"] = _brianlib.CircularVector_retarray_set
+    __swig_getmethods__["retarray"] = _brianlib.CircularVector_retarray_get
+    if _newclass:retarray = _swig_property(_brianlib.CircularVector_retarray_get, _brianlib.CircularVector_retarray_set)
     def __init__(self, *args): 
         this = _brianlib.new_CircularVector(*args)
         try: self.this.append(this)

@@ -6,13 +6,13 @@
 #include<list>
 using namespace std;
 
+#define neuron_value(group, neuron, state) group->S[neuron+state*(group->num_neurons)]
+
 class StateUpdater;
 class Threshold;
 class ResetBase;
 class SpikeContainer;
 class CircularVector;
-
-typedef list<int> SpikeList;
 
 class NeuronGroup
 {
@@ -23,17 +23,16 @@ public:
 	Threshold *thr;
 	ResetBase *resetobj;
 	SpikeContainer *LS;
+	int *spikesarray;
 	NeuronGroup(double *S, int n, int m, StateUpdater *su,
 			    Threshold *thr, ResetBase *reset,
 			    int ls_n, int ls_m);
 	~NeuronGroup();
-	SpikeList get_spikes(int delay=0);
+	void get_spikes(int **ret, int *ret_n, int delay=0);
 	void update();
 	void reset();
 	void get_S_flat(double *S_out_flat, int nm);
 };
-
-//inline double& neuron_value(NeuronGroup *group, int neuron, int state);
 
 class StateUpdater
 {
@@ -60,7 +59,7 @@ public:
 	double value;
 	int state;
 	Threshold(int state, double value) : value(value), state(state) {}
-	SpikeList __call__(NeuronGroup *group); // like in Python
+	void __call__(int **ret, int *ret_n, NeuronGroup *group);
 };
 
 class ResetBase
@@ -101,6 +100,8 @@ public:
 	int state;
 	vector< vector<double> > values;
 	StateMonitor(NeuronGroup *group, int state);
+	// Putting this virtual destructor in causes a memory leak, need to work out why
+	//virtual ~StateMonitor() {};
 	virtual void __call__();
 	vector<double> __getitem__(int i);
 };
@@ -123,6 +124,7 @@ private:
 	inline int getitem(int i);
 public:
 	int *X, cursor, n;
+	int *retarray;
 	CircularVector(int n);
 	~CircularVector();
 	void reinit();
@@ -130,10 +132,9 @@ public:
 	int __len__();
 	int __getitem__(int i);
 	void __setitem__(int i, int x);
-	list<int> __getslice__(int i, int j);
-	list<int> get_conditional(int i, int j, int min, int max, int offset=0);
+	void __getslice__(int **ret, int *ret_n, int i, int j);
+	void get_conditional(int **ret, int *ret_n, int i, int j, int min, int max, int offset=0);
 	void __setslice__(int i, int j, int *x, int n);
-	void __setslice__(int i, int j, list<int> &x);
 	string __repr__();
 	string __str__();
 };
@@ -146,11 +147,10 @@ public:
 	~SpikeContainer();
 	void reinit();
 	void push(int *x, int n);
-	void push(list<int> &x);
-	SpikeList lastspikes();
-	SpikeList __getitem__(int i);
-	SpikeList get_spikes(int delay, int origin, int N);
-	SpikeList __getslice__(int i, int j);
+	void lastspikes(int **ret, int *ret_n);
+	void __getitem__(int **ret, int *ret_n, int i);
+	void get_spikes(int **ret, int *ret_n, int delay, int origin, int N);
+	void __getslice__(int **ret, int *ret_n, int i, int j);
 	string __repr__();
 	string __str__();
 };

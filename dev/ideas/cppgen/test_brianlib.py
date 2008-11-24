@@ -31,16 +31,6 @@ Still missing:
 
 Notes:
 
-+ With refractoriness, C++ is actually slower than Brian for N=10000,
-  I think various factors are at play here.
-    - My C++ code is written without thought to optimisation at the
-      moment, in particular there are lots of pointer dereferences.
-    - The C++ code returns spikes as a list<int> which is even passed
-      by value rather than by reference, whereas the Brian code uses
-      a static array to pass these. This is probably the most
-      important point because it was adding the Refractoriness that
-      caused the slowdown.
-
 Ideas:
 
 + An interesting alternative to generating SpikeLists as in Brian is to
@@ -52,10 +42,10 @@ Ideas:
 from brian import *
 import brianlib as bl
 import time
-duration = 1*second
-N = 10000
+duration = 0.1*second
+N = 10
 doplot = False
-domonitor = False
+domonitor = True
 debugmode = False
 if debugmode:
     log_level_info()
@@ -111,6 +101,7 @@ W = copy(G.W)
 start = time.time()
 blnet.run(int(duration/defaultclock.dt))
 end = time.time()
+print 'N =', N, 'duration =', duration, 'domonitor =', domonitor
 print 'C++ time:', (end-start)*second
 if doplot and domonitor:
     subplot(221)
@@ -138,3 +129,5 @@ if doplot and domonitor:
         plot(M2[i])
     title('W, Brian')
     show()
+if debugmode and domonitor:
+    pass

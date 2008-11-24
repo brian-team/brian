@@ -8,7 +8,16 @@ from distutils.core import setup, Extension
 
 
 brianlib_module = Extension('_brianlib',
-                           sources=['brianlib_wrap.cxx', 'brianlib.cpp'],
+                           sources=['brianlib_wrap.cxx',
+                                    #'brianlib.cpp',
+                                    'circular.cpp',
+                                    'monitor.cpp',
+                                    'neurongroup.cpp',
+                                    'network.cpp',
+                                    'reset.cpp',
+                                    'stateupdater.cpp',
+                                    'threshold.cpp',
+                                    ],
                            include_dirs=['c:\\python25\\lib\\site-packages\\numpy\\core\\include'],
                            extra_compile_args=['-O3']
                            )

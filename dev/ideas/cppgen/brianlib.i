@@ -26,5 +26,6 @@ import_array();
 %apply (int* INPLACE_ARRAY1, int DIM1) {(int *y, int n)};
 %apply (double* INPLACE_ARRAY1, int DIM1) {(double *b, int b_n)};
 %apply (double* ARGOUT_ARRAY1, int DIM1) {(double *S_out_flat, int nm)};
+%apply (int** ARGOUTVIEW_ARRAY1, int* DIM1 ) {(int **ret, int *ret_n)};
 
 %include "brianlib.h"
