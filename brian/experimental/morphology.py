@@ -147,7 +147,7 @@ class Morphology(object):
         '''
         Prints information about the morphology
         '''
-        print len(self._segments),'segments'
+        print len([s for n,s in self._segments.iteritems() if s['n']==n]),'segments'
         print 'Branches:'
         for name,branch in self._branches.iteritems():
             area=sum([self._segments[s]['area'] for s in branch['segments']])*meter**2
@@ -162,8 +162,9 @@ class Morphology(object):
         '''
         self._eqs=dict()
         for n,segment in self._segments.iteritems():
-            self._eqs[n]=MembraneEquation(C=Cm*segment['area'])
-            self._eqs[n].area=segment['area']
+            if segment['n']==n: # otherwise it is a copy
+                self._eqs[n]=MembraneEquation(C=Cm*segment['area'])
+                self._eqs[n].area=segment['area']
         
     def __getitem__(self,branch):
         '''
@@ -226,17 +227,41 @@ class Morphology(object):
         '''
         eqs=Compartments(self._eqs)
         for n,s in self._segments.iteritems():
-            n0=s['parent']
-            if n0 in self._segments:
-                s0=self._segments[n0]
-                Ra=Ri*s['length']/(pi*.5*(s0['radius']**2+s['radius']**2))
-                eqs.connect(n0,n,Ra)
+            if s['n']==n: # otherwise it is a copy
+                n0=s['parent']
+                if n0 in self._segments:
+                    s0=self._segments[n0]
+                    Ra=Ri*s['length']/(pi*.5*(s0['radius']**2+s['radius']**2))
+                    eqs.connect(n0,n,Ra)
         return eqs
+    
+    def simplify(self):
+        '''
+        Replaces branches by equivalent cylinders.
+        Preserves the total area and electrotonic length.
+        '''
+        for branch in self._branches.itervalues():
+            if branch['name']!='soma':
+                segs=[self._segments[n] for n in branch['segments']]
+                a=sum([seg['area'] for seg in segs])
+                l=sum([seg['length']/sqrt(seg['radius']) for seg in segs])
+                r=(a/(2*pi*l))**(2./3.)
+                l0=(r**.5)*l
+                segs[0]['radius']=r*meter
+                #segs[0]['length']=l0 # length is the length of connecting segment
+                segs[0]['area']=a*meter**2
+                self._segments[branch['end']]=segs[0]
+                branch['segments']=branch['segments'][0:1]
+                # Destroy other segments
+                for seg in segs[1:-1]:
+                    del self._segments[seg['n']]
 
 if __name__=='__main__':
     morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
     morpho.info()
     print morpho.compartment(101,10*um)
     print morpho.branch(100)
+    morpho.simplify()
+    morpho.info()
     model=morpho.equations(Ri=70*ohm*cm)
     
