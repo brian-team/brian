@@ -181,10 +181,16 @@ class Morphology(object):
             return self._eqs[branch['start']+location]
         else: # position
             x=0*meter
+            oldx=x
             for s in branch['segments']:
                 x+=self._segments[s]['length']
                 if x>location:
-                    return self._eqs[s]
+                    # The closer one
+                    if x-location<location-oldx:
+                        return self._eqs[s]
+                    else:
+                        return self._eqs[s-1]
+                oldx=x
             raise IndexError,'Location not found'
     
     def branch(self,branch,children=False):
@@ -228,7 +234,6 @@ class Morphology(object):
         return eqs
 
 if __name__=='__main__':
-    #morpho=Morphology('P12-DEV175.CNG.swc')
     morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
     morpho.info()
     print morpho.compartment(101,10*um)
