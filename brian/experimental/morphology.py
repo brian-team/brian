@@ -6,6 +6,10 @@ Typical values for intrinsic parameters
 Cm =0.7 - 1 uF/(cm**2) # specific membrane capacitance
 Ri = 70 - 200 ohm*cm # intracellular resistivity
 Rm = variable, choose taum=Rm*Cm first # specific membrane resistance (ohm*cm**2)
+
+TODO:
+* discretise
+* apply current on branch (branch class?)
 '''
 from brian.units import meter,ohm
 from brian.stdunits import um,cm,ms,uF
@@ -22,7 +26,7 @@ class Morphology(object):
         '''
         Cm is the specific membrane capacitance
         '''
-        self.segments=[]
+        self._segments=[]
         if name is not None:
             self.load(name,Cm)
         
@@ -116,17 +120,17 @@ class Morphology(object):
         branches.append(branch)
         
         # Make segment dictionary
-        self.segments=dict()
+        self._segments=dict()
         for segment in segments:
-            self.segments[segment['n']]=segment
+            self._segments[segment['n']]=segment
         
         # Name branches and segments
         # The soma is 'soma'
-        self.branches=dict()
+        self._branches=dict()
         for branch in branches:
             #if branch['type']
-            parent=self.segments[branch['start']]['parent']
-            if parent in self.segments:
+            parent=self._segments[branch['start']]['parent']
+            if parent in self._segments:
                 b=[b for b in branches if parent in b['segments']][0] # parent branch
                 if b['name']=='soma':
                     branch['name']=str(b['children'])
@@ -135,7 +139,7 @@ class Morphology(object):
                 b['children']+=1
             else:
                 branch['name']='soma'
-            self.branches[branch['name']]=branch
+            self._branches[branch['name']]=branch
 
         self.build_equations(Cm)
 
@@ -143,12 +147,12 @@ class Morphology(object):
         '''
         Prints information about the morphology
         '''
-        print len(self.segments),'segments'
+        print len(self._segments),'segments'
         print 'Branches:'
-        for name,branch in self.branches.iteritems():
-            area=sum([self.segments[s]['area'] for s in branch['segments']])*meter**2
-            length=sum([self.segments[s]['length'] for s in branch['segments']\
-                        if 'length' in self.segments[s]])*meter
+        for name,branch in self._branches.iteritems():
+            area=sum([self._segments[s]['area'] for s in branch['segments']])*meter**2
+            length=sum([self._segments[s]['length'] for s in branch['segments']\
+                        if 'length' in self._segments[s]])*meter
             print name,':',len(branch['segments']),'segments ; area =',area,'; length =',length
 
     def build_equations(self,Cm=1*uF/(cm**2)):
@@ -156,32 +160,57 @@ class Morphology(object):
         Builds a dictionary of equations.
         Cm is the specific capacitance.
         '''
-        self.eqs=dict()
-        for n,segment in self.segments.iteritems():
-            self.eqs[n]=MembraneEquation(C=Cm*segment['area'])
+        self._eqs=dict()
+        for n,segment in self._segments.iteritems():
+            self._eqs[n]=MembraneEquation(C=Cm*segment['area'])
+            self._eqs[n].area=segment['area']
         
     def __getitem__(self,branch):
         '''
         Returns a branch.
         '''
-        return self.branches[branch]
+        return self.branch(branch)
     
-    def segment(self,branch,location):
+    def index(self,branch,location):
         '''
-        Returns the segment at given location on given branch
-        
-        TODO: change name to compartment
+        Returns the index of the segment at given location on given branch
         '''
-        branch=self[branch]
+        branch=str(branch)
+        branch=self._branches[branch]
         if type(location)==type(0): # index
-            return self.segments[branch['start']+location]
+            return self._eqs[branch['start']+location]
         else: # position
             x=0*meter
             for s in branch['segments']:
-                x+=self.segments[s]['length']
+                x+=self._segments[s]['length']
                 if x>location:
-                    return self.segments[s]
+                    return self._eqs[s]
             raise IndexError,'Location not found'
+    
+    def branch(self,branch,children=False):
+        '''
+        Returns a branch.
+        
+        children = True: children are also returned (subtree)
+        '''
+        branch=str(branch)
+        if children:
+            l=[]
+            for br in self._branches.iterkeys():
+                if (branch=='soma') or br.startswith(branch):
+                    l.extend(self.branch(br))
+            return l
+        else:
+            return [self._eqs[n] for n in self._branches[branch]['segments']]
+    
+    def subtree(self,branch):
+        return self.branch(branch,children=True)
+    
+    def compartment(self,branch,location):
+        '''
+        Returns the segment at given location on given branch
+        '''
+        return self.index(branch,location)
         
     def equations(self,Ri=100*ohm*cm):
         '''
@@ -189,22 +218,20 @@ class Morphology(object):
         Ri is the intracellular resistivity.
         Connects all segments together.
         '''
-        eqs=Compartments(self.eqs)
-        for n,s in self.segments.iteritems():
+        eqs=Compartments(self._eqs)
+        for n,s in self._segments.iteritems():
             n0=s['parent']
-            if n0 in self.segments:
-                s0=self.segments[n0]
+            if n0 in self._segments:
+                s0=self._segments[n0]
                 Ra=Ri*s['length']/(pi*.5*(s0['radius']**2+s['radius']**2))
                 eqs.connect(n0,n,Ra)
         return eqs
 
 if __name__=='__main__':
-    morpho=Morphology('P12-DEV175.CNG.swc')
+    #morpho=Morphology('P12-DEV175.CNG.swc')
+    morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
     morpho.info()
-    print morpho['101']
-    print morpho.segment('101',1)
-    Cm=1*uF/(cm**2)
-    Rm=20*ms/Cm
-    Ri=100*ohm*cm
-    model=morpho.equations()
+    print morpho.compartment(101,10*um)
+    print morpho.branch(100)
+    model=morpho.equations(Ri=70*ohm*cm)
     
