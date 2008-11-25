@@ -9,10 +9,11 @@ Rm = variable, choose taum=Rm*Cm first # specific membrane resistance (ohm*cm**2
 
 TODO:
 * discretise
-* apply current on branch (branch class?)
+* problem with simplify and location
+* check if surfacic when applying on a branch
 '''
 from brian.units import meter,ohm
-from brian.stdunits import um,cm,ms,uF
+from brian.stdunits import um,cm,ms,uF,mV
 from numpy import sqrt,array,pi
 from brian.compartments import *
 from brian.membrane_equations import *
@@ -179,7 +180,7 @@ class Morphology(object):
         branch=str(branch)
         branch=self._branches[branch]
         if type(location)==type(0): # index
-            return self._eqs[branch['start']+location]
+            return branch['start']+location
         else: # position
             x=0*meter
             oldx=x
@@ -188,9 +189,9 @@ class Morphology(object):
                 if x>location:
                     # The closer one
                     if x-location<location-oldx:
-                        return self._eqs[s]
+                        return s
                     else:
-                        return self._eqs[s-1]
+                        return s-1
                 oldx=x
             raise IndexError,'Location not found'
     
@@ -217,7 +218,7 @@ class Morphology(object):
         '''
         Returns the segment at given location on given branch
         '''
-        return self.index(branch,location)
+        return self._eqs[self.index(branch,location)]
         
     def equations(self,Ri=100*ohm*cm):
         '''
@@ -255,13 +256,24 @@ class Morphology(object):
                 # Destroy other segments
                 for seg in segs[1:-1]:
                     del self._segments[seg['n']]
+    
+    def insert_current(self,current,branch,location=None):
+        if location is None:
+            branch=morpho.branch(branch)
+            for c in branch:
+                c+=current
+        else:
+            c=morpho.compartment(branch,location)
+            c+=current
 
 if __name__=='__main__':
     morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
     morpho.info()
+    #print morpho.branch(100)
+    #morpho.simplify()
+    #morpho.info()
+    morpho.insert_current(Current('I=g*(E-vm) : amp/(cm**2)',surfacic=True,
+                                  g=1*uF/(cm**2)/(20*ms),E=-75*mV),101,10*um)
     print morpho.compartment(101,10*um)
-    print morpho.branch(100)
-    morpho.simplify()
-    morpho.info()
     model=morpho.equations(Ri=70*ohm*cm)
     

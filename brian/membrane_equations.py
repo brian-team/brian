@@ -44,12 +44,16 @@ class Current(Equations):
     '''
     A set of equations defining a current.
     '''
-    def __init__(self,expr='',current_name=None,level=0,**kwd):
+    def __init__(self,expr='',current_name=None,level=0,surfacic=False,**kwd):
         Equations.__init__(self,expr,level=level+1,**kwd)
+        if surfacic:
+            self._prefix='__scurrent_'
+        else:
+            self._prefix='__current_'
         if current_name:
             self.set_current_name(current_name)
         else: # Guess
-            if len(self._units)==1: # only one variable
+            if len(self._units)==2: # only one variable (the other one is t)
                 self.set_current_name(self._units.keys()[0])
             else:
                 current_names=[name for name,unit in self._units.iteritems()\
@@ -61,7 +65,7 @@ class Current(Equations):
         if name!='t':
             if name is None:
                 name=unique_id()
-            current_name='__current_'+name
+            current_name=self._prefix+name
             self.add_eq(current_name,name,self._units[name]) # not an alias because read-only
 
 class IonicCurrent(Current):
@@ -70,7 +74,7 @@ class IonicCurrent(Current):
     to extracellular.
     '''
     def set_current_name(self,name):
-        current_name='__current_'+name
+        current_name=self._prefix+name
         self.add_eq(current_name,'-'+name,self._units[name])
 
 InjectedCurrent=Current
@@ -99,6 +103,13 @@ class MembraneEquation(Equations):
         return self
         
     def set_membrane_current(self):
-        current_vars=[name for name in self._eq_names if name[:10]=='__current_']
-        if current_vars!=[]:
+        current_vars=[name for name in self._eq_names if name.startswith('__current_')] # point current
+        scurrent_vars=[name for name in self._eq_names if name.startswith('__scurrent_')] # surfacic current
+        if scurrent_vars!=[]:
+            if current_vars!=[]:
+                self._string['__membrane_Im']='+'.join(current_vars)+'+__area*('+'+'.join(scurrent_vars)+')'
+            else:
+                self._string['__membrane_Im']='__area*('+'+'.join(scurrent_vars)+')'
+            self._namespace[name]['__area']=self.area
+        elif current_vars!=[]:
             self._string['__membrane_Im']='+'.join(current_vars)
