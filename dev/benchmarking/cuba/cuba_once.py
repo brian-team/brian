@@ -2,7 +2,7 @@ import brian_no_units
 from brian import *
 import time
 
-set_global_preferences(useweave=False)
+#set_global_preferences(useweave=False)
 print 'Compilation on', get_global_preference('useweave')
 
 duration = 2.5*second

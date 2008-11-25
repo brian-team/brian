@@ -44,7 +44,7 @@ import brianlib as bl
 import time
 duration = 0.1*second
 N = 10
-doplot = False
+doplot = True
 domonitor = True
 debugmode = False
 if debugmode:

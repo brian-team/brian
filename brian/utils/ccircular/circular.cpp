@@ -1,4 +1,4 @@
-#include "brianlib.h"
+#include "ccircular.h"
 #include<sstream>
 
 CircularVector::CircularVector(int n)
@@ -66,7 +66,7 @@ void CircularVector::__getslice__(int **ret, int *ret_n, int i, int j)
 }
 
 // This can potentially be sped up substantially using a bisection algorithm
-/*void CircularVector::get_conditional(int **ret, int *ret_n, int i, int j, int min, int max, int offset)
+void CircularVector::get_conditional(int **ret, int *ret_n, int i, int j, int min, int max, int offset)
 {
 	int i0 = this->index(i);
 	int j0 = this->index(j);
@@ -79,13 +79,18 @@ void CircularVector::__getslice__(int **ret, int *ret_n, int i, int j)
 	}
 	*ret = this->retarray;
 	*ret_n = n;
-}*/
-//TODO: seems to work for test_brianlib.py but fails for cuba_once.py - why?
-void CircularVector::get_conditional(int **ret, int *ret_n, int i, int j, int min, int max, int offset)
+}
+/*void CircularVector::get_conditional(int **ret, int *ret_n, int i, int j, int min, int max, int offset)
 {
 	int i0, j0;
 	int lo, mid, hi;
 	// start with a binary search to the left
+	while(j<i) j+=this->n;
+	while(i<0)
+	{
+		i+=this->n;
+		j+=this->n;
+	}
     lo = i;
     hi = j;
     while(lo<hi)
@@ -114,7 +119,7 @@ void CircularVector::get_conditional(int **ret, int *ret_n, int i, int j, int mi
 		this->retarray[n++] = this->X[k]-offset;
 	*ret = this->retarray;
 	*ret_n = n;
-}
+}*/
 
 void CircularVector::__setslice__(int i, int j, int *x, int n)
 {
