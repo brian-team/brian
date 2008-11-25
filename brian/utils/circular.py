@@ -40,6 +40,8 @@ Ideas for speed improvements: use put, putmask and take with mode='wrap' and out
 from numpy import *
 from scipy import weave
 import bisect
+import os
+import warnings
 
 __all__=['CircularVector','SpikeContainer']
 
@@ -229,6 +231,13 @@ class SpikeContainer(object):
     
     def __print__(self):
         return self.__repr__()
+
+if True and os.path.exists(os.path.join(os.path.split(__file__)[0], 'ccircular/_ccircular.pyd')):
+    import ccircular.ccircular as _ccircular
+    class SpikeContainer(_ccircular.SpikeContainer):
+        def __init__(self,n,m,useweave=False,compiler=None):
+            _ccircular.SpikeContainer.__init__(self, n, m)
+    warnings.warn('Using C++ SpikeContainer')
 
 # I am not sure that class below is useful!
 class ModInt(object):
