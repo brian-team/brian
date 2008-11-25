@@ -258,7 +258,9 @@ class Morphology(object):
                     del self._segments[seg['n']]
     
     def insert_current(self,current,branch,location=None):
-        if location is None:
+        if location is None: # on branch
+            if current._prefix=='__current_': # point current
+                raise Error,"The current should be surfacic"
             branch=morpho.branch(branch)
             for c in branch:
                 c+=current
