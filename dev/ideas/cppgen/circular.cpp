@@ -80,34 +80,45 @@ void CircularVector::__getslice__(int **ret, int *ret_n, int i, int j)
 	*ret = this->retarray;
 	*ret_n = n;
 }*/
-//TODO: seems to work for test_brianlib.py but fails for cuba_once.py - why?
 void CircularVector::get_conditional(int **ret, int *ret_n, int i, int j, int min, int max, int offset)
 {
 	int i0, j0;
 	int lo, mid, hi;
-	// start with a binary search to the left
-    lo = i;
-    hi = j;
+	int ioff = this->index(i);
+	int joff = this->index(j);
+	int lensearch;
+	if(joff>=ioff)
+		lensearch = joff-ioff;
+	else
+		lensearch = this->n-(ioff-joff);
+	// start with a binary search to the left, note that we use here the bisect_left
+	// algorithm from the standard python library translated into C++ code, and
+	// altered to work with a circular array with an offset. The lo and hi variables
+	// vary from 0 to lensearch but the probe this->X[...] is offset by ioff, the
+	// position in the X array of the i variable passed to the function.
+	lo = 0;
+	hi = lensearch;
     while(lo<hi)
     {
         mid = (lo+hi)/2;
-        if(this->getitem(mid)<min)
+        if(this->X[(mid+ioff)%this->n]<min)
         	lo = mid+1;
         else
         	hi = mid;
     }
-    i0 = this->index(lo);
+    i0 = (lo+ioff)%this->n;
 	// then a binary search to the right
-    hi = j;
+    //lo = 0; // we can use the lo output from the previous step
+    hi = lensearch;
     while(lo<hi)
     {
         mid = (lo+hi)/2;
-        if(this->getitem(mid)<max)
+        if(this->X[(mid+ioff)%this->n]<max)
         	lo = mid+1;
         else
         	hi = mid;
     }
-    j0 = this->index(lo);
+    j0 = (lo+ioff)%this->n;
 	// then fill in the return array
 	int n = 0;
 	for(int k=i0;k!=j0;k=(k+1)%this->n)

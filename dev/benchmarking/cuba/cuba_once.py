@@ -7,7 +7,7 @@ print 'Compilation on', get_global_preference('useweave')
 
 duration = 2.5*second
 Nsyn = 80.
-we = 1.62*mV
+we = 9*mV
 N = 16000
 
 eqs='''
