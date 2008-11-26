@@ -2481,37 +2481,41 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define SWIGTYPE_p_CircularVector swig_types[0]
-#define SWIGTYPE_p_LinearStateUpdater swig_types[1]
-#define SWIGTYPE_p_Network swig_types[2]
-#define SWIGTYPE_p_NetworkOperation swig_types[3]
-#define SWIGTYPE_p_NeuronGroup swig_types[4]
-#define SWIGTYPE_p_Refractoriness swig_types[5]
-#define SWIGTYPE_p_Reset swig_types[6]
-#define SWIGTYPE_p_ResetBase swig_types[7]
-#define SWIGTYPE_p_SpikeContainer swig_types[8]
-#define SWIGTYPE_p_StateMonitor swig_types[9]
-#define SWIGTYPE_p_StateUpdater swig_types[10]
-#define SWIGTYPE_p_Threshold swig_types[11]
-#define SWIGTYPE_p_allocator_type swig_types[12]
-#define SWIGTYPE_p_char swig_types[13]
-#define SWIGTYPE_p_difference_type swig_types[14]
-#define SWIGTYPE_p_double swig_types[15]
-#define SWIGTYPE_p_int swig_types[16]
-#define SWIGTYPE_p_p_PyObject swig_types[17]
-#define SWIGTYPE_p_p_int swig_types[18]
-#define SWIGTYPE_p_size_type swig_types[19]
-#define SWIGTYPE_p_std__invalid_argument swig_types[20]
-#define SWIGTYPE_p_std__listTNetworkOperation_p_std__allocatorTNetworkOperation_p_t_t swig_types[21]
-#define SWIGTYPE_p_std__listTNeuronGroup_p_std__allocatorTNeuronGroup_p_t_t swig_types[22]
-#define SWIGTYPE_p_std__listTint_std__allocatorTint_t_t swig_types[23]
-#define SWIGTYPE_p_std__listTint_std__allocatorTint_t_t__allocator_type swig_types[24]
-#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t swig_types[25]
-#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t__allocator_type swig_types[26]
-#define SWIGTYPE_p_std__vectorTstd__vectorTdouble_std__allocatorTdouble_t_t_std__allocatorTstd__vectorTdouble_std__allocatorTdouble_t_t_t_t swig_types[27]
-#define SWIGTYPE_p_swig__PySwigIterator swig_types[28]
-#define SWIGTYPE_p_value_type swig_types[29]
-static swig_type_info *swig_types[31];
-static swig_module_info swig_module = {swig_types, 30, 0, 0, 0, 0};
+#define SWIGTYPE_p_Connection swig_types[1]
+#define SWIGTYPE_p_ConnectionMatrix swig_types[2]
+#define SWIGTYPE_p_DenseConnectionMatrix swig_types[3]
+#define SWIGTYPE_p_LinearStateUpdater swig_types[4]
+#define SWIGTYPE_p_Network swig_types[5]
+#define SWIGTYPE_p_NetworkOperation swig_types[6]
+#define SWIGTYPE_p_NeuronGroup swig_types[7]
+#define SWIGTYPE_p_Refractoriness swig_types[8]
+#define SWIGTYPE_p_Reset swig_types[9]
+#define SWIGTYPE_p_ResetBase swig_types[10]
+#define SWIGTYPE_p_SpikeContainer swig_types[11]
+#define SWIGTYPE_p_StateMonitor swig_types[12]
+#define SWIGTYPE_p_StateUpdater swig_types[13]
+#define SWIGTYPE_p_Threshold swig_types[14]
+#define SWIGTYPE_p_allocator_type swig_types[15]
+#define SWIGTYPE_p_char swig_types[16]
+#define SWIGTYPE_p_difference_type swig_types[17]
+#define SWIGTYPE_p_double swig_types[18]
+#define SWIGTYPE_p_int swig_types[19]
+#define SWIGTYPE_p_p_PyObject swig_types[20]
+#define SWIGTYPE_p_p_int swig_types[21]
+#define SWIGTYPE_p_size_type swig_types[22]
+#define SWIGTYPE_p_std__invalid_argument swig_types[23]
+#define SWIGTYPE_p_std__listTConnection_p_std__allocatorTConnection_p_t_t swig_types[24]
+#define SWIGTYPE_p_std__listTNetworkOperation_p_std__allocatorTNetworkOperation_p_t_t swig_types[25]
+#define SWIGTYPE_p_std__listTNeuronGroup_p_std__allocatorTNeuronGroup_p_t_t swig_types[26]
+#define SWIGTYPE_p_std__listTint_std__allocatorTint_t_t swig_types[27]
+#define SWIGTYPE_p_std__listTint_std__allocatorTint_t_t__allocator_type swig_types[28]
+#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t swig_types[29]
+#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t__allocator_type swig_types[30]
+#define SWIGTYPE_p_std__vectorTstd__vectorTdouble_std__allocatorTdouble_t_t_std__allocatorTstd__vectorTdouble_std__allocatorTdouble_t_t_t_t swig_types[31]
+#define SWIGTYPE_p_swig__PySwigIterator swig_types[32]
+#define SWIGTYPE_p_value_type swig_types[33]
+static swig_type_info *swig_types[35];
+static swig_module_info swig_module = {swig_types, 34, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -8843,6 +8847,59 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_NeuronGroup_S_m_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_S_m_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_S_m_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "NeuronGroup_S_m_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->S_m = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_NeuronGroup_S_m_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_S_m_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_S_m_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  result = (int) ((arg1)->S_m);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_NeuronGroup_su_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   NeuronGroup *arg1 = (NeuronGroup *) 0 ;
@@ -9108,7 +9165,113 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_new_NeuronGroup(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_NeuronGroup_owner_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  NeuronGroup *arg2 = (NeuronGroup *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_owner_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_owner_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_NeuronGroup, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "NeuronGroup_owner_set" "', argument " "2"" of type '" "NeuronGroup *""'"); 
+  }
+  arg2 = reinterpret_cast< NeuronGroup * >(argp2);
+  if (arg1) (arg1)->owner = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_NeuronGroup_owner_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  NeuronGroup *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_owner_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_owner_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  result = (NeuronGroup *) ((arg1)->owner);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_NeuronGroup_origin_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_origin_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_origin_set" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "NeuronGroup_origin_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->origin = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_NeuronGroup_origin_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:NeuronGroup_origin_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_origin_get" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  result = (int) ((arg1)->origin);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_NeuronGroup__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   double *arg1 = (double *) 0 ;
   int arg2 ;
@@ -9175,6 +9338,121 @@ SWIGINTERN PyObject *_wrap_new_NeuronGroup(PyObject *SWIGUNUSEDPARM(self), PyObj
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_NeuronGroup, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_NeuronGroup__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  NeuronGroup *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:new_NeuronGroup",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_NeuronGroup" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_NeuronGroup" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_NeuronGroup" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  result = (NeuronGroup *)new NeuronGroup(arg1,arg2,arg3);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_NeuronGroup, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_NeuronGroup(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[7];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 6); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 3) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_NeuronGroup, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          return _wrap_new_NeuronGroup__SWIG_1(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 6) {
+    int _v;
+    {
+      _v = is_array(argv[0]) && PyArray_EquivTypenums(array_type(argv[0]),
+        NPY_DOUBLE);
+    }
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_StateUpdater, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        void *vptr = 0;
+        int res = SWIG_ConvertPtr(argv[2], &vptr, SWIGTYPE_p_Threshold, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          void *vptr = 0;
+          int res = SWIG_ConvertPtr(argv[3], &vptr, SWIGTYPE_p_ResetBase, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            {
+              int res = SWIG_AsVal_int(argv[4], NULL);
+              _v = SWIG_CheckState(res);
+            }
+            if (_v) {
+              {
+                int res = SWIG_AsVal_int(argv[5], NULL);
+                _v = SWIG_CheckState(res);
+              }
+              if (_v) {
+                return _wrap_new_NeuronGroup__SWIG_0(self, args);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'new_NeuronGroup'.\n  Possible C/C++ prototypes are:\n""    NeuronGroup(double *,int,int,StateUpdater *,Threshold *,ResetBase *,int,int)\n""    NeuronGroup(NeuronGroup *,int,int)\n");
   return NULL;
 }
 
@@ -9361,50 +9639,6 @@ SWIGINTERN PyObject *_wrap_NeuronGroup_reset(PyObject *SWIGUNUSEDPARM(self), PyO
   arg1 = reinterpret_cast< NeuronGroup * >(argp1);
   (arg1)->reset();
   resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_NeuronGroup_get_S_flat(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
-  double *arg2 = (double *) 0 ;
-  int arg3 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject *array2 = NULL ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:NeuronGroup_get_S_flat",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "NeuronGroup_get_S_flat" "', argument " "1"" of type '" "NeuronGroup *""'"); 
-  }
-  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
-  {
-    npy_intp dims[1];
-    if (!PyInt_Check(obj1))
-    {
-      char* typestring = pytype_string(obj1);
-      PyErr_Format(PyExc_TypeError,
-        "Int dimension expected.  '%s' given.",
-        typestring);
-      SWIG_fail;
-    }
-    arg3 = (int) PyInt_AsLong(obj1);
-    dims[0] = (npy_intp) arg3;
-    array2 = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-    if (!array2) SWIG_fail;
-    arg2 = (double*) array_data(array2);
-  }
-  (arg1)->get_S_flat(arg2,arg3);
-  resultobj = SWIG_Py_Void();
-  {
-    resultobj = SWIG_Python_AppendOutput(resultobj,array2);
-  }
   return resultobj;
 fail:
   return NULL;
@@ -10947,6 +11181,59 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Network_connections_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Network *arg1 = (Network *) 0 ;
+  std::list<Connection * > *arg2 = (std::list<Connection * > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Network_connections_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Network, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Network_connections_set" "', argument " "1"" of type '" "Network *""'"); 
+  }
+  arg1 = reinterpret_cast< Network * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__listTConnection_p_std__allocatorTConnection_p_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Network_connections_set" "', argument " "2"" of type '" "std::list<Connection * > *""'"); 
+  }
+  arg2 = reinterpret_cast< std::list<Connection * > * >(argp2);
+  if (arg1) (arg1)->connections = *arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Network_connections_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Network *arg1 = (Network *) 0 ;
+  std::list<Connection * > *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Network_connections_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Network, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Network_connections_get" "', argument " "1"" of type '" "Network *""'"); 
+  }
+  arg1 = reinterpret_cast< Network * >(argp1);
+  result = (std::list<Connection * > *)& ((arg1)->connections);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__listTConnection_p_std__allocatorTConnection_p_t_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Network_add__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Network *arg1 = (Network *) 0 ;
@@ -11007,6 +11294,36 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Network_add__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Network *arg1 = (Network *) 0 ;
+  Connection *arg2 = (Connection *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Network_add",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Network, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Network_add" "', argument " "1"" of type '" "Network *""'"); 
+  }
+  arg1 = reinterpret_cast< Network * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Network_add" "', argument " "2"" of type '" "Connection *""'"); 
+  }
+  arg2 = reinterpret_cast< Connection * >(argp2);
+  (arg1)->add(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Network_add(PyObject *self, PyObject *args) {
   int argc;
   PyObject *argv[3];
@@ -11045,9 +11362,23 @@ SWIGINTERN PyObject *_wrap_Network_add(PyObject *self, PyObject *args) {
       }
     }
   }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_Network, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_Connection, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        return _wrap_Network_add__SWIG_2(self, args);
+      }
+    }
+  }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'Network_add'.\n  Possible C/C++ prototypes are:\n""    add(Network *,NeuronGroup *)\n""    add(Network *,NetworkOperation *)\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'Network_add'.\n  Possible C/C++ prototypes are:\n""    add(Network *,NeuronGroup *)\n""    add(Network *,NetworkOperation *)\n""    add(Network *,Connection *)\n");
   return NULL;
 }
 
@@ -12413,6 +12744,983 @@ SWIGINTERN PyObject *SpikeContainer_swigregister(PyObject *SWIGUNUSEDPARM(self),
   return SWIG_Py_Void();
 }
 
+SWIGINTERN PyObject *_wrap_ConnectionMatrix_add_row(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  ConnectionMatrix *arg1 = (ConnectionMatrix *) 0 ;
+  int arg2 ;
+  double *arg3 = (double *) 0 ;
+  int arg4 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyArrayObject *array3 = NULL ;
+  int i3 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:ConnectionMatrix_add_row",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_ConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ConnectionMatrix_add_row" "', argument " "1"" of type '" "ConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< ConnectionMatrix * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "ConnectionMatrix_add_row" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    array3 = obj_to_array_no_conversion(obj2, NPY_DOUBLE);
+    if (!array3 || !require_dimensions(array3,1) || !require_contiguous(array3)
+      || !require_native(array3)) SWIG_fail;
+    arg3 = (double*) array_data(array3);
+    arg4 = 1;
+    for (i3=0; i3 < array_numdims(array3); ++i3) arg4 *= array_size(array3,i3);
+  }
+  (arg1)->add_row(arg2,arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_ConnectionMatrix_add_rows(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  ConnectionMatrix *arg1 = (ConnectionMatrix *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int arg3 ;
+  double *arg4 = (double *) 0 ;
+  int arg5 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:ConnectionMatrix_add_rows",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_ConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ConnectionMatrix_add_rows" "', argument " "1"" of type '" "ConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< ConnectionMatrix * >(argp1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_INT);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (int*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  {
+    array4 = obj_to_array_no_conversion(obj2, NPY_DOUBLE);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (double*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  (arg1)->add_rows(arg2,arg3,arg4,arg5);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_ConnectionMatrix(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  ConnectionMatrix *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_ConnectionMatrix")) SWIG_fail;
+  result = (ConnectionMatrix *)new ConnectionMatrix();
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_ConnectionMatrix, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_ConnectionMatrix(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  ConnectionMatrix *arg1 = (ConnectionMatrix *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_ConnectionMatrix",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_ConnectionMatrix, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_ConnectionMatrix" "', argument " "1"" of type '" "ConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< ConnectionMatrix * >(argp1);
+  delete arg1;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *ConnectionMatrix_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_ConnectionMatrix, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_DenseConnectionMatrix_W_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  DenseConnectionMatrix *arg1 = (DenseConnectionMatrix *) 0 ;
+  double *arg2 = (double *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:DenseConnectionMatrix_W_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_DenseConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "DenseConnectionMatrix_W_set" "', argument " "1"" of type '" "DenseConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< DenseConnectionMatrix * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_double, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "DenseConnectionMatrix_W_set" "', argument " "2"" of type '" "double *""'"); 
+  }
+  arg2 = reinterpret_cast< double * >(argp2);
+  if (arg1) (arg1)->W = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_DenseConnectionMatrix_W_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  DenseConnectionMatrix *arg1 = (DenseConnectionMatrix *) 0 ;
+  double *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:DenseConnectionMatrix_W_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_DenseConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "DenseConnectionMatrix_W_get" "', argument " "1"" of type '" "DenseConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< DenseConnectionMatrix * >(argp1);
+  result = (double *) ((arg1)->W);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_double, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_DenseConnectionMatrix_n_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  DenseConnectionMatrix *arg1 = (DenseConnectionMatrix *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:DenseConnectionMatrix_n_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_DenseConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "DenseConnectionMatrix_n_set" "', argument " "1"" of type '" "DenseConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< DenseConnectionMatrix * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "DenseConnectionMatrix_n_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->n = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_DenseConnectionMatrix_n_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  DenseConnectionMatrix *arg1 = (DenseConnectionMatrix *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:DenseConnectionMatrix_n_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_DenseConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "DenseConnectionMatrix_n_get" "', argument " "1"" of type '" "DenseConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< DenseConnectionMatrix * >(argp1);
+  result = (int) ((arg1)->n);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_DenseConnectionMatrix_m_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  DenseConnectionMatrix *arg1 = (DenseConnectionMatrix *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:DenseConnectionMatrix_m_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_DenseConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "DenseConnectionMatrix_m_set" "', argument " "1"" of type '" "DenseConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< DenseConnectionMatrix * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "DenseConnectionMatrix_m_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->m = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_DenseConnectionMatrix_m_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  DenseConnectionMatrix *arg1 = (DenseConnectionMatrix *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:DenseConnectionMatrix_m_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_DenseConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "DenseConnectionMatrix_m_get" "', argument " "1"" of type '" "DenseConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< DenseConnectionMatrix * >(argp1);
+  result = (int) ((arg1)->m);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_DenseConnectionMatrix(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double *arg1 = (double *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  DenseConnectionMatrix *result = 0 ;
+  PyArrayObject *array1 = NULL ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:new_DenseConnectionMatrix",&obj0)) SWIG_fail;
+  {
+    array1 = obj_to_array_no_conversion(obj0, NPY_DOUBLE);
+    if (!array1 || !require_dimensions(array1,2) || !require_contiguous(array1)
+      || !require_native(array1)) SWIG_fail;
+    arg1 = (double*) array_data(array1);
+    arg2 = (int) array_size(array1,0);
+    arg3 = (int) array_size(array1,1);
+  }
+  result = (DenseConnectionMatrix *)new DenseConnectionMatrix(arg1,arg2,arg3);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_DenseConnectionMatrix, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_DenseConnectionMatrix_add_row(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  DenseConnectionMatrix *arg1 = (DenseConnectionMatrix *) 0 ;
+  int arg2 ;
+  double *arg3 = (double *) 0 ;
+  int arg4 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyArrayObject *array3 = NULL ;
+  int i3 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:DenseConnectionMatrix_add_row",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_DenseConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "DenseConnectionMatrix_add_row" "', argument " "1"" of type '" "DenseConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< DenseConnectionMatrix * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "DenseConnectionMatrix_add_row" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    array3 = obj_to_array_no_conversion(obj2, NPY_DOUBLE);
+    if (!array3 || !require_dimensions(array3,1) || !require_contiguous(array3)
+      || !require_native(array3)) SWIG_fail;
+    arg3 = (double*) array_data(array3);
+    arg4 = 1;
+    for (i3=0; i3 < array_numdims(array3); ++i3) arg4 *= array_size(array3,i3);
+  }
+  (arg1)->add_row(arg2,arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_DenseConnectionMatrix(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  DenseConnectionMatrix *arg1 = (DenseConnectionMatrix *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_DenseConnectionMatrix",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_DenseConnectionMatrix, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_DenseConnectionMatrix" "', argument " "1"" of type '" "DenseConnectionMatrix *""'"); 
+  }
+  arg1 = reinterpret_cast< DenseConnectionMatrix * >(argp1);
+  delete arg1;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *DenseConnectionMatrix_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_DenseConnectionMatrix, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_Connection_source_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  NeuronGroup *arg2 = (NeuronGroup *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Connection_source_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_source_set" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_NeuronGroup, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Connection_source_set" "', argument " "2"" of type '" "NeuronGroup *""'"); 
+  }
+  arg2 = reinterpret_cast< NeuronGroup * >(argp2);
+  if (arg1) (arg1)->source = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_source_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  NeuronGroup *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Connection_source_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_source_get" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  result = (NeuronGroup *) ((arg1)->source);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_target_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  NeuronGroup *arg2 = (NeuronGroup *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Connection_target_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_target_set" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_NeuronGroup, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Connection_target_set" "', argument " "2"" of type '" "NeuronGroup *""'"); 
+  }
+  arg2 = reinterpret_cast< NeuronGroup * >(argp2);
+  if (arg1) (arg1)->target = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_target_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  NeuronGroup *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Connection_target_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_target_get" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  result = (NeuronGroup *) ((arg1)->target);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_connmat_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  ConnectionMatrix *arg2 = (ConnectionMatrix *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Connection_connmat_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_connmat_set" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_ConnectionMatrix, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Connection_connmat_set" "', argument " "2"" of type '" "ConnectionMatrix *""'"); 
+  }
+  arg2 = reinterpret_cast< ConnectionMatrix * >(argp2);
+  if (arg1) (arg1)->connmat = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_connmat_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  ConnectionMatrix *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Connection_connmat_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_connmat_get" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  result = (ConnectionMatrix *) ((arg1)->connmat);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_ConnectionMatrix, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_state_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Connection_state_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_state_set" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Connection_state_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->state = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_state_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Connection_state_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_state_get" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  result = (int) ((arg1)->state);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_delay_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Connection_delay_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_delay_set" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Connection_delay_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->delay = arg2;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_delay_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  int result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Connection_delay_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_delay_get" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  result = (int) ((arg1)->delay);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_Connection__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  NeuronGroup *arg2 = (NeuronGroup *) 0 ;
+  ConnectionMatrix *arg3 = (ConnectionMatrix *) 0 ;
+  int arg4 ;
+  int arg5 ;
+  Connection *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  int val5 ;
+  int ecode5 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:new_Connection",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_Connection" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_Connection" "', argument " "2"" of type '" "NeuronGroup *""'"); 
+  }
+  arg2 = reinterpret_cast< NeuronGroup * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_ConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_Connection" "', argument " "3"" of type '" "ConnectionMatrix *""'"); 
+  }
+  arg3 = reinterpret_cast< ConnectionMatrix * >(argp3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_Connection" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  ecode5 = SWIG_AsVal_int(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_Connection" "', argument " "5"" of type '" "int""'");
+  } 
+  arg5 = static_cast< int >(val5);
+  result = (Connection *)new Connection(arg1,arg2,arg3,arg4,arg5);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Connection, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_Connection__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  NeuronGroup *arg2 = (NeuronGroup *) 0 ;
+  ConnectionMatrix *arg3 = (ConnectionMatrix *) 0 ;
+  int arg4 ;
+  Connection *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:new_Connection",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_Connection" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_Connection" "', argument " "2"" of type '" "NeuronGroup *""'"); 
+  }
+  arg2 = reinterpret_cast< NeuronGroup * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_ConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_Connection" "', argument " "3"" of type '" "ConnectionMatrix *""'"); 
+  }
+  arg3 = reinterpret_cast< ConnectionMatrix * >(argp3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_Connection" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  result = (Connection *)new Connection(arg1,arg2,arg3,arg4);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Connection, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_Connection__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  NeuronGroup *arg1 = (NeuronGroup *) 0 ;
+  NeuronGroup *arg2 = (NeuronGroup *) 0 ;
+  ConnectionMatrix *arg3 = (ConnectionMatrix *) 0 ;
+  Connection *result = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:new_Connection",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_Connection" "', argument " "1"" of type '" "NeuronGroup *""'"); 
+  }
+  arg1 = reinterpret_cast< NeuronGroup * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_NeuronGroup, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_Connection" "', argument " "2"" of type '" "NeuronGroup *""'"); 
+  }
+  arg2 = reinterpret_cast< NeuronGroup * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_ConnectionMatrix, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_Connection" "', argument " "3"" of type '" "ConnectionMatrix *""'"); 
+  }
+  arg3 = reinterpret_cast< ConnectionMatrix * >(argp3);
+  result = (Connection *)new Connection(arg1,arg2,arg3);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Connection, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_Connection(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[6];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 5); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 3) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_NeuronGroup, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_NeuronGroup, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        void *vptr = 0;
+        int res = SWIG_ConvertPtr(argv[2], &vptr, SWIGTYPE_p_ConnectionMatrix, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          return _wrap_new_Connection__SWIG_2(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_NeuronGroup, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_NeuronGroup, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        void *vptr = 0;
+        int res = SWIG_ConvertPtr(argv[2], &vptr, SWIGTYPE_p_ConnectionMatrix, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            return _wrap_new_Connection__SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 5) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_NeuronGroup, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_NeuronGroup, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        void *vptr = 0;
+        int res = SWIG_ConvertPtr(argv[2], &vptr, SWIGTYPE_p_ConnectionMatrix, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            {
+              int res = SWIG_AsVal_int(argv[4], NULL);
+              _v = SWIG_CheckState(res);
+            }
+            if (_v) {
+              return _wrap_new_Connection__SWIG_0(self, args);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'new_Connection'.\n  Possible C/C++ prototypes are:\n""    Connection(NeuronGroup *,NeuronGroup *,ConnectionMatrix *,int,int)\n""    Connection(NeuronGroup *,NeuronGroup *,ConnectionMatrix *,int)\n""    Connection(NeuronGroup *,NeuronGroup *,ConnectionMatrix *)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_propagate(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Connection_propagate",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_propagate" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_INT);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (int*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  (arg1)->propagate(arg2,arg3);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Connection_do_propagate(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Connection_do_propagate",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Connection_do_propagate" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  (arg1)->do_propagate();
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_Connection(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Connection *arg1 = (Connection *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_Connection",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Connection, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_Connection" "', argument " "1"" of type '" "Connection *""'"); 
+  }
+  arg1 = reinterpret_cast< Connection * >(argp1);
+  delete arg1;
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *Connection_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O|swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_Connection, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"delete_PySwigIterator", _wrap_delete_PySwigIterator, METH_VARARGS, NULL},
 	 { (char *)"PySwigIterator_value", _wrap_PySwigIterator_value, METH_VARARGS, NULL},
@@ -12504,6 +13812,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"NeuronGroup_num_vars_get", _wrap_NeuronGroup_num_vars_get, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_num_neurons_set", _wrap_NeuronGroup_num_neurons_set, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_num_neurons_get", _wrap_NeuronGroup_num_neurons_get, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_S_m_set", _wrap_NeuronGroup_S_m_set, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_S_m_get", _wrap_NeuronGroup_S_m_get, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_su_set", _wrap_NeuronGroup_su_set, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_su_get", _wrap_NeuronGroup_su_get, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_thr_set", _wrap_NeuronGroup_thr_set, METH_VARARGS, NULL},
@@ -12514,12 +13824,15 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"NeuronGroup_LS_get", _wrap_NeuronGroup_LS_get, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_spikesarray_set", _wrap_NeuronGroup_spikesarray_set, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_spikesarray_get", _wrap_NeuronGroup_spikesarray_get, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_owner_set", _wrap_NeuronGroup_owner_set, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_owner_get", _wrap_NeuronGroup_owner_get, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_origin_set", _wrap_NeuronGroup_origin_set, METH_VARARGS, NULL},
+	 { (char *)"NeuronGroup_origin_get", _wrap_NeuronGroup_origin_get, METH_VARARGS, NULL},
 	 { (char *)"new_NeuronGroup", _wrap_new_NeuronGroup, METH_VARARGS, NULL},
 	 { (char *)"delete_NeuronGroup", _wrap_delete_NeuronGroup, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_get_spikes", _wrap_NeuronGroup_get_spikes, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_update", _wrap_NeuronGroup_update, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_reset", _wrap_NeuronGroup_reset, METH_VARARGS, NULL},
-	 { (char *)"NeuronGroup_get_S_flat", _wrap_NeuronGroup_get_S_flat, METH_VARARGS, NULL},
 	 { (char *)"NeuronGroup_swigregister", NeuronGroup_swigregister, METH_VARARGS, NULL},
 	 { (char *)"StateUpdater___call__", _wrap_StateUpdater___call__, METH_VARARGS, NULL},
 	 { (char *)"new_StateUpdater", _wrap_new_StateUpdater, METH_VARARGS, NULL},
@@ -12585,6 +13898,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Network_groups_get", _wrap_Network_groups_get, METH_VARARGS, NULL},
 	 { (char *)"Network_operations_set", _wrap_Network_operations_set, METH_VARARGS, NULL},
 	 { (char *)"Network_operations_get", _wrap_Network_operations_get, METH_VARARGS, NULL},
+	 { (char *)"Network_connections_set", _wrap_Network_connections_set, METH_VARARGS, NULL},
+	 { (char *)"Network_connections_get", _wrap_Network_connections_get, METH_VARARGS, NULL},
 	 { (char *)"Network_add", _wrap_Network_add, METH_VARARGS, NULL},
 	 { (char *)"Network_update", _wrap_Network_update, METH_VARARGS, NULL},
 	 { (char *)"Network_run", _wrap_Network_run, METH_VARARGS, NULL},
@@ -12627,20 +13942,47 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SpikeContainer___repr__", _wrap_SpikeContainer___repr__, METH_VARARGS, NULL},
 	 { (char *)"SpikeContainer___str__", _wrap_SpikeContainer___str__, METH_VARARGS, NULL},
 	 { (char *)"SpikeContainer_swigregister", SpikeContainer_swigregister, METH_VARARGS, NULL},
+	 { (char *)"ConnectionMatrix_add_row", _wrap_ConnectionMatrix_add_row, METH_VARARGS, NULL},
+	 { (char *)"ConnectionMatrix_add_rows", _wrap_ConnectionMatrix_add_rows, METH_VARARGS, NULL},
+	 { (char *)"new_ConnectionMatrix", _wrap_new_ConnectionMatrix, METH_VARARGS, NULL},
+	 { (char *)"delete_ConnectionMatrix", _wrap_delete_ConnectionMatrix, METH_VARARGS, NULL},
+	 { (char *)"ConnectionMatrix_swigregister", ConnectionMatrix_swigregister, METH_VARARGS, NULL},
+	 { (char *)"DenseConnectionMatrix_W_set", _wrap_DenseConnectionMatrix_W_set, METH_VARARGS, NULL},
+	 { (char *)"DenseConnectionMatrix_W_get", _wrap_DenseConnectionMatrix_W_get, METH_VARARGS, NULL},
+	 { (char *)"DenseConnectionMatrix_n_set", _wrap_DenseConnectionMatrix_n_set, METH_VARARGS, NULL},
+	 { (char *)"DenseConnectionMatrix_n_get", _wrap_DenseConnectionMatrix_n_get, METH_VARARGS, NULL},
+	 { (char *)"DenseConnectionMatrix_m_set", _wrap_DenseConnectionMatrix_m_set, METH_VARARGS, NULL},
+	 { (char *)"DenseConnectionMatrix_m_get", _wrap_DenseConnectionMatrix_m_get, METH_VARARGS, NULL},
+	 { (char *)"new_DenseConnectionMatrix", _wrap_new_DenseConnectionMatrix, METH_VARARGS, NULL},
+	 { (char *)"DenseConnectionMatrix_add_row", _wrap_DenseConnectionMatrix_add_row, METH_VARARGS, NULL},
+	 { (char *)"delete_DenseConnectionMatrix", _wrap_delete_DenseConnectionMatrix, METH_VARARGS, NULL},
+	 { (char *)"DenseConnectionMatrix_swigregister", DenseConnectionMatrix_swigregister, METH_VARARGS, NULL},
+	 { (char *)"Connection_source_set", _wrap_Connection_source_set, METH_VARARGS, NULL},
+	 { (char *)"Connection_source_get", _wrap_Connection_source_get, METH_VARARGS, NULL},
+	 { (char *)"Connection_target_set", _wrap_Connection_target_set, METH_VARARGS, NULL},
+	 { (char *)"Connection_target_get", _wrap_Connection_target_get, METH_VARARGS, NULL},
+	 { (char *)"Connection_connmat_set", _wrap_Connection_connmat_set, METH_VARARGS, NULL},
+	 { (char *)"Connection_connmat_get", _wrap_Connection_connmat_get, METH_VARARGS, NULL},
+	 { (char *)"Connection_state_set", _wrap_Connection_state_set, METH_VARARGS, NULL},
+	 { (char *)"Connection_state_get", _wrap_Connection_state_get, METH_VARARGS, NULL},
+	 { (char *)"Connection_delay_set", _wrap_Connection_delay_set, METH_VARARGS, NULL},
+	 { (char *)"Connection_delay_get", _wrap_Connection_delay_get, METH_VARARGS, NULL},
+	 { (char *)"new_Connection", _wrap_new_Connection, METH_VARARGS, NULL},
+	 { (char *)"Connection_propagate", _wrap_Connection_propagate, METH_VARARGS, NULL},
+	 { (char *)"Connection_do_propagate", _wrap_Connection_do_propagate, METH_VARARGS, NULL},
+	 { (char *)"delete_Connection", _wrap_delete_Connection, METH_VARARGS, NULL},
+	 { (char *)"Connection_swigregister", Connection_swigregister, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
 
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
-static void *_p_RefractorinessTo_p_Reset(void *x) {
-    return (void *)((Reset *)  ((Refractoriness *) x));
-}
-static void *_p_LinearStateUpdaterTo_p_StateUpdater(void *x) {
-    return (void *)((StateUpdater *)  ((LinearStateUpdater *) x));
-}
 static void *_p_StateMonitorTo_p_NetworkOperation(void *x) {
     return (void *)((NetworkOperation *)  ((StateMonitor *) x));
+}
+static void *_p_DenseConnectionMatrixTo_p_ConnectionMatrix(void *x) {
+    return (void *)((ConnectionMatrix *)  ((DenseConnectionMatrix *) x));
 }
 static void *_p_ResetTo_p_ResetBase(void *x) {
     return (void *)((ResetBase *)  ((Reset *) x));
@@ -12648,7 +13990,16 @@ static void *_p_ResetTo_p_ResetBase(void *x) {
 static void *_p_RefractorinessTo_p_ResetBase(void *x) {
     return (void *)((ResetBase *) (Reset *) ((Refractoriness *) x));
 }
+static void *_p_LinearStateUpdaterTo_p_StateUpdater(void *x) {
+    return (void *)((StateUpdater *)  ((LinearStateUpdater *) x));
+}
+static void *_p_RefractorinessTo_p_Reset(void *x) {
+    return (void *)((Reset *)  ((Refractoriness *) x));
+}
 static swig_type_info _swigt__p_CircularVector = {"_p_CircularVector", "CircularVector *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_Connection = {"_p_Connection", "Connection *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_ConnectionMatrix = {"_p_ConnectionMatrix", "ConnectionMatrix *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_DenseConnectionMatrix = {"_p_DenseConnectionMatrix", "DenseConnectionMatrix *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_LinearStateUpdater = {"_p_LinearStateUpdater", "LinearStateUpdater *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Network = {"_p_Network", "Network *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_NetworkOperation = {"_p_NetworkOperation", "NetworkOperation *", 0, 0, (void*)0, 0};
@@ -12669,6 +14020,7 @@ static swig_type_info _swigt__p_p_PyObject = {"_p_p_PyObject", "PyObject **", 0,
 static swig_type_info _swigt__p_p_int = {"_p_p_int", "int **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_size_type = {"_p_size_type", "size_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__invalid_argument = {"_p_std__invalid_argument", "std::invalid_argument *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__listTConnection_p_std__allocatorTConnection_p_t_t = {"_p_std__listTConnection_p_std__allocatorTConnection_p_t_t", "std::list<Connection *,std::allocator<Connection * > > *|std::list<Connection * > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__listTNetworkOperation_p_std__allocatorTNetworkOperation_p_t_t = {"_p_std__listTNetworkOperation_p_std__allocatorTNetworkOperation_p_t_t", "std::list<NetworkOperation *,std::allocator<NetworkOperation * > > *|std::list<NetworkOperation * > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__listTNeuronGroup_p_std__allocatorTNeuronGroup_p_t_t = {"_p_std__listTNeuronGroup_p_std__allocatorTNeuronGroup_p_t_t", "std::list<NeuronGroup *,std::allocator<NeuronGroup * > > *|std::list<NeuronGroup * > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__listTint_std__allocatorTint_t_t = {"_p_std__listTint_std__allocatorTint_t_t", "std::list<int,std::allocator<int > > *|std::list<int > *", 0, 0, (void*)0, 0};
@@ -12681,6 +14033,9 @@ static swig_type_info _swigt__p_value_type = {"_p_value_type", "value_type *", 0
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_CircularVector,
+  &_swigt__p_Connection,
+  &_swigt__p_ConnectionMatrix,
+  &_swigt__p_DenseConnectionMatrix,
   &_swigt__p_LinearStateUpdater,
   &_swigt__p_Network,
   &_swigt__p_NetworkOperation,
@@ -12701,6 +14056,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_p_int,
   &_swigt__p_size_type,
   &_swigt__p_std__invalid_argument,
+  &_swigt__p_std__listTConnection_p_std__allocatorTConnection_p_t_t,
   &_swigt__p_std__listTNetworkOperation_p_std__allocatorTNetworkOperation_p_t_t,
   &_swigt__p_std__listTNeuronGroup_p_std__allocatorTNeuronGroup_p_t_t,
   &_swigt__p_std__listTint_std__allocatorTint_t_t,
@@ -12713,6 +14069,9 @@ static swig_type_info *swig_type_initial[] = {
 };
 
 static swig_cast_info _swigc__p_CircularVector[] = {  {&_swigt__p_CircularVector, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_Connection[] = {  {&_swigt__p_Connection, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_ConnectionMatrix[] = {  {&_swigt__p_ConnectionMatrix, 0, 0, 0},  {&_swigt__p_DenseConnectionMatrix, _p_DenseConnectionMatrixTo_p_ConnectionMatrix, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_DenseConnectionMatrix[] = {  {&_swigt__p_DenseConnectionMatrix, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_LinearStateUpdater[] = {  {&_swigt__p_LinearStateUpdater, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Network[] = {  {&_swigt__p_Network, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_NetworkOperation[] = {  {&_swigt__p_StateMonitor, _p_StateMonitorTo_p_NetworkOperation, 0, 0},  {&_swigt__p_NetworkOperation, 0, 0, 0},{0, 0, 0, 0}};
@@ -12733,6 +14092,7 @@ static swig_cast_info _swigc__p_p_PyObject[] = {  {&_swigt__p_p_PyObject, 0, 0, 
 static swig_cast_info _swigc__p_p_int[] = {  {&_swigt__p_p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_size_type[] = {  {&_swigt__p_size_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__invalid_argument[] = {  {&_swigt__p_std__invalid_argument, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__listTConnection_p_std__allocatorTConnection_p_t_t[] = {  {&_swigt__p_std__listTConnection_p_std__allocatorTConnection_p_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__listTNetworkOperation_p_std__allocatorTNetworkOperation_p_t_t[] = {  {&_swigt__p_std__listTNetworkOperation_p_std__allocatorTNetworkOperation_p_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__listTNeuronGroup_p_std__allocatorTNeuronGroup_p_t_t[] = {  {&_swigt__p_std__listTNeuronGroup_p_std__allocatorTNeuronGroup_p_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__listTint_std__allocatorTint_t_t[] = {  {&_swigt__p_std__listTint_std__allocatorTint_t_t, 0, 0, 0},{0, 0, 0, 0}};
@@ -12745,6 +14105,9 @@ static swig_cast_info _swigc__p_value_type[] = {  {&_swigt__p_value_type, 0, 0, 
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_CircularVector,
+  _swigc__p_Connection,
+  _swigc__p_ConnectionMatrix,
+  _swigc__p_DenseConnectionMatrix,
   _swigc__p_LinearStateUpdater,
   _swigc__p_Network,
   _swigc__p_NetworkOperation,
@@ -12765,6 +14128,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_p_int,
   _swigc__p_size_type,
   _swigc__p_std__invalid_argument,
+  _swigc__p_std__listTConnection_p_std__allocatorTConnection_p_t_t,
   _swigc__p_std__listTNetworkOperation_p_std__allocatorTNetworkOperation_p_t_t,
   _swigc__p_std__listTNeuronGroup_p_std__allocatorTNeuronGroup_p_t_t,
   _swigc__p_std__listTint_std__allocatorTint_t_t,

@@ -10,12 +10,19 @@ void Network::add(NetworkOperation *op)
 	this->operations.push_back(op);
 }
 
+void Network::add(Connection *conn)
+{
+	this->connections.push_back(conn);
+}
+
 void Network::update()
 {
 	// Groups
 	for(list<NeuronGroup*>::iterator i=this->groups.begin();i!=this->groups.end();i++)
 		(*i)->update();
-	// TODO: Connections
+	// Connections
+	for(list<Connection*>::iterator i=this->connections.begin();i!=this->connections.end();i++)
+		(*i)->do_propagate();
 	// Resets
 	for(list<NeuronGroup*>::iterator i=this->groups.begin();i!=this->groups.end();i++)
 		(*i)->reset();

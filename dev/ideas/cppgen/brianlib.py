@@ -184,6 +184,9 @@ class NeuronGroup(_object):
     __swig_setmethods__["num_neurons"] = _brianlib.NeuronGroup_num_neurons_set
     __swig_getmethods__["num_neurons"] = _brianlib.NeuronGroup_num_neurons_get
     if _newclass:num_neurons = _swig_property(_brianlib.NeuronGroup_num_neurons_get, _brianlib.NeuronGroup_num_neurons_set)
+    __swig_setmethods__["S_m"] = _brianlib.NeuronGroup_S_m_set
+    __swig_getmethods__["S_m"] = _brianlib.NeuronGroup_S_m_get
+    if _newclass:S_m = _swig_property(_brianlib.NeuronGroup_S_m_get, _brianlib.NeuronGroup_S_m_set)
     __swig_setmethods__["su"] = _brianlib.NeuronGroup_su_set
     __swig_getmethods__["su"] = _brianlib.NeuronGroup_su_get
     if _newclass:su = _swig_property(_brianlib.NeuronGroup_su_get, _brianlib.NeuronGroup_su_set)
@@ -199,6 +202,12 @@ class NeuronGroup(_object):
     __swig_setmethods__["spikesarray"] = _brianlib.NeuronGroup_spikesarray_set
     __swig_getmethods__["spikesarray"] = _brianlib.NeuronGroup_spikesarray_get
     if _newclass:spikesarray = _swig_property(_brianlib.NeuronGroup_spikesarray_get, _brianlib.NeuronGroup_spikesarray_set)
+    __swig_setmethods__["owner"] = _brianlib.NeuronGroup_owner_set
+    __swig_getmethods__["owner"] = _brianlib.NeuronGroup_owner_get
+    if _newclass:owner = _swig_property(_brianlib.NeuronGroup_owner_get, _brianlib.NeuronGroup_owner_set)
+    __swig_setmethods__["origin"] = _brianlib.NeuronGroup_origin_set
+    __swig_getmethods__["origin"] = _brianlib.NeuronGroup_origin_get
+    if _newclass:origin = _swig_property(_brianlib.NeuronGroup_origin_get, _brianlib.NeuronGroup_origin_set)
     def __init__(self, *args): 
         this = _brianlib.new_NeuronGroup(*args)
         try: self.this.append(this)
@@ -208,7 +217,6 @@ class NeuronGroup(_object):
     def get_spikes(*args): return _brianlib.NeuronGroup_get_spikes(*args)
     def update(*args): return _brianlib.NeuronGroup_update(*args)
     def reset(*args): return _brianlib.NeuronGroup_reset(*args)
-    def get_S_flat(*args): return _brianlib.NeuronGroup_get_S_flat(*args)
 NeuronGroup_swigregister = _brianlib.NeuronGroup_swigregister
 NeuronGroup_swigregister(NeuronGroup)
 
@@ -400,6 +408,9 @@ class Network(_object):
     __swig_setmethods__["operations"] = _brianlib.Network_operations_set
     __swig_getmethods__["operations"] = _brianlib.Network_operations_get
     if _newclass:operations = _swig_property(_brianlib.Network_operations_get, _brianlib.Network_operations_set)
+    __swig_setmethods__["connections"] = _brianlib.Network_connections_set
+    __swig_getmethods__["connections"] = _brianlib.Network_connections_get
+    if _newclass:connections = _swig_property(_brianlib.Network_connections_get, _brianlib.Network_connections_set)
     def add(*args): return _brianlib.Network_add(*args)
     def update(*args): return _brianlib.Network_update(*args)
     def run(*args): return _brianlib.Network_run(*args)
@@ -475,6 +486,82 @@ class SpikeContainer(_object):
     def __str__(*args): return _brianlib.SpikeContainer___str__(*args)
 SpikeContainer_swigregister = _brianlib.SpikeContainer_swigregister
 SpikeContainer_swigregister(SpikeContainer)
+
+class ConnectionMatrix(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, ConnectionMatrix, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, ConnectionMatrix, name)
+    __repr__ = _swig_repr
+    def add_row(*args): return _brianlib.ConnectionMatrix_add_row(*args)
+    def add_rows(*args): return _brianlib.ConnectionMatrix_add_rows(*args)
+    def __init__(self, *args): 
+        this = _brianlib.new_ConnectionMatrix(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _brianlib.delete_ConnectionMatrix
+    __del__ = lambda self : None;
+ConnectionMatrix_swigregister = _brianlib.ConnectionMatrix_swigregister
+ConnectionMatrix_swigregister(ConnectionMatrix)
+
+class DenseConnectionMatrix(ConnectionMatrix):
+    __swig_setmethods__ = {}
+    for _s in [ConnectionMatrix]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
+    __setattr__ = lambda self, name, value: _swig_setattr(self, DenseConnectionMatrix, name, value)
+    __swig_getmethods__ = {}
+    for _s in [ConnectionMatrix]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
+    __getattr__ = lambda self, name: _swig_getattr(self, DenseConnectionMatrix, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["W"] = _brianlib.DenseConnectionMatrix_W_set
+    __swig_getmethods__["W"] = _brianlib.DenseConnectionMatrix_W_get
+    if _newclass:W = _swig_property(_brianlib.DenseConnectionMatrix_W_get, _brianlib.DenseConnectionMatrix_W_set)
+    __swig_setmethods__["n"] = _brianlib.DenseConnectionMatrix_n_set
+    __swig_getmethods__["n"] = _brianlib.DenseConnectionMatrix_n_get
+    if _newclass:n = _swig_property(_brianlib.DenseConnectionMatrix_n_get, _brianlib.DenseConnectionMatrix_n_set)
+    __swig_setmethods__["m"] = _brianlib.DenseConnectionMatrix_m_set
+    __swig_getmethods__["m"] = _brianlib.DenseConnectionMatrix_m_get
+    if _newclass:m = _swig_property(_brianlib.DenseConnectionMatrix_m_get, _brianlib.DenseConnectionMatrix_m_set)
+    def __init__(self, *args): 
+        this = _brianlib.new_DenseConnectionMatrix(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def add_row(*args): return _brianlib.DenseConnectionMatrix_add_row(*args)
+    __swig_destroy__ = _brianlib.delete_DenseConnectionMatrix
+    __del__ = lambda self : None;
+DenseConnectionMatrix_swigregister = _brianlib.DenseConnectionMatrix_swigregister
+DenseConnectionMatrix_swigregister(DenseConnectionMatrix)
+
+class Connection(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Connection, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Connection, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["source"] = _brianlib.Connection_source_set
+    __swig_getmethods__["source"] = _brianlib.Connection_source_get
+    if _newclass:source = _swig_property(_brianlib.Connection_source_get, _brianlib.Connection_source_set)
+    __swig_setmethods__["target"] = _brianlib.Connection_target_set
+    __swig_getmethods__["target"] = _brianlib.Connection_target_get
+    if _newclass:target = _swig_property(_brianlib.Connection_target_get, _brianlib.Connection_target_set)
+    __swig_setmethods__["connmat"] = _brianlib.Connection_connmat_set
+    __swig_getmethods__["connmat"] = _brianlib.Connection_connmat_get
+    if _newclass:connmat = _swig_property(_brianlib.Connection_connmat_get, _brianlib.Connection_connmat_set)
+    __swig_setmethods__["state"] = _brianlib.Connection_state_set
+    __swig_getmethods__["state"] = _brianlib.Connection_state_get
+    if _newclass:state = _swig_property(_brianlib.Connection_state_get, _brianlib.Connection_state_set)
+    __swig_setmethods__["delay"] = _brianlib.Connection_delay_set
+    __swig_getmethods__["delay"] = _brianlib.Connection_delay_get
+    if _newclass:delay = _swig_property(_brianlib.Connection_delay_get, _brianlib.Connection_delay_set)
+    def __init__(self, *args): 
+        this = _brianlib.new_Connection(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def propagate(*args): return _brianlib.Connection_propagate(*args)
+    def do_propagate(*args): return _brianlib.Connection_do_propagate(*args)
+    __swig_destroy__ = _brianlib.delete_Connection
+    __del__ = lambda self : None;
+Connection_swigregister = _brianlib.Connection_swigregister
+Connection_swigregister(Connection)
 
 
 

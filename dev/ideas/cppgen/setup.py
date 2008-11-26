@@ -18,6 +18,7 @@ brianlib_module = Extension('_brianlib',
                                     'reset.cpp',
                                     'stateupdater.cpp',
                                     'threshold.cpp',
+                                    'connection.cpp',
                                     ],
                            include_dirs=[numpy_include_dir],
                            extra_compile_args=['-O3']

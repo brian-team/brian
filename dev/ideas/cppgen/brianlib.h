@@ -6,32 +6,37 @@
 #include<list>
 using namespace std;
 
-#define neuron_value(group, neuron, state) group->S[neuron+state*(group->num_neurons)]
+#define neuron_value(group, neuron, state) (group)->S[((neuron)+(group)->origin)+(state)*((group)->S_m)]
+//#define neuron_value(group, neuron, state) (group)->S[((neuron))+(state)*((group)->num_neurons)]
+#define matrix_value(matrix, i, j, n, m) (matrix)[(i)*(m)+(j)]
 
 class StateUpdater;
 class Threshold;
 class ResetBase;
 class SpikeContainer;
 class CircularVector;
+class Connection;
 
 class NeuronGroup
 {
 public:
 	double *S;
-	int num_vars, num_neurons;
+	int num_vars, num_neurons, S_m;
 	StateUpdater *su;
 	Threshold *thr;
 	ResetBase *resetobj;
 	SpikeContainer *LS;
 	int *spikesarray;
+	NeuronGroup *owner;
+	int origin;
 	NeuronGroup(double *S, int n, int m, StateUpdater *su,
 			    Threshold *thr, ResetBase *reset,
 			    int ls_n, int ls_m);
+	NeuronGroup(NeuronGroup *parent, int origin, int length);
 	~NeuronGroup();
 	void get_spikes(int **ret, int *ret_n, int delay=0);
 	void update();
 	void reset();
-	void get_S_flat(double *S_out_flat, int nm);
 };
 
 class StateUpdater
@@ -111,8 +116,10 @@ class Network
 public:
 	list<NeuronGroup*> groups;
 	list<NetworkOperation*> operations;
+	list<Connection*> connections;
 	void add(NeuronGroup *group);
 	void add(NetworkOperation *op);
+	void add(Connection *conn);
 	void update();
 	void run(int timesteps);
 };
@@ -153,6 +160,35 @@ public:
 	void __getslice__(int **ret, int *ret_n, int i, int j);
 	string __repr__();
 	string __str__();
+};
+
+class ConnectionMatrix
+{
+public:
+    virtual void add_row(int i, double *b, int b_n) {};
+    virtual void add_rows(int *x, int n, double *b, int b_n);
+};
+
+class DenseConnectionMatrix : public ConnectionMatrix
+{
+public:
+	double *W;
+	int n, m;
+	DenseConnectionMatrix(double *S, int n, int m) : W(S), n(n), m(m) {};
+	virtual void add_row(int i, double *b, int b_n);
+};
+
+class Connection
+{
+public:
+	NeuronGroup *source, *target;
+	ConnectionMatrix *connmat;
+	int state, delay;
+	Connection(NeuronGroup *source, NeuronGroup *target, ConnectionMatrix *connmat,
+				int state=0, int delay=0) : source(source), target(target),
+				connmat(connmat), state(state), delay(delay) {}
+	virtual void propagate(int *x, int n);
+	virtual void do_propagate();
 };
 
 #endif 
