@@ -59,6 +59,7 @@ from quantityarray import *
 from neuronmodel import *
 import sys
 from brian_unit_prefs import bup
+import numpy
 
 
 class NeuronGroup(magic.InstanceTracker):
@@ -383,6 +384,8 @@ class NeuronGroup(magic.InstanceTracker):
         '''
         self._state_updater(self) # update the variables
         spikes=self._threshold(self) # get spikes
+        if not isinstance(spikes, numpy.ndarray):
+            spikes = array(spikes, dtype=int)
         self.LS.push(spikes) # Store spikes
         
     def get_spikes(self,delay=0):
