@@ -14,7 +14,7 @@ TODO:
 '''
 from brian.units import meter,ohm
 from brian.stdunits import um,cm,ms,uF,mV
-from numpy import sqrt,array,pi
+from numpy import sqrt,array,pi,mean
 from brian.compartments import *
 from brian.membrane_equations import *
 from brian import sum
@@ -167,11 +167,15 @@ class Morphology(object):
                 self._eqs[n]=MembraneEquation(C=Cm*segment['area'])
                 self._eqs[n].area=segment['area']
         
-    def __getitem__(self,branch):
+    def __getitem__(self,x):
         '''
-        Returns a branch.
+        Returns a branch or a compartment (equations).
         '''
-        return self.branch(branch)
+        if type(x)==type((0,0)): # tuple: compartment
+            branch,location=x
+            return self.compartment(branch,location)
+        else: # single variable: branch
+            return self.branch(x)
     
     def index(self,branch,location):
         '''
@@ -194,6 +198,50 @@ class Morphology(object):
                         return s-1
                 oldx=x
             raise IndexError,'Location not found'
+    
+    def radius(self,branch,location=None):
+        '''
+        Returns the radius of a compartment or branch
+        '''
+        if location is None: # branch: return mean radius
+            return mean([self.radius(branch,n) for n in self._branches[branch]['segments']])*meter
+        else:
+            seg=self._segments[self.index(branch,location)]
+            return seg['radius']
+
+    def diameter(self,branch,location=None):
+        '''
+        Returns the diameter of a compartment or branch
+        '''
+        return 2*self.radius(branch,location)
+            
+    def length(self,branch,location=None):
+        '''
+        Returns the length of a compartment or branch.
+        '''
+        if location is None: # branch
+            l=0*meter
+            for n in self._branches[branch]['segments']:
+                l+=self.length(branch,n)
+            return l
+        else:
+            return self._segments[self.index(branch,location)]['length']
+    
+    def area(self,branch,location=None):
+        '''
+        Returns the area of a compartment or branch.
+        '''
+        if location is None: # branch
+            a=0*meter**2
+            for n in self._branches[branch]['segments']:
+                a+=self.area(branch,n)
+            return a
+        else:
+            seg=self._segments[self.index(branch,location)]
+            if seg['type']=='soma':
+                return 4*pi*self.radius(branch,location)**2
+            else:
+                return self.length(branch,location)*2*pi*self.radius(branch,location)
     
     def branch(self,branch,children=False):
         '''
@@ -232,7 +280,11 @@ class Morphology(object):
                 n0=s['parent']
                 if n0 in self._segments:
                     s0=self._segments[n0]
-                    Ra=Ri*s['length']/(pi*.5*(s0['radius']**2+s['radius']**2))
+                    if s0['type']=='soma':
+                        l=.5*s['length']
+                    else:
+                        l=.5*(s['length']+s0['length']) # connection length
+                    Ra=Ri*l/(pi*.5*(s0['radius']**2+s['radius']**2))
                     eqs.connect(n0,n,Ra)
         return eqs
     
@@ -276,6 +328,6 @@ if __name__=='__main__':
     #morpho.info()
     morpho.insert_current(Current('I=g*(E-vm) : amp/(cm**2)',surfacic=True,
                                   g=1*uF/(cm**2)/(20*ms),E=-75*mV),101,10*um)
-    print morpho.compartment(101,10*um)
+    print morpho[101,10*um]
     model=morpho.equations(Ri=70*ohm*cm)
     
