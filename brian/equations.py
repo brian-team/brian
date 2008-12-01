@@ -446,7 +446,27 @@ class Equations(object):
         # Update variables
         for var in self._diffeq_names_nonzero:
             S[var]+=dt*buffer[var]
-            
+    
+    def forward_euler_code_string(self):
+        '''
+        Generates Python code for a forward Euler step.
+        '''
+        # TODO: check if it can really be frozen
+        # TODO: change /a to *(1/a) with precalculation (use parser)
+        all_variables=self._eq_names+self._diffeq_names+self._alias.keys()+['t']
+        # nonzero? insert dt?
+        vars_tmp=[name+'__tmp' for name in self._diffeq_names]
+        lines=','.join(self._diffeq_names)+'=P._S\n'
+        lines+=','.join(vars_tmp)+'=P._dS\n'
+        for name in self._diffeq_names_nonzero:
+            namespace=self._namespace[name]
+            expr=optimiser.freeze(self._string[name],all_variables,namespace)
+            lines+=name+'__tmp[:]='+expr+'\n'
+        lines+='P._S+=dt*P._dS\n'
+        return lines
+        # Return a function f(P) or a namespace (exec code in namespace)
+        # 1st option: include directly in neurongroup._state_updater (good?)        
+    
     def forward_euler_code(self):
         '''
         Generates Python code for a forward Euler step.
