@@ -15,12 +15,12 @@ from operator import isSequenceType
 from brian.units import ohm,Mohm
 from brian.stdunits import pF,ms,nA,mV,nS
 from brian.neurongroup import NeuronGroup
-from scipy import zeros,array,optimize,mean,arange,diff,rand,exp,sum,convolve
+from scipy import zeros,array,optimize,mean,arange,diff,rand,exp,sum,convolve,eye,linalg,sqrt
 from brian.clock import Clock
 
 __all__=['electrode','current_clamp','voltage_clamp','DCC','SEVC',
          'AcquisitionBoard','AEC','VC_AEC','full_kernel','full_kernel_from_step',
-         'electrode_kernel_soma','electrode_kernel_dendrite']
+         'electrode_kernel_soma','electrode_kernel_dendrite','solve_convolution']
 
 '''
 ------------
@@ -365,6 +365,19 @@ def full_kernel_from_step(V,I):
     '''
     return diff(V)/I
 
+def solve_convolution(K,Km):
+    '''
+    Solves Ke = K - Km * Ke/Re
+    Linear problem
+    '''
+    Re=sum(K)-sum(Km)
+    n=len(Km)
+    A=eye(n)*(1+Km[0]/Re)
+    for k in range(n):
+        for m in range(k):
+            A[k,m]=Km[k-m]/Re
+    return linalg.lstsq(A,K)[0]
+
 def electrode_kernel_dendrite(Karg,start_tail,full_output=False):
     '''
     (For dendritic recordings)
@@ -382,6 +395,7 @@ def electrode_kernel_dendrite(Karg,start_tail,full_output=False):
         Solves Ke = RawK - Km * Ke/Re for a dendritic Km.
         '''
         Kel=RawK-Km
+        # DOES NOT CONVERGE!!
         for _ in range(5): # Iterative solution
             Kel=RawK-convolve(Km,Kel)[:len(Km)]/sum(Kel)
             # NB: Re=sum(Kel) increases after every iteration
@@ -393,12 +407,13 @@ def electrode_kernel_dendrite(Karg,start_tail,full_output=False):
     Ktail=K[tail]
     f=lambda params:params[0]*((tail+1)**-.5)*exp(-params[1]**2*(tail+1))-Ktail
     p,_=optimize.leastsq(f,array([1.,.3]))
+    #print 1./sqrt(abs(p[1])) # problem here!
     Km=p[0]*((t+1)**-.5)*exp(-p[1]**2*(t+1))
     K[tail]=Km[tail]
 
     # Find the minimum
-    z=optimize.fminbound(lambda x:sum(remove_km(K,x*Km)[tail]**2),.5,1.)
-    Ke=remove_km(K,z*Km)
+    z=optimize.fminbound(lambda x:sum(solve_convolution(K,x*Km)[tail]**2),.5,1.)
+    Ke=solve_convolution(K,z*Km)
 
     if full_output:
         return Ke[:start_tail],z*Km
@@ -437,8 +452,8 @@ def electrode_kernel_soma(Karg,start_tail,full_output=False):
     K[tail]=Km[tail]
         
     # Find the minimum
-    z=optimize.fminbound(lambda x:sum(remove_km(K,x*Km)[tail]**2),.5,1.)
-    Ke=remove_km(K,z*Km)
+    z=optimize.fminbound(lambda x:sum(solve_convolution(K,x*Km)[tail]**2),.5,1.)
+    Ke=solve_convolution(K,z*Km)
 
     if full_output:
         return Ke[:start_tail],z*Km
