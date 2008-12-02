@@ -23,6 +23,11 @@ def space_constant(d,Rm,Ri):
     return (d*Rm/Ri)**.5
 
 class Morphology(object):
+    '''
+    Morphology class
+    ----------------
+    
+    '''
     def __init__(self,name=None,Cm=1*uF/(cm**2)):
         '''
         Cm is the specific membrane capacitance
