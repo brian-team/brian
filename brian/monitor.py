@@ -39,7 +39,7 @@ if properly coded.
 '''
 
 __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMonitor','StateMonitor','ISIHistogramMonitor',\
-           'PopulationRateMonitor', 'StateSpikeMonitor']
+           'PopulationRateMonitor', 'StateSpikeMonitor', 'AllStateMonitor']
 
 from units import *
 from connection import Connection
@@ -50,6 +50,7 @@ from network import NetworkOperation
 from quantityarray import *
 import types
 from operator import isSequenceType
+import pylab
 
 # defines and tests the interface, the docstring is considered part of the definition
 def _define_and_test_interface(self):
@@ -723,6 +724,15 @@ class StateMonitor(NetworkOperation,Monitor):
     for the recorded values of neuron ``i`` (if it was specified with the
     ``record`` keyword). It returns a :class:`QuantityArray` object with units. Downcast
     to an array without units by writing ``asarray(M[i])``.
+    
+    Methods:
+    
+    .. method:: plot([indices=None])
+        
+        Plots the recorded values using pylab. You can specify an index or
+        list of indices, otherwise all the recorded values will be plotted.
+        The graph plotted will have legends of the form ``name[i]`` for
+        ``name`` the variable name, and ``i`` the neuron index.
     '''
     times  = property(fget=lambda self:QuantityArray(self._times))
     mean   = property(fget=lambda self:self.unit*QuantityArray(self._mu/self.N))
@@ -844,3 +854,81 @@ class StateMonitor(NetworkOperation,Monitor):
             return [self.record]
         else:
             return self.record
+        
+    def plot(self, indices=None):
+        if indices is None:
+            for i in self.get_record_indices():
+                pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
+        elif isinstance(indices, int):
+            pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
+        else:
+            for i in indices:
+                pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
+
+class AllStateMonitor(NetworkOperation):
+    '''
+    Monitors all state variables of a group
+    
+    This class is a container for multiple :class:`StateMonitor` objects,
+    one for each variable in the group. You can retrieve individual
+    :class:`StateMonitor` objects using ``M[name]`` or retrieve the
+    recorded values using ``M[name, i]`` for neuron ``i``.
+    
+    Methods:
+    
+    ``vars()``
+        Returns the variables
+    ``items()``, ``iteritems()``
+        Returns the pairs (var, mon)
+    ``plot(indices)``
+        Plots all the monitors.
+    
+    Attributes:
+    
+    ``times``
+        The times at which recordings were made.
+    ``monitors``
+        The dictionary of monitors indexed by variable name.
+    
+    Usage::
+        
+        G = NeuronGroup(N, eqs, ...)
+        M = AllStateMonitor(G, record=True)
+        ...
+        run(...)
+        ...
+        plot(M['V'].times, M['V'][0])
+        figure()
+        for name, m in M.iteritems():
+            plot(m.times, m[0], label=name)
+        legend()
+        show()
+    '''
+    def __init__(self, G, **kwds):
+        f = lambda : 0
+        NetworkOperation.__init__(self, f)
+        self.monitors = {}
+        for varname in G.var_index.keys():
+            if isinstance(varname, str):
+                self.monitors[varname] = StateMonitor(G, varname, **kwds)
+        self.contained_objects = self.monitors.values()
+    def __getitem__(self, varname):
+        if isinstance(varname, tuple):
+            varname, i = varname
+            return self.monitors[varname][i]
+        else:
+            return self.monitors[varname]
+    def vars(self):
+        return self.monitors.keys()
+    def iteritems(self):
+        return self.monitors.iteritems()
+    def items(self):
+        return self.monitors.items()
+    def plot(self, indices=None):
+        for k, m in self.monitors.iteritems():
+            m.plot(indices)
+    def get_times(self):
+        return self.monitors.values()[0].times
+    times = property(fget = lambda self:self.get_times())
+    def __call__(self):
+        pass
