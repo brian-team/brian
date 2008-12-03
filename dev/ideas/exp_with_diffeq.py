@@ -9,7 +9,7 @@ if False:
     dz/dt = v*z/tau : 1
     '''
     G = NeuronGroup(1, eqs)
-    M = AllStateMonitor(G, record=True, when='start')
+    M = MultiStateMonitor(G, record=True, when='start')
     G.y = 0
     G.v = 1
     G.x = 0
@@ -27,7 +27,7 @@ if True:
     du/dt=u*u/tau:1
     '''
     G = NeuronGroup(1, eqs)
-    M = AllStateMonitor(G, record=True, when='start')
+    M = MultiStateMonitor(G, record=True, when='start')
     G.y = 1
     G.x = G.y
     G.u = exp(G.y)

@@ -39,7 +39,7 @@ if properly coded.
 '''
 
 __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMonitor','StateMonitor','ISIHistogramMonitor',\
-           'PopulationRateMonitor', 'StateSpikeMonitor', 'AllStateMonitor']
+           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor']
 
 from units import *
 from connection import Connection
@@ -865,14 +865,20 @@ class StateMonitor(NetworkOperation,Monitor):
             for i in indices:
                 pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
 
-class AllStateMonitor(NetworkOperation):
+class MultiStateMonitor(NetworkOperation):
     '''
-    Monitors all state variables of a group
+    Monitors multiple state variables of a group
     
     This class is a container for multiple :class:`StateMonitor` objects,
     one for each variable in the group. You can retrieve individual
     :class:`StateMonitor` objects using ``M[name]`` or retrieve the
     recorded values using ``M[name, i]`` for neuron ``i``.
+
+    Initialised with a group ``G`` and a list of variables ``vars``. If 
+    ``vars`` is omitted then all the variables of ``G`` will be recorded.
+    Any additional keyword argument used to initialise the object will
+    be passed to the individual :class:`StateMonitor` objects (e.g. the
+    ``when`` keyword).
     
     Methods:
     
@@ -893,7 +899,7 @@ class AllStateMonitor(NetworkOperation):
     Usage::
         
         G = NeuronGroup(N, eqs, ...)
-        M = AllStateMonitor(G, record=True)
+        M = MultiStateMonitor(G, record=True)
         ...
         run(...)
         ...
@@ -904,13 +910,14 @@ class AllStateMonitor(NetworkOperation):
         legend()
         show()
     '''
-    def __init__(self, G, **kwds):
-        f = lambda : 0
-        NetworkOperation.__init__(self, f)
+    def __init__(self, G, vars=None, **kwds):
+        NetworkOperation.__init__(self, lambda : None)
         self.monitors = {}
-        for varname in G.var_index.keys():
-            if isinstance(varname, str):
-                self.monitors[varname] = StateMonitor(G, varname, **kwds)
+        if vars is None:
+            vars = [name for name in G.var_index.keys() if isinstance(name,str)]
+        self.vars = vars
+        for varname in vars:
+            self.monitors[varname] = StateMonitor(G, varname, **kwds)
         self.contained_objects = self.monitors.values()
     def __getitem__(self, varname):
         if isinstance(varname, tuple):
