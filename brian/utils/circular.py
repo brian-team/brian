@@ -232,12 +232,15 @@ class SpikeContainer(object):
     def __print__(self):
         return self.__repr__()
 
-if True and os.path.exists(os.path.join(os.path.split(__file__)[0], 'ccircular/_ccircular.pyd')):
+#if True and os.path.exists(os.path.join(os.path.split(__file__)[0], 'ccircular/_ccircular.pyd')):
+try:
     import ccircular.ccircular as _ccircular
     class SpikeContainer(_ccircular.SpikeContainer):
         def __init__(self,n,m,useweave=False,compiler=None):
             _ccircular.SpikeContainer.__init__(self, n, m)
     warnings.warn('Using C++ SpikeContainer')
+except ImportError:
+    pass
 
 # I am not sure that class below is useful!
 class ModInt(object):
