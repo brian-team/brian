@@ -128,7 +128,7 @@ class DelayConnection(Connection):
                 sv = self._delayedreaction[(self._cur_delay_ind+int(self._invtargetdt*self.delayvec[i]))%self._max_delay,:]
                 self.W.add_row(i,sv)
         elif self.delayvec.ndim==2:
-            if False and self._useaccel and isinstance(self.W, SparseSTDPConnectionMatrix) and isinstance(self.delayvec,DenseConnectionMatrix):
+            if self._useaccel and isinstance(self.W, SparseSTDPConnectionMatrix) and isinstance(self.delayvec,DenseConnectionMatrix):
                 if not isinstance(spikes, numpy.ndarray):
                     spikes = array(spikes, dtype=int)
                 rowj = self.W.rowj
