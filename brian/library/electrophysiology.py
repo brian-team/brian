@@ -405,10 +405,10 @@ def electrode_kernel_dendrite(Karg,start_tail,full_output=False):
     t=arange(len(K))
     tail=arange(start_tail,len(K))
     Ktail=K[tail]
-    f=lambda params:params[0]/params[1]*((tail+1)**-.5)*exp(-params[1]**2*(tail+1))-Ktail
-    p,_=optimize.leastsq(f,array([1.,.03]))
-    #print "tau=",1./sqrt(abs(p[1])),"R=",p[0]
-    Km=p[0]/p[1]*((t+1)**-.5)*exp(-p[1]**2*(t+1))
+    f=lambda params:params[0]*((tail+1)**-.5)*exp(-params[1]**2*(tail+1))-Ktail
+    p,_=optimize.leastsq(f,array([1.,.3]))
+    print "tau_dend=",.1/(p[1]**2)
+    Km=p[0]*((t+1)**-.5)*exp(-p[1]**2*(t+1))
     K[tail]=Km[tail]
 
     # Find the minimum
@@ -448,7 +448,7 @@ def electrode_kernel_soma(Karg,start_tail,full_output=False):
     Ktail=K[tail]
     f=lambda params:params[0]*exp(-params[1]**2*(tail+1))-Ktail
     p,_=optimize.leastsq(f,array([1.,.3]))
-    #print "tau=",1./sqrt(abs(p[1]))
+    print "tau=",.1/(p[1]**2)
     Km=p[0]*exp(-p[1]**2*(t+1))
     K[tail]=Km[tail]
     
