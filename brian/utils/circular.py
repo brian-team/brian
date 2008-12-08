@@ -238,7 +238,7 @@ try:
     class SpikeContainer(_ccircular.SpikeContainer):
         def __init__(self,n,m,useweave=False,compiler=None):
             _ccircular.SpikeContainer.__init__(self, n, m)
-    warnings.warn('Using C++ SpikeContainer')
+    #warnings.warn('Using C++ SpikeContainer')
 except ImportError:
     pass
 
