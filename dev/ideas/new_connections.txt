@@ -220,3 +220,106 @@ Issues:
   allowing you to benefit from the data structure with fast
   row access, but still using only as much RAM as you will
   actually use.
+
+Concrete proposal
+-----------------
+
+Classes:
+
+- DenseVector, derived from numpy.ndarray and can be used as one
+- SparseVector, derived from numpy.ndarray and can be used as one
+- ConnectionMatrix
+  + DenseConnectionMatrix
+  		derived from numpy.ndarray (8 bytes per entry)
+  + SparseConnectionMatrix
+  		row based like current system, fast row access, insertion,
+  		no column access. Essentially the same as scipy lil_matrix
+  		which might now be good enough to use unmodified (I think
+  		they replaced the lists with numpy arrays). Uses 12 bytes
+  		per entry.
+  + FixedSparseConnectionMatrix
+        fast row access, column access but no insertion. Similar
+        to scipy csr_matrix but with faster column access (but
+        also with higher memory costs, 16 bytes per entry rather
+        than 12.)
+  + PoolSparseConnectionMatrix
+        row and column access and insertion, but row access slower
+        than the others and uses 20 bytes per entry. I don't think
+        there is a numpy equivalent.
+- Connection
+  + DelayConnection, etc.
+
+Interfaces:
+
+DenseVector and SparseVector are numpy.ndarray and can be used
+without thinking about them, e.g. multiplication, addition, etc.
+
+ConnectionMatrix can be used just like a numpy.ndarray as much
+as possible, but with some extra methods. The basic interface
+would be like this:
+
+class ConnectionMatrix(object):
+    def get_row(self, i):
+    def get_row_sparse(self, i):
+    def get_row_dense(self, i):
+    def get_col(self, i):
+    def get_col_sparse(self, i):
+    def get_col_dense(self, i):
+    def set_row(self, i, x):
+    def set_row_sparse(self, i, ind, data):
+    def set_row_dense(self, i, x):
+    def set_col(self, i, x):
+    def set_col_sparse(self, i, ind, data):
+    def set_col_dense(self, i, x):
+    def set_single(self, i, j, x):
+    def get_single(self, i, j, x):
+    # something like this? haven't worked out syntax yet
+    def insert_in_row_sparse(self, i, ind, data):
+
+However, you would also be able to use standard slice syntax and
+in most cases that would work fine. So W[i,:] would just return
+W.get_row(i), which in turn would either return W.get_row_sparse(i)
+or W.get_row_dense(i) depending on what was more appropriate. The
+other one of the two would just convert the sparse/dense row to the
+other format, i.e. it's basically just a helper function.
+
+We could also have various conversion functions from the scipy sparse
+matrix formats and between our different sparse matrix formats. It
+might be nice to use the scipy formats for construction for example.
+
+Connection would have the same interface as before.
+
+Examples:
+
+Take STDP for example, we have lines like this:
+
+def stdpreset(P, spikes):
+    for i in spikes:
+        synapses[i,:]=clip(synapses[i,:]+neurons.A_post_,0,gmax)
+    P.A_pre_[spikes]+=dA_pre
+
+The crucial line is:
+
+synapses[i,:]=clip(synapses[i,:]+neurons.A_post_,0,gmax)
+
+If we want to allow something like this then we have an issue to decide
+on. If synapses is a dense matrix, then the syntax is fine. However,
+what does it mean if synapses is a sparse matrix? In this case,
+synapses[i,:] is a sparse vector, but neurons.A_post_ is a dense vector.
+Mathematically, synapses[i,:]+neurons.A_post_ ought to be a dense vector
+too, but in this case we know it makes more sense that it should be a
+sparse vector. In particular, if we write x, ind for the values and row
+indices of synapses[i,:] then what we probably want is for
+synapses[i,:]+neurons.A_post_ to be sparse with values
+x+neurons.A_post_[ind] at indices ind. These semantics make sense if we
+think of synapses[i,:] as being a row of a connection matrix specifically
+rather than a vector in general. So perhaps we should call them
+DenseConnectionVector and SparseConnectionVector to emphasise those
+semantics? The other option is that synapses[i,:]+neurons.A_post_ could
+be a dense vector, but then we have to decide what synapses[i,:]=x for
+x a dense vector should mean. It could mean, discard the entries in x
+which do not have a corresponding entry in synapses[i,:], or it could mean
+fill in synapses[i,:] where x is nonzero (i.e. create new synapses). My
+feeling is that creating new synapses ought to always be explicit, and the
+default is to discard values, although obviously that has some odd
+properties too...
