@@ -5,39 +5,52 @@ from itertools import izip
 colon_slice = slice(None,None,None)
 
 class ConnectionVector(object):
-    def __array__(self, dtype=None):
-        return NotImplemented
-    def __len__(self):
-        return NotImplemented
+    pass
+#    def __array__(self, dtype=None):
+#        return NotImplemented
+#    def __len__(self):
+#        return NotImplemented
 
 class DenseConnectionVector(ConnectionVector, numpy.ndarray):
     def __new__(subtype, arr):
-        return numpy.array(arr, dtype=float).view(subtype)
-    def __array__(self, dtype=None):
-        if dtype==None: dtype=self.dtype
-        return numpy.ndarray.__array__(self, dtype)
-    def __str__(self):
-        self = asarray(self)
-        return str(self)
-    def __repr__(self):
-        self = asarray(self)
-        return repr(self)
+        #return numpy.array(arr, dtype=float).view(subtype)
+        return numpy.array(arr).view(subtype)
+#    def __array__(self, dtype=None):
+#        if dtype==None: dtype=self.dtype
+#        return numpy.ndarray.__array__(self, dtype)
+#    def __str__(self):
+#        self = asarray(self)
+#        return str(self)
+#    def __repr__(self):
+#        self = asarray(self)
+#        return repr(self)
 
-class SparseConnectionVector(ConnectionVector):
+class SparseConnectionVector(ConnectionVector, numpy.ndarray):
+    def __new__(subtype, n, ind, data):
+        return numpy.array(data).view(subtype)
     def __init__(self, n, ind, data):
         self.n = n
         self.ind = ind
-        self.data = data
-    def __array__(self, dtype=None):
-        if dtype==None: dtype=float
-        x = numpy.zeros(self.n, dtype=dtype)
-        x[self.ind] = self.data
+    def __array_wrap__(self, obj, context=None):
+        print 'wrapping'
+        if context is not None:
+            ufunc = context[0]
+            args = context[1]
+        x = numpy.ndarray.__array_wrap__(self, obj, context)
+#        if not hasattr(x,'_units') or hasattr(x,'_realunits_implied'):
+#            x._units = self._units
+#            del x._realunits_implied
         return x
-    def __len__(self):
-        return self.n
-    def __str__(self):
-        return 'SparseConnectionVector length '+str(self.n)+', indices='+str(self.ind)+', data='+str(self.data)
-    __repr__ = __str__
+#    def __array__(self, dtype=None):
+#        if dtype==None: dtype=float
+#        x = numpy.zeros(self.n, dtype=dtype)
+#        x[self.ind] = self.data
+#        return x
+#    def __len__(self):
+#        return self.n
+#    def __str__(self):
+#        return 'SparseConnectionVector length '+str(self.n)+', indices='+str(self.ind)+', data='+str(self.data)
+#    __repr__ = __str__
 
 class ConnectionMatrix(object):
     # methods to be implemented by subclass
@@ -315,22 +328,7 @@ class FrozenSparseConnectionMatrix(ConnectionMatrix):
 #        self.alldata[self.coldataindices[j]] = self.colset[self.coli[j]]
 
 if __name__=='__main__':
-    m = FixedNNZSparseConnectionMatrix((2,2),nnzmax=10)
-    m.set_row_sparse(0, [0], [5.])
-    m.set_row_sparse(1, [0, 1], [6., 7.])
-    print array(m)
-    print m.alldata
-    print m.nnz
-#    print m.alli
-#    print m.allj
-    print m.rowj
-    print m.rowdataind
-    print m.coli
-    print m.coldataind
-    print m.get_col_dense(0)
-    print m.get_col_dense(1)
-    m = FrozenSparseConnectionMatrix(m)
-    print array(m)
-    print m.alldata
-    print m.rowj
-    print m.rowdata
+    x = SparseConnectionVector(10, [1,2], [3.,4.])
+    y = randn(10)
+    #print x*x
+    print x+y
