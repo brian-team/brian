@@ -20,7 +20,8 @@ from brian.clock import Clock
 
 __all__=['electrode','current_clamp','voltage_clamp','DCC','SEVC',
          'AcquisitionBoard','AEC','VC_AEC','full_kernel','full_kernel_from_step',
-         'electrode_kernel_soma','electrode_kernel_dendrite','solve_convolution']
+         'electrode_kernel_soma','electrode_kernel_dendrite','solve_convolution',
+         'electrode_kernel']
 
 '''
 ------------
@@ -406,7 +407,16 @@ def electrode_kernel_dendrite(Karg,start_tail,full_output=False):
     tail=arange(start_tail,len(K))
     Ktail=K[tail]
     f=lambda params:params[0]*((tail+1)**-.5)*exp(-params[1]**2*(tail+1))-Ktail
-    p,_=optimize.leastsq(f,array([1.,.3]))
+    #Rtail=sum(Ktail)
+    #g=lambda tau:sum((tail+1)**(-.5)*exp(-(tail+1)/tau))
+    #J=lambda tau:sum(((tail+1)**(-.5)*exp(-(tail+1)/tau)/g(tau)-Ktail/Rtail)**2)
+    p,_=optimize.leastsq(f,array([1.,.03]))
+    #p=optimize.fminbound(J,.1,10000.)
+    #p=optimize.golden(J)
+    
+    #print "tau_dend=",p*.1
+    #Km=(t+1)**(-.5)*exp(-(t+1)/p)*Rtail/g(p)
+    
     print "tau_dend=",.1/(p[1]**2)
     Km=p[0]*((t+1)**-.5)*exp(-p[1]**2*(t+1))
     K[tail]=Km[tail]
@@ -442,17 +452,61 @@ def electrode_kernel_soma(Karg,start_tail,full_output=False):
             # NB: Re=sum(Kel) increases after every iteration
         return Kel
 
-    # Fit of the tail to a dendritic kernel to find the membrane time constant
+    # Fit of the tail to a somatic kernel to find the membrane time constant
     t=arange(len(K))
     tail=arange(start_tail,len(K))
     Ktail=K[tail]
     f=lambda params:params[0]*exp(-params[1]**2*(tail+1))-Ktail
     p,_=optimize.leastsq(f,array([1.,.3]))
-    print "tau=",.1/(p[1]**2)
     Km=p[0]*exp(-p[1]**2*(t+1))
+    print "tau_soma=",.1/(p[1]**2)
+
     K[tail]=Km[tail]
+
+    # Find the minimum
+    z=optimize.fminbound(lambda x:sum(solve_convolution(K,x*Km)[tail]**2),.5,1.)
+    Ke=solve_convolution(K,z*Km)
+    print "R=",sum(z*p[0]*exp(-p[1]**2*(arange(1000)+1)))
+
+    if full_output:
+        return Ke[:start_tail],z*Km
+    else:
+        return Ke[:start_tail]
+
+def electrode_kernel(Karg,start_tail,full_output=False):
+    '''
+    Extracts the electrode kernel Ke from the raw kernel K
+    by removing the membrane kernel, estimated from the
+    indexes >= start_tail of the raw kernel.
+    full_output = returns Ke,Km if True (otherwise Ke)
+    (Ke=electrode filter, Km=membrane filter)
     
-    print 'R=',sum(p[0]*exp(-p[1]**2*(arange(15000)+1)))
+    Finds automatically whether to use dendritic or somatic kernel.
+    '''
+
+    K=Karg.copy()
+    
+    # Fit of the tail to a somatic kernel to find the membrane time constant
+    t=arange(len(K))
+    tail=arange(start_tail,len(K))
+    Ktail=K[tail]
+    f=lambda params:params[0]*exp(-params[1]**2*(tail+1))-Ktail
+    p,_=optimize.leastsq(f,array([1.,.3]))
+    Km_soma=p[0]*exp(-p[1]**2*(t+1))
+
+    f=lambda params:params[0]*((tail+1)**-.5)*exp(-params[1]**2*(tail+1))-Ktail
+    p,_=optimize.leastsq(f,array([1.,.03]))    
+    Km_dend=p[0]*((t+1)**-.5)*exp(-p[1]**2*(t+1))
+
+    if sum((Km_soma[tail]-Ktail)**2)<sum((Km_dend[tail]-Ktail)**2):
+        print "Somatic kernel"
+        Km=Km_soma
+    else:
+        print "Dendritic kernel"
+        Km=Km_dend
+
+    K[tail]=Km[tail]
+
     # Find the minimum
     z=optimize.fminbound(lambda x:sum(solve_convolution(K,x*Km)[tail]**2),.5,1.)
     Ke=solve_convolution(K,z*Km)
