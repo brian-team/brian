@@ -6,6 +6,8 @@ In all functions below, spikes is a sorted list of spike times
 from numpy import diff,std,mean,array,dot,ones,arange,histogram
 from brian.stdunits import ms
 
+__all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF','total_correlation']
+
 # First-order statistics
 def firing_rate(spikes):
     '''

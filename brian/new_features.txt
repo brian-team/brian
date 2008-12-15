@@ -1,5 +1,7 @@
 New features since 1.0.0
 ------------------------
+* Spike train statitics (utils.statistics)
+* Miscellaneous optimisations
 
 New features since 1.0.0 rc5
 ----------------------------
