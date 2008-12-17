@@ -41,7 +41,7 @@ from neurongroup import NeuronGroup
 from equations import Equations
 from scipy.special import erf
 from scipy.optimize import newton
-from scipy import exp,pi,linalg,diag,isreal,array,dot
+from scipy import exp,pi,linalg,diag,isreal,array,dot,sqrt
 from units import check_units,hertz,second
 from utils.circular import SpikeContainer
 from brian import poisson,binomial,rand,exponential,qarray
@@ -142,7 +142,11 @@ def decompose_correlation_matrix(C,R):
     # 3) Complete the diagonal with alpha*ri^2
     #alpha=alpha+.01; // avoids bad conditioning problems (uncomment if Cholesky fails)
     C+=diag(alpha*D)
-    return linalg.cholesky(C,lower=1)
+    
+    # 4) Calculate a square root (Cholesky is unstable, use singular value decomposition)
+    #return linalg.cholesky(C,lower=1)
+    U,S,V=linalg.svd(C)
+    return (U*sqrt(S)*V.T)
 
 class CorrelatedSpikeTrains(NeuronGroup):
     '''
