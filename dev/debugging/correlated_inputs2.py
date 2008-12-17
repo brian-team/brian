@@ -8,7 +8,7 @@ from brian.utils.statistics import *
 
 N=2
 r0=15*Hz+20*rand(N)*Hz # rates
-C=150*(5+rand(N,N))*Hz**2 # correlation matrix
+C=50*rand(N,N)*Hz**2 # correlation matrix
 C=C+C.T
 input=CorrelatedSpikeTrains(N,rates=r0,C=C,tauc=10*ms)
 
