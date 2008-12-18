@@ -1,6 +1,13 @@
 '''
 Tk interface
 From http://www.pythonware.com/library/tkinter/introduction/hello-again.htm
+
+Idea: extend the Parameters class to generate interfaces with load/save abilities
+Maybe use configparser? (and take care of units)
+
+Suggestion:
+* use wxpython
+* editors: wxglade, boa, pythoncard
 '''
 from Tkinter import *
 
