@@ -35,6 +35,12 @@
 '''
 Generation of correlated spike trains.
 Based on the article: Brette, R. (2008). Generation of correlated spike trains.
+http://www.di.ens.fr/~brette/papers/Brette2008NC.html
+
+The models for correlated spike trains are from the paper
+but the implemented algorithms are simple ones.
+
+See brian.utils.statistics for correlograms.
 '''
 from threshold import PoissonThreshold,HomogeneousPoissonThreshold
 from neurongroup import NeuronGroup
@@ -99,6 +105,7 @@ class HomogeneousCorrelatedSpikeTrains(NeuronGroup):
         r = rate (Hz)
         c = total correlation strength (in [0,1])
         tauc = correlation time constant (ms)
+        Cross-covariance functions are c*exp(-|s|/tauc)
         '''
         self.N=N
         # Correction of mu and sigma
@@ -146,14 +153,13 @@ def decompose_correlation_matrix(C,R):
     # 4) Calculate a square root (Cholesky is unstable, use singular value decomposition)
     #return linalg.cholesky(C,lower=1)
     U,S,V=linalg.svd(C)
-    return (U*sqrt(S)*V.T)
+    return dot(dot(U,sqrt(diag(S))),V.T)
 
 class CorrelatedSpikeTrains(NeuronGroup):
     '''
     Correlated spike trains with arbitrary rates and pair-wise exponential correlations.
     Uses Cox processes (Ornstein-Uhlenbeck).
     P.rate is the vector of (time-varying) rates.
-    TO BE TESTED
     '''
     @check_units(tauc=second)
     def __init__(self,N,rates,C,tauc,clock=None):
@@ -162,6 +168,7 @@ class CorrelatedSpikeTrains(NeuronGroup):
         rates = rates (Hz)
         C = correlation matrix
         tauc = correlation time constant (ms)
+        Cross-covariance functions are C[i,j]*exp(-|s|/tauc)
         '''
         eq=Equations('''
         rate : Hz

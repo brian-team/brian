@@ -7,8 +7,8 @@ from brian.correlatedspikes import *
 from brian.utils.statistics import *
 
 N=2
-r0=15*Hz+20*rand(N)*Hz # rates
-C=50*rand(N,N)*Hz**2 # correlation matrix
+r0=25*Hz+30*rand(N)*Hz # rates
+C=500*rand(N,N)*Hz**2 # correlation matrix
 C=C+C.T
 input=CorrelatedSpikeTrains(N,rates=r0,C=C,tauc=10*ms)
 
@@ -21,4 +21,5 @@ plot(CCVF(S[0],S[1],width=20*ms,bin=1*ms,T=duration))
 subplot(212)
 plot(CCF(S[0],S[1],width=20*ms,bin=1*ms,T=duration))
 print C[0,1],r0[0],r0[1]
+print total_correlation(S[0],S[1])
 show()
