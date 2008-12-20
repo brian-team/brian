@@ -64,6 +64,9 @@ paper='Brette, R. (2008). Generation of correlated spike trains. Neural Computat
 url='http://www.di.ens.fr/~brette/papers/Brette2008NC.html'
 )
 
+"""
+Utility functions
+"""
 def rectified_gaussian(mu,sigma):
     '''
     Calculates the mean and standard deviation for a rectified Gaussian distribution.
@@ -93,6 +96,10 @@ def inv_rectified_gaussian(mur,sigmar):
     
     return (mu,sigma)
 
+"""
+Doubly stochastic processes (Cox processes).
+Good for long correlation time constants.
+"""
 class HomogeneousCorrelatedSpikeTrains(NeuronGroup):
     '''
     Correlated spike trains with identical rates and homogeneous exponential correlations.

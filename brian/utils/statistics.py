@@ -112,18 +112,30 @@ def ACVF(T0,width=20*ms,bin=1*ms,T=None):
     '''
     return CCVF(T0,T0,width,bin,T)
 
-def total_correlation(T1,T2,width=20*ms,bin=1*ms,T=None):
+def total_correlation(T1,T2,width=20*ms,T=None):
     '''
     Returns the total correlation coefficient with lag in [-width,width].
     T is the total duration (optional).
     The result is a real (typically in [0,1]):
     total_correlation(T1,T2)=int(CCVF(T1,T2))/rate(T1)
-
-    N.B.: units are discarded.
-    
-    TODO: more direct calculation
     '''
-    return float(bin*sum(CCVF(T1,T2,width,bin,T))/firing_rate(T1))
+    # Remove units
+    width=float(width)
+    T1=array(T1)
+    T2=array(T2)
+    # Divide by time to get rate
+    if T is None:
+        T=max(T1[-1],T2[-1])-min(T1[0],T2[0])
+    i=0
+    j=0
+    x=0
+    for t in T1:
+        while i<len(T2) and T2[i]<t-width: # other possibility use searchsorted
+            i+=1
+        while j<len(T2) and T2[j]<t+width:
+            j+=1
+        x+=sum(1./(T-abs(T2[i:j]-t))) # counts coincidences with windowing (probabilities)
+    return float(x/firing_rate(T1))-float(firing_rate(T2)*2*width)
 
 if __name__=='__main__':
     from brian import *
