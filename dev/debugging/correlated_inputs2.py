@@ -6,7 +6,7 @@ from brian import *
 from brian.correlatedspikes import *
 from brian.utils.statistics import *
 
-N=2
+N=10
 r0=25*Hz+30*rand(N)*Hz # rates
 C=500*rand(N,N)*Hz**2 # correlation matrix
 C=C+C.T
