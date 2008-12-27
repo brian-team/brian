@@ -54,7 +54,7 @@ from brian import poisson,binomial,rand,exponential,qarray
 from random import sample
 
 __all__=['rectified_gaussian','inv_rectified_gaussian','HomogeneousCorrelatedSpikeTrains',\
-         'CorrelatedSpikeTrains','mixture_process']
+         'CorrelatedSpikeTrains','mixture_process','find_mixture']
 
 # Contributor information
 __credits__=dict(
