@@ -18,7 +18,7 @@ def reset_STP(P,spikes):
     P.R_[spikes]-=U_SE*P.R_[spikes]
     P.v_[spikes]=-60*mV
 
-P=NeuronGroup(4000,model=eqs,threshold=-50*mV,reset=reset_STP)
+P=NeuronGroup(4000,model=eqs,threshold=-50*mV,reset="R-=U_SE*R;v=-60*mV")
 P.v=-60*mV+rand(4000)*10*mV
 P.R=1
 Pe=P.subgroup(3200)

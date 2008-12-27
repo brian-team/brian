@@ -50,7 +50,7 @@ def get_identifiers(expr):
     expression (string).
     '''
     # cleaner: parser.expr(expr).tolist() then find leaves of the form [1,name]
-    return parser.expr(expr).compile().co_names
+    return parser.suite(expr).compile().co_names
 
 def fill_vars(f,keepnamespace=False,*varnames):
     '''

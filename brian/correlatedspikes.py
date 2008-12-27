@@ -46,8 +46,8 @@ from threshold import PoissonThreshold,HomogeneousPoissonThreshold
 from neurongroup import NeuronGroup
 from equations import Equations
 from scipy.special import erf
-from scipy.optimize import newton
-from scipy import exp,pi,linalg,diag,isreal,array,dot,sqrt
+from scipy.optimize import newton,fmin_tnc
+from scipy import *
 from units import check_units,hertz,second
 from utils.circular import SpikeContainer
 from brian import poisson,binomial,rand,exponential,qarray
@@ -169,7 +169,7 @@ class CorrelatedSpikeTrains(NeuronGroup):
     P.rate is the vector of (time-varying) rates.
     '''
     @check_units(tauc=second)
-    def __init__(self,N,rates,C,tauc,clock=None):
+    def __init__(self,rates,C,tauc,clock=None):
         '''
         Initialization:
         rates = rates (Hz)
@@ -181,7 +181,7 @@ class CorrelatedSpikeTrains(NeuronGroup):
         rate : Hz
         dy/dt = -y*(1./tauc)+xi/(.5*tauc)**.5 : 1
         ''')
-        NeuronGroup.__init__(self,N,model=eq,threshold=PoissonThreshold(),\
+        NeuronGroup.__init__(self,len(rates),model=eq,threshold=PoissonThreshold(),\
                              clock=clock)
         self._R=array(rates)
         self._L=decompose_correlation_matrix(array(C),self._R)
@@ -190,7 +190,71 @@ class CorrelatedSpikeTrains(NeuronGroup):
         # Calculate rates
         self.rate_=self._R+dot(self._L,self.y_)
         NeuronGroup.update(self)
-        
+
+row_vector=lambda V:V.reshape(1,len(V))
+column_vector=lambda V:V.reshape(len(V),1)
+
+def homogeneous_mixture(R,c):
+    '''
+    Returns a mixture (nu,P) for a homogeneous synchronization structure:
+    C(i,j)=2*c*(R(i)*R(j))/<R>
+    '''
+    pass
+
+def find_mixture(R,C,iter=10000):
+    '''
+    Finds a mixture matrix P and source rate vector nu
+    from the correlation matrix C and the target rates R.
+    Returns nu,P.
+    
+    Gradient descent.
+    TODO: use Scipy optimization algorithms.
+    '''
+    N=len(R)
+  
+    # Steps
+    b=0.1/N
+    a=b/N
+  
+    # Initial value: here such that F=0
+    P=eye(N)
+    R=column_vector(R)
+    nu=row_vector(R)
+  
+    for _ in xrange(iter):
+        # Compute error
+        Q=dot(P,diag(sqrt(nu.flatten())))
+        C2=dot(Q,Q.T)
+        E=linalg.norm(C-C2-diag(diag(C-C2)),'fro')
+        F=sum(clip(dot(P,nu.T)-R,0,Inf))
+        A=-(C-C2-diag(diag(C-C2)))
+    
+        #print "E=",E,"F=",F,"Etot=",E*a+F*b
+    
+        # Gradient in E
+        dPE=4*dot(dot(A,P),diag(nu.flatten()))
+        dNuE=row_vector(2*diag(dot(dot(P.T,A),P)))
+    
+        # Gradient in F
+        HF=(dot(P,nu.T)-R)>0
+        dNuF=dot(HF.T,P)
+        dPF=dot(HF,nu)
+    
+        # One step of gradient descent
+        P=P-a*dPE-b*dPF
+        nu=nu-a*dNuE-b*dNuF
+    
+        # Clipping
+        nu=clip(nu,0,Inf)
+        P=clip(P,0,1)    
+  
+    # Now we complete
+    nu=hstack((nu,(R-dot(P,nu.T)).T))
+    P=hstack((P,eye(N)))
+    print E,F
+
+    return nu,P
+
 def mixture_process(nu,P,tauc,t):
     '''
     Generate correlated spike trains from a mixture process.
@@ -217,3 +281,13 @@ def mixture_process(nu,P,tauc,t):
                 selection=sample(spikes,m)+qarray(exponential(tauc,m))*second
                 result.extend(zip([i]*m,selection))
     return result
+
+if __name__=='__main__':
+    from time import time
+    R=2+rand(5)
+    C=rand(5,5)
+    C=.5*(C+C.T)
+    t1=time()
+    nu,P=find_mixture(R,C)
+    t2=time()
+    print t2-t1

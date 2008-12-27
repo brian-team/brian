@@ -1,5 +1,7 @@
 New features since 1.0.0
 ------------------------
+
+* Reset and threshold can be specified with strings (Python expressions)
 * Spike train statitics (utils.statistics)
 * Miscellaneous optimisations
 

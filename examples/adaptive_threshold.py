@@ -8,13 +8,9 @@ dv/dt = -v/(10*ms) : volt
 dvt/dt = (10*mV-vt)/(15*ms) : volt
 '''
 
-def myreset(P, spikes):
-    P.v[spikes]=0*mV
-    P.vt[spikes]+=3*mV
-    
 IF = NeuronGroup(1, model=eqs,
-        reset=myreset,
-        threshold=lambda v,vt:v>=vt)
+        reset='v=0*mV;vt+=3*mV',
+        threshold='v>vt')
 IF.rest()
 PG = PoissonGroup(1, 500*Hz)
 

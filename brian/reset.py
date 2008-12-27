@@ -37,11 +37,14 @@ Reset mechanisms
 '''
 
 __all__=['Reset','VariableReset','Refractoriness','NoReset','FunReset',
-         'CustomRefractoriness', 'SimpleCustomRefractoriness']
+         'CustomRefractoriness', 'SimpleCustomRefractoriness','StringReset']
 
 from numpy import where, zeros
 from units import *
 from clock import *
+import inspect
+import re
+from inspection import *
 
 def _define_and_test_interface(self):
     """
@@ -181,6 +184,39 @@ class Reset(object):
         
     def __repr__(self):
         return 'Reset '+str(self.resetvalue)
+
+class StringReset(Reset):
+    '''
+    A reset specified by a string expression.
+    '''
+    def __init__(self,expr,level=0):
+        # Build the namespace
+        frame=inspect.stack()[level+1][0]
+        global_namespace,local_namespace=frame.f_globals,frame.f_locals
+        # Find external objects
+        vars=list(get_identifiers(expr))
+        self._namespace={}
+        self._vars=[] # neuron group variables
+        for var in vars:
+            if var in local_namespace: #local
+                self._namespace[var]=local_namespace[var]
+            elif var in global_namespace: #global
+                self._namespace[var]=global_namespace[var]
+            elif var in globals(): # typically units
+                self._namespace[var]=globals()[var]
+            else: # assume it is a neuron group variable
+                self._vars.append(var)
+                expr=re.sub("\\b"+var+"\\b",var+'[_spikes_]',expr)
+        self._code=compile(expr,"StringReset","exec")
+        
+    def __call__(self,P):
+        self._namespace['_spikes_']=P.LS.lastspikes()
+        for var in self._vars:
+            self._namespace[var]=P.state(var)
+        exec self._code in self._namespace
+
+    def __repr__(self):
+        return "String reset"
 
 class VariableReset(Reset):
     '''

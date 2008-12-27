@@ -18,11 +18,7 @@ dR/dt=(1-R)/tau_rec : 1
 rate : Hz
 '''
 
-def reset_STP(P,spikes):
-    P.R_[spikes]-=U_SE*P.R_[spikes]
-    P.x[spikes]=0
-    
-input=NeuronGroup(N,model=eqs,threshold=1.,reset=reset_STP)
+input=NeuronGroup(N,model=eqs,threshold=1.,reset="R-=U_SE*R;x=0")
 MR=StateMonitor(input,'R',record=[0,N-1])
 input.R=1
 input.rate=linspace(5*Hz,30*Hz,N)

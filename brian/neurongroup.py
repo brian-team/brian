@@ -205,6 +205,18 @@ class NeuronGroup(magic.InstanceTracker):
             else:
                 model = Equations(model, level=1)        
 
+        if isinstance(threshold,str):
+            if bup.use_units:
+                threshold = StringThreshold(threshold, level=2)
+            else:
+                threshold = StringThreshold(threshold, level=1)
+
+        if isinstance(reset,str):
+            if bup.use_units:
+                reset = StringReset(reset, level=2)
+            else:
+                reset = StringReset(reset, level=1)
+
         # Clock
         clock=guess_clock(clock)#not needed with protocol checking
         self.clock=clock 

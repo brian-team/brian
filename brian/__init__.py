@@ -40,6 +40,7 @@ __docformat__ = "restructuredtext en"
 
 from scipy import *
 from pylab import *
+if 'x' in globals(): del x # for some reason x is defined as 'symlog' by pylab!
 
 from clock import *
 from connection import *

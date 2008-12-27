@@ -10,10 +10,10 @@ N=10
 r0=25*Hz+30*rand(N)*Hz # rates
 C=500*rand(N,N)*Hz**2 # correlation matrix
 C=C+C.T
-input=CorrelatedSpikeTrains(N,rates=r0,C=C,tauc=10*ms)
+input=CorrelatedSpikeTrains(rates=r0,C=C,tauc=10*ms)
 
 S=SpikeMonitor(input)
-duration=200*second
+duration=20*second
 run(duration)
 
 subplot(211)
