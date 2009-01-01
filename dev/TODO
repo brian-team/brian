@@ -1,0 +1,50 @@
+* Cluster computing
+Idea: use pypar, it seems really simple to use
+http://datamining.anu.edu.au/~ole/pypar/
+
+* Compound linear/nonlinear state updaters?
+For example, often there is a linear and nonlinear part of the equation,
+e.g. dv/dt is nonlinear, but you have some auxiliary variables to define
+an alpha synapse that can be considered separately and are linear.
+
+* Better LinearStateUpdater
+In most cases, the update matrix is degenerate only because of the parameters.
+It would be better to take care of this directly (separate dynamical variables
+and parameters, and calculate the matrix).
+Other thing: use A**100 instead of 100 time steps.
+
+* Add MultiLinearStateUpdater to Brian
+Need to decide what the syntax should be, e.g. could have specification of constant
+parameters in the Equations, e.g.
+eqs = '''
+dV/dt = -V/tau : volt
+const tau : second
+'''
+At first this would only be used by MultiLinearStateUpdater
+but in principle could also be used by nonlinear mechanisms for better optimisation.
+
+* refractory can be a vector
+refractory shouldn't have to be a constant for the group.
+
+* specify weight matrix in Connection init
+e.g.
+C = Connection(G, H, 'V', random_connectivity(p=0.1, weight=1*mV))
+or
+C = Connection(G, H, 'V', weight=1*mV, p=0.1)
+
+* STP
+Short term plasticity (Tsodyks Markram). Should be easy
+(but maybe an event-driven implementation would be nice).
+
+* Why is t a vector?
+Figure out why group.t is a vector. It might have to do with units.
+
+* Heterogeneous delays
+
+* Use the GPU: complete project with TechX to use GPU accelerated versions of code.
+
+* Meaningful error messages: Improve catching of errors and usefulness of error messages
+
+* STDP
+
+* New connection matrices

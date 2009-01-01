@@ -1,0 +1,21 @@
+BEP-3: Quality tools
+Abstract: to set up a series of quality tools (scripts) to ensure the quality of the
+code, such as style, test and documentation coverage, efficiency tests.
+
+Available tools
+---------------
+* pylint, pychecker, pymetrics, pyflakes
+
+Tests
+-----
+* Have an additional separate module with user-defined tests? (or more global tests)
+* Handling bugs: write failing tests. When the bug is solved, the test passes and can be
+added to the test suite.
+
+Style
+-----
+* Style checker (e.g. from brian import * and check all globals)
+
+Miscellaneous ideas
+-------------------
+* Write a guide for developers

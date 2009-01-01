@@ -414,7 +414,8 @@ class Network(object):
     def update(self):
         for f in self._update_schedule[id(self.clock)]:
             f()
-    
+
+    """
     def update_threaded(self,queue):
         '''
         EXPERIMENTAL (not useful for the moment)
@@ -429,12 +430,11 @@ class Network(object):
         # Propagate spikes
         for C in self.connections:
             C.propagate(C.source.get_spikes(C.delay))
-            if isinstance(C,STDPConnection):
-                C.backpropagate(C.target.get_spikes(C.delay))
             
         # Miscellanous operations
         for op in self.operations:
             op()
+    """
         
     def run(self,duration,threads=1):
         '''

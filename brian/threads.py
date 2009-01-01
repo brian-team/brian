@@ -41,12 +41,11 @@ Goal: speed-up with dual core machines.
 For the moment the threads seem to run on the same processor
 (I don't know how to change this behaviour). 
 '''
-from threading import Thread
-from Queue import Queue
+from multiprocessing import Process,Queue
 
 __all__=['GroupUpdater']
    
-class GroupUpdater(Thread):
+class GroupUpdater(Process):
     '''
     An object that updates groups.
     Groups are fed into a queue by the main thread.
@@ -54,9 +53,9 @@ class GroupUpdater(Thread):
     gets groups to update from the queue.
     '''
     def __init__(self,queue):
-        Thread.__init__(self)
-        self.queue=queue
-        
+        Process.__init__(self)
+        self.queue=queue   
+          
     def run(self):
         P=0
         while P!=None:

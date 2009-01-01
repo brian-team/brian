@@ -1,0 +1,9 @@
+BEP-0
+
+Brian Enhanced Proposals (BEPs) propose new features with implementation specifications.
+
+See http://www.python.org/dev/peps/ and particularly
+http://www.python.org/dev/peps/pep-0001/
+for explanations and format guidelines for enhancement proposals.
+
+Closed BEPs go to the closed folder and can serve for the documentation.
