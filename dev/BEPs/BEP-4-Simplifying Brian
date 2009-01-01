@@ -1,0 +1,40 @@
+BEP-4: Simplifying Brian
+Abstract: This BEP proposes to simplify Brian's code by moving some classes to an "obsolete"
+folder.
+
+In order to make the code more readable and also to simplify the syntax of Brian, I propose
+a number of simplifications. Removed classes should be put in an "obsolete" folder so as to
+keep backward compatibility while simplifying the code. A "deprecated" warning could be raised
+when those classes are used (see http://seewhatever.de/blog/?p=161).
+
+First, the standard structure of a model is
+equations + threshold + reset,
+where the threshold is a Python expression evaluating to a boolean
+and reset a series of Python statements.
+
+Threshold
+---------
+StringThreshold should be the standard mechanism. Obsolete classes:
+* NoThreshold
+* FunThreshold
+* SimpleFunThreshold
+* VariableThreshold
+
+PoissonThreshold and EmpiricalThreshold could also be replaced by or supplemented
+with versions with expressions,
+where PoissonThreshold expressions should return a vector of 0..1 values.
+
+Reset
+-----
+StringReset should be the standard mechanism. Obsolete classes:
+* VariableReset
+* FunReset
+* NoReset
+
+Model
+-----
+Is the Model class really useful? (neuronmodel module)
+
+quantityarray
+-------------
+We could move it the obsolete folder.

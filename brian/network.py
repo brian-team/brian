@@ -38,7 +38,6 @@ Network class
 __all__ = ['Network','MagicNetwork','NetworkOperation','network_operation','run','reinit','stop']
 
 from Queue import Queue
-from threads import *
 from connection import *
 from neurongroup import NeuronGroup
 from clock import guess_clock,Clock

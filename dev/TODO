@@ -1,3 +1,5 @@
+* Unit checking in string resets and thresholds
+
 * Cluster computing
 Idea: use pypar, it seems really simple to use
 http://datamining.anu.edu.au/~ole/pypar/
@@ -32,10 +34,6 @@ C = Connection(G, H, 'V', random_connectivity(p=0.1, weight=1*mV))
 or
 C = Connection(G, H, 'V', weight=1*mV, p=0.1)
 
-* STP
-Short term plasticity (Tsodyks Markram). Should be easy
-(but maybe an event-driven implementation would be nice).
-
 * Why is t a vector?
 Figure out why group.t is a vector. It might have to do with units.
 
@@ -44,7 +42,5 @@ Figure out why group.t is a vector. It might have to do with units.
 * Use the GPU: complete project with TechX to use GPU accelerated versions of code.
 
 * Meaningful error messages: Improve catching of errors and usefulness of error messages
-
-* STDP
 
 * New connection matrices

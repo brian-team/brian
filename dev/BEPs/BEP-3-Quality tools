@@ -1,10 +1,13 @@
 BEP-3: Quality tools
-Abstract: to set up a series of quality tools (scripts) to ensure the quality of the
-code, such as style, test and documentation coverage, efficiency tests.
+Abstract: We should set up a series of quality tools (scripts) to ensure the quality of the
+code, such as style, test and documentation coverage, efficiency tests (benchmarks).
+This would be very useful if we want to welcome new developers.
 
 Available tools
 ---------------
 * pylint, pychecker, pymetrics, pyflakes
+* In Eclipse: run as code coverage + code coverage results view
+* In Eclipse: pylint (in Pydev preferences). I could not install it yet...
 
 Tests
 -----
@@ -19,3 +22,4 @@ Style
 Miscellaneous ideas
 -------------------
 * Write a guide for developers
+* Automatically find obsolete functions/classes (unused ones)
