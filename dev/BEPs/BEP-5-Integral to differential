@@ -1,0 +1,37 @@
+BEP-5: Integral to differential
+Abstract: This BEP proposes a function to find the linear differential system
+associated to a given impulse response (e.g. PSPs, PSCs, STDP rules...).
+
+Example: g(t)=t*exp(-t/tau)
+should be converted to:
+dg/dt=(x-g)/tau
+dx/dt=-x/tau
+with appropriate scaling, and the initial condition x=1,g=0 at time t=0.
+
+Idea: use the automatic differentiation to calculate d^ng/dt^n and calculate the rank
+of a set of vectors g^{(n)}(t_i) to find the dimension. Then use e.g. least square
+minimization to find the matrix.
+Issue: this does not work if there are free variables (e.g. tau).
+
+Implementation proposal:
+eqs=equations("g(t)=t*exp(-t/tau)") # returns Equations or string object
+# I couldn't find a proper name for the function!
+
+The differential system contains variables g and g_in and is such that the solution
+with initial condition g_in=1 and x=0 for all other variables is such that g(t) matches
+the given expression.
+How to do it:
+* A duration T is passed (typically a few times tau)
+* re matching to extract g, t (time variable) and the RHS expression
+* conversion to a function of t
+* nth-derivatives of g are calculated with automatic differentiation
+* N points are randomly drawn in [0,T] and N vectors are calculated, each vector
+holds the value of g^{(i)}(t_j).
+* The rank is calculated as follows: calculate the best LSQ approximation of g{(n)} as
+a function of g^i (i<n). When the residual error does not change significantly from n to n+1, 
+then the rank is n.
+* A matrix A has been found such that dX/dt=AX, where x_0=g and x_i=g^{(i)}. In fact
+the matrix is such that for i<n-1, a_ii+1=1 and a_ij=0 otherwise. The last row comes from
+the LSQ calculation.
+* Now a change of variables must be done so that variable x_0 is unchanged and the solution
+matches the initial condition problem [TO FINISH].
