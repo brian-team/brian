@@ -7,8 +7,8 @@ TODO:
 * better function name
 * units
 * return string or Equations object
-* direct calculation of PAP-1
 * discrete time version
+* rescale X0 to avoid numerical problems
 '''
 import re
 import inspect
@@ -69,7 +69,7 @@ def integral2differential(expr,T=20*ms,level=0,N=20):
     
     # Find initial condition
     X0=array([differentiate(f,0*ms,order=n) for n in range(rank)])
-
+    
     # Build A
     A=diag(ones(rank-1),1)
     A[-1,:]=oldx.reshape(1,rank)
@@ -80,12 +80,15 @@ def integral2differential(expr,T=20*ms,level=0,N=20):
         Q[:,-1]=X0
         nvar=rank-1
         w=1.
+        # Exact inversion
+        P=eye(rank)
+        P[:-1,-1]=-X0[:-1]/X0[-1] # Has to be !=0 !!
+        P[-1,-1]=1./X0[-1]
     else: # discontinuous g, spikes act on first variable: x->x+g(0)
         Q[:,0]=X0
         nvar=0
-        w=X0[0]
-        
-    P=linalg.inv(Q)
+        w=X0[0]        
+        P=linalg.inv(Q)
     
     return dot(dot(P,A),Q),nvar,w
     
@@ -94,11 +97,11 @@ if __name__=='__main__':
     from scipy import linalg
     tau=10*ms
     tau2=5*ms
-    freq=300*Hz
+    freq=350*Hz
     # The gammatone example does not seem to work for higher orders
-    # - the program probably stops at an early rank
-    #f=lambda t:(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)
-    #A,nvar,w=integral2differential('g(t)=(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)')
+    # probably a numerical problem; use a rescaling matrix for X0?
+    f=lambda t:(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)
+    A,nvar,w=integral2differential('g(t)=(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)')
     #f=lambda t:exp(-t/tau)-exp(-t/tau2)*cos(2*pi*t/tau)
     #A,nvar,w=integral2differential('g(t)=exp(-t/tau)-exp(-t/tau2)*cos(2*pi*t/tau)')
     print A,nvar,w
