@@ -1,6 +1,7 @@
 BEP-5: Integral to differential
 Abstract: This BEP proposes a function to find the linear differential system
 associated to a given impulse response (e.g. PSPs, PSCs, STDP rules...).
+Experimental module: experimental/integrodiff
 
 Example: g(t)=t*exp(-t/tau)
 should be converted to:
@@ -14,6 +15,7 @@ minimization to find the matrix.
 Issue: this does not work if there are free variables (e.g. tau).
 
 Implementation proposal:
+------------------------
 eqs=equations("g(t)=t*exp(-t/tau)") # returns Equations or string object
 # I couldn't find a proper name for the function!
 
@@ -36,6 +38,11 @@ the LSQ calculation.
 * The initial condition is found by calculating the derivatives at time 0.
 * Now a change of variables must be done so that variable x_0 is unchanged and the solution
 matches the initial condition problem, i.e., such that Y0=PX0, with X0 the initial
-condition in the original system and Y0 in the new system.
-
-Remark: check the Wronskian (proof).
+condition in the original system and Y0 in the new system. It can be easily seen that the
+change of variable is such that the last column of P^{-1} is X0, and the first row is
+(1,0,...), implying in particular that g(0)=0 (except for 1-dimensional systems, e.g.,
+g(t)=exp(-t/tau)). Any such (invertible) P will work.
+* If g(0)!=0, then the initial condition should be x_0=g(0) and all other variables are null
+at time 0. It follows that the first column of P^{-1} is X0 and the first row is
+(g(0),0,...).
+* A is replaced by PAP^{-1}.
