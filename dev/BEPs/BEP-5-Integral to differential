@@ -33,5 +33,9 @@ then the rank is n.
 * A matrix A has been found such that dX/dt=AX, where x_0=g and x_i=g^{(i)}. In fact
 the matrix is such that for i<n-1, a_ii+1=1 and a_ij=0 otherwise. The last row comes from
 the LSQ calculation.
+* The initial condition is found by calculating the derivatives at time 0.
 * Now a change of variables must be done so that variable x_0 is unchanged and the solution
-matches the initial condition problem [TO FINISH].
+matches the initial condition problem, i.e., such that Y0=PX0, with X0 the initial
+condition in the original system and Y0 in the new system.
+
+Remark: check the Wronskian (proof).
