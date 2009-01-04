@@ -30,7 +30,7 @@ def integral2differential(expr,T=20*ms,level=0,N=20):
     level is the frame level where the expression is defined.
     '''
     # Expression matching
-    var,time,RHS=re.search('\s*(\w+)\s*\(\s*(\w+)\s*\)\s*=\s*(.+)\s*',expr).groups()
+    varname,time,RHS=re.search('\s*(\w+)\s*\(\s*(\w+)\s*\)\s*=\s*(.+)\s*',expr).groups()
     
     # Build the namespace
     frame=inspect.stack()[level+1][0]
@@ -90,7 +90,27 @@ def integral2differential(expr,T=20*ms,level=0,N=20):
         w=X0[0]        
         P=linalg.inv(Q)
     
-    return dot(dot(P,A),Q),nvar,w
+    M=dot(dot(P,A),Q)
+    
+    # Turn into string
+    # Set variable names
+    if rank<5:
+        names='xyz'[:rank]
+    elif rank<28:
+        names='abcdefghijklmnopqrstuvwxyz'[:rank]
+    else:
+        raise Error,"The rank is too high!"
+    names=[varname]+[name for name in names]
+    
+    # Build string
+    # TODO: skip zeros, avoid +-, add units
+    eqs=[]
+    for i in range(rank):
+        eqs.append('d'+names[i]+'/dt='+'+'.join([str(x)+'*'+name for x,name in zip(M[i,:],names)]))
+    eq_string='\n'.join(eqs)
+    #print eq_string
+    
+    return M,nvar,w
     
 if __name__=='__main__':
     from brian import *
