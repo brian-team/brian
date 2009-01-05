@@ -12,12 +12,14 @@ TODO:
 '''
 import re
 import inspect
-from brian.stdunits import ms
+from brian.units import *
+from brian.stdunits import *
 from brian.inspection import get_identifiers
 from brian.utils.autodiff import *
+from brian.equations import unique_id
 from scipy import linalg
 
-def integral2differential(expr,T=20*ms,level=0,N=20):
+def integral2differential(expr,T=20*ms,level=0,N=20,suffix=None):
     '''
     Example:
       A,nvar,w=integral2differential('g(t)=t*exp(-t/tau)')
@@ -31,7 +33,7 @@ def integral2differential(expr,T=20*ms,level=0,N=20):
     '''
     # Expression matching
     varname,time,RHS=re.search('\s*(\w+)\s*\(\s*(\w+)\s*\)\s*=\s*(.+)\s*',expr).groups()
-    
+        
     # Build the namespace
     frame=inspect.stack()[level+1][0]
     global_namespace,local_namespace=frame.f_globals,frame.f_locals
@@ -50,6 +52,9 @@ def integral2differential(expr,T=20*ms,level=0,N=20):
     
     # Convert to a function
     f=eval('lambda '+time+':'+RHS,namespace)
+    
+    # Unit
+    unit=get_unit(f(rand()*second)) # not so good: we need the corresponding string
     
     # Pick N points
     t=rand(N)*T
@@ -95,20 +100,23 @@ def integral2differential(expr,T=20*ms,level=0,N=20):
     # Turn into string
     # Set variable names
     if rank<5:
-        names='xyz'[:rank]
-    elif rank<28:
-        names='abcdefghijklmnopqrstuvwxyz'[:rank]
+        names=[varname]+['x','y','z'][:rank-1]
     else:
-        raise Error,"The rank is too high!"
-    names=[varname]+[name for name in names]
+        names=[varname]+['x'+str(i) for i in range(rank-1)]
+
+    # Add suffix
+    suffix=suffix or unique_id()
+    names[1:]=[name+suffix for name in names[1:]]
     
     # Build string
     # TODO: skip zeros, avoid +-, add units
     eqs=[]
     for i in range(rank):
-        eqs.append('d'+names[i]+'/dt='+'+'.join([str(x)+'*'+name for x,name in zip(M[i,:],names)]))
+        eqs.append('d'+names[i]+'/dt='+'+'.join([str(x)+'*'+name for x,name in zip(M[i,:],names)])+
+                   ' : '+str(unit))
+    eqs.append(varname+'_in='+names[nvar]) # alias
     eq_string='\n'.join(eqs)
-    #print eq_string
+    print eq_string
     
     return M,nvar,w
     
@@ -120,8 +128,8 @@ if __name__=='__main__':
     freq=350*Hz
     # The gammatone example does not seem to work for higher orders
     # probably a numerical problem; use a rescaling matrix for X0?
-    f=lambda t:(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)
-    A,nvar,w=integral2differential('g(t)=(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)')
+    f=lambda t:(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)*volt
+    A,nvar,w=integral2differential('g(t)=(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)*volt')
     #f=lambda t:exp(-t/tau)-exp(-t/tau2)*cos(2*pi*t/tau)
     #A,nvar,w=integral2differential('g(t)=exp(-t/tau)-exp(-t/tau2)*cos(2*pi*t/tau)')
     print A,nvar,w
