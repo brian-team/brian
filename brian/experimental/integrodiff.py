@@ -5,7 +5,6 @@ See BEP-5.
 TODO:
 * maximum rank
 * better function name
-* units
 * return string or Equations object
 * discrete time version
 * rescale X0 to avoid numerical problems
@@ -16,20 +15,26 @@ from brian.units import *
 from brian.stdunits import *
 from brian.inspection import get_identifiers
 from brian.utils.autodiff import *
-from brian.equations import unique_id
+from brian.equations import *
 from scipy import linalg
 
-def integral2differential(expr,T=20*ms,level=0,N=20,suffix=None):
+def integral2differential(expr,T=20*ms,level=0,N=20,suffix=None,matrix_output=False):
     '''
     Example:
-      A,nvar,w=integral2differential('g(t)=t*exp(-t/tau)')
+      eqs,w=integral2differential('g(t)=t*exp(-t/tau)')
+      M,nvar,w=integral2differential('g(t)=t*exp(-t/tau)',matrix_output=True)
       
-    Returns the matrix of the corresponding differential system, the
+    Returns an Equations object corresponding to the time-invariant linear system specified
+    by the impulse response g(t), and the value w to generate the impulse response:
+    g_in->g_in+w.
+    
+    If matrix_output is True, returns the matrix of the corresponding differential system, the
     index nvar of the variable and the initial condition w=x_nvar(0).
     
     T is the interval over which the function is calculated.
     N is the number of points chosen in that interval.
     level is the frame level where the expression is defined.
+    suffix is a string added to internal variable names (default: unique string).
     '''
     # Expression matching
     varname,time,RHS=re.search('\s*(\w+)\s*\(\s*(\w+)\s*\)\s*=\s*(.+)\s*',expr).groups()
@@ -54,7 +59,7 @@ def integral2differential(expr,T=20*ms,level=0,N=20,suffix=None):
     f=eval('lambda '+time+':'+RHS,namespace)
     
     # Unit
-    unit=get_unit(f(rand()*second)) # not so good: we need the corresponding string
+    unit=get_unit(f(rand()*second)).name
     
     # Pick N points
     t=rand(N)*T
@@ -105,20 +110,22 @@ def integral2differential(expr,T=20*ms,level=0,N=20,suffix=None):
         names=[varname]+['x'+str(i) for i in range(rank-1)]
 
     # Add suffix
-    suffix=suffix or unique_id()
+    if suffix is None:
+        suffix=unique_id()
     names[1:]=[name+suffix for name in names[1:]]
     
     # Build string
-    # TODO: skip zeros, avoid +-, add units
     eqs=[]
     for i in range(rank):
-        eqs.append('d'+names[i]+'/dt='+'+'.join([str(x)+'*'+name for x,name in zip(M[i,:],names)])+
+        eqs.append('d'+names[i]+'/dt='+'+'.join([str(x)+'*'+name for x,name in zip(M[i,:],names) if x!=0.])+
                    ' : '+str(unit))
     eqs.append(varname+'_in='+names[nvar]) # alias
-    eq_string='\n'.join(eqs)
-    print eq_string
+    eq_string='\n'.join(eqs).replace('+-','-')
     
-    return M,nvar,w
+    if matrix_output:
+        return M,nvar,w
+    else:
+        return Equations(eq_string),w
     
 if __name__=='__main__':
     from brian import *
@@ -128,14 +135,19 @@ if __name__=='__main__':
     freq=350*Hz
     # The gammatone example does not seem to work for higher orders
     # probably a numerical problem; use a rescaling matrix for X0?
-    f=lambda t:(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)*volt
-    A,nvar,w=integral2differential('g(t)=(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)*volt')
+    f=lambda t:(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)
+    A,nvar,w=integral2differential('g(t)=(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)',suffix='',
+                                   matrix_output=True)
+    eq,w=integral2differential('g(t)=(t/tau)**1*exp(-t/tau)*cos(2*pi*freq*t)',suffix='',
+                                   matrix_output=False)
+    print eq
     #f=lambda t:exp(-t/tau)-exp(-t/tau2)*cos(2*pi*t/tau)
-    #A,nvar,w=integral2differential('g(t)=exp(-t/tau)-exp(-t/tau2)*cos(2*pi*t/tau)')
+    #A,nvar,w=integral2differential('g(t)=exp(-t/tau)-exp(-t/tau2)*cos(2*pi*t/tau)',
+    #                                matrix_output=True)
     print A,nvar,w
     for t in range(10):
         t=t*1*ms
         print linalg.expm(A*t)[0,nvar]*w,f(t)
-    t=arange(50)*.5*ms
-    plot(t,f(t))
-    show()
+    #t=arange(50)*.5*ms
+    #plot(t,f(t))
+    #show()
