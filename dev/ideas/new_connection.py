@@ -127,6 +127,13 @@ class DynamicConstructionMatrix(ConstructionMatrix, scipy.sparse.lil_matrix):
     def connection_matrix(self, *args, **kwds):
         return DynamicConnectionMatrix(self, *args, **kwds)
 
+# this is used to look up str->class conversions for structure=... keyword
+construction_matrix_register = {
+        'dense':DenseConstructionMatrix,
+        'sparse':SparseConstructionMatrix,
+        'dynamic':DynamicConstructionMatrix,
+        }
+
 class ConnectionMatrix(object):
     '''
     Base class for connection matrix objects
@@ -601,6 +608,45 @@ class DynamicConnectionMatrix(ConnectionMatrix):
             self.alldata[:self.nnz] = value
         else:
             ConnectionMatrix.__setitem__(self, item, value)
+
+class Connection(Connection):
+    @check_units(delay=second)
+    def __init__(self,source,target,state=0,delay=0*msecond,modulation=None,
+                 structure='sparse',**kwds):
+        self.source = source # pointer to source group
+        self.target = target # pointer to target group
+        if isinstance(state, str): # named state variable
+            self.nstate = target.get_var_index(state)
+        else:
+            self.nstate = state # target state index
+        if isinstance(modulation, str): # named state variable
+            self._nstate_mod = source.get_var_index(modulation)
+        else:
+            self._nstate_mod = modulation # source state index
+        if isinstance(structure, str):
+            structure = construction_matrix_register[structure]
+        self.W = structure((len(source),len(target)),**kwds)
+        self.iscompressed = False # True if compress() has been called
+        source.set_max_delay(delay)
+        self.delay = int(delay/source.clock.dt) # Synaptic delay in time bins
+    def propagate(self, spikes):
+        if not iscompressed:
+            self.compress()
+        if len(spikes):
+            sv=self.target._S[self.nstate]
+            assert self._nstate_mod is None # TODO: handle other case
+            rows = self.W.get_rows(spikes)
+            # TODO: optimised code for this situation
+            if isinstance(rows[0], SparseConnectionVector):
+                for row in rows:
+                    sv[row.ind] += row
+            else:
+                for row in rows:
+                    sv += row
+    def compress(self):
+        if not self.iscompressed:
+            self.W = self.W.connection_matrix()
+            self.iscompressed = True
 
 if __name__=='__main__':
     x = scipy.sparse.lil_matrix((5,5))
