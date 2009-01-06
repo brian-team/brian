@@ -5,9 +5,9 @@ See BEP-5.
 TODO:
 * maximum rank
 * better function name
-* return string or Equations object
 * discrete time version
 * rescale X0 to avoid numerical problems
+* automatic determination of T?
 '''
 import re
 import inspect
@@ -80,6 +80,17 @@ def integral2differential(expr,T=20*ms,level=0,N=20,suffix=None,matrix_output=Fa
     # Find initial condition
     X0=array([differentiate(f,0*ms,order=n) for n in range(rank)])
     
+    # Rescaling DOES NOT WORK
+    #R=ones(rank)
+    #for i in range(rank):
+    #    if X0[i]!=0.:
+    #        R[i]=1./X0[i]
+    #    else:
+    #        R[i]=1.
+    #R=diag(R)
+    #X0=dot(R,X0)
+    #oldx=dot(R,oldx)
+    
     # Build A
     A=diag(ones(rank-1),1)
     A[-1,:]=oldx.reshape(1,rank)
@@ -101,6 +112,7 @@ def integral2differential(expr,T=20*ms,level=0,N=20,suffix=None,matrix_output=Fa
         P=linalg.inv(Q)
     
     M=dot(dot(P,A),Q)
+    #M=dot(linalg.inv(R),dot(M,R))
     
     # Turn into string
     # Set variable names

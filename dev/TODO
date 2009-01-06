@@ -1,3 +1,4 @@
+* Refactor namespace finding in strings (maybe function in inspection)
 * Unit checking in string resets and thresholds
 
 * Cluster computing
@@ -38,9 +39,6 @@ C = Connection(G, H, 'V', weight=1*mV, p=0.1)
 Figure out why group.t is a vector. It might have to do with units.
 
 * Heterogeneous delays
-
 * Use the GPU: complete project with TechX to use GPU accelerated versions of code.
-
 * Meaningful error messages: Improve catching of errors and usefulness of error messages
-
 * New connection matrices
