@@ -369,8 +369,10 @@ class UserComputedConnectionMatrix(ConnectionMatrix):
     def __init__(self, dims, row_func):
         self.sourcelen, self.targetlen = dims
         self.row_func = row_func
+        
     def get_row(self, i):
         return self.row_func(i)
+    
     def __getitem__(self, item):
         if isinstance(item,int):
             return self.get_row(item)
@@ -454,17 +456,21 @@ class UserComputedSparseConnectionMatrix(ConnectionMatrix):
         self.sourcelen, self.targetlen = dims
         self.row_func = row_func
         self.cur_row = numpy.zeros(dims[1])
+        
     def add_row(self,i,X):
         indices, values = self.row_func(i)
         X[indices]+=values
+        
     def add_scaled_row(self,i,X,factor):
         # modulation may not work? need factor[self.rows[i]] here? is factor a number or an array?
         X[indices]+=factor*values
+        
     def get_row(self, i):
         indices, values = self.row_func(i)
         self.cur_row[:] = 0.0
         self.cur_row[indices] = values
         return self.cur_row
+    
     def __getitem__(self, item):
         if isinstance(item,int):
             return self.get_row(item)
