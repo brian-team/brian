@@ -124,6 +124,9 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
 class SparseConstructionMatrix(ConstructionMatrix, scipy.sparse.lil_matrix):
     def connection_matrix(self, *args, **kwds):
         return SparseConnectionMatrix(self, *args, **kwds)
+    # Unfortunately we still need to implement this because although scipy 0.7.0
+    # now supports X[a:b,c:d] for sparse X it is unbelievably slow (shabby code
+    # on their part).
     def __setitem__(self, index, W):
         """
         Speed-up if x is a sparse matrix.
@@ -348,7 +351,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
     the memory requirements to 20 bytes per entry (4 extra bytes for the
     row indices and 4 extra bytes for the data indices).
     '''
-    def __init__(self, val, column_access=True):
+    def __init__(self, val, column_access=False):
         self.nnz = nnz = val.getnnz()
         alldata = numpy.zeros(nnz)
         if column_access:
@@ -719,7 +722,13 @@ class Connection(Connection):
 if __name__=='__main__':
     
     # original version of Connection still slightly faster with compilation on, but not much...
-    #from brian import Connection
+    # on my laptop with new Connection:
+    #  initialise:  1.3900001049
+    #  run:        10.1719999313
+    # and with old Connection:
+    #  initialise:  1.70299983025 (slower surprisingly!)
+    #  run:         9.18700003624 (about 10% faster, but this should be fixable?)
+    from brian import Connection
     
     #set_global_preferences(useweave=False)
     
