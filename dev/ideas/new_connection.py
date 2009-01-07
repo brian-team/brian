@@ -2,6 +2,8 @@ from brian import *
 import numpy
 import scipy
 from itertools import izip
+import bisect
+from scipy import weave
 
 colon_slice = slice(None,None,None)
 
@@ -122,7 +124,36 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
 class SparseConstructionMatrix(ConstructionMatrix, scipy.sparse.lil_matrix):
     def connection_matrix(self, *args, **kwds):
         return SparseConnectionMatrix(self, *args, **kwds)
+    def __setitem__(self, index, W):
+        """
+        Speed-up if x is a sparse matrix.
+        TODO: checks (first remove the data).
+        """
+        try:
+            i, j = index
+        except (ValueError, TypeError):
+            raise IndexError, "invalid index"
 
+        if isinstance(i, slice) and isinstance(j,slice) and\
+           (i.step is None) and (j.step is None) and\
+           (isinstance(W,scipy.sparse.lil_matrix) or isinstance(W,numpy.ndarray)):
+            rows = self.rows[i]
+            datas = self.data[i]
+            j0=j.start
+            if isinstance(W,scipy.sparse.lil_matrix):
+                for row,data,rowW,dataW in izip(rows,datas,W.rows,W.data):
+                    jj=bisect.bisect(row,j0) # Find the insertion point
+                    row[jj:jj]=[j0+k for k in rowW]
+                    data[jj:jj]=dataW
+            elif isinstance(W,ndarray):
+                nq=W.shape[1]
+                for row,data,rowW in izip(rows,datas,W):
+                    jj=bisect.bisect(row,j0) # Find the insertion point
+                    row[jj:jj]=range(j0,j0+nq)
+                    data[jj:jj]=rowW
+        else:
+            scipy.sparse.lil_matrix.__setitem__(self,index,W)
+            
 class DynamicConstructionMatrix(ConstructionMatrix, scipy.sparse.lil_matrix):
     def connection_matrix(self, *args, **kwds):
         return DynamicConnectionMatrix(self, *args, **kwds)
@@ -333,10 +364,14 @@ class SparseConnectionMatrix(ConnectionMatrix):
         for c in xrange(val.shape[0]):
             # extra the row values and column indices of row c of the initialising matrix
             # this works for any of the scipy sparse matrix formats
-            sr = val[c, :]
-            sr = sr.tolil()
-            r = sr.rows[0]
-            d = sr.data[0]
+            if isinstance(val, scipy.sparse.lil_matrix):
+                r = val.rows[c]
+                d = val.data[c]
+            else:
+                sr = val[c, :]
+                sr = sr.tolil()
+                r = sr.rows[0]
+                d = sr.data[0]
             # copy the values into the alldata array, the indices into the allj array, and
             # so forth
             rowind[c] = i
@@ -477,10 +512,14 @@ class DynamicConnectionMatrix(ConnectionMatrix):
         for c in xrange(val.shape[0]):
             # extra the row values and column indices of row c of the initialising matrix
             # this works for any of the scipy sparse matrix formats
-            sr = val[c, :]
-            sr = sr.tolil()
-            r = sr.rows[0]
-            d = sr.data[0]
+            if isinstance(val, scipy.sparse.lil_matrix):
+                r = val.rows[c]
+                d = val.data[c]
+            else:
+                sr = val[c, :]
+                sr = sr.tolil()
+                r = sr.rows[0]
+                d = sr.data[0]
             self.alldata[i:i+len(d)] = d
             self.rowj.append(array(r, dtype=int))
             self.rowdataind.append(arange(i, i+len(d)))
@@ -629,17 +668,46 @@ class Connection(Connection):
         self.iscompressed = False # True if compress() has been called
         source.set_max_delay(delay)
         self.delay = int(delay/source.clock.dt) # Synaptic delay in time bins
+        self._useaccel = get_global_preference('useweave')
+        self._cpp_compiler = get_global_preference('weavecompiler')
     def propagate(self, spikes):
-        if not iscompressed:
+        if not self.iscompressed:
             self.compress()
         if len(spikes):
             sv=self.target._S[self.nstate]
             assert self._nstate_mod is None # TODO: handle other case
             rows = self.W.get_rows(spikes)
-            # TODO: optimised code for this situation
+            # TODO: optimised code for DenseVector case too
             if isinstance(rows[0], SparseConnectionVector):
-                for row in rows:
-                    sv[row.ind] += row
+                if self._useaccel:
+                    nspikes = len(spikes)
+                    rowinds = [r.ind for r in rows]
+                    datas = rows
+                    code =  """
+                            for(int j=0;j<nspikes;j++)
+                            {
+                                PyArrayObject* _row = convert_to_numpy(rowinds[j], "row");
+                                conversion_numpy_check_type(_row, PyArray_INT, "row");
+                                conversion_numpy_check_size(_row, 1, "row");
+                                blitz::Array<int,1> row = convert_to_blitz<int,1>(_row,"row");
+                                PyArrayObject* _data = convert_to_numpy(datas[j], "data");
+                                conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
+                                conversion_numpy_check_size(_data, 1, "data");
+                                blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
+                                int m = row.numElements();
+                                for(int k=0;k<m;k++)
+                                {
+                                    sv(row(k)) += data(k);
+                                }
+                            }
+                            """
+                    weave.inline(code,['sv','rowinds','datas','spikes','nspikes'],
+                                 compiler=self._cpp_compiler,
+                                 type_converters=weave.converters.blitz,
+                                 extra_compile_args=['-O3'])
+                else:
+                    for row in rows:
+                        sv[row.ind] += row
             else:
                 for row in rows:
                     sv += row
@@ -649,59 +717,115 @@ class Connection(Connection):
             self.iscompressed = True
 
 if __name__=='__main__':
-    x = scipy.sparse.lil_matrix((5,5))
-    x[2:4,1:3] = 1
-    print x.todense()
-    y = DynamicConnectionMatrix(x)
-    print y.alldata
-    print y.rowj
-    print y.rowdataind
-    print y.unusedinds
-    for i in range(5):
-        print y[i,:].todense()
-    print
-    for i in range(5):
-        print y[:,i].todense()
-    print
-    y.remove(2,1)
-    print y.todense()
-    print y.alldata
-    print y.rowj
-    print y.rowdataind
-    print y.unusedinds
-    y.insert(0,1,2)
-    print y.todense()
-    print y.alldata
-    print y.rowj
-    print y.rowdataind
-    print y.unusedinds
-    y.insert(0,1,3)
-    print y.todense()
-    print y.alldata
-    print y.rowj
-    print y.rowdataind
-    print y.unusedinds
-    y.insert(0,2,4)
-    print y.todense()
-    print y.alldata
-    print y.rowj
-    print y.rowdataind
-    print y.unusedinds
-    for i in range(5):
-        print y[:,i].todense()
-    print
-    y.insert(4,4,5)
-    print y.todense()
-    print y.alldata
-    print y.rowj
-    print y.rowdataind
-    print y.unusedinds
-    print
-    y[0,:] *= 2
-    print y.todense()
-    print
-    y[:,1] *= 3
-    print y.todense()
+    
+    # original version of Connection still slightly faster with compilation on, but not much...
+    #from brian import Connection
+    
+    #set_global_preferences(useweave=False)
+    
+    import time
+    
+    start = time.time()
+    
+    eqs='''
+    dv/dt = (ge+gi-(v+49*mV))/(20*ms) : volt
+    dge/dt = -ge/(5*ms) : volt
+    dgi/dt = -gi/(10*ms) : volt
+    '''
+    
+    P=NeuronGroup(4000,model=eqs,
+                  threshold=-50*mV,reset=-60*mV,
+                  refractory=5*ms)
+    P.v=-60*mV+10*mV*rand(len(P))
+    Pe=P.subgroup(3200)
+    Pi=P.subgroup(800)
+    
+    Ce=Connection(Pe,P,'ge')
+    Ci=Connection(Pi,P,'gi')
+    
+    Ce.connect_random(Pe, P, 0.02,weight=9*mV)
+    Ci.connect_random(Pi, P, 0.02,weight=-9*mV)
+
+    M = PopulationSpikeCounter(P)
+    
+    net = Network(P, Ce, Ci, M)
+    
+    net.run(1*ms)
+
+    print time.time()-start
+    start = time.time()
+    
+    def f():
+        run(1*second)
+    
+    f()
+    print time.time()-start
+
+    print M.nspikes
+
+#    import cProfile as profile
+#    import pstats
+#    profile.run('f()','newconn.prof')
+#    stats = pstats.Stats('newconn.prof')
+#    #stats.strip_dirs()
+#    stats.sort_stats('cumulative', 'calls')
+#    stats.print_stats(50)
+    
+    #raster_plot(M)
+    #show()    
+#    x = scipy.sparse.lil_matrix((5,5))
+#    x[2:4,1:3] = 1
+#    print x.todense()
+#    y = DynamicConnectionMatrix(x)
+#    print y.alldata
+#    print y.rowj
+#    print y.rowdataind
+#    print y.unusedinds
+#    for i in range(5):
+#        print y[i,:].todense()
+#    print
+#    for i in range(5):
+#        print y[:,i].todense()
+#    print
+#    y.remove(2,1)
+#    print y.todense()
+#    print y.alldata
+#    print y.rowj
+#    print y.rowdataind
+#    print y.unusedinds
+#    y.insert(0,1,2)
+#    print y.todense()
+#    print y.alldata
+#    print y.rowj
+#    print y.rowdataind
+#    print y.unusedinds
+#    y.insert(0,1,3)
+#    print y.todense()
+#    print y.alldata
+#    print y.rowj
+#    print y.rowdataind
+#    print y.unusedinds
+#    y.insert(0,2,4)
+#    print y.todense()
+#    print y.alldata
+#    print y.rowj
+#    print y.rowdataind
+#    print y.unusedinds
+#    for i in range(5):
+#        print y[:,i].todense()
+#    print
+#    y.insert(4,4,5)
+#    print y.todense()
+#    print y.alldata
+#    print y.rowj
+#    print y.rowdataind
+#    print y.unusedinds
+#    print
+#    y[0,:] *= 2
+#    print y.todense()
+#    print
+#    y[:,1] *= 3
+#    print y.todense()
 #    x = SparseConstructionMatrix((5,5))
 #    x[2:4,1:3] = 1
 #    print x.todense()
