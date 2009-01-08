@@ -13,12 +13,24 @@ def todense(x):
     return array(x)
 
 class ConnectionVector(object):
+    '''
+    Base class for connection vectors, just used for defining the interface
+    
+    ConnectionVector objects are returned by ConnectionMatrix objects when
+    they retrieve rows or columns. At the moment, there are two choices,
+    sparse or dense.
+    
+    This class has no real function at the moment.
+    '''
     def todense(self):
         return NotImplemented
     def tosparse(self):
         return NotImplemented
 
 class DenseConnectionVector(ConnectionVector, numpy.ndarray):
+    '''
+    Just a numpy array.
+    '''
     def __new__(subtype, arr):
         return numpy.array(arr, copy=False).view(subtype)
     def todense(self):
@@ -116,6 +128,15 @@ class ConstructionMatrix(object):
         return NotImplemented
 
 class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
+    '''
+    Dense construction matrix. Essentially just numpy.ndarray.
+    
+    The ``connection_matrix`` method returns a :class:`DenseConnectionMatrix`
+    object.
+    
+    The ``__setitem__`` method is overloaded so that you can set values with
+    a sparse matrix.
+    '''
     def connection_matrix(self, *args, **kwds):
         if 'copy' not in kwds:
             kwds['copy'] = False
@@ -128,6 +149,12 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
             ndarray.__setitem__(self,index,W)
 
 class SparseMatrix(scipy.sparse.lil_matrix):
+    '''
+    Used as the base for sparse construction matrix classes, essentially just scipy's lil_matrix.
+    
+    The scipy lil_matrix class allows you to specify slices in ``__setitem__`` but the
+    performance is cripplingly slow. This class has a faster implementation.
+    '''
     # Unfortunately we still need to implement this because although scipy 0.7.0
     # now supports X[a:b,c:d] for sparse X it is unbelievably slow (shabby code
     # on their part).
@@ -135,6 +162,7 @@ class SparseMatrix(scipy.sparse.lil_matrix):
         """
         Speed-up if x is a sparse matrix.
         TODO: checks (first remove the data).
+        TODO: once we've got this working in all cases, should we submit to scipy?
         """
         try:
             i, j = index
@@ -162,10 +190,16 @@ class SparseMatrix(scipy.sparse.lil_matrix):
             scipy.sparse.lil_matrix.__setitem__(self,index,W)
 
 class SparseConstructionMatrix(ConstructionMatrix, SparseMatrix):
+    '''
+    SparseConstructionMatrix is converted to SparseConnectionMatrix.
+    '''
     def connection_matrix(self, *args, **kwds):
         return SparseConnectionMatrix(self, *args, **kwds)
             
 class DynamicConstructionMatrix(ConstructionMatrix, SparseMatrix):
+    '''
+    DynamicConstructionMatrix is converted to DynamicConnectionMatrix.
+    '''
     def connection_matrix(self, *args, **kwds):
         return DynamicConnectionMatrix(self, *args, **kwds)
 
@@ -303,7 +337,7 @@ class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
     See documentation for :class:`ConnectionMatrix` for details on
     connection matrix types.
 
-    Thi smatrix implements a dense connection matrix. It is just
+    This matrix implements a dense connection matrix. It is just
     a numpy array. The ``get_row`` and ``get_col`` methods return
     :class:`DenseConnectionVector`` objects.
     '''
@@ -311,6 +345,7 @@ class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
         return numpy.array(data, **kwds).view(subtype)
 
     def __init__(self, val, **kwds):
+        # precompute rows and cols for fast returns by get_rows etc.
         self.rows = [DenseConnectionVector(numpy.ndarray.__getitem__(self, i)) for i in xrange(val.shape[0])]
         self.cols = [DenseConnectionVector(numpy.ndarray.__getitem__(self, (slice(None), i))) for i in xrange(val.shape[1])]
     
@@ -381,7 +416,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
     row indices and 4 extra bytes for the data indices).
     '''
     def __init__(self, val, column_access=False):
-        self.nnz = nnz = val.getnnz()
+        self.nnz = nnz = val.getnnz()# nnz stands for number of nonzero entries
         alldata = numpy.zeros(nnz)
         if column_access:
             alli = numpy.zeros(nnz, dtype=int)
@@ -698,7 +733,141 @@ class DynamicConnectionMatrix(ConnectionMatrix):
         else:
             ConnectionMatrix.__setitem__(self, item, value)
 
-class Connection(Connection):
+class Connection(Connection):#magic.InstanceTracker):
+    '''
+    Mechanism for propagating spikes from one group to another
+
+    A Connection object declares that when spikes in a source
+    group are generated, certain neurons in the target group
+    should have a value added to specific states. See
+    Tutorial 2: Connections to understand this better.
+
+    **Initialised as:** ::
+    
+        Connection(source, target[, state=0[, delay=0*ms[, modulation=None]]])
+    
+    With arguments:
+    
+    ``source``
+        The group from which spikes will be propagated.
+    ``target``
+        The group to which spikes will be propagated.
+    ``state``
+        The state variable name or number that spikes will be
+        propagated to in the target group.
+    ``delay``
+        The delay between a spike being generated at the source
+        and received at the target. At the moment, the mechanism
+        for delays only works for relatively short delays (an
+        error will be generated for delays that are too long).
+    ``modulation``
+        The state variable name from the source group that scales
+        the synaptic weights (for short-term synaptic plasticity).
+    ``structure``
+        Data structure: ``sparse`` (default), ``dense`` or
+        ``dynamic``. See below for more information on structures.
+    
+    **Methods**
+    
+    ``connect_random(P,Q,p[,weight=1[,fixed=False[,seed=None]]])``
+        Connects each neuron in ``P`` to each neuron in ``Q`` with independent
+        probability ``p`` and weight ``weight`` (this is the amount that
+        gets added to the target state variable). If ``fixed`` is True, then
+        the number of presynaptic neurons per neuron is constant. If ``seed``
+        is given, it is used as the seed to the random number generators, for
+        exactly repeatable results.
+    ``connect_full(P,Q[,weight=1])``
+        Connect every neuron in ``P`` to every neuron in ``Q`` with the given
+        weight.
+    ``connect_one_to_one(P,Q)``
+        If ``P`` and ``Q`` have the same number of neurons then neuron ``i``
+        in ``P`` will be connected to neuron ``i`` in ``Q`` with weight 1.
+    ``connect(P,Q,W)``
+        You can specify a matrix of weights directly (can be in any format
+        recognised by NumPy). Note that due to internal implementation details,
+        passing a full matrix rather than a sparse one may slow down your code
+        (because zeros will be propagated as well as nonzero values).
+        **WARNING:** No unit checking is done at the moment.
+
+    Additionally, you can directly access the matrix of weights by writing::
+    
+        C = Connection(P,Q)
+        print C[i,j]
+        C[i,j] = ...
+    
+    Where here ``i`` is the source neuron and ``j`` is the target neuron.
+    Note: if ``C[i,j]`` should be zero, it is more efficient not to write
+    ``C[i,j]=0``, if you write this then when neuron ``i`` fires all the
+    targets will have the value 0 added to them rather than just the
+    nonzero ones.
+    **WARNING:** No unit checking is currently done if you use this method.
+    Take care to set the right units.
+    
+    **Connection matrix structures**
+    
+    Brian currently features three types of connection matrix structures,
+    each of which is suited for different situations. Brian has two stages
+    of connection matrix. The first is the construction stage, used for
+    building a weight matrix. This stage is optimised for the construction
+    of matrices, with lots of features, but would be slow for runtime
+    behaviour. Consequently, the second stage is the connection stage,
+    used when Brian is being run. The connection stage is optimised for
+    run time behaviour, but many features which are useful for construction
+    are absent (e.g. the ability to add or remove synapses). Conversion
+    between construction and connection stages is done by the
+    ``compress()`` method of :class:`Connection` which is called
+    automatically when it is used for the first time.
+    
+    The structures are: 
+    
+    ``dense``
+        A dense matrix. Allows runtime modification of all values. If
+        connectivity is close to being dense this is probably the most
+        efficient, but in most cases it is less efficient. In addition,
+        a dense connection matrix will often do the wrong thing if
+        using STDP. Because a synapse will be considered to exist but
+        with weight 0, STDP will be able to create new synapses where
+        there were previously none. Memory requirements are ``8NM``
+        bytes where ``(N,M)`` are the dimensions. (A ``double`` float
+        value uses 8 bytes.)
+    ``sparse``
+        A sparse matrix. See :class:`SparseConnectionMatrix` for
+        details on implementation. This class features very fast row
+        access, and slower column access if the ``column_access=True``
+        keyword is specified (making it suitable for learning
+        algorithms such as STDP which require this). Memory
+        requirements are 12 bytes per nonzero entry for row access
+        only, or 20 bytes per nonzero entry if column access is
+        specified. Synapses cannot be created or deleted at runtime
+        with this class (although weights can be set to zero).
+    ``dynamic``
+        A sparse matrix which allows runtime insertion and removal
+        of synapses. See :class:`DynamicConnectionMatrix` for
+        implementation details. This class features row and column
+        access. The row access is slower than for ``sparse`` so this
+        class should only be used when insertion and removal of
+        synapses is crucial. Memory requirements are 24 bytes per
+        nonzero entry. However, note that more memory than this
+        may be required because memory is allocated using a
+        dynamic array which grows by doubling its size when it runs
+        out. If you know the maximum number of nonzero entries you will
+        have in advance, specify the ``nnzmax`` keyword to set the
+        initial size of the array. 
+    
+    **Advanced information**
+    
+    The following methods are also defined and used internally, if you are
+    writing your own derived connection class you need to understand what
+    these do.
+    
+    ``propagate(spikes)``
+        Action to take when source neurons with indices in ``spikes``
+        fired.
+    ``do_propagate()``
+        The method called by the :class:`Network` ``update()`` step,
+        typically just propagates the spikes obtained by calling
+        the ``get_spikes`` method of the ``source`` :class:`NeuronGroup`.
+    '''
     @check_units(delay=second)
     def __init__(self,source,target,state=0,delay=0*msecond,modulation=None,
                  structure='sparse',**kwds):
@@ -725,13 +894,36 @@ class Connection(Connection):
         if not self.iscompressed:
             self.compress()
         if len(spikes):
+            # Target state variable
             sv=self.target._S[self.nstate]
+            # If specified, modulation state variable
             if self._nstate_mod is not None:
                 sv_pre = self.source._S[self._nstate_mod]
+            # Get the rows of the connection matrix, each row will be either a
+            # DenseConnectionVector or a SparseConnectionVector.
             rows = self.W.get_rows(spikes)
-            if isinstance(rows[0], SparseConnectionVector):
-                if self._nstate_mod is None:
-                    if self._useaccel:
+            if not self._useaccel: # Pure Python version is easier to understand, but slower than C++ version below
+                if isinstance(rows[0], SparseConnectionVector):
+                    if self._nstate_mod is None:
+                        # Rows stored as sparse vectors without modulation
+                        for row in rows:
+                            sv[row.ind] += row
+                    else:
+                        # Rows stored as sparse vectors with modulation
+                        for row in rows:
+                            sv[row.ind] += row*sv_pre[row.ind]
+                else:
+                    if self._nstate_mod is None:
+                        # Rows stored as dense vectors without modulation
+                        for row in rows:
+                            sv += row
+                    else:
+                        # Rows stored as dense vectors with modulation
+                        for row in rows:
+                            sv += row*sv_pre                    
+            else: # C++ accelerated code, does the same as the code above but faster and less pretty
+                if isinstance(rows[0], SparseConnectionVector):
+                    if self._nstate_mod is None:
                         nspikes = len(spikes)
                         rowinds = [r.ind for r in rows]
                         datas = rows
@@ -758,10 +950,6 @@ class Connection(Connection):
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=['-O3'])
                     else:
-                        for row in rows:
-                            sv[row.ind] += row
-                else:
-                    if self._useaccel:
                         nspikes = len(spikes)
                         rowinds = [r.ind for r in rows]
                         datas = rows
@@ -787,12 +975,8 @@ class Connection(Connection):
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=['-O3'])
-                    else:
-                        for row in rows:
-                            sv[row.ind] += row*sv_pre[row.ind]
-            else:
-                if self._nstate_mod is None:
-                    if self._useaccel:
+                else:
+                    if self._nstate_mod is None:
                         if not isinstance(spikes, numpy.ndarray):
                             spikes = array(spikes, dtype=int)
                         nspikes = len(spikes)
@@ -813,10 +997,6 @@ class Connection(Connection):
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=['-O3'])
                     else:
-                        for row in rows:
-                            sv += row
-                else:
-                    if self._useaccel:
                         if not isinstance(spikes, numpy.ndarray):
                             spikes = array(spikes, dtype=int)
                         nspikes = len(spikes)
@@ -836,14 +1016,135 @@ class Connection(Connection):
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=['-O3'])
-                    else:
-                        for row in rows:
-                            sv += row*sv_pre
                     
     def compress(self):
         if not self.iscompressed:
             self.W = self.W.connection_matrix()
             self.iscompressed = True
+
+    def reinit(self):
+        '''
+        Resets the variables.
+        '''
+        pass
+
+    def do_propagate(self):
+        self.propagate(self.source.get_spikes(self.delay))
+    
+    def origin(self,P,Q):
+        '''
+        Returns the starting coordinate of the given groups in
+        the connection matrix W.
+        '''
+        return (P._origin-self.source._origin,Q._origin-self.target._origin)
+
+    # TODO: rewrite all the connection functions to work row by row for memory and time efficiency 
+
+    # TODO: change this
+    def connect(self,source=None,target=None,W=None):
+        '''
+        Connects (sub)groups P and Q with the weight matrix W (any type).
+        Internally: inserts W as a submatrix.
+        TODO: checks if the submatrix has already been specified.
+        '''
+        P=source or self.source
+        Q=target or self.target
+        i0,j0=self.origin(P,Q)
+        self.W[i0:i0+len(P),j0:j0+len(Q)]=W
+        
+    def connect_random(self,source=None,target=None,p=1.,weight=1.,fixed=False, seed=None):
+        '''
+        Connects the neurons in group P to neurons in group Q with probability p,
+        with given weight (default 1).
+        The weight can be a quantity or a function of i (in P) and j (in Q).
+        If ``fixed`` is True, then the number of presynaptic neurons per neuron is constant.
+        '''
+        P=source or self.source
+        Q=target or self.target
+        if seed is not None:
+            numpy.random.seed(seed) # numpy's random number seed
+            pyrandom.seed(seed) # Python's random number seed
+        if fixed:
+            random_matrix_function=random_matrix_fixed_column
+        else:
+            random_matrix_function=random_matrix
+            
+        if callable(weight):
+            # Check units
+            try:
+                weight(0,0)+Q._S0[self.nstate]
+            except DimensionMismatchError,inst:
+                raise DimensionMismatchError("Incorrects unit for the synaptic weights.",*inst._dims)
+            self.connect(P,Q,random_matrix_function(len(P),len(Q),p,value=weight))
+        else:
+            # Check units
+            try:
+                weight+Q._S0[self.nstate]
+            except DimensionMismatchError,inst:
+                raise DimensionMismatchError("Incorrects unit for the synaptic weights.",*inst._dims)
+            self.connect(P,Q,random_matrix_function(len(P),len(Q),p,value=float(weight)))
+
+    def connect_full(self,source=None,target=None,weight=1.):
+        '''
+        Connects the neurons in group P to all neurons in group Q,
+        with given weight (default 1).
+        The weight can be a quantity or a function of i (in P) and j (in Q).
+        '''
+        P=source or self.source
+        Q=target or self.target
+        # TODO: check units
+        if callable(weight):
+            # Check units
+            try:
+                weight(0,0)+Q._S0[self.nstate]
+            except DimensionMismatchError,inst:
+                raise DimensionMismatchError("Incorrects unit for the synaptic weights.",*inst._dims)
+            W=zeros((len(P),len(Q)))
+            try:
+                weight(0,1.*arange(0,len(Q)))
+                failed=False
+            except:
+                failed= True
+            if failed: # vector-based not possible
+                log_debug('connections','Cannot build the connection matrix by rows')
+                for i in range(len(P)):
+                    for j in range(len(Q)):
+                        w = float(weight(i,j))
+                        #if not is_within_absolute_tolerance(w,0.,effective_zero):
+                        W[i,j] = w
+            else:
+                for i in range(len(P)): # build W row by row
+                    #w = weight(i,1.*arange(0,len(Q)))
+                    #I = (abs(w)>effective_zero).nonzero()[0]
+                    #print w, I, w[I]
+                    #W[i,I] = w[I]
+                    W[i,:] = weight(i,1.*arange(0,len(Q)))
+            self.connect(P,Q,W)
+        else:
+            try:
+                weight+Q._S0[self.nstate]
+            except DimensionMismatchError,inst:
+                raise DimensionMismatchError("Incorrect unit for the synaptic weights.",*inst._dims)
+            self.connect(P,Q,float(weight)*ones((len(P),len(Q))))
+
+    def connect_one_to_one(self,source=None,target=None,weight=1):
+        '''
+        Connects source[i] to target[i] with weights 1 (or weight).
+        '''
+        P=source or self.source
+        Q=target or self.target
+        if (len(P)!=len(Q)):
+            raise AttributeError,'The connected (sub)groups must have the same size.'
+        # TODO: unit checking
+        self.connect(P,Q,float(weight)*eye_lil_matrix(len(P)))
+        
+    def __getitem__(self,i):
+        return self.W.__getitem__(i)
+
+    def __setitem__(self,i,x):
+        # TODO: unit checking
+        self.W.__setitem__(i,x)
+
 
 if __name__=='__main__':
     
