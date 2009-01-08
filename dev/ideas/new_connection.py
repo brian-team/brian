@@ -120,10 +120,14 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
         if 'copy' not in kwds:
             kwds['copy'] = False
         return DenseConnectionMatrix(self, *args, **kwds)
+    def __setitem__(self, index, W):
+        # Make it work for sparse matrices
+        if isinstance(W,scipy.sparse.spmatrix):
+            ndarray.__setitem__(self,index,W.todense())
+        else:
+            ndarray.__setitem__(self,index,W)
 
-class SparseConstructionMatrix(ConstructionMatrix, scipy.sparse.lil_matrix):
-    def connection_matrix(self, *args, **kwds):
-        return SparseConnectionMatrix(self, *args, **kwds)
+class SparseMatrix(scipy.sparse.lil_matrix):
     # Unfortunately we still need to implement this because although scipy 0.7.0
     # now supports X[a:b,c:d] for sparse X it is unbelievably slow (shabby code
     # on their part).
@@ -156,8 +160,12 @@ class SparseConstructionMatrix(ConstructionMatrix, scipy.sparse.lil_matrix):
                     data[jj:jj]=rowW
         else:
             scipy.sparse.lil_matrix.__setitem__(self,index,W)
+
+class SparseConstructionMatrix(ConstructionMatrix, SparseMatrix):
+    def connection_matrix(self, *args, **kwds):
+        return SparseConnectionMatrix(self, *args, **kwds)
             
-class DynamicConstructionMatrix(ConstructionMatrix, scipy.sparse.lil_matrix):
+class DynamicConstructionMatrix(ConstructionMatrix, SparseMatrix):
     def connection_matrix(self, *args, **kwds):
         return DynamicConnectionMatrix(self, *args, **kwds)
 
@@ -299,11 +307,12 @@ class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
     a numpy array. The ``get_row`` and ``get_col`` methods return
     :class:`DenseConnectionVector`` objects.
     '''
-    def __init__(self, shape, **kwds):
-        numpy.ndarray.__init__(self, shape, **kwds)
-        self[:]=0
-        self.rows = [DenseConnectionVector(self[i]) for i in xrange(shape[0])]
-        self.cols = [DenseConnectionVector(self[:,i]) for i in xrange(shape[1])]
+    def __new__(subtype, data, **kwds):
+        return numpy.array(data, **kwds).view(subtype)
+
+    def __init__(self, val, **kwds):
+        self.rows = [DenseConnectionVector(numpy.ndarray.__getitem__(self, i)) for i in xrange(val.shape[0])]
+        self.cols = [DenseConnectionVector(numpy.ndarray.__getitem__(self, (slice(None), i))) for i in xrange(val.shape[1])]
     
     def get_rows(self, rows):
         return [self.rows[i] for i in rows]
@@ -717,42 +726,119 @@ class Connection(Connection):
             self.compress()
         if len(spikes):
             sv=self.target._S[self.nstate]
-            assert self._nstate_mod is None # TODO: handle other case
+            if self._nstate_mod is not None:
+                sv_pre = self.source._S[self._nstate_mod]
             rows = self.W.get_rows(spikes)
-            # TODO: optimised code for DenseVector case too
             if isinstance(rows[0], SparseConnectionVector):
-                if self._useaccel:
-                    nspikes = len(spikes)
-                    rowinds = [r.ind for r in rows]
-                    datas = rows
-                    code =  """
-                            for(int j=0;j<nspikes;j++)
-                            {
-                                PyArrayObject* _row = convert_to_numpy(rowinds[j], "row");
-                                conversion_numpy_check_type(_row, PyArray_INT, "row");
-                                conversion_numpy_check_size(_row, 1, "row");
-                                blitz::Array<int,1> row = convert_to_blitz<int,1>(_row,"row");
-                                PyArrayObject* _data = convert_to_numpy(datas[j], "data");
-                                conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
-                                conversion_numpy_check_size(_data, 1, "data");
-                                blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
-                                int m = row.numElements();
-                                for(int k=0;k<m;k++)
+                if self._nstate_mod is None:
+                    if self._useaccel:
+                        nspikes = len(spikes)
+                        rowinds = [r.ind for r in rows]
+                        datas = rows
+                        code =  """
+                                for(int j=0;j<nspikes;j++)
                                 {
-                                    sv(row(k)) += data(k);
+                                    PyArrayObject* _row = convert_to_numpy(rowinds[j], "row");
+                                    conversion_numpy_check_type(_row, PyArray_INT, "row");
+                                    conversion_numpy_check_size(_row, 1, "row");
+                                    blitz::Array<int,1> row = convert_to_blitz<int,1>(_row,"row");
+                                    PyArrayObject* _data = convert_to_numpy(datas[j], "data");
+                                    conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
+                                    conversion_numpy_check_size(_data, 1, "data");
+                                    blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
+                                    int m = row.numElements();
+                                    for(int k=0;k<m;k++)
+                                    {
+                                        sv(row(k)) += data(k);
+                                    }
                                 }
-                            }
-                            """
-                    weave.inline(code,['sv','rowinds','datas','spikes','nspikes'],
-                                 compiler=self._cpp_compiler,
-                                 type_converters=weave.converters.blitz,
-                                 extra_compile_args=['-O3'])
+                                """
+                        weave.inline(code,['sv','rowinds','datas','spikes','nspikes'],
+                                     compiler=self._cpp_compiler,
+                                     type_converters=weave.converters.blitz,
+                                     extra_compile_args=['-O3'])
+                    else:
+                        for row in rows:
+                            sv[row.ind] += row
                 else:
-                    for row in rows:
-                        sv[row.ind] += row
+                    if self._useaccel:
+                        nspikes = len(spikes)
+                        rowinds = [r.ind for r in rows]
+                        datas = rows
+                        code =  """
+                                for(int j=0;j<nspikes;j++)
+                                {
+                                    PyArrayObject* _row = convert_to_numpy(rowinds[j], "row");
+                                    conversion_numpy_check_type(_row, PyArray_INT, "row");
+                                    conversion_numpy_check_size(_row, 1, "row");
+                                    blitz::Array<int,1> row = convert_to_blitz<int,1>(_row,"row");
+                                    PyArrayObject* _data = convert_to_numpy(datas[j], "data");
+                                    conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
+                                    conversion_numpy_check_size(_data, 1, "data");
+                                    blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
+                                    int m = row.numElements();
+                                    for(int k=0;k<m;k++)
+                                    {
+                                        sv(row(k)) += data(k)*sv_pre(row(k));
+                                    }
+                                }
+                                """
+                        weave.inline(code,['sv','sv_pre','rowinds','datas','spikes','nspikes'],
+                                     compiler=self._cpp_compiler,
+                                     type_converters=weave.converters.blitz,
+                                     extra_compile_args=['-O3'])
+                    else:
+                        for row in rows:
+                            sv[row.ind] += row*sv_pre[row.ind]
             else:
-                for row in rows:
-                    sv += row
+                if self._nstate_mod is None:
+                    if self._useaccel:
+                        if not isinstance(spikes, numpy.ndarray):
+                            spikes = array(spikes, dtype=int)
+                        nspikes = len(spikes)
+                        N = len(sv)
+                        code =  """
+                                for(int j=0;j<nspikes;j++)
+                                {
+                                    PyArrayObject* _row = convert_to_numpy(rows[j], "row");
+                                    conversion_numpy_check_type(_row, PyArray_DOUBLE, "row");
+                                    conversion_numpy_check_size(_row, 1, "row");
+                                    blitz::Array<double,1> row = convert_to_blitz<double,1>(_row,"row");
+                                    for(int k=0;k<N;k++)
+                                        sv(k) += row(k);
+                                }
+                                """
+                        weave.inline(code,['sv','spikes','nspikes','N', 'rows'],
+                                     compiler=self._cpp_compiler,
+                                     type_converters=weave.converters.blitz,
+                                     extra_compile_args=['-O3'])
+                    else:
+                        for row in rows:
+                            sv += row
+                else:
+                    if self._useaccel:
+                        if not isinstance(spikes, numpy.ndarray):
+                            spikes = array(spikes, dtype=int)
+                        nspikes = len(spikes)
+                        N = len(sv)
+                        code =  """
+                                for(int j=0;j<nspikes;j++)
+                                {
+                                    PyArrayObject* _row = convert_to_numpy(rows[j], "row");
+                                    conversion_numpy_check_type(_row, PyArray_DOUBLE, "row");
+                                    conversion_numpy_check_size(_row, 1, "row");
+                                    blitz::Array<double,1> row = convert_to_blitz<double,1>(_row,"row");
+                                    for(int k=0;k<N;k++)
+                                        sv(k) += row(k)*sv_pre(k);
+                                }
+                                """
+                        weave.inline(code,['sv','sv_pre','spikes','nspikes','N', 'rows'],
+                                     compiler=self._cpp_compiler,
+                                     type_converters=weave.converters.blitz,
+                                     extra_compile_args=['-O3'])
+                    else:
+                        for row in rows:
+                            sv += row*sv_pre
                     
     def compress(self):
         if not self.iscompressed:
@@ -768,7 +854,7 @@ if __name__=='__main__':
     # and with old Connection:
     #  initialise:  1.70299983025 (slower surprisingly!)
     #  run:         9.18700003624 (about 10% faster, but this should be fixable?)
-    from brian import Connection
+    #from brian import Connection
     
     #set_global_preferences(useweave=False)
     
@@ -789,13 +875,14 @@ if __name__=='__main__':
     Pe=P.subgroup(3200)
     Pi=P.subgroup(800)
     
-    Ce=Connection(Pe,P,'ge')
-    Ci=Connection(Pi,P,'gi')
+    Ce=Connection(Pe,P,'ge',structure='dynamic')
+    Ci=Connection(Pi,P,'gi',structure='dynamic')
     
     Ce.connect_random(Pe, P, 0.02,weight=9*mV)
     Ci.connect_random(Pi, P, 0.02,weight=-9*mV)
 
     M = PopulationSpikeCounter(P)
+    #M = SpikeMonitor(P)
     
     net = Network(P, Ce, Ci, M)
     
@@ -811,6 +898,10 @@ if __name__=='__main__':
     print time.time()-start
 
     print M.nspikes
+    
+    if hasattr(M, 'spikes') and len(M.spikes):
+        raster_plot(M)
+        show()
 
 #    import cProfile as profile
 #    import pstats
