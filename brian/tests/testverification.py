@@ -51,6 +51,7 @@ class TestSequenceFunctions(unittest.TestCase):
         M = SpikeMonitor(G)
         run(1*second)
         self.assert_(M.nspikes==840)
+        
     def testexponentialcurrent(self):
         '''Tests whether an exponential current works as predicted
         

@@ -201,24 +201,34 @@ class ConnectionMatrix(object):
     # methods to be implemented by subclass
     def get_row(self, i):
         return NotImplemented
+    
     def get_col(self, i):
         return NotImplemented
+    
     def set_row(self, i, x):
         return NotImplemented    
+    
     def set_col(self, i, x):
         return NotImplemented    
+    
     def set_element(self, i, j, x):
         return NotImplemented
+    
     def get_element(self, i, j):
         return NotImplemented
+    
     def get_rows(self, rows):
         return [self.get_row(i) for i in rows]
+    
     def insert(self, i, j, x):
         return NotImplemented
+    
     def remove(self, i, j):
         return NotImplemented
+    
     def getnnz(self):
         return NotImplemented
+    
     def todense(self):
         return array([todense(r) for r in self])
     # we support the following indexing schemes:
@@ -226,6 +236,7 @@ class ConnectionMatrix(object):
     # - s[i,:]
     # - s[:,i]
     # - s[i,j]
+    
     def __getitem__(self, item):
         if isinstance(item,tuple) and isinstance(item[0],int) and item[1]==colon_slice:
             return self.get_row(item[0])
@@ -252,6 +263,7 @@ class ConnectionMatrix(object):
                 return self.get_element(item_i, item_j)
             raise TypeError('Only (i,:), (:,j), (i,j) indexing supported.')
         raise TypeError('Can only get items of type slice or tuple')
+    
     def __setitem__(self, item, value):
         if isinstance(item,tuple) and isinstance(item[0],int) and item[1]==colon_slice:
             return self.set_row(item[0], value)
@@ -292,21 +304,29 @@ class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
         self[:]=0
         self.rows = [DenseConnectionVector(self[i]) for i in xrange(shape[0])]
         self.cols = [DenseConnectionVector(self[:,i]) for i in xrange(shape[1])]
+    
     def get_rows(self, rows):
         return [self.rows[i] for i in rows]
+    
     def get_row(self, i):
         return self.rows[i]
+    
     def get_col(self, i):
         return self.cols[i]
+    
     def set_row(self, i, x):
         self[i] = todense(x)
+    
     def set_col(self, i, x):
         self[:, i] = todense(x)
+    
     def get_element(self, i, j):
         return self[i,j]
+    
     def set_element(self, i, j, val):
         self[i,j] = val
     insert = set_element
+    
     def remove(self, i, j):
         self[i, j] = 0
 
@@ -412,27 +432,34 @@ class SparseConnectionMatrix(ConnectionMatrix):
             self.coli = coli
             self.coldataindices = coldataindices
         self.rows = [SparseConnectionVector(self.shape[1], self.rowj[i], self.rowdata[i]) for i in xrange(self.shape[0])]
+    
     def getnnz(self):
         return self.nnz
+    
     def get_element(self, i, j):
         n = searchsorted(self.rowj[i], j)
         if n>=len(self.rowj[i]) or self.rowj[i][n]!=j:
             return 0
         return self.rowdata[i][n]
+    
     def set_element(self, i, j, x):
         n = searchsorted(self.rowj[i], j)
         if n>=len(self.rowj[i]) or self.rowj[i][n]!=j:
             raise ValueError('Insertion of new elements not supported for SparseConnectionMatrix.')
         self.rowdata[i][n] = x
+    
     def get_row(self, i):
         return self.rows[i]
+    
     def get_rows(self, rows):
         return [self.rows[i] for i in rows]
+    
     def get_col(self, j):
         if self.column_access:
             return SparseConnectionVector(self.shape[0], self.coli[j], self.alldata[self.coldataindices[j]])
         else:
             raise TypeError('No column access.')
+    
     def set_row(self, i, val):
         if isinstance(val, SparseConnectionVector):
             if val.ind is not self.rowj[i]:
@@ -445,6 +472,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
                 self.rowdata[i][:] = val[self.rowj[i]]
             else:
                 self.rowdata[i][:] = val
+    
     def set_col(self, j, val):
         if self.column_access:
             if isinstance(val, SparseConnectionVector):
@@ -460,6 +488,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
                     self.alldata[self.coldataindices[j]] = val
         else:
             raise TypeError('No column access.')
+    
     def __setitem__(self, item, value):
         if item==colon_slice:
             self.alldata[:] = value
@@ -546,8 +575,10 @@ class DynamicConnectionMatrix(ConnectionMatrix):
             curcdi[j]+=1
         for j in xrange(val.shape[1]):
             self.coli.append(alli[self.coldataind[j]])
+    
     def getnnz(self):
         return self.nnz
+    
     def insert(self, i, j, x):
         n = searchsorted(self.rowj[i], j)
         if n<len(self.rowj[i]) and self.rowj[i][n]==j:
@@ -589,6 +620,7 @@ class DynamicConnectionMatrix(ConnectionMatrix):
         newcoldataind[m] = newind
         newcoldataind[m+1:] = self.coldataind[j][m:]
         self.coldataind[j] = newcoldataind
+    
     def remove(self, i, j):
         n = searchsorted(self.rowj[i], j)
         if n>=len(self.rowj[i]) or self.rowj[i][n]!=j:
@@ -615,12 +647,16 @@ class DynamicConnectionMatrix(ConnectionMatrix):
         newcoldataind[:m] = self.coldataind[j][:m]
         newcoldataind[m:] = self.coldataind[j][m+1:]
         self.coldataind[j] = newcoldataind
+    
     def get_row(self, i):
         return SparseConnectionVector(self.shape[1], self.rowj[i], self.alldata[self.rowdataind[i]])
+    
     def get_rows(self, rows):
         return [SparseConnectionVector(self.shape[1], self.rowj[i], self.alldata[self.rowdataind[i]]) for i in rows]
+    
     def get_col(self, j):
         return SparseConnectionVector(self.shape[0], self.coli[j], self.alldata[self.coldataind[j]])
+    
     def set_row(self, i, val):
         if isinstance(val, SparseConnectionVector):
             if val.ind is not self.rowj[i]:
@@ -633,6 +669,7 @@ class DynamicConnectionMatrix(ConnectionMatrix):
                 self.alldata[self.rowdataind[i]] = val[self.rowj[i]]
             else:
                 self.alldata[self.rowdataind[i]] = val
+    
     def set_col(self, j, val):
         if isinstance(val, SparseConnectionVector):
             if val.ind is not self.coli[j]:
@@ -645,6 +682,7 @@ class DynamicConnectionMatrix(ConnectionMatrix):
                 self.alldata[self.coldataind[j]] = val[self.coli[j]]
             else:
                 self.alldata[self.coldataind[j]] = val
+    
     def __setitem__(self, item, value):
         if item==colon_slice:
             self.alldata[:self.nnz] = value
@@ -673,6 +711,7 @@ class Connection(Connection):
         self.delay = int(delay/source.clock.dt) # Synaptic delay in time bins
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        
     def propagate(self, spikes):
         if not self.iscompressed:
             self.compress()
@@ -714,6 +753,7 @@ class Connection(Connection):
             else:
                 for row in rows:
                     sv += row
+                    
     def compress(self):
         if not self.iscompressed:
             self.W = self.W.connection_matrix()
