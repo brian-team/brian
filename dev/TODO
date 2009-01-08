@@ -1,3 +1,5 @@
+* Update documentation with string reset/threshold
+* String reset with multiline strings
 * Neuron = NeuronGroup(1,..)
 * Refactor namespace finding in strings (maybe function in inspection)
 * Unit checking in string resets and thresholds
