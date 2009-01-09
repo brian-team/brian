@@ -1,3 +1,6 @@
+'''
+***** NOW OUT OF DATE BECAUSE OF NEW CONNECTIONS CLASS DESIGN ****
+'''
 from brian import *
 from brian.connection import ConnectionMatrix
 import numpy, scipy

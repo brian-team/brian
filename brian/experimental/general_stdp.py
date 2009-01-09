@@ -167,7 +167,7 @@ if __name__=='__main__':
         G2 = NeuronGroup(1,model=eqs_neurons,threshold=vt,reset=vr)
 #        C = Connection(G1, G2, 'ge', structure='dense')
 #        C.connect(G1,G2,rand(len(G1),len(G2))*gmax)
-        C = Connection(G1, G2, 'ge')
+        C = Connection(G1, G2, 'ge', column_access=True)
         C.connect_random(G1,G2,0.9,weight=lambda i,j:rand()*gmax)
         
 #        def f_pre(W, pre, post, spikes):
@@ -192,8 +192,8 @@ if __name__=='__main__':
         
         G2.v = vr
         
-        import stdp_sparse
-        C.W = stdp_sparse.SparseSTDPConnectionMatrix(C.W)
+#        import stdp_sparse
+#        C.W = stdp_sparse.SparseSTDPConnectionMatrix(C.W)
         
         start_time=time()
         run(20*second)

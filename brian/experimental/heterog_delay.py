@@ -1,3 +1,7 @@
+'''
+IMPORTANT NOTE: Not working with new connections yet!
+TODO: make this work with new connections
+'''
 from brian import *
 from brian.connection import SparseConnectionMatrix, DenseConnectionMatrix, ComputedConnectionMatrix
 from scipy import weave

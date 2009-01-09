@@ -1,3 +1,11 @@
+'''
+**** OUT OF DATE AND NO LONGER USEFUL BECAUSE OF NEW CONNECTIONS ****
+
+This class was originally written because of problems with STDP, with
+the new connection class structure, this shouldn't be necessary. In fact
+it won't even work with the new class structure.
+'''
+
 from brian import *
 from brian.connection import ConnectionMatrix, DenseConnectionMatrix
 from scipy import sparse
