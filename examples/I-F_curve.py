@@ -11,6 +11,7 @@ from brian.library.IF import *
 
 N=1000
 eqs=Brette_Gerstner()+Current('I:amp')
+print eqs
 group=NeuronGroup(N,model=eqs,threshold=-20*mV,reset=AdaptiveReset())
 group.vm=-70*mV
 group.I=linspace(0*nA,1*nA,N)

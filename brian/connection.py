@@ -83,6 +83,7 @@ def random_row_func(N, p, weight=1., initseed=None):
         initseed = pyrandom.randint(100000,1000000) # replace this
     cur_row = numpy.zeros(N)
     myrange = numpy.arange(N, dtype=int)
+    
     def row_func(i):
         pyrandom.seed(initseed+int(i))
         scirandom.seed(initseed+int(i))
@@ -90,6 +91,7 @@ def random_row_func(N, p, weight=1., initseed=None):
         cur_row[:] = 0.0
         cur_row[pyrandom.sample(myrange,k)] = weight
         return cur_row
+    
     return row_func
 
 #class UserComputedConnectionMatrix(ConnectionMatrix):
@@ -262,6 +264,7 @@ class ConnectionVector(object):
     '''
     def todense(self):
         return NotImplemented
+    
     def tosparse(self):
         return NotImplemented
 
@@ -271,8 +274,10 @@ class DenseConnectionVector(ConnectionVector, numpy.ndarray):
     '''
     def __new__(subtype, arr):
         return numpy.array(arr, copy=False).view(subtype)
+    
     def todense(self):
         return self
+    
     def tosparse(self):
         return SparseConnectionVector(len(self), self.nonzero(), self)
 
@@ -304,6 +309,7 @@ class SparseConnectionVector(ConnectionVector, numpy.ndarray):
         x.n = n
         x.ind = ind
         return x
+    
     def __array_finalize__(self, orig):
         # the array is passed through this function after standard numpy operations,
         # this ensures that the indices are kept from the original array. This makes,
@@ -314,10 +320,12 @@ class SparseConnectionVector(ConnectionVector, numpy.ndarray):
         except AttributeError:
             pass
         return self
+    
     def todense(self):
         x = zeros(self.n)
         x[self.ind] = self
         return x
+    
     def tosparse(self):
         return self
     # This is a list of the binary operations that numpy arrays support.
@@ -377,9 +385,11 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
     '''
     def __init__(self, val, **kwds):
         self.init_kwds = kwds
+    
     def connection_matrix(self):
         kwds = self.init_kwds
         return DenseConnectionMatrix(self, **kwds)
+    
     def __setitem__(self, index, W):
         # Make it work for sparse matrices
         if isinstance(W,scipy.sparse.spmatrix):
@@ -435,6 +445,7 @@ class SparseConstructionMatrix(ConstructionMatrix, SparseMatrix):
     def __init__(self, arg, **kwds):
         SparseMatrix.__init__(self, arg)
         self.init_kwds = kwds
+        
     def connection_matrix(self):
         return SparseConnectionMatrix(self, **self.init_kwds)
             
@@ -445,6 +456,7 @@ class DynamicConstructionMatrix(ConstructionMatrix, SparseMatrix):
     def __init__(self, arg, **kwds):
         SparseMatrix.__init__(self, arg)
         self.init_kwds = kwds
+        
     def connection_matrix(self):
         return DynamicConnectionMatrix(self, **self.init_kwds)
 
