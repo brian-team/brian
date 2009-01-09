@@ -248,7 +248,7 @@ colon_slice = slice(None,None,None)
 def todense(x):
     if hasattr(x, 'todense'):
         return x.todense()
-    return array(x)
+    return array(x, copy=False)
 
 class ConnectionVector(object):
     '''
@@ -604,20 +604,24 @@ class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
         return self.cols[i]
     
     def set_row(self, i, x):
-        self[i] = todense(x)
+        numpy.ndarray.__setitem__(self, i, todense(x))
     
     def set_col(self, i, x):
-        self[:, i] = todense(x)
+        numpy.ndarray.__setitem__(self, (colon_slice, i), todense(x))
+        #self[:, i] = todense(x)
     
     def get_element(self, i, j):
-        return self[i,j]
+        numpy.ndarray.__getitem__(self, (i, j))
+        #return self[i,j]
     
     def set_element(self, i, j, val):
-        self[i,j] = val
+        numpy.ndarray.__setitem__(self, (i, j), val)
+        #self[i,j] = val
     insert = set_element
     
     def remove(self, i, j):
-        self[i, j] = 0
+        numpy.ndarray.__setitem__(self, (i, j), 0)
+        #self[i, j] = 0
 
 class SparseConnectionMatrix(ConnectionMatrix):
     '''

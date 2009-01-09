@@ -1,9 +1,9 @@
 '''
-IMPORTANT NOTE: Not working with new connections yet!
-TODO: make this work with new connections
+TODO: need to optimise to work better with new connections
+TODO: need to work out better semantics for setting delays
 '''
 from brian import *
-from brian.connection import SparseConnectionMatrix, DenseConnectionMatrix, ComputedConnectionMatrix
+from brian.connection import construction_matrix_register, DenseConnectionVector, SparseConnectionVector, todense
 from scipy import weave
 from operator import isNumberType
 import numpy
@@ -13,7 +13,7 @@ except ImportError:
     class SparseSTDPConnectionMatrix(object):
         pass
 
-__all__ = ['DelayConnection','PresynapticDelayConnection']
+__all__ = ['DelayConnection']#,'PresynapticDelayConnection']
 
 class DelayConnection(Connection):
     '''
@@ -92,16 +92,13 @@ class DelayConnection(Connection):
         # resets to zero.
         self._delayedreaction = numpy.zeros((self._max_delay, len(target)))
         # vector of delay times, can be changed during a run
+        self.delay_dimension = delay_dimension
         if delay_dimension==1:
             self.delayvec = numpy.zeros(len(source))
         elif delay_dimension==2:
             if isinstance(structure,str):
-                structure = {'sparse':SparseConnectionMatrix,
-                    'dense':DenseConnectionMatrix,
-                    'computed':ComputedConnectionMatrix
-                    }[structure]
+                structure = construction_matrix_register[structure]
             self.delayvec=structure((len(source),len(target)),**kwds)
-#            self.delayvec = numpy.zeros((len(source), len(target)))
         else:
             raise ValueError('delay_dimension must be 1 or 2')
         self._cur_delay_ind = 0
@@ -123,67 +120,68 @@ class DelayConnection(Connection):
         self._invtargetdt = 1/self.target.clock._dt
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        
     def propagate(self, spikes):
         # TODO: modulation not yet supported
-        if self.delayvec.ndim==1:
+        if self.delay_dimension==1:
             for i in spikes:
                 # standard propagation, but to the 'state variable' in _delayedreaction defined by the circular
                 # indexing scheme
                 sv = self._delayedreaction[(self._cur_delay_ind+int(self._invtargetdt*self.delayvec[i]))%self._max_delay,:]
-                self.W.add_row(i,sv)
-        elif self.delayvec.ndim==2:
-            if self._useaccel and isinstance(self.W, SparseSTDPConnectionMatrix) and isinstance(self.delayvec,DenseConnectionMatrix):
-                if not isinstance(spikes, numpy.ndarray):
-                    spikes = array(spikes, dtype=int)
-                rowj = self.W.rowj
-                rowdata = self.W.rowdata
-                nspikes = len(spikes)
-                cdi = self._cur_delay_ind
-                delayvec = asarray(self.delayvec)
-                dr = self._delayedreaction
-                invdt = self._invtargetdt
-                maxdelay = self._max_delay
-                code =  """
-                for(int i=0;i<nspikes;i++)
-                {
-                    int j = spikes(i);
-                    PyArrayObject* _thisrowj = convert_to_numpy(rowj[j], "rowj");
-                    conversion_numpy_check_type(_thisrowj, PyArray_INT, "rowj");
-                    conversion_numpy_check_size(_thisrowj, 1, "rowj");
-                    blitz::Array<int,1> thisrowj = convert_to_blitz<int,1>(_thisrowj,"row");
-                    PyArrayObject* _thisrowdata = convert_to_numpy(rowdata[j], "rowdata");
-                    conversion_numpy_check_type(_thisrowdata, PyArray_DOUBLE, "rowdata");
-                    conversion_numpy_check_size(_thisrowdata, 1, "rowdata");
-                    blitz::Array<double,1> thisrowdata = convert_to_blitz<double,1>(_thisrowdata,"rowdata");
-                    int m = thisrowj.numElements();
-                    for(int k=0;k<m;k++)
-                    {
-                        int drind = (cdi + (int)(invdt*delayvec(j, thisrowj(k)))) % maxdelay;
-                        dr(drind, thisrowj(k)) = dr(drind, thisrowj(k)) + thisrowdata(k);
-                    }
-                }
-                """
-                weave.inline(code,['rowj','rowdata','dr','delayvec','invdt','maxdelay','cdi','spikes','nspikes'],
-                             compiler=self._cpp_compiler,
-                             type_converters=weave.converters.blitz,
-                             extra_compile_args=['-O3'])
-            else:
-                for i in spikes:
-                    # TODO: fix this temporary hack until we sort out generalised connection matrices better
-                    dvecrow = self.delayvec[i,:]
-                    # handle the case where W is a sparse matrix
-                    if hasattr(dvecrow,'toarray'):
-                        dvecrow = dvecrow.toarray().squeeze()
-                    drind = (self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow,dtype=int))%self._max_delay
-                    # TODO: fix this temporary hack until we sort out generalised connection matrices better
-                    Wrow = self.W[i,:]
-                    # handle the case where W is a sparse matrix
-                    if hasattr(Wrow,'toarray'):
-                        Wrow = Wrow.toarray().squeeze()
-                    self._delayedreaction[drind,numpy.arange(len(drind),dtype=int)]+=Wrow
+                row = self.W.get_row(i)
+                if isinstance(row, DenseConnectionVector):
+                    sv += row
+                else:
+                    sv[row.ind] += row
+        elif self.delay_dimension==2:
+            # Accelerated code from old version follows, will need to be changed but I'm leaving it
+            # here because it might have some useful ideas in it.
+#            if self._useaccel and isinstance(self.W, SparseSTDPConnectionMatrix) and isinstance(self.delayvec,DenseConnectionMatrix):
+#                if not isinstance(spikes, numpy.ndarray):
+#                    spikes = array(spikes, dtype=int)
+#                rowj = self.W.rowj
+#                rowdata = self.W.rowdata
+#                nspikes = len(spikes)
+#                cdi = self._cur_delay_ind
+#                delayvec = asarray(self.delayvec)
+#                dr = self._delayedreaction
+#                invdt = self._invtargetdt
+#                maxdelay = self._max_delay
+#                code =  """
+#                for(int i=0;i<nspikes;i++)
+#                {
+#                    int j = spikes(i);
+#                    PyArrayObject* _thisrowj = convert_to_numpy(rowj[j], "rowj");
+#                    conversion_numpy_check_type(_thisrowj, PyArray_INT, "rowj");
+#                    conversion_numpy_check_size(_thisrowj, 1, "rowj");
+#                    blitz::Array<int,1> thisrowj = convert_to_blitz<int,1>(_thisrowj,"row");
+#                    PyArrayObject* _thisrowdata = convert_to_numpy(rowdata[j], "rowdata");
+#                    conversion_numpy_check_type(_thisrowdata, PyArray_DOUBLE, "rowdata");
+#                    conversion_numpy_check_size(_thisrowdata, 1, "rowdata");
+#                    blitz::Array<double,1> thisrowdata = convert_to_blitz<double,1>(_thisrowdata,"rowdata");
+#                    int m = thisrowj.numElements();
+#                    for(int k=0;k<m;k++)
+#                    {
+#                        int drind = (cdi + (int)(invdt*delayvec(j, thisrowj(k)))) % maxdelay;
+#                        dr(drind, thisrowj(k)) = dr(drind, thisrowj(k)) + thisrowdata(k);
+#                    }
+#                }
+#                """
+#                weave.inline(code,['rowj','rowdata','dr','delayvec','invdt','maxdelay','cdi','spikes','nspikes'],
+#                             compiler=self._cpp_compiler,
+#                             type_converters=weave.converters.blitz,
+#                             extra_compile_args=['-O3'])
+#            else:
+            for i in spikes:
+                # TODO: should consider the two cases of dense and sparse separately
+                dvecrow = self.delayvec.get_row(i).todense()
+                drind = (self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow, dtype=int))%self._max_delay
+                Wrow = self.W.get_row(i).todense()
+                self._delayedreaction[drind, numpy.arange(len(drind), dtype=int)] += Wrow
         else:
             raise ValueError('delay array should be 1 or 2 dimensional')
-
+        
+    # earlier attempt at defining semantics for connect_random with delays, I don't think it works.
 #    def connect_random(self,P,Q,p,weight=1.,delay=0.,fixed=False, seed=None):
 #        Connection.connect_random(self, P, Q, p, weight=weight, fixed=fixed, seed=seed)
 #        if isNumberType(delay):
@@ -241,90 +239,103 @@ class DelayConnection(Connection):
 
     delays = property(fget=lambda self:self.delayvec, fset=set_delays)
 
-#    def compress(self):
-#        if not self.iscompressed:
-#            Connection.compress(self)
-#            if self.delayvec.ndim==2:
-#                self.delayvec.freeze()    
+    def compress(self):
+        if not self.iscompressed:
+            if self.delayvec.ndim==2:
+                # We want delayvec to have nonzero entries at the same places as
+                # W does, so we use W to initialise the compressed version of
+                # delayvec, and then copy the values from the old delayvec to
+                # the new compressed one, allowing delayvec and W to not have
+                # to be perfectly intersected at the initialisation stage. If
+                # the structure is dynamic, it will be the user's
+                # responsibility to update them in sequence
+                delayvec = self.delayvec
+                self.delayvec = self.W.connection_matrix()
+                for i in xrange(self.W.shape[0]):
+                    delayvec[i,:]
+                    self.delayvec.set_row(i, array(todense(delayvec[i,:]), copy=False).flatten())    
+            Connection.compress(self)
 
 
-class PresynapticDelayConnection(Connection):
-    def __init__(self, source, target, state=0, modulation=None,
-                 structure='sparse', max_delay=5*msecond, delay_dimension=1, **kwds):
-        Connection.__init__(self, source, target, state=state, modulation=modulation, structure=structure, **kwds)
-        self._max_delay = int(max_delay/target.clock.dt)+1
-        # Each row of the following array stores the cumulative effect of spikes at some
-        # particular time, defined by a circular indexing scheme. The _cur_delay_ind attribute
-        # stores the row corresponding to the current time, so that _cur_delay_ind+1 corresponds
-        # to that time + target.clock.dt, and so on. When _cur_delay_ind reaches _max_delay it
-        # resets to zero.
-        self._delayedreaction = numpy.zeros((self._max_delay, len(source)),dtype=bool)
-        # vector of delay times, can be changed during a run
-        if delay_dimension==1:
-            self.delayvec = numpy.zeros(len(source))
-#        elif delay_dimension==2:
-#            if isinstance(structure,str):
-#                structure = {'sparse':SparseConnectionMatrix,
-#                    'dense':DenseConnectionMatrix,
-#                    'computed':ComputedConnectionMatrix
-#                    }[structure]
-#            self.delayvec=structure((len(source),len(target)),**kwds)
-##            self.delayvec = numpy.zeros((len(source), len(target)))
-        else:
-            raise ValueError('delay_dimension must be 1')
-        self._cur_delay_ind = 0
-        # this network operation is added to the Network object via the contained_objects
-        # protocol (see the line after the function definition). The standard Connection.propagate
-        # function propagates spikes to _delayedreaction rather than the target, and this
-        # function which is called after the usual propagations propagates that data from
-        # _delayedreaction to the target. It only needs to be called each target.clock update.
-        @network_operation(clock=target.clock, when='after_connections')
-        def delayed_propagate():
-            # propagate from _delayedreaction -> target group multiplying by W
-            Connection.propagate(self, where(self._delayedreaction[self._cur_delay_ind])[0])
-            # reset the current row of _delayedreaction
-            self._delayedreaction[self._cur_delay_ind, :] = False
-            # increase the index for the circular indexing scheme
-            self._cur_delay_ind = (self._cur_delay_ind + 1) % self._max_delay
-        self.contained_objects = [delayed_propagate]
-        # this is just used to convert delayvec's which are in ms to integers, precalculating it makes it faster
-        self._invtargetdt = 1/self.target.clock._dt
-        self._useaccel = get_global_preference('useweave')
-        self._cpp_compiler = get_global_preference('weavecompiler')
-    def propagate(self, spikes):
-        # TODO: modulation not yet supported
-        if self.delayvec.ndim==1:
-            if not isinstance(spikes, numpy.ndarray):
-                spikes = array(spikes, dtype=int)
-            dvec = self.delayvec[spikes]
-            drind = (self._cur_delay_ind+numpy.array(self._invtargetdt*dvec,dtype=int))%self._max_delay
-            self._delayedreaction[drind, spikes] = True
-#        elif self.delayvec.ndim==2:
-#            for i in spikes:
-#                # TODO: fix this temporary hack until we sort out generalised connection matrices better
-#                dvecrow = self.delayvec[i,:]
-#                # handle the case where W is a sparse matrix
-#                if hasattr(dvecrow,'toarray'):
-#                    dvecrow = dvecrow.toarray().squeeze()
-#                drind = (self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow,dtype=int))%self._max_delay
-#                # TODO: fix this temporary hack until we sort out generalised connection matrices better
-#                Wrow = self.W[i,:]
-#                # handle the case where W is a sparse matrix
-#                if hasattr(Wrow,'toarray'):
-#                    Wrow = Wrow.toarray().squeeze()
-#                self._delayedreaction[drind,numpy.arange(len(drind),dtype=int)]+=Wrow
-        else:
-            raise ValueError('delay array should be 1 dimensional')
-    
-    def set_delays(self, val):
-        self.delayvec[:]=val
-
-    delays = property(fget=lambda self:self.delayvec, fset=set_delays)
+# I think this class was unfinished, anyway it's not clear how it differs from the previous one
+# except that it appears to be less complete
+#class PresynapticDelayConnection(Connection):
+#    def __init__(self, source, target, state=0, modulation=None,
+#                 structure='sparse', max_delay=5*msecond, delay_dimension=1, **kwds):
+#        Connection.__init__(self, source, target, state=state, modulation=modulation, structure=structure, **kwds)
+#        self._max_delay = int(max_delay/target.clock.dt)+1
+#        # Each row of the following array stores the cumulative effect of spikes at some
+#        # particular time, defined by a circular indexing scheme. The _cur_delay_ind attribute
+#        # stores the row corresponding to the current time, so that _cur_delay_ind+1 corresponds
+#        # to that time + target.clock.dt, and so on. When _cur_delay_ind reaches _max_delay it
+#        # resets to zero.
+#        self._delayedreaction = numpy.zeros((self._max_delay, len(source)),dtype=bool)
+#        # vector of delay times, can be changed during a run
+#        if delay_dimension==1:
+#            self.delayvec = numpy.zeros(len(source))
+##        elif delay_dimension==2:
+##            if isinstance(structure,str):
+##                structure = {'sparse':SparseConnectionMatrix,
+##                    'dense':DenseConnectionMatrix,
+##                    'computed':ComputedConnectionMatrix
+##                    }[structure]
+##            self.delayvec=structure((len(source),len(target)),**kwds)
+###            self.delayvec = numpy.zeros((len(source), len(target)))
+#        else:
+#            raise ValueError('delay_dimension must be 1')
+#        self._cur_delay_ind = 0
+#        # this network operation is added to the Network object via the contained_objects
+#        # protocol (see the line after the function definition). The standard Connection.propagate
+#        # function propagates spikes to _delayedreaction rather than the target, and this
+#        # function which is called after the usual propagations propagates that data from
+#        # _delayedreaction to the target. It only needs to be called each target.clock update.
+#        @network_operation(clock=target.clock, when='after_connections')
+#        def delayed_propagate():
+#            # propagate from _delayedreaction -> target group multiplying by W
+#            Connection.propagate(self, where(self._delayedreaction[self._cur_delay_ind])[0])
+#            # reset the current row of _delayedreaction
+#            self._delayedreaction[self._cur_delay_ind, :] = False
+#            # increase the index for the circular indexing scheme
+#            self._cur_delay_ind = (self._cur_delay_ind + 1) % self._max_delay
+#        self.contained_objects = [delayed_propagate]
+#        # this is just used to convert delayvec's which are in ms to integers, precalculating it makes it faster
+#        self._invtargetdt = 1/self.target.clock._dt
+#        self._useaccel = get_global_preference('useweave')
+#        self._cpp_compiler = get_global_preference('weavecompiler')
+#    def propagate(self, spikes):
+#        # TODO: modulation not yet supported
+#        if self.delayvec.ndim==1:
+#            if not isinstance(spikes, numpy.ndarray):
+#                spikes = array(spikes, dtype=int)
+#            dvec = self.delayvec[spikes]
+#            drind = (self._cur_delay_ind+numpy.array(self._invtargetdt*dvec,dtype=int))%self._max_delay
+#            self._delayedreaction[drind, spikes] = True
+##        elif self.delayvec.ndim==2:
+##            for i in spikes:
+##                # TODO: fix this temporary hack until we sort out generalised connection matrices better
+##                dvecrow = self.delayvec[i,:]
+##                # handle the case where W is a sparse matrix
+##                if hasattr(dvecrow,'toarray'):
+##                    dvecrow = dvecrow.toarray().squeeze()
+##                drind = (self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow,dtype=int))%self._max_delay
+##                # TODO: fix this temporary hack until we sort out generalised connection matrices better
+##                Wrow = self.W[i,:]
+##                # handle the case where W is a sparse matrix
+##                if hasattr(Wrow,'toarray'):
+##                    Wrow = Wrow.toarray().squeeze()
+##                self._delayedreaction[drind,numpy.arange(len(drind),dtype=int)]+=Wrow
+#        else:
+#            raise ValueError('delay array should be 1 dimensional')
+#    
+#    def set_delays(self, val):
+#        self.delayvec[:]=val
+#
+#    delays = property(fget=lambda self:self.delayvec, fset=set_delays)
 
 if __name__=='__main__':
     
-    dimensions = 1
-    dc = PresynapticDelayConnection
+    dimensions = 2
+    dc = DelayConnection
     
     if dimensions==1:
     
@@ -356,13 +367,12 @@ if __name__=='__main__':
         
         C = dc(inp, outp, structure='dense', delay_dimension=2)
         C.connect_full(inp, outp)
-        for j in range(M):
-            C.delays[:, j] = [(maxdelay*i*j)/((N-1)*(M-1)) for i in range(N)]
+        for i in xrange(N):
+            for j in xrange(M):
+                C.delays[i,j] = (maxdelay*i*j)/((N-1)*(M-1))
         C.delays[0,1] = 3*ms
         C.delays[0,2] = 2*ms
-            
-#        print C.delayvec[4,:]/ms
-        
+                
         M_outp = SpikeMonitor(outp)
         
         run(20*ms)
