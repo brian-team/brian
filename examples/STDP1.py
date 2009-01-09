@@ -50,12 +50,12 @@ input.rate=10*Hz
 rate=PopulationRateMonitor(neurons)
 
 start_time=time()
-run(100*second)
-#run(2*second)
+#run(100*second)
+run(2*second)
 print "Simulation time:",time()-start_time
 
 subplot(211)
 plot(rate.times/ms,rate.smooth_rate(500*ms))
 subplot(212)
-plot(synapses.W.squeeze(),'.')
+plot(asarray(synapses.W).squeeze(),'.')
 show()

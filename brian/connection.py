@@ -1171,8 +1171,10 @@ class Connection(magic.InstanceTracker):
                             sv[row.ind] += row
                     else:
                         # Rows stored as sparse vectors with modulation
-                        for row in rows:
-                            sv[row.ind] += row*sv_pre[row.ind]
+                        for i, row in izip(spikes, rows):
+                            # note we call the numpy __mul__ directly because row is
+                            # a SparseConnectionVector with different mul semantics
+                            sv[row.ind] += numpy.ndarray.__mul__(row, sv_pre[i])
                 else:
                     if self._nstate_mod is None:
                         # Rows stored as dense vectors without modulation
@@ -1180,8 +1182,8 @@ class Connection(magic.InstanceTracker):
                             sv += row
                     else:
                         # Rows stored as dense vectors with modulation
-                        for row in rows:
-                            sv += row*sv_pre                    
+                        for i, row in izip(spikes, rows):
+                            sv += numpy.ndarray.__mul__(row, sv_pre[i])                    
             else: # C++ accelerated code, does the same as the code above but faster and less pretty
                 if isinstance(rows[0], SparseConnectionVector):
                     if self._nstate_mod is None:
@@ -1226,9 +1228,10 @@ class Connection(magic.InstanceTracker):
                                     conversion_numpy_check_size(_data, 1, "data");
                                     blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
                                     int m = row.numElements();
+                                    double mod = sv_pre(spikes(j));
                                     for(int k=0;k<m;k++)
                                     {
-                                        sv(row(k)) += data(k)*sv_pre(row(k));
+                                        sv(row(k)) += data(k)*mod;
                                     }
                                 }
                                 """
@@ -1269,8 +1272,9 @@ class Connection(magic.InstanceTracker):
                                     conversion_numpy_check_type(_row, PyArray_DOUBLE, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
                                     blitz::Array<double,1> row = convert_to_blitz<double,1>(_row,"row");
+                                    double mod = sv_pre(spikes(j));
                                     for(int k=0;k<N;k++)
-                                        sv(k) += row(k)*sv_pre(k);
+                                        sv(k) += row(k)*mod;
                                 }
                                 """
                         weave.inline(code,['sv','sv_pre','spikes','nspikes','N', 'rows'],
