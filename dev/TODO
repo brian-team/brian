@@ -41,7 +41,6 @@ C = Connection(G, H, 'V', weight=1*mV, p=0.1)
 * Why is t a vector?
 Figure out why group.t is a vector. It might have to do with units.
 
-* Heterogeneous delays
+* Heterogeneous delays (fix to work with new connection matrices)
 * Use the GPU: complete project with TechX to use GPU accelerated versions of code.
 * Meaningful error messages: Improve catching of errors and usefulness of error messages
-* New connection matrices

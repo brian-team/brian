@@ -1,9 +1,11 @@
 New features since 1.0.0
 ------------------------
 
+* New code for Connections, including new 'dynamic' connection matrix type
 * Reset and threshold can be specified with strings (Python expressions)
-* Spike train statitics (utils.statistics)
+* Spike train statistics (utils.statistics)
 * Miscellaneous optimisations
+* New MultiStateMonitor class
 
 New features since 1.0.0 rc5
 ----------------------------
