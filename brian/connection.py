@@ -1193,11 +1193,13 @@ class Connection(magic.InstanceTracker):
                         code =  """
                                 for(int j=0;j<nspikes;j++)
                                 {
-                                    PyArrayObject* _row = convert_to_numpy(rowinds[j], "row");
+                                    PyObject* _rowind = rowinds[j];
+                                    PyArrayObject* _row = convert_to_numpy(_rowind, "row");
                                     conversion_numpy_check_type(_row, PyArray_INT, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
                                     blitz::Array<int,1> row = convert_to_blitz<int,1>(_row,"row");
-                                    PyArrayObject* _data = convert_to_numpy(datas[j], "data");
+                                    PyObject* _datasj = datas[j];
+                                    PyArrayObject* _data = convert_to_numpy(_datasj, "data");
                                     conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
                                     conversion_numpy_check_size(_data, 1, "data");
                                     blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
@@ -1206,6 +1208,8 @@ class Connection(magic.InstanceTracker):
                                     {
                                         sv(row(k)) += data(k);
                                     }
+                                    Py_DECREF(_rowind);
+                                    Py_DECREF(_datasj);
                                 }
                                 """
                         weave.inline(code,['sv','rowinds','datas','spikes','nspikes'],
@@ -1219,11 +1223,13 @@ class Connection(magic.InstanceTracker):
                         code =  """
                                 for(int j=0;j<nspikes;j++)
                                 {
-                                    PyArrayObject* _row = convert_to_numpy(rowinds[j], "row");
+                                    PyObject* _rowind = rowinds[j];
+                                    PyArrayObject* _row = convert_to_numpy(_rowind, "row");
                                     conversion_numpy_check_type(_row, PyArray_INT, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
                                     blitz::Array<int,1> row = convert_to_blitz<int,1>(_row,"row");
-                                    PyArrayObject* _data = convert_to_numpy(datas[j], "data");
+                                    PyObject* _datasj = datas[j];
+                                    PyArrayObject* _data = convert_to_numpy(_datasj, "data");
                                     conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
                                     conversion_numpy_check_size(_data, 1, "data");
                                     blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
@@ -1233,6 +1239,8 @@ class Connection(magic.InstanceTracker):
                                     {
                                         sv(row(k)) += data(k)*mod;
                                     }
+                                    Py_DECREF(_rowind);
+                                    Py_DECREF(_datasj);
                                 }
                                 """
                         weave.inline(code,['sv','sv_pre','rowinds','datas','spikes','nspikes'],
@@ -1248,12 +1256,14 @@ class Connection(magic.InstanceTracker):
                         code =  """
                                 for(int j=0;j<nspikes;j++)
                                 {
-                                    PyArrayObject* _row = convert_to_numpy(rows[j], "row");
+                                    PyObject* _rowsj = rows[j];
+                                    PyArrayObject* _row = convert_to_numpy(_rowsj, "row");
                                     conversion_numpy_check_type(_row, PyArray_DOUBLE, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
                                     blitz::Array<double,1> row = convert_to_blitz<double,1>(_row,"row");
                                     for(int k=0;k<N;k++)
                                         sv(k) += row(k);
+                                    Py_DECREF(_rowsj);
                                 }
                                 """
                         weave.inline(code,['sv','spikes','nspikes','N', 'rows'],
@@ -1268,13 +1278,15 @@ class Connection(magic.InstanceTracker):
                         code =  """
                                 for(int j=0;j<nspikes;j++)
                                 {
-                                    PyArrayObject* _row = convert_to_numpy(rows[j], "row");
+                                    PyObject* _rowsj = rows[j];
+                                    PyArrayObject* _row = convert_to_numpy(_rowsj, "row");
                                     conversion_numpy_check_type(_row, PyArray_DOUBLE, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
                                     blitz::Array<double,1> row = convert_to_blitz<double,1>(_row,"row");
                                     double mod = sv_pre(spikes(j));
                                     for(int k=0;k<N;k++)
                                         sv(k) += row(k)*mod;
+                                    Py_DECREF(_rowsj);
                                 }
                                 """
                         weave.inline(code,['sv','sv_pre','spikes','nspikes','N', 'rows'],
