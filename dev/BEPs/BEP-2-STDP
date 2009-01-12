@@ -1,2 +1,11 @@
 BEP-2: Spike-timing-dependent plasticity
 
+How to specify STDP:
+* presynaptic group
+* postsynaptic group
+* connection matrix
+* STDP rule
+
+One possibility is pass a Connection object, which holds
+the first 3 elements. Alternatively, keyword arguments could be
+passed when initialising the Connection object.
