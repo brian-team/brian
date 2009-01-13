@@ -1,11 +1,65 @@
 BEP-2: Spike-timing-dependent plasticity
 
+Interface
+=========
 How to specify STDP:
 * presynaptic group
 * postsynaptic group
 * connection matrix
 * STDP rule
 
-One possibility is pass a Connection object, which holds
+One possibility is to pass a Connection object, which holds
 the first 3 elements. Alternatively, keyword arguments could be
-passed when initialising the Connection object.
+passed when initialising the Connection object. Or a Connection
+method could be used: myconnection.set_STDP(...).
+
+How to specify the STDP rule
+----------------------------
+* Differential equations
+^^^^^^^^^^^^^^^^^^^^^^^^
+One can define directly the synaptic model, e.g.:
+
+pre:
+	dA_pre/dt=-A_pre/tau_pre : 1
+post:
+	dA_post/dt=-A_post/tau_post : 1
+spike_pre:
+	A_pre+=dA_pre
+	w=clip(w+A_post,0,gmax) # or w+=A_post and use automatic clipping
+spike_post:
+	A_post+=dA_post
+	w=clip(w+A_pre,0,gmax)
+
+How to pass this model?
+Possibly like NeuronGroup (advantage: same mechanism):
+STDP(eqs='dA/...',presynaptic='A_pre...',postsynaptic='A_post...')
+and w is a special identifier meaning synaptic weight.
+Note that it is necessary to define pre and post-synaptic variables,
+in order to interpret the expressions in spike_pre and spike_post.
+
+Implementation:
+* Presynaptic and postsynaptic groups are created, with the corresponding
+variables (A_pre, A_post) and differential equations.
+* Operation associated to presynaptic spikes:
+	A_pre[spikes]+=dA_pre # insertion of [spikes] after presynaptic variables
+	w[spikes,:]=clip(w[spikes,:]+A_post,0,gmax) # insertion of [spikes,:] after w
+  and w is the connection matrix.
+* Same for postsynaptic spikes except [:,spikes] is inserted.
+To implement the last 2 operations, there should be a forward and backward propagate
+function in Connection, that would be called by the network object.
+
+* Phenomenological
+^^^^^^^^^^^^^^^^^^
+
+* Standard predefined types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Typically, most people use exponential STDP, with various types of interactions
+(all-to-all/nearest neighbour, additive/multiplicative etc). In that case
+
+Event-driven implementation
+===========================
+In an event-driven implementation, pre and postsynaptic variables are only updated at
+spike times. In the example above:
+A_pre[spikes]=A_pre[spikes]*exp(-(t-lastt[spikes])/tau_pre), where lastt is a vector of
+last update times.
+And: lastt[spikes]=t

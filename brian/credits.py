@@ -37,11 +37,12 @@ Functions that return contributor information on Brian functions,
 classes and modules.
 '''
 
-__all__=['credits']
+__all__=['credits','author']
 
 from types import StringType
 
-from inspect import getmodule
+from inspect import getmodule,getsource
+import re
 
 def credits(obj=None):
     '''
@@ -69,3 +70,30 @@ def credits(obj=None):
         except:
             pass
         return d
+
+def author(obj):
+    '''
+    A stupid function that returns the most likely author(s) of the object (Dan or Romain),
+    guessing from code style.
+    TODO: remove comments from code.
+    '''
+    text=getsource(obj)
+    dan,romain=False,False
+    authors=[]
+
+    # Remove comments/strings
+    text=re.sub(r'#.*?\n','',text)
+    p=re.compile(r'""".*?"""',flags=re.S)
+    text=p.sub('',text)
+    p=re.compile(r"'''.*?'''",flags=re.S)
+    text=p.sub('',text)
+
+    # Guess from spaces
+    if re.search(r', \b',text): dan=True
+    if re.search(r'\b = \b',text): dan=True    
+    if re.search(r',\b',text): romain=True
+    if re.search(r'\b=\b',text): romain=True    
+    
+    if dan: authors+=["Dan"]
+    if romain: authors+=["Romain"]
+    return authors
