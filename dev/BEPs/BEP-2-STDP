@@ -17,6 +17,7 @@ How to specify the STDP rule
 ----------------------------
 * Differential equations
 ^^^^^^^^^^^^^^^^^^^^^^^^
+This is the most general way of specifying the STDP rule.
 One can define directly the synaptic model, e.g.:
 
 pre:
@@ -48,13 +49,42 @@ variables (A_pre, A_post) and differential equations.
 To implement the last 2 operations, there should be a forward and backward propagate
 function in Connection, that would be called by the network object.
 
+Notes:
+* In some rules (last developments by W. Gerstner and M. van Rossum), the differential
+system can depend on the membrane potential (or another variable) of the postsynaptic
+neuron (not of the presynaptic one). This could be included in the specification above,
+but only for the postsynaptic side (I don't think it is possible to vectorise if it is
+on the presynaptic side). We should probably check that in those papers.
+
 * Phenomenological
 ^^^^^^^^^^^^^^^^^^
+The user must provide:
+* f(t>0) and f(t<0) (weight modification function)
+* consider all or nearest spikes, for both presynaptic and postsynaptic spikes
+* weight update rule, for t>0 and t<0. E.g.: w+=dw or w+=(1-w)*dw
+This is less general than the specification based on differential systems (e.g. triplet
+rules are not possible).
+
+Example:
+STDP(f_pre="Apre*exp(-t/tau_pre)",
+     f_post="Apost*exp(-t/tau_post)",
+     pre='all',post='nearest',
+     update_pre='(1-w)*dw',update_post='dw')
+with defaults pre='all', post='all', update_pre='dw', update_post='dw'.
+[the _pre and _post suffixes are not good; should causal/anticausal or something like that;
+or maybe _prepost and _postpre].
+Bounds should also be specified, if necessary.
+
+The functions (f_pre, f_post) would be turned into differential systems
+(see experimental/integrodiff). Interaction "all" converts to Apre[spikes]+=1,
+interaction "nearest" converts to Apre[spikes]=1.
 
 * Standard predefined types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Typically, most people use exponential STDP, with various types of interactions
-(all-to-all/nearest neighbour, additive/multiplicative etc). In that case
+(all-to-all/nearest neighbour, additive/multiplicative etc). Essentially,
+this only applies to the definition of differential equations, i.e., of the
+weight change function (f_pre and f_post).
 
 Event-driven implementation
 ===========================
@@ -63,3 +93,23 @@ spike times. In the example above:
 A_pre[spikes]=A_pre[spikes]*exp(-(t-lastt[spikes])/tau_pre), where lastt is a vector of
 last update times.
 And: lastt[spikes]=t
+
+In that case, 2 possibilities:
+* specific neuron groups with no update method, but instead another method for specific
+updates. One idea: def update(self,index=None), where index is the list of neurons to update. 
+* no groups, the vectors A_pre and A_post are stored and managed by the Connection object or
+a STDP object. That does not seem very general, however.
+* no groups, the vectors A_pre and A_post are stored in the pre and postsynaptic groups,
+but updated somewhere else (at spike times).
+
+The last possibility looks better.
+
+How to calculate exact solutions of linear differential systems:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+An idea could be to use some matric decomposition:
+http://en.wikipedia.org/wiki/Matrix_decomposition
+such as diagonalization (but that is not always possible) or (most general) the
+Jordan decomposition.
+Alternatively, one could use expm(At), where t has to be calculated for each updated
+neuron index (too slow?). The scipy.linalg function expm is written in Pure Python using
+the Padé approximation (rational approximation), so it might be possible to vectorise it.
