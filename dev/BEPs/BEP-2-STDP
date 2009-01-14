@@ -33,10 +33,38 @@ spike_post:
 
 How to pass this model?
 Possibly like NeuronGroup (advantage: same mechanism):
-STDP(eqs='dA/...',presynaptic='A_pre...',postsynaptic='A_post...')
+STDP(eqs_pre='dA_pre/...',spikes_pre='A_pre...',eqs_post='dA_post/...',spikes_post='A_post...')
 and w is a special identifier meaning synaptic weight.
 Note that it is necessary to define pre and post-synaptic variables,
 in order to interpret the expressions in spike_pre and spike_post.
+
+Syntax suggestions:
+1) myconnection.set_STDP(eqs_pre='dA_pre/...', # equations string (with units etc)
+                        spikes_pre='A_pre...', # python statements
+                        eqs_post='dA_post/...',
+                        spikes_post='A_post...')
+
+2) myconnection=Connection(...,STDP={'eqs_pre'=...,'spikes_pre'=...})
+
+3) myconnection=Connection(...,STDP=STDP(eqs_pre=...,spikes_pre=...))
+
+4) eqs="""
+pre:
+	dA_pre/dt=-A_pre/tau_pre : 1
+	spike:
+		A_pre+=dA_pre
+		w=clip(w+A_post,0,gmax) # or w+=A_post and use automatic clipping
+post:
+	dA_post/dt=-A_post/tau_post : 1
+	spike:
+		A_post+=dA_post
+		w=clip(w+A_pre,0,gmax)
+"""
+myconnection=Connection(...,STDP=eqs)
+
+Possibly, we could go for 1), then later add the syntax 2).
+Syntax 4) would make sense if we had similar ways of specifying neuron models
+(see Eilif's suggestion).
 
 Implementation:
 * Presynaptic and postsynaptic groups are created, with the corresponding
@@ -66,13 +94,13 @@ This is less general than the specification based on differential systems (e.g. 
 rules are not possible).
 
 Example:
-STDP(f_pre="Apre*exp(-t/tau_pre)",
-     f_post="Apost*exp(-t/tau_post)",
-     pre='all',post='nearest',
-     update_pre='(1-w)*dw',update_post='dw')
+set_STDP(f_pre="Apre*exp(-t/tau_pre)",
+         f_post="Apost*exp(-t/tau_post)",
+         pre='all',post='nearest',
+         update_pre='(1-w)*dw',update_post='dw')
 with defaults pre='all', post='all', update_pre='dw', update_post='dw'.
 [the _pre and _post suffixes are not good; should causal/anticausal or something like that;
-or maybe _prepost and _postpre].
+or maybe _prepost and _postpre, or pos/neg]. Alternatively, bounds="soft"/"hard"/"semisoft".
 Bounds should also be specified, if necessary.
 
 The functions (f_pre, f_post) would be turned into differential systems
@@ -85,6 +113,10 @@ Typically, most people use exponential STDP, with various types of interactions
 (all-to-all/nearest neighbour, additive/multiplicative etc). Essentially,
 this only applies to the definition of differential equations, i.e., of the
 weight change function (f_pre and f_post).
+
+Example:
+myconnection.set_exponentialSTDP(Apre=,Apost=,tau_pre=,tau_post=)
+# and all other keyword arguments as above (all/nearest/)
 
 Event-driven implementation
 ===========================
