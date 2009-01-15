@@ -180,10 +180,11 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer):
 #    + N (number of neurons in group)
     
     @check_units(refractory=second,max_delay=second)
-    def __init__(self,N,model=None,threshold=None,reset=NoReset(),\
-                 init=None,\
-                 refractory=0*msecond,clock=None,order=1,implicit=False,\
-                 max_delay=0*msecond,compile=False,freeze=False,method=None,**args):
+    def __init__(self, N, model=None, threshold=None, reset=NoReset(),
+                 init=None, refractory=0*msecond,
+                 clock=None, order=1, implicit=False,
+                 max_delay=0*msecond, compile=False, freeze=False, method=None,
+                 **args):
         '''
         Initializes the group.
         '''
