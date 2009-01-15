@@ -35,38 +35,48 @@ How to pass this model?
 Possibly like NeuronGroup (advantage: same mechanism):
 STDP(eqs_pre='dA_pre/...',spikes_pre='A_pre...',eqs_post='dA_post/...',spikes_post='A_post...')
 and w is a special identifier meaning synaptic weight.
+
 Note that it is necessary to define pre and post-synaptic variables,
 in order to interpret the expressions in spike_pre and spike_post.
+But these could in principle be guessed. Presynaptic (postsynaptic) variables are those variables
+modified by presynaptic (postsynaptic) spikes. All identifiers in the "spike_pre" statement
+that are in left-hand sides are modified. This is not trivial to do but possible.
 
-Syntax suggestions:
-1) myconnection.set_STDP(eqs_pre='dA_pre/...', # equations string (with units etc)
-                        spikes_pre='A_pre...', # python statements
-                        eqs_post='dA_post/...',
-                        spikes_post='A_post...')
+Syntax:
+stdp=STDP(C,eqs='''
+                dA_pre/...
+                dA_post/...''', # equations string (with units etc)
+                pre='A_pre...', # python statements
+                post='A_post...'[,
+                bounds=(0,gmax)]) # clipping
 
-2) myconnection=Connection(...,STDP={'eqs_pre'=...,'spikes_pre'=...})
-
-3) myconnection=Connection(...,STDP=STDP(eqs_pre=...,spikes_pre=...))
-
-4) eqs="""
-pre:
-	dA_pre/dt=-A_pre/tau_pre : 1
-	spike:
-		A_pre+=dA_pre
-		w=clip(w+A_post,0,gmax) # or w+=A_post and use automatic clipping
-post:
-	dA_post/dt=-A_post/tau_post : 1
-	spike:
-		A_post+=dA_post
-		w=clip(w+A_pre,0,gmax)
-"""
-myconnection=Connection(...,STDP=eqs)
-
-Possibly, we could go for 1), then later add the syntax 2).
-Syntax 4) would make sense if we had similar ways of specifying neuron models
-(see Eilif's suggestion).
+	For the future?
+	eqs="""
+	pre:
+		dA_pre/dt=-A_pre/tau_pre : 1
+		spike:
+			A_pre+=dA_pre
+			w=clip(w+A_post,0,gmax) # or w+=A_post and use automatic clipping
+	post:
+		dA_post/dt=-A_post/tau_post : 1
+		spike:
+			A_post+=dA_post
+			w=clip(w+A_pre,0,gmax)
+	"""
+	myconnection=Connection(...,STDP=eqs)
 
 Implementation:
+* get identifiers from pre and post code
+* find which ones are modified (e.g. regular expression matching; careful with comments)
+* separate differential equations in pre/post
+* check pre/post consistency
+* create virtual groups (inherit NeuronGroup; Group?), pre and post
+* pre/post code: add [spikes,:] etc
+* bounds: add one line to pre/post code (clip(w,min,max,w))
+* event-driven code; do some speed tests
+* create forward and backward Connection objects; propagate does pre or post code and
+event-driven updates
+
 * Presynaptic and postsynaptic groups are created, with the corresponding
 variables (A_pre, A_post) and differential equations.
 * Operation associated to presynaptic spikes:
