@@ -59,6 +59,7 @@ import random as pyrandom
 from scipy import random as scirandom
 from utils.approximatecomparisons import is_within_absolute_tolerance
 from globalprefs import *
+from base import *
     
 effective_zero = 1e-40
 
@@ -994,7 +995,7 @@ class DynamicConnectionMatrix(ConnectionMatrix):
         else:
             ConnectionMatrix.__setitem__(self, item, value)
 
-class Connection(magic.InstanceTracker):
+class Connection(magic.InstanceTracker, ObjectContainer):
     '''
     Mechanism for propagating spikes from one group to another
 

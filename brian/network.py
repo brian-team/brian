@@ -48,6 +48,7 @@ import types
 from itertools import chain
 from collections import defaultdict
 import copy
+from base import *
 
 globally_stopped = False
 
@@ -547,7 +548,7 @@ def unpickle_network(oldclass, net):
     return net
     
 
-class NetworkOperation(magic.InstanceTracker):
+class NetworkOperation(magic.InstanceTracker, ObjectContainer):
     """Callable class for operations that should be called every update step
     
     Typically, you should just use the :func:`network_operation` decorator, but if you

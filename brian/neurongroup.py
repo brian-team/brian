@@ -60,9 +60,10 @@ from neuronmodel import *
 import sys
 from brian_unit_prefs import bup
 import numpy
+from base import *
 
 
-class NeuronGroup(magic.InstanceTracker):
+class NeuronGroup(magic.InstanceTracker, ObjectContainer):
     """Group of neurons
     
     Initialised as::
