@@ -309,6 +309,7 @@ class SpikeMonitor(Connection,Monitor):
     rewrite the ``propagate`` method, or pass the monitoring function
     as an argument (``function=myfunction``, with ``def myfunction(spikes):...``)
     '''
+    # isn't there a units problem here for delay?
     def __init__(self,source,record=True,delay=0,function=None):
         # recordspikes > record?
         self.source=source # pointer to source group

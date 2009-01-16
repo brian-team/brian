@@ -2,11 +2,26 @@
 # See BEP-2-STDP
 from inspection import *
 from equations import *
+from monitor import SpikeMonitor
+from network import NetworkOperation
 from stateupdater import get_linear_equations
 from scipy.linalg import expm
 import re
 
-class STDP(object): # NetworkOperation? No: should not be called every time step
+class STDPUpdater(SpikeMonitor):
+    '''
+    Updates STDP variables at spike times
+    '''
+    def __init__(self,source,code,namespace,delay=0):
+        SpikeMonitor.__init__(self,source,record=False,delay=delay)
+        self._code=code # update code
+        self._namespace=namespace # code namespace
+        
+    def propagate(self,spikes):
+        self._namespace['spikes']=spikes
+        exec self._code in self._namespace
+
+class STDP(NetworkOperation):
     '''
     Spike-timing-dependent plasticity
     '''
@@ -92,7 +107,7 @@ class STDP(object): # NetworkOperation? No: should not be called every time step
                 
         # Compile code
         pre_code=compile(pre,"Presynaptic code","exec")
-        post_code=compile(pre,"Presynaptic code","exec")
+        post_code=compile(pre,"Postsynaptic code","exec")
         
         # create virtual groups (inherit NeuronGroup; Group?), pre and post
                 
@@ -109,8 +124,12 @@ class STDP(object): # NetworkOperation? No: should not be called every time step
         #    vars_pre[0]+'[spikes]*=exp(%(a)f*t[spikes])' % Mpre[0]
         #    vars_post[0]+'[spikes]*=exp(%(a)f*t[spikes])' % Mpost[0]
         
-        # create forward and backward Connection objects or SpikeMonitor objects; propagate does pre or post code and
-        #   event-driven updates
+        # create forward and backward Connection objects or SpikeMonitor objects
+        pre_updater=STDPUpdater(C.source,code=pre_code,namespace=pre_namespace)
+        post_updater=STDPUpdater(C.source,code=post_code,namespace=post_namespace)
+        
+    def __call__(self):
+        pass
     
 if __name__=='__main__':
     from brian import *
