@@ -3,6 +3,7 @@
 from inspection import *
 from equations import *
 from stateupdater import get_linear_equations
+from scipy.linalg import expm
 import re
 
 class STDP(object): # NetworkOperation?
@@ -93,6 +94,12 @@ class STDP(object): # NetworkOperation?
         # Get matrices of differential systems
         Mpre,_=get_linear_equations(eqs_pre) # B should be zero
         Mpost,_=get_linear_equations(eqs_post)
+        
+        # Add update code to pre and post
+        # 1-dimensional case (exponential STDP)
+        #if (len(vars_pre)==1) and (len(vars_post)==1):
+        #    vars_pre[0]+'[spikes]*=exp(%(a)f*t[spikes])' % Mpre[0]
+        #    vars_post[0]+'[spikes]*=exp(%(a)f*t[spikes])' % Mpost[0]
         
         # create forward and backward Connection objects; propagate does pre or post code and
         #   event-driven updates
