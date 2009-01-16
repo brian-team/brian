@@ -68,7 +68,7 @@ stdp=STDP(C,eqs='''
 Implementation:
 [DONE]* get identifiers from pre and post code
 [DONE]* find which ones are modified (e.g. regular expression matching; careful with comments)
-* separate differential equations in pre/post
+[DONE]* separate differential equations in pre/post
 [DONE]* check pre/post consistency
 * create virtual groups (inherit NeuronGroup; Group?), pre and post
 [DONE]* pre/post code: add [spikes,:] etc
