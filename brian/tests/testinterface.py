@@ -16,50 +16,65 @@ from brian.log import *
 class TestSequenceFunctions(unittest.TestCase):
     def set_up(self):
         pass
+    
     def testclock(self):
         """Tests the interface to the clock module.
         """        
         from brian.clock import _define_and_test_interface
         _define_and_test_interface(self)
+        
     def testmagic(self):
         """Tests the interface to the magic module.
         """
         from brian.magic import _define_and_test_interface
         _define_and_test_interface(self)
+        
     def testunits(self):
         """Tests the interface to the units module.
         """        
         from brian.units import _define_and_test_interface
         _define_and_test_interface(self)
+        
     def testdirectcontrol(self):
         """Tests the interface to the directcontrol module.
         """
         from brian.directcontrol import _define_and_test_interface
-        _define_and_test_interface(self)     
+        _define_and_test_interface(self) 
+            
     def testunitsafefunctions(self):
         """Tests the interface to the unitsafefunctions module.
         """
         from brian.unitsafefunctions import _define_and_test_interface
         _define_and_test_interface(self)   
+        
     def testreset(self):
         """Tests the interface to the reset module.
         """
         from brian.reset import _define_and_test_interface
-        _define_and_test_interface(self)   
+        _define_and_test_interface(self)  
+         
     def testthreshold(self):
         """Tests the interface to the threshold module.
         """
         from brian.threshold import _define_and_test_interface
         _define_and_test_interface(self)
+        
     def testmonitor(self):   
         """Tests the interface to the monitor module.
         """
         from brian.monitor import _define_and_test_interface
         _define_and_test_interface(self)
+        
     def testconnection(self):   
         """Tests the interface to the connection module.
         """
         from brian.connection import _define_and_test_interface
+        _define_and_test_interface(self)
+        
+    def testinspection(self):
+        """Tests the interface to the inspection module.
+        """
+        from brian.inspection import _define_and_test_interface
         _define_and_test_interface(self)
 
 def run_test():

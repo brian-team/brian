@@ -38,11 +38,12 @@ Inspection of models defined by differential equations.
 
 __all__=['is_affine','depends_on','Term','get_global_term',\
          'get_var_names','check_equations_units','fill_vars','AffineFunction',\
-         'get_identifiers']
+         'get_identifiers','modified_variables']
 
 from numpy import array
 from units import second,DimensionMismatchError
 import parser
+import re
 
 def get_identifiers(expr):
     '''
@@ -51,6 +52,28 @@ def get_identifiers(expr):
     '''
     # cleaner: parser.expr(expr).tolist() then find leaves of the form [1,name]
     return parser.suite(expr).compile().co_names
+
+def modified_variables(expr):
+    '''
+    Returns the list of variables or functions in expr that are in left-hand sides, e.g.:
+        x+=5
+    expr can be a multiline statement.
+    Multiline comments are not allowed but multiline statements are.
+    Functions may also be returned as in:
+        do(something) # here do is returned, not something
+        
+    TODO: maybe functions should be removed?
+    '''
+    vars=get_identifiers(expr)
+    # Merge multi-line statements
+    expr=re.sub('\\\s*?\n',' ',expr)
+    # Find lines that start by an identifier
+    mod_vars=[]
+    for line in expr.splitlines():
+        s=re.search(r'^\s*(\w+)\b',line)
+        if s and (s.group(1) in vars):
+            mod_vars.append(s.group(1))
+    return mod_vars
 
 def fill_vars(f,keepnamespace=False,*varnames):
     '''
@@ -275,3 +298,15 @@ def get_global_term(f,x,x0):
     
     return result
     
+def _define_and_test_interface(self):
+    '''
+    Inspection module
+    '''
+    expr='''
+x_12+=y*12 # comment
+pour(water,\
+   "on desk")'''
+    # Check that identifiers are correctly extracted
+    self.assert_(get_identifiers(expr)==('x_12','y','pour','water'))
+    # Check that modified variables are correctly extracted
+    self.assert_(modified_variables(expr)==['x_12','pour'])

@@ -66,13 +66,13 @@ stdp=STDP(C,eqs='''
 	myconnection=Connection(...,STDP=eqs)
 
 Implementation:
-* get identifiers from pre and post code
-* find which ones are modified (e.g. regular expression matching; careful with comments)
+[DONE]* get identifiers from pre and post code
+[DONE]* find which ones are modified (e.g. regular expression matching; careful with comments)
 * separate differential equations in pre/post
-* check pre/post consistency
+[DONE]* check pre/post consistency
 * create virtual groups (inherit NeuronGroup; Group?), pre and post
-* pre/post code: add [spikes,:] etc
-* bounds: add one line to pre/post code (clip(w,min,max,w))
+[DONE]* pre/post code: add [spikes,:] etc
+[DONE]* bounds: add one line to pre/post code (clip(w,min,max,w))
 * event-driven code; do some speed tests
 * create forward and backward Connection objects; propagate does pre or post code and
 event-driven updates
