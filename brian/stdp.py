@@ -6,7 +6,7 @@ from stateupdater import get_linear_equations
 from scipy.linalg import expm
 import re
 
-class STDP(object): # NetworkOperation?
+class STDP(object): # NetworkOperation? No: should not be called every time step
     '''
     Spike-timing-dependent plasticity
     '''
@@ -70,6 +70,10 @@ class STDP(object): # NetworkOperation?
             else: # what do we do?
                 pass
         
+        # Create namespaces for pre and post codes
+        pre_namespace=namespace(pre,level=level+1)
+        post_namespace=namespace(post,level=level+1)
+        
         # Pre code
         for var in vars_pre: # presynaptic variables (vectorisation)
             pre=re.sub(r'\b'+var+r'\b',var+'[spikes]',pre)
@@ -81,17 +85,21 @@ class STDP(object): # NetworkOperation?
         
         # Bounds: add one line to pre/post code (clip(w,min,max,w))
         if bounds is not None: # would that work with SparseVector? probably not...
+            # or actual code? (rather than compiled string)
             min,max=bounds
             pre+='\nclip(w[spikes,:],%(min)f,%(max)f,w[spikes,:])' % {'min':min,'max':max}
             post+='\nclip(w[:,spikes],%(min)f,%(max)f,w[:,spikes])' % {'min':min,'max':max}
-        
-        # Create namespace
+                
         # Compile code
+        pre_code=compile(pre,"Presynaptic code","exec")
+        post_code=compile(pre,"Presynaptic code","exec")
         
         # create virtual groups (inherit NeuronGroup; Group?), pre and post
                 
         # event-driven code; do some speed tests
         # Get matrices of differential systems
+        eqs_pre.prepare()
+        eqs_post.prepare()
         Mpre,_=get_linear_equations(eqs_pre) # B should be zero
         Mpost,_=get_linear_equations(eqs_post)
         
@@ -101,7 +109,7 @@ class STDP(object): # NetworkOperation?
         #    vars_pre[0]+'[spikes]*=exp(%(a)f*t[spikes])' % Mpre[0]
         #    vars_post[0]+'[spikes]*=exp(%(a)f*t[spikes])' % Mpost[0]
         
-        # create forward and backward Connection objects; propagate does pre or post code and
+        # create forward and backward Connection objects or SpikeMonitor objects; propagate does pre or post code and
         #   event-driven updates
     
 if __name__=='__main__':
@@ -110,8 +118,8 @@ if __name__=='__main__':
     C=Connection(P,P,'v')
     tau_pre=20*ms
     tau_post=20*ms
-    A_pre=.1
-    A_post=-.2
+    dA_pre=.1
+    dA_post=-.2
     eqs_stdp='''
     dA_pre/dt=-A_pre/tau_pre : 1
     dA_post/dt=-A_post/tau_post : 1

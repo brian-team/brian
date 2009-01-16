@@ -41,12 +41,41 @@ TODO: some of the module is obsolete
 
 __all__=['is_affine','depends_on','Term','get_global_term',\
          'get_var_names','check_equations_units','fill_vars','AffineFunction',\
-         'get_identifiers','modified_variables']
+         'get_identifiers','modified_variables','namespace']
 
 from numpy import array
-from units import second,DimensionMismatchError
+from units import *
 import parser
 import re
+import inspect
+
+def namespace(expr,level=0,return_unknowns=False):
+    '''
+    Returns a namespace with the values of identifiers in expr,
+    taking from:
+    * local namespace
+    * global namespace
+    * units
+    '''
+    # Build the namespace
+    frame=inspect.stack()[level+1][0]
+    global_namespace,local_namespace=frame.f_globals,frame.f_locals
+    # Find external objects
+    space={}
+    unknowns=[]
+    for var in get_identifiers(expr):
+        if var in local_namespace: #local
+            space[var]=local_namespace[var]
+        elif var in global_namespace: #global
+            space[var]=global_namespace[var]
+        elif var in globals(): # typically units
+            space[var]=globals()[var]
+        else:
+            unknowns.append(var)
+    if return_unknowns:
+        return space,unknowns
+    else:
+        return space
 
 def get_identifiers(expr):
     '''
