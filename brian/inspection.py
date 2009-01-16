@@ -33,7 +33,10 @@
 # ----------------------------------------------------------------------------------
 # 
 '''
-Inspection of models defined by differential equations.
+Inspection of strings with python statements 
+and models defined by differential equations.
+
+TODO: some of the module is obsolete
 '''
 
 __all__=['is_affine','depends_on','Term','get_global_term',\
@@ -48,7 +51,7 @@ import re
 def get_identifiers(expr):
     '''
     Returns the list of identifiers (variables or functions) in the
-    expression (string).
+    Python expression (string).
     '''
     # cleaner: parser.expr(expr).tolist() then find leaves of the form [1,name]
     return parser.suite(expr).compile().co_names

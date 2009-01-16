@@ -2,6 +2,7 @@
 # See BEP-2-STDP
 from inspection import *
 from equations import *
+from stateupdater import get_linear_equations
 import re
 
 class STDP(object): # NetworkOperation?
@@ -21,6 +22,7 @@ class STDP(object): # NetworkOperation?
         # Convert to equations object
         eqs_obj=Equations(eqs,level=level+1)
         # Disallow static equations and aliases (for now)
+        #   idea: use get_linear_equations directly here, then split the matrices
         if eqs_obj._eq_names!=[] or eqs_obj._eq_names!=[]:
             print eqs_obj._eq_names,eqs_obj._eq_names
             raise Exception,"There should be only differential equations"
@@ -85,8 +87,13 @@ class STDP(object): # NetworkOperation?
         # Create namespace
         # Compile code
         
-        # create virtual groups (inherit NeuronGroup; Group?), pre and post        
+        # create virtual groups (inherit NeuronGroup; Group?), pre and post
+                
         # event-driven code; do some speed tests
+        # Get matrices of differential systems
+        Mpre,_=get_linear_equations(eqs_pre) # B should be zero
+        Mpost,_=get_linear_equations(eqs_post)
+        
         # create forward and backward Connection objects; propagate does pre or post code and
         #   event-driven updates
     

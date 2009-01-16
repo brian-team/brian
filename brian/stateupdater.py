@@ -38,7 +38,7 @@ Neuron StateUpdaters
 
 __all__ = ['StateUpdater','LinearStateUpdater','NonlinearStateUpdater',
            'SynapticNoise','LazyStateUpdater','magic_state_updater',
-           'FunStateUpdater']
+           'FunStateUpdater','get_linear_equations']
 
 #from scipy.weave import blitz
 from numpy import *
