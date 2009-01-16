@@ -4,7 +4,7 @@ from inspection import *
 from equations import *
 import re
 
-class STDP(object):
+class STDP(object): # NetworkOperation?
     '''
     Spike-timing-dependent plasticity
     '''
@@ -21,10 +21,12 @@ class STDP(object):
         # Convert to equations object
         eqs_obj=Equations(eqs,level=level+1)
         # Disallow static equations and aliases (for now)
-        if eqs_obj._eq_names!=[] or eqs_obj._alias!=[]:
+        if eqs_obj._eq_names!=[] or eqs_obj._eq_names!=[]:
+            print eqs_obj._eq_names,eqs_obj._eq_names
             raise Exception,"There should be only differential equations"
         
         # Check units
+        eqs_obj.compile_functions()
         eqs_obj.check_units()
         # Check that equations are linear
         if not eqs_obj.is_linear():
@@ -65,24 +67,41 @@ class STDP(object):
             else: # what do we do?
                 pass
         
-        # create virtual groups (inherit NeuronGroup; Group?), pre and post
-        
         # Pre code
         for var in vars_pre: # presynaptic variables (vectorisation)
             pre=re.sub(r'\b'+var+r'\b',var+'[spikes]',pre)
-        pre=re.sub(r'\bw\b','w[spikes,:]') # synaptic weight
+        pre=re.sub(r'\bw\b','w[spikes,:]',pre) # synaptic weight
         # Post code
         for var in vars_post: # presynaptic variables (vectorisation)
             post=re.sub(r'\b'+var+r'\b',var+'[spikes]',post)
-        post=re.sub(r'\bw\b','w[:,spikes]') # synaptic weight
+        post=re.sub(r'\bw\b','w[:,spikes]',post) # synaptic weight
         
-        # bounds: add one line to pre/post code (clip(w,min,max,w))
+        # Bounds: add one line to pre/post code (clip(w,min,max,w))
         if bounds is not None: # would that work with SparseVector? probably not...
             min,max=bounds
-            pre+='\nclip(w[spikes,:],%(min),%(max),w[spikes,:])' % {'min':min,'max':max}
-            post+='\nclip(w[:,spikes],%(min),%(max),w[:,spikes])' % {'min':min,'max':max}
+            pre+='\nclip(w[spikes,:],%(min)f,%(max)f,w[spikes,:])' % {'min':min,'max':max}
+            post+='\nclip(w[:,spikes],%(min)f,%(max)f,w[:,spikes])' % {'min':min,'max':max}
         
+        # Create namespace
+        # Compile code
+        
+        # create virtual groups (inherit NeuronGroup; Group?), pre and post        
         # event-driven code; do some speed tests
         # create forward and backward Connection objects; propagate does pre or post code and
         #   event-driven updates
+    
+if __name__=='__main__':
+    from brian import *
+    P=NeuronGroup(10,model='dv/dt=-v/(10*ms):1')
+    C=Connection(P,P,'v')
+    tau_pre=20*ms
+    tau_post=20*ms
+    A_pre=.1
+    A_post=-.2
+    eqs_stdp='''
+    dA_pre/dt=-A_pre/tau_pre : 1
+    dA_post/dt=-A_post/tau_post : 1
+    '''
+    stdp=STDP(C,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
+              post='A_post+=dA_post;w+=A_pre',bounds=(0,1))
     

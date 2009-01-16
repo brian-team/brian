@@ -63,10 +63,15 @@ def modified_variables(expr):
         do(something) # here do is returned, not something
         
     TODO: maybe functions should be removed?
+    TODO: better handling of semi-columns (;)
     '''
     vars=get_identifiers(expr)
     # Merge multi-line statements
     expr=re.sub('\\\s*?\n',' ',expr)
+    # Remove comments
+    expr=re.sub('#.*','',expr)
+    # Split at semi-columns
+    expr=re.sub(';','\n',expr)
     # Find lines that start by an identifier
     mod_vars=[]
     for line in expr.splitlines():
