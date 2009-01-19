@@ -61,9 +61,10 @@ import sys
 from brian_unit_prefs import bup
 import numpy
 from base import *
+from group import *
 
 
-class NeuronGroup(magic.InstanceTracker, ObjectContainer):
+class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     """Group of neurons
     
     Initialised as::
@@ -234,11 +235,12 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer):
             if (init==None) and (model._units=={}):
                 raise AttributeError,"The group must be initialized."
             self._state_updater,var_names=magic_state_updater(model,clock=clock,order=order,implicit=implicit,compile=compile,freeze=freeze,method=method)
-            self.staticvars=dict([(name,model._function[name]) for name in model._eq_names])
-            self.var_index=dict(zip(var_names,count()))
-            self.var_index.update(zip(range(len(var_names)),range(len(var_names)))) # name integer i -> state variable i
-            for var1,var2 in model._alias.iteritems():
-                self.var_index[var1]=self.var_index[var2]
+            Group.__init__(self, model, N)
+#            self.staticvars=dict([(name,model._function[name]) for name in model._eq_names])
+#            self.var_index=dict(zip(var_names,count()))
+#            self.var_index.update(zip(range(len(var_names)),range(len(var_names)))) # name integer i -> state variable i
+#            for var1,var2 in model._alias.iteritems():
+#                self.var_index[var1]=self.var_index[var2]
             # Converts S0 from dictionary to tuple
             if self._S0==None: # No initialization: 0 with units
                 S0={}
@@ -277,7 +279,8 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer):
             self._threshold=NoThreshold()
         
         # Initialization of the state matrix
-        self._S=zeros((len(self._state_updater),N))
+        if not hasattr(self, '_S'):
+            self._S = zeros((len(self._state_updater),N))
         if self._S0!=None:
             for i in range(len(self._state_updater)):
                 self._S[i,:]=self._S0[i]
@@ -372,11 +375,11 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer):
         '''
         self._state_updater.rest(self)
 
-    def get_var_index(self,name):
-        '''
-        Returns the index of state variable "name".
-        '''
-        return self.var_index[name]
+#    def get_var_index(self,name):
+#        '''
+#        Returns the index of state variable "name".
+#        '''
+#        return self.var_index[name]
 
     def reinit(self):
         '''
@@ -439,14 +442,14 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer):
         self._next_subgroup+=N;
         return P
        
-    def __len__(self):
-        '''
-        Number of neurons in the group.
-        '''
-        return self._S.shape[1]
-
-    def num_states(self):
-        return self._S.shape[0]
+#    def __len__(self):
+#        '''
+#        Number of neurons in the group.
+#        '''
+#        return self._S.shape[1]
+#
+#    def num_states(self):
+#        return self._S.shape[0]
     
     def unit(self,name):
         '''
@@ -460,24 +463,32 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer):
         else:
             return get_unit(self._S0[self.get_var_index(name)])
     
-    def state_(self,name):
-        '''
-        Gets the state variable named "name" as a reference to the underlying array
-        '''
-        # why doesn't this work?
-#        if name in self._var_array:
-#            return self._var_array[name]
-        if isinstance(name,int):
-            return self._S[name]
+    def state_(self, name):
         if name=='t':
             self.__t[:] = self.clock._t
             return self.__t
-        if name in self.staticvars:
-            f=self.staticvars[name]
-            return f(*[self.state_(var) for var in f.func_code.co_varnames])
-        i=self.var_index[name]
-        return self._S[i]
+        else:
+            return Group.state_(self, name)
     state = state_
+    
+#    def state_(self,name):
+#        '''
+#        Gets the state variable named "name" as a reference to the underlying array
+#        '''
+#        # why doesn't this work?
+##        if name in self._var_array:
+##            return self._var_array[name]
+#        if isinstance(name,int):
+#            return self._S[name]
+#        if name=='t':
+#            self.__t[:] = self.clock._t
+#            return self.__t
+#        if name in self.staticvars:
+#            f=self.staticvars[name]
+#            return f(*[self.state_(var) for var in f.func_code.co_varnames])
+#        i=self.var_index[name]
+#        return self._S[i]
+#    state = state_
 
 #    def state(self,name):
 #        '''
@@ -492,43 +503,43 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer):
     def __getitem__(self,i):
         return self[i:i+1]
     
-    def __getattr__(self,name):
-        if name=='var_index':
-            # this seems mad - the reason is that getattr is only called if the thing hasn't
-            # been found using the standard methods of finding attributes, which for var_index
-            # should have worked, this is important because the next line looks for var_index
-            # and if we haven't got a var_index we don't want to get stuck in an infinite
-            # loop
-            raise AttributeError  
-        if not hasattr(self,'var_index'):
-            # only provide lookup of variable names if we have some variable names, i.e.
-            # if the var_index attribute exists
-            raise AttributeError
-        try:
-            return self.state(name)
-        except KeyError:
-            if len(name) and name[-1]=='_':
-                try:
-                    origname = name[:-1]
-                    return self.state_(origname)
-                except KeyError:
-                    raise AttributeError
-            raise AttributeError
-    
-    def __setattr__(self,name,val):
-        origname = name
-        if len(name) and name[-1]=='_':
-            origname = name[:-1]
-        if not hasattr(self,'var_index') or (name not in self.var_index and origname not in self.var_index):
-            object.__setattr__(self,name,val)
-            if not hasattr(self,'_setattrcount'):
-                object.__setattr__(self,'_setattrcount',0)
-            object.__setattr__(self,'_setattrcount',self._setattrcount+1)
-        else:
-            if name in self.var_index:
-                self.state(name)[:]=val
-            else:
-                self.state_(origname)[:]=val
+#    def __getattr__(self,name):
+#        if name=='var_index':
+#            # this seems mad - the reason is that getattr is only called if the thing hasn't
+#            # been found using the standard methods of finding attributes, which for var_index
+#            # should have worked, this is important because the next line looks for var_index
+#            # and if we haven't got a var_index we don't want to get stuck in an infinite
+#            # loop
+#            raise AttributeError  
+#        if not hasattr(self,'var_index'):
+#            # only provide lookup of variable names if we have some variable names, i.e.
+#            # if the var_index attribute exists
+#            raise AttributeError
+#        try:
+#            return self.state(name)
+#        except KeyError:
+#            if len(name) and name[-1]=='_':
+#                try:
+#                    origname = name[:-1]
+#                    return self.state_(origname)
+#                except KeyError:
+#                    raise AttributeError
+#            raise AttributeError
+#    
+#    def __setattr__(self,name,val):
+#        origname = name
+#        if len(name) and name[-1]=='_':
+#            origname = name[:-1]
+#        if not hasattr(self,'var_index') or (name not in self.var_index and origname not in self.var_index):
+#            object.__setattr__(self,name,val)
+#            if not hasattr(self,'_setattrcount'):
+#                object.__setattr__(self,'_setattrcount',0)
+#            object.__setattr__(self,'_setattrcount',self._setattrcount+1)
+#        else:
+#            if name in self.var_index:
+#                self.state(name)[:]=val
+#            else:
+#                self.state_(origname)[:]=val
 
     def __getslice__(self,i,j):
         '''

@@ -6,6 +6,7 @@ New features since 1.0.0
 * Spike train statistics (utils.statistics)
 * Miscellaneous optimisations
 * New MultiStateMonitor class
+* New Group, MultiGroup objects (for convenience of people writing extensions mostly)
 
 New features since 1.0.0 rc5
 ----------------------------
