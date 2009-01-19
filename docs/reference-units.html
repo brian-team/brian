@@ -2,27 +2,27 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Units system &mdash; Brian v1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-          URL_ROOT:    '',
-          VERSION:     '1.0.0',
-          COLLAPSE_MODINDEX: false,
-          FILE_SUFFIX: ''
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/interface.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="contents" title="Global table of contents" href="contents.html" />
-    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="Reference" href="reference.html" />
     <link rel="next" title="Clocks" href="reference-clocks.html" />
-    <link rel="prev" title="Reference" href="reference.html" />
+    <link rel="prev" title="Reference" href="reference.html" /> 
   </head>
   <body>
     <div class="related">
@@ -41,9 +41,9 @@
           <a href="reference.html" title="Reference"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li> 
       </ul>
-    </div>
+    </div>  
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
@@ -51,7 +51,7 @@
             
   
   <div class="section" id="units-system">
-<span id="index-95"></span><h1 id="units-system"><span id="index-95"></span>Units system<a class="headerlink" href="#units-system" title="Permalink to this headline">¶</a></h1>
+<span id="index-94"></span><h1>Units system<a class="headerlink" href="#units-system" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="brian.have_same_dimensions">
 <!--[brian.have_same_dimensions]--><tt class="descclassname">brian.</tt><tt class="descname">have_same_dimensions</tt><big>(</big><em>obj1</em>, <em>obj2</em><big>)</big><a class="headerlink" href="#brian.have_same_dimensions" title="Permalink to this definition">¶</a></dt>
@@ -68,7 +68,7 @@ integration of scalar and array valued quantities.</p>
 integration of scalar and array valued quantities.</p>
 </dd></dl>
 
-<dl class="exception" id="index-96">
+<span class="target" id="index-95"></span><dl class="exception">
 <dt id="brian.DimensionMismatchError">
 <!--[brian.DimensionMismatchError]-->exception <tt class="descclassname">brian.</tt><tt class="descname">DimensionMismatchError</tt><a class="headerlink" href="#brian.DimensionMismatchError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exception class for attempted operations with inconsistent dimensions</p>
@@ -77,7 +77,7 @@ class is to help catch errors based on incorrect units. The exception will
 print a representation of the dimensions of the two inconsistent objects
 that were operated on. If you want to check for inconsistent units in your
 code, do something like:</p>
-<pre>try:
+<div class="highlight-python"><pre>try:
     ...
     your code here
     ...
@@ -86,6 +86,7 @@ except DimensionMismatchError, inst:
     cleanup code here, e.g.
     print "Found dimension mismatch, details:", inst
     ...</pre>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -93,19 +94,22 @@ except DimensionMismatchError, inst:
 <!--[brian.check_units]--><tt class="descclassname">brian.</tt><tt class="descname">check_units</tt><big>(</big><em>**au</em><big>)</big><a class="headerlink" href="#brian.check_units" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator to check units of arguments passed to a function</p>
 <p><strong>Sample usage:</strong></p>
-<div class="highlight"><pre><span class="nd">@check_units</span><span class="p">(</span><span class="n">I</span><span class="o">=</span><span class="n">amp</span><span class="p">,</span><span class="n">R</span><span class="o">=</span><span class="n">ohm</span><span class="p">,</span><span class="n">wibble</span><span class="o">=</span><span class="n">metre</span><span class="p">,</span><span class="n">result</span><span class="o">=</span><span class="n">volt</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@check_units</span><span class="p">(</span><span class="n">I</span><span class="o">=</span><span class="n">amp</span><span class="p">,</span><span class="n">R</span><span class="o">=</span><span class="n">ohm</span><span class="p">,</span><span class="n">wibble</span><span class="o">=</span><span class="n">metre</span><span class="p">,</span><span class="n">result</span><span class="o">=</span><span class="n">volt</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">getvoltage</span><span class="p">(</span><span class="n">I</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="o">**</span><span class="n">k</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">I</span><span class="o">*</span><span class="n">R</span>
 </pre></div>
+</div>
 <p>You don&#8217;t have to check the units of every variable in the function, and
 you can define what the units should be for variables that aren&#8217;t
 explicitly named in the definition of the function. For example, the code
 above checks that the variable wibble should be a length, so writing:</p>
-<div class="highlight"><pre><span class="n">getvoltage</span><span class="p">(</span><span class="mf">1</span><span class="o">*</span><span class="n">amp</span><span class="p">,</span><span class="mf">1</span><span class="o">*</span><span class="n">ohm</span><span class="p">,</span><span class="n">wibble</span><span class="o">=</span><span class="mf">1</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">getvoltage</span><span class="p">(</span><span class="mf">1</span><span class="o">*</span><span class="n">amp</span><span class="p">,</span><span class="mf">1</span><span class="o">*</span><span class="n">ohm</span><span class="p">,</span><span class="n">wibble</span><span class="o">=</span><span class="mf">1</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>would fail, but:</p>
-<div class="highlight"><pre><span class="n">getvoltage</span><span class="p">(</span><span class="mf">1</span><span class="o">*</span><span class="n">amp</span><span class="p">,</span><span class="mf">1</span><span class="o">*</span><span class="n">ohm</span><span class="p">,</span><span class="n">wibble</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">metre</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">getvoltage</span><span class="p">(</span><span class="mf">1</span><span class="o">*</span><span class="n">amp</span><span class="p">,</span><span class="mf">1</span><span class="o">*</span><span class="n">ohm</span><span class="p">,</span><span class="n">wibble</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">metre</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>would pass.
 String arguments are not checked (e.g. <tt class="docutils literal"><span class="pre">getvoltage(wibble='hello')</span></tt> would pass).</p>
 <p>The special name <tt class="docutils literal"><span class="pre">result</span></tt> is for the return value of the function.</p>
@@ -154,15 +158,16 @@ some additional information (name and string representation).
 You can define new units which will be used when generating
 string representations of quantities simply by doing an
 arithmetical operation with only units, for example:</p>
-<div class="highlight"><pre><span class="n">Nm</span> <span class="o">=</span> <span class="n">newton</span> <span class="o">*</span> <span class="n">metre</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Nm</span> <span class="o">=</span> <span class="n">newton</span> <span class="o">*</span> <span class="n">metre</span>
 </pre></div>
+</div>
 <p>Note that operations with units are slower than operations with
 <a title="brian.Quantity" class="reference internal" href="#brian.Quantity"><tt class="xref docutils literal"><span class="pre">Quantity</span></tt></a> objects, so for efficiency if you do not need the
 extra information that a <a title="brian.Unit" class="reference internal" href="#brian.Unit"><tt class="xref docutils literal"><span class="pre">Unit</span></tt></a> object carries around, write
 <tt class="docutils literal"><span class="pre">1*second</span></tt> in preference to <tt class="docutils literal"><span class="pre">second</span></tt>.</p>
 </dd></dl>
 
-<span class="target" id="index-97"></span></div>
+<span class="target" id="index-96"></span></div>
 
 
           </div>
@@ -178,7 +183,7 @@ extra information that a <a title="brian.Unit" class="reference internal" href="
             <ul class="this-page-menu">
               <li><a href="_sources/reference-units.txt">Show Source</a></li>
             </ul>
-            <h3>Quick search</h3>
+          <h3>Quick search</h3>
             <form class="search" action="search.html" method="get">
               <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
               <input type="hidden" name="check_keywords" value="yes" />
@@ -204,13 +209,13 @@ extra information that a <a title="brian.Unit" class="reference internal" href="
           <a href="reference.html" title="Reference"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Sep 23, 2008.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+      Last updated on Jan 19, 2009.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>
 </html>

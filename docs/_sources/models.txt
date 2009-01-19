@@ -123,9 +123,27 @@ Reset
 More complex resets can be defined. The value of the ``reset`` keyword can be:
 
 * a quantity (``0*mV``)
+* a string
 * a function
 * a :class:`Reset` object, which can be used for resetting a specific state variable or
   for resetting a state variable to the value of another variable.
+
+Reset as Python code
+^^^^^^^^^^^^^^^^^^^^
+The simplest way to customise the reset is to define it as a Python statement, e.g.::
+
+  eqs='''
+  dv/dt=-v/tau : volt
+  dw/dt=-w/tau : volt
+  '''
+  group=NeuronGroup(100,model=eqs,reset="v=0*mV;w+=3*mV",threshold=10*mV)
+
+The string must be a valid Python statement (possibly a multiline string). It can
+contain variables from the neuron group, units and any variable defined in the namespace
+(e.g. tau), as for equations. Be aware that if a variable in the namespace has the same
+name as a neuron group variable, then it masks the neuron variable. The way it works is
+that the code is evaluated with each neuron variable ``v`` replaced by ``v[spikes]``, where
+``spikes`` is the array of indexes of the neurons that just spiked.
 
 Functional reset
 ^^^^^^^^^^^^^^^^
@@ -163,6 +181,23 @@ Here the value of the variable ``w`` is used to reset the variable ``v``.
 Threshold
 ---------
 As for the reset, the threshold can be customised.
+
+Threshold as Python expression
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The simplest way to customise the threshold is to define it as a Python expression, e.g.::
+
+  eqs='''
+  dv/dt=-v/tau : volt
+  dw/dt=(v-w)/tau : volt
+  '''
+  group=NeuronGroup(100,model=eqs,reset=0*mV,threshold="v>=w")
+
+The string must be an expression which evaluates to a boolean. It can
+contain variables from the neuron group, units and any variable defined in the namespace
+(e.g. tau), as for equations. Be aware that if a variable in the namespace has the same
+name as a neuron group variable, then it masks the neuron variable. The way it works is that
+the expression is evaluated with the neuron variables replaced by their vector values (values for
+all neurons), so that the expression returns a boolean vector.
 
 Functional threshold
 ^^^^^^^^^^^^^^^^^^^^

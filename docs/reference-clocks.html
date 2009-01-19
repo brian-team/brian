@@ -2,27 +2,27 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Clocks &mdash; Brian v1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-          URL_ROOT:    '',
-          VERSION:     '1.0.0',
-          COLLAPSE_MODINDEX: false,
-          FILE_SUFFIX: ''
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/interface.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="contents" title="Global table of contents" href="contents.html" />
-    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="Reference" href="reference.html" />
     <link rel="next" title="Neuron models and groups" href="reference-models-and-groups.html" />
-    <link rel="prev" title="Units system" href="reference-units.html" />
+    <link rel="prev" title="Units system" href="reference-units.html" /> 
   </head>
   <body>
     <div class="related">
@@ -41,9 +41,9 @@
           <a href="reference-units.html" title="Units system"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li> 
       </ul>
-    </div>
+    </div>  
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
@@ -51,15 +51,16 @@
             
   
   <div class="section" id="clocks">
-<span id="index-63"></span><h1 id="clocks"><span id="index-63"></span>Clocks<a class="headerlink" href="#clocks" title="Permalink to this headline">¶</a></h1>
+<span id="index-63"></span><h1>Clocks<a class="headerlink" href="#clocks" title="Permalink to this headline">¶</a></h1>
 <p id="index-64">Many Brian objects store a clock object (always passed in the
 initialiser with the keyword <tt class="docutils literal"><span class="pre">clock=</span></tt>...). If no clock is specified,
 the program uses the global default clock. When Brian is initially
 imported, this is the object <a title="brian.defaultclock" class="reference internal" href="#brian.defaultclock"><tt class="xref docutils literal"><span class="pre">defaultclock</span></tt></a>, and it has a default
 time step of 0.1ms. In a simple script, you can override this by
 writing (for example):</p>
-<div class="highlight"><pre><span class="n">defaultclock</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="mf">1</span><span class="o">*</span><span class="n">ms</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">defaultclock</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="mf">1</span><span class="o">*</span><span class="n">ms</span>
 </pre></div>
+</div>
 <p>However, there are other ways to access or redefine the default
 clock (see functions below).</p>
 <p id="index-65">You may wish to use multiple clocks in your program. In this case,
@@ -71,7 +72,7 @@ according to their time steps (value of <a title="brian.Clock.dt" class="referen
 that runs with a very small <tt class="docutils literal"><span class="pre">dt</span></tt>, but with some computationally
 expensive operation running at a lower frequency.</p>
 <div class="section" id="the-clock-class">
-<h2 id="the-clock-class">The <a title="brian.Clock" class="reference internal" href="#brian.Clock"><tt class="xref docutils literal"><span class="pre">Clock</span></tt></a> class<a class="headerlink" href="#the-clock-class" title="Permalink to this headline">¶</a></h2>
+<h2>The <a title="brian.Clock" class="reference internal" href="#brian.Clock"><tt class="xref docutils literal"><span class="pre">Clock</span></tt></a> class<a class="headerlink" href="#the-clock-class" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="brian.Clock">
 <!--[brian.Clock]-->class <tt class="descclassname">brian.</tt><tt class="descname">Clock</tt><big>(</big><em>dt=0.1 ms</em>, <em>t=0.0 s</em>, <em>makedefaultclock=False</em><big>)</big><a class="headerlink" href="#brian.Clock" title="Permalink to this definition">¶</a></dt>
@@ -146,7 +147,7 @@ simulation is still running.</dd></dl>
 
 </div>
 <div class="section" id="the-default-clock">
-<span id="index-66"></span><h2 id="the-default-clock"><span id="index-66"></span>The default clock<a class="headerlink" href="#the-default-clock" title="Permalink to this headline">¶</a></h2>
+<span id="index-66"></span><h2>The default clock<a class="headerlink" href="#the-default-clock" title="Permalink to this headline">¶</a></h2>
 <dl class="data">
 <dt id="brian.defaultclock">
 <!--[brian.defaultclock]--><tt class="descclassname">brian.</tt><tt class="descname">defaultclock</tt><a class="headerlink" href="#brian.defaultclock" title="Permalink to this definition">¶</a></dt>
@@ -160,9 +161,10 @@ get hold of the default clock is to use the functions:</p>
 <li><a title="brian.reinit_default_clock" class="reference internal" href="#brian.reinit_default_clock"><tt class="xref docutils literal"><span class="pre">reinit_default_clock()</span></tt></a></li>
 </ul>
 <p>However, it is suitable for short scripts, e.g.:</p>
-<div class="highlight"><pre><span class="n">defaultclock</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="mf">1</span><span class="o">*</span><span class="n">ms</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">defaultclock</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="mf">1</span><span class="o">*</span><span class="n">ms</span>
 <span class="o">...</span>
 </pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -171,8 +173,9 @@ get hold of the default clock is to use the functions:</p>
 <dd><p>Create a new default clock</p>
 <p>Uses the keywords of the <a title="brian.Clock" class="reference internal" href="#brian.Clock"><tt class="xref docutils literal"><span class="pre">Clock</span></tt></a> initialiser.</p>
 <p>Sample usage:</p>
-<div class="highlight"><pre><span class="n">define_default_clock</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">define_default_clock</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 </pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -194,7 +197,7 @@ get hold of the default clock is to use the functions:</p>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3>Table Of Contents</h3>
+            <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
 <li><a class="reference external" href="">Clocks</a><ul>
 <li><a class="reference external" href="#the-clock-class">The <tt class="docutils literal"><span class="pre">Clock</span></tt> class</a></li>
@@ -211,7 +214,7 @@ get hold of the default clock is to use the functions:</p>
             <ul class="this-page-menu">
               <li><a href="_sources/reference-clocks.txt">Show Source</a></li>
             </ul>
-            <h3>Quick search</h3>
+          <h3>Quick search</h3>
             <form class="search" action="search.html" method="get">
               <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
               <input type="hidden" name="check_keywords" value="yes" />
@@ -237,13 +240,13 @@ get hold of the default clock is to use the functions:</p>
           <a href="reference-units.html" title="Units system"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Sep 23, 2008.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+      Last updated on Jan 19, 2009.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>
 </html>

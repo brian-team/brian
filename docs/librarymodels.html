@@ -2,27 +2,27 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Library models &mdash; Brian v1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-          URL_ROOT:    '',
-          VERSION:     '1.0.0',
-          COLLAPSE_MODINDEX: false,
-          FILE_SUFFIX: ''
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/interface.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="contents" title="Global table of contents" href="contents.html" />
-    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="The library" href="library.html" />
     <link rel="next" title="Random processes" href="randomprocesses.html" />
-    <link rel="prev" title="The library" href="library.html" />
+    <link rel="prev" title="The library" href="library.html" /> 
   </head>
   <body>
     <div class="related">
@@ -41,9 +41,9 @@
           <a href="library.html" title="The library"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="library.html" accesskey="U">The library</a> &raquo;</li>
+          <li><a href="library.html" accesskey="U">The library</a> &raquo;</li> 
       </ul>
-    </div>
+    </div>  
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
@@ -51,156 +51,201 @@
             
   
   <div class="section" id="library-models">
-<h1 id="library-models">Library models<a class="headerlink" href="#library-models" title="Permalink to this headline">¶</a></h1>
+<h1>Library models<a class="headerlink" href="#library-models" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="membrane-equations">
-<h2 id="membrane-equations">Membrane equations<a class="headerlink" href="#membrane-equations" title="Permalink to this headline">¶</a></h2>
+<h2>Membrane equations<a class="headerlink" href="#membrane-equations" title="Permalink to this headline">¶</a></h2>
 <p>Library models are defined using the <tt class="xref docutils literal"><span class="pre">MembraneEquation</span></tt> class. This is a subclass of
 <a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> which is defined by a capacitance C and a sum of currents. The following instruction:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>defines the equation C*dvm/dt=0*amp, with the membrane capacitance C=200 pF. The name of the membrane potential
 variable can be changed as follows:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">vm</span><span class="o">=</span><span class="s">&#39;V&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">vm</span><span class="o">=</span><span class="s">&#39;V&#39;</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>The main interest of this class is that one can use it to build models by adding currents to a membrane
 equation. The <tt class="xref docutils literal"><span class="pre">Current</span></tt> class is a subclass of <a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> which defines a current to be added
 to a membrane equation. For example:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span><span class="o">+</span><span class="n">Current</span><span class="p">(</span><span class="n">I</span><span class="o">=</span><span class="s">&#39;(V0-vm)/R : amp&#39;</span><span class="p">,</span><span class="n">current_name</span><span class="o">=</span><span class="s">&#39;I&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span><span class="o">+</span><span class="n">Current</span><span class="p">(</span><span class="n">I</span><span class="o">=</span><span class="s">&#39;(V0-vm)/R : amp&#39;</span><span class="p">,</span><span class="n">current_name</span><span class="o">=</span><span class="s">&#39;I&#39;</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>defines the same equation as:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
 <span class="s">dvm/dt=I/(200*pF) : volt</span>
 <span class="s">I=(V0-vm)/R : amp</span>
 <span class="s">&#39;&#39;&#39;</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>The keyword <tt class="docutils literal"><span class="pre">current_name</span></tt> is optional if there is no ambiguity, i.e., if there is only one variable
 or only one variable with amp units. As for standard equations, <tt class="xref docutils literal"><span class="pre">Current</span></tt> objects can be initialised with
 a multiline string (several equations). By default, the convention for the current direction is the one for injected
 current. For the ionic current convention, use the <tt class="xref docutils literal"><span class="pre">IonicCurrent</span></tt> class:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span><span class="o">+</span><span class="n">IonicCurrent</span><span class="p">(</span><span class="n">I</span><span class="o">=</span><span class="s">&#39;(vm-V0)/R : amp&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span><span class="o">+</span><span class="n">IonicCurrent</span><span class="p">(</span><span class="n">I</span><span class="o">=</span><span class="s">&#39;(vm-V0)/R : amp&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="section" id="integrate-and-fire-models">
-<h2 id="integrate-and-fire-models">Integrate-and-Fire models<a class="headerlink" href="#integrate-and-fire-models" title="Permalink to this headline">¶</a></h2>
-<p>A few standard Integrate-and-Fire models are implemented in the <tt class="docutils literal"><span class="pre">IF</span></tt> library module:</p>
-<div class="highlight"><pre><span class="k">from</span> <span class="nn">brian.library.IF</span> <span class="k">import</span> <span class="o">*</span>
+</div>
+<div class="section" id="compartmental-modelling">
+<h2>Compartmental modelling<a class="headerlink" href="#compartmental-modelling" title="Permalink to this headline">¶</a></h2>
+<p>Compartmental neuron models can be created by merging several <tt class="xref docutils literal"><span class="pre">MembraneEquation</span></tt> objects,
+with the <tt class="docutils literal"><span class="pre">compartments</span></tt> module. If <tt class="docutils literal"><span class="pre">soma</span></tt> and <tt class="docutils literal"><span class="pre">dendrite</span></tt> are two compartments defined as
+<tt class="xref docutils literal"><span class="pre">MembraneEquation</span></tt> objects, then a neuron with those 2 compartments can be created as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian.compartments</span> <span class="k">import</span> <span class="o">*</span>
+<span class="n">neuron_eqs</span><span class="o">=</span><span class="n">Compartments</span><span class="p">({</span><span class="s">&#39;soma&#39;</span><span class="p">:</span><span class="n">soma</span><span class="p">,</span><span class="s">&#39;dendrite&#39;</span><span class="p">:</span><span class="n">dendrite</span><span class="p">})</span>
+<span class="n">neuron_eqs</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;soma&#39;</span><span class="p">,</span><span class="s">&#39;dendrite&#39;</span><span class="p">,</span><span class="n">Ra</span><span class="p">)</span>
+<span class="n">neuron</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">neuron_eqs</span><span class="p">)</span>
 </pre></div>
+</div>
+<p>The <tt class="xref docutils literal"><span class="pre">Compartments</span></tt> object is initialised with a dictionary of <tt class="xref docutils literal"><span class="pre">MembraneEquation</span></tt> objects.
+The returned object <tt class="docutils literal"><span class="pre">neuron_eqs</span></tt> is also a <tt class="xref docutils literal"><span class="pre">MembraneEquation</span></tt> object, where the name of
+each compartment has been appended to variable names (with a leading underscore).
+For example, <tt class="docutils literal"><span class="pre">neuron.vm_soma</span></tt> refers to variable <tt class="docutils literal"><span class="pre">vm</span></tt> of the somatic compartment.
+The <tt class="docutils literal"><span class="pre">connect</span></tt> method adds a coupling current between the two named compartments, with the given
+resistance <tt class="docutils literal"><span class="pre">Ra</span></tt>.</p>
+</div>
+<div class="section" id="integrate-and-fire-models">
+<h2>Integrate-and-Fire models<a class="headerlink" href="#integrate-and-fire-models" title="Permalink to this headline">¶</a></h2>
+<p>A few standard Integrate-and-Fire models are implemented in the <tt class="docutils literal"><span class="pre">IF</span></tt> library module:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian.library.IF</span> <span class="k">import</span> <span class="o">*</span>
+</pre></div>
+</div>
 <p>All these functions return <a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> objects (more precisely, <tt class="xref docutils literal"><span class="pre">MembraneEquation</span></tt> objects).</p>
 <ul>
 <li><p class="first">Leaky integrate-and-fire model (<tt class="docutils literal"><span class="pre">dvm/dt=(El-vm)/tau</span> <span class="pre">:</span> <span class="pre">volt</span></tt>):</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">leaky_IF</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">El</span><span class="o">=-</span><span class="mf">70</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">leaky_IF</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">El</span><span class="o">=-</span><span class="mf">70</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 </pre></div>
+</div>
 </li>
 <li><p class="first">Perfect integrator (<tt class="docutils literal"><span class="pre">dvm/dt=Im/tau</span> <span class="pre">:</span> <span class="pre">volt</span></tt>):</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">perfect_IF</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">perfect_IF</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 </pre></div>
+</div>
 </li>
 <li><p class="first">Quadratic integrate-and-fire model (<tt class="docutils literal"><span class="pre">C*dvm/dt=a*(vm-El)*(vm-VT)</span> <span class="pre">:</span> <span class="pre">volt</span></tt>):</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">quadratic_IF</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">nS</span><span class="o">/</span><span class="n">mV</span><span class="p">,</span><span class="n">EL</span><span class="o">=-</span><span class="mf">70</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">VT</span><span class="o">=-</span><span class="mf">50</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">quadratic_IF</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">nS</span><span class="o">/</span><span class="n">mV</span><span class="p">,</span><span class="n">EL</span><span class="o">=-</span><span class="mf">70</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">VT</span><span class="o">=-</span><span class="mf">50</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 </pre></div>
+</div>
 </li>
 <li><p class="first">Exponential integrate-and-fire model (<tt class="docutils literal"><span class="pre">C*dvm/dt=gL*(EL-vm)+gL*DeltaT*exp((vm-VT)/DeltaT)</span> <span class="pre">:volt</span></tt>):</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">exp_IF</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">gL</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span><span class="n">EL</span><span class="o">=-</span><span class="mf">70</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">VT</span><span class="o">=-</span><span class="mf">55</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">DeltaT</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">exp_IF</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">gL</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span><span class="n">EL</span><span class="o">=-</span><span class="mf">70</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">VT</span><span class="o">=-</span><span class="mf">55</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">DeltaT</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 </pre></div>
+</div>
 </li>
 </ul>
 <p>In general, it is possible to define a neuron group with different parameter values for each neuron, by
 passing strings at initialisation. For example, the following code defines leaky integrate-and-fire models
 with heterogeneous resting potential values:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">leaky_IF</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">El</span><span class="o">=</span><span class="s">&#39;V0&#39;</span><span class="p">)</span><span class="o">+</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;V0:volt&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">leaky_IF</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">El</span><span class="o">=</span><span class="s">&#39;V0&#39;</span><span class="p">)</span><span class="o">+</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;V0:volt&#39;</span><span class="p">)</span>
 <span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">15</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
 <div class="section" id="two-dimensional-if-models">
-<h2 id="two-dimensional-if-models">Two-dimensional IF models<a class="headerlink" href="#two-dimensional-if-models" title="Permalink to this headline">¶</a></h2>
+<h2>Two-dimensional IF models<a class="headerlink" href="#two-dimensional-if-models" title="Permalink to this headline">¶</a></h2>
 <p>Integrate-and-fire models with two variables can display a very rich set of electrophysiological behaviours.
 In Brian, two such models have been implemented: Izhikevich model and Brette-Gerstner adaptive exponential
 integrate-and-fire model (also included in the <tt class="docutils literal"><span class="pre">IF</span></tt> module).
 The equations are obtained in the same way as for one-dimensional models:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Izhikevich</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mf">0.02</span><span class="o">/</span><span class="n">ms</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="mf">0.2</span><span class="o">/</span><span class="n">ms</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Izhikevich</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mf">0.02</span><span class="o">/</span><span class="n">ms</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="mf">0.2</span><span class="o">/</span><span class="n">ms</span><span class="p">)</span>
 <span class="n">eqs</span><span class="o">=</span><span class="n">Brette_Gerstner</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">281</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">gL</span><span class="o">=</span><span class="mf">30</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span><span class="n">EL</span><span class="o">=-</span><span class="mf">70.6</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">VT</span><span class="o">=-</span><span class="mf">50.4</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">DeltaT</span><span class="o">=</span><span class="mf">2</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">tauw</span><span class="o">=</span><span class="mf">144</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="mf">4</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span>
 <span class="n">eqs</span><span class="o">=</span><span class="n">aEIF</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">281</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">gL</span><span class="o">=</span><span class="mf">30</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span><span class="n">EL</span><span class="o">=-</span><span class="mf">70.6</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">VT</span><span class="o">=-</span><span class="mf">50.4</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">DeltaT</span><span class="o">=</span><span class="mf">2</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">tauw</span><span class="o">=</span><span class="mf">144</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="mf">4</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span> <span class="c"># equivalent</span>
 </pre></div>
+</div>
 <p>and two state variables are defined: <tt class="docutils literal"><span class="pre">vm</span></tt> (membrane potential) and <tt class="docutils literal"><span class="pre">w</span></tt> (adaptation variable).
 The equivalent equations for Izhikevich model are:</p>
-<pre>dvm/dt=(0.04/ms/mV)*vm**2+(5/ms)*vm+140*mV/ms-w : volt/second
+<div class="highlight-python"><pre>dvm/dt=(0.04/ms/mV)*vm**2+(5/ms)*vm+140*mV/ms-w : volt/second
 dw/dt=a*(b*vm-w)                            : volt/second</pre>
+</div>
 <p>and for Brette-Gerstner model:</p>
-<pre>C*dvm/dt=gL*(EL-vm)+gL*DeltaT*exp((vm-VT)/DeltaT)-w :volt
+<div class="highlight-python"><pre>C*dvm/dt=gL*(EL-vm)+gL*DeltaT*exp((vm-VT)/DeltaT)-w :volt
 dw/dt=(a*(vm-EL)-w)/tauw : amp</pre>
+</div>
 <p>To simulate these models, one needs to specify a threshold value, and a good choice is
 <tt class="docutils literal"><span class="pre">VT+4*DeltaT</span></tt>. The reset is particular in these models since it is bidimensional:
 vm-&gt;Vr and w-&gt;w+b. A specific reset class has been implemented for this purpose:
 <tt class="xref docutils literal"><span class="pre">AdaptiveReset</span></tt>, initialised with Vr and b. Thus, a typical construction of a group of
 such models is:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Brette_Gerstner</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">281</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">gL</span><span class="o">=</span><span class="mf">30</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span><span class="n">EL</span><span class="o">=-</span><span class="mf">70.6</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">VT</span><span class="o">=-</span><span class="mf">50.4</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">DeltaT</span><span class="o">=</span><span class="mf">2</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">tauw</span><span class="o">=</span><span class="mf">144</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="mf">4</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Brette_Gerstner</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">281</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">gL</span><span class="o">=</span><span class="mf">30</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span><span class="n">EL</span><span class="o">=-</span><span class="mf">70.6</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">VT</span><span class="o">=-</span><span class="mf">50.4</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">DeltaT</span><span class="o">=</span><span class="mf">2</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">tauw</span><span class="o">=</span><span class="mf">144</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="mf">4</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span>
 <span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">threshold</span><span class="o">=-</span><span class="mf">43</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">AdaptiveReset</span><span class="p">(</span><span class="n">Vr</span><span class="o">=-</span><span class="mf">70.6</span><span class="o">*</span><span class="n">mvolt</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="mf">0.0805</span><span class="o">*</span><span class="n">nA</span><span class="p">))</span>
 </pre></div>
 </div>
+</div>
 <div class="section" id="synapses">
-<h2 id="synapses">Synapses<a class="headerlink" href="#synapses" title="Permalink to this headline">¶</a></h2>
+<h2>Synapses<a class="headerlink" href="#synapses" title="Permalink to this headline">¶</a></h2>
 <p>A few simple synaptic models are implemented in the module <tt class="docutils literal"><span class="pre">synapses</span></tt>:</p>
-<div class="highlight"><pre><span class="k">from</span> <span class="nn">brian.library.synapses</span> <span class="k">import</span> <span class="o">*</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian.library.synapses</span> <span class="k">import</span> <span class="o">*</span>
 </pre></div>
+</div>
 <p>All the following functions need to be passed the name of the variable upon which the received spikes
 will act, and the name of the variable representing the current or conductance.
 The simplest one is the exponential synapse:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">exp_synapse</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">unit</span><span class="o">=</span><span class="n">amp</span><span class="p">,</span><span class="n">output</span><span class="o">=</span><span class="s">&#39;x_current&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">exp_synapse</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">unit</span><span class="o">=</span><span class="n">amp</span><span class="p">,</span><span class="n">output</span><span class="o">=</span><span class="s">&#39;x_current&#39;</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>It is equivalent to:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
 <span class="s">dx/dt=-x/tau : amp</span>
 <span class="s">x_out=x</span>
 <span class="s">&#39;&#39;&#39;</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>Here, <tt class="docutils literal"><span class="pre">x</span></tt> is the variable which receives the spikes and <tt class="docutils literal"><span class="pre">x_current</span></tt> is the variable to be inserted in
 the membrane equation (since it is a one-dimensional synaptic model, the variables are the same).
 If the output variable name is not defined, then it will be automatically generated by adding the
 suffix <tt class="docutils literal"><span class="pre">_out</span></tt> to the input name.</p>
 <p>Two other types of synapses are implemented. The alpha synapse (<tt class="docutils literal"><span class="pre">x(t)=alpha*(t/tau)*exp(1-t/tau)</span></tt>, where
 <tt class="docutils literal"><span class="pre">alpha</span></tt> is a normalising factor) is defined with the same syntax by:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">alpha_synapse</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">unit</span><span class="o">=</span><span class="n">amp</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">alpha_synapse</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">unit</span><span class="o">=</span><span class="n">amp</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>and the bi-exponential synapse is defined by (<tt class="docutils literal"><span class="pre">x(t)=(tau2/(tau2-tau1))*(exp(-t/tau1)-exp(-t/tau2))</span></tt>,
 up to a normalising factor):</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">biexp_synapse</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="n">tau1</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">tau2</span><span class="o">=</span><span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">unit</span><span class="o">=</span><span class="n">amp</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">biexp_synapse</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="n">tau1</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">tau2</span><span class="o">=</span><span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">unit</span><span class="o">=</span><span class="n">amp</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>For all types of synapses, the normalising factor is such that the maximum of x(t) is 1.
 These functions can be used as in the following example:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span><span class="o">+</span><span class="n">Current</span><span class="p">(</span><span class="s">&#39;I=gl*(El-vm)+ge*(Ee-vm):amp&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span><span class="o">+</span><span class="n">Current</span><span class="p">(</span><span class="s">&#39;I=gl*(El-vm)+ge*(Ee-vm):amp&#39;</span><span class="p">)</span>
 <span class="n">eqs</span><span class="o">+=</span><span class="n">alpha_synapse</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;ge_in&#39;</span><span class="p">,</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">unit</span><span class="o">=</span><span class="n">siemens</span><span class="p">,</span><span class="n">output</span><span class="o">=</span><span class="s">&#39;ge&#39;</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>where alpha conductances have been inserted in the membrane equation.</p>
 <p>One can directly insert synaptic currents with the functions <tt class="docutils literal"><span class="pre">exp_current</span></tt>, <tt class="docutils literal"><span class="pre">alpha_current</span></tt>
 and <tt class="docutils literal"><span class="pre">biexp_current</span></tt>:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span><span class="o">+</span><span class="n">Current</span><span class="p">(</span><span class="s">&#39;I=gl*(El-vm):amp&#39;</span><span class="p">)</span><span class="o">+</span>\
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span><span class="o">+</span><span class="n">Current</span><span class="p">(</span><span class="s">&#39;I=gl*(El-vm):amp&#39;</span><span class="p">)</span><span class="o">+</span>\
     <span class="n">alpha_current</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>(the units is amp by default), or synaptic conductances with the functions <tt class="docutils literal"><span class="pre">exp_conductance</span></tt>, <tt class="docutils literal"><span class="pre">alpha_conductance</span></tt>
 and <tt class="docutils literal"><span class="pre">biexp_conductance</span></tt>:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span><span class="o">+</span><span class="n">Current</span><span class="p">(</span><span class="s">&#39;I=gl*(El-vm):amp&#39;</span><span class="p">)</span><span class="o">+</span>\
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">MembraneEquation</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">200</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span><span class="o">+</span><span class="n">Current</span><span class="p">(</span><span class="s">&#39;I=gl*(El-vm):amp&#39;</span><span class="p">)</span><span class="o">+</span>\
     <span class="n">alpha_conductance</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">E</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">tau</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>where <tt class="docutils literal"><span class="pre">E</span></tt> is the reversal potential.</p>
 </div>
 <div class="section" id="ionic-currents">
-<h2 id="ionic-currents">Ionic currents<a class="headerlink" href="#ionic-currents" title="Permalink to this headline">¶</a></h2>
+<h2>Ionic currents<a class="headerlink" href="#ionic-currents" title="Permalink to this headline">¶</a></h2>
 <p>A few standard ionic currents have implemented in the module <tt class="docutils literal"><span class="pre">ionic_currents</span></tt>:</p>
-<div class="highlight"><pre><span class="k">from</span> <span class="nn">brian.library.ionic_currents</span> <span class="k">import</span> <span class="o">*</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian.library.ionic_currents</span> <span class="k">import</span> <span class="o">*</span>
 </pre></div>
+</div>
 <p>When the current name is not specified,
 a unique name is generated automatically. Models can be constructed by adding currents to a
 <tt class="xref docutils literal"><span class="pre">MembraneEquation</span></tt>.</p>
 <ul>
 <li><p class="first">Leak current (<tt class="docutils literal"><span class="pre">gl*(El-vm)</span></tt>):</p>
-<div class="highlight"><pre><span class="n">current</span><span class="o">=</span><span class="n">leak_current</span><span class="p">(</span><span class="n">gl</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span><span class="n">El</span><span class="o">=-</span><span class="mf">70</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">current_name</span><span class="o">=</span><span class="s">&#39;I&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">current</span><span class="o">=</span><span class="n">leak_current</span><span class="p">(</span><span class="n">gl</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span><span class="n">El</span><span class="o">=-</span><span class="mf">70</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">current_name</span><span class="o">=</span><span class="s">&#39;I&#39;</span><span class="p">)</span>
 </pre></div>
+</div>
 </li>
 <li><p class="first">Hodgkin-Huxley K+ current:</p>
-<pre>current=K_current_HH(gmax,EK,current_name='IK'):</pre>
+<div class="highlight-python"><pre>current=K_current_HH(gmax,EK,current_name='IK'):</pre>
+</div>
 </li>
 <li><p class="first">Hodgkin-Huxley Na+ current:</p>
-<pre>current=Na_current_HH(gmax,ENa,current_name='INa'):</pre>
+<div class="highlight-python"><pre>current=Na_current_HH(gmax,ENa,current_name='INa'):</pre>
+</div>
 </li>
 </ul>
 </div>
@@ -212,10 +257,11 @@ a unique name is generated automatically. Models can be constructed by adding cu
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3>Table Of Contents</h3>
+            <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
 <li><a class="reference external" href="">Library models</a><ul>
 <li><a class="reference external" href="#membrane-equations">Membrane equations</a></li>
+<li><a class="reference external" href="#compartmental-modelling">Compartmental modelling</a></li>
 <li><a class="reference external" href="#integrate-and-fire-models">Integrate-and-Fire models</a></li>
 <li><a class="reference external" href="#two-dimensional-if-models">Two-dimensional IF models</a></li>
 <li><a class="reference external" href="#synapses">Synapses</a></li>
@@ -232,7 +278,7 @@ a unique name is generated automatically. Models can be constructed by adding cu
             <ul class="this-page-menu">
               <li><a href="_sources/librarymodels.txt">Show Source</a></li>
             </ul>
-            <h3>Quick search</h3>
+          <h3>Quick search</h3>
             <form class="search" action="search.html" method="get">
               <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
               <input type="hidden" name="check_keywords" value="yes" />
@@ -258,13 +304,13 @@ a unique name is generated automatically. Models can be constructed by adding cu
           <a href="library.html" title="The library"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="library.html" accesskey="U">The library</a> &raquo;</li>
+          <li><a href="library.html" accesskey="U">The library</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Sep 23, 2008.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+      Last updated on Jan 19, 2009.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>
 </html>

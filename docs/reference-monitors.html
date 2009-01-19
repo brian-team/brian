@@ -2,27 +2,27 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Monitors &mdash; Brian v1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-          URL_ROOT:    '',
-          VERSION:     '1.0.0',
-          COLLAPSE_MODINDEX: false,
-          FILE_SUFFIX: ''
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/interface.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="contents" title="Global table of contents" href="contents.html" />
-    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="Reference" href="reference.html" />
     <link rel="next" title="Plotting" href="reference-plotting.html" />
-    <link rel="prev" title="Network" href="reference-network.html" />
+    <link rel="prev" title="Network" href="reference-network.html" /> 
   </head>
   <body>
     <div class="related">
@@ -41,9 +41,9 @@
           <a href="reference-network.html" title="Network"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li> 
       </ul>
-    </div>
+    </div>  
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
@@ -51,7 +51,7 @@
             
   
   <div class="section" id="monitors">
-<h1 id="monitors">Monitors<a class="headerlink" href="#monitors" title="Permalink to this headline">¶</a></h1>
+<h1>Monitors<a class="headerlink" href="#monitors" title="Permalink to this headline">¶</a></h1>
 <p>Monitors are used to record properties of your network. The two
 most important are <a title="brian.SpikeMonitor" class="reference internal" href="#brian.SpikeMonitor"><tt class="xref docutils literal"><span class="pre">SpikeMonitor</span></tt></a> which records spikes, and
 <a title="brian.StateMonitor" class="reference internal" href="#brian.StateMonitor"><tt class="xref docutils literal"><span class="pre">StateMonitor</span></tt></a> which records values of state variables. These
@@ -72,8 +72,9 @@ decorator.</p>
 <!--[brian.SpikeMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">SpikeMonitor</tt><big>(</big><em>source</em>, <em>record=True</em>, <em>delay=0</em>, <em>function=None</em><big>)</big><a class="headerlink" href="#brian.SpikeMonitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Counts or records spikes from a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a></p>
 <p>Initialised as one of:</p>
-<pre>SpikeMonitor(source(,record=True))
+<div class="highlight-python"><pre>SpikeMonitor(source(,record=True))
 SpikeMonitor(source,function=function)</pre>
+</div>
 <p>Where:</p>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
@@ -111,8 +112,9 @@ as an argument (<tt class="docutils literal"><span class="pre">function=myfuncti
 <!--[brian.SpikeCounter]-->class <tt class="descclassname">brian.</tt><tt class="descname">SpikeCounter</tt><big>(</big><em>source</em><big>)</big><a class="headerlink" href="#brian.SpikeCounter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Counts spikes from a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a></p>
 <p>Initialised as:</p>
-<div class="highlight"><pre><span class="n">SpikeCounter</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SpikeCounter</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>With argument:</p>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
@@ -134,8 +136,9 @@ number of spikes counted for neuron <tt class="docutils literal"><span class="pr
 <!--[brian.PopulationSpikeCounter]-->class <tt class="descclassname">brian.</tt><tt class="descname">PopulationSpikeCounter</tt><big>(</big><em>source</em>, <em>delay=0</em><big>)</big><a class="headerlink" href="#brian.PopulationSpikeCounter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Counts spikes from a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a></p>
 <p>Initialised as:</p>
-<div class="highlight"><pre><span class="n">PopulationSpikeCounter</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">PopulationSpikeCounter</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>With argument:</p>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
@@ -153,8 +156,9 @@ number of spikes counted for neuron <tt class="docutils literal"><span class="pr
 <!--[brian.StateSpikeMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">StateSpikeMonitor</tt><big>(</big><em>source</em>, <em>var</em><big>)</big><a class="headerlink" href="#brian.StateSpikeMonitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Counts or records spikes and state variables at spike times from a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a></p>
 <p>Initialised as:</p>
-<div class="highlight"><pre><span class="n">StateSpikeMonitor</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">StateSpikeMonitor</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>Where:</p>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
@@ -198,8 +202,9 @@ whole monitored group, or just for neuron <tt class="docutils literal"><span cla
 <!--[brian.StateMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">StateMonitor</tt><big>(</big><em>P</em>, <em>varname</em>, <em>clock=None</em>, <em>record=False</em>, <em>timestep=1</em>, <em>when='end'</em><big>)</big><a class="headerlink" href="#brian.StateMonitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Records the values of a state variable from a <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>.</p>
 <p>Initialise as:</p>
-<pre>StateMonitor(P,varname(,record=False)
+<div class="highlight-python"><pre>StateMonitor(P,varname(,record=False)
     (,when='end)(,timestep=1)(,clock=clock))</pre>
+</div>
 <p>Where:</p>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">P</span></tt></dt>
@@ -249,11 +254,21 @@ group (not just the ones specified in the <tt class="docutils literal"><span cla
 single neuron&#8217;s values.</dd>
 </dl>
 <p>In addition, if <tt class="xref docutils literal"><span class="pre">M`</span></tt> is a <a title="brian.StateMonitor" class="reference internal" href="#brian.StateMonitor"><tt class="xref docutils literal"><span class="pre">StateMonitor</span></tt></a> object, you write:</p>
-<div class="highlight"><pre><span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 </pre></div>
+</div>
 <p>for the recorded values of neuron <tt class="docutils literal"><span class="pre">i</span></tt> (if it was specified with the
 <tt class="docutils literal"><span class="pre">record</span></tt> keyword). It returns a <tt class="xref docutils literal"><span class="pre">QuantityArray</span></tt> object with units. Downcast
 to an array without units by writing <tt class="docutils literal"><span class="pre">asarray(M[i])</span></tt>.</p>
+<p>Methods:</p>
+<dl class="method">
+<dt id="brian.StateMonitor.plot">
+<!--[brian.StateMonitor.plot]--><tt class="descname">plot</tt><big>(</big><span class="optional">[</span><em>indices=None</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#brian.StateMonitor.plot" title="Permalink to this definition">¶</a></dt>
+<dd>Plots the recorded values using pylab. You can specify an index or
+list of indices, otherwise all the recorded values will be plotted.
+The graph plotted will have legends of the form <tt class="docutils literal"><span class="pre">name[i]</span></tt> for
+<tt class="docutils literal"><span class="pre">name</span></tt> the variable name, and <tt class="docutils literal"><span class="pre">i</span></tt> the neuron index.</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -261,7 +276,8 @@ to an array without units by writing <tt class="docutils literal"><span class="p
 <!--[brian.FileSpikeMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">FileSpikeMonitor</tt><big>(</big><em>source</em>, <em>filename</em>, <em>record=False</em>, <em>delay=0</em><big>)</big><a class="headerlink" href="#brian.FileSpikeMonitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Records spikes to a file</p>
 <p>Initialised as:</p>
-<pre>FileSpikeMonitor(source, filename[, record=False])</pre>
+<div class="highlight-python"><pre>FileSpikeMonitor(source, filename[, record=False])</pre>
+</div>
 <p>Does everything that a <a title="brian.SpikeMonitor" class="reference internal" href="#brian.SpikeMonitor"><tt class="xref docutils literal"><span class="pre">SpikeMonitor</span></tt></a> does except also records
 the spikes to the named file. note that spikes are recorded
 as an ASCII file of lines each of the form:</p>
@@ -281,8 +297,9 @@ the program ends).</dd>
 <!--[brian.ISIHistogramMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">ISIHistogramMonitor</tt><big>(</big><em>source</em>, <em>bins</em>, <em>delay=0</em><big>)</big><a class="headerlink" href="#brian.ISIHistogramMonitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Records the interspike interval histograms of a group.</p>
 <p>Initialised as:</p>
-<div class="highlight"><pre><span class="n">ISIHistogramMonitor</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">bins</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ISIHistogramMonitor</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">bins</span><span class="p">)</span>
 </pre></div>
+</div>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
 <dd>The source group to record from.</dd>
@@ -309,8 +326,9 @@ were in each bin.</dd>
 <!--[brian.PopulationRateMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">PopulationRateMonitor</tt><big>(</big><em>source</em>, <em>bin=None</em><big>)</big><a class="headerlink" href="#brian.PopulationRateMonitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Monitors and stores the (time-varying) population rate</p>
 <p>Initialised as:</p>
-<div class="highlight"><pre><span class="n">PopulationRateMonitor</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="n">bin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">PopulationRateMonitor</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="n">bin</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>Records the average activity of the group for every bin.</p>
 <p>Properties:</p>
 <dl class="docutils">
@@ -339,7 +357,7 @@ were in each bin.</dd>
             <ul class="this-page-menu">
               <li><a href="_sources/reference-monitors.txt">Show Source</a></li>
             </ul>
-            <h3>Quick search</h3>
+          <h3>Quick search</h3>
             <form class="search" action="search.html" method="get">
               <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
               <input type="hidden" name="check_keywords" value="yes" />
@@ -365,13 +383,13 @@ were in each bin.</dd>
           <a href="reference-network.html" title="Network"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Sep 23, 2008.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+      Last updated on Jan 19, 2009.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>
 </html>

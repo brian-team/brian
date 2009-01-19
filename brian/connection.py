@@ -41,6 +41,9 @@ __all__=[
 #         'UserComputedSparseConnectionMatrix',
 #         'random_row_func',
 #         'random_sparse_row_func'
+         'ConstructionMatrix', 'SparseConstructionMatrix', 'DenseConstructionMatrix', 'DynamicConstructionMatrix',
+         'ConnectionMatrix', 'SparseConnectionMatrix', 'DenseConnectionMatrix', 'DynamicConnectionMatrix',
+         'ConnectionVector', 'SparseConnectionVector', 'DenseConnectionVector',
          ]
 
 import copy
@@ -819,11 +822,13 @@ class DynamicConnectionMatrix(ConnectionMatrix):
     usual slicing operations supported, ``M[:]=val`` is supported, where
     ``val`` must be a scalar or an array of length ``nnz``.
     
-    Implementation details:
+    **Implementation details**
     
     The values are stored in an array ``alldata`` of length ``nnzmax`` (maximum
     number of nonzero entries). This is a dynamic array, see:
+    
         http://en.wikipedia.org/wiki/Dynamic_array
+        
     You can set the resizing constant with the argument ``dynamic_array_const``.
     Normally the default value 2 is fine but if memory is a worry it could be
     made smaller.

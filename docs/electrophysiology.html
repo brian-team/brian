@@ -2,27 +2,27 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Electrophysiology &mdash; Brian v1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-          URL_ROOT:    '',
-          VERSION:     '1.0.0',
-          COLLAPSE_MODINDEX: false,
-          FILE_SUFFIX: ''
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/interface.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="contents" title="Global table of contents" href="contents.html" />
-    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="The library" href="library.html" />
     <link rel="next" title="Extending the library" href="extendinglibrary.html" />
-    <link rel="prev" title="Random processes" href="randomprocesses.html" />
+    <link rel="prev" title="Random processes" href="randomprocesses.html" /> 
   </head>
   <body>
     <div class="related">
@@ -41,9 +41,9 @@
           <a href="randomprocesses.html" title="Random processes"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="library.html" accesskey="U">The library</a> &raquo;</li>
+          <li><a href="library.html" accesskey="U">The library</a> &raquo;</li> 
       </ul>
-    </div>
+    </div>  
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
@@ -51,7 +51,238 @@
             
   
   <div class="section" id="electrophysiology">
-<h1 id="electrophysiology">Electrophysiology<a class="headerlink" href="#electrophysiology" title="Permalink to this headline">¶</a></h1>
+<h1>Electrophysiology<a class="headerlink" href="#electrophysiology" title="Permalink to this headline">¶</a></h1>
+<p>The electrophysiology library contains a number of models of electrodes,
+amplifiers and recording protocols to simulate intracellular electrophysiological
+recordings.
+To import the electrophysiology library:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian.library.electrophysiology</span> <span class="k">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>There is a series of example scripts in the examples/electrophysiology folder.</p>
+<div class="section" id="electrodes">
+<h2>Electrodes<a class="headerlink" href="#electrodes" title="Permalink to this headline">¶</a></h2>
+<p>Electrodes are defined as resistor/capacitor (RC) circuits, or multiple
+RC circuits in series. Define a simple RC electrode with resistance Re
+and capacitance Ce (possibly 0 pF) as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">el</span><span class="o">=</span><span class="n">electrode</span><span class="p">(</span><span class="n">Re</span><span class="p">,</span><span class="n">Ce</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">electrode</span></tt> function returns an <a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> object containing the
+electrode model, where
+the electrode potential is <tt class="docutils literal"><span class="pre">v_el</span></tt> (the recording), the membrane potential is <tt class="docutils literal"><span class="pre">vm</span></tt>, the electrode current
+entering the membrane is <tt class="docutils literal"><span class="pre">i_inj</span></tt> and command current is <tt class="docutils literal"><span class="pre">i_cmd</span></tt>.
+These names can be overriden using the corresponding keywords. For example, a membrane
+equation with a .5 nA current injected through an electrode is defined as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;dv/dt=(-gl*v+i_inj)/Cm : volt&#39;</span><span class="p">)</span><span class="o">+</span><span class="n">electrode</span><span class="p">(</span><span class="mf">50</span><span class="o">*</span><span class="n">Mohm</span><span class="p">,</span><span class="mf">10</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">vm</span><span class="o">=</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">i_cmd</span><span class="o">=.</span><span class="mf">5</span><span class="o">*</span><span class="n">nA</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Specify <tt class="docutils literal"><span class="pre">i_cmd=None</span></tt> if the electrode is only used to record (no current injection). More complex
+electrodes can be defined by passing lists of resistances and capacitances, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">el</span><span class="o">=</span><span class="n">electrode</span><span class="p">([</span><span class="mf">50</span><span class="o">*</span><span class="n">Mohm</span><span class="p">,</span><span class="mf">20</span><span class="o">*</span><span class="n">Mohm</span><span class="p">],[</span><span class="mf">5</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="mf">3</span><span class="o">*</span><span class="n">pF</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="amplifiers">
+<h2>Amplifiers<a class="headerlink" href="#amplifiers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="current-clamp-amplifier">
+<h3>Current-clamp amplifier<a class="headerlink" href="#current-clamp-amplifier" title="Permalink to this headline">¶</a></h3>
+<p>A current-clamp amplifier injects a current through an intracellular electrode
+and records the membrane potential. Two standard circuits are included to compensate
+for the electrode voltage: bridge compensation and capacitance neutralization
+(see e.g. the <a class="reference external" href="http://www.moleculardevices.com/pages/instruments/axon_guide.html">Axon guide</a>).
+The following command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">amp</span><span class="o">=</span><span class="n">current_clamp</span><span class="p">(</span><span class="n">Re</span><span class="o">=</span><span class="mf">80</span><span class="o">*</span><span class="n">Mohm</span><span class="p">,</span><span class="n">Ce</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>defines a current-clamp amplifier with an electrode modelled as a RC circuit. The function
+returns an <a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> object, where
+the recording potential is <tt class="docutils literal"><span class="pre">v_rec</span></tt>, the membrane potential is <tt class="docutils literal"><span class="pre">vm</span></tt>, the electrode current
+entering the membrane is <tt class="docutils literal"><span class="pre">i_inj</span></tt> and command current is <tt class="docutils literal"><span class="pre">i_cmd</span></tt>.
+These names can be overriden using the corresponding keywords.
+For implementation reasons, the amplifier always includes an electrode.
+Optionally, bridge compensation, can be used with the <tt class="docutils literal"><span class="pre">bridge</span></tt> keyword and capacitance
+neutralization with the <tt class="docutils literal"><span class="pre">capa_comp</span></tt> keyword. For example, the following instruction defines
+a partially compensated recording:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">amp</span><span class="o">=</span><span class="n">current_clamp</span><span class="p">(</span><span class="n">Re</span><span class="o">=</span><span class="mf">80</span><span class="o">*</span><span class="n">Mohm</span><span class="p">,</span><span class="n">Ce</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">bridge</span><span class="o">=</span><span class="mf">78</span><span class="o">*</span><span class="n">Mohm</span><span class="p">,</span><span class="n">capa_comp</span><span class="o">=</span><span class="mf">8</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The capacitance neutralization is a feedback circuit, so that it becomes unstable if
+the feedback capacitance is larger than the actual capacitance of the electrode.
+The bridge compensation is an input-dependent voltage offset (<tt class="docutils literal"><span class="pre">bridge*i_cmd</span></tt>), and
+thus is always stable (unless an additional feedback, such as dynamic clamp, is provided).
+Note that the bridge and capacitance neutralization parameters can be variable names, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">amp</span><span class="o">=</span><span class="n">current_clamp</span><span class="p">(</span><span class="n">Re</span><span class="o">=</span><span class="mf">80</span><span class="o">*</span><span class="n">Mohm</span><span class="p">,</span><span class="n">Ce</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">pF</span><span class="p">,</span><span class="n">bridge</span><span class="o">=</span><span class="s">&#39;Rbridge&#39;</span><span class="p">,</span><span class="n">capa_comp</span><span class="o">=</span><span class="mf">8</span><span class="o">*</span><span class="n">pF</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and then the bridge compensation can be changed dynamically during the simulation.</p>
+</div>
+<div class="section" id="voltage-clamp-amplifier">
+<h3>Voltage-clamp amplifier<a class="headerlink" href="#voltage-clamp-amplifier" title="Permalink to this headline">¶</a></h3>
+<p>The library includes a single-electrode voltage-clamp amplifier, which
+clamps the potential at a given value and records the current going through
+the electrode.
+The following command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">amp</span><span class="o">=</span><span class="n">voltage_clamp</span><span class="p">(</span><span class="n">Re</span><span class="o">=</span><span class="mf">20</span><span class="o">*</span><span class="n">Mohm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>defines a voltage-clamp amplifier with an electrode modelled as a pure
+resistance.
+The function
+returns an <a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> object, where
+the recording current is <tt class="docutils literal"><span class="pre">i_rec</span></tt>, the membrane potential is <tt class="docutils literal"><span class="pre">vm</span></tt>, the electrode current
+entering the membrane is <tt class="docutils literal"><span class="pre">i_inj</span></tt> and command voltage is <tt class="docutils literal"><span class="pre">v_cmd</span></tt>
+(note that <tt class="docutils literal"><span class="pre">i_rec</span></tt> = - <tt class="docutils literal"><span class="pre">i_inj</span></tt>).
+These names can be overriden using the corresponding keywords.
+For implementation reasons, the amplifier always includes an electrode.
+Electrode capacitance is not included, meaning that
+the capacitance neutralization circuit is always set at the maximum value.
+The quality of the clamp is limited by the electrode or &#8216;&#8217;series&#8217;&#8217; resistance,
+which can be compensated in a similar way as bridge compensation in current-clamp
+recordings. Series resistance compensation consists in adding a current-dependent
+voltage offset to the voltage command. Because of the feedback, that compensation needs
+to be slightly delayed (with a low-pass circuit). The following example defines a
+voltage-clamp amplifier with half-compensated series resistance and compensation delay
+1 ms:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">amp</span><span class="o">=</span><span class="n">voltage_clamp</span><span class="p">(</span><span class="n">Re</span><span class="o">=</span><span class="mf">20</span><span class="o">*</span><span class="n">Mohm</span><span class="p">,</span><span class="n">Rs</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">Mohm</span><span class="p">,</span><span class="n">tau_u</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">tau_u</span></tt> keyword is optional and defaults to 1 ms.</p>
+</div>
+<div class="section" id="acquisition-board">
+<h3>Acquisition board<a class="headerlink" href="#acquisition-board" title="Permalink to this headline">¶</a></h3>
+<p>An acquisition board samples a recording
+and sends a command (e.g. injected current)
+at regular times. It is defined as a
+<a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>.
+Use:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">board</span><span class="o">=</span><span class="n">AcquisitionBoard</span><span class="p">(</span><span class="n">P</span><span class="o">=</span><span class="n">neuron</span><span class="p">,</span><span class="n">V</span><span class="o">=</span><span class="s">&#39;V&#39;</span><span class="p">,</span><span class="n">I</span><span class="o">=</span><span class="s">&#39;I&#39;</span><span class="p">,</span><span class="n">clock</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">P</span></tt> = neuron group (possibly containing amplifier and electrode),
+<tt class="docutils literal"><span class="pre">V</span></tt> = potential variable name,
+<tt class="docutils literal"><span class="pre">I</span></tt> = current variable name,
+<tt class="docutils literal"><span class="pre">clock</span></tt> = acquisition clock. The recording variable is then stored in
+<tt class="docutils literal"><span class="pre">board.record</span></tt> and a command is sent with the instruction <tt class="docutils literal"><span class="pre">board.command=I</span></tt>.</p>
+</div>
+<div class="section" id="discontinuous-current-clamp">
+<h3>Discontinuous current clamp<a class="headerlink" href="#discontinuous-current-clamp" title="Permalink to this headline">¶</a></h3>
+<p>The discontinuous current clamp (DCC) consists in alternatively injecting current
+and measuring the potential, in order to measure the potential when the voltage
+across the electrode has vanished. The sampling clock is mainly determined by the
+electrode time constant (the sampling period should be two orders of magnitude larger
+than the electrode time constant).
+It is defined and used in the same way as an acquisition board (above):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">board</span><span class="o">=</span><span class="n">DCC</span><span class="p">(</span><span class="n">P</span><span class="o">=</span><span class="n">neuron</span><span class="p">,</span><span class="n">V</span><span class="o">=</span><span class="s">&#39;V&#39;</span><span class="p">,</span><span class="n">I</span><span class="o">=</span><span class="s">&#39;I&#39;</span><span class="p">,</span><span class="n">frequency</span><span class="o">=</span><span class="mf">2</span><span class="o">*</span><span class="n">kHz</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">frequency</span></tt> is the sampling frequency. The duty cycle is 1/3
+(meaning current is injected during 1/3 of each sampling step).</p>
+</div>
+<div class="section" id="discontinuous-voltage-clamp">
+<h3>Discontinuous voltage clamp<a class="headerlink" href="#discontinuous-voltage-clamp" title="Permalink to this headline">¶</a></h3>
+<p>The discontinuous voltage clamp or single-electrode voltage clamp (SEVC) is
+an implementation of the voltage clamp using a feedback current with a DCC
+amplifier. It is defined as the DCC:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">board</span><span class="o">=</span><span class="n">SEVC</span><span class="p">(</span><span class="n">P</span><span class="o">=</span><span class="n">neuron</span><span class="p">,</span><span class="n">V</span><span class="o">=</span><span class="s">&#39;V&#39;</span><span class="p">,</span><span class="n">I</span><span class="o">=</span><span class="s">&#39;I&#39;</span><span class="p">,</span><span class="n">frequency</span><span class="o">=</span><span class="mf">2</span><span class="o">*</span><span class="n">kHz</span><span class="p">,</span><span class="n">gain</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">nS</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>except that a gain parameter is included. The SEVC injects a negative
+feedback current I=gain*(Vcommand-V). The quality of the clamp improves with
+higher gains, but there is a maximum value above which the system is unstable,
+because of the finite temporal resolution.
+The recorded current is stored in <tt class="docutils literal"><span class="pre">board.record</span></tt> and the command voltage is sent
+with the instruction <tt class="docutils literal"><span class="pre">board.command=-20*mV</span></tt>.
+With this implementation of the SEVC, the membrane is never perfectly clamped.
+A better clamp is obtained by adding an integral controller with the keyword
+<tt class="docutils literal"><span class="pre">gain2=10*nS/ms</span></tt>. The additional current J(t) is governed by the differential
+equation dJ/dt=gain2*(Vcommand-V), so that it ensures perfect clamping in the
+stationary state.
+However, this controller does not improve the settling time of the clamp, but
+only the final voltage value.</p>
+</div>
+</div>
+<div class="section" id="active-electrode-compensation-aec">
+<h2>Active Electrode Compensation (AEC)<a class="headerlink" href="#active-electrode-compensation-aec" title="Permalink to this headline">¶</a></h2>
+<p>The electrophysiology library includes the Active Electrode Compensation (AEC) technique
+described in Brette et al (2008),
+<a class="reference external" href="http://www.di.ens.fr/~brette/papers/Brette2008Neuron.html">High-resolution intracellular recordings using a real-time computational model of the electrode</a>,
+Neuron 59(3):379-91.</p>
+<div class="section" id="offline-aec">
+<h3>Offline AEC<a class="headerlink" href="#offline-aec" title="Permalink to this headline">¶</a></h3>
+<p>Given a digital current-clamp recording of the (uncompensated) potential <tt class="docutils literal"><span class="pre">v</span></tt>
+(vector of values) and injected current <tt class="docutils literal"><span class="pre">i</span></tt>, the following instructions
+calculate the full kernel of the system and the electrode kernel:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">K</span><span class="o">=</span><span class="n">full_kernel</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">ksize</span><span class="p">)</span>
+<span class="n">Ke</span><span class="o">=</span><span class="n">electrode_kernel_soma</span><span class="p">(</span><span class="n">K</span><span class="p">,</span><span class="n">start_tail</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">ksize</span></tt> is the size of the full kernel (number of sampling steps; typical size is
+about 15 ms) and <tt class="docutils literal"><span class="pre">start_tail</span></tt> is the size of the electrode kernel (start point
+of the &#8216;&#8217;tail&#8217;&#8217; of the full kernel; typical size if about 4 ms). The electrode
+should be compensated for capacitance (capacitance neutralization)
+but not resistance (bridge compensation). The best choice for the
+input current is a series of independent random values, and the last <tt class="docutils literal"><span class="pre">ksize</span></tt>
+steps of <tt class="docutils literal"><span class="pre">v</span></tt> should be null (i.e., the injection should stop before the end).
+Here it was assumed that the recording was done at the soma; if it is done in a thin
+process such as a dendrite or axon, the function <tt class="docutils literal"><span class="pre">electrode_kernel_dendrite</span></tt>
+should be used instead. The full kernel can also be obtained from a step current
+injection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">K</span><span class="o">=</span><span class="n">full_kernel_from_step</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">ksize</span><span class="p">)</span>
+<span class="n">Ke</span><span class="o">=</span><span class="n">electrode_kernel_soma</span><span class="p">(</span><span class="n">K</span><span class="p">,</span><span class="n">start_tail</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">i</span></tt> is a constant value in this case (note that this is not the best choice for
+real recordings).</p>
+<p>Once the electrode kernel has been found, any recording can be compensated as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">vcomp</span><span class="o">=</span><span class="n">AEC_compensate</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">ke</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">v</span></tt> is the raw voltage recording, <tt class="docutils literal"><span class="pre">i</span></tt> is the injected current
+and <tt class="docutils literal"><span class="pre">ke</span></tt> is the electrode kernel.</p>
+</div>
+<div class="section" id="online-aec">
+<h3>Online AEC<a class="headerlink" href="#online-aec" title="Permalink to this headline">¶</a></h3>
+<p>For dynamic-clamp or voltage-clamp recordings, the electrode compensation must be
+done online. An AEC board is initialized in the same way as an acquisition board:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">board</span><span class="o">=</span><span class="n">AEC</span><span class="p">(</span><span class="n">neuron</span><span class="p">,</span><span class="s">&#39;V&#39;</span><span class="p">,</span><span class="s">&#39;I&#39;</span><span class="p">,</span><span class="n">clock</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">clock</span></tt> is the acquisition clock. The estimation phase typically looks like:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">board</span><span class="o">.</span><span class="n">start_injection</span><span class="p">()</span>
+<span class="n">run</span><span class="p">(</span><span class="mf">2</span><span class="o">*</span><span class="n">second</span><span class="p">)</span>
+<span class="n">board</span><span class="o">.</span><span class="n">start_injection</span><span class="p">()</span>
+<span class="n">run</span><span class="p">(</span><span class="mf">100</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<span class="n">board</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>where white noise is injected for 2 seconds (default amplitude .5 nA).
+You can change the default amplitude and DC current as follows:
+<tt class="docutils literal"><span class="pre">board.start_injection(amp=.5*nA,DC=1*nA)</span></tt>.
+After estimation, the kernel is stored in <tt class="docutils literal"><span class="pre">board.Ke</span></tt>.
+The following options can be passed to the function <tt class="docutils literal"><span class="pre">estimate</span></tt>:
+<tt class="docutils literal"><span class="pre">ksize</span></tt> (default 150 sampling steps), <tt class="docutils literal"><span class="pre">ktail</span></tt> (default 50 sampling steps)
+and <tt class="docutils literal"><span class="pre">dendritic</span></tt> (default <tt class="xref docutils literal"><span class="pre">False</span></tt>, use <tt class="xref docutils literal"><span class="pre">True</span></tt> is the recording is a thin
+process, i.e., axon or dendrite).
+Online compensation is then switched on with <tt class="docutils literal"><span class="pre">board.switch_on()</span></tt>
+and off with <tt class="docutils literal"><span class="pre">board.switch_off()</span></tt>. For example, to inject a .5 nA current
+pulse for 200 ms, use the following instructions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">board</span><span class="o">.</span><span class="n">switch_on</span><span class="p">()</span>
+<span class="n">board</span><span class="o">.</span><span class="n">command</span><span class="o">=.</span><span class="mf">5</span><span class="o">*</span><span class="n">nA</span>
+<span class="n">run</span><span class="p">(</span><span class="mf">200</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<span class="n">board</span><span class="o">.</span><span class="n">command</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">nA</span>
+<span class="n">run</span><span class="p">(</span><span class="mf">150</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<span class="n">board</span><span class="o">.</span><span class="n">switch_off</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>During the simulation, the variable <tt class="docutils literal"><span class="pre">board.record</span></tt> stores the compensated
+potential.</p>
+</div>
+<div class="section" id="voltage-clamp-with-aec">
+<h3>Voltage-clamp with AEC<a class="headerlink" href="#voltage-clamp-with-aec" title="Permalink to this headline">¶</a></h3>
+<p>To be documented!</p>
+</div>
+</div>
 </div>
 
 
@@ -60,6 +291,28 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="">Electrophysiology</a><ul>
+<li><a class="reference external" href="#electrodes">Electrodes</a></li>
+<li><a class="reference external" href="#amplifiers">Amplifiers</a><ul>
+<li><a class="reference external" href="#current-clamp-amplifier">Current-clamp amplifier</a></li>
+<li><a class="reference external" href="#voltage-clamp-amplifier">Voltage-clamp amplifier</a></li>
+<li><a class="reference external" href="#acquisition-board">Acquisition board</a></li>
+<li><a class="reference external" href="#discontinuous-current-clamp">Discontinuous current clamp</a></li>
+<li><a class="reference external" href="#discontinuous-voltage-clamp">Discontinuous voltage clamp</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#active-electrode-compensation-aec">Active Electrode Compensation (AEC)</a><ul>
+<li><a class="reference external" href="#offline-aec">Offline AEC</a></li>
+<li><a class="reference external" href="#online-aec">Online AEC</a></li>
+<li><a class="reference external" href="#voltage-clamp-with-aec">Voltage-clamp with AEC</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
             <h4>Previous topic</h4>
             <p class="topless"><a href="randomprocesses.html" title="previous chapter">Random processes</a></p>
             <h4>Next topic</h4>
@@ -68,7 +321,7 @@
             <ul class="this-page-menu">
               <li><a href="_sources/electrophysiology.txt">Show Source</a></li>
             </ul>
-            <h3>Quick search</h3>
+          <h3>Quick search</h3>
             <form class="search" action="search.html" method="get">
               <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
               <input type="hidden" name="check_keywords" value="yes" />
@@ -94,13 +347,13 @@
           <a href="randomprocesses.html" title="Random processes"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="library.html" accesskey="U">The library</a> &raquo;</li>
+          <li><a href="library.html" accesskey="U">The library</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Sep 23, 2008.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+      Last updated on Jan 19, 2009.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>
 </html>

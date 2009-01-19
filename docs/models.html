@@ -2,27 +2,27 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Models and neuron groups &mdash; Brian v1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-          URL_ROOT:    '',
-          VERSION:     '1.0.0',
-          COLLAPSE_MODINDEX: false,
-          FILE_SUFFIX: ''
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/interface.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="contents" title="Global table of contents" href="contents.html" />
-    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="User manual" href="usermanual.html" />
     <link rel="next" title="Connections" href="connections.html" />
-    <link rel="prev" title="Units" href="units.html" />
+    <link rel="prev" title="Units" href="units.html" /> 
   </head>
   <body>
     <div class="related">
@@ -41,9 +41,9 @@
           <a href="units.html" title="Units"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="usermanual.html" accesskey="U">User manual</a> &raquo;</li>
+          <li><a href="usermanual.html" accesskey="U">User manual</a> &raquo;</li> 
       </ul>
-    </div>
+    </div>  
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
@@ -51,17 +51,18 @@
             
   
   <div class="section" id="models-and-neuron-groups">
-<h1 id="models-and-neuron-groups">Models and neuron groups<a class="headerlink" href="#models-and-neuron-groups" title="Permalink to this headline">¶</a></h1>
+<h1>Models and neuron groups<a class="headerlink" href="#models-and-neuron-groups" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="equations">
-<h2 id="equations"><a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a><a class="headerlink" href="#equations" title="Permalink to this headline">¶</a></h2>
+<h2><a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a><a class="headerlink" href="#equations" title="Permalink to this headline">¶</a></h2>
 <p><a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> objects are initialised with a string as follows:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
 <span class="s">dx/dt=(y-x)/tau + a : volt   # differential equation</span>
 <span class="s">y=2*x : volt                 # equation</span>
 <span class="s">z=x                          # alias</span>
 <span class="s">a : volt/second              # parameter</span>
 <span class="s">&#39;&#39;&#39;</span><span class="p">)</span>
 </pre></div>
+</div>
 <p id="index-61">It is possible to pass a string instead of an <a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> object when initialising
 a neuron group. In that case, the string is implicitly converted to an <a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> object.
 There are 4 different types of equations:</p>
@@ -90,17 +91,19 @@ are self-consistent. In the process, names of external variables are also modifi
 conflicts (by adding a prefix).</p>
 </div>
 <div class="section" id="neuron-groups">
-<h2 id="neuron-groups">Neuron groups<a class="headerlink" href="#neuron-groups" title="Permalink to this headline">¶</a></h2>
+<h2>Neuron groups<a class="headerlink" href="#neuron-groups" title="Permalink to this headline">¶</a></h2>
 <p>The key idea for efficient simulations is to update synchronously the state variables
 of all identical neuron models. A neuron group is defined by the model equations, and
 optionnally a threshold condition and a reset. For example for 100 neurons:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;dv/dt=-v/tau : volt&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="n">Equations</span><span class="p">(</span><span class="s">&#39;dv/dt=-v/tau : volt&#39;</span><span class="p">)</span>
 <span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>The <tt class="docutils literal"><span class="pre">model</span></tt> keyword also accepts strings (in that case it is converted to an <a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a>
 object), e.g.:</p>
-<div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;dv/dt=-v/tau : volt&#39;</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;dv/dt=-v/tau : volt&#39;</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>The units of both the reset and threshold are checked for consistency with the equations.
 The code above defines a group of 100 integrate-and-fire neurons with threshold 10 mV and
 reset 0 mV. The second line defines an object named <tt class="docutils literal"><span class="pre">group</span></tt> which contains all the state
@@ -108,13 +111,14 @@ variables, which can be accessed with the dot notation, i.e. <tt class="docutils
 the values of variable <tt class="docutils literal"><span class="pre">v</span></tt> for all of the 100 neurons. It is an array with units as defined
 in the equations (here, volt). By default, all state variables are initialised at value 0.
 It can be initialised by the user as in the following example:</p>
-<div class="highlight"><pre><span class="n">group</span><span class="o">.</span><span class="n">v</span><span class="o">=</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="mf">100</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">group</span><span class="o">.</span><span class="n">v</span><span class="o">=</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="mf">100</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>Here the values of <tt class="docutils literal"><span class="pre">v</span></tt> for all the neurons are evenly spaced between 0 mV and 10 mV
 (<tt class="docutils literal"><span class="pre">linspace</span></tt> is a NumPy function). The method <tt class="docutils literal"><span class="pre">group.rest()</span></tt> may also be used to set the
 resting point of the equations, but convergence is not always guaranteed.</p>
 <div class="section" id="important-options">
-<h3 id="important-options">Important options<a class="headerlink" href="#important-options" title="Permalink to this headline">¶</a></h3>
+<h3>Important options<a class="headerlink" href="#important-options" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><tt class="docutils literal"><span class="pre">refractory</span></tt>: a refractory period (default 0 ms), to be used in combination with the <tt class="docutils literal"><span class="pre">reset</span></tt> value.</li>
 <li><tt class="docutils literal"><span class="pre">implicit</span></tt> (default <tt class="xref docutils literal"><span class="pre">False</span></tt>): if True, then an implicit method is used. This is useful
@@ -122,21 +126,24 @@ for Hodgkin-Huxley equations, which are stiff.</li>
 </ul>
 </div>
 <div class="section" id="subgroups">
-<h3 id="subgroups">Subgroups<a class="headerlink" href="#subgroups" title="Permalink to this headline">¶</a></h3>
+<h3>Subgroups<a class="headerlink" href="#subgroups" title="Permalink to this headline">¶</a></h3>
 <p>Subgroups can be created with the slice operator:</p>
-<div class="highlight"><pre><span class="n">subgroup1</span><span class="o">=</span><span class="n">group</span><span class="p">[</span><span class="mf">0</span><span class="p">:</span><span class="mf">50</span><span class="p">]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">subgroup1</span><span class="o">=</span><span class="n">group</span><span class="p">[</span><span class="mf">0</span><span class="p">:</span><span class="mf">50</span><span class="p">]</span>
 <span class="n">subgroup2</span><span class="o">=</span><span class="n">group</span><span class="p">[</span><span class="mf">50</span><span class="p">:</span><span class="mf">100</span><span class="p">]</span>
 </pre></div>
+</div>
 <p>Then <tt class="docutils literal"><span class="pre">subgroup2.v[i]</span></tt> equals <tt class="docutils literal"><span class="pre">group.v[50+i]</span></tt>.
 An alternative equivalent method is the following:</p>
-<div class="highlight"><pre><span class="n">subgroup1</span><span class="o">=</span><span class="n">group</span><span class="o">.</span><span class="n">subgroup</span><span class="p">(</span><span class="mf">50</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">subgroup1</span><span class="o">=</span><span class="n">group</span><span class="o">.</span><span class="n">subgroup</span><span class="p">(</span><span class="mf">50</span><span class="p">)</span>
 <span class="n">subgroup2</span><span class="o">=</span><span class="n">group</span><span class="o">.</span><span class="n">subgroup</span><span class="p">(</span><span class="mf">50</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>The parent group keeps track of the allocated subgroups. But note that the two methods are
 mutually exclusive, e.g. in the following example:</p>
-<div class="highlight"><pre><span class="n">subgroup1</span><span class="o">=</span><span class="n">group</span><span class="p">[</span><span class="mf">0</span><span class="p">:</span><span class="mf">50</span><span class="p">]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">subgroup1</span><span class="o">=</span><span class="n">group</span><span class="p">[</span><span class="mf">0</span><span class="p">:</span><span class="mf">50</span><span class="p">]</span>
 <span class="n">subgroup2</span><span class="o">=</span><span class="n">group</span><span class="o">.</span><span class="n">subgroup</span><span class="p">(</span><span class="mf">50</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>both subgroups are actually identical.</p>
 <p>Subgroups are useful when creating connections or monitoring the state variables or spikes.
 The best practice is to define groups as large as possible, then divide them in subgroups if necessary.
@@ -146,96 +153,140 @@ subgroups of this big group.</p>
 </div>
 </div>
 <div class="section" id="reset">
-<h2 id="reset">Reset<a class="headerlink" href="#reset" title="Permalink to this headline">¶</a></h2>
+<h2>Reset<a class="headerlink" href="#reset" title="Permalink to this headline">¶</a></h2>
 <p>More complex resets can be defined. The value of the <tt class="docutils literal"><span class="pre">reset</span></tt> keyword can be:</p>
 <ul class="simple">
 <li>a quantity (<tt class="docutils literal"><span class="pre">0*mV</span></tt>)</li>
+<li>a string</li>
 <li>a function</li>
 <li>a <a title="brian.Reset" class="reference external" href="reference-models-and-groups.html#brian.Reset"><tt class="xref docutils literal"><span class="pre">Reset</span></tt></a> object, which can be used for resetting a specific state variable or
 for resetting a state variable to the value of another variable.</li>
 </ul>
+<div class="section" id="reset-as-python-code">
+<h3>Reset as Python code<a class="headerlink" href="#reset-as-python-code" title="Permalink to this headline">¶</a></h3>
+<p>The simplest way to customise the reset is to define it as a Python statement, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">dv/dt=-v/tau : volt</span>
+<span class="s">dw/dt=-w/tau : volt</span>
+<span class="s">&#39;&#39;&#39;</span>
+<span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="s">&quot;v=0*mV;w+=3*mV&quot;</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The string must be a valid Python statement (possibly a multiline string). It can
+contain variables from the neuron group, units and any variable defined in the namespace
+(e.g. tau), as for equations. Be aware that if a variable in the namespace has the same
+name as a neuron group variable, then it masks the neuron variable. The way it works is
+that the code is evaluated with each neuron variable <tt class="docutils literal"><span class="pre">v</span></tt> replaced by <tt class="docutils literal"><span class="pre">v[spikes]</span></tt>, where
+<tt class="docutils literal"><span class="pre">spikes</span></tt> is the array of indexes of the neurons that just spiked.</p>
+</div>
 <div class="section" id="functional-reset">
-<h3 id="functional-reset">Functional reset<a class="headerlink" href="#functional-reset" title="Permalink to this headline">¶</a></h3>
+<h3>Functional reset<a class="headerlink" href="#functional-reset" title="Permalink to this headline">¶</a></h3>
 <p>To define a specific reset, the generic method is define a function as follows:</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">myreset</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">spikes</span><span class="p">):</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">myreset</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">spikes</span><span class="p">):</span>
   <span class="n">P</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">spikes</span><span class="p">]</span><span class="o">=</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spikes</span><span class="p">))</span><span class="o">*</span><span class="mf">5</span><span class="o">*</span><span class="n">mV</span>
 <span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">myreset</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>or faster:</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">myreset</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">spikes</span><span class="p">):</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">myreset</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">spikes</span><span class="p">):</span>
   <span class="n">P</span><span class="o">.</span><span class="n">v_</span><span class="p">[</span><span class="n">spikes</span><span class="p">]</span><span class="o">=</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spikes</span><span class="p">))</span><span class="o">*</span><span class="mf">5</span><span class="o">*</span><span class="n">mV</span>
 </pre></div>
+</div>
 <p>Every time step, the user-defined function is called with arguments
 <tt class="docutils literal"><span class="pre">P</span></tt>, the neuron group, and <tt class="docutils literal"><span class="pre">spikes</span></tt>, the list of indexes of the neurons that just spiked.
 The function above resets the neurons that just spiked to a random value.</p>
 </div>
 <div class="section" id="resetting-another-variable">
-<h3 id="resetting-another-variable">Resetting another variable<a class="headerlink" href="#resetting-another-variable" title="Permalink to this headline">¶</a></h3>
+<h3>Resetting another variable<a class="headerlink" href="#resetting-another-variable" title="Permalink to this headline">¶</a></h3>
 <p>It is possible to specify the reset variable explicitly:</p>
-<div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">Reset</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">),</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">Reset</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">),</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>Here the variable <tt class="docutils literal"><span class="pre">w</span></tt> is reset.</p>
 </div>
 <div class="section" id="resetting-to-the-value-of-another-variable">
-<h3 id="resetting-to-the-value-of-another-variable">Resetting to the value of another variable<a class="headerlink" href="#resetting-to-the-value-of-another-variable" title="Permalink to this headline">¶</a></h3>
+<h3>Resetting to the value of another variable<a class="headerlink" href="#resetting-to-the-value-of-another-variable" title="Permalink to this headline">¶</a></h3>
 <p>The value of the reset can be given by another state variable:</p>
-<div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">VariableReset</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">resetvaluestate</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">),</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">VariableReset</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">resetvaluestate</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">),</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>Here the value of the variable <tt class="docutils literal"><span class="pre">w</span></tt> is used to reset the variable <tt class="docutils literal"><span class="pre">v</span></tt>.</p>
 </div>
 </div>
 <div class="section" id="threshold">
-<h2 id="threshold">Threshold<a class="headerlink" href="#threshold" title="Permalink to this headline">¶</a></h2>
+<h2>Threshold<a class="headerlink" href="#threshold" title="Permalink to this headline">¶</a></h2>
 <p>As for the reset, the threshold can be customised.</p>
+<div class="section" id="threshold-as-python-expression">
+<h3>Threshold as Python expression<a class="headerlink" href="#threshold-as-python-expression" title="Permalink to this headline">¶</a></h3>
+<p>The simplest way to customise the threshold is to define it as a Python expression, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">dv/dt=-v/tau : volt</span>
+<span class="s">dw/dt=(v-w)/tau : volt</span>
+<span class="s">&#39;&#39;&#39;</span>
+<span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="s">&quot;v&gt;=w&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The string must be an expression which evaluates to a boolean. It can
+contain variables from the neuron group, units and any variable defined in the namespace
+(e.g. tau), as for equations. Be aware that if a variable in the namespace has the same
+name as a neuron group variable, then it masks the neuron variable. The way it works is that
+the expression is evaluated with the neuron variables replaced by their vector values (values for
+all neurons), so that the expression returns a boolean vector.</p>
+</div>
 <div class="section" id="functional-threshold">
-<h3 id="functional-threshold">Functional threshold<a class="headerlink" href="#functional-threshold" title="Permalink to this headline">¶</a></h3>
+<h3>Functional threshold<a class="headerlink" href="#functional-threshold" title="Permalink to this headline">¶</a></h3>
 <p>The generic method to define a custom threshold condition is to pass a function of the
 state variables which returns a boolean (true if the threshold condition is met), for example:</p>
-<div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="s">&#39;&#39;&#39;</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">eqs</span><span class="o">=</span><span class="s">&#39;&#39;&#39;</span>
 <span class="s">dv/dt=-v/tau : volt</span>
 <span class="s">dw/dt=(v-w)/tau : volt</span>
 <span class="s">&#39;&#39;&#39;</span>
 <span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">,</span><span class="n">w</span><span class="p">:</span><span class="n">v</span><span class="o">&gt;=</span><span class="n">w</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>Here we used an anonymous function (<tt class="docutils literal"><span class="pre">lambda</span></tt> keyword) but of course a named function can also
 be used. In this example, spikes are generated when v is greater than w.
 Note that the arguments of the function must be the state variables with the same order as
 in the <a title="brian.Equations" class="reference external" href="reference-models-and-groups.html#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> string.</p>
 </div>
 <div class="section" id="thresholding-another-variable">
-<h3 id="thresholding-another-variable">Thresholding another variable<a class="headerlink" href="#thresholding-another-variable" title="Permalink to this headline">¶</a></h3>
+<h3>Thresholding another variable<a class="headerlink" href="#thresholding-another-variable" title="Permalink to this headline">¶</a></h3>
 <p>It is possible to specify the threshold variable explicitly:</p>
-<div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="n">Threshold</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="n">Threshold</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">state</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">))</span>
 </pre></div>
+</div>
 <p>Here the variable <tt class="docutils literal"><span class="pre">w</span></tt> is checked.</p>
 </div>
 <div class="section" id="using-another-variable-as-the-threshold-value">
-<h3 id="using-another-variable-as-the-threshold-value">Using another variable as the threshold value<a class="headerlink" href="#using-another-variable-as-the-threshold-value" title="Permalink to this headline">¶</a></h3>
+<h3>Using another variable as the threshold value<a class="headerlink" href="#using-another-variable-as-the-threshold-value" title="Permalink to this headline">¶</a></h3>
 <p>The same model as in the functional threshold example can be defined as follows:</p>
-<div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span>\
+<div class="highlight-python"><div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span>\
       <span class="n">VariableThreshold</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">threshold_state</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
+</div>
 <div class="section" id="empirical-threshold">
-<h3 id="empirical-threshold">Empirical threshold<a class="headerlink" href="#empirical-threshold" title="Permalink to this headline">¶</a></h3>
+<h3>Empirical threshold<a class="headerlink" href="#empirical-threshold" title="Permalink to this headline">¶</a></h3>
 <p>For Hodgkin-Huxley models, one needs to determine the threshold empirically. Here the
 <em>threshold</em> should really be understood rather as the onset of the spikes (used to propagate
 the spikes to the other neurons), since there is no explicit reset. There is a
 <a title="brian.Threshold" class="reference external" href="reference-models-and-groups.html#brian.Threshold"><tt class="xref docutils literal"><span class="pre">Threshold</span></tt></a> subclass for this purpose:</p>
-<div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="n">EmpiricalThreshold</span><span class="p">(</span><span class="n">threshold</span><span class="o">=-</span><span class="mf">20</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">refractory</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">ms</span><span class="p">))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="n">EmpiricalThreshold</span><span class="p">(</span><span class="n">threshold</span><span class="o">=-</span><span class="mf">20</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">refractory</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">ms</span><span class="p">))</span>
 </pre></div>
+</div>
 <p>Spikes are triggered when the membrane potential reaches the value -20 mV, but only if it
 has not spiked in the last 3 ms (otherwise there would be spikes every time step during the action
 potential). The <tt class="docutils literal"><span class="pre">state</span></tt> keyword may be used to specify the state variable which should be checked
 for the threshold condition.</p>
 </div>
 <div class="section" id="poisson-threshold">
-<h3 id="poisson-threshold">Poisson threshold<a class="headerlink" href="#poisson-threshold" title="Permalink to this headline">¶</a></h3>
+<h3>Poisson threshold<a class="headerlink" href="#poisson-threshold" title="Permalink to this headline">¶</a></h3>
 <p>It is possible to generate spikes with a given probability rather than when a threshold condition
 is met, by using the class <tt class="xref docutils literal"><span class="pre">PoissonThreshold</span></tt>, as in the following example:</p>
-<div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;x : Hz&#39;</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="n">PoissonThreshold</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">100</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;x : Hz&#39;</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="n">PoissonThreshold</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">))</span>
 <span class="n">x</span><span class="o">=</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span><span class="mf">10</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span><span class="mf">100</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>Here spikes are generated as Poisson processes with rates given by the variable x
 (the <tt class="docutils literal"><span class="pre">state</span></tt> keyword is optional: default = first variable defined). Note that x can
 change over time (inhomogeneous Poisson processes). The units of variable x must be Hertz.</p>
@@ -249,7 +300,7 @@ change over time (inhomogeneous Poisson processes). The units of variable x must
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3>Table Of Contents</h3>
+            <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
 <li><a class="reference external" href="">Models and neuron groups</a><ul>
 <li><a class="reference external" href="#equations"><tt class="docutils literal"><span class="pre">Equations</span></tt></a></li>
@@ -259,12 +310,14 @@ change over time (inhomogeneous Poisson processes). The units of variable x must
 </ul>
 </li>
 <li><a class="reference external" href="#reset">Reset</a><ul>
+<li><a class="reference external" href="#reset-as-python-code">Reset as Python code</a></li>
 <li><a class="reference external" href="#functional-reset">Functional reset</a></li>
 <li><a class="reference external" href="#resetting-another-variable">Resetting another variable</a></li>
 <li><a class="reference external" href="#resetting-to-the-value-of-another-variable">Resetting to the value of another variable</a></li>
 </ul>
 </li>
 <li><a class="reference external" href="#threshold">Threshold</a><ul>
+<li><a class="reference external" href="#threshold-as-python-expression">Threshold as Python expression</a></li>
 <li><a class="reference external" href="#functional-threshold">Functional threshold</a></li>
 <li><a class="reference external" href="#thresholding-another-variable">Thresholding another variable</a></li>
 <li><a class="reference external" href="#using-another-variable-as-the-threshold-value">Using another variable as the threshold value</a></li>
@@ -284,7 +337,7 @@ change over time (inhomogeneous Poisson processes). The units of variable x must
             <ul class="this-page-menu">
               <li><a href="_sources/models.txt">Show Source</a></li>
             </ul>
-            <h3>Quick search</h3>
+          <h3>Quick search</h3>
             <form class="search" action="search.html" method="get">
               <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
               <input type="hidden" name="check_keywords" value="yes" />
@@ -310,13 +363,13 @@ change over time (inhomogeneous Poisson processes). The units of variable x must
           <a href="units.html" title="Units"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="usermanual.html" accesskey="U">User manual</a> &raquo;</li>
+          <li><a href="usermanual.html" accesskey="U">User manual</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Sep 23, 2008.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+      Last updated on Jan 19, 2009.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>
 </html>

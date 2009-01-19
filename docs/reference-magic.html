@@ -2,27 +2,27 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Magic in Brian &mdash; Brian v1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-          URL_ROOT:    '',
-          VERSION:     '1.0.0',
-          COLLAPSE_MODINDEX: false,
-          FILE_SUFFIX: ''
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/interface.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="contents" title="Global table of contents" href="contents.html" />
-    <link rel="index" title="Global index" href="genindex.html" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="Reference" href="reference.html" />
     <link rel="next" title="Tests" href="reference-tests.html" />
-    <link rel="prev" title="Plotting" href="reference-plotting.html" />
+    <link rel="prev" title="Plotting" href="reference-plotting.html" /> 
   </head>
   <body>
     <div class="related">
@@ -41,9 +41,9 @@
           <a href="reference-plotting.html" title="Plotting"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li> 
       </ul>
-    </div>
+    </div>  
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
@@ -51,19 +51,20 @@
             
   
   <div class="section" id="magic-in-brian">
-<span id="index-72"></span><h1 id="magic-in-brian"><span id="index-72"></span>Magic in Brian<a class="headerlink" href="#magic-in-brian" title="Permalink to this headline">¶</a></h1>
+<span id="index-71"></span><h1>Magic in Brian<a class="headerlink" href="#magic-in-brian" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="brian.magic_return">
 <!--[brian.magic_return]--><tt class="descclassname">brian.</tt><tt class="descname">magic_return</tt><big>(</big><em>f</em><big>)</big><a class="headerlink" href="#brian.magic_return" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator to ensure that the returned object from a function is recognised by magic functions</p>
 <p><strong>Usage example:</strong></p>
-<div class="highlight"><pre><span class="nd">@magic_return</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@magic_return</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
     <span class="k">return</span> <span class="n">PulsePacket</span><span class="p">(</span><span class="mf">50</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span> <span class="mf">100</span><span class="p">,</span> <span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 </pre></div>
+</div>
 <p><strong>Explanation</strong></p>
 <p>Normally, code like the following wouldn&#8217;t work:</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
     <span class="k">return</span> <span class="n">PulsePacket</span><span class="p">(</span><span class="mf">50</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span> <span class="mf">100</span><span class="p">,</span> <span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 <span class="n">pp</span> <span class="o">=</span> <span class="n">f</span><span class="p">()</span>
 <span class="n">M</span> <span class="o">=</span> <span class="n">SpikeMonitor</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span>
@@ -71,11 +72,12 @@
 <span class="n">raster_plot</span><span class="p">()</span>
 <span class="n">show</span><span class="p">()</span>
 </pre></div>
+</div>
 <p>The reason is that the magic function <a title="brian.run" class="reference external" href="reference-network.html#brian.run"><tt class="xref docutils literal"><span class="pre">run()</span></tt></a> only recognises objects created
 in the same execution frame that it is run from. The <a title="brian.magic_return" class="reference internal" href="#brian.magic_return"><tt class="xref docutils literal"><span class="pre">magic_return()</span></tt></a> decorator
 corrects this, it registers the return value of a function with the magic
 module. The following code will work as expected:</p>
-<div class="highlight"><pre><span class="nd">@magic_return</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@magic_return</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
     <span class="k">return</span> <span class="n">PulsePacket</span><span class="p">(</span><span class="mf">50</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span> <span class="mf">100</span><span class="p">,</span> <span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 <span class="n">pp</span> <span class="o">=</span> <span class="n">f</span><span class="p">()</span>
@@ -84,6 +86,7 @@ module. The following code will work as expected:</p>
 <span class="n">raster_plot</span><span class="p">()</span>
 <span class="n">show</span><span class="p">()</span>
 </pre></div>
+</div>
 <p><strong>Technical details</strong></p>
 <p>The <a title="brian.magic_return" class="reference internal" href="#brian.magic_return"><tt class="xref docutils literal"><span class="pre">magic_return()</span></tt></a> function uses <a title="brian.magic_register" class="reference internal" href="#brian.magic_register"><tt class="xref docutils literal"><span class="pre">magic_register()</span></tt></a> with the default <tt class="docutils literal"><span class="pre">level=1</span></tt>
 on just the object returned by a function. See details for <a title="brian.magic_register" class="reference internal" href="#brian.magic_register"><tt class="xref docutils literal"><span class="pre">magic_register()</span></tt></a>.</p>
@@ -96,29 +99,33 @@ on just the object returned by a function. See details for <a title="brian.magic
 <p><strong>Standard usage</strong></p>
 <p>If <tt class="docutils literal"><span class="pre">A</span></tt> is a tracked class (derived from <tt class="xref docutils literal"><span class="pre">InstanceTracker</span></tt>), then the following wouldn&#8217;t
 work:</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span>
 <span class="n">objs</span> <span class="o">=</span> <span class="n">f</span><span class="p">()</span>
 <span class="k">print</span> <span class="n">get_instances</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mf">0</span><span class="p">)[</span><span class="mf">0</span><span class="p">]</span>
 </pre></div>
+</div>
 <p>Instead you write:</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
     <span class="n">magic_register</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span>    
 <span class="n">objs</span> <span class="o">=</span> <span class="n">f</span><span class="p">()</span>
 <span class="k">print</span> <span class="n">get_instances</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mf">0</span><span class="p">)[</span><span class="mf">0</span><span class="p">]</span>
 </pre></div>
+</div>
 <p><strong>Definition</strong></p>
 <p>Call as:</p>
-<pre>magic_register(...[,level=1])</pre>
+<div class="highlight-python"><pre>magic_register(...[,level=1])</pre>
+</div>
 <p>The <tt class="docutils literal"><span class="pre">...</span></tt> can be any sequence of tracked objects or containers of tracked objects,
 and each tracked object will have its instance id (the execution frame in which it was
 created) set to that of its parent (or to its parent at the given level). This is
 equivalent to calling:</p>
-<div class="highlight"><pre><span class="n">x</span><span class="o">.</span><span class="n">set_instance_id</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span><span class="o">.</span><span class="n">set_instance_id</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">)</span>
 </pre></div>
+</div>
 <p>For each object <tt class="docutils literal"><span class="pre">x</span></tt> passed to <a title="brian.magic_register" class="reference internal" href="#brian.magic_register"><tt class="xref docutils literal"><span class="pre">magic_register()</span></tt></a>.</p>
 </dd></dl>
 
@@ -146,7 +153,7 @@ on projects with multiple files or functions.</dd>
             <ul class="this-page-menu">
               <li><a href="_sources/reference-magic.txt">Show Source</a></li>
             </ul>
-            <h3>Quick search</h3>
+          <h3>Quick search</h3>
             <form class="search" action="search.html" method="get">
               <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
               <input type="hidden" name="check_keywords" value="yes" />
@@ -172,13 +179,13 @@ on projects with multiple files or functions.</dd>
           <a href="reference-plotting.html" title="Plotting"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
-          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li>
+          <li><a href="reference.html" accesskey="U">Reference</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Sep 23, 2008.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+      Last updated on Jan 19, 2009.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>
 </html>
