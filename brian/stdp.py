@@ -6,24 +6,48 @@ from monitor import SpikeMonitor
 from network import NetworkOperation
 from stateupdater import get_linear_equations
 from scipy.linalg import expm
+from scipy import dot,eye,zeros,array
 import re
+
+__all__=['STDPUpdater','STDP','dependency_matrix']
 
 class STDPUpdater(SpikeMonitor):
     '''
     Updates STDP variables at spike times
     '''
-    def __init__(self,source,code,namespace,delay=0):
-        SpikeMonitor.__init__(self,source,record=False,delay=delay)
+    def __init__(self,source,vars,M,code,namespace,delay=0):
+        '''
+        source = source group
+        vars = variable names
+        M = matrix of the linear differential system
+        code = code to execute for every spike
+        namespace = namespace for the code
+        delay = transmission delay 
+        '''
+        super(STDPUpdater,self).__init__(source,record=False,delay=delay)
         self._code=code # update code
         self._namespace=namespace # code namespace
+        # State variables
+        self.S=zeros((len(vars),len(source)))
+        for i,var in enumerate(vars):
+            self._namespace[var]=self.S[i]
+        self.lastt=zeros(len(vars)) # time since last update
+        self.M=M
+        self.clock=source.clock
         
     def propagate(self,spikes):
         self._namespace['spikes']=spikes
+        t=self.clock.t
+        for i in spikes:
+            self.S[:,i]=expm(self.M*(t-self.lastt[i]))*self.S[:,i]
+        self.lastt[spikes]=t
         exec self._code in self._namespace
 
 class STDP(NetworkOperation):
     '''
     Spike-timing-dependent plasticity
+    
+    TODO: set pre and post transmission delays (should sum to the connection delay)
     '''
     def __init__(self,C,eqs,pre,post,bounds=None,level=0):
         '''
@@ -37,11 +61,6 @@ class STDP(NetworkOperation):
         eqs=re.sub('\\\s*?\n',' ',eqs)
         # Convert to equations object
         eqs_obj=Equations(eqs,level=level+1)
-        # Disallow static equations and aliases (for now)
-        #   idea: use get_linear_equations directly here, then split the matrices
-        if eqs_obj._eq_names!=[] or eqs_obj._eq_names!=[]:
-            print eqs_obj._eq_names,eqs_obj._eq_names
-            raise Exception,"There should be only differential equations"
         
         # Check units
         eqs_obj.compile_functions()
@@ -55,40 +74,41 @@ class STDP(NetworkOperation):
         vars_pre=[var for var in vars if var in modified_variables(pre)]
         vars_post=[var for var in vars if var in modified_variables(post)]
         
-        # Additional check: modification of presynaptic variables should not depend on postsynaptic
+        # Additional check TODO: modification of presynaptic variables should not depend on postsynaptic
         #   variables
         
-        # One difficulty here: we need to determine the dependency of differential variables
-        # (a variable may not be directly modified by spikes but depend on a modified var)
+        # Get the matrix of the differential system
+        M,_=get_linear_equations(eqs_obj)
+        D=dependency_matrix(M)
         
-        # check pre/post consistency (TODO: see static variables)
-        for var in vars_pre:
-            for x in get_identifiers(eqs_obj._string[var]):
-                if x in vars_post:
-                    raise Exception,"Presynaptic variable "+var+" depends on postsynaptic variable "+x
-        for var in vars_post:
-            for x in get_identifiers(eqs_obj._string[var]):
-                if x in vars_pre:
-                    raise Exception,"Postsynaptic variable "+var+" depends on presynaptic variable "+x
+        # Collect dependent variables
+        dependent_pre=zeros(M.shape[0])
+        dependent_post=zeros(M.shape[0])
+        for i,var in enumerate(vars):
+            if var in vars_pre:
+                dependent_pre+=D[i,:]
+            elif var in vars_post:
+                dependent_post+=D[i,:]
+        index_pre=(dependent_pre>0).nonzero()[0]
+        index_post=(dependent_post>0).nonzero()[0]
+        vars_pre=array(vars)[index_pre]
+        vars_post=array(vars)[index_post]
         
-        # separate differential equations in pre/post
-        eqs_pre=Equations()
-        eqs_post=Equations()
-        for line in eqs.splitlines():
-            eq=Equations(line,level=level+1)
-            if eq._diffeq_names==[]: # no differential equation
-                pass # empty line
-            elif eq._diffeq_names[0] in vars_pre:
-                eqs_pre+=eq
-            elif eq._diffeq_names[0] in vars_post:
-                eqs_post+=eq
-            else: # what do we do?
-                pass
+        # Check pre/post consistency
+        shared_vars=set(vars_pre).intersection(vars_post)
+        if shared_vars!=set([]):
+            raise Exception,str(list(shared_vars))+" are both presynaptic and postsynaptic!"
+        
+        # Split the matrix M
+        M_pre=M[index_pre,:][:,index_pre]
+        M_post=M[index_post,:][:,index_post]
         
         # Create namespaces for pre and post codes
         pre_namespace=namespace(pre,level=level+1)
         post_namespace=namespace(post,level=level+1)
-        
+        pre_namespace['w']=C.W
+        post_namespace['w']=C.W
+
         # Pre code
         for var in vars_pre: # presynaptic variables (vectorisation)
             pre=re.sub(r'\b'+var+r'\b',var+'[spikes]',pre)
@@ -110,13 +130,6 @@ class STDP(NetworkOperation):
         post_code=compile(pre,"Postsynaptic code","exec")
         
         # create virtual groups (inherit NeuronGroup; Group?), pre and post
-                
-        # event-driven code; do some speed tests
-        # Get matrices of differential systems
-        eqs_pre.prepare()
-        eqs_post.prepare()
-        Mpre,_=get_linear_equations(eqs_pre) # B should be zero
-        Mpost,_=get_linear_equations(eqs_post)
         
         # Add update code to pre and post
         # 1-dimensional case (exponential STDP)
@@ -125,14 +138,29 @@ class STDP(NetworkOperation):
         #    vars_post[0]+'[spikes]*=exp(%(a)f*t[spikes])' % Mpost[0]
         
         # create forward and backward Connection objects or SpikeMonitor objects
-        pre_updater=STDPUpdater(C.source,code=pre_code,namespace=pre_namespace)
-        post_updater=STDPUpdater(C.source,code=post_code,namespace=post_namespace)
+        pre_updater=STDPUpdater(C.source,vars=vars_pre,M=M_pre,code=pre_code,namespace=pre_namespace)
+        post_updater=STDPUpdater(C.source,vars=vars_post,M=M_post,code=post_code,namespace=post_namespace)
         
     def __call__(self):
         pass
     
+def dependency_matrix(A):
+    '''
+    A is the (square) matrix of a differential system (or a difference system).
+    Returns a matrix (Mij) where Mij==True iff variable i depends on variable j.
+    '''
+    n=A.shape[0] # check if square?
+    D=A!=0
+    U=eye(n)
+    M=eye(n)
+    for _ in range(n-1):
+        U=dot(M,D)
+        M+=U
+    return M!=0
+    
 if __name__=='__main__':
     from brian import *
+    from time import time
     P=NeuronGroup(10,model='dv/dt=-v/(10*ms):1')
     C=Connection(P,P,'v')
     tau_pre=20*ms
@@ -140,9 +168,12 @@ if __name__=='__main__':
     dA_pre=.1
     dA_post=-.2
     eqs_stdp='''
-    dA_pre/dt=-A_pre/tau_pre : 1
+    dA_pre/dt=(x-A_pre)/tau_pre : 1
+    dx/dt=(y-x)/tau_pre : 1
+    dy/dt=-y/tau_pre : 1
     dA_post/dt=-A_post/tau_post : 1
     '''
+    t1=time()
     stdp=STDP(C,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
               post='A_post+=dA_post;w+=A_pre',bounds=(0,1))
-    
+    print time()-t1
