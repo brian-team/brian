@@ -9,7 +9,7 @@ from scipy.linalg import expm
 from scipy import dot,eye,zeros,array,clip,exp
 import re
 
-__all__=['STDPUpdater','STDP','dependency_matrix']
+__all__=['STDP']
 
 class STDPUpdater(SpikeMonitor):
     '''
@@ -99,8 +99,6 @@ class STDP(NetworkOperation):
         # Create namespaces for pre and post codes
         pre_namespace=namespace(pre,level=level+1)
         post_namespace=namespace(post,level=level+1)
-        #pre_namespace['w']=C.W
-        #post_namespace['w']=C.W
 
         # Indent and loop
         pre=re.compile('^',re.M).sub('    ',pre)
@@ -142,9 +140,11 @@ class STDP(NetworkOperation):
         pre_updater=STDPUpdater(C.source,C,vars=vars_pre,code=pre_code,namespace=pre_namespace)
         post_updater=STDPUpdater(C.target,C,vars=vars_post,code=post_code,namespace=post_namespace)
         
+        # State variables
         self.S_pre=zeros((len(vars_pre),len(C.source)))        
         self.S_post=zeros((len(vars_post),len(C.target)))
         
+        # Update matrix
         self.update_pre=expm(M_pre*self.clock._dt)
         self.update_post=expm(M_post*self.clock._dt)
         

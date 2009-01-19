@@ -1,3 +1,4 @@
+* STDP documentation
 * option for disabling unit checking in NeuronGroup.__init__
 * Bug in I-F_curve; seems to be due to handling variable t
 * Remove Model (from code and tutorials); use Deprecated warning?

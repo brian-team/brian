@@ -1,5 +1,8 @@
+# No STDP: 60 s
+# STDP: 81s
+# STDP + double clip : 87s
+#
 from brian import *
-from brian.stdp import *
 from time import time
 
 taum=20*ms
@@ -26,7 +29,7 @@ dA_post/dt=-A_post/tau_post : 1
 
 input=PoissonGroup(1000,rates=10*Hz)
 neurons=NeuronGroup(1,model=eqs_neurons,threshold=vt,reset=vr)
-synapses=Connection(input,neurons,'ge',structure='sparse')
+synapses=Connection(input,neurons,'ge')
 synapses.connect(input,neurons,rand(len(input),len(neurons))*gmax)
 neurons.v=vr
 
@@ -38,8 +41,6 @@ rate=PopulationRateMonitor(neurons)
 start_time=time()
 run(20*second)
 print "Simulation time:",time()-start_time
-
-#print stdp.contained_objects[0].lastt
 
 subplot(211)
 plot(rate.times/ms,rate.smooth_rate(100*ms))

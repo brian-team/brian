@@ -1,6 +1,7 @@
 New features since 1.0.0
 ------------------------
 
+* STDP
 * New code for Connections, including new 'dynamic' connection matrix type
 * Reset and threshold can be specified with strings (Python expressions)
 * Spike train statistics (utils.statistics)

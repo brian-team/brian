@@ -69,6 +69,7 @@ from credits import *
 from utils.parallelpython import *
 from tests import *
 from magic import *
+from stdp import *
 
 __version__ = '1.0.0'
 
