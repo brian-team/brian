@@ -15,9 +15,9 @@ def run_speedtracks(doplot=True):
         date = datetime.date.today()
         fname = name.replace('.py', '-'+str(date)+'.pkl')
         pickle.dump((descname, results, date), open(fname, 'wb'), protocol=2)
-        date = date - datetime.timedelta(1)
-        fname = name.replace('.py', '-'+str(date)+'.pkl')
-        pickle.dump((descname, results, date), open(fname, 'wb'), protocol=2)
+#        date = date - datetime.timedelta(1)
+#        fname = name.replace('.py', '-'+str(date)+'.pkl')
+#        pickle.dump((descname, results, date), open(fname, 'wb'), protocol=2)
     if doplot:
         show()
 
@@ -80,7 +80,7 @@ def track_mean(name=None):
         
 
 if __name__=='__main__':
-    #run_speedtracks()
+    run_speedtracks()
     #plot_recent()
-    track_mean()
+    #track_mean()
     show()
