@@ -704,7 +704,7 @@ class Equations(object):
         Make the variables in the namespace associated to variable name
         specific to that variable by inserting the prefix name_.
         """
-        vars=self._namespace[name]
+        vars=self._namespace[name].keys()
         #print vars
         for var in vars:
             if not(var=='exp'): # quick fix: exp is in the global namespace
