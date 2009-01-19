@@ -6,7 +6,7 @@ from monitor import SpikeMonitor
 from network import NetworkOperation
 from stateupdater import get_linear_equations
 from scipy.linalg import expm
-from scipy import dot,eye,zeros,array
+from scipy import dot,eye,zeros,array,clip,exp
 import re
 
 __all__=['STDPUpdater','STDP','dependency_matrix']
@@ -15,9 +15,10 @@ class STDPUpdater(SpikeMonitor):
     '''
     Updates STDP variables at spike times
     '''
-    def __init__(self,source,vars,M,code,namespace,delay=0):
+    def __init__(self,source,C,vars,code,namespace,delay=0):
         '''
         source = source group
+        C = connection
         vars = variable names
         M = matrix of the linear differential system
         code = code to execute for every spike
@@ -27,29 +28,20 @@ class STDPUpdater(SpikeMonitor):
         super(STDPUpdater,self).__init__(source,record=False,delay=delay)
         self._code=code # update code
         self._namespace=namespace # code namespace
-        # State variables
-        self.S=zeros((len(vars),len(source)))
-        for i,var in enumerate(vars):
-            self._namespace[var]=self.S[i]
-        self.lastt=zeros(len(vars)) # time since last update
-        self.M=M
-        self.clock=source.clock
+        self.C=C
         
     def propagate(self,spikes):
         self._namespace['spikes']=spikes
-        t=self.clock.t
-        for i in spikes:
-            self.S[:,i]=expm(self.M*(t-self.lastt[i]))*self.S[:,i]
-        self.lastt[spikes]=t
+        self._namespace['w']=self.C.W
         exec self._code in self._namespace
 
 class STDP(NetworkOperation):
     '''
     Spike-timing-dependent plasticity
     
-    TODO: set pre and post transmission delays (should sum to the connection delay)
+    TODO: set pre and post transmission delays (e.g. to shift the zero of the STDP function)
     '''
-    def __init__(self,C,eqs,pre,post,bounds=None,level=0):
+    def __init__(self,C,eqs,pre,post,bounds=None,level=0,clock=None):
         '''
         C: connection object
         eqs: differential equations (with units)
@@ -57,6 +49,7 @@ class STDP(NetworkOperation):
         post: Python code for postsynaptic spikes
         bounds: bounds on the weights, e.g. (0,gmax) (default no bounds)
         '''
+        NetworkOperation.__init__(self,lambda:None,clock=clock)
         # Merge multi-line statements
         eqs=re.sub('\\\s*?\n',' ',eqs)
         # Convert to equations object
@@ -106,28 +99,36 @@ class STDP(NetworkOperation):
         # Create namespaces for pre and post codes
         pre_namespace=namespace(pre,level=level+1)
         post_namespace=namespace(post,level=level+1)
-        pre_namespace['w']=C.W
-        post_namespace['w']=C.W
+        #pre_namespace['w']=C.W
+        #post_namespace['w']=C.W
+
+        # Indent and loop
+        pre=re.compile('^',re.M).sub('    ',pre)
+        post=re.compile('^',re.M).sub('    ',post)
+        pre='for i in spikes:\n'+pre
+        post='for i in spikes:\n'+post
 
         # Pre code
         for var in vars_pre: # presynaptic variables (vectorisation)
-            pre=re.sub(r'\b'+var+r'\b',var+'[spikes]',pre)
-        pre=re.sub(r'\bw\b','w[spikes,:]',pre) # synaptic weight
+            pre=re.sub(r'\b'+var+r'\b',var+'[i]',pre)
+        pre=re.sub(r'\bw\b','w[i,:]',pre) # synaptic weight
         # Post code
         for var in vars_post: # presynaptic variables (vectorisation)
-            post=re.sub(r'\b'+var+r'\b',var+'[spikes]',post)
-        post=re.sub(r'\bw\b','w[:,spikes]',post) # synaptic weight
+            post=re.sub(r'\b'+var+r'\b',var+'[i]',post)
+        post=re.sub(r'\bw\b','w[:,i]',post) # synaptic weight
         
         # Bounds: add one line to pre/post code (clip(w,min,max,w))
         if bounds is not None: # would that work with SparseVector? probably not...
             # or actual code? (rather than compiled string)
             min,max=bounds
-            pre+='\nclip(w[spikes,:],%(min)f,%(max)f,w[spikes,:])' % {'min':min,'max':max}
-            post+='\nclip(w[:,spikes],%(min)f,%(max)f,w[:,spikes])' % {'min':min,'max':max}
-                
+            pre+='\n    w[i,:]=clip(w[i,:],%(min)f,%(max)f)' % {'min':min,'max':max}
+            post+='\n    w[:,i]=clip(w[:,i],%(min)f,%(max)f)' % {'min':min,'max':max}
+            pre_namespace['clip']=clip
+            post_namespace['clip']=clip
+        
         # Compile code
         pre_code=compile(pre,"Presynaptic code","exec")
-        post_code=compile(pre,"Postsynaptic code","exec")
+        post_code=compile(post,"Postsynaptic code","exec")
         
         # create virtual groups (inherit NeuronGroup; Group?), pre and post
         
@@ -138,12 +139,30 @@ class STDP(NetworkOperation):
         #    vars_post[0]+'[spikes]*=exp(%(a)f*t[spikes])' % Mpost[0]
         
         # create forward and backward Connection objects or SpikeMonitor objects
-        pre_updater=STDPUpdater(C.source,vars=vars_pre,M=M_pre,code=pre_code,namespace=pre_namespace)
-        post_updater=STDPUpdater(C.source,vars=vars_post,M=M_post,code=post_code,namespace=post_namespace)
+        pre_updater=STDPUpdater(C.source,C,vars=vars_pre,code=pre_code,namespace=pre_namespace)
+        post_updater=STDPUpdater(C.target,C,vars=vars_post,code=post_code,namespace=post_namespace)
         
-    def __call__(self):
-        pass
+        self.S_pre=zeros((len(vars_pre),len(C.source)))        
+        self.S_post=zeros((len(vars_post),len(C.target)))
+        
+        self.update_pre=expm(M_pre*self.clock._dt)
+        self.update_post=expm(M_post*self.clock._dt)
+        
+        # Put variables in namespaces
+        for i,var in enumerate(vars_pre):
+            pre_updater._namespace[var]=self.S_pre[i]
+            post_updater._namespace[var]=self.S_pre[i]
+
+        for i,var in enumerate(vars_post):
+            pre_updater._namespace[var]=self.S_post[i]
+            post_updater._namespace[var]=self.S_post[i]
+        
+        self.contained_objects=[pre_updater,post_updater]
     
+    def __call__(self):
+        self.S_pre[:]=dot(self.update_pre,self.S_pre)
+        self.S_post[:]=dot(self.update_post,self.S_post)
+
 def dependency_matrix(A):
     '''
     A is the (square) matrix of a differential system (or a difference system).
@@ -157,23 +176,6 @@ def dependency_matrix(A):
         U=dot(M,D)
         M+=U
     return M!=0
-    
+
 if __name__=='__main__':
-    from brian import *
-    from time import time
-    P=NeuronGroup(10,model='dv/dt=-v/(10*ms):1')
-    C=Connection(P,P,'v')
-    tau_pre=20*ms
-    tau_post=20*ms
-    dA_pre=.1
-    dA_post=-.2
-    eqs_stdp='''
-    dA_pre/dt=(x-A_pre)/tau_pre : 1
-    dx/dt=(y-x)/tau_pre : 1
-    dy/dt=-y/tau_pre : 1
-    dA_post/dt=-A_post/tau_post : 1
-    '''
-    t1=time()
-    stdp=STDP(C,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
-              post='A_post+=dA_post;w+=A_pre',bounds=(0,1))
-    print time()-t1
+    pass

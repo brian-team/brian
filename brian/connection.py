@@ -677,7 +677,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
     the memory requirements to 20 bytes per entry (4 extra bytes for the
     row indices and 4 extra bytes for the data indices).
     '''
-    def __init__(self, val, column_access=False):
+    def __init__(self, val, column_access=True):
         self.nnz = nnz = val.getnnz()# nnz stands for number of nonzero entries
         alldata = numpy.zeros(nnz)
         if column_access:
