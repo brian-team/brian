@@ -60,7 +60,7 @@ from log import *
 from globalprefs import *
 
 def magic_state_updater(model,clock=None,order=1,implicit=False,compile=False,freeze=False,\
-                        method=None):
+                        method=None,check_units=True):
     '''
     Examines the set of differential equations in 'model' (Equations object) and 
     returns a StateUpdater object and the list of dynamic variables.
@@ -89,7 +89,7 @@ def magic_state_updater(model,clock=None,order=1,implicit=False,compile=False,fr
     if not(isinstance(model,Equations)): # a set of equations?
         raise TypeError,"An Equations object must be passed."
     
-    model.prepare() # check units and other things
+    model.prepare(check_units=check_units) # check units and other things
     dynamicvars=model._diffeq_names # Dynamic variables
 
     # Identify stochastic equations
@@ -312,6 +312,7 @@ class LinearStateUpdater(StateUpdater):
         '''
         self._useaccel = get_global_preference('useweave_linear_diffeq')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        self._useB=False
         if clock==None:
             clock = guess_clock()
         if isinstance(M,ndarray):

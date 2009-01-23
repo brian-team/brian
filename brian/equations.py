@@ -373,7 +373,7 @@ class Equations(object):
             vardict[var]=call_with_dict(self._function[var],vardict)
         return f(*[vardict[var] for var in f.func_code.co_varnames])
 
-    def prepare(self):
+    def prepare(self,check_units=True):
         '''
         Do a number of checks (units) and preparation of the object.
         '''
@@ -390,7 +390,7 @@ class Equations(object):
         # Compile strings to functions
         self.compile_functions()
         # Check units
-        self.check_units()
+        if check_units: self.check_units()
         # Set the update order of (static) variables
         self.set_eq_order()
         # Replace static variables by their value in differential equations

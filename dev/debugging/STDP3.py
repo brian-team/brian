@@ -28,15 +28,7 @@ dA_post/dt=-A_post/tau_post : 1
 dA_pre/dt=-A_pre/tau_pre : 1
 '''
 
-def neurons_reset(P,spikes):
-    P.v_[spikes]=vr
-    for i in spikes:
-        synapses[i,:]=clip(synapses[i,:]+P.A_post_,0,gmax)
-        synapses[:,i]=clip(synapses[:,i]+P.A_pre_,0,gmax)
-    P.A_pre_[spikes]+=dA_pre
-    P.A_post_[spikes]+=dA_post
-
-neurons=NeuronGroup(N,model=eqs_neurons,threshold=vt,reset=neurons_reset)
+neurons=NeuronGroup(N,model=eqs_neurons,threshold=vt,reset=vr)
 synapses=Connection(neurons,neurons,'ge',structure='dense')
 synapses.connect_full(neurons,neurons,weight=w0)
 neurons.v=rand(N)*(vt-vr)+vr

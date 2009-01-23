@@ -183,12 +183,14 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     @check_units(refractory=second,max_delay=second)
     def __init__(self, N, model=None, threshold=None, reset=NoReset(),
                  init=None, refractory=0*msecond,
-                 clock=None, order=1, implicit=False,
+                 clock=None, order=1, implicit=False,unit_checking=True,
                  max_delay=0*msecond, compile=False, freeze=False, method=None,
                  **args):
         '''
         Initializes the group.
         '''
+
+        self._spiking=True # by default, produces spikes
 
         # Check if model is specified as a Model and load its variables if it is
         if isinstance(model,Model):
@@ -234,7 +236,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         elif isinstance(model,Equations):
             if (init==None) and (model._units=={}):
                 raise AttributeError,"The group must be initialized."
-            self._state_updater,var_names=magic_state_updater(model,clock=clock,order=order,implicit=implicit,compile=compile,freeze=freeze,method=method)
+            self._state_updater,var_names=magic_state_updater(model,clock=clock,order=order,check_units=check_units,implicit=implicit,compile=compile,freeze=freeze,method=method)
             Group.__init__(self, model, N)
 #            self.staticvars=dict([(name,model._function[name]) for name in model._eq_names])
 #            self.var_index=dict(zip(var_names,count()))
@@ -256,6 +258,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         else:
             raise TypeError,"StateUpdater must be specified at initialization."        
         # TODO: remove temporary unit hack, this makes all state variables dimensionless if no units are specified
+        # What is this??
         if self._S0 is None:
             self._S0 = dict((i,1.) for i in range(len(self._state_updater)))
                  
@@ -277,6 +280,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             self._threshold=Threshold(threshold=threshold)
         else: # maybe raise an error?
             self._threshold=NoThreshold()
+            self._spiking=False
         
         # Initialization of the state matrix
         if not hasattr(self, '_S'):
@@ -400,10 +404,11 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         Updates the state variables.
         '''
         self._state_updater(self) # update the variables
-        spikes=self._threshold(self) # get spikes
-        if not isinstance(spikes, numpy.ndarray):
-            spikes = array(spikes, dtype=int)
-        self.LS.push(spikes) # Store spikes
+        if self._spiking:
+            spikes=self._threshold(self) # get spikes
+            if not isinstance(spikes, numpy.ndarray):
+                spikes = array(spikes, dtype=int)
+            self.LS.push(spikes) # Store spikes
         
     def get_spikes(self,delay=0):
         '''

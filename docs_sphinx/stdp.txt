@@ -1,0 +1,60 @@
+.. currentmodule:: brian
+
+Spike-timing-dependent plasticity
+=================================
+
+Synaptic weights can be modified by spiking activity.
+Weight modifications at a given synapse depend on the relative
+timing between presynaptic and postsynaptic spikes. Down to the
+biophysical level, there is a number of synaptic variables which
+are continuously evolving according to some differential equations,
+and those variables can be modified by presynaptic and postsynaptic
+spikes. In spike-timing-dependent plasticity (STDP) rules, the synaptic weight
+changes at the times of presynaptic and postsynaptic
+spikes only, as a function of the other synaptic variables.
+In Brian, an STDP rule can be specified by defining an
+:class:`STDP` object, as in the following example::
+
+  eqs_stdp='''
+  dA_pre/dt=-A_pre/tau_pre : 1
+  dA_post/dt=-A_post/tau_post : 1
+  '''
+  stdp=STDP(myconnection,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
+            post='A_post+=dA_post;w+=A_pre',bounds=(0,gmax))
+            
+The :class:`STDP` object acts on the :class:`Connection` object
+``myconnection``. Equations of the synaptic variables are given in
+a string (argument ``eqs``) as for defining neuron models.
+When a presynaptic (postsynaptic) spike is received, the code
+``pre`` (``post``) is executed, where the special identifier
+``w`` stands for the synaptic weight (from the specified
+connection matrix). Optionally, bounds on the synaptic weights can
+be specified.
+
+The example above defines an exponential STDP rule with hard bounds
+and all-to-all pair interactions.
+
+Exponential STDP
+----------------
+In many applications, the STDP function is piecewise exponential.
+In that case, one can use the :class:`ExponentialSTDP` class::
+
+  stdp=ExponentialSTDP(synapses,taup,taum,Ap,Am,wmax=gmax,interactions='all',bounds='hard')
+
+Here the synaptic weight function is::
+
+  f(s) = Ap*exp(-s/taup) if s >0
+         Am*exp(s/taum) if s <0
+
+The maximum synaptic weight is ``wmax``. The ``interactions`` keyword determines
+how pairs of pre/post synaptic spikes interact: ``all`` if contributions from
+all pairs are added, ``nearest`` for only nearest neighbour interactions.
+Bounds can be ``hard`` (weights are clipped), ``soft`` or ``semisoft`` (not implemented
+yet).
+
+Current limitations
+-------------------
+* The differential equations must be linear.
+* Presynaptic and postsynaptic variables must not interact, that is,
+a variable cannot be modified by both presynaptic and postsynaptic
+spikes.

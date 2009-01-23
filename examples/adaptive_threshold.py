@@ -14,8 +14,7 @@ IF = NeuronGroup(1, model=eqs,
 IF.rest()
 PG = PoissonGroup(1, 500*Hz)
 
-C = Connection(PG, IF, 'v')
-C.connect_full(PG, IF, 3*mV)
+C = Connection(PG, IF, 'v',weight=3*mV)
 
 Mv = StateMonitor(IF, 'v', record=True)
 Mvt = StateMonitor(IF, 'vt', record=True)

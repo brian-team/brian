@@ -4,12 +4,13 @@ from inspection import *
 from equations import *
 from monitor import SpikeMonitor
 from network import NetworkOperation
-from stateupdater import get_linear_equations
+from neurongroup import NeuronGroup
+from stateupdater import get_linear_equations,LinearStateUpdater
 from scipy.linalg import expm
 from scipy import dot,eye,zeros,array,clip,exp
 import re
 
-__all__=['STDP']
+__all__=['STDP','ExponentialSTDP']
 
 class STDPUpdater(SpikeMonitor):
     '''
@@ -40,6 +41,8 @@ class STDP(NetworkOperation):
     Spike-timing-dependent plasticity
     
     TODO: set pre and post transmission delays (e.g. to shift the zero of the STDP function)
+    TODO: use equations instead of linearupdater (-> nonlinear equations possible)
+    TODO: allow pre and postsynaptic group variables
     '''
     def __init__(self,C,eqs,pre,post,bounds=None,level=0,clock=None):
         '''
@@ -51,9 +54,12 @@ class STDP(NetworkOperation):
         '''
         NetworkOperation.__init__(self,lambda:None,clock=clock)
         # Merge multi-line statements
-        eqs=re.sub('\\\s*?\n',' ',eqs)
+        #eqs=re.sub('\\\s*?\n',' ',eqs)
         # Convert to equations object
-        eqs_obj=Equations(eqs,level=level+1)
+        if isinstance(eqs,Equations):
+            eqs_obj=eqs
+        else:
+            eqs_obj=Equations(eqs,level=level+1)
         
         # Check units
         eqs_obj.compile_functions()
@@ -128,40 +134,74 @@ class STDP(NetworkOperation):
         pre_code=compile(pre,"Presynaptic code","exec")
         post_code=compile(post,"Postsynaptic code","exec")
         
-        # create virtual groups (inherit NeuronGroup; Group?), pre and post
-        
-        # Add update code to pre and post
-        # 1-dimensional case (exponential STDP)
-        #if (len(vars_pre)==1) and (len(vars_post)==1):
-        #    vars_pre[0]+'[spikes]*=exp(%(a)f*t[spikes])' % Mpre[0]
-        #    vars_post[0]+'[spikes]*=exp(%(a)f*t[spikes])' % Mpost[0]
-        
         # create forward and backward Connection objects or SpikeMonitor objects
         pre_updater=STDPUpdater(C.source,C,vars=vars_pre,code=pre_code,namespace=pre_namespace)
         post_updater=STDPUpdater(C.target,C,vars=vars_post,code=post_code,namespace=post_namespace)
-        
-        # State variables
-        self.S_pre=zeros((len(vars_pre),len(C.source)))        
-        self.S_post=zeros((len(vars_post),len(C.target)))
-        
-        # Update matrix
-        self.update_pre=expm(M_pre*self.clock._dt)
-        self.update_post=expm(M_post*self.clock._dt)
+                
+        # Neuron groups
+        G_pre=NeuronGroup(len(C.source),model=LinearStateUpdater(M_pre,clock=self.clock))
+        G_post=NeuronGroup(len(C.target),model=LinearStateUpdater(M_post,clock=self.clock))
+        G_pre._S[:]=0
+        G_post._S[:]=0
         
         # Put variables in namespaces
         for i,var in enumerate(vars_pre):
-            pre_updater._namespace[var]=self.S_pre[i]
-            post_updater._namespace[var]=self.S_pre[i]
+            pre_updater._namespace[var]=G_pre._S[i]
+            post_updater._namespace[var]=G_pre._S[i]
 
         for i,var in enumerate(vars_post):
-            pre_updater._namespace[var]=self.S_post[i]
-            post_updater._namespace[var]=self.S_post[i]
+            pre_updater._namespace[var]=G_post._S[i]
+            post_updater._namespace[var]=G_post._S[i]
         
-        self.contained_objects=[pre_updater,post_updater]
+        self.contained_objects=[pre_updater,post_updater,G_pre,G_post]
     
     def __call__(self):
-        self.S_pre[:]=dot(self.update_pre,self.S_pre)
-        self.S_post[:]=dot(self.update_post,self.S_post)
+        pass
+
+class ExponentialSTDP(STDP):
+    '''
+    Exponential STDP.
+    
+    Synaptic weight change:
+    f(s) = Ap*exp(-s/taup) if s >0
+           Am*exp(s/taum) if s <0
+           
+    interactions =
+      'all' : contributions from all pre-post pairs are added
+      'nearest': only nearest-neighbour pairs are considered
+      
+    wmax = maximum synaptic weight
+    
+    bounds =
+      'hard' : hard clipping
+      'soft' : multiplicative STDP
+      'semisoft'
+      
+    TODO: faster version
+    '''
+    def __init__(self,C,taup,taum,Ap,Am,interactions='all',wmax=None,
+                 bounds='hard'):
+        eqs=Equations('''
+        dA_pre/dt=-A_pre/taup : 1
+        dA_post/dt=-A_post/taum : 1''',taup=taup,taum=taum)
+        if interactions=='all':
+            pre='A_pre+=Ap'
+            post='A_post+=Am'
+        elif interactions=='nearest':
+            pre='A_pre=Ap'
+            post='A_post=Am'
+        else:
+            raise AttributeError,"Unknown interaction type "+interactions
+        pre+='\nw+=A_post'
+        post+='\nw+=A_pre'
+       
+        if bounds=='hard':
+            if wmax is None:
+                raise AttributeError,"You must specify the maximum synaptic weight"
+            min,max=0,wmax
+        else:
+            raise NotImplementedError,"Soft bounds are not implemented yet"
+        STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,bounds=(min,max))
 
 def dependency_matrix(A):
     '''

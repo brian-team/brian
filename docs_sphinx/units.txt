@@ -138,6 +138,10 @@ After importing ``brian_no_units``, all units are converted to their float value
 This may also be a solution when using external libraries which are not compatible with units
 (but see next section).
 
+Unit checking can also be turned down locally when initializing a neuron group by
+passing the argument ``check_units=False``. In that case, no error is raised if the
+differential equations are not homogeneous.
+
 A good practice is to develop the script with units on, then switch them off once the script
 runs correctly.
 

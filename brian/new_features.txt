@@ -1,6 +1,8 @@
 New features since 1.0.0
 ------------------------
 
+* Simplified initialisation of Connection objects
+* Optional unit checking in NeuronGroup
 * STDP
 * New code for Connections, including new 'dynamic' connection matrix type
 * Reset and threshold can be specified with strings (Python expressions)

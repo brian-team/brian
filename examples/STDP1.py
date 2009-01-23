@@ -33,13 +33,14 @@ synapses=Connection(input,neurons,'ge')
 synapses.connect(input,neurons,rand(len(input),len(neurons))*gmax)
 neurons.v=vr
 
-stdp=STDP(synapses,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
-          post='A_post+=dA_post;w+=A_pre',bounds=(0,gmax))
+#stdp=STDP(synapses,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
+#          post='A_post+=dA_post;w+=A_pre',bounds=(0,gmax))
+stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax)
 
 rate=PopulationRateMonitor(neurons)
 
 start_time=time()
-run(20*second)
+run(2*second)
 print "Simulation time:",time()-start_time
 
 subplot(211)

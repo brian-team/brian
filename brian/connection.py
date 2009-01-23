@@ -1137,7 +1137,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
     '''
     @check_units(delay=second)
     def __init__(self,source,target,state=0,delay=0*msecond,modulation=None,
-                 structure='sparse',**kwds):
+                 structure='sparse',weight=None,sparseness=None,**kwds):
         self.source = source # pointer to source group
         self.target = target # pointer to target group
         if isinstance(state, str): # named state variable
@@ -1156,6 +1156,17 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         self.delay = int(delay/source.clock.dt) # Synaptic delay in time bins
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        
+        # Initialisation of weights
+        # TODO: check consistency of weight and sparseness
+        # TODO: select dense or sparse according to sparseness
+        if weight is not None:
+            if isinstance(weight,scipy.sparse.spmatrix) or isinstance(weight,ndarray):
+                self.connect(W=weight)
+            elif sparseness is None:
+                self.connect_full(weight=weight)
+            else:
+                self.connect_random(weight=weight,p=sparseness)
         
     def propagate(self, spikes):
         if not self.iscompressed:
@@ -1335,7 +1346,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         i0,j0=self.origin(P,Q)
         self.W[i0:i0+len(P),j0:j0+len(Q)]=W
         
-    def connect_random(self,source=None,target=None,p=1.,weight=1.,fixed=False, seed=None):
+    def connect_random(self,source=None,target=None,p=1.,weight=1.,fixed=False, seed=None, sparseness=None):
         '''
         Connects the neurons in group P to neurons in group Q with probability p,
         with given weight (default 1).
@@ -1344,6 +1355,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         '''
         P=source or self.source
         Q=target or self.target
+        if sparseness is not None: p = sparseness # synonym
         if seed is not None:
             numpy.random.seed(seed) # numpy's random number seed
             pyrandom.seed(seed) # Python's random number seed

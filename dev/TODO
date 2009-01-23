@@ -1,5 +1,8 @@
-* STDP documentation
-* option for disabling unit checking in NeuronGroup.__init__
+* Delayed connections
+* docs for specifying weight matrix in Connection init
+* Clean NeuronGroup init, in particular S0 is strangely handled; remove the
+init keyword? (in fact S0 is used mostly for unit checking)
+* Documentation for statistics
 * Bug in I-F_curve; seems to be due to handling variable t
 * Remove Model (from code and tutorials); use Deprecated warning?
 * Update documentation with string reset/threshold
@@ -35,12 +38,6 @@ but in principle could also be used by nonlinear mechanisms for better optimisat
 
 * refractory can be a vector
 refractory shouldn't have to be a constant for the group.
-
-* specify weight matrix in Connection init
-e.g.
-C = Connection(G, H, 'V', random_connectivity(p=0.1, weight=1*mV))
-or
-C = Connection(G, H, 'V', weight=1*mV, p=0.1)
 
 * Why is t a vector?
 Figure out why group.t is a vector. It might have to do with units.

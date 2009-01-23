@@ -45,12 +45,10 @@ P.gi=0*mV
 
 Pe=P.subgroup(3200)
 Pi=P.subgroup(800)
-Ce=Connection(Pe,P,'ge')
-Ci=Connection(Pi,P,'gi')
 we=(60*0.27/10)*mV # excitatory synaptic weight (voltage)
 wi=(-20*4.5/10)*mV # inhibitory synaptic weight
-Ce.connect_random(p=0.02,weight=we)
-Ci.connect_random(p=0.02,weight=wi)
+Ce=Connection(Pe,P,'ge',weight=we,sparseness=0.02)
+Ci=Connection(Pi,P,'gi',weight=wi,sparseness=0.02)
 P.v=Vr+rand(len(P))*(Vt-Vr)
 
 # Record the number of spikes

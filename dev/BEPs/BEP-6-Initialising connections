@@ -1,0 +1,28 @@
+BEP-6: Initialising connections
+Abstract: Currently, one must initialise a connection in two steps, first
+construct the Connection object, then define the actual connections. In most
+typical cases, the connections follow simple schemes that can be described in
+one line. It would be more intuitive to do it in a single instruction.
+
+STATUS: DONE (docs to write)
+
+Examples:
+C = Connection(G, H, 'V', random_connectivity(p=0.1, weight=1*mV))
+or
+C = Connection(G, H, 'V', weight=1*mV, p=0.1)
+
+I would favor the latter syntax, which I find more straightforward.
+The type of weight keyword tells what initialisation function should be
+called:
+* single value: connect_full (dense connection with identical weights)
+* function: connect_full (functional meaning)
+* matrix: connect (can be dense or sparse)
+
+If the keyword "p" is specified, then the connect_random method is called.
+Maybe it is not explicit enough though? proba? probability? sparseness?
+I would go for sparseness, which is the most explicit. In that case it could be
+added as a keyword to connect_random (alias for p).
+
+This does not cover all the cases, but it is still possible to use the
+connect methods in specific cases, while keeping an intuitive and efficient
+syntax.

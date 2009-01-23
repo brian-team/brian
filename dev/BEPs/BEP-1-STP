@@ -1,1 +1,34 @@
 BEP-1: Short term plasticity
+Abstract: Implementation of short term plasticity following the Tsodyks-Markram
+model.
+
+The model: presynaptic spikes produce instantaneous changes in synaptic
+variables, which also follow differential equations. The synaptic weight is
+modulated by one of those variables, in a multiplicative way.
+
+Implementation
+==============
+A number of variables are involved in the model. Since they are only modified
+by presynaptic spikes, a group of the size of the presynaptic group P should be
+created, with the appropriate dynamics. This group G receives spikes from P through
+an IdentityConnection, which modify its variables. Spikes are directly forwarded
+to the postsynaptic group Q, with a modulation. That connection should replace
+the original connection between P and Q. This can be done simply by replacing
+the source variable of the Connection.
+
+To deal with delays correctly, the delays from P->Q should be transferred to
+P->G and removed from P->Q, which might not be trivial. If those are not transferred,
+then the delays are assumed to be purely dendritic.
+
+The value of the modulation variable is only required at presynaptic spike times.
+It implies that the integration of the equations can be event-driven, which would
+minimize the simulation cost.
+
+Interface
+=========
+A similar interface as for STDP should be chosen, e.g.:
+stp=STP(C,parameters)
+where C is the Connection.
+
+One could pass the equations as a string as for STDP, but are there any other
+models of synaptic dynamics being used?
