@@ -6,6 +6,24 @@ The model: presynaptic spikes produce instantaneous changes in synaptic
 variables, which also follow differential equations. The synaptic weight is
 modulated by one of those variables, in a multiplicative way.
 
+References
+==========
+Mongillo et al (2005). Synaptic Theory of Working Memory, Science.
+dx/dt=(1-x)/taud  (depression)
+du/dt=(U-u)/tauf  (facilitation)
+spike: x->x*(1-u); u->u+U*(1-u)
+x is the modulation factor (in 0..1)
+
+Markram et al (1998). Differential signaling via the same axon of neocortical
+pyramidal neurons, PNAS.
+[same model]
+
+Tsodyks & Markram (1997). The neural code between neocortical pyramidal neurons
+depends on neurotransmitter release probability, PNAS.
+
+Senn et al (2001). An Algorithm for Modifying Neurotransmitter Release
+Probability Based on Pre- and Postsynaptic Spike Timing, Neural Comp.
+
 Implementation
 ==============
 A number of variables are involved in the model. Since they are only modified
