@@ -26,9 +26,9 @@ class STPUpdater(SpikeMonitor):
     '''
     Event-driven updates of STP variables.
     '''
-    def __init__(self,P,taud,tauf,U,delay=0):
-        SpikeMonitor.__init__(self,P,record=False,delay=delay)
-        # P is the source group
+    def __init__(self,source,P,taud,tauf,U,delay=0):
+        SpikeMonitor.__init__(self,source,record=False,delay=delay)
+        # P is the group with the STP variables
         N=len(P)
         self.P=P
         self.minvtaud=-1./taud
@@ -61,9 +61,9 @@ class STP(NetworkOperation):
         NetworkOperation.__init__(self,lambda:None)
         N=len(C.source)
         P=STPGroup(N)
+        self.contained_objects=[STPUpdater(C.source,P,taud,tauf,U),P]
         C.source=P
         C.nstate_mod=0 # modulation of synaptic weights
-        self.contained_objects=[STPUpdater(P,taud,tauf,U)]
         
     def __call__(self):
         pass

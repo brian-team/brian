@@ -28,7 +28,7 @@ neuron=NeuronGroup(N,model=eqs_neuron)
 
 C=Connection(input,neuron,'i')
 C.connect_one_to_one(input,neuron,A_SE*U_SE)
-stp=STP(C,taud=tau_rec,tauf=tau_rec,U=U_SE)
+stp=STP(C,taud=tau_rec,tauf=.1*ms,U=U_SE)
 trace=StateMonitor(neuron,'v',record=[0,N-1])
 
 run(1000*ms)
