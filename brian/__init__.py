@@ -70,6 +70,7 @@ from utils.parallelpython import *
 from tests import *
 from magic import *
 from stdp import *
+from stp import *
 
 __version__ = '1.0.0'
 

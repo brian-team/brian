@@ -182,7 +182,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     
     @check_units(refractory=second,max_delay=second)
     def __init__(self, N, model=None, threshold=None, reset=NoReset(),
-                 init=None, refractory=0*msecond,
+                 init=None, refractory=0*msecond, level=0,
                  clock=None, order=1, implicit=False,unit_checking=True,
                  max_delay=0*msecond, compile=False, freeze=False, method=None,
                  **args):
@@ -191,6 +191,8 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         '''
 
         self._spiking=True # by default, produces spikes
+        if bup.use_units: # one additional frame level induced by the decorator
+            level+=1
 
         # Check if model is specified as a Model and load its variables if it is
         if isinstance(model,Model):
@@ -205,22 +207,13 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             # Equations will do by default. The level has to be 4 because it is 1+3, where the 1 is
             # the frame that called the NeuronGroup init, and the 3 is the 3 decorators added to the
             # beginning of the __init__ method.
-            if bup.use_units:
-                model = Equations(model, level=2)
-            else:
-                model = Equations(model, level=1)        
+            model = Equations(model, level=level+1)        
 
         if isinstance(threshold,str):
-            if bup.use_units:
-                threshold = StringThreshold(threshold, level=2)
-            else:
-                threshold = StringThreshold(threshold, level=1)
+            threshold = StringThreshold(threshold, level=level+1)
 
         if isinstance(reset,str):
-            if bup.use_units:
-                reset = StringReset(reset, level=2)
-            else:
-                reset = StringReset(reset, level=1)
+            reset = StringReset(reset, level=level+1)
 
         # Clock
         clock=guess_clock(clock)#not needed with protocol checking
