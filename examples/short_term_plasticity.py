@@ -14,13 +14,10 @@ N=10
 
 eqs='''
 dx/dt=rate : 1
-dR/dt=(1-R)/tau_rec : 1
 rate : Hz
 '''
 
-input=NeuronGroup(N,model=eqs,threshold=1.,reset="R-=U_SE*R;x=0")
-MR=StateMonitor(input,'R',record=[0,N-1])
-input.R=1
+input=NeuronGroup(N,model=eqs,threshold=1.,reset=0)
 input.rate=linspace(5*Hz,30*Hz,N)
 
 eqs_neuron='''
@@ -29,21 +26,17 @@ di/dt=-i/tau_e:amp
 '''
 neuron=NeuronGroup(N,model=eqs_neuron)
 
-C=Connection(input,neuron,'i',modulation='R')
+C=Connection(input,neuron,'i')
 C.connect_one_to_one(input,neuron,A_SE*U_SE)
+stp=STP(C,taud=tau_rec,tauf=.1*ms,U=U_SE)
 trace=StateMonitor(neuron,'v',record=[0,N-1])
 
 run(1000*ms)
-subplot(221)
-plot(MR.times/ms,MR[0])
-title('R')
-subplot(223)
+print stp.contained_objects[1].x
+subplot(211)
 plot(trace.times/ms,trace[0]/mV)
 title('Vm')
-subplot(222)
-plot(MR.times/ms,MR[N-1])
-title('R')
-subplot(224)
+subplot(212)
 plot(trace.times/ms,trace[N-1]/mV)
 title('Vm')
 show()

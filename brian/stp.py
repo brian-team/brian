@@ -40,10 +40,11 @@ class STPUpdater(SpikeMonitor):
         self.clock=P.clock
         
     def propagate(self,spikes):
-        tmp=1-self.u[spikes]
         interval=self.clock.t-self.lastt[spikes]
+        self.u[spikes]=self.U+(self.u[spikes]-self.U)*exp(interval*self.minvtauf)
+        tmp=1-self.u[spikes]
         self.x[spikes]=(1+(self.x[spikes]-1)*exp(interval*self.minvtaud))*tmp
-        self.u[spikes]=self.U+(self.u[spikes]-self.U)*exp(interval*self.minvtauf)+self.U*tmp
+        self.u[spikes]+=self.U*tmp
         self.lastt[spikes]=self.clock.t
         self.P.LS.push(spikes)
 
@@ -61,9 +62,11 @@ class STP(NetworkOperation):
         NetworkOperation.__init__(self,lambda:None)
         N=len(C.source)
         P=STPGroup(N)
+        P.x=1
+        P.u=U
         self.contained_objects=[STPUpdater(C.source,P,taud,tauf,U),P]
         C.source=P
-        C.nstate_mod=0 # modulation of synaptic weights
+        C._nstate_mod=0 # modulation of synaptic weights
         
     def __call__(self):
         pass

@@ -32,6 +32,7 @@ stp=STP(C,taud=tau_rec,tauf=.1*ms,U=U_SE)
 trace=StateMonitor(neuron,'v',record=[0,N-1])
 
 run(1000*ms)
+print stp.contained_objects[1].x
 subplot(211)
 plot(trace.times/ms,trace[0]/mV)
 title('Vm')

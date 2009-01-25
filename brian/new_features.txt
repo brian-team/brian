@@ -1,6 +1,7 @@
 New features since 1.0.0
 ------------------------
 
+* Short-term plasticity (Tsodyks-Markram model)
 * Simplified initialisation of Connection objects
 * Optional unit checking in NeuronGroup
 * STDP
