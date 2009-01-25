@@ -5,21 +5,28 @@ Adapted from Song, Miller and Abbott (2000)
 from brian import *
 from time import time
 
+#defaultclock.dt=.01*ms
+
 taum=20*ms
 tau_post=20*ms
 tau_pre=20*ms
 Ee=0*mV
+Ei=-70*mV
 vt=-54*mV
 vr=-60*mV
 El=-70*mV
 taue=5*ms
+taui=5*ms
 gmax=0.015
+gin=0.05
+Fin=200*10*Hz
 dA_pre=gmax*.005
 dA_post=-dA_pre*1.05
 
 eqs_neurons='''
-dv/dt=(ge*(Ee-v)+El-v)/taum : volt
+dv/dt=(ge*(Ee-v)+gi*(Ei-v)+El-v)/taum : volt
 dge/dt=-ge/taue : 1
+dgi/dt=-gi/taui : 1
 '''
 
 #eqs_stdp='''
@@ -27,10 +34,11 @@ dge/dt=-ge/taue : 1
 #dA_post/dt=-A_post/tau_post : 1
 #'''
 
-input=PoissonGroup(1000,rates=20*Hz)
+input=PoissonGroup(1000,rates=30*Hz)
+input_in=PoissonGroup(1,rates=Fin)
 neurons=NeuronGroup(1,model=eqs_neurons,threshold=vt,reset=vr)
-synapses=Connection(input,neurons,'ge')
-synapses.connect(input,neurons,rand(len(input),len(neurons))*gmax)
+synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax)
+synapses_in=Connection(input_in,neurons,'gi',weight=gin)
 neurons.v=vr
 
 #stdp=STDP(synapses,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
@@ -40,7 +48,7 @@ stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax)
 rate=PopulationRateMonitor(neurons)
 
 start_time=time()
-run(60*second)
+run(10*second)
 print "Simulation time:",time()-start_time
 
 subplot(211)
