@@ -1,6 +1,6 @@
 # Short-term plasticity
 # See BEP-1
-# UNTESTED
+# TO BE TESTED WITH FACILITATION
 from network import NetworkOperation
 from neurongroup import NeuronGroup
 from monitor import SpikeMonitor
@@ -15,7 +15,7 @@ class STPGroup(NeuronGroup):
     def __init__(self,N):
         eqs='''
         x : 1
-        u : 1
+        y : 1
         '''
         NeuronGroup.__init__(self,N,model=eqs)
         
@@ -35,16 +35,17 @@ class STPUpdater(SpikeMonitor):
         self.minvtauf=-1./tauf
         self.U=U
         self.x=P.x
-        self.u=P.u
+        self.y=P.y
         self.lastt=zeros(N) # last update
         self.clock=P.clock
         
     def propagate(self,spikes):
         interval=self.clock.t-self.lastt[spikes]
-        self.u[spikes]=self.U+(self.u[spikes]-self.U)*exp(interval*self.minvtauf)
-        tmp=1-self.u[spikes]
+        #self.u[spikes]=self.U+(self.u[spikes]-self.U)*exp(interval*self.minvtauf)
+        self.y[spikes]*=exp(interval*self.minvtauf)
+        tmp=(1-self.U)-self.y[spikes]
         self.x[spikes]=(1+(self.x[spikes]-1)*exp(interval*self.minvtaud))*tmp
-        self.u[spikes]+=self.U*tmp
+        self.y[spikes]+=self.U*tmp
         self.lastt[spikes]=self.clock.t
         self.P.LS.push(spikes)
 
@@ -56,6 +57,11 @@ class STP(NetworkOperation):
     spike: x->x*(1-u); u->u+U*(1-u)  (in what order?)
     x is the modulation factor (in 0..1) for the synaptic weight
     
+    Rewritten as follows for (minor) optimization:
+    dx/dt=(1-x)/taud
+    dy/dt=-y/tauf   (y=u-U)
+    spike: x->x*(1-U-y); y->y+U*(1-U-y)  (in what order?)
+    
     TODO: manage delays correctly
     '''
     def __init__(self,C,taud,tauf,U):
@@ -63,8 +69,8 @@ class STP(NetworkOperation):
         N=len(C.source)
         P=STPGroup(N)
         P.x=1
-        P.u=U
-        self.contained_objects=[STPUpdater(C.source,P,taud,tauf,U),P]
+        P.y=0
+        self.contained_objects=[STPUpdater(C.source,P,taud,tauf,U)]
         C.source=P
         C._nstate_mod=0 # modulation of synaptic weights
         

@@ -22,12 +22,12 @@ dv/dt=(ge*(Ee-v)+El-v)/taum : volt
 dge/dt=-ge/taue : 1
 '''
 
-eqs_stdp='''
-dA_pre/dt=-A_pre/tau_pre : 1
-dA_post/dt=-A_post/tau_post : 1
-'''
+#eqs_stdp='''
+#dA_pre/dt=-A_pre/tau_pre : 1
+#dA_post/dt=-A_post/tau_post : 1
+#'''
 
-input=PoissonGroup(1000,rates=10*Hz)
+input=PoissonGroup(1000,rates=20*Hz)
 neurons=NeuronGroup(1,model=eqs_neurons,threshold=vt,reset=vr)
 synapses=Connection(input,neurons,'ge')
 synapses.connect(input,neurons,rand(len(input),len(neurons))*gmax)
@@ -40,7 +40,7 @@ stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax)
 rate=PopulationRateMonitor(neurons)
 
 start_time=time()
-run(2*second)
+run(60*second)
 print "Simulation time:",time()-start_time
 
 subplot(211)

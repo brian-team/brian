@@ -169,18 +169,26 @@ class ExponentialSTDP(STDP):
     interactions =
       'all' : contributions from all pre-post pairs are added
       'nearest': only nearest-neighbour pairs are considered
-      
+      'nearest_pre': nearest presynaptic spike, all postsynaptic spikes
+      'nearest_post': nearest postsynaptic spike, all presynaptic spikes
+            
     wmax = maximum synaptic weight
     
-    bounds =
-      'hard' : hard clipping
-      'soft' : multiplicative STDP
-      'semisoft'
+    update =
+      'additive' : modifications are additive (independent of synaptic weight)
+      'multiplicative' : modifications are multiplicative (proportional to w)
+      'mixed' : post-pre modifications are multiplicative,
+                pre-post modifications are additive
+      'mixed2' : pre-post modifications are multiplicative,
+                 post-pre modifications are additive
       
     TODO: faster version
     '''
     def __init__(self,C,taup,taum,Ap,Am,interactions='all',wmax=None,
-                 bounds='hard'):
+                 update='additive'):
+        if wmax is None:
+            raise AttributeError,"You must specify the maximum synaptic weight"
+
         eqs=Equations('''
         dA_pre/dt=-A_pre/taup : 1
         dA_post/dt=-A_post/taum : 1''',taup=taup,taum=taum)
@@ -190,17 +198,31 @@ class ExponentialSTDP(STDP):
         elif interactions=='nearest':
             pre='A_pre=Ap'
             post='A_post=Am'
+        elif interactions=='nearest_pre':
+            pre='A_pre=Ap'
+            post='A_post=+Am'
+        elif interactions=='nearest_post':
+            pre='A_pre+=Ap'
+            post='A_post=Am'
         else:
             raise AttributeError,"Unknown interaction type "+interactions
-        pre+='\nw+=A_post'
-        post+='\nw+=A_pre'
-       
-        if bounds=='hard':
-            if wmax is None:
-                raise AttributeError,"You must specify the maximum synaptic weight"
-            min,max=0,wmax
+        
+        min,max=0,wmax
+        
+        if update=='additive':
+            pre+='\nw+=A_post'
+            post+='\nw+=A_pre'
+        elif update=='multiplicative': # check that
+            pre+='\nw*=(1+A_post)'
+            post+='\nw*=(1+A_pre)'
+        elif update=='mixed':
+            pre+='\nw*=(1+A_post)'
+            post+='\nw+=A_pre'
+        elif update=='mixed2':
+            pre+='\nw+=A_post'
+            post+='\nw*=(1+A_pre)'
         else:
-            raise NotImplementedError,"Soft bounds are not implemented yet"
+            raise AttributeError,"Unknown update type "+update
         STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,bounds=(min,max))
 
 def dependency_matrix(A):
