@@ -1,0 +1,107 @@
+BEP-7: DelayConnection
+Abstract: Connections with heterogeneous delays
+
+Introduction
+============
+
+Want a Connection object that can handle neurons with delays
+that vary either per neuron or per synapse.
+
+Issues
+======
+
+Functionality
+-------------
+
+There is a difference between presynaptic and postsynaptic delays.
+Do we want to include both? How important is that compared to
+implementation decisions (see below)?
+
+Syntax
+------
+
+Instantiation
+~~~~~~~~~~~~~
+
+The current syntax for the instantiation of the DelayConnection
+class is the same as for the Connection class with one extra
+keyword delay_dimension=1 or delay_dimension=2 (for per-neuron
+or per-synapse delays). This keyword could easily be renamed,
+e.g.:
+
+* synaptic_delays=True would correspond to delay_dimension=2
+  and would be the default, and synaptic_delays=False would
+  correspond to delay_dimension=1.
+* neuronal_delays=False would correspond to delay_dimension=2
+  and would be the default, and neurons_delays=True for dim 1.
+
+A related issue would be whether or not we want the user to have
+to use DelayConnection or whether we could just add keywords to
+Connection, and that if those keywords were present the Connection
+class would just make itself into a DelayConnection class.
+
+Referring to delays
+~~~~~~~~~~~~~~~~~~~
+
+More problematic is what should be done about defining connections.
+The current implementation stores two matrices, one for the delays
+and one for the weights. The matrices have the same type. These
+are currently accessed through a ``delays`` property, i.e.::
+
+	C.delays[i,j] = ...
+
+There are some technical issues about how you make sure that the
+weight matrix and the delay matrix have exactly the same structure,
+see below.
+
+Initialising delays
+~~~~~~~~~~~~~~~~~~~
+
+At the moment, there are no helper functions like ``connect_random``
+and ``connect_full`` that do anything for delays. You have to just
+initialise these by hand. Some proposals:
+
+* Implement a ``initialise_random_delay`` function and/or a
+  ``initialise_delay`` function that takes a function ``f(i,j)``
+  as an argument. This would then be evaluated for every nonzero
+  entry in the weight matrix (so that initialisation of the
+  weight matrix would have to come before initialisation of the
+  delay matrix).
+* Override the ``connect_random`` functions to include extra
+  keywords like ``delays=...``. For example, you could have
+  ``delays=(min,max)``, ``delays=func``, etc.
+
+Implementation
+==============
+
+Propagation
+~~~~~~~~~~~
+
+The current implementation of DelayConnection is postsynaptic. An
+array is stored which is NxM where N is the number of target
+neurons, and M is the number of time steps for the maximum delay,
+i.e. maxdelay/dt. This array is circular in time and has a current
+index pointer. When a spike arrives it is propagated to the
+appropriate row of the array, and when the current index pointer
+reaches a row the cumulative effects of that row are propagated
+to the target neurons. This implementation is reasonably efficient
+and can work with both per-neuron and per-synapse delays easily,
+and can handle dense and sparse matrices easily.
+
+Delays are stored either as a vector or a second array of the same
+type and shape as the weight matrix. Delays are stored as floats
+and converted to ints on the fly (so that delays can be easily
+changed at runtime).
+
+Keeping delays and weights in sync
+----------------------------------
+
+For sparse matrices they should have the same nonzero entries
+and this should be enforced somehow. The current implementation at
+compression time first compresses the weight matrix, duplicates
+that structure and copies the delay values from the construction
+matrix to the weight matrix. If a delay value is missing from the
+construction matrix it is set to 0, if a weight value corresponding
+to an entry in the sparse matrix is missing, it is ignored. After
+compression, it is at the moment up to the user to keep these in
+sync.
