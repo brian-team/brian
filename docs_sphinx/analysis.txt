@@ -38,6 +38,8 @@ Spike trains recorded by a :class:`SpikeMonitor` can be displayed as raster plot
 Usual options of the ``plot`` command can also be passed to :func:`raster_plot`. One may also pass
 several spike monitors as arguments.
 
+
+
 .. TODO: docs:histograms
 	Histograms
 	----------

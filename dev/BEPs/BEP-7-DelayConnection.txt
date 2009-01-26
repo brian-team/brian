@@ -40,6 +40,9 @@ to use DelayConnection or whether we could just add keywords to
 Connection, and that if those keywords were present the Connection
 class would just make itself into a DelayConnection class.
 
+Example:
+  C=Connection(P,Q,'ge',delay=True)
+
 Referring to delays
 ~~~~~~~~~~~~~~~~~~~
 
@@ -67,6 +70,7 @@ initialise these by hand. Some proposals:
   entry in the weight matrix (so that initialisation of the
   weight matrix would have to come before initialisation of the
   delay matrix).
+* ``set_delays``?
 * Override the ``connect_random`` functions to include extra
   keywords like ``delays=...``. For example, you could have
   ``delays=(min,max)``, ``delays=func``, etc.
