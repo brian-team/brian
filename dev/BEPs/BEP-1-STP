@@ -11,8 +11,9 @@ References
 Mongillo et al (2005). Synaptic Theory of Working Memory, Science.
 dx/dt=(1-x)/taud  (depression)
 du/dt=(U-u)/tauf  (facilitation)
-spike: x->x*(1-u); u->u+U*(1-u)
-x is the modulation factor (in 0..1)
+spike: u->u+U*(1-u); x->x*(1-u)
+u*x is the modulation factor (in 0..1), weights are modulated by the value of
+u*x before updating.
 
 Markram et al (1998). Differential signaling via the same axon of neocortical
 pyramidal neurons, PNAS.

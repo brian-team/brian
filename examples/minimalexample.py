@@ -23,5 +23,10 @@ Ci.connect_random(Pi, P, 0.02,weight=-9*mV)
 M=SpikeMonitor(P)
 
 run(1*second)
+i=0
+while len(M[i])==0:
+    i+=1
+print "The firing rate of neuron",i,"is",firing_rate(M[i])*Hz
+print "The coefficient of variation neuron",i,"is",CV(M[i])
 raster_plot(M)
 show()

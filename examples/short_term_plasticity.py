@@ -4,10 +4,8 @@ Neurons with regular inputs and depressing synapses
 '''
 from brian import *
 
-U_SE=.67
 tau_e=3*ms
 taum=50*ms
-tau_rec=800*ms
 A_SE=250*pA
 Rm=100*Mohm
 N=10
@@ -26,9 +24,10 @@ di/dt=-i/tau_e:amp
 '''
 neuron=NeuronGroup(N,model=eqs_neuron)
 
-C=Connection(input,neuron,'i')
-C.connect_one_to_one(weight=A_SE*U_SE)
-stp=STP(C,taud=tau_rec,tauf=.1*ms,U=U_SE)
+C=Connection(input,neuron,'i',delay=200*ms)
+C.connect_one_to_one(weight=A_SE)
+#stp=STP(C,taud=10*ms,tauf=100*ms,U=.1) # facilitation
+stp=STP(C,taud=100*ms,tauf=10*ms,U=.6) # depression
 trace=StateMonitor(neuron,'v',record=[0,N-1])
 
 run(1000*ms)

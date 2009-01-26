@@ -56,5 +56,5 @@ Current limitations
 -------------------
 * The differential equations must be linear.
 * Presynaptic and postsynaptic variables must not interact, that is,
-a variable cannot be modified by both presynaptic and postsynaptic
-spikes.
+  a variable cannot be modified by both presynaptic and postsynaptic
+  spikes.

@@ -1,6 +1,24 @@
-# Short-term plasticity
+'''
+Short-term synaptic plasticity.
+
+Implements the short-term plasticity model described in:
+Markram et al (1998). Differential signaling via the same axon of
+neocortical pyramidal neurons, PNAS. Synaptic dynamics is
+described by two variables x and u, which follows the following differential equations::
+
+  dx/dt=(1-x)/taud  (depression)
+  du/dt=(U-u)/tauf  (facilitation)
+
+where taud, tauf are time constants and U is a parameter in 0..1. Each a presynaptic
+spike triggers modifications of the variables::
+
+  u<-u+U*(1-u)
+  x<-x*(1-u)
+
+Synaptic weights are modulated by the product u*x (in 0..1).
+'''
 # See BEP-1
-# TO BE TESTED WITH FACILITATION
+
 from network import NetworkOperation
 from neurongroup import NeuronGroup
 from monitor import SpikeMonitor
@@ -14,8 +32,9 @@ class STPGroup(NeuronGroup):
     '''
     def __init__(self,N):
         eqs='''
+        ux : 1
         x : 1
-        y : 1
+        u : 1
         '''
         NeuronGroup.__init__(self,N,model=eqs)
         
@@ -34,18 +53,19 @@ class STPUpdater(SpikeMonitor):
         self.minvtaud=-1./taud
         self.minvtauf=-1./tauf
         self.U=U
+        self.ux=P.ux
         self.x=P.x
-        self.y=P.y
+        self.u=P.u
         self.lastt=zeros(N) # last update
         self.clock=P.clock
         
     def propagate(self,spikes):
+        self.ux[spikes]=self.u[spikes]*self.x[spikes]
         interval=self.clock.t-self.lastt[spikes]
-        #self.u[spikes]=self.U+(self.u[spikes]-self.U)*exp(interval*self.minvtauf)
-        self.y[spikes]*=exp(interval*self.minvtauf)
-        tmp=(1-self.U)-self.y[spikes]
+        self.u[spikes]=self.U+(self.u[spikes]-self.U)*exp(interval*self.minvtauf)
+        tmp=1-self.u[spikes]
         self.x[spikes]=(1+(self.x[spikes]-1)*exp(interval*self.minvtaud))*tmp
-        self.y[spikes]+=self.U*tmp
+        self.u[spikes]+=self.U*tmp
         self.lastt[spikes]=self.clock.t
         self.P.LS.push(spikes)
 
@@ -54,24 +74,26 @@ class STP(NetworkOperation):
     Short-term synaptic plasticity, following the Tsodyks-Markram model:
     dx/dt=(1-x)/taud  (depression)
     du/dt=(U-u)/tauf  (facilitation)
-    spike: x->x*(1-u); u->u+U*(1-u)  (in what order?)
-    x is the modulation factor (in 0..1) for the synaptic weight
+    spike: u->u+U*(1-u);x->x*(1-u)
+    u*x is the modulation factor (in 0..1) for the synaptic weight
     
-    Rewritten as follows for (minor) optimization:
-    dx/dt=(1-x)/taud
-    dy/dt=-y/tauf   (y=u-U)
-    spike: x->x*(1-U-y); y->y+U*(1-U-y)  (in what order?)
-    
-    TODO: manage delays correctly
+    TODO: CHECK DELAYS
     '''
     def __init__(self,C,taud,tauf,U):
         NetworkOperation.__init__(self,lambda:None)
         N=len(C.source)
         P=STPGroup(N)
         P.x=1
-        P.y=0
-        self.contained_objects=[STPUpdater(C.source,P,taud,tauf,U)]
+        P.u=U
+        P.ux=U
+        updater=STPUpdater(C.source,P,taud,tauf,U,delay=C.delay*C.source.clock.dt)
+        self.contained_objects=[updater]
         C.source=P
+        C.delay=0
+        if C.delay<0:
+            raise AttributeError,"The Connection object must have a larger delay than the STP object."
+        P.set_max_delay(C.delay)
+        updater.source.set_max_delay(updater.delay)
         C._nstate_mod=0 # modulation of synaptic weights
         
     def __call__(self):

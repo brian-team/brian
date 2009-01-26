@@ -1,12 +1,9 @@
 '''
-Network (CUBA) with depressing synapses
-Excitatory synapses are depressing, inhibitory ones are not
+Network (CUBA) with short-term synaptic plasticity for excitatory synapses
+(Depressing at long timescales, facilitating at short timescales)
 '''
 from brian import *
 from time import time
-
-U_SE=.2
-tau_rec=500*ms
 
 eqs='''
 dv/dt = (ge+gi-(v+49*mV))/(20*ms) : volt
@@ -20,7 +17,7 @@ Pe=P.subgroup(3200)
 Pi=P.subgroup(800)
 Ce=Connection(Pe,P,'ge',weight=1.62*mV,sparseness=.02)
 Ci=Connection(Pi,P,'gi',weight=-9*mV,sparseness=.02)
-stp=STP(Ce,taud=tau_rec,tauf=.1*ms,U=U_SE)
+stp=STP(Ce,taud=200*ms,tauf=20*ms,U=.2)
 M=SpikeMonitor(P)
 rate=PopulationRateMonitor(P)
 t1=time()

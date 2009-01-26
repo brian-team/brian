@@ -38,7 +38,32 @@ Spike trains recorded by a :class:`SpikeMonitor` can be displayed as raster plot
 Usual options of the ``plot`` command can also be passed to :func:`raster_plot`. One may also pass
 several spike monitors as arguments.
 
+Statistics
+----------
+Here are a few functions to analyse first and second order statistical properties
+of spike trains, defined as ordered lists of spike times:
 
+* Firing rate: ``firing_rate(spikes)`` where ``spikes`` is a spike train (list of spike times).
+* Coefficient of variation: ``CV(spikes)``.
+* Cross-correlogram: ``correlogram(T1,T2,width=20*ms,bin=1*ms,T=None)`` returns
+  the cross-correlogram of spike trains T1 and T2 with lag in [-width,width] and given bin size.
+  T is the total duration (optional) and should be greater than the duration of T1 and T2.
+  The result the rate of coincidences in each bin, returned as an array.
+* Autocorrelogram: ``autocorrelogram(T0,width=20*ms,bin=1*ms,T=None)`` is the same as
+  ``correlogram(T0,T0,width=20*ms,bin=1*ms,T=None)``.
+* Cross-correlation function: ``CCF(T1,T2,width=20*ms,bin=1*ms,T=None)`` returns the cross-correlation
+  function of T1 and T2, which is the same as the cross-correlogram divided by the bin size (which makes the
+  result independent of the bin size).
+* Autocorrelation function: ``ACF(T0,width=20*ms,bin=1*ms,T=None)``, same as
+  ``CCF(T0,T0,width=20*ms,bin=1*ms,T=None)``.
+* Cross-covariance function: ``CCVF(T1,T2,width=20*ms,bin=1*ms,T=None)`` is the cross-correlation
+  function of T1 and T2 minus for the cross-correlation of independent spike trains with the same rates
+  (product of rates).
+* Auto-covariance function: ``ACVF(T0,width=20*ms,bin=1*ms,T=None)`` is the same as
+  ``CCVF(T0,T0,width=20*ms,bin=1*ms,T=None)``.
+* Total correlation coefficient: ``total_correlation(T1,T2,width=20*ms,T=None)`` is
+  the integral of the cross-covariance function divided by the rate of T1, typically (but not
+  always) between 0 and 1.
 
 .. TODO: docs:histograms
 	Histograms
