@@ -1,11 +1,18 @@
 '''
 Spike-timing dependent plasticity
 Adapted from Song, Miller and Abbott (2000)
+
+Time (slow PC):
+  6.8 * real time without STDP
+  9.3 with STDP
+  8.5 with STDP and dense matrix
+  6.9 with STDP and no input spike
+  meaning most of STDP time is for weight changes
 '''
 from brian import *
 from time import time
 
-#defaultclock.dt=.01*ms
+#defaultclock.dt=.02*ms
 
 taum=20*ms
 tau_post=20*ms
@@ -34,10 +41,11 @@ dgi/dt=-gi/taui : 1
 #dA_post/dt=-A_post/tau_post : 1
 #'''
 
-input=PoissonGroup(1000,rates=30*Hz)
+input=PoissonGroup(1000,rates=15*Hz)
 input_in=PoissonGroup(1,rates=Fin)
 neurons=NeuronGroup(1,model=eqs_neurons,threshold=vt,reset=vr)
-synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax)
+synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax,
+                    structure='dense')
 synapses_in=Connection(input_in,neurons,'gi',weight=gin)
 neurons.v=vr
 
@@ -48,7 +56,7 @@ stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax)
 rate=PopulationRateMonitor(neurons)
 
 start_time=time()
-run(10*second)
+run(30*second)
 print "Simulation time:",time()-start_time
 
 subplot(211)
