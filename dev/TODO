@@ -1,5 +1,7 @@
-* Delayed connections
+(* Delayed connections)
+* Checks STDP/STP
 * docs for specifying weight matrix in Connection init
+* tutorials/examples update
 * Clean NeuronGroup init, in particular S0 is strangely handled; remove the
 init keyword? (in fact S0 is used mostly for unit checking)
 * Documentation for statistics
@@ -7,26 +9,26 @@ init keyword? (in fact S0 is used mostly for unit checking)
 * Remove Model (from code and tutorials); use Deprecated warning?
 * Update documentation with string reset/threshold
 * String reset with multiline strings
-* Neuron = NeuronGroup(1,..)
-* Refactor namespace finding in strings (maybe function in inspection)
-* Unit checking in string resets and thresholds
+(* Neuron = NeuronGroup(1,..))
+(* Refactor namespace finding in strings (maybe function in inspection))
+(* Unit checking in string resets and thresholds)
 
-* Cluster computing
+(* Cluster computing)
 Idea: use pypar, it seems really simple to use
 http://datamining.anu.edu.au/~ole/pypar/
 
-* Compound linear/nonlinear state updaters?
+(* Compound linear/nonlinear state updaters?)
 For example, often there is a linear and nonlinear part of the equation,
 e.g. dv/dt is nonlinear, but you have some auxiliary variables to define
 an alpha synapse that can be considered separately and are linear.
 
-* Better LinearStateUpdater
+(* Better LinearStateUpdater)
 In most cases, the update matrix is degenerate only because of the parameters.
 It would be better to take care of this directly (separate dynamical variables
 and parameters, and calculate the matrix).
 Other thing: use A**100 instead of 100 time steps.
 
-* Add MultiLinearStateUpdater to Brian
+(* Add MultiLinearStateUpdater to Brian)
 Need to decide what the syntax should be, e.g. could have specification of constant
 parameters in the Equations, e.g.
 eqs = '''
@@ -36,12 +38,11 @@ const tau : second
 At first this would only be used by MultiLinearStateUpdater
 but in principle could also be used by nonlinear mechanisms for better optimisation.
 
-* refractory can be a vector
+(* refractory can be a vector)
 refractory shouldn't have to be a constant for the group.
 
-* Why is t a vector?
+(* Why is t a vector?)
 Figure out why group.t is a vector. It might have to do with units.
 
-* Heterogeneous delays (fix to work with new connection matrices)
-* Use the GPU: complete project with TechX to use GPU accelerated versions of code.
-* Meaningful error messages: Improve catching of errors and usefulness of error messages
+(* Use the GPU: complete project with TechX to use GPU accelerated versions of code.)
+(* Meaningful error messages: Improve catching of errors and usefulness of error messages)
