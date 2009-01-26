@@ -1,3 +1,4 @@
+* Update reference sheet
 (* Delayed connections)
 * Checks STDP/STP
 * docs for specifying weight matrix in Connection init
