@@ -41,7 +41,7 @@ TODO: some of the module is obsolete
 
 __all__=['is_affine','depends_on','Term','get_global_term',\
          'get_var_names','check_equations_units','fill_vars','AffineFunction',\
-         'get_identifiers','modified_variables','namespace']
+         'get_identifiers','modified_variables','namespace','clean_text']
 
 from numpy import array
 from units import *
@@ -85,6 +85,21 @@ def get_identifiers(expr):
     # cleaner: parser.expr(expr).tolist() then find leaves of the form [1,name]
     return parser.suite(expr).compile().co_names
 
+def clean_text(expr):
+    '''
+    Cleans a Python expression or statement:
+    * Remove comments (# comment)
+    * Merge multi-line statements (\)
+    * Split at semi-columns (careful: indentation is ignored)
+    '''
+    # Merge multi-line statements
+    expr=re.sub('\\\s*?\n',' ',expr)
+    # Remove comments
+    expr=re.sub('#.*','',expr)
+    # Split at semi-columns
+    expr=re.sub(';','\n',expr)
+    return expr
+
 def modified_variables(expr):
     '''
     Returns the list of variables or functions in expr that are in left-hand sides, e.g.:
@@ -98,12 +113,7 @@ def modified_variables(expr):
     TODO: better handling of semi-columns (;)
     '''
     vars=get_identifiers(expr)
-    # Merge multi-line statements
-    expr=re.sub('\\\s*?\n',' ',expr)
-    # Remove comments
-    expr=re.sub('#.*','',expr)
-    # Split at semi-columns
-    expr=re.sub(';','\n',expr)
+    expr=clean_text(expr)
     # Find lines that start by an identifier
     mod_vars=[]
     for line in expr.splitlines():

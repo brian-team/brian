@@ -8,9 +8,12 @@ dv/dt = -v/(10*ms) : volt
 dvt/dt = (10*mV-vt)/(15*ms) : volt
 '''
 
-IF = NeuronGroup(1, model=eqs,
-        reset='v=0*mV;vt+=3*mV',
-        threshold='v>vt')
+reset='''
+v=0*mV
+vt+=3*mV
+'''
+
+IF = NeuronGroup(1, model=eqs,reset=reset,threshold='v>vt')
 IF.rest()
 PG = PoissonGroup(1, 500*Hz)
 

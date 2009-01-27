@@ -190,23 +190,10 @@ class StringReset(Reset):
     A reset specified by a string expression.
     '''
     def __init__(self,expr,level=0):
-        # Build the namespace
-        frame=inspect.stack()[level+1][0]
-        global_namespace,local_namespace=frame.f_globals,frame.f_locals
-        # Find external objects
-        vars=list(get_identifiers(expr))
-        self._namespace={}
-        self._vars=[] # neuron group variables
-        for var in vars:
-            if var in local_namespace: #local
-                self._namespace[var]=local_namespace[var]
-            elif var in global_namespace: #global
-                self._namespace[var]=global_namespace[var]
-            elif var in globals(): # typically units
-                self._namespace[var]=globals()[var]
-            else: # assume it is a neuron group variable
-                self._vars.append(var)
-                expr=re.sub("\\b"+var+"\\b",var+'[_spikes_]',expr)
+        self._namespace,unknowns=namespace(expr,level=level+1,return_unknowns=True)
+        self._vars=unknowns
+        for var in unknowns:
+            expr=re.sub("\\b"+var+"\\b",var+'[_spikes_]',expr)
         self._code=compile(expr,"StringReset","exec")
         
     def __call__(self,P):

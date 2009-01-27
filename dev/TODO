@@ -1,15 +1,12 @@
 * Update examples (connection initialisation)
 * Update reference sheet
-(* Delayed connections)
 * docs for specifying weight matrix in Connection init
 * tutorials/examples update
 * Clean NeuronGroup init, in particular S0 is strangely handled; remove the
 init keyword? (in fact S0 is used mostly for unit checking)
 * Remove Model (from code and tutorials); use Deprecated warning?
 * Update documentation with string reset/threshold
-* String reset with multiline strings
 (* Neuron = NeuronGroup(1,..))
-(* Refactor namespace finding in strings (maybe function in inspection))
 (* Unit checking in string resets and thresholds)
 
 (* Cluster computing)
