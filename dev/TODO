@@ -1,6 +1,6 @@
 * Update reference sheet
 * docs for specifying weight matrix in Connection init
-* tutorials/examples update
+* tutorials update
 * Clean NeuronGroup init, in particular S0 is strangely handled; remove the
 init keyword? (in fact S0 is used mostly for unit checking)
 * Remove Model (from code and tutorials); use Deprecated warning?
