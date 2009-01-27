@@ -26,8 +26,7 @@ dV/dt = (-V+Iext)/tau : volt
 Iext: volt
 '''
 # A single leaky I&F neuron with simclock as its clock
-model = Model(equation=eqs, reset=0*mV, threshold=10*mV, clock=simclock)
-G = NeuronGroup(1, model=model)
+G = NeuronGroup(1, model=eqs,reset=0*mV, threshold=10*mV, clock=simclock)
 G.V=5*mV
 # This function will be run in sync with inputclock i.e. every 100 ms
 @network_operation(clock=inputclock)

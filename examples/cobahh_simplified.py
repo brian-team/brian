@@ -67,10 +67,8 @@ P=NeuronGroup(4000,model=eqs,
     implicit=True,freeze=True)
 Pe=P.subgroup(3200)
 Pi=P.subgroup(800)
-Ce=Connection(Pe,P,'ge')
-Ci=Connection(Pi,P,'gi')
-Ce.connect_random(Pe, P, 0.02,weight=we)
-Ci.connect_random(Pi, P, 0.02,weight=wi)
+Ce=Connection(Pe,P,'ge',weight=we,sparseness=0.02)
+Ci=Connection(Pi,P,'gi',weight=wi,sparseness=0.02)
 # Initialization
 P.v=El+(randn(len(P))*5-5)*mV
 P.ge=(randn(len(P))*1.5+4)*10.*nS

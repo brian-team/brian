@@ -15,10 +15,8 @@ P.v=-60*mV+10*mV*rand(len(P))
 Pe=P.subgroup(3200)
 Pi=P.subgroup(800)
 
-Ce=Connection(Pe,P,'ge')
-Ci=Connection(Pi,P,'gi')
-Ce.connect_random(Pe, P, 0.02,weight=1.62*mV)
-Ci.connect_random(Pi, P, 0.02,weight=-9*mV)
+Ce=Connection(Pe,P,'ge',weight=1.62*mV,sparseness=0.02)
+Ci=Connection(Pi,P,'gi',weight=-9*mV,sparseness=0.02)
 
 M=SpikeMonitor(P)
 

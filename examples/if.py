@@ -10,10 +10,7 @@ tau = 10*ms
 Vr = -70*mV
 Vt = -55*mV
 
-model = Model(equations='''
-    V : volt
-    ''', threshold=Vt, reset=Vr)
-G = NeuronGroup(1,model)
+G = NeuronGroup(1,model='V:volt',threshold=Vt, reset=Vr)
 
 input = SpikeGeneratorGroup(1,[(0,t*ms) for t in linspace(10,100,25)])
 

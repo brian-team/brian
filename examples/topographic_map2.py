@@ -26,12 +26,10 @@ layer2.x=linspace(0.,1.,len(layer2))
 # Generic connectivity function
 topomap=lambda i,j,x,y,sigma: exp(-abs(x[i]-y[j])/sigma)
 
-feedforward=Connection(layer1,layer2)
-feedforward.connect_random(layer1,layer2,.5,
+feedforward=Connection(layer1,layer2,sparseness=.5,
                            weight=lambda i,j:topomap(i,j,layer1.x,layer2.x,.3)*3*mV)
 
-recurrent=Connection(layer2,layer2)
-recurrent.connect_random(layer2,layer2,.5,
+recurrent=Connection(layer2,layer2,sparseness=.5,
                          weight=lambda i,j:topomap(i,j,layer1.x,layer2.x,.2)*.5*mV)
 
 spikes=SpikeMonitor(layer2)

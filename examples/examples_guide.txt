@@ -3,7 +3,6 @@ List of examples
 * adaptive_threshold: an integrate-and-fire model with a threshold that increases
 with each spike and relaxes exponentially, and Poisson input.
 * adaptive: an integrate-and-fire model with adaptation.
-* adex: adaptive exponential integrate-and-fire model.
 * cable: a passive dendrite.
 * COBA: a network of IF models with synaptic conductances.
 * cobahh_simplified: a network of Hodgkin-Huxley models.
@@ -36,10 +35,8 @@ Poisson input to subsets of the network.
 * rate_model: model where spikes are produced with probability v*dt.
 * reliability: reliability of spike timing.
 * ring: a ring of IF oscillators.
-* sfc: a synfire chain.
 * stim2d: how to do a layer of neurons responding to a 2D stimulus
 * stopping: demonstration of how to stop a stimulation during a run.
-* synfire_chains: a synfire chain (simpler).
 * topographic_map: a two-layer network with topographic random connections, including
 lateral connections.
 * topographic_map2: a two-layer network with topographic random connections, including
@@ -59,6 +56,9 @@ electrophysiology/    (simulation of intracellular recordings)
 * voltageclamp: single-electrode continuous voltage clamp
 
 frompapers/    (models adapted from published papers)
+* Brette_Gerstner_2005: adaptive exponential integrate-and-fire model.
+* Diesmann_et_al_1999: synfire chains
+* Diesmann_et_al_1999_longer: synfire chains
 * Sturzl_et_al_2000:  Theory of Arachnid Prey Localization
 
 interface/    (web interface)

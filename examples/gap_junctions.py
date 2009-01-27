@@ -19,17 +19,17 @@ du/dt=(N*v0-u)/tau : volt # input from other neurons
 '''
 
 def myreset(P,spikes):
-    P.v_[spikes]=vr # reset
-    P.v_+=g_gap*beta*len(spikes) # spike effect
-    P.u_-=delta*len(spikes)
+    P.v[spikes]=vr # reset
+    P.v+=g_gap*beta*len(spikes) # spike effect
+    P.u-=delta*len(spikes)
 
 group=NeuronGroup(N,model=eqs,threshold=vt,reset=myreset)
 
 @network_operation
 def noise(cl):
     x=randn(N)*sigma*(cl.dt/tau)**.5
-    group.v_+=x
-    group.u_+=sum(x)
+    group.v+=x
+    group.u+=sum(x)
 
 trace=StateMonitor(group,'v',record=[0,1])
 spikes=SpikeMonitor(group)

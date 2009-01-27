@@ -30,12 +30,10 @@ eqs+=exp_conductance('gi',Ei,taui) # from library.synapses
 P=NeuronGroup(4000,model=eqs,threshold=-20*mvolt,reset=EL,refractory=2*ms)
 Pe=P.subgroup(3200)
 Pi=P.subgroup(800)
-Ce=Connection(Pe,P,'ge')
-Ci=Connection(Pi,P,'gi')
 we=1.5*nS # excitatory synaptic weight
 wi=2.5*we # inhibitory synaptic weight
-Ce.connect_random(Pe, P, 0.05,weight=we)
-Ci.connect_random(Pi, P, 0.05,weight=wi)
+Ce=Connection(Pe,P,'ge',weight=we,sparseness=0.05)
+Ci=Connection(Pi,P,'gi',weight=wi,sparseness=0.05)
 # Initialization
 P.vm=randn(len(P))*10*mV-70*mV
 P.ge=(randn(len(P))*2+5)*we
