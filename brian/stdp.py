@@ -233,6 +233,8 @@ class ExponentialSTDP(STDP):
             raise AttributeError,"Unknown update type "+update
         STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,wmax=wmax)
 
+# TODO: insert it in Equations, as a method returning an Equations object
+# for a given list of variables, with dependent variables
 def dependency_matrix(A):
     '''
     A is the (square) matrix of a differential system (or a difference system).
