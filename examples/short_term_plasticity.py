@@ -1,5 +1,5 @@
 '''
-Example with Tsodyks STP model
+Example with short term plasticity model
 Neurons with regular inputs and depressing synapses
 '''
 from brian import *
@@ -24,7 +24,7 @@ di/dt=-i/tau_e:amp
 '''
 neuron=NeuronGroup(N,model=eqs_neuron)
 
-C=Connection(input,neuron,'i',delay=200*ms)
+C=Connection(input,neuron,'i')
 C.connect_one_to_one(weight=A_SE)
 #stp=STP(C,taud=10*ms,tauf=100*ms,U=.1) # facilitation
 stp=STP(C,taud=100*ms,tauf=10*ms,U=.6) # depression

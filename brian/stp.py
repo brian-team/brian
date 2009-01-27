@@ -15,7 +15,7 @@ spike triggers modifications of the variables::
   u<-u+U*(1-u)
   x<-x*(1-u)
 
-Synaptic weights are modulated by the product u*x (in 0..1).
+Synaptic weights are modulated by the product u*x (in 0..1) (before update).
 '''
 # See BEP-1
 
@@ -76,8 +76,6 @@ class STP(NetworkOperation):
     du/dt=(U-u)/tauf  (facilitation)
     spike: u->u+U*(1-u);x->x*(1-u)
     u*x is the modulation factor (in 0..1) for the synaptic weight
-    
-    TODO: CHECK DELAYS
     '''
     def __init__(self,C,taud,tauf,U):
         NetworkOperation.__init__(self,lambda:None)
@@ -90,10 +88,6 @@ class STP(NetworkOperation):
         self.contained_objects=[updater]
         C.source=P
         C.delay=0
-        if C.delay<0:
-            raise AttributeError,"The Connection object must have a larger delay than the STP object."
-        P.set_max_delay(C.delay)
-        updater.source.set_max_delay(updater.delay)
         C._nstate_mod=0 # modulation of synaptic weights
         
     def __call__(self):

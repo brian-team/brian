@@ -30,14 +30,13 @@ Implementation
 A number of variables are involved in the model. Since they are only modified
 by presynaptic spikes, a group of the size of the presynaptic group P should be
 created, with the appropriate dynamics. This group G receives spikes from P through
-an IdentityConnection, which modify its variables. Spikes are directly forwarded
-to the postsynaptic group Q, with a modulation. That connection should replace
-the original connection between P and Q. This can be done simply by replacing
-the source variable of the Connection.
+a SpikeMonitor, which modify its variables in an event-driven way.
+Spikes are directly forwarded to the postsynaptic group Q, with a modulation.
+That connection should replace the original connection between P and Q.
+This can be done simply by replacing the source variable of the Connection.
 
 To deal with delays correctly, the delays from P->Q should be transferred to
-P->G and removed from P->Q, which might not be trivial. If those are not transferred,
-then the delays are assumed to be purely dendritic.
+P->G and removed from P->Q.
 
 The value of the modulation variable is only required at presynaptic spike times.
 It implies that the integration of the equations can be event-driven, which would
