@@ -33,7 +33,7 @@
 # ----------------------------------------------------------------------------------
 # 
 """
-Neuron model base class
+Neuron model base class : DEPRECATED
 """
 
 __all__ = ['Model']
@@ -43,6 +43,7 @@ import neurongroup
 import magic
 from equations import *
 from brian_unit_prefs import bup
+import warnings
 
 class Model(object):
     """
@@ -128,6 +129,7 @@ class Model(object):
     """
     @check_units(refractory=second,maxdelay=second)
     def __init__(self,**kwds):
+        warnings.warn('Model object deprecated as of Brian 1.1', DeprecationWarning)
         # todo: define a set of acceptable keywords and delete the rest
         if 'equation' in kwds: kwds['model']=kwds.pop('equation')
         if 'equations' in kwds: kwds['model']=kwds.pop('equations')

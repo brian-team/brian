@@ -16,7 +16,6 @@ In this tutorial, we introduce some of the basic concepts of a Brian simulation:
 
 The following Brian classes will be introduced:
 
-* :class:`Model`
 * :class:`NeuronGroup`
 * :class:`Connection`
 * :class:`SpikeMonitor`

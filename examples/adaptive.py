@@ -9,7 +9,9 @@ dv/dt = (-w-v)/(10*ms) : volt # the membrane equation
 dw/dt = -w/(30*ms) : volt # the adaptation current
 '''
 # The adaptation variable increases with each spike
-IF = NeuronGroup(1,model=eqs,reset="v=0*mV;w+=3*mV",threshold=20*mV)
+IF = NeuronGroup(1,model=eqs,threshold=20*mV,
+                 reset='''v  = 0*mV
+                          w += 3*mV ''')
 
 C = Connection(PG,IF,'v',weight=3*mV)
 

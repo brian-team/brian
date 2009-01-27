@@ -15,10 +15,8 @@ Vr  =-60*mvolt          # reset value
 El  =-49*mvolt          # resting potential (same as the reset)
 psp = 0.5*mvolt         # postsynaptic potential size
 
-model = Model(equation='dV/dt = -(V-El)/tau : volt',
-              threshold=Vt,reset=Vr)
-
-G = NeuronGroup(N=40,model=model)
+G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
+              threshold=Vt, reset=Vr)
 
 C = Connection(G,G)
 C.connect_random(G,G,0.1,weight=psp)

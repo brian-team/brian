@@ -44,10 +44,10 @@ eqs_neurons='''
 dv/dt=-v/tau+sigma*(2./tau)**.5*xi : 1
 '''
 neurons=NeuronGroup(N,model=eqs_neurons,threshold=1,reset=0)
-synapses=Connection(ears,neurons,'v',structure='dense',delays=True,max_delay=1.1*max_delay)
+synapses=Connection(ears,neurons,'v',structure='dense',delay=True,max_delay=1.1*max_delay)
 synapses.connect_full(ears,neurons,weight=.5)
-synapses.delays[0,:]=linspace(0*ms,1.1*max_delay,N)
-synapses.delays[1,:]=linspace(0*ms,1.1*max_delay,N)[::-1]
+synapses.delay[0,:]=linspace(0*ms,1.1*max_delay,N)
+synapses.delay[1,:]=linspace(0*ms,1.1*max_delay,N)[::-1]
 spikes=SpikeMonitor(neurons)
 
 run(1000*ms)

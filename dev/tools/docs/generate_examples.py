@@ -1,4 +1,4 @@
-import os, re, glob, brian, inspect, compiler, unicodedata
+import os, re, glob, brian, inspect, compiler, unicodedata, fnmatch
 documentable_names = set()
 for k, v in brian.__dict__.iteritems():
     try:
@@ -7,7 +7,35 @@ for k, v in brian.__dict__.iteritems():
     except TypeError:
         pass
 os.chdir('../../../examples')
-examplesfnames = [fname for fname in glob.glob('*.py') if 'parallelpythonised' not in fname]
+
+class GlobDirectoryWalker:
+    # a forward iterator that traverses a directory tree
+
+    def __init__(self, directory, pattern="*"):
+        self.stack = [directory]
+        self.pattern = pattern
+        self.files = []
+        self.index = 0
+
+    def __getitem__(self, index):
+        while 1:
+            try:
+                file = self.files[self.index]
+                self.index = self.index + 1
+            except IndexError:
+                # pop next directory from stack
+                self.directory = self.stack.pop()
+                self.files = os.listdir(self.directory)
+                self.index = 0
+            else:
+                # got a filename
+                fullname = os.path.join(self.directory, file)
+                if os.path.isdir(fullname) and not os.path.islink(fullname):
+                    self.stack.append(fullname)
+                if fnmatch.fnmatch(file, self.pattern):
+                    return fullname
+
+examplesfnames = [fname for fname in GlobDirectoryWalker('.','*.py') if 'parallelpythonised' not in fname]
 examplesbasenames = [fname[:fname.find('.')] for fname in examplesfnames]
 examplescode = [open(fname,'r').read() for fname in examplesfnames]
 examplesdocs = []

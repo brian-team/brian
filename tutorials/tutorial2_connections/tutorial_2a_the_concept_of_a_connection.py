@@ -36,7 +36,6 @@ eqs = Equations('''
       dVa/dt = -Va/tau_a : volt
       dVb/dt = -Vb/tau_b : volt
       ''')
-model = Model(equations=eqs,threshold=Vt,reset=Vr)
 '''
 So far, we have defined a model neuron with two state variables, ``Va``
 and ``Vb``, which both decay exponentially towards 0, but with different
@@ -73,7 +72,7 @@ G1 = SpikeGeneratorGroup(2,spiketimes)
 Now we create a second group, with one neuron, according to the
 model we defined earlier.
 '''
-G2 = NeuronGroup(N=1,model=model)
+G2 = NeuronGroup(N=1, model=eqs, threshold=Vt, reset=Vr)
 '''
 Connections
 ~~~~~~~~~~~

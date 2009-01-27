@@ -25,11 +25,11 @@ El   = -49*mV          # resting potential
 we   = (60*0.27/10)*mV # excitatory synaptic weight
 wi   =  (20*4.5/10)*mV # inhibitory synaptic weight
 
-model = Model(equations = '''
+eqs = Equations('''
         dV/dt  = (ge-gi-(V-El))/taum : volt
         dge/dt = -ge/taue            : volt
         dgi/dt = -gi/taui            : volt
-        ''', threshold=Vt, reset=Vr)
+        ''')
 '''
 So far, this has been pretty similar to the previous part, the only
 difference is we have a couple more parameters, and we've added a
@@ -37,7 +37,7 @@ resting potential ``El`` into the equation for ``V``.
 
 Now we make lots of neurons:
 '''
-G = NeuronGroup(4000, model=model)
+G = NeuronGroup(4000, model=eqs, threshold=Vt, reset=Vr)
 '''
 Next, we divide them into subgroups. The :meth:`~NeuronGroup.subgroup` method of a
 :class:`NeuronGroup` returns a new :class:`NeuronGroup` that can be used in

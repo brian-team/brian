@@ -37,11 +37,12 @@ taui = 10*ms
 Vt   = 10*mV
 Vr   =  0*mV
 
-model = Model(equations = '''
-        dV/dt  = (-V+ge-gi)/taum : volt
-        dge/dt = -ge/taue        : volt
-        dgi/dt = -gi/taui        : volt
-        ''', threshold=Vt, reset=Vr)
+eqs = Equations('''
+      dV/dt  = (-V+ge-gi)/taum : volt
+      dge/dt = -ge/taue        : volt
+      dgi/dt = -gi/taui        : volt
+      ''')
+
 '''
 Connections
 ~~~~~~~~~~~
@@ -57,7 +58,7 @@ spiketimes = [(0,1*ms),(0,10*ms),
               (0,50*ms),(0,55*ms)]
 
 G1 = SpikeGeneratorGroup(2,spiketimes)
-G2 = NeuronGroup(N=1,model=model)
+G2 = NeuronGroup(N=1, model=eqs, threshold=Vt, reset=Vr)
 
 C1 = Connection(G1,G2,'ge')
 C2 = Connection(G1,G2,'gi')

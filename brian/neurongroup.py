@@ -82,22 +82,31 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         a :class:`StateUpdater` object, or a list or tuple of :class:`Equations` and
         strings.
     ``threshold=None``
-        A :class:`Threshold` object, a function or a scalar quantity.
+        A :class:`Threshold` object, a function, a scalar quantity or a string.
         If ``threshold`` is a function with one argument, it will be
         converted to a :class:`SimpleFunThreshold`, otherwise it will be a
         :class:`FunThreshold`. If ``threshold`` is a scalar, then a constant
         single valued threshold with that value will be used. In this case,
         the variable to apply the threshold to will be guessed. If there is
         only one variable, or if you have a variable named one of
-        ``V``, ``Vm``, ``v`` or ``vm`` it will be used.
+        ``V``, ``Vm``, ``v`` or ``vm`` it will be used. If ``threshold`` is a
+        string then the appropriate threshold type will be chosen, for example
+        you could do ``threshold='V>10*mV'``. The string must be a one line
+        string.
     ``reset=None``
-        A :class:`Reset` object, a function or a scalar quantity. If it's a
+        A :class:`Reset` object, a function, a scalar quantity or a string. If it's a
         function, it will be converted to a :class:`FunReset` object. If it's
         a scalar, then a constant single valued reset with that value will
         be used. In this case,
         the variable to apply the reset to will be guessed. If there is
         only one variable, or if you have a variable named one of
-        ``V``, ``Vm``, ``v`` or ``vm`` it will be used.
+        ``V``, ``Vm``, ``v`` or ``vm`` it will be used. If ``reset`` is a
+        string it should be a series of expressions which are evaluated for
+        each neuron that is resetting. The series of expressions can be
+        multiline or separated by a semicolon. For example,
+        ``reset=`Vt+=5*mV; V=Vt'``. Statements involving ``if`` constructions
+        will often not work because the code is automatically vectorised.
+        For such constructions, use a function instead of a string.
     ``refractory=0*ms``
         A refractory period, used in combination with the ``reset`` value
         if it is a scalar.

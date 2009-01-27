@@ -45,8 +45,7 @@ class TestSequenceFunctions(unittest.TestCase):
         Vr  =-60*mvolt          # reset value
         El  =-49*mvolt          # resting potential (same as the reset)
         dV = 'dV/dt = -(V-El)/tau : volt # membrane potential'
-        model = Model(equation=dV,threshold=Vt,reset=Vr)
-        G = NeuronGroup(N=40,model=model)
+        G = NeuronGroup(N=40,model=dV,threshold=Vt,reset=Vr)
         G.V = El
         M = SpikeMonitor(G)
         run(1*second)

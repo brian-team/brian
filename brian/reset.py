@@ -45,6 +45,7 @@ from clock import *
 import inspect
 import re
 from inspection import *
+from utils.documentation import flattened_docstring
 
 def _define_and_test_interface(self):
     """
@@ -190,6 +191,7 @@ class StringReset(Reset):
     A reset specified by a string expression.
     '''
     def __init__(self,expr,level=0):
+        expr = flattened_docstring(expr)
         self._namespace,unknowns=namespace(expr,level=level+1,return_unknowns=True)
         self._vars=unknowns
         for var in unknowns:
