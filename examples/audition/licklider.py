@@ -5,7 +5,6 @@ delay lines) with phase locking.
 R. Brette
 '''
 from brian import *
-from brian.experimental.heterog_delay import *
 
 defaultclock.dt=.02*ms
 dt=defaultclock.dt
@@ -34,7 +33,7 @@ eqs_neurons='''
 dv/dt=-v/tau+sigma*(2./tau)**.5*xi : 1
 '''
 neurons=NeuronGroup(N,model=eqs_neurons,threshold=1,reset=0)
-synapses=DelayConnection(receptors,neurons,'v',structure='dense',max_delay=1.1*max_delay)
+synapses=Connection(receptors,neurons,'v',structure='dense',max_delay=1.1*max_delay,delays=True)
 synapses.connect_full(receptors,neurons,weight=.5)
 synapses.delays[1,:]=1./exp(linspace(log(min_freq/Hz),log(max_freq/Hz),N))
 spikes=SpikeMonitor(neurons)
