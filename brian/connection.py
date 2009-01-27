@@ -49,6 +49,7 @@ __all__=[
 
 import copy
 from itertools import izip
+import itertools
 from random import sample
 import bisect
 from units import *
@@ -406,6 +407,8 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
         else:
             ndarray.__setitem__(self,index,W)
 
+oldscipy = scipy.__version__.startswith('0.6.')
+
 class SparseMatrix(scipy.sparse.lil_matrix):
     '''
     Used as the base for sparse construction matrix classes, essentially just scipy's lil_matrix.
@@ -444,6 +447,17 @@ class SparseMatrix(scipy.sparse.lil_matrix):
                     jj=bisect.bisect(row,j0) # Find the insertion point
                     row[jj:jj]=range(j0,j0+nq)
                     data[jj:jj]=rowW
+        elif oldscipy and isinstance(i, int) and isinstance(j, (list, tuple, numpy.ndarray)):
+            row = dict(izip(self.rows[i], self.data[i]))
+            try:
+                row.update(dict(izip(j,W)))
+            except TypeError:
+                row.update(dict(izip(j,itertools.repeat(W))))
+            items = row.items()
+            items.sort()
+            row, data = izip(*items)
+            self.rows[i] = list(row)
+            self.data[i] = list(data)
         else:
             scipy.sparse.lil_matrix.__setitem__(self,index,W)
 
