@@ -33,6 +33,7 @@ Poisson input to subsets of the network.
 * poissongroup: Poisson input to an IF neuron.
 * pulsepacket: demonstrates the use of PulsePacket and SpikeGenerator objects.
 * rate_model: model where spikes are produced with probability v*dt.
+* reliability: reliability of spike timing.
 * ring: a ring of IF oscillators.
 * sfc: a synfire chain.
 * stim2d: how to do a layer of neurons responding to a 2D stimulus
@@ -46,6 +47,8 @@ lateral connections.
 * two_neurons: two connected neurons with delays.
 
 audition/    (auditory models)
+* jeffress: Jeffress model of sound localisation
+* licklider: Licklider model of pitch perception
 
 electrophysiology/    (simulation of intracellular recordings)
 * AEC: active electrode compensation
@@ -53,6 +56,9 @@ electrophysiology/    (simulation of intracellular recordings)
 * DCC: discontinuous current clamp
 * SEVC: single-electrode discontinuous voltage clamp
 * voltageclamp: single-electrode continuous voltage clamp
+
+frompapers/    (models adapted from published papers)
+* Sturzl_et_al_2000:  Theory of Arachnid Prey Localization
 
 interface/    (web interface)
 * interface: web interface (requires cherrypy)

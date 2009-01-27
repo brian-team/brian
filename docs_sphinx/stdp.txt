@@ -40,6 +40,7 @@ Current limitations
 * Presynaptic and postsynaptic variables must not interact, that is,
   a variable cannot be modified by both presynaptic and postsynaptic
   spikes. However, synaptic weight modifications can depend on all variables.
+* STDP currently works only with homogeneous delays, not heterogeneous ones.
 
 Exponential STDP
 ^^^^^^^^^^^^^^^^

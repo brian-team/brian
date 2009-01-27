@@ -1,9 +1,11 @@
 '''
-Jeffress model.
+Jeffress model, adapted with spiking neuron models.
 A sound source (white noise) is moving around the head.
 Delay differences between the two ears are used to determine the azimuth of the source.
 Delays are mapped to a neural place code using delay lines (each neuron receives input
 from both ears, with different delays).
+
+R. Brette
 '''
 from brian import *
 from brian.experimental.heterog_delay import *
@@ -19,7 +21,7 @@ def sound(t):
 
 # Ears and sound motion around the head (constant angular speed)
 sound_speed=300*metre/second
-interaural_distance=20*cm
+interaural_distance=20*cm # big head!
 max_delay=interaural_distance/sound_speed
 print "Maximum interaural delay:",max_delay
 angular_speed=2*pi*radian/second # 1 turn/second
@@ -50,9 +52,5 @@ synapses.delays[1,:]=linspace(0*ms,1.1*max_delay,N)[::-1]
 spikes=SpikeMonitor(neurons)
 
 run(1000*ms)
-#subplot(211)
-#plot(traces.times/ms,traces[0])
-#plot(traces.times/ms,traces[1])
-#subplot(212)
 raster_plot(spikes)
 show()
