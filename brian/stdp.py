@@ -1,4 +1,6 @@
-# STDP
+'''
+Spike-timing-dependent plasticity
+'''
 # See BEP-2-STDP
 from inspection import *
 from equations import *
@@ -7,7 +9,7 @@ from network import NetworkOperation
 from neurongroup import NeuronGroup
 from stateupdater import get_linear_equations,LinearStateUpdater
 from scipy.linalg import expm
-from scipy import dot,eye,zeros,array,clip,exp
+from scipy import dot,eye,zeros,array,clip,exp,Inf
 import re
 
 __all__=['STDP','ExponentialSTDP']
@@ -44,13 +46,13 @@ class STDP(NetworkOperation):
     TODO: use equations instead of linearupdater (-> nonlinear equations possible)
     TODO: allow pre and postsynaptic group variables
     '''
-    def __init__(self,C,eqs,pre,post,bounds=None,level=0,clock=None):
+    def __init__(self,C,eqs,pre,post,wmax=Inf,level=0,clock=None):
         '''
         C: connection object
         eqs: differential equations (with units)
         pre: Python code for presynaptic spikes
         post: Python code for postsynaptic spikes
-        bounds: bounds on the weights, e.g. (0,gmax) (default no bounds)
+        wmax: maximum weight (default unlimited)
         '''
         NetworkOperation.__init__(self,lambda:None,clock=clock)
         # Merge multi-line statements
@@ -117,18 +119,16 @@ class STDP(NetworkOperation):
             pre=re.sub(r'\b'+var+r'\b',var+'[i]',pre)
         pre=re.sub(r'\bw\b','w[i,:]',pre) # synaptic weight
         # Post code
-        for var in vars_post: # presynaptic variables (vectorisation)
+        for var in vars_post: # postsynaptic variables (vectorisation)
             post=re.sub(r'\b'+var+r'\b',var+'[i]',post)
         post=re.sub(r'\bw\b','w[:,i]',post) # synaptic weight
         
         # Bounds: add one line to pre/post code (clip(w,min,max,w))
-        if bounds is not None: # would that work with SparseVector? probably not...
-            # or actual code? (rather than compiled string)
-            min,max=bounds
-            pre+='\n    w[i,:]=clip(w[i,:],%(min)f,%(max)f)' % {'min':min,'max':max}
-            post+='\n    w[:,i]=clip(w[:,i],%(min)f,%(max)f)' % {'min':min,'max':max}
-            pre_namespace['clip']=clip
-            post_namespace['clip']=clip
+        # or actual code? (rather than compiled string)
+        pre+='\n    w[i,:]=clip(w[i,:],0,%(max)f)' % {'max':wmax}
+        post+='\n    w[:,i]=clip(w[:,i],0,%(max)f)' % {'max':wmax}
+        pre_namespace['clip']=clip
+        post_namespace['clip']=clip
         
         # Compile code
         pre_code=compile(pre,"Presynaptic code","exec")
@@ -137,7 +137,7 @@ class STDP(NetworkOperation):
         # create forward and backward Connection objects or SpikeMonitor objects
         pre_updater=STDPUpdater(C.source,C,vars=vars_pre,code=pre_code,namespace=pre_namespace)
         post_updater=STDPUpdater(C.target,C,vars=vars_post,code=post_code,namespace=post_namespace)
-                
+        
         # Neuron groups
         G_pre=NeuronGroup(len(C.source),model=LinearStateUpdater(M_pre,clock=self.clock))
         G_post=NeuronGroup(len(C.target),model=LinearStateUpdater(M_post,clock=self.clock))
@@ -176,13 +176,11 @@ class ExponentialSTDP(STDP):
     
     update =
       'additive' : modifications are additive (independent of synaptic weight)
+                   (or "hard bounds")
       'multiplicative' : modifications are multiplicative (proportional to w)
-      'mixed' : post-pre modifications are multiplicative,
-                pre-post modifications are additive
-      'mixed2' : pre-post modifications are multiplicative,
-                 post-pre modifications are additive
-      
-    TODO: faster version
+                   (or "soft bounds")
+      'mixed' : depression is multiplicative,
+                potentiation is additive
     '''
     def __init__(self,C,taup,taum,Ap,Am,interactions='all',wmax=None,
                  update='additive'):
@@ -191,7 +189,7 @@ class ExponentialSTDP(STDP):
 
         eqs=Equations('''
         dA_pre/dt=-A_pre/taup : 1
-        dA_post/dt=-A_post/taum : 1''',taup=taup,taum=taum)
+        dA_post/dt=-A_post/taum : 1''',taup=taup,taum=taum,wmax=wmax)
         if interactions=='all':
             pre='A_pre+=Ap'
             post='A_post+=Am'
@@ -207,23 +205,33 @@ class ExponentialSTDP(STDP):
         else:
             raise AttributeError,"Unknown interaction type "+interactions
         
-        min,max=0,wmax
-        
         if update=='additive':
             pre+='\nw+=A_post'
             post+='\nw+=A_pre'
-        elif update=='multiplicative': # check that
-            pre+='\nw*=(1+A_post)'
-            post+='\nw*=(1+A_pre)'
+        elif update=='multiplicative':
+            if Am<0:
+                pre+='\nw*=(1+A_post)'
+            else:
+                pre+='\nw+=(wmax-w)*A_post'
+            if Ap<0:
+                post+='\nw*=(1+A_pre)'
+            else:
+                post+='\nw+=(wmax-w)*A_pre'
         elif update=='mixed':
-            pre+='\nw*=(1+A_post)'
-            post+='\nw+=A_pre'
-        elif update=='mixed2':
-            pre+='\nw+=A_post'
-            post+='\nw*=(1+A_pre)'
+            if Am<0 and Ap>0:
+                pre+='\nw*=(1+A_post)'
+                post+='\nw+=A_pre'
+            elif Am>0 and Ap<0:
+                post+='\nw*=(1+A_pre)'
+                pre+='\nw+=A_post'
+            else:
+                if Am>0:
+                    raise AttributeError,"There is no depression in STDP rule"
+                else:
+                    raise AttributeError,"There is no potentiation in STDP rule"
         else:
             raise AttributeError,"Unknown update type "+update
-        STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,bounds=(min,max))
+        STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,wmax=wmax)
 
 def dependency_matrix(A):
     '''

@@ -5,8 +5,6 @@ Adapted from Song, Miller and Abbott (2000) and Song and Abbott (2001)
 from brian import *
 from time import time
 
-#defaultclock.dt=.02*ms
-
 taum=20*ms
 tau_pre=20*ms
 tau_post=tau_pre*5
