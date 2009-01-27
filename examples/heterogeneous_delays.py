@@ -18,13 +18,13 @@ H = NeuronGroup(100, model='dV/dt=-V/(10*ms):volt')
 # Connection with delays, here the delays are specified as a function of (i,j)
 # giving the delay from neuron i to neuron j. In this case there is only one
 # presynaptic neuron so i will be 0.
-C = Connection(G, H, weight=5*mV, max_delay=10*ms,structure='dynamic',
-               delays=lambda i, j:10*ms*(j/50.-1)**2)
+C = Connection(G, H, weight=5*mV, max_delay=10*ms,
+               delay=lambda i, j:10*ms*(j/50.-1)**2)
 M = StateMonitor(H, 'V', record=True)
 run(40*ms)
 subplot(211)
 # These are the delays from neuron 0 to neuron i in ms
-plot([C.delays[0,i]/ms for i in range(100)])
+plot([C.delay[0,i]/ms for i in range(100)])
 ylabel('Delay (ms)')
 title('Delays')
 subplot(212)

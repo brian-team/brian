@@ -1047,9 +1047,23 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         propagated to in the target group.
     ``delay``
         The delay between a spike being generated at the source
-        and received at the target. At the moment, the mechanism
-        for delays only works for relatively short delays (an
-        error will be generated for delays that are too long).
+        and received at the target. Depending on the type of ``delay``
+        it has different effects. If ``delay`` is a scalar value, then
+        the connection will be initialised with all neurons having
+        that delay. For very long delays, this may raise an error. If
+        ``delay=True`` then the connection will be initialised as a
+        :class:`DelayConnection`, allowing heterogeneous delays (a
+        different delay for each synapse). ``delay`` can also be a
+        pair ``(min,max)`` or a function of one or two variables, in
+        both cases it will be initialised as a :class:`DelayConnection`,
+        see the documentation for that class for details. Note that in
+        these cases, initialisation of delays will only have the
+        intended effect if used with the ``weight`` and ``sparseness``
+        arguments below.
+    ``max_delay``
+        If you are using a connection with heterogeneous delays, specify
+        this to set the maximum allowed delay (smaller values use less
+        memory). The default is 5ms.
     ``modulation``
         The state variable name from the source group that scales
         the synaptic weights (for short-term synaptic plasticity).
@@ -1064,18 +1078,6 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         If ``weight`` is specified and ``sparseness`` is not, a full
         connection is assumed, otherwise random connectivity with this
         level of sparseness is assumed.
-    ``delays``
-        If not specified, a standard connection is used, otherwise a
-        :class:`DelayConnection` is used, allowing heterogeneous delays
-        (a different delay for each synapse). Set to ``True`` to allow
-        heterogeneous delays, or see the documentation for
-        :class:`DelayConnection` for other allowed values to initialise
-        delays in combination with the ``weight`` and ``sparseness``
-        values above.
-    ``max_delay``
-        If you are using a connection with heterogeneous delays, specify
-        this to set the maximum allowed delay (smaller values use less
-        memory). The default is 5ms.
     
     **Methods**
     
@@ -1178,17 +1180,15 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         typically just propagates the spikes obtained by calling
         the ``get_spikes`` method of the ``source`` :class:`NeuronGroup`.
     '''
-    @check_units(delay=second)
+    #@check_units(delay=second)
     def __init__(self,source,target,state=0,delay=0*msecond,modulation=None,
-                 structure='sparse',weight=None,sparseness=None,delays=None,max_delay=5*ms,**kwds):
-        if delays is not None:
-            if int(delay/source.clock.dt)>0:
-                raise ValueError('Cannot set delay and delays.')
-            if delays is True:
-                delays = None # this instructs us to use DelayConnection, but not initialise any delays
+                 structure='sparse',weight=None,sparseness=None,max_delay=5*ms,**kwds):
+        if not isinstance(delay, float):
+            if delay is True:
+                delay = None # this instructs us to use DelayConnection, but not initialise any delays
             self.__class__ = DelayConnection
             self.__init__(source, target, state=state, modulation=modulation, structure=structure,
-                          weight=weight, sparseness=sparseness, delays=delays, max_delay=max_delay, **kwds)
+                          weight=weight, sparseness=sparseness, delay=delay, max_delay=max_delay, **kwds)
             return
         self.source = source # pointer to source group
         self.target = target # pointer to target group
@@ -1205,7 +1205,8 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         self.W = structure((len(source),len(target)),**kwds)
         self.iscompressed = False # True if compress() has been called
         source.set_max_delay(delay)
-        self.delay = int(delay/source.clock.dt) # Synaptic delay in time bins
+        if not isinstance(self, DelayConnection):
+            self.delay = int(delay/source.clock.dt) # Synaptic delay in time bins
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._keyword_based_init(weight=weight, sparseness=sparseness)
@@ -1510,16 +1511,16 @@ class DelayConnection(Connection):
         neuron. Note, the smaller you make this the less memory will be
         used.
     
-    Has one attribute other than those in a :class:`Connection`:
+    Overrides the following attribute of :class:`Connection`:
     
-    .. attribute:: delays
+    .. attribute:: delay
     
         A matrix of delays. This array can be changed during a run,
         but at no point should it be greater than ``max_delay``.
     
     In addition, the methods ``connect``, ``connect_random``, ``connect_full``,
-    and ``connect_one_to_one`` have a new keyword ``delays=...`` for setting the
-    initial values of the delays, where ``delays`` can be one of:
+    and ``connect_one_to_one`` have a new keyword ``delay=...`` for setting the
+    initial values of the delays, where ``delay`` can be one of:
 
     * A float, all delays will be set to this value
     * A pair (min, max), delays will be uniform between these two
@@ -1532,8 +1533,8 @@ class DelayConnection(Connection):
 
     Finally, there is a method:
     
-    ``set_delays(delays)``
-        Where ``delays`` must be of one of the types above.
+    ``set_delays(delay)``
+        Where ``delay`` must be of one of the types above.
     
     **Notes**
     
@@ -1568,7 +1569,7 @@ class DelayConnection(Connection):
        
     def __init__(self, source, target, state=0, modulation=None,
                  structure='sparse',
-                 weight=None, sparseness=None, delays=None,
+                 weight=None, sparseness=None, delay=None,
                  max_delay=5*msecond, **kwds):
         Connection.__init__(self, source, target, state=state, modulation=modulation,
                             structure=structure, weight=weight, sparseness=sparseness, **kwds)
@@ -1602,8 +1603,8 @@ class DelayConnection(Connection):
         self._invtargetdt = 1/self.target.clock._dt
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
-        if delays is not None:
-            self.set_delays(delays)
+        if delay is not None:
+            self.set_delays(delay)
         
     def propagate(self, spikes):
         if not self.iscompressed:
@@ -1798,11 +1799,14 @@ class DelayConnection(Connection):
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=['-O3'])
+
+    def do_propagate(self):
+        self.propagate(self.source.get_spikes(0))
             
-    def _set_delays_property(self, val):
+    def _set_delay_property(self, val):
         self.delayvec[:]=val
 
-    delays = property(fget=lambda self:self.delayvec, fset=_set_delays_property)
+    delay = property(fget=lambda self:self.delayvec, fset=_set_delay_property)
 
     def compress(self):
         if not self.iscompressed:
@@ -1819,11 +1823,11 @@ class DelayConnection(Connection):
                 self.delayvec.set_row(i, array(todense(delayvec[i,:]), copy=False).flatten())    
             Connection.compress(self)
     
-    def set_delays(self, delays):
+    def set_delays(self, delay):
         '''
         Set the delays corresponding to the weight matrix
         
-        ``delays`` must be one of:
+        ``delay`` must be one of:
         
         * A float, all delays will be set to this value
         * A pair (min, max), delays will be uniform between these two
@@ -1834,7 +1838,7 @@ class DelayConnection(Connection):
           nonzero entry in the weight matrix.
         * A matrix of an appropriate type (e.g. ndarray or lil_matrix).
         '''
-        if delays is None:
+        if delay is None:
             return
         W = self.W
         if isinstance(W, sparse.lil_matrix):
@@ -1843,54 +1847,54 @@ class DelayConnection(Connection):
         else:
             def getrow(i):
                 return slice(None), W[i,:]
-        if isinstance(delays, float):
+        if isinstance(delay, float):
             for i in xrange(self.W.shape[0]):
                 inds, data = getrow(i)
-                self.delayvec[i, inds] = delays
-        elif isinstance(delays, (tuple, list)) and len(delays)==2:
-            delaymin, delaymax = delays
+                self.delayvec[i, inds] = delay
+        elif isinstance(delay, (tuple, list)) and len(delays)==2:
+            delaymin, delaymax = delay
             for i in xrange(self.W.shape[0]):
                 inds, data = getrow(i)
                 rowdelay = rand(len(data))*(delaymax-delaymin)+delaymin
                 self.delayvec[i, inds] = rowdelay
-        elif callable(delays) and delays.func_code.co_argcount==0:
+        elif callable(delay) and delay.func_code.co_argcount==0:
             for i in xrange(self.W.shape[0]):
                 inds, data = getrow(i)
-                rowdelay = [delays() for _ in xrange(len(data))]
+                rowdelay = [delay() for _ in xrange(len(data))]
                 self.delayvec[i, inds] = rowdelay
-        elif callable(delays) and delays.func_code.co_argcount==2:
+        elif callable(delay) and delay.func_code.co_argcount==2:
             for i in xrange(self.W.shape[0]):
                 inds, data = getrow(i)
                 if isinstance(inds, slice) and inds==slice(None):
                     inds = numpy.arange(len(data))
-                self.delayvec[i, inds] = delays(i, inds)
+                self.delayvec[i, inds] = delay(i, inds)
         else:
             #raise TypeError('delays must be float, pair or function of 0 or 2 arguments')
-            self.delayvec[:,:] = delays # probably won't work, but then it will raise an error
+            self.delayvec[:,:] = delay # probably won't work, but then it will raise an error
 
     def connect(self, *args, **kwds):
-        delays = kwds.pop('delays', None)
+        delay = kwds.pop('delay', None)
         Connection.connect(self, *args, **kwds)
-        if delays is not None:
-            self.set_delays(delays)
+        if delay is not None:
+            self.set_delays(delay)
 
     def connect_random(self, *args, **kwds):
-        delays = kwds.pop('delays', None)
+        delay = kwds.pop('delay', None)
         Connection.connect_random(self, *args, **kwds)
-        if delays is not None:
-            self.set_delays(delays)
+        if delay is not None:
+            self.set_delays(delay)
     
     def connect_full(self, *args, **kwds):
-        delays = kwds.pop('delays', None)
+        delay = kwds.pop('delay', None)
         Connection.connect_full(self, *args, **kwds)
-        if delays is not None:
-            self.set_delays(delays)
+        if delay is not None:
+            self.set_delays(delay)
 
     def connect_one_to_one(self, *args, **kwds):
-        delays = kwds.pop('delays', None)
+        delay = kwds.pop('delay', None)
         Connection.connect_one_to_one(self, *args, **kwds)
-        if delays is not None:
-            self.set_delays(delays)
+        if delay is not None:
+            self.set_delays(delay)
 
 class IdentityConnection(Connection):
     '''
@@ -1930,7 +1934,7 @@ class MultiConnection(Connection):
         self.source=source
         self.connections=connections
         self.iscompressed=False
-        self.delay=int(connections[0].delay/source.clock.dt) # Assuming identical delays
+        self.delay=connections[0].delay
         
     def propagate(self,spikes):
         '''
