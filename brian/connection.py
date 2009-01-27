@@ -632,7 +632,7 @@ class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
         #self[:, i] = todense(x)
     
     def get_element(self, i, j):
-        numpy.ndarray.__getitem__(self, (i, j))
+        return numpy.ndarray.__getitem__(self, (i, j))
         #return self[i,j]
     
     def set_element(self, i, j, val):
