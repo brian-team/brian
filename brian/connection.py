@@ -977,6 +977,14 @@ class DynamicConnectionMatrix(ConnectionMatrix):
         newcoldataind[:m] = self.coldataind[j][:m]
         newcoldataind[m:] = self.coldataind[j][m+1:]
         self.coldataind[j] = newcoldataind
+
+    def get_element(self, i, j):
+        n = searchsorted(self.rowj[i], j)
+        if n>=len(self.rowj[i]) or self.rowj[i][n]!=j:
+            return 0
+        return self.alldata[self.rowdataind[i][n]]
+
+    set_element = insert
     
     def get_row(self, i):
         return SparseConnectionVector(self.shape[1], self.rowj[i], self.alldata[self.rowdataind[i]])
