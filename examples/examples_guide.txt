@@ -35,7 +35,6 @@ Poisson input to subsets of the network.
 * rate_model: model where spikes are produced with probability v*dt.
 * ring: a ring of IF oscillators.
 * sfc: a synfire chain.
-* STDP1: STDP example adapted from Song, Miller and Abbott (2000).
 * stim2d: how to do a layer of neurons responding to a 2D stimulus
 * stopping: demonstration of how to stop a stimulation during a run.
 * synfire_chains: a synfire chain (simpler).
@@ -45,3 +44,22 @@ lateral connections.
 lateral connections.
 * transient_sync: a ring network of noisy IF neurons with distance-dependent synaptic weights.
 * two_neurons: two connected neurons with delays.
+
+audition/    (auditory models)
+
+electrophysiology/    (simulation of intracellular recordings)
+* AEC: active electrode compensation
+* bridge: bridge compensation
+* DCC: discontinuous current clamp
+* SEVC: single-electrode discontinuous voltage clamp
+* voltageclamp: single-electrode continuous voltage clamp
+
+interface/    (web interface)
+* interface: web interface (requires cherrypy)
+
+plasticity/    (spike-timing dependent and short term plasticity)
+* STDP1: STDP example adapted from Song, Miller and Abbott (2000), additive rule.
+* STDP2: STDP example adapted from van Rossum et al (2000), mixed rule.
+* short_term_plasticity: neuron with short term plasticity 
+* short_term_plasticity2: network with short term plasticity
+ 

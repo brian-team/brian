@@ -1,8 +1,6 @@
 * Update examples (connection initialisation)
-* Delays in STDP
 * Update reference sheet
 (* Delayed connections)
-* Checks STDP
 * docs for specifying weight matrix in Connection init
 * tutorials/examples update
 * Clean NeuronGroup init, in particular S0 is strangely handled; remove the

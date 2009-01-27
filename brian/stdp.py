@@ -10,6 +10,7 @@ from neurongroup import NeuronGroup
 from stateupdater import get_linear_equations,LinearStateUpdater
 from scipy.linalg import expm
 from scipy import dot,eye,zeros,array,clip,exp,Inf
+from stdunits import ms
 import re
 
 __all__=['STDP','ExponentialSTDP']
@@ -18,7 +19,7 @@ class STDPUpdater(SpikeMonitor):
     '''
     Updates STDP variables at spike times
     '''
-    def __init__(self,source,C,vars,code,namespace,delay=0):
+    def __init__(self,source,C,vars,code,namespace,delay=0*ms):
         '''
         source = source group
         C = connection
@@ -40,19 +41,19 @@ class STDPUpdater(SpikeMonitor):
 
 class STDP(NetworkOperation):
     '''
-    Spike-timing-dependent plasticity
-    
-    TODO: set pre and post transmission delays (e.g. to shift the zero of the STDP function)
-    TODO: use equations instead of linearupdater (-> nonlinear equations possible)
-    TODO: allow pre and postsynaptic group variables
+    Spike-timing-dependent plasticity    
     '''
-    def __init__(self,C,eqs,pre,post,wmax=Inf,level=0,clock=None):
+    #TODO: use equations instead of linearupdater (-> nonlinear equations possible)
+    #TODO: allow pre and postsynaptic group variables
+    def __init__(self,C,eqs,pre,post,wmax=Inf,level=0,clock=None,delay_pre=None,delay_post=None):
         '''
         C: connection object
         eqs: differential equations (with units)
         pre: Python code for presynaptic spikes
         post: Python code for postsynaptic spikes
         wmax: maximum weight (default unlimited)
+        delay_pre: presynaptic delay
+        delay_post: postsynaptic delay (backward propagating spike)
         '''
         NetworkOperation.__init__(self,lambda:None,clock=clock)
         # Merge multi-line statements
@@ -134,9 +135,21 @@ class STDP(NetworkOperation):
         pre_code=compile(pre,"Presynaptic code","exec")
         post_code=compile(post,"Postsynaptic code","exec")
         
+        # Delays
+        connection_delay=C.delay*C.source.clock.dt
+        if (delay_pre is None) and (delay_post is None): # same delays as the Connnection C
+            delay_pre=connection_delay
+            delay_post=0*ms
+        elif delay_pre is None:
+            delay_pre=connection_delay-delay_post
+            if delay_pre<0*ms: raise AttributeError,"Postsynaptic delay is too large"
+        elif delay_post is None:
+            delay_post=connection_delay-delay_pre
+            if delay_post<0*ms: raise AttributeError,"Postsynaptic delay is too large"
+        
         # create forward and backward Connection objects or SpikeMonitor objects
-        pre_updater=STDPUpdater(C.source,C,vars=vars_pre,code=pre_code,namespace=pre_namespace)
-        post_updater=STDPUpdater(C.target,C,vars=vars_post,code=post_code,namespace=post_namespace)
+        pre_updater=STDPUpdater(C.source,C,vars=vars_pre,code=pre_code,namespace=pre_namespace,delay=delay_pre)
+        post_updater=STDPUpdater(C.target,C,vars=vars_post,code=post_code,namespace=post_namespace,delay=delay_post)
         
         # Neuron groups
         G_pre=NeuronGroup(len(C.source),model=LinearStateUpdater(M_pre,clock=self.clock))
@@ -162,16 +175,16 @@ class ExponentialSTDP(STDP):
     '''
     Exponential STDP.
     
-    Synaptic weight change:
+    Synaptic weight change (relative to the maximum weight wmax):
     f(s) = Ap*exp(-s/taup) if s >0
            Am*exp(s/taum) if s <0
-           
+    
     interactions =
       'all' : contributions from all pre-post pairs are added
       'nearest': only nearest-neighbour pairs are considered
       'nearest_pre': nearest presynaptic spike, all postsynaptic spikes
       'nearest_post': nearest postsynaptic spike, all presynaptic spikes
-            
+    
     wmax = maximum synaptic weight
     
     update =
@@ -183,7 +196,7 @@ class ExponentialSTDP(STDP):
                 potentiation is additive
     '''
     def __init__(self,C,taup,taum,Ap,Am,interactions='all',wmax=None,
-                 update='additive'):
+                 update='additive',delay_pre=None,delay_post=None):
         if wmax is None:
             raise AttributeError,"You must specify the maximum synaptic weight"
 
@@ -206,6 +219,8 @@ class ExponentialSTDP(STDP):
             raise AttributeError,"Unknown interaction type "+interactions
         
         if update=='additive':
+            Ap*=wmax
+            Am*=wmax
             pre+='\nw+=A_post'
             post+='\nw+=A_pre'
         elif update=='multiplicative':
@@ -219,9 +234,11 @@ class ExponentialSTDP(STDP):
                 post+='\nw+=(wmax-w)*A_pre'
         elif update=='mixed':
             if Am<0 and Ap>0:
+                Ap*=wmax
                 pre+='\nw*=(1+A_post)'
                 post+='\nw+=A_pre'
             elif Am>0 and Ap<0:
+                Am*=wmax
                 post+='\nw*=(1+A_pre)'
                 pre+='\nw+=A_post'
             else:
@@ -231,7 +248,7 @@ class ExponentialSTDP(STDP):
                     raise AttributeError,"There is no potentiation in STDP rule"
         else:
             raise AttributeError,"Unknown update type "+update
-        STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,wmax=wmax)
+        STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,wmax=wmax,delay_pre=delay_pre,delay_post=delay_post)
 
 # TODO: insert it in Equations, as a method returning an Equations object
 # for a given list of variables, with dependent variables
