@@ -74,8 +74,11 @@ class IonicCurrent(Current):
     to extracellular.
     '''
     def set_current_name(self,name):
-        current_name=self._prefix+name
-        self.add_eq(current_name,'-'+name,self._units[name])
+        if name!='t':
+            if name is None:
+                name=unique_id()
+            current_name=self._prefix+name
+            self.add_eq(current_name,'-'+name,self._units[name])
 
 InjectedCurrent=Current
 

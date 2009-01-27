@@ -91,6 +91,7 @@ def Brette_Gerstner(C=281*pF,gL=30*nS,EL=-70.6*mV,VT=-50.4*mV,\
                         a=a,EL=EL,tauw=tauw)
 
 aEIF=Brette_Gerstner # synonym
+AdEx=aEIF
 
 class AdaptiveReset(object):
     '''

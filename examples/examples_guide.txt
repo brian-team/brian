@@ -3,6 +3,7 @@ List of examples
 * adaptive_threshold: an integrate-and-fire model with a threshold that increases
 with each spike and relaxes exponentially, and Poisson input.
 * adaptive: an integrate-and-fire model with adaptation.
+* adex: adaptive exponential integrate-and-fire model.
 * cable: a passive dendrite.
 * COBA: a network of IF models with synaptic conductances.
 * cobahh_simplified: a network of Hodgkin-Huxley models.
