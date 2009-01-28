@@ -22,7 +22,7 @@
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="Examples" href="examples.html" />
     <link rel="next" title="Example: topographic_map2" href="examples-topographic_map2.html" />
-    <link rel="prev" title="Example: synfire_chains" href="examples-synfire_chains.html" /> 
+    <link rel="prev" title="Example: stopping" href="examples-stopping.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,7 +38,7 @@
           <a href="examples-topographic_map2.html" title="Example: topographic_map2"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="examples-synfire_chains.html" title="Example: synfire_chains"
+          <a href="examples-stopping.html" title="Example: stopping"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
           <li><a href="slowstart.html" accesskey="U">Getting started</a> &raquo;</li>
@@ -52,7 +52,7 @@
             
   
   <span class="target" id="example-topographic-map"></span><div class="section" id="id1">
-<span id="index-57"></span><h1>Example: topographic_map<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-246"></span><h1>Example: topographic_map<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>Topographic map - an example of complicated connections.
 Two layers of neurons.
 The first layer is connected randomly to the second one in a
@@ -74,13 +74,11 @@ The second layer has random lateral connections.</p>
 <span class="n">layer2</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 
 <span class="n">topomap</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">:</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">*.</span><span class="mf">1</span><span class="p">)</span><span class="o">*</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span>
-<span class="n">feedforward</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">layer1</span><span class="p">,</span><span class="n">layer2</span><span class="p">)</span>
-<span class="n">feedforward</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">layer1</span><span class="p">,</span><span class="n">layer2</span><span class="p">,</span><span class="o">.</span><span class="mf">5</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">topomap</span><span class="p">)</span>
+<span class="n">feedforward</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">layer1</span><span class="p">,</span><span class="n">layer2</span><span class="p">,</span><span class="n">sparseness</span><span class="o">=.</span><span class="mf">5</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">topomap</span><span class="p">)</span>
 <span class="c">#feedforward[2,3]=1*mV</span>
 
 <span class="n">lateralmap</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">:</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">*.</span><span class="mf">05</span><span class="p">)</span><span class="o">*</span><span class="mf">0.5</span><span class="o">*</span><span class="n">mV</span>
-<span class="n">recurrent</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">layer2</span><span class="p">,</span><span class="n">layer2</span><span class="p">)</span>
-<span class="n">recurrent</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">layer2</span><span class="p">,</span><span class="n">layer2</span><span class="p">,</span><span class="o">.</span><span class="mf">5</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">lateralmap</span><span class="p">)</span>
+<span class="n">recurrent</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">layer2</span><span class="p">,</span><span class="n">layer2</span><span class="p">,</span><span class="n">sparseness</span><span class="o">=.</span><span class="mf">5</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">lateralmap</span><span class="p">)</span>
 
 <span class="n">spikes</span><span class="o">=</span><span class="n">SpikeMonitor</span><span class="p">(</span><span class="n">layer2</span><span class="p">)</span>
 
@@ -88,10 +86,10 @@ The second layer has random lateral connections.</p>
 <span class="n">subplot</span><span class="p">(</span><span class="mf">211</span><span class="p">)</span>
 <span class="n">raster_plot</span><span class="p">(</span><span class="n">spikes</span><span class="p">)</span>
 <span class="n">subplot</span><span class="p">(</span><span class="mf">223</span><span class="p">)</span>
-<span class="n">imshow</span><span class="p">(</span><span class="n">array</span><span class="p">(</span><span class="n">feedforward</span><span class="o">.</span><span class="n">W</span><span class="o">.</span><span class="n">todense</span><span class="p">()),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">imshow</span><span class="p">(</span><span class="n">feedforward</span><span class="o">.</span><span class="n">W</span><span class="o">.</span><span class="n">todense</span><span class="p">(),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s">&#39;lower&#39;</span><span class="p">)</span>
 <span class="n">title</span><span class="p">(</span><span class="s">&#39;Feedforward connection strengths&#39;</span><span class="p">)</span>
 <span class="n">subplot</span><span class="p">(</span><span class="mf">224</span><span class="p">)</span>
-<span class="n">imshow</span><span class="p">(</span><span class="n">array</span><span class="p">(</span><span class="n">recurrent</span><span class="o">.</span><span class="n">W</span><span class="o">.</span><span class="n">todense</span><span class="p">()),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">imshow</span><span class="p">(</span><span class="n">recurrent</span><span class="o">.</span><span class="n">W</span><span class="o">.</span><span class="n">todense</span><span class="p">(),</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s">&#39;lower&#39;</span><span class="p">)</span>
 <span class="n">title</span><span class="p">(</span><span class="s">&#39;Recurrent connection strengths&#39;</span><span class="p">)</span>
 <span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -105,7 +103,7 @@ The second layer has random lateral connections.</p>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
-            <p class="topless"><a href="examples-synfire_chains.html" title="previous chapter">Example: synfire_chains</a></p>
+            <p class="topless"><a href="examples-stopping.html" title="previous chapter">Example: stopping</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="examples-topographic_map2.html" title="next chapter">Example: topographic_map2</a></p>
             <h3>This Page</h3>
@@ -135,7 +133,7 @@ The second layer has random lateral connections.</p>
           <a href="examples-topographic_map2.html" title="Example: topographic_map2"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="examples-synfire_chains.html" title="Example: synfire_chains"
+          <a href="examples-stopping.html" title="Example: stopping"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
           <li><a href="slowstart.html" accesskey="U">Getting started</a> &raquo;</li>
@@ -144,7 +142,7 @@ The second layer has random lateral connections.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

@@ -1,9 +1,50 @@
-* Documentation update
+* Documentation (in rough order of importance)
+	- STDP (need to do user manual and reference manual)
+	- STP (need to do user manual and ref manual)
+	- Equations - up to date? (ref?, user?)
+	- NeuronGroup - up to date? (ref? user?)
+	- Compartments, documentation needs updating, current documentation says it
+	  is found in library package but it has been moved to main part of brian,
+	  plus there is no reference documentation. This also holds for all the
+	  library objects I think, membrane equations and so forth...
+	- StateUpdaters - up to date? (very little in ref manual, user?)
+	- Correlated spikes not documented
+	- Utils
+	   + autodiff?
+	   + parallelpython?
+	   + parameters?
+	   + statistics?
+	   + tabulate?
+	   + fastexp
+	- Experimental features could be partially documented, or at least mentioned.
+	   + integrodiff
+	   + morphology
+	   + multilinearstateupdater
+	   + DONE! ccodegen
+	- DONE! Compiled code stuff
+	   + SWIG version of circular
+	   + brian_global_config.py
+	   + ccodegen
+	- DONE! Need to mention brian_global_config.py somewhere
+	- DONE! Model deprecated
+	- DONE! MagicNetwork
+	- DONE! IdentityConnection (ref manual)
+	- DONE! MultiStateMonitor
+	- DONE! StateSpikeMonitor
+	- DONE! New connection matrices
+	- DONE! New keywords for initialising Connection (weight, sparseness, delay) in
+	  user manual.
+	- DONE! DelayConnection
+	- DONE! String resets and threshold
+	 
+* clear() function + documentation	
 * Update reference sheet
 * Clean NeuronGroup init, in particular S0 is strangely handled; remove the
 init keyword? (in fact S0 is used mostly for unit checking)
 (* Neuron = NeuronGroup(1,..))
 (* Unit checking in string resets and thresholds)
+(* String resets and thresholds should check for common cases and use accelerated
+   versions if available (e.g. VariableThreshold, etc.).)
 
 (* Cluster computing)
 Idea: use pypar, it seems really simple to use
@@ -36,5 +77,10 @@ refractory shouldn't have to be a constant for the group.
 (* Why is t a vector?)
 Figure out why group.t is a vector. It might have to do with units.
 
+(* Turning off magic? )
+
+(* Finish autocorrelogram object )
+
 (* Use the GPU: complete project with TechX to use GPU accelerated versions of code.)
-(* Meaningful error messages: Improve catching of errors and usefulness of error messages)
+(* Meaningful error messages: Improve catching of errors and usefulness of error messages,
+   also look into logging which is very inconsistent at the moment.)

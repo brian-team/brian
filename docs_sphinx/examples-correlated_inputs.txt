@@ -20,7 +20,7 @@ From: Brette, R. (2007). Generation of correlated spike trains.
     from brian import *
     from brian.correlatedspikes import *
     
-    input=HomogeneousCorrelatedSpikeTrains(1000,r=30*Hz,c=0.05,tauc=10*ms)
+    input=HomogeneousCorrelatedSpikeTrains(1000,r=10*Hz,c=0.1,tauc=10*ms)
     
     S=SpikeMonitor(input)
     S2=PopulationRateMonitor(input)

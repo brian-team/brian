@@ -3,6 +3,8 @@
 .. index::
 	single: preferences
 
+.. _preferences:
+
 Preferences
 ===========
 
@@ -15,10 +17,19 @@ functions:
 .. autofunction:: set_global_preferences
 .. autofunction:: get_global_preference
 
-The currently known global preferences are:
+Global configuration file
+-------------------------
+
+If you have a module named ``brian_global_config`` anywhere on your Python path,
+Brian will attempt to import it to define global preferences. For example, to
+automatically enable weave compilation for all your Brian projects, create a
+file ``brian_global_config.py`` somewhere in the Python path with the following
+contents::
+
+	from brian.globalprefs import *
+	set_global_preferences(useweave=True)
 
 .. INSERT_GLOBAL_PREFERENCES_HERE
-
 
 Global preferences for Brian
 ----------------------------

@@ -25,6 +25,7 @@ decorator.
 .. autoclass:: PopulationSpikeCounter
 .. autoclass:: StateSpikeMonitor
 .. autoclass:: StateMonitor
+.. autoclass:: MultiStateMonitor
 .. autoclass:: FileSpikeMonitor
 .. autoclass:: ISIHistogramMonitor
 .. autoclass:: PopulationRateMonitor

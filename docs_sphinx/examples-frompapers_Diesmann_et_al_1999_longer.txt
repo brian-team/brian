@@ -1,14 +1,14 @@
 .. currentmodule:: brian
 
-.. _example-sfc:
+.. _example-frompapers_Diesmann_et_al_1999_longer:
 
 .. index::
    pair: example usage; Model
    pair: example usage; Network
    pair: example usage; Parameters
 
-Example: sfc
-============
+Example: Diesmann_et_al_1999_longer (frompapers)
+================================================
 
 Implementation of synfire chain from Diesmann et al. 1999
 
@@ -95,12 +95,11 @@ Dan Goodman - Dec. 2007
     # Excitatory PSPs only
     def Model(p):
         equations = Equations('''
-            dV/dt = (-(V-Vr)+x)*(1./taum)                            : volt
-            dx/dt = (-x+y)*(1./taupsp)                               : volt
-            dy/dt = -y*(1./taupsp)+25.27*mV/ms+(39.24*mV/ms**0.5)*xi : volt
+            dV/dt = (-(V-p.Vr)+x)*(1./p.taum)                          : volt
+            dx/dt = (-x+y)*(1./p.taupsp)                               : volt
+            dy/dt = -y*(1./p.taupsp)+25.27*mV/ms+(39.24*mV/ms**0.5)*xi : volt
             ''')
-        return Model(equations=equations,threshold=p.Vt,reset=p.Vr,refractory=p.abs_refrac,\
-                      init=(0*volt,0*volt,0*volt))
+        return Parameters(model=equations,threshold=p.Vt,reset=p.Vr,refractory=p.abs_refrac)
     
     default_params = Parameters(
         # Network parameters
@@ -124,7 +123,7 @@ Dan Goodman - Dec. 2007
     class DefaultNetwork(Network):
         def __init__(self,p):
             # define groups
-            chaingroup = NeuronGroup(N=p.total_neurons, model=Model(p))
+            chaingroup = NeuronGroup(N=p.total_neurons, **Model(p))
             inputgroup = PulsePacket(p.initial_burst_t,p.neurons_in_input_layer,p.initial_burst_sigma)
             layer = [ chaingroup.subgroup(p.neurons_per_layer) for i in range(p.num_layers) ]
             # connections
@@ -236,5 +235,5 @@ Dan Goodman - Dec. 2007
     #state_space(8,10)
     #state_space(10,50)
     #state_space(10,150)
-    #show())
+    #show()
 

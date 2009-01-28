@@ -1,4 +1,6 @@
-# Voltage-clamp experiment
+'''
+Voltage-clamp experiment
+'''
 from brian import *
 from brian.library.electrophysiology import *
 

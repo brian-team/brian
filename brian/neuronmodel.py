@@ -49,6 +49,8 @@ class Model(object):
     """
     Stores properties that define a model neuron
     
+    **NOTE: this class has been deprecated as of Brian 1.1**
+    
     The purpose of this class is to store the parameters that define
     a model neuron, but not actually create any neurons themselves. That is
     done by the :class:`NeuronGroup` object. The parameters for initialising

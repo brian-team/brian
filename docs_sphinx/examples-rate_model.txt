@@ -4,8 +4,9 @@
 
 .. index::
    pair: example usage; NeuronGroup
-   pair: example usage; PoissonThreshold
    pair: example usage; run
+   pair: example usage; group
+   pair: example usage; PoissonThreshold
    pair: example usage; PopulationRateMonitor
 
 Example: rate_model

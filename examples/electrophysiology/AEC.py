@@ -1,4 +1,6 @@
-# AEC experiment (current-clamp)
+'''
+AEC experiment (current-clamp)
+'''
 from brian import *
 from brian.library.electrophysiology import *
 from time import time

@@ -23,8 +23,8 @@ class, see :ref:`integration`.
 .. index::
 	single: model
 
-The :class:`Model` object
--------------------------
+The :class:`Model` object (DEPRECATED IN BRIAN 1.1)
+---------------------------------------------------
 
 .. autoclass:: Model
 
@@ -42,6 +42,7 @@ Reset objects are called each network update step to reset
 specified state variables of neurons that have fired.
 
 .. autoclass:: Reset
+.. autoclass:: StringReset
 
 .. index::
 	pair: variable; reset
@@ -68,6 +69,7 @@ spike.
 	pair: threshold; linear
 
 .. autoclass:: Threshold
+.. autoclass:: StringThreshold
 
 .. index::
 	pair: threshold; variable

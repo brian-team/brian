@@ -4,10 +4,9 @@
 
 .. index::
    pair: example usage; NeuronGroup
+   pair: example usage; Connection
    pair: example usage; run
    pair: example usage; SpikeGeneratorGroup
-   pair: example usage; Connection
-   pair: example usage; Model
    pair: example usage; StateMonitor
 
 Example: if
@@ -26,10 +25,7 @@ regularly spaced spikes from the :class:`SpikeGeneratorGroup`.
     Vr = -70*mV
     Vt = -55*mV
     
-    model = Model(equations='''
-        V : volt
-        ''', threshold=Vt, reset=Vr)
-    G = NeuronGroup(1,model)
+    G = NeuronGroup(1,model='V:volt',threshold=Vt, reset=Vr)
     
     input = SpikeGeneratorGroup(1,[(0,t*ms) for t in linspace(10,100,25)])
     

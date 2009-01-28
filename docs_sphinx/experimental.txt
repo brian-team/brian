@@ -1,0 +1,14 @@
+.. currentmodule:: brian
+
+Experimental features
+*********************
+
+The following features are located in the ``experimental`` package inside Brian, and are subject to change
+without notice. The most likely changes are ones of syntax and naming, although functionality may also
+be subject to change.
+
+.. toctree::
+   :maxdepth: 1
+  
+   experimental-ccodegen
+   

@@ -52,7 +52,7 @@
             
   
   <span class="target" id="example-adaptive-threshold"></span><div class="section" id="id1">
-<span id="index-27"></span><h1>Example: adaptive_threshold<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-203"></span><h1>Example: adaptive_threshold<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>A model with adaptive threshold (increases with each spike)</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian</span> <span class="k">import</span> <span class="o">*</span>
 
@@ -61,18 +61,16 @@
 <span class="s">dvt/dt = (10*mV-vt)/(15*ms) : volt</span>
 <span class="s">&#39;&#39;&#39;</span>
 
-<span class="k">def</span> <span class="nf">myreset</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">spikes</span><span class="p">):</span>
-    <span class="n">P</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">spikes</span><span class="p">]</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span>
-    <span class="n">P</span><span class="o">.</span><span class="n">vt</span><span class="p">[</span><span class="n">spikes</span><span class="p">]</span><span class="o">+=</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span>
+<span class="n">reset</span><span class="o">=</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">v=0*mV</span>
+<span class="s">vt+=3*mV</span>
+<span class="s">&#39;&#39;&#39;</span>
 
-<span class="n">IF</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span>
-        <span class="n">reset</span><span class="o">=</span><span class="n">myreset</span><span class="p">,</span>
-        <span class="n">threshold</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">,</span><span class="n">vt</span><span class="p">:</span><span class="n">v</span><span class="o">&gt;=</span><span class="n">vt</span><span class="p">)</span>
+<span class="n">IF</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">reset</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="s">&#39;v&gt;vt&#39;</span><span class="p">)</span>
 <span class="n">IF</span><span class="o">.</span><span class="n">rest</span><span class="p">()</span>
 <span class="n">PG</span> <span class="o">=</span> <span class="n">PoissonGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span> <span class="mf">500</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
 
-<span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span> <span class="n">IF</span><span class="p">,</span> <span class="s">&#39;v&#39;</span><span class="p">)</span>
-<span class="n">C</span><span class="o">.</span><span class="n">connect_full</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span> <span class="n">IF</span><span class="p">,</span> <span class="mf">3</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span> <span class="n">IF</span><span class="p">,</span> <span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 
 <span class="n">Mv</span> <span class="o">=</span> <span class="n">StateMonitor</span><span class="p">(</span><span class="n">IF</span><span class="p">,</span> <span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="n">Mvt</span> <span class="o">=</span> <span class="n">StateMonitor</span><span class="p">(</span><span class="n">IF</span><span class="p">,</span> <span class="s">&#39;vt&#39;</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
@@ -133,7 +131,7 @@
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

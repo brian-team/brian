@@ -52,15 +52,14 @@
             
   
   <span class="target" id="example-poissongroup"></span><div class="section" id="id1">
-<span id="index-47"></span><h1>Example: poissongroup<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-239"></span><h1>Example: poissongroup<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>Poisson input to an IF model</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian</span> <span class="k">import</span> <span class="o">*</span>
 
 <span class="n">PG</span> <span class="o">=</span> <span class="n">PoissonGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span><span class="mf">200</span><span class="o">*</span><span class="n">Hz</span><span class="o">*</span><span class="p">(</span><span class="mf">1</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="mf">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">t</span><span class="o">*</span><span class="mf">50</span><span class="o">*</span><span class="n">Hz</span><span class="p">)))</span>
 <span class="n">IF</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;dv/dt=-v/(10*ms) : volt&#39;</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">volt</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 
-<span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span><span class="n">IF</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">)</span>
-<span class="n">C</span><span class="o">.</span><span class="n">connect_full</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span><span class="n">IF</span><span class="p">,</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span><span class="n">IF</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 
 <span class="n">MS</span> <span class="o">=</span> <span class="n">SpikeMonitor</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span><span class="bp">True</span><span class="p">)</span>
 <span class="n">Mv</span> <span class="o">=</span> <span class="n">StateMonitor</span><span class="p">(</span><span class="n">IF</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">record</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
@@ -124,7 +123,7 @@
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

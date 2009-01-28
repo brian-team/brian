@@ -76,11 +76,11 @@ exponential synaptic currents. The neurons are randomly connected with probabili
 <span class="n">we</span>   <span class="o">=</span> <span class="p">(</span><span class="mf">60</span><span class="o">*</span><span class="mf">0.27</span><span class="o">/</span><span class="mf">10</span><span class="p">)</span><span class="o">*</span><span class="n">mV</span> <span class="c"># excitatory synaptic weight</span>
 <span class="n">wi</span>   <span class="o">=</span>  <span class="p">(</span><span class="mf">20</span><span class="o">*</span><span class="mf">4.5</span><span class="o">/</span><span class="mf">10</span><span class="p">)</span><span class="o">*</span><span class="n">mV</span> <span class="c"># inhibitory synaptic weight</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">equations</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="n">eqs</span> <span class="o">=</span> <span class="n">Equations</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
 <span class="s">        dV/dt  = (ge-gi-(V-El))/taum : volt</span>
 <span class="s">        dge/dt = -ge/taue            : volt</span>
 <span class="s">        dgi/dt = -gi/taui            : volt</span>
-<span class="s">        &#39;&#39;&#39;</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
+<span class="s">        &#39;&#39;&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </blockquote>
@@ -89,7 +89,7 @@ difference is we have a couple more parameters, and we&#8217;ve added a
 resting potential <tt class="docutils literal"><span class="pre">El</span></tt> into the equation for <tt class="docutils literal"><span class="pre">V</span></tt>.</p>
 <p>Now we make lots of neurons:</p>
 <blockquote>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">4000</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">4000</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
 </pre></div>
 </div>
 </blockquote>
@@ -229,7 +229,7 @@ as a subplot of a larger figure).</p>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

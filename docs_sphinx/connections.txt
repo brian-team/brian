@@ -83,15 +83,37 @@ Here each synaptic weight is random (between 0 and 1 nS).
 
 Delays
 ------
-Transmission delays can be introduced with the keyword ``delay``, passed at initialisation time::
+Transmission delays can be introduced with the keyword ``delay``, passed at initialisation time.
+There are two types of delays, homogeneous (all synapses have the same delay) and heterogeneous
+(all synapses can have different delays). The former is more computationally efficient than the
+latter. An example of homogeneous delays::
 
   myconnection=Connection(group1,group2,'ge',delay=3*ms)
 
-Note that all synaptic connections have the same delay. To define connections with different delays,
-several Connection objects must be introduced, e.g.::
+If you have limited heterogeneity, you can use several Connection objects, e.g.::
 
   myconnection_fast=Connection(group1,group2,'ge',delay=1*ms)
   myconnection_slow=Connection(group1,group2,'ge',delay=5*ms)
+
+For a highly heterogeneous set of delays, initialise the connection with ``delay=True``, set
+a maximum delay with for example ``max_delay=5*ms`` and
+then use the ``delay`` keyword in the :meth:`~DelayConnection.connect_random` and
+:meth:`~DelayConnection.connect_full` methods::
+
+  myconnection=Connection(group1,group2,'ge',delay=True,max_delay=5*ms)
+  myconnection.connect_full(group1,group2,weight=3*nS,delay=(0*ms,5*ms))
+ 
+The code above initialises the delays uniformly randomly between 0ms and 5ms. You can also
+set ``delay`` to be a function of no variables, where it will be called once for each synapse,
+or of two variables ``i, j`` where it will be called once for each row, as in the case of the
+weights in the section above.
+
+Alternatively, you can set the delays as follows::
+
+  myconnection.delay[i,j] = 3*ms
+  
+See the reference documentation for :class:`Connection` and :class:`DelayConnection` for
+more details.
 
 Connection structure
 --------------------
@@ -101,10 +123,10 @@ set at initialisation time::
 
   myconnection=Connection(group1,group2,'ge',structure='dense')
 
-Currently, long-term plasticity (STDP) can only be implemented with dense matrices.
-The ``structure`` keyword can take the following values: sparse (default), dense and
-computed. The last one correspond to synaptic connections which are calculated on the fly,
-but this feature is not implemented yet.
+The sparse matrix structure is fixed during a run, new synapses cannot be added or deleted,
+but there is a dynamic sparse matrix structure. It is less computationally efficient, but
+allows runtime adding and deleting of synaptic connections. Use the ``structure='dynamic'``
+keyword. For more details see the reference documentation for :class:`Connection`.
 
 Modulation
 ----------
@@ -127,3 +149,23 @@ The most efficient way to implement it is with the class :class:`IdentityConnect
 With this structure, the synaptic weights are homogeneous (it is not possible to define them
 independently). When neuron i from ``group1`` spikes, the variable ge of neuron i from ``group2``
 is increased by 1 nS. A typical application is when defining inputs to a network.
+
+Simple connections
+------------------
+
+If your connection just connects one group to another in a simple way, you can initialise
+the weights and delays at the time you initialise the :class:`Connection` object by using
+the ``weight``, ``sparseness`` and ``delay`` keywords. For example::
+
+  myconnection = Connection(group1, group2, 'ge', weight=1*nS, sparseness=0.1,
+                            delay=(0*ms, 5*ms), max_delay=5*ms)
+
+This would be equivalent to::
+
+  myconnection = Connection(group1, group2, 'ge', delay=True, max_delay=5*ms)
+  myconnection.connect_random(group1, group2, weight=1*nS, delay=(0*ms, 5*ms))
+
+If the ``sparseness`` value is omitted or set to value 1, full connectivity is assumed,
+otherwise random connectivity.
+
+NOTE: in this case the ``delay`` keyword used without the ``weight`` keyword has no effect.

@@ -299,6 +299,16 @@ class Threshold(object):
 class StringThreshold(Threshold):
     '''
     A threshold specified by a string expression.
+    
+    Initialised with arguments:
+    
+    ``expr``
+        The expression used to test whether a neuron has fired a spike.
+        Should be a single statement that returns a value. For example,
+        ``'V>50*mV'`` or ``'V>Vt'``.
+    ``level``
+        How many levels up in the calling sequence to look for
+        names in the namespace. Usually 0 for user code.
     '''
     def __init__(self,expr,level=0):
         self._namespace,unknowns=namespace(expr,level=level+1,return_unknowns=True)

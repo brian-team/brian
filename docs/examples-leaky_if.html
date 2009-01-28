@@ -52,7 +52,7 @@
             
   
   <span class="target" id="example-leaky-if"></span><div class="section" id="id1">
-<span id="index-36"></span><h1>Example: leaky_if<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-224"></span><h1>Example: leaky_if<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>A very simple example Brian script to show how to implement
 a leaky integrate and fire model. In this example, we also
 drive the single leaky integrate and fire neuron with
@@ -63,10 +63,7 @@ regularly spaced spikes from the <a title="brian.SpikeGeneratorGroup" class="ref
 <span class="n">Vr</span> <span class="o">=</span> <span class="o">-</span><span class="mf">70</span><span class="o">*</span><span class="n">mV</span>
 <span class="n">Vt</span> <span class="o">=</span> <span class="o">-</span><span class="mf">55</span><span class="o">*</span><span class="n">mV</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">equations</span><span class="o">=</span><span class="s">&#39;&#39;&#39;</span>
-<span class="s">    dV/dt = -(V-Vr)/tau : volt</span>
-<span class="s">    &#39;&#39;&#39;</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
-<span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="n">model</span><span class="p">)</span>
+<span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;dV/dt = -(V-Vr)/tau : volt&#39;</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
 
 <span class="n">spikes</span> <span class="o">=</span> <span class="n">linspace</span><span class="p">(</span><span class="mf">10</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="mf">100</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="mf">25</span><span class="p">)</span>
 <span class="nb">input</span> <span class="o">=</span> <span class="n">MultipleSpikeGeneratorGroup</span><span class="p">([</span><span class="n">spikes</span><span class="p">])</span>
@@ -130,7 +127,7 @@ regularly spaced spikes from the <a title="brian.SpikeGeneratorGroup" class="ref
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

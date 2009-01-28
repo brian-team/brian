@@ -52,7 +52,7 @@
             
   
   <span class="target" id="example-mirollo-strogatz"></span><div class="section" id="id1">
-<span id="index-38"></span><h1>Example: mirollo_strogatz<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-226"></span><h1>Example: mirollo_strogatz<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>Mirollo-Strogatz network</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian</span> <span class="k">import</span> <span class="o">*</span>
 
@@ -63,8 +63,7 @@
 
 <span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;dv/dt=(v0-v)/tau : volt&#39;</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 
-<span class="n">W</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group</span><span class="p">,</span><span class="n">group</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">)</span>
-<span class="n">W</span><span class="o">.</span><span class="n">connect_full</span><span class="p">(</span><span class="n">group</span><span class="p">,</span><span class="n">group</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
+<span class="n">W</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group</span><span class="p">,</span><span class="n">group</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
 
 <span class="n">group</span><span class="o">.</span><span class="n">v</span><span class="o">=</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">*</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span>
 
@@ -124,7 +123,7 @@
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

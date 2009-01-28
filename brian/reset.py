@@ -188,7 +188,17 @@ class Reset(object):
 
 class StringReset(Reset):
     '''
-    A reset specified by a string expression.
+    Reset defined by a string
+    
+    Initialised with arguments:
+    
+    ``expr``
+        The string expression used to reset. This can include 
+        multiple lines or statements separated by a semicolon.
+        For example, ``'V=-70*mV'`` or ``'V=-70*mV; Vt+=10*mV'``.
+    ``level``
+        How many levels up in the calling sequence to look for
+        names in the namespace. Usually 0 for user code.
     '''
     def __init__(self,expr,level=0):
         expr = flattened_docstring(expr)

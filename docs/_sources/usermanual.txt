@@ -26,6 +26,8 @@ Brian itself is documented in the following sections:
    units
    models
    connections
+   stdp
+   stp
    recording
    inputs
    operations

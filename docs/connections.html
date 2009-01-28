@@ -21,7 +21,7 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="User manual" href="usermanual.html" />
-    <link rel="next" title="Recording" href="recording.html" />
+    <link rel="next" title="Spike-timing-dependent plasticity" href="stdp.html" />
     <link rel="prev" title="Models and neuron groups" href="models.html" /> 
   </head>
   <body>
@@ -35,7 +35,7 @@
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="recording.html" title="Recording"
+          <a href="stdp.html" title="Spike-timing-dependent plasticity"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="models.html" title="Models and neuron groups"
@@ -130,16 +130,36 @@ with no argument, as in the following example:</p>
 </div>
 <div class="section" id="delays">
 <h2>Delays<a class="headerlink" href="#delays" title="Permalink to this headline">¶</a></h2>
-<p>Transmission delays can be introduced with the keyword <tt class="docutils literal"><span class="pre">delay</span></tt>, passed at initialisation time:</p>
+<p>Transmission delays can be introduced with the keyword <tt class="docutils literal"><span class="pre">delay</span></tt>, passed at initialisation time.
+There are two types of delays, homogeneous (all synapses have the same delay) and heterogeneous
+(all synapses can have different delays). The former is more computationally efficient than the
+latter. An example of homogeneous delays:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">myconnection</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">delay</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that all synaptic connections have the same delay. To define connections with different delays,
-several Connection objects must be introduced, e.g.:</p>
+<p>If you have limited heterogeneity, you can use several Connection objects, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">myconnection_fast</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">delay</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 <span class="n">myconnection_slow</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">delay</span><span class="o">=</span><span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>For a highly heterogeneous set of delays, initialise the connection with <tt class="docutils literal"><span class="pre">delay=True</span></tt>, set
+a maximum delay with for example <tt class="docutils literal"><span class="pre">max_delay=5*ms</span></tt> and
+then use the <tt class="docutils literal"><span class="pre">delay</span></tt> keyword in the <tt class="xref docutils literal"><span class="pre">connect_random()</span></tt> and
+<tt class="xref docutils literal"><span class="pre">connect_full()</span></tt> methods:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">myconnection</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">delay</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">max_delay</span><span class="o">=</span><span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<span class="n">myconnection</span><span class="o">.</span><span class="n">connect_full</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span><span class="n">delay</span><span class="o">=</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The code above initialises the delays uniformly randomly between 0ms and 5ms. You can also
+set <tt class="docutils literal"><span class="pre">delay</span></tt> to be a function of no variables, where it will be called once for each synapse,
+or of two variables <tt class="docutils literal"><span class="pre">i,</span> <span class="pre">j</span></tt> where it will be called once for each row, as in the case of the
+weights in the section above.</p>
+<p>Alternatively, you can set the delays as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">myconnection</span><span class="o">.</span><span class="n">delay</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3</span><span class="o">*</span><span class="n">ms</span>
+</pre></div>
+</div>
+<p>See the reference documentation for <a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a> and <a title="brian.DelayConnection" class="reference external" href="reference-connections.html#brian.DelayConnection"><tt class="xref docutils literal"><span class="pre">DelayConnection</span></tt></a> for
+more details.</p>
 </div>
 <div class="section" id="connection-structure">
 <h2>Connection structure<a class="headerlink" href="#connection-structure" title="Permalink to this headline">¶</a></h2>
@@ -149,10 +169,10 @@ set at initialisation time:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">myconnection</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="n">group2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">structure</span><span class="o">=</span><span class="s">&#39;dense&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Currently, long-term plasticity (STDP) can only be implemented with dense matrices.
-The <tt class="docutils literal"><span class="pre">structure</span></tt> keyword can take the following values: sparse (default), dense and
-computed. The last one correspond to synaptic connections which are calculated on the fly,
-but this feature is not implemented yet.</p>
+<p>The sparse matrix structure is fixed during a run, new synapses cannot be added or deleted,
+but there is a dynamic sparse matrix structure. It is less computationally efficient, but
+allows runtime adding and deleting of synaptic connections. Use the <tt class="docutils literal"><span class="pre">structure='dynamic'</span></tt>
+keyword. For more details see the reference documentation for <a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a>.</p>
 </div>
 <div class="section" id="modulation">
 <h2>Modulation<a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h2>
@@ -176,6 +196,24 @@ The most efficient way to implement it is with the class <tt class="xref docutil
 independently). When neuron i from <tt class="docutils literal"><span class="pre">group1</span></tt> spikes, the variable ge of neuron i from <tt class="docutils literal"><span class="pre">group2</span></tt>
 is increased by 1 nS. A typical application is when defining inputs to a network.</p>
 </div>
+<div class="section" id="simple-connections">
+<h2>Simple connections<a class="headerlink" href="#simple-connections" title="Permalink to this headline">¶</a></h2>
+<p>If your connection just connects one group to another in a simple way, you can initialise
+the weights and delays at the time you initialise the <a title="brian.Connection" class="reference external" href="reference-connections.html#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a> object by using
+the <tt class="docutils literal"><span class="pre">weight</span></tt>, <tt class="docutils literal"><span class="pre">sparseness</span></tt> and <tt class="docutils literal"><span class="pre">delay</span></tt> keywords. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">myconnection</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">group2</span><span class="p">,</span> <span class="s">&#39;ge&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span> <span class="n">sparseness</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                          <span class="n">delay</span><span class="o">=</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span> <span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">),</span> <span class="n">max_delay</span><span class="o">=</span><span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This would be equivalent to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">myconnection</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">group2</span><span class="p">,</span> <span class="s">&#39;ge&#39;</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">max_delay</span><span class="o">=</span><span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<span class="n">myconnection</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">group2</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">nS</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span> <span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>If the <tt class="docutils literal"><span class="pre">sparseness</span></tt> value is omitted or set to value 1, full connectivity is assumed,
+otherwise random connectivity.</p>
+<p>NOTE: in this case the <tt class="docutils literal"><span class="pre">delay</span></tt> keyword used without the <tt class="docutils literal"><span class="pre">weight</span></tt> keyword has no effect.</p>
+</div>
 </div>
 
 
@@ -195,6 +233,7 @@ is increased by 1 nS. A typical application is when defining inputs to a network
 <li><a class="reference external" href="#connection-structure">Connection structure</a></li>
 <li><a class="reference external" href="#modulation">Modulation</a></li>
 <li><a class="reference external" href="#direct-connection">Direct connection</a></li>
+<li><a class="reference external" href="#simple-connections">Simple connections</a></li>
 </ul>
 </li>
 </ul>
@@ -202,7 +241,7 @@ is increased by 1 nS. A typical application is when defining inputs to a network
             <h4>Previous topic</h4>
             <p class="topless"><a href="models.html" title="previous chapter">Models and neuron groups</a></p>
             <h4>Next topic</h4>
-            <p class="topless"><a href="recording.html" title="next chapter">Recording</a></p>
+            <p class="topless"><a href="stdp.html" title="next chapter">Spike-timing-dependent plasticity</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
               <li><a href="_sources/connections.txt">Show Source</a></li>
@@ -227,7 +266,7 @@ is increased by 1 nS. A typical application is when defining inputs to a network
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="recording.html" title="Recording"
+          <a href="stdp.html" title="Spike-timing-dependent plasticity"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="models.html" title="Models and neuron groups"
@@ -238,7 +277,7 @@ is increased by 1 nS. A typical application is when defining inputs to a network
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

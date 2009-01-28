@@ -272,6 +272,51 @@ The graph plotted will have legends of the form <tt class="docutils literal"><sp
 </dd></dl>
 
 <dl class="class">
+<dt id="brian.MultiStateMonitor">
+<!--[brian.MultiStateMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">MultiStateMonitor</tt><big>(</big><em>G</em>, <em>vars=None</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#brian.MultiStateMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Monitors multiple state variables of a group</p>
+<p>This class is a container for multiple <a title="brian.StateMonitor" class="reference internal" href="#brian.StateMonitor"><tt class="xref docutils literal"><span class="pre">StateMonitor</span></tt></a> objects,
+one for each variable in the group. You can retrieve individual
+<a title="brian.StateMonitor" class="reference internal" href="#brian.StateMonitor"><tt class="xref docutils literal"><span class="pre">StateMonitor</span></tt></a> objects using <tt class="docutils literal"><span class="pre">M[name]</span></tt> or retrieve the
+recorded values using <tt class="docutils literal"><span class="pre">M[name,</span> <span class="pre">i]</span></tt> for neuron <tt class="docutils literal"><span class="pre">i</span></tt>.</p>
+<p>Initialised with a group <tt class="docutils literal"><span class="pre">G</span></tt> and a list of variables <tt class="docutils literal"><span class="pre">vars</span></tt>. If 
+<tt class="docutils literal"><span class="pre">vars</span></tt> is omitted then all the variables of <tt class="docutils literal"><span class="pre">G</span></tt> will be recorded.
+Any additional keyword argument used to initialise the object will
+be passed to the individual <a title="brian.StateMonitor" class="reference internal" href="#brian.StateMonitor"><tt class="xref docutils literal"><span class="pre">StateMonitor</span></tt></a> objects (e.g. the
+<tt class="docutils literal"><span class="pre">when</span></tt> keyword).</p>
+<p>Methods:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">vars()</span></tt></dt>
+<dd>Returns the variables</dd>
+<dt><tt class="docutils literal"><span class="pre">items()</span></tt>, <tt class="docutils literal"><span class="pre">iteritems()</span></tt></dt>
+<dd>Returns the pairs (var, mon)</dd>
+<dt><tt class="docutils literal"><span class="pre">plot(indices)</span></tt></dt>
+<dd>Plots all the monitors.</dd>
+</dl>
+<p>Attributes:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">times</span></tt></dt>
+<dd>The times at which recordings were made.</dd>
+<dt><tt class="docutils literal"><span class="pre">monitors</span></tt></dt>
+<dd>The dictionary of monitors indexed by variable name.</dd>
+</dl>
+<p>Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">eqs</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">M</span> <span class="o">=</span> <span class="n">MultiStateMonitor</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="n">run</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="n">plot</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="s">&#39;V&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="n">M</span><span class="p">[</span><span class="s">&#39;V&#39;</span><span class="p">][</span><span class="mf">0</span><span class="p">])</span>
+<span class="n">figure</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">M</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="n">m</span><span class="p">[</span><span class="mf">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+<span class="n">legend</span><span class="p">()</span>
+<span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
 <dt id="brian.FileSpikeMonitor">
 <!--[brian.FileSpikeMonitor]-->class <tt class="descclassname">brian.</tt><tt class="descname">FileSpikeMonitor</tt><big>(</big><em>source</em>, <em>filename</em>, <em>record=False</em>, <em>delay=0</em><big>)</big><a class="headerlink" href="#brian.FileSpikeMonitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Records spikes to a file</p>
@@ -388,7 +433,7 @@ were in each bin.</dd>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

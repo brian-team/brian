@@ -56,15 +56,12 @@
 Brian is to work through Tutorial 2: Connections.</p>
 <dl class="class">
 <dt id="brian.Connection">
-<!--[brian.Connection]-->class <tt class="descclassname">brian.</tt><tt class="descname">Connection</tt><big>(</big><em>source</em>, <em>target</em>, <em>state=0</em>, <em>delay=0.0 s</em>, <em>modulation=None</em>, <em>structure='sparse'</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#brian.Connection" title="Permalink to this definition">¶</a></dt>
+<!--[brian.Connection]-->class <tt class="descclassname">brian.</tt><tt class="descname">Connection</tt><big>(</big><em>source</em>, <em>target</em>, <em>state=0</em>, <em>delay=0.0 s</em>, <em>modulation=None</em>, <em>structure='sparse'</em>, <em>weight=None</em>, <em>sparseness=None</em>, <em>max_delay=5.0 ms</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#brian.Connection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mechanism for propagating spikes from one group to another</p>
 <p>A Connection object declares that when spikes in a source
 group are generated, certain neurons in the target group
 should have a value added to specific states. See
 Tutorial 2: Connections to understand this better.</p>
-<p><strong>Initialised as:</strong></p>
-<div class="highlight-python"><pre>Connection(source, target[, state=0[, delay=0*ms[, modulation=None]]])</pre>
-</div>
 <p>With arguments:</p>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">source</span></tt></dt>
@@ -76,15 +73,37 @@ Tutorial 2: Connections to understand this better.</p>
 propagated to in the target group.</dd>
 <dt><tt class="docutils literal"><span class="pre">delay</span></tt></dt>
 <dd>The delay between a spike being generated at the source
-and received at the target. At the moment, the mechanism
-for delays only works for relatively short delays (an
-error will be generated for delays that are too long).</dd>
+and received at the target. Depending on the type of <tt class="docutils literal"><span class="pre">delay</span></tt>
+it has different effects. If <tt class="docutils literal"><span class="pre">delay</span></tt> is a scalar value, then
+the connection will be initialised with all neurons having
+that delay. For very long delays, this may raise an error. If
+<tt class="docutils literal"><span class="pre">delay=True</span></tt> then the connection will be initialised as a
+<a title="brian.DelayConnection" class="reference internal" href="#brian.DelayConnection"><tt class="xref docutils literal"><span class="pre">DelayConnection</span></tt></a>, allowing heterogeneous delays (a
+different delay for each synapse). <tt class="docutils literal"><span class="pre">delay</span></tt> can also be a
+pair <tt class="docutils literal"><span class="pre">(min,max)</span></tt> or a function of one or two variables, in
+both cases it will be initialised as a <a title="brian.DelayConnection" class="reference internal" href="#brian.DelayConnection"><tt class="xref docutils literal"><span class="pre">DelayConnection</span></tt></a>,
+see the documentation for that class for details. Note that in
+these cases, initialisation of delays will only have the
+intended effect if used with the <tt class="docutils literal"><span class="pre">weight</span></tt> and <tt class="docutils literal"><span class="pre">sparseness</span></tt>
+arguments below.</dd>
+<dt><tt class="docutils literal"><span class="pre">max_delay</span></tt></dt>
+<dd>If you are using a connection with heterogeneous delays, specify
+this to set the maximum allowed delay (smaller values use less
+memory). The default is 5ms.</dd>
 <dt><tt class="docutils literal"><span class="pre">modulation</span></tt></dt>
 <dd>The state variable name from the source group that scales
 the synaptic weights (for short-term synaptic plasticity).</dd>
 <dt><tt class="docutils literal"><span class="pre">structure</span></tt></dt>
 <dd>Data structure: <tt class="docutils literal"><span class="pre">sparse</span></tt> (default), <tt class="docutils literal"><span class="pre">dense</span></tt> or
 <tt class="docutils literal"><span class="pre">dynamic</span></tt>. See below for more information on structures.</dd>
+<dt><tt class="docutils literal"><span class="pre">weight</span></tt></dt>
+<dd>If specified, the connection matrix will be initialised with
+values specified by <tt class="docutils literal"><span class="pre">weight</span></tt>, which can be any of the values
+allowed in the methods <cite>connect*`</cite> below.</dd>
+<dt><tt class="docutils literal"><span class="pre">sparseness</span></tt></dt>
+<dd>If <tt class="docutils literal"><span class="pre">weight</span></tt> is specified and <tt class="docutils literal"><span class="pre">sparseness</span></tt> is not, a full
+connection is assumed, otherwise random connectivity with this
+level of sparseness is assumed.</dd>
 </dl>
 <p><strong>Methods</strong></p>
 <dl class="docutils">
@@ -185,8 +204,90 @@ the <tt class="docutils literal"><span class="pre">get_spikes</span></tt> method
 </dl>
 </dd></dl>
 
+<dl class="class">
+<dt id="brian.DelayConnection">
+<!--[brian.DelayConnection]-->class <tt class="descclassname">brian.</tt><tt class="descname">DelayConnection</tt><big>(</big><em>source</em>, <em>target</em>, <em>state=0</em>, <em>modulation=None</em>, <em>structure='sparse'</em>, <em>weight=None</em>, <em>sparseness=None</em>, <em>delay=None</em>, <em>max_delay=5.0 ms</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#brian.DelayConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connection which implements heterogeneous postsynaptic delays</p>
+<p>Initialised as for a <a title="brian.Connection" class="reference internal" href="#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a>, but with the additional
+keyword:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">max_delay</span></tt></dt>
+<dd>Specifies the maximum delay time for any
+neuron. Note, the smaller you make this the less memory will be
+used.</dd>
+</dl>
+<p>Overrides the following attribute of <a title="brian.Connection" class="reference internal" href="#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a>:</p>
+<dl class="attribute">
+<dt id="brian.DelayConnection.delay">
+<!--[brian.DelayConnection.delay]--><tt class="descname">delay</tt><a class="headerlink" href="#brian.DelayConnection.delay" title="Permalink to this definition">¶</a></dt>
+<dd>A matrix of delays. This array can be changed during a run,
+but at no point should it be greater than <tt class="docutils literal"><span class="pre">max_delay</span></tt>.</dd></dl>
+
+<p>In addition, the methods <tt class="docutils literal"><span class="pre">connect</span></tt>, <tt class="docutils literal"><span class="pre">connect_random</span></tt>, <tt class="docutils literal"><span class="pre">connect_full</span></tt>,
+and <tt class="docutils literal"><span class="pre">connect_one_to_one</span></tt> have a new keyword <tt class="docutils literal"><span class="pre">delay=...</span></tt> for setting the
+initial values of the delays, where <tt class="docutils literal"><span class="pre">delay</span></tt> can be one of:</p>
+<ul class="simple">
+<li>A float, all delays will be set to this value</li>
+<li>A pair (min, max), delays will be uniform between these two
+values.</li>
+<li>A function of no arguments, will be called for each nonzero
+entry in the weight matrix.</li>
+<li>A function of two argument <tt class="docutils literal"><span class="pre">(i,j)</span></tt> will be called for each
+nonzero entry in the weight matrix.</li>
+<li>A matrix of an appropriate type (e.g. ndarray or lil_matrix).</li>
+</ul>
+<p>Finally, there is a method:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">set_delays(delay)</span></tt></dt>
+<dd>Where <tt class="docutils literal"><span class="pre">delay</span></tt> must be of one of the types above.</dd>
+</dl>
+<p><strong>Notes</strong></p>
+<p>This class implements post-synaptic delays. This means that the spike is
+propagated immediately from the presynaptic neuron with the synaptic
+weight at the time of the spike, but arrives at the postsynaptic neuron
+with the given delay. At the moment, Brian only provides support for
+presynaptic delays if they are homogeneous, using the <tt class="docutils literal"><span class="pre">delay</span></tt> keyword
+of a standard <tt class="docutils literal"><span class="pre">Connection</span></tt>.</p>
+<p><strong>Implementation</strong></p>
+<p><a title="brian.DelayConnection" class="reference internal" href="#brian.DelayConnection"><tt class="xref docutils literal"><span class="pre">DelayConnection</span></tt></a> stores an array of size <tt class="docutils literal"><span class="pre">(n,m)</span></tt> where
+<tt class="docutils literal"><span class="pre">n</span></tt> is <tt class="docutils literal"><span class="pre">max_delay/dt</span></tt> for <tt class="docutils literal"><span class="pre">dt</span></tt> of the target <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>&#8216;s clock,
+and <tt class="docutils literal"><span class="pre">m</span></tt> is the number of neurons in the target. This array can potentially
+be quite large. Each row in this array represents the array that should be
+added to the target state variable at some particular future time. Which
+row corresponds to which time is tracked using a circular indexing scheme.</p>
+<p>When a spike from neuron <tt class="docutils literal"><span class="pre">i</span></tt> in the source is encountered, the delay time
+of neuron <tt class="docutils literal"><span class="pre">i</span></tt> is looked up, the row corresponding to the current time
+plus that delay time is found using the circular indexing scheme, and then
+the spike is propagated to that row as for a standard connection (although
+this won&#8217;t be propagated to the target until a later time).</p>
+<p><strong>Warning</strong></p>
+<p>If you are using a dynamic connection matrix, it is your responsibility to
+ensure that the nonzero entries of the weight matrix and the delay matrix
+exactly coincide. This is not an issue for sparse or dense matrices.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="brian.IdentityConnection">
+<!--[brian.IdentityConnection]-->class <tt class="descclassname">brian.</tt><tt class="descname">IdentityConnection</tt><big>(</big><em>source</em>, <em>target</em>, <em>state=0</em>, <em>weight=1</em>, <em>delay=0.0 s</em><big>)</big><a class="headerlink" href="#brian.IdentityConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a title="brian.Connection" class="reference internal" href="#brian.Connection"><tt class="xref docutils literal"><span class="pre">Connection</span></tt></a> between two groups of the same size, where neuron <tt class="docutils literal"><span class="pre">i</span></tt> in the
+source group is connected to neuron <tt class="docutils literal"><span class="pre">i</span></tt> in the target group.</p>
+<p>Initialised with arguments:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">source</span></tt>, <tt class="docutils literal"><span class="pre">target</span></tt></dt>
+<dd>The source and target <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a> objects.</dd>
+<dt><tt class="docutils literal"><span class="pre">state</span></tt></dt>
+<dd>The target state variable.</dd>
+<dt><tt class="docutils literal"><span class="pre">weight</span></tt></dt>
+<dd>The weight of the synapse, must be a scalar.</dd>
+<dt><tt class="docutils literal"><span class="pre">delay</span></tt></dt>
+<dd>Only homogeneous delays are allowed.</dd>
+</dl>
+<p>The benefit of this class is that it has no storage requirements and is optimised for
+this special case.</p>
+</dd></dl>
+
 <div class="section" id="connection-matrix-types">
-<span id="index-67"></span><h2>Connection matrix types<a class="headerlink" href="#connection-matrix-types" title="Permalink to this headline">¶</a></h2>
+<span id="index-263"></span><h2>Connection matrix types<a class="headerlink" href="#connection-matrix-types" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="brian.ConnectionMatrix">
 <!--[brian.ConnectionMatrix]-->class <tt class="descclassname">brian.</tt><tt class="descname">ConnectionMatrix</tt><a class="headerlink" href="#brian.ConnectionMatrix" title="Permalink to this definition">¶</a></dt>
@@ -424,7 +525,7 @@ of the nonzero elements.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

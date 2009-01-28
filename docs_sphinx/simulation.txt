@@ -58,3 +58,15 @@ A :class:`Network` object holds a collection of objets that can be run, i.e., ob
 
 You can also pass lists of objects. The simulation can be controlled with the methods
 ``stop`` and ``reinit``.
+
+The :class:`MagicNetwork` object
+--------------------------------
+
+When :func:`run`, :func:`reinit` and :func:`stop` are called, they act on the "magic network" (the network
+consisting of all relevant objects such as groups, connections, monitors and user operations). This "magic
+network" can be explicitly constructed using the :class:`MagicNetwork` object::
+
+  G = NeuronGroup(...)
+  C = Connection(...)
+  net = MagicNetwork()
+  net.run(1*second)

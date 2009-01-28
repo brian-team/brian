@@ -3,10 +3,11 @@
 .. _example-cable:
 
 .. index::
-   pair: example usage; Current
-   pair: example usage; MembraneEquation
    pair: example usage; NeuronGroup
    pair: example usage; run
+   pair: example usage; MembraneEquation
+   pair: example usage; Compartments
+   pair: example usage; Current
    pair: example usage; StateMonitor
 
 Example: cable

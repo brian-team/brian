@@ -109,14 +109,14 @@ case we will write:</p>
 <p>To complete the specification of the model, we also define a threshold and reset
 value.</p>
 <blockquote>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">equation</span><span class="o">=</span><span class="s">&#39;dV/dt = -(V-El)/tau : volt&#39;</span><span class="p">,</span>
-              <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s">&#39;dV/dt = -(V-El)/tau : volt&#39;</span><span class="p">,</span>
+              <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
 </pre></div>
 </div>
 </blockquote>
 <p>The statement creates a new object &#8216;model&#8217; which is an instance of the
-Brian class <a title="brian.Model" class="reference external" href="reference-models-and-groups.html#brian.Model"><tt class="xref docutils literal"><span class="pre">Model</span></tt></a>, initialised with the values in the
-line above. In Python, you can call a function or initialise
+Brian class <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>, initialised with the values in the
+line above and one single neuron. In Python, you can call a function or initialise
 a class using keyword arguments as well as ordered arguments, so
 if I defined a function <tt class="docutils literal"><span class="pre">f(x,y)</span></tt> I could call it as <tt class="docutils literal"><span class="pre">f(1,2)</span></tt> or
 as <tt class="docutils literal"><span class="pre">f(y=2,x=1)</span></tt> and get the same effect. See the Python tutorial
@@ -126,12 +126,12 @@ for more information on this.</p>
 <h2>Group of neurons<a class="headerlink" href="#group-of-neurons" title="Permalink to this headline">¶</a></h2>
 <p>We create a group of 40 neurons with the model defined above.</p>
 <blockquote>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mf">40</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mf">40</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s">&#39;dV/dt = -(V-El)/tau : volt&#39;</span><span class="p">,</span>
+              <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
 </pre></div>
 </div>
 </blockquote>
-<p>The <tt class="docutils literal"><span class="pre">N</span></tt> keyword gives the number of neurons in the group and the
-<tt class="docutils literal"><span class="pre">model</span></tt> keyword is used to pass the neuron model.</p>
+<p>The <tt class="docutils literal"><span class="pre">N</span></tt> keyword gives the number of neurons in the group.</p>
 <p>For the moment, we leave the networks in this group unconnected
 to each other, each evolves separately from the others.</p>
 </div>
@@ -228,7 +228,7 @@ are not homogeneous!, dimensions were (m^2 kg s^-3 A^-1)
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

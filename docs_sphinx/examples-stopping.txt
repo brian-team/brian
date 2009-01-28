@@ -10,7 +10,6 @@
    pair: example usage; network_operation
    pair: example usage; Connection
    pair: example usage; PoissonGroup
-   pair: example usage; Model
 
 Example: stopping
 =================
@@ -43,22 +42,14 @@ monitored network firing rate is above a minimum threshold.
     input_connection_p = 0.1
     rate_per_neuron = max_input_rate/(num_input_neurons*input_connection_p)
     
-    model = Model(equations='''
-        dV/dt=-(V-El)/tau : volt
-        ''',
-        threshold=Vt,
-        reset=Vr)
-    
     P = PoissonGroup(num_input_neurons, lambda t: rate_per_neuron*(t/duration))
     
-    G = NeuronGroup(1000, model=model)
+    G = NeuronGroup(1000, model='dV/dt=-(V-El)/tau : volt',threshold=Vt,reset=Vr)
     G.V = Vr+(Vt-Vr)*rand(len(G))
     
-    CPG = Connection(P, G)
-    CPG.connect_random(P, G, p=input_connection_p, weight=weight)
+    CPG = Connection(P, G,weight=weight,sparseness=input_connection_p)
      
-    CGG = Connection(G, G)
-    CGG.connect_full(G, G, weight=weight)
+    CGG = Connection(G, G, weight=weight)
     
     MP = PopulationRateMonitor(G, bin=1*ms)
     

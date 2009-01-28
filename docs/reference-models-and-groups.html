@@ -51,9 +51,9 @@
             
   
   <div class="section" id="neuron-models-and-groups">
-<span id="index-72"></span><h1>Neuron models and groups<a class="headerlink" href="#neuron-models-and-groups" title="Permalink to this headline">¶</a></h1>
+<span id="index-266"></span><h1>Neuron models and groups<a class="headerlink" href="#neuron-models-and-groups" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="the-equations-object">
-<span id="index-73"></span><h2>The <a title="brian.Equations" class="reference internal" href="#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> object<a class="headerlink" href="#the-equations-object" title="Permalink to this headline">¶</a></h2>
+<span id="index-267"></span><h2>The <a title="brian.Equations" class="reference internal" href="#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> object<a class="headerlink" href="#the-equations-object" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="brian.Equations">
 <!--[brian.Equations]-->class <tt class="descclassname">brian.</tt><tt class="descname">Equations</tt><big>(</big><em>expr=''</em>, <em>level=0</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#brian.Equations" title="Permalink to this definition">¶</a></dt>
@@ -114,7 +114,7 @@ for connecting two separate systems of equations together.</dd>
 one of the state variables of the model (but will not evolve
 dynamically, instead it should be set by the user).</dd>
 </dl>
-<p id="index-74"><strong>Noise</strong></p>
+<p id="index-268"><strong>Noise</strong></p>
 <p>String equations can also use the reserved term <tt class="docutils literal"><span class="pre">xi</span></tt> for a
 Gaussian white noise with mean 0 and variance 1.</p>
 <p><strong>Example usage</strong></p>
@@ -130,12 +130,13 @@ Gaussian white noise with mean 0 and variance 1.</p>
 <p>For information on integration methods, and the <tt class="xref docutils literal"><span class="pre">StateUpdater</span></tt>
 class, see <a class="reference external" href="reference-integration.html#integration"><em>Integration</em></a>.</p>
 </div>
-<div class="section" id="the-model-object">
-<span id="index-75"></span><h2>The <a title="brian.Model" class="reference internal" href="#brian.Model"><tt class="xref docutils literal"><span class="pre">Model</span></tt></a> object<a class="headerlink" href="#the-model-object" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="the-model-object-deprecated-in-brian-1-1">
+<span id="index-269"></span><h2>The <a title="brian.Model" class="reference internal" href="#brian.Model"><tt class="xref docutils literal"><span class="pre">Model</span></tt></a> object (DEPRECATED IN BRIAN 1.1)<a class="headerlink" href="#the-model-object-deprecated-in-brian-1-1" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="brian.Model">
 <!--[brian.Model]-->class <tt class="descclassname">brian.</tt><tt class="descname">Model</tt><big>(</big><em>**kwds</em><big>)</big><a class="headerlink" href="#brian.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stores properties that define a model neuron</p>
+<p><strong>NOTE: this class has been deprecated as of Brian 1.1</strong></p>
 <p>The purpose of this class is to store the parameters that define
 a model neuron, but not actually create any neurons themselves. That is
 done by the <a title="brian.NeuronGroup" class="reference internal" href="#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a> object. The parameters for initialising
@@ -217,7 +218,7 @@ of initialization.</dd>
 <h2>The <a title="brian.NeuronGroup" class="reference internal" href="#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a> object<a class="headerlink" href="#the-neurongroup-object" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="brian.NeuronGroup">
-<!--[brian.NeuronGroup]-->class <tt class="descclassname">brian.</tt><tt class="descname">NeuronGroup</tt><big>(</big><em>N</em>, <em>model=None</em>, <em>threshold=None</em>, <em>reset=No reset</em>, <em>init=None</em>, <em>refractory=0.0 s</em>, <em>clock=None</em>, <em>order=1</em>, <em>implicit=False</em>, <em>max_delay=0.0 s</em>, <em>compile=False</em>, <em>freeze=False</em>, <em>method=None</em>, <em>**args</em><big>)</big><a class="headerlink" href="#brian.NeuronGroup" title="Permalink to this definition">¶</a></dt>
+<!--[brian.NeuronGroup]-->class <tt class="descclassname">brian.</tt><tt class="descname">NeuronGroup</tt><big>(</big><em>N</em>, <em>model=None</em>, <em>threshold=None</em>, <em>reset=No reset</em>, <em>init=None</em>, <em>refractory=0.0 s</em>, <em>level=0</em>, <em>clock=None</em>, <em>order=1</em>, <em>implicit=False</em>, <em>unit_checking=True</em>, <em>max_delay=0.0 s</em>, <em>compile=False</em>, <em>freeze=False</em>, <em>method=None</em>, <em>**args</em><big>)</big><a class="headerlink" href="#brian.NeuronGroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Group of neurons</p>
 <p>Initialised as:</p>
 <div class="highlight-python"><pre>NeuronGroup(N,model[,threshold[,reset[,refractory[,clock[,
@@ -233,22 +234,31 @@ an <a title="brian.Equations" class="reference internal" href="#brian.Equations"
 a <tt class="xref docutils literal"><span class="pre">StateUpdater</span></tt> object, or a list or tuple of <a title="brian.Equations" class="reference internal" href="#brian.Equations"><tt class="xref docutils literal"><span class="pre">Equations</span></tt></a> and
 strings.</dd>
 <dt><tt class="docutils literal"><span class="pre">threshold=None</span></tt></dt>
-<dd>A <a title="brian.Threshold" class="reference internal" href="#brian.Threshold"><tt class="xref docutils literal"><span class="pre">Threshold</span></tt></a> object, a function or a scalar quantity.
+<dd>A <a title="brian.Threshold" class="reference internal" href="#brian.Threshold"><tt class="xref docutils literal"><span class="pre">Threshold</span></tt></a> object, a function, a scalar quantity or a string.
 If <tt class="docutils literal"><span class="pre">threshold</span></tt> is a function with one argument, it will be
 converted to a <a title="brian.SimpleFunThreshold" class="reference internal" href="#brian.SimpleFunThreshold"><tt class="xref docutils literal"><span class="pre">SimpleFunThreshold</span></tt></a>, otherwise it will be a
 <a title="brian.FunThreshold" class="reference internal" href="#brian.FunThreshold"><tt class="xref docutils literal"><span class="pre">FunThreshold</span></tt></a>. If <tt class="docutils literal"><span class="pre">threshold</span></tt> is a scalar, then a constant
 single valued threshold with that value will be used. In this case,
 the variable to apply the threshold to will be guessed. If there is
 only one variable, or if you have a variable named one of
-<tt class="docutils literal"><span class="pre">V</span></tt>, <tt class="docutils literal"><span class="pre">Vm</span></tt>, <tt class="docutils literal"><span class="pre">v</span></tt> or <tt class="docutils literal"><span class="pre">vm</span></tt> it will be used.</dd>
+<tt class="docutils literal"><span class="pre">V</span></tt>, <tt class="docutils literal"><span class="pre">Vm</span></tt>, <tt class="docutils literal"><span class="pre">v</span></tt> or <tt class="docutils literal"><span class="pre">vm</span></tt> it will be used. If <tt class="docutils literal"><span class="pre">threshold</span></tt> is a
+string then the appropriate threshold type will be chosen, for example
+you could do <tt class="docutils literal"><span class="pre">threshold='V&gt;10*mV'</span></tt>. The string must be a one line
+string.</dd>
 <dt><tt class="docutils literal"><span class="pre">reset=None</span></tt></dt>
-<dd>A <a title="brian.Reset" class="reference internal" href="#brian.Reset"><tt class="xref docutils literal"><span class="pre">Reset</span></tt></a> object, a function or a scalar quantity. If it&#8217;s a
+<dd>A <a title="brian.Reset" class="reference internal" href="#brian.Reset"><tt class="xref docutils literal"><span class="pre">Reset</span></tt></a> object, a function, a scalar quantity or a string. If it&#8217;s a
 function, it will be converted to a <a title="brian.FunReset" class="reference internal" href="#brian.FunReset"><tt class="xref docutils literal"><span class="pre">FunReset</span></tt></a> object. If it&#8217;s
 a scalar, then a constant single valued reset with that value will
 be used. In this case,
 the variable to apply the reset to will be guessed. If there is
 only one variable, or if you have a variable named one of
-<tt class="docutils literal"><span class="pre">V</span></tt>, <tt class="docutils literal"><span class="pre">Vm</span></tt>, <tt class="docutils literal"><span class="pre">v</span></tt> or <tt class="docutils literal"><span class="pre">vm</span></tt> it will be used.</dd>
+<tt class="docutils literal"><span class="pre">V</span></tt>, <tt class="docutils literal"><span class="pre">Vm</span></tt>, <tt class="docutils literal"><span class="pre">v</span></tt> or <tt class="docutils literal"><span class="pre">vm</span></tt> it will be used. If <tt class="docutils literal"><span class="pre">reset</span></tt> is a
+string it should be a series of expressions which are evaluated for
+each neuron that is resetting. The series of expressions can be
+multiline or separated by a semicolon. For example,
+<tt class="docutils literal"><span class="pre">reset=`Vt+=5*mV;</span> <span class="pre">V=Vt'</span></tt>. Statements involving <tt class="docutils literal"><span class="pre">if</span></tt> constructions
+will often not work because the code is automatically vectorised.
+For such constructions, use a function instead of a string.</dd>
 <dt><tt class="docutils literal"><span class="pre">refractory=0*ms</span></tt></dt>
 <dd>A refractory period, used in combination with the <tt class="docutils literal"><span class="pre">reset</span></tt> value
 if it is a scalar.</dd>
@@ -325,7 +335,7 @@ wanting to write extensions?</p>
 
 </div>
 <div class="section" id="resets">
-<span id="index-76"></span><h2>Resets<a class="headerlink" href="#resets" title="Permalink to this headline">¶</a></h2>
+<span id="index-270"></span><h2>Resets<a class="headerlink" href="#resets" title="Permalink to this headline">¶</a></h2>
 <p>Reset objects are called each network update step to reset
 specified state variables of neurons that have fired.</p>
 <dl class="class">
@@ -347,7 +357,23 @@ given state variable of the neuron group will be set to value
 <tt class="docutils literal"><span class="pre">resetvalue</span></tt>.</p>
 </dd></dl>
 
-<span class="target" id="index-77"></span><dl class="class">
+<dl class="class">
+<dt id="brian.StringReset">
+<!--[brian.StringReset]-->class <tt class="descclassname">brian.</tt><tt class="descname">StringReset</tt><big>(</big><em>expr</em>, <em>level=0</em><big>)</big><a class="headerlink" href="#brian.StringReset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset defined by a string</p>
+<p>Initialised with arguments:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">expr</span></tt></dt>
+<dd>The string expression used to reset. This can include 
+multiple lines or statements separated by a semicolon.
+For example, <tt class="docutils literal"><span class="pre">'V=-70*mV'</span></tt> or <tt class="docutils literal"><span class="pre">'V=-70*mV;</span> <span class="pre">Vt+=10*mV'</span></tt>.</dd>
+<dt><tt class="docutils literal"><span class="pre">level</span></tt></dt>
+<dd>How many levels up in the calling sequence to look for
+names in the namespace. Usually 0 for user code.</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="index-271"></span><dl class="class">
 <dt id="brian.VariableReset">
 <!--[brian.VariableReset]-->class <tt class="descclassname">brian.</tt><tt class="descname">VariableReset</tt><big>(</big><em>resetvaluestate=1</em>, <em>state=0</em><big>)</big><a class="headerlink" href="#brian.VariableReset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resets specified state variable to the value of another state variable</p>
@@ -363,7 +389,7 @@ given state variable of the neuron group will be set to
 the value of the state variable <tt class="docutils literal"><span class="pre">resetvaluestate</span></tt>.</p>
 </dd></dl>
 
-<span class="target" id="index-78"></span><dl class="class">
+<span class="target" id="index-272"></span><dl class="class">
 <dt id="brian.Refractoriness">
 <!--[brian.Refractoriness]-->class <tt class="descclassname">brian.</tt><tt class="descname">Refractoriness</tt><big>(</big><em>resetvalue=0.0 V</em>, <em>period=5.0 ms</em>, <em>state=0</em><big>)</big><a class="headerlink" href="#brian.Refractoriness" title="Permalink to this definition">¶</a></dt>
 <dd><p>Holds the state variable at the reset value for a fixed time after a spike.</p>
@@ -463,10 +489,10 @@ the indexes of the neurons to be reset.</dd>
 
 </div>
 <div class="section" id="thresholds">
-<span id="index-79"></span><h2>Thresholds<a class="headerlink" href="#thresholds" title="Permalink to this headline">¶</a></h2>
+<span id="index-273"></span><h2>Thresholds<a class="headerlink" href="#thresholds" title="Permalink to this headline">¶</a></h2>
 <p>A threshold mechanism checks which neurons have fired a
 spike.</p>
-<span class="target" id="index-80"></span><dl class="class">
+<span class="target" id="index-274"></span><dl class="class">
 <dt id="brian.Threshold">
 <!--[brian.Threshold]-->class <tt class="descclassname">brian.</tt><tt class="descname">Threshold</tt><big>(</big><em>threshold=1.0 mV</em>, <em>state=0</em><big>)</big><a class="headerlink" href="#brian.Threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>All neurons with a specified state variable above a fixed value fire a spike.</p>
@@ -486,7 +512,23 @@ then this function will use a <tt class="docutils literal"><span class="pre">C++
 runs approximately 3x faster.</p>
 </dd></dl>
 
-<span class="target" id="index-81"></span><dl class="class">
+<dl class="class">
+<dt id="brian.StringThreshold">
+<!--[brian.StringThreshold]-->class <tt class="descclassname">brian.</tt><tt class="descname">StringThreshold</tt><big>(</big><em>expr</em>, <em>level=0</em><big>)</big><a class="headerlink" href="#brian.StringThreshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>A threshold specified by a string expression.</p>
+<p>Initialised with arguments:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">expr</span></tt></dt>
+<dd>The expression used to test whether a neuron has fired a spike.
+Should be a single statement that returns a value. For example,
+<tt class="docutils literal"><span class="pre">'V&gt;50*mV'</span></tt> or <tt class="docutils literal"><span class="pre">'V&gt;Vt'</span></tt>.</dd>
+<dt><tt class="docutils literal"><span class="pre">level</span></tt></dt>
+<dd>How many levels up in the calling sequence to look for
+names in the namespace. Usually 0 for user code.</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="index-275"></span><dl class="class">
 <dt id="brian.VariableThreshold">
 <!--[brian.VariableThreshold]-->class <tt class="descclassname">brian.</tt><tt class="descname">VariableThreshold</tt><big>(</big><em>threshold_state=1</em>, <em>state=0</em><big>)</big><a class="headerlink" href="#brian.VariableThreshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Threshold mechanism where one state variable is compared to another.</p>
@@ -510,7 +552,7 @@ a custom thresholding operation.</p>
 then this function will use a <tt class="docutils literal"><span class="pre">C++</span></tt> accelerated version.</p>
 </dd></dl>
 
-<span class="target" id="index-82"></span><dl class="class">
+<span class="target" id="index-276"></span><dl class="class">
 <dt id="brian.EmpiricalThreshold">
 <!--[brian.EmpiricalThreshold]-->class <tt class="descclassname">brian.</tt><tt class="descname">EmpiricalThreshold</tt><big>(</big><em>threshold=1.0 mV</em>, <em>refractory=1.0 ms</em>, <em>state=0</em>, <em>clock=None</em><big>)</big><a class="headerlink" href="#brian.EmpiricalThreshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Empirical threshold, e.g. for Hodgkin-Huxley models.</p>
@@ -539,7 +581,7 @@ use the default clock, you need to specify its clock here.</dd>
 </dl>
 </dd></dl>
 
-<span class="target" id="index-83"></span><dl class="class">
+<span class="target" id="index-277"></span><dl class="class">
 <dt id="brian.SimpleFunThreshold">
 <!--[brian.SimpleFunThreshold]-->class <tt class="descclassname">brian.</tt><tt class="descname">SimpleFunThreshold</tt><big>(</big><em>thresholdfun</em>, <em>state=0</em><big>)</big><a class="headerlink" href="#brian.SimpleFunThreshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Threshold mechanism with a user-specified function.</p>
@@ -602,7 +644,7 @@ use the <a title="brian.SimpleFunThreshold" class="reference internal" href="#br
             <ul>
 <li><a class="reference external" href="">Neuron models and groups</a><ul>
 <li><a class="reference external" href="#the-equations-object">The <tt class="docutils literal"><span class="pre">Equations</span></tt> object</a></li>
-<li><a class="reference external" href="#the-model-object">The <tt class="docutils literal"><span class="pre">Model</span></tt> object</a></li>
+<li><a class="reference external" href="#the-model-object-deprecated-in-brian-1-1">The <tt class="docutils literal"><span class="pre">Model</span></tt> object (DEPRECATED IN BRIAN 1.1)</a></li>
 <li><a class="reference external" href="#the-neurongroup-object">The <tt class="docutils literal"><span class="pre">NeuronGroup</span></tt> object</a></li>
 <li><a class="reference external" href="#resets">Resets</a></li>
 <li><a class="reference external" href="#thresholds">Thresholds</a></li>
@@ -649,7 +691,7 @@ use the <a title="brian.SimpleFunThreshold" class="reference internal" href="#br
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

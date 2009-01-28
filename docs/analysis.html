@@ -51,8 +51,8 @@
             
   
   <div class="section" id="analysis-and-plotting">
-<span id="index-0"></span><h1>Analysis and plotting<a class="headerlink" href="#analysis-and-plotting" title="Permalink to this headline">¶</a></h1>
-<p id="index-1">Most plotting should be done with the PyLab commands, all of
+<span id="index-105"></span><h1>Analysis and plotting<a class="headerlink" href="#analysis-and-plotting" title="Permalink to this headline">¶</a></h1>
+<p id="index-106">Most plotting should be done with the PyLab commands, all of
 which are loaded when you import Brian. See:</p>
 <blockquote>
 <a class="reference external" href="http://matplotlib.sourceforge.net/matplotlib.pylab.html">http://matplotlib.sourceforge.net/matplotlib.pylab.html</a></blockquote>
@@ -78,6 +78,34 @@ last line of your script), except when using IPython with the Pylab mode (<tt cl
 <p>Usual options of the <tt class="docutils literal"><span class="pre">plot</span></tt> command can also be passed to <a title="brian.raster_plot" class="reference external" href="reference-plotting.html#brian.raster_plot"><tt class="xref docutils literal"><span class="pre">raster_plot()</span></tt></a>. One may also pass
 several spike monitors as arguments.</p>
 </div>
+<div class="section" id="statistics">
+<h2>Statistics<a class="headerlink" href="#statistics" title="Permalink to this headline">¶</a></h2>
+<p>Here are a few functions to analyse first and second order statistical properties
+of spike trains, defined as ordered lists of spike times:</p>
+<ul class="simple">
+<li>Firing rate: <tt class="docutils literal"><span class="pre">firing_rate(spikes)</span></tt> where <tt class="docutils literal"><span class="pre">spikes</span></tt> is a spike train (list of spike times).</li>
+<li>Coefficient of variation: <tt class="docutils literal"><span class="pre">CV(spikes)</span></tt>.</li>
+<li>Cross-correlogram: <tt class="docutils literal"><span class="pre">correlogram(T1,T2,width=20*ms,bin=1*ms,T=None)</span></tt> returns
+the cross-correlogram of spike trains T1 and T2 with lag in [-width,width] and given bin size.
+T is the total duration (optional) and should be greater than the duration of T1 and T2.
+The result the rate of coincidences in each bin, returned as an array.</li>
+<li>Autocorrelogram: <tt class="docutils literal"><span class="pre">autocorrelogram(T0,width=20*ms,bin=1*ms,T=None)</span></tt> is the same as
+<tt class="docutils literal"><span class="pre">correlogram(T0,T0,width=20*ms,bin=1*ms,T=None)</span></tt>.</li>
+<li>Cross-correlation function: <tt class="docutils literal"><span class="pre">CCF(T1,T2,width=20*ms,bin=1*ms,T=None)</span></tt> returns the cross-correlation
+function of T1 and T2, which is the same as the cross-correlogram divided by the bin size (which makes the
+result independent of the bin size).</li>
+<li>Autocorrelation function: <tt class="docutils literal"><span class="pre">ACF(T0,width=20*ms,bin=1*ms,T=None)</span></tt>, same as
+<tt class="docutils literal"><span class="pre">CCF(T0,T0,width=20*ms,bin=1*ms,T=None)</span></tt>.</li>
+<li>Cross-covariance function: <tt class="docutils literal"><span class="pre">CCVF(T1,T2,width=20*ms,bin=1*ms,T=None)</span></tt> is the cross-correlation
+function of T1 and T2 minus for the cross-correlation of independent spike trains with the same rates
+(product of rates).</li>
+<li>Auto-covariance function: <tt class="docutils literal"><span class="pre">ACVF(T0,width=20*ms,bin=1*ms,T=None)</span></tt> is the same as
+<tt class="docutils literal"><span class="pre">CCVF(T0,T0,width=20*ms,bin=1*ms,T=None)</span></tt>.</li>
+<li>Total correlation coefficient: <tt class="docutils literal"><span class="pre">total_correlation(T1,T2,width=20*ms,T=None)</span></tt> is
+the integral of the cross-covariance function divided by the rate of T1, typically (but not
+always) between 0 and 1.</li>
+</ul>
+</div>
 </div>
 
 
@@ -90,6 +118,7 @@ several spike monitors as arguments.</p>
             <ul>
 <li><a class="reference external" href="">Analysis and plotting</a><ul>
 <li><a class="reference external" href="#raster-plots">Raster plots</a></li>
+<li><a class="reference external" href="#statistics">Statistics</a></li>
 </ul>
 </li>
 </ul>
@@ -133,7 +162,7 @@ several spike monitors as arguments.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

@@ -8,6 +8,7 @@ Advanced concepts
   
    parallel
    efficient
+   compiledcode
    tasks_multiplefiles
    parameters
    reference-preferences

@@ -51,9 +51,9 @@
             
   
   <div class="section" id="simulation-control">
-<span id="index-97"></span><h1>Simulation control<a class="headerlink" href="#simulation-control" title="Permalink to this headline">¶</a></h1>
+<span id="index-264"></span><h1>Simulation control<a class="headerlink" href="#simulation-control" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="the-update-schedule">
-<span id="index-98"></span><h2>The update schedule<a class="headerlink" href="#the-update-schedule" title="Permalink to this headline">¶</a></h2>
+<span id="index-265"></span><h2>The update schedule<a class="headerlink" href="#the-update-schedule" title="Permalink to this headline">¶</a></h2>
 <p>When a simulation is run, the operations are done in the following order by default:</p>
 <ol class="arabic simple">
 <li>Update every <a title="brian.NeuronGroup" class="reference external" href="reference-models-and-groups.html#brian.NeuronGroup"><tt class="xref docutils literal"><span class="pre">NeuronGroup</span></tt></a>, this typically performs an integration time step for the differential equations defining the neuron model.</li>
@@ -102,6 +102,18 @@ needs to be created.</p>
 <p>You can also pass lists of objects. The simulation can be controlled with the methods
 <tt class="docutils literal"><span class="pre">stop</span></tt> and <tt class="docutils literal"><span class="pre">reinit</span></tt>.</p>
 </div>
+<div class="section" id="the-magicnetwork-object">
+<h2>The <a title="brian.MagicNetwork" class="reference external" href="reference-network.html#brian.MagicNetwork"><tt class="xref docutils literal"><span class="pre">MagicNetwork</span></tt></a> object<a class="headerlink" href="#the-magicnetwork-object" title="Permalink to this headline">¶</a></h2>
+<p>When <a title="brian.run" class="reference external" href="reference-network.html#brian.run"><tt class="xref docutils literal"><span class="pre">run()</span></tt></a>, <a title="brian.reinit" class="reference external" href="reference-network.html#brian.reinit"><tt class="xref docutils literal"><span class="pre">reinit()</span></tt></a> and <a title="brian.stop" class="reference external" href="reference-network.html#brian.stop"><tt class="xref docutils literal"><span class="pre">stop()</span></tt></a> are called, they act on the &#8220;magic network&#8221; (the network
+consisting of all relevant objects such as groups, connections, monitors and user operations). This &#8220;magic
+network&#8221; can be explicitly constructed using the <a title="brian.MagicNetwork" class="reference external" href="reference-network.html#brian.MagicNetwork"><tt class="xref docutils literal"><span class="pre">MagicNetwork</span></tt></a> object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">net</span> <span class="o">=</span> <span class="n">MagicNetwork</span><span class="p">()</span>
+<span class="n">net</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mf">1</span><span class="o">*</span><span class="n">second</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -116,6 +128,7 @@ needs to be created.</p>
 <li><a class="reference external" href="#the-update-schedule">The update schedule</a></li>
 <li><a class="reference external" href="#basic-simulation-control">Basic simulation control</a></li>
 <li><a class="reference external" href="#the-network-class">The Network class</a></li>
+<li><a class="reference external" href="#the-magicnetwork-object">The <tt class="docutils literal"><span class="pre">MagicNetwork</span></tt> object</a></li>
 </ul>
 </li>
 </ul>
@@ -159,7 +172,7 @@ needs to be created.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

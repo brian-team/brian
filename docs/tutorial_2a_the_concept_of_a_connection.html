@@ -88,7 +88,6 @@ object (see the next part of the tutorial for an example of this).</p>
 <span class="s">      dVa/dt = -Va/tau_a : volt</span>
 <span class="s">      dVb/dt = -Vb/tau_b : volt</span>
 <span class="s">      &#39;&#39;&#39;</span><span class="p">)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">equations</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
 </pre></div>
 </div>
 </blockquote>
@@ -129,7 +128,7 @@ of which (neuron 1) fires at times 2 ms and 3 ms. The list of
 <p>Now we create a second group, with one neuron, according to the
 model we defined earlier.</p>
 <blockquote>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">G2</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mf">1</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">G2</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mf">1</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
 </pre></div>
 </div>
 </blockquote>
@@ -291,7 +290,7 @@ i to neuron j inhibitory.</li>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

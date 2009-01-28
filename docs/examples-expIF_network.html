@@ -52,7 +52,7 @@
             
   
   <span class="target" id="example-expif-network"></span><div class="section" id="id1">
-<span id="index-33"></span><h1>Example: expIF_network<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-216"></span><h1>Example: expIF_network<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>A network of exponential IF models with synaptic conductances</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian</span> <span class="k">import</span> <span class="o">*</span>
 <span class="k">from</span> <span class="nn">brian.library.IF</span> <span class="k">import</span> <span class="o">*</span>
@@ -83,12 +83,10 @@
 <span class="n">P</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">4000</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">threshold</span><span class="o">=-</span><span class="mf">20</span><span class="o">*</span><span class="n">mvolt</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">EL</span><span class="p">,</span><span class="n">refractory</span><span class="o">=</span><span class="mf">2</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
 <span class="n">Pe</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">subgroup</span><span class="p">(</span><span class="mf">3200</span><span class="p">)</span>
 <span class="n">Pi</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">subgroup</span><span class="p">(</span><span class="mf">800</span><span class="p">)</span>
-<span class="n">Ce</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">Pe</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">)</span>
-<span class="n">Ci</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">Pi</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="s">&#39;gi&#39;</span><span class="p">)</span>
 <span class="n">we</span><span class="o">=</span><span class="mf">1.5</span><span class="o">*</span><span class="n">nS</span> <span class="c"># excitatory synaptic weight</span>
 <span class="n">wi</span><span class="o">=</span><span class="mf">2.5</span><span class="o">*</span><span class="n">we</span> <span class="c"># inhibitory synaptic weight</span>
-<span class="n">Ce</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">Pe</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">we</span><span class="p">)</span>
-<span class="n">Ci</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">Pi</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">wi</span><span class="p">)</span>
+<span class="n">Ce</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">Pe</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">we</span><span class="p">,</span><span class="n">sparseness</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">Ci</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">Pi</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="s">&#39;gi&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">wi</span><span class="p">,</span><span class="n">sparseness</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
 <span class="c"># Initialization</span>
 <span class="n">P</span><span class="o">.</span><span class="n">vm</span><span class="o">=</span><span class="n">randn</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">))</span><span class="o">*</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="o">-</span><span class="mf">70</span><span class="o">*</span><span class="n">mV</span>
 <span class="n">P</span><span class="o">.</span><span class="n">ge</span><span class="o">=</span><span class="p">(</span><span class="n">randn</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">))</span><span class="o">*</span><span class="mf">2</span><span class="o">+</span><span class="mf">5</span><span class="p">)</span><span class="o">*</span><span class="n">we</span>
@@ -165,7 +163,7 @@
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

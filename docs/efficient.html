@@ -21,7 +21,7 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="Advanced concepts" href="advanced.html" />
-    <link rel="next" title="Projects with multiple files or functions" href="tasks_multiplefiles.html" />
+    <link rel="next" title="Compiled code" href="compiledcode.html" />
     <link rel="prev" title="Parallel computing" href="parallel.html" /> 
   </head>
   <body>
@@ -35,7 +35,7 @@
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="tasks_multiplefiles.html" title="Projects with multiple files or functions"
+          <a href="compiledcode.html" title="Compiled code"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="parallel.html" title="Parallel computing"
@@ -51,10 +51,11 @@
             
   
   <div class="section" id="how-to-write-efficient-brian-code">
-<span id="index-3"></span><h1>How to write efficient Brian code<a class="headerlink" href="#how-to-write-efficient-brian-code" title="Permalink to this headline">¶</a></h1>
+<span id="index-282"></span><h1>How to write efficient Brian code<a class="headerlink" href="#how-to-write-efficient-brian-code" title="Permalink to this headline">¶</a></h1>
 <p>There are a few keys to writing fast and efficient Brian code. The
 first is to use Brian itself efficiently. The second is to write
-good vectorised code, which is using Python and NumPy efficiently.</p>
+good vectorised code, which is using Python and NumPy efficiently.
+For more performance tips, see also <a class="reference external" href="compiledcode.html#compiled-code"><em>Compiled code</em></a>.</p>
 <div class="section" id="brian-specifics">
 <h2>Brian specifics<a class="headerlink" href="#brian-specifics" title="Permalink to this headline">¶</a></h2>
 <p>You can switch off Brian&#8217;s entire unit checking module
@@ -85,7 +86,7 @@ complicated examples where you repeatedly refer to <tt class="docutils literal">
 it could add up.</p>
 </div>
 <div class="section" id="vectorisation">
-<span id="index-4"></span><h2>Vectorisation<a class="headerlink" href="#vectorisation" title="Permalink to this headline">¶</a></h2>
+<span id="efficiency-vectorisation"></span><span id="index-283"></span><h2>Vectorisation<a class="headerlink" href="#vectorisation" title="Permalink to this headline">¶</a></h2>
 <p>Python is a fast language, but each line of Python code has an
 associated overhead attached to it. Sometimes you can get considerable
 increases in speed by writing a vectorised version of it. A good guide
@@ -210,7 +211,7 @@ snippet like this is often almost as simple as the Python code would be.</p>
             <h4>Previous topic</h4>
             <p class="topless"><a href="parallel.html" title="previous chapter">Parallel computing</a></p>
             <h4>Next topic</h4>
-            <p class="topless"><a href="tasks_multiplefiles.html" title="next chapter">Projects with multiple files or functions</a></p>
+            <p class="topless"><a href="compiledcode.html" title="next chapter">Compiled code</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
               <li><a href="_sources/efficient.txt">Show Source</a></li>
@@ -235,7 +236,7 @@ snippet like this is often almost as simple as the Python code would be.</p>
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="tasks_multiplefiles.html" title="Projects with multiple files or functions"
+          <a href="compiledcode.html" title="Compiled code"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="parallel.html" title="Parallel computing"
@@ -246,7 +247,7 @@ snippet like this is often almost as simple as the Python code would be.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

@@ -1,4 +1,6 @@
-# Bridge experiment (current-clamp)
+'''
+Bridge experiment (current-clamp)
+'''
 from brian import *
 from brian.library.electrophysiology import *
 

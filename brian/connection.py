@@ -1898,8 +1898,22 @@ class DelayConnection(Connection):
 
 class IdentityConnection(Connection):
     '''
-    A connection between two (sub)groups of the same size, connecting
-    P[i] to Q[i] with given weight (default 1)
+    A :class:`Connection` between two groups of the same size, where neuron ``i`` in the
+    source group is connected to neuron ``i`` in the target group.
+    
+    Initialised with arguments:
+    
+    ``source``, ``target``
+        The source and target :class:`NeuronGroup` objects.
+    ``state``
+        The target state variable.
+    ``weight``
+        The weight of the synapse, must be a scalar.
+    ``delay``
+        Only homogeneous delays are allowed.
+    
+    The benefit of this class is that it has no storage requirements and is optimised for
+    this special case.
     '''
     @check_units(delay=second)
     def __init__(self,source,target,state=0,weight=1,delay=0*msecond):

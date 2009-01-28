@@ -22,7 +22,7 @@
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="User manual" href="usermanual.html" />
     <link rel="next" title="Inputs" href="inputs.html" />
-    <link rel="prev" title="Connections" href="connections.html" /> 
+    <link rel="prev" title="Short-term plasticity" href="stp.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,7 +38,7 @@
           <a href="inputs.html" title="Inputs"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="connections.html" title="Connections"
+          <a href="stp.html" title="Short-term plasticity"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
           <li><a href="usermanual.html" accesskey="U">User manual</a> &raquo;</li> 
@@ -106,6 +106,32 @@ by setting the keyword <tt class="docutils literal"><span class="pre">timestep</
 <div class="highlight-python"><div class="highlight"><pre><span class="n">M</span><span class="o">=</span><span class="n">StateMonitor</span><span class="p">(</span><span class="n">group</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">record</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">timestep</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="section" id="recording-spike-triggered-state-values">
+<h3>Recording spike triggered state values<a class="headerlink" href="#recording-spike-triggered-state-values" title="Permalink to this headline">¶</a></h3>
+<p>You can record the value of a state variable at each spike using <a title="brian.StateSpikeMonitor" class="reference external" href="reference-monitors.html#brian.StateSpikeMonitor"><tt class="xref docutils literal"><span class="pre">StateSpikeMonitor</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">M</span> <span class="o">=</span> <span class="n">StateSpikeMonitor</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="s">&#39;V&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">spikes</span></tt> attribute of <tt class="docutils literal"><span class="pre">M</span></tt> consists of a series of tuples <tt class="docutils literal"><span class="pre">(i,t,V)</span></tt> where <tt class="docutils literal"><span class="pre">V</span></tt> is the
+value at the time of the spike.</p>
+</div>
+<div class="section" id="recording-multiple-state-variables">
+<h3>Recording multiple state variables<a class="headerlink" href="#recording-multiple-state-variables" title="Permalink to this headline">¶</a></h3>
+<p>You can either use multiple <a title="brian.StateMonitor" class="reference external" href="reference-monitors.html#brian.StateMonitor"><tt class="xref docutils literal"><span class="pre">StateMonitor</span></tt></a> objects or use the <a title="brian.MultiStateMonitor" class="reference external" href="reference-monitors.html#brian.MultiStateMonitor"><tt class="xref docutils literal"><span class="pre">MultiStateMonitor</span></tt></a>
+object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">M</span> <span class="o">=</span> <span class="n">MultiStateMonitor</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="n">run</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="n">plot</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="s">&#39;V&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="n">M</span><span class="p">[</span><span class="s">&#39;V&#39;</span><span class="p">][</span><span class="mf">0</span><span class="p">])</span>
+<span class="n">figure</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">M</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="n">m</span><span class="p">[</span><span class="mf">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+<span class="n">legend</span><span class="p">()</span>
+<span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="counting-spikes">
 <h2>Counting spikes<a class="headerlink" href="#counting-spikes" title="Permalink to this headline">¶</a></h2>
@@ -155,7 +181,11 @@ the whole group at some given time). The bin size is set with the <tt class="doc
 <li><a class="reference external" href="#custom-monitoring">Custom monitoring</a></li>
 </ul>
 </li>
-<li><a class="reference external" href="#recording-state-variables">Recording state variables</a></li>
+<li><a class="reference external" href="#recording-state-variables">Recording state variables</a><ul>
+<li><a class="reference external" href="#recording-spike-triggered-state-values">Recording spike triggered state values</a></li>
+<li><a class="reference external" href="#recording-multiple-state-variables">Recording multiple state variables</a></li>
+</ul>
+</li>
 <li><a class="reference external" href="#counting-spikes">Counting spikes</a></li>
 <li><a class="reference external" href="#recording-population-rates">Recording population rates</a></li>
 </ul>
@@ -163,7 +193,7 @@ the whole group at some given time). The bin size is set with the <tt class="doc
 </ul>
 
             <h4>Previous topic</h4>
-            <p class="topless"><a href="connections.html" title="previous chapter">Connections</a></p>
+            <p class="topless"><a href="stp.html" title="previous chapter">Short-term plasticity</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="inputs.html" title="next chapter">Inputs</a></p>
             <h3>This Page</h3>
@@ -193,7 +223,7 @@ the whole group at some given time). The bin size is set with the <tt class="doc
           <a href="inputs.html" title="Inputs"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="connections.html" title="Connections"
+          <a href="stp.html" title="Short-term plasticity"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
           <li><a href="usermanual.html" accesskey="U">User manual</a> &raquo;</li> 
@@ -201,7 +231,7 @@ the whole group at some given time). The bin size is set with the <tt class="doc
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

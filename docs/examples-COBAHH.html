@@ -52,7 +52,7 @@
             
   
   <span class="target" id="example-cobahh"></span><div class="section" id="id1">
-<span id="index-20"></span><h1>Example: COBAHH<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-197"></span><h1>Example: COBAHH<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>This is a Brian script implementing a benchmark described
 in the following review paper:</p>
 <p>Simulation of networks of spiking neurons: A review of tools and strategies (2007).
@@ -112,10 +112,8 @@ R. Brette and D. Goodman.
               <span class="n">implicit</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">freeze</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="nb">compile</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <span class="n">Pe</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">subgroup</span><span class="p">(</span><span class="mf">3200</span><span class="p">)</span>
 <span class="n">Pi</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">subgroup</span><span class="p">(</span><span class="mf">800</span><span class="p">)</span>
-<span class="n">Ce</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">Pe</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">)</span>
-<span class="n">Ci</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">Pi</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="s">&#39;gi&#39;</span><span class="p">)</span>
-<span class="n">Ce</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">Pe</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">we</span><span class="p">)</span>
-<span class="n">Ci</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">Pi</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">wi</span><span class="p">)</span>
+<span class="n">Ce</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">Pe</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">we</span><span class="p">,</span><span class="n">sparseness</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
+<span class="n">Ci</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">Pi</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="s">&#39;gi&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">wi</span><span class="p">,</span><span class="n">sparseness</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
 <span class="c"># Initialization</span>
 <span class="n">P</span><span class="o">.</span><span class="n">v</span><span class="o">=</span><span class="n">El</span><span class="o">+</span><span class="p">(</span><span class="n">randn</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">))</span><span class="o">*</span><span class="mf">5</span><span class="o">-</span><span class="mf">5</span><span class="p">)</span><span class="o">*</span><span class="n">mV</span>
 <span class="n">P</span><span class="o">.</span><span class="n">ge</span><span class="o">=</span><span class="p">(</span><span class="n">randn</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">))</span><span class="o">*</span><span class="mf">1.5</span><span class="o">+</span><span class="mf">4</span><span class="p">)</span><span class="o">*</span><span class="mf">10.</span><span class="o">*</span><span class="n">nS</span>
@@ -200,7 +198,7 @@ R. Brette and D. Goodman.
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

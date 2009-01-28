@@ -69,10 +69,8 @@ values.</p>
 <span class="n">Vr</span>  <span class="o">=-</span><span class="mf">60</span><span class="o">*</span><span class="n">mvolt</span>          <span class="c"># reset value</span>
 <span class="n">El</span>  <span class="o">=-</span><span class="mf">49</span><span class="o">*</span><span class="n">mvolt</span>          <span class="c"># resting potential (same as the reset)</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">equation</span><span class="o">=</span><span class="s">&#39;dV/dt = -(V-El)/tau : volt&#39;</span><span class="p">,</span>
-              <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
-
-<span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mf">40</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+<span class="n">G</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mf">40</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s">&#39;dV/dt = -(V-El)/tau : volt&#39;</span><span class="p">,</span>
+              <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
 
 <span class="n">M</span> <span class="o">=</span> <span class="n">SpikeMonitor</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 </pre></div>
@@ -152,7 +150,7 @@ interest into this network by connecting the neurons together.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

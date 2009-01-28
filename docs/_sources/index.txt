@@ -23,6 +23,7 @@ version of the documentation `here <http://brian.di.ens.fr/docs/Brian.pdf>`__.
    extending
    reference
    typicaltasks
+   experimental
 
 .. current removed because it's not written yet
    quickstart

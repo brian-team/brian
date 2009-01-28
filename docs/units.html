@@ -243,6 +243,9 @@ After importing <tt class="docutils literal"><span class="pre">brian_no_units</s
 <tt class="docutils literal"><span class="pre">mV</span></tt> is simply the number <tt class="docutils literal"><span class="pre">0.001</span></tt>.
 This may also be a solution when using external libraries which are not compatible with units
 (but see next section).</p>
+<p>Unit checking can also be turned down locally when initializing a neuron group by
+passing the argument <tt class="docutils literal"><span class="pre">check_units=False</span></tt>. In that case, no error is raised if the
+differential equations are not homogeneous.</p>
 <p>A good practice is to develop the script with units on, then switch them off once the script
 runs correctly.</p>
 </div>
@@ -323,7 +326,7 @@ The same trick may be applied to use external functions which do not work with u
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

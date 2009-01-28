@@ -1,4 +1,6 @@
-# Voltage-clamp experiment (SEVC)
+'''
+Voltage-clamp experiment (SEVC)
+'''
 from brian import *
 from brian.library.electrophysiology import *
 

@@ -24,6 +24,7 @@ in the extras package.
    examples-delays
    examples-expIF_network
    examples-gap_junctions
+   examples-heterogeneous_delays
    examples-HodgkinHuxley
    examples-I-F_curve
    examples-I-F_curve2
@@ -42,15 +43,62 @@ in the extras package.
    examples-poissongroup
    examples-pulsepacket
    examples-rate_model
+   examples-reliability
    examples-ring
-   examples-sfc
-   examples-short_term_plasticity
-   examples-short_term_plasticity2
-   examples-STDP1
    examples-stim2d
    examples-stopping
-   examples-synfire_chains
    examples-topographic_map
    examples-topographic_map2
    examples-transient_sync
    examples-two_neurons
+
+plasticity
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-plasticity_short_term_plasticity
+   examples-plasticity_short_term_plasticity2
+   examples-plasticity_STDP1
+   examples-plasticity_STDP2
+
+interface
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-interface_interface
+
+frompapers
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-frompapers_Brette_Gerstner_2005
+   examples-frompapers_Diesmann_et_al_1999
+   examples-frompapers_Diesmann_et_al_1999_longer
+   examples-frompapers_Sturzl_et_al_2000
+
+electrophysiology
+-----------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-electrophysiology_AEC
+   examples-electrophysiology_bridge
+   examples-electrophysiology_DCC
+   examples-electrophysiology_SEVC
+   examples-electrophysiology_voltageclamp
+
+audition
+--------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-audition_jeffress
+   examples-audition_licklider

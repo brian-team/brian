@@ -7,6 +7,8 @@ The best way to understand the concept of a :class:`Connection` in
 Brian is to work through Tutorial 2: Connections.
 
 .. autoclass:: Connection
+.. autoclass:: DelayConnection
+.. autoclass:: IdentityConnection
 
 .. index::
 	pair: connection; matrix

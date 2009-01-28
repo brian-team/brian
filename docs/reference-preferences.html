@@ -50,8 +50,8 @@
           <div class="body">
             
   
-  <div class="section" id="preferences">
-<span id="index-88"></span><h1>Preferences<a class="headerlink" href="#preferences" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="id1">
+<span id="preferences"></span><span id="index-281"></span><h1>Preferences<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
 <p>Setting and getting global preferences is done with the following
@@ -72,7 +72,18 @@ functions:</p>
 <!--[brian.get_global_preference]--><tt class="descclassname">brian.</tt><tt class="descname">get_global_preference</tt><big>(</big><em>k</em><big>)</big><a class="headerlink" href="#brian.get_global_preference" title="Permalink to this definition">¶</a></dt>
 <dd>Get the value of the named global preference</dd></dl>
 
-<p>The currently known global preferences are:</p>
+</div>
+<div class="section" id="global-configuration-file">
+<h2>Global configuration file<a class="headerlink" href="#global-configuration-file" title="Permalink to this headline">¶</a></h2>
+<p>If you have a module named <tt class="docutils literal"><span class="pre">brian_global_config</span></tt> anywhere on your Python path,
+Brian will attempt to import it to define global preferences. For example, to
+automatically enable weave compilation for all your Brian projects, create a
+file <tt class="docutils literal"><span class="pre">brian_global_config.py</span></tt> somewhere in the Python path with the following
+contents:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian.globalprefs</span> <span class="k">import</span> <span class="o">*</span>
+<span class="n">set_global_preferences</span><span class="p">(</span><span class="n">useweave</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="global-preferences-for-brian">
 <h2>Global preferences for Brian<a class="headerlink" href="#global-preferences-for-brian" title="Permalink to this headline">¶</a></h2>
@@ -117,6 +128,7 @@ frame, otherwise set it to <tt class="xref docutils literal"><span class="pre">T
             <ul>
 <li><a class="reference external" href="">Preferences</a><ul>
 <li><a class="reference external" href="#functions">Functions</a></li>
+<li><a class="reference external" href="#global-configuration-file">Global configuration file</a></li>
 <li><a class="reference external" href="#global-preferences-for-brian">Global preferences for Brian</a></li>
 </ul>
 </li>
@@ -161,7 +173,7 @@ frame, otherwise set it to <tt class="xref docutils literal"><span class="pre">T
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

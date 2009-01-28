@@ -52,7 +52,7 @@
             
   
   <span class="target" id="example-topographic-map2"></span><div class="section" id="id1">
-<span id="index-58"></span><h1>Example: topographic_map2<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-247"></span><h1>Example: topographic_map2<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>Topographic map - an example of complicated connections.
 Two layers of neurons.
 The first layer is connected randomly to the second one in a
@@ -79,12 +79,10 @@ Each neuron has a position x[i].</p>
 <span class="c"># Generic connectivity function</span>
 <span class="n">topomap</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">sigma</span><span class="p">:</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="o">/</span><span class="n">sigma</span><span class="p">)</span>
 
-<span class="n">feedforward</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">layer1</span><span class="p">,</span><span class="n">layer2</span><span class="p">)</span>
-<span class="n">feedforward</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">layer1</span><span class="p">,</span><span class="n">layer2</span><span class="p">,</span><span class="o">.</span><span class="mf">5</span><span class="p">,</span>
+<span class="n">feedforward</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">layer1</span><span class="p">,</span><span class="n">layer2</span><span class="p">,</span><span class="n">sparseness</span><span class="o">=.</span><span class="mf">5</span><span class="p">,</span>
                            <span class="n">weight</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">:</span><span class="n">topomap</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">layer1</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">layer2</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="o">.</span><span class="mf">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 
-<span class="n">recurrent</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">layer2</span><span class="p">,</span><span class="n">layer2</span><span class="p">)</span>
-<span class="n">recurrent</span><span class="o">.</span><span class="n">connect_random</span><span class="p">(</span><span class="n">layer2</span><span class="p">,</span><span class="n">layer2</span><span class="p">,</span><span class="o">.</span><span class="mf">5</span><span class="p">,</span>
+<span class="n">recurrent</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">layer2</span><span class="p">,</span><span class="n">layer2</span><span class="p">,</span><span class="n">sparseness</span><span class="o">=.</span><span class="mf">5</span><span class="p">,</span>
                          <span class="n">weight</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">:</span><span class="n">topomap</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">layer1</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">layer2</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="o">.</span><span class="mf">2</span><span class="p">)</span><span class="o">*.</span><span class="mf">5</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 
 <span class="n">spikes</span><span class="o">=</span><span class="n">SpikeMonitor</span><span class="p">(</span><span class="n">layer2</span><span class="p">)</span>
@@ -149,7 +147,7 @@ Each neuron has a position x[i].</p>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

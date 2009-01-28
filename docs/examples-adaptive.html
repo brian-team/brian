@@ -52,7 +52,7 @@
             
   
   <span class="target" id="example-adaptive"></span><div class="section" id="id1">
-<span id="index-26"></span><h1>Example: adaptive<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-202"></span><h1>Example: adaptive<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>An adaptive neuron model</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian</span> <span class="k">import</span> <span class="o">*</span>
 
@@ -61,13 +61,12 @@
 <span class="s">dv/dt = (-w-v)/(10*ms) : volt # the membrane equation</span>
 <span class="s">dw/dt = -w/(30*ms) : volt # the adaptation current</span>
 <span class="s">&#39;&#39;&#39;</span>
-<span class="k">def</span> <span class="nf">myreset</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">spikes</span><span class="p">):</span>
-    <span class="n">P</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">spikes</span><span class="p">]</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span> <span class="c"># Faster: P.v_[spikes]=0*mV</span>
-    <span class="n">P</span><span class="o">.</span><span class="n">w</span><span class="p">[</span><span class="n">spikes</span><span class="p">]</span><span class="o">+=</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span> <span class="c"># the adaptation variable increases with each spike</span>
-<span class="n">IF</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">myreset</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">20</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+<span class="c"># The adaptation variable increases with each spike</span>
+<span class="n">IF</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">20</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span>
+                 <span class="n">reset</span><span class="o">=</span><span class="s">&#39;&#39;&#39;v  = 0*mV</span>
+<span class="s">                          w += 3*mV &#39;&#39;&#39;</span><span class="p">)</span>
 
-<span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span><span class="n">IF</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">)</span>
-<span class="n">C</span><span class="o">.</span><span class="n">connect_full</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span><span class="n">IF</span><span class="p">,</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span><span class="n">IF</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="mf">3</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
 
 <span class="n">MS</span> <span class="o">=</span> <span class="n">SpikeMonitor</span><span class="p">(</span><span class="n">PG</span><span class="p">,</span><span class="bp">True</span><span class="p">)</span>
 <span class="n">Mv</span> <span class="o">=</span> <span class="n">StateMonitor</span><span class="p">(</span><span class="n">IF</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">record</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
@@ -129,7 +128,7 @@
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

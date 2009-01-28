@@ -1,7 +1,9 @@
-# Interface example
-# Install cherrypy for this example
-# Then run the script and go to http://localhost:8080 on your web browser
-# You can use cherrypy to write html interfaces to your code.
+'''
+Interface example
+Install cherrypy for this example
+Then run the script and go to http://localhost:8080 on your web browser
+You can use cherrypy to write html interfaces to your code.
+'''
 
 from brian import *
 import cherrypy

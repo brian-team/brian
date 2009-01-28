@@ -91,11 +91,11 @@ potential.</p>
 <span class="n">Vt</span>   <span class="o">=</span> <span class="mf">10</span><span class="o">*</span><span class="n">mV</span>
 <span class="n">Vr</span>   <span class="o">=</span>  <span class="mf">0</span><span class="o">*</span><span class="n">mV</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">equations</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
-<span class="s">        dV/dt  = (-V+ge-gi)/taum : volt</span>
-<span class="s">        dge/dt = -ge/taue        : volt</span>
-<span class="s">        dgi/dt = -gi/taui        : volt</span>
-<span class="s">        &#39;&#39;&#39;</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
+<span class="n">eqs</span> <span class="o">=</span> <span class="n">Equations</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">      dV/dt  = (-V+ge-gi)/taum : volt</span>
+<span class="s">      dge/dt = -ge/taue        : volt</span>
+<span class="s">      dgi/dt = -gi/taui        : volt</span>
+<span class="s">      &#39;&#39;&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </blockquote>
@@ -113,7 +113,7 @@ that two excitatory spikes close together.</p>
               <span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="mf">50</span><span class="o">*</span><span class="n">ms</span><span class="p">),(</span><span class="mf">0</span><span class="p">,</span><span class="mf">55</span><span class="o">*</span><span class="n">ms</span><span class="p">)]</span>
 
 <span class="n">G1</span> <span class="o">=</span> <span class="n">SpikeGeneratorGroup</span><span class="p">(</span><span class="mf">2</span><span class="p">,</span><span class="n">spiketimes</span><span class="p">)</span>
-<span class="n">G2</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mf">1</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+<span class="n">G2</span> <span class="o">=</span> <span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mf">1</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">Vt</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="n">Vr</span><span class="p">)</span>
 
 <span class="n">C1</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span><span class="n">G2</span><span class="p">,</span><span class="s">&#39;ge&#39;</span><span class="p">)</span>
 <span class="n">C2</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span><span class="n">G2</span><span class="p">,</span><span class="s">&#39;gi&#39;</span><span class="p">)</span>
@@ -262,7 +262,7 @@ zero given the finite precision of the calculations involved.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

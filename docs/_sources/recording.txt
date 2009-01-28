@@ -63,9 +63,32 @@ by setting the keyword ``timestep``::
 
   M=StateMonitor(group,'v',record=True,timestep=n)
 
-.. TODO: docs:recording spike triggered values  
-	Recording spike-triggered values
-	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Recording spike triggered state values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can record the value of a state variable at each spike using :class:`StateSpikeMonitor`::
+
+  M = StateSpikeMonitor(group, 'V')
+
+The ``spikes`` attribute of ``M`` consists of a series of tuples ``(i,t,V)`` where ``V`` is the
+value at the time of the spike.
+
+Recording multiple state variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can either use multiple :class:`StateMonitor` objects or use the :class:`MultiStateMonitor`
+object::
+
+	M = MultiStateMonitor(group, record=True)
+	...
+	run(...)
+	...
+	plot(M['V'].times, M['V'][0])
+	figure()
+	for name, m in M.iteritems():
+	    plot(m.times, m[0], label=name)
+	legend()
+	show()  
 
 Counting spikes
 ---------------

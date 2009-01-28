@@ -9,6 +9,7 @@ How to write efficient Brian code
 There are a few keys to writing fast and efficient Brian code. The
 first is to use Brian itself efficiently. The second is to write
 good vectorised code, which is using Python and NumPy efficiently.
+For more performance tips, see also :ref:`compiled-code`.
 
 Brian specifics
 ---------------
@@ -90,6 +91,8 @@ it could add up.
 	pair: efficient code; vectorisation
 	single: vectorisation
 	single: speed; vectorisation
+
+.. _efficiency-vectorisation:
 
 Vectorisation
 -------------

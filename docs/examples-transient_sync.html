@@ -52,7 +52,7 @@
             
   
   <span class="target" id="example-transient-sync"></span><div class="section" id="id1">
-<span id="index-59"></span><h1>Example: transient_sync<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-248"></span><h1>Example: transient_sync<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>Transient synchronisation in a population of noisy IF neurons
 with distance-dependent synaptic weights (organised as a ring)</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian</span> <span class="k">import</span> <span class="o">*</span>
@@ -63,10 +63,9 @@ with distance-dependent synaptic weights (organised as a ring)</p>
 <span class="n">sigma</span><span class="o">=</span><span class="mf">4</span><span class="o">*</span><span class="n">mV</span>
 <span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;dv/dt=(v0-v)/tau + sigma*xi/tau**.5 : volt&#39;</span><span class="p">,</span>\
                   <span class="n">threshold</span><span class="o">=</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="o">*</span><span class="n">mV</span><span class="p">)</span>
-<span class="n">C</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group</span><span class="p">,</span><span class="n">group</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">structure</span><span class="o">=</span><span class="s">&#39;dense&#39;</span><span class="p">)</span> <span class="c"># use a dense matrix</span>
+<span class="n">C</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">group</span><span class="p">,</span><span class="n">group</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">structure</span><span class="o">=</span><span class="s">&#39;dense&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">:</span><span class="o">.</span><span class="mf">4</span><span class="o">*</span><span class="n">mV</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="mf">1.</span><span class="o">/</span><span class="n">N</span><span class="p">))</span> <span class="c"># use a dense matrix</span>
 <span class="c">#f=lambda i,j:.5*mV*exp(-abs(i-j)*.1)</span>
 <span class="c">#C.connect_full(group,group,weight=lambda i,j:f(i,j)+f(i+N,j)+f(i,j+N))</span>
-<span class="n">C</span><span class="o">.</span><span class="n">connect_full</span><span class="p">(</span><span class="n">group</span><span class="p">,</span><span class="n">group</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">:</span><span class="o">.</span><span class="mf">4</span><span class="o">*</span><span class="n">mV</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="mf">1.</span><span class="o">/</span><span class="n">N</span><span class="p">))</span>
 <span class="n">S</span><span class="o">=</span><span class="n">SpikeMonitor</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
 <span class="n">R</span><span class="o">=</span><span class="n">PopulationRateMonitor</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
 <span class="n">group</span><span class="o">.</span><span class="n">v</span><span class="o">=</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">*</span><span class="mf">10</span><span class="o">*</span><span class="n">mV</span>
@@ -131,7 +130,7 @@ with distance-dependent synaptic weights (organised as a ring)</p>
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

@@ -21,7 +21,7 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
     <link rel="up" title="Examples" href="examples.html" />
-    <link rel="next" title="Example: HodgkinHuxley" href="examples-HodgkinHuxley.html" />
+    <link rel="next" title="Example: heterogeneous_delays" href="examples-heterogeneous_delays.html" />
     <link rel="prev" title="Example: expIF_network" href="examples-expIF_network.html" /> 
   </head>
   <body>
@@ -35,7 +35,7 @@
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="examples-HodgkinHuxley.html" title="Example: HodgkinHuxley"
+          <a href="examples-heterogeneous_delays.html" title="Example: heterogeneous_delays"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="examples-expIF_network.html" title="Example: expIF_network"
@@ -52,7 +52,7 @@
             
   
   <span class="target" id="example-gap-junctions"></span><div class="section" id="id1">
-<span id="index-34"></span><h1>Example: gap_junctions<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<span id="index-221"></span><h1>Example: gap_junctions<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>Network of noisy IF neurons with gap junctions</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian</span> <span class="k">import</span> <span class="o">*</span>
 
@@ -72,17 +72,17 @@
 <span class="s">&#39;&#39;&#39;</span>
 
 <span class="k">def</span> <span class="nf">myreset</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">spikes</span><span class="p">):</span>
-    <span class="n">P</span><span class="o">.</span><span class="n">v_</span><span class="p">[</span><span class="n">spikes</span><span class="p">]</span><span class="o">=</span><span class="n">vr</span> <span class="c"># reset</span>
-    <span class="n">P</span><span class="o">.</span><span class="n">v_</span><span class="o">+=</span><span class="n">g_gap</span><span class="o">*</span><span class="n">beta</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">spikes</span><span class="p">)</span> <span class="c"># spike effect</span>
-    <span class="n">P</span><span class="o">.</span><span class="n">u_</span><span class="o">-=</span><span class="n">delta</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">spikes</span><span class="p">)</span>
+    <span class="n">P</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">spikes</span><span class="p">]</span><span class="o">=</span><span class="n">vr</span> <span class="c"># reset</span>
+    <span class="n">P</span><span class="o">.</span><span class="n">v</span><span class="o">+=</span><span class="n">g_gap</span><span class="o">*</span><span class="n">beta</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">spikes</span><span class="p">)</span> <span class="c"># spike effect</span>
+    <span class="n">P</span><span class="o">.</span><span class="n">u</span><span class="o">-=</span><span class="n">delta</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">spikes</span><span class="p">)</span>
 
 <span class="n">group</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="n">vt</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="n">myreset</span><span class="p">)</span>
 
 <span class="nd">@network_operation</span>
 <span class="k">def</span> <span class="nf">noise</span><span class="p">(</span><span class="n">cl</span><span class="p">):</span>
     <span class="n">x</span><span class="o">=</span><span class="n">randn</span><span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="o">*</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">dt</span><span class="o">/</span><span class="n">tau</span><span class="p">)</span><span class="o">**.</span><span class="mf">5</span>
-    <span class="n">group</span><span class="o">.</span><span class="n">v_</span><span class="o">+=</span><span class="n">x</span>
-    <span class="n">group</span><span class="o">.</span><span class="n">u_</span><span class="o">+=</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">v</span><span class="o">+=</span><span class="n">x</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">u</span><span class="o">+=</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
 <span class="n">trace</span><span class="o">=</span><span class="n">StateMonitor</span><span class="p">(</span><span class="n">group</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">record</span><span class="o">=</span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="mf">1</span><span class="p">])</span>
 <span class="n">spikes</span><span class="o">=</span><span class="n">SpikeMonitor</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
@@ -110,7 +110,7 @@
             <h4>Previous topic</h4>
             <p class="topless"><a href="examples-expIF_network.html" title="previous chapter">Example: expIF_network</a></p>
             <h4>Next topic</h4>
-            <p class="topless"><a href="examples-HodgkinHuxley.html" title="next chapter">Example: HodgkinHuxley</a></p>
+            <p class="topless"><a href="examples-heterogeneous_delays.html" title="next chapter">Example: heterogeneous_delays</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
               <li><a href="_sources/examples-gap_junctions.txt">Show Source</a></li>
@@ -135,7 +135,7 @@
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="examples-HodgkinHuxley.html" title="Example: HodgkinHuxley"
+          <a href="examples-heterogeneous_delays.html" title="Example: heterogeneous_delays"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="examples-expIF_network.html" title="Example: expIF_network"
@@ -147,7 +147,7 @@
     </div>
     <div class="footer">
       &copy; Copyright 2008, Romain Brette, Dan Goodman.
-      Last updated on Jan 19, 2009.
+      Last updated on Jan 28, 2009.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>
