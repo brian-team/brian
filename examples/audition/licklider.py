@@ -33,13 +33,13 @@ eqs_neurons='''
 dv/dt=-v/tau+sigma*(2./tau)**.5*xi : 1
 '''
 neurons=NeuronGroup(N,model=eqs_neurons,threshold=1,reset=0)
-synapses=Connection(receptors,neurons,'v',structure='dense',max_delay=1.1*max_delay,delays=True)
+synapses=Connection(receptors,neurons,'v',structure='dense',max_delay=1.1*max_delay,delay=True)
 synapses.connect_full(receptors,neurons,weight=.5)
-synapses.delays[1,:]=1./exp(linspace(log(min_freq/Hz),log(max_freq/Hz),N))
+synapses.delay[1,:]=1./exp(linspace(log(min_freq/Hz),log(max_freq/Hz),N))
 spikes=SpikeMonitor(neurons)
 
 run(1000*ms)
 raster_plot(spikes)
 ylabel('Frequency')
-yticks([0,99,199,299],array(1./synapses.delays.todense()[1,[0,99,199,299]],dtype=int))
+yticks([0,99,199,299],array(1./synapses.delay.todense()[1,[0,99,199,299]],dtype=int))
 show()
