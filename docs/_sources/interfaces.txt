@@ -1,4 +1,0 @@
-.. currentmodule:: brian
-
-Web interfaces
-==============

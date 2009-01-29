@@ -1,6 +1,6 @@
 * Documentation (in rough order of importance)
-	- STDP (need to do user manual and reference manual)
-	- STP (need to do user manual and ref manual)
+	- STDP (ref)
+	- STP (ref)
 	- Equations - up to date? (ref?, user?)
 	- NeuronGroup - up to date? (ref? user?)
 	- Compartments, documentation needs updating, current documentation says it

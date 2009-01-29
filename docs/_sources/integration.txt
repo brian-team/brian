@@ -1,4 +1,0 @@
-.. currentmodule:: brian
-
-Numerical integration of equations
-==================================
