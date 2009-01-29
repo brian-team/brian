@@ -1,6 +1,4 @@
 * Documentation (in rough order of importance)
-	- Equations - up to date? (ref?, user?)
-	- NeuronGroup - up to date? (ref? user?)
 	- Compartments, documentation needs updating, current documentation says it
 	  is found in library package but it has been moved to main part of brian,
 	  plus there is no reference documentation. This also holds for all the
@@ -25,6 +23,8 @@
 	   + DONE! SWIG version of circular
 	   + DONE! brian_global_config.py
 	   + DONE! ccodegen
+	- DONE! NeuronGroup - up to date?
+	- DONE! Equations - up to date? (yes, but ref currently just points to user)
 	- DONE! clear() function + documentation
 	- DONE! Need to mention brian_global_config.py somewhere
 	- DONE! Model deprecated
@@ -45,6 +45,8 @@ init keyword? (in fact S0 is used mostly for unit checking)
 (* Unit checking in string resets and thresholds)
 (* String resets and thresholds should check for common cases and use accelerated
    versions if available (e.g. VariableThreshold, etc.).)
+
+(* Change default values of compile and freeze to true in NeuronGroup? )
 
 (* Cluster computing)
 Idea: use pypar, it seems really simple to use

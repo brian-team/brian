@@ -67,12 +67,7 @@ from group import *
 class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     """Group of neurons
     
-    Initialised as::
-    
-        NeuronGroup(N,model[,threshold[,reset[,refractory[,clock[,
-                order[,implicit[,max_delay[,compile[,freeze[,method]]]]]]]]]])
-    
-    with arguments:
+    Initialised with arguments:
     
     ``N``
         The number of neurons in the group.
@@ -121,17 +116,20 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         equations. TODO: more details.
     ``max_delay=0*ms``
         The maximum allowable delay (larger values use more memory).
-        TODO: more details.
+        This doesn't usually need to be specified because Connections will update it.
     ``compile=False``
         Whether or not to attempt to compile the differential equation
-        solvers into ``C++`` code.
+        solvers (into Python code). Typically, for best performance, both ``compile``
+        and ``freeze`` should be set to ``True`` for nonlinear differential equations.
     ``freeze=False``
         If True, parameters are replaced by their values at the time
         of initialization.
-    ```method=None``
+    ``method=None``
         If not None, the integration method is forced. Possible values are
         linear, nonlinear, Euler, exponential_Euler (overrides implicit and order
         keywords).
+    ``unit_checking=True``
+        Set to ``False`` to bypass unit-checking.
     
     **Methods**
     
@@ -139,30 +137,29 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     
         Returns the next sequential subgroup of ``N`` neurons. See
         the section on subgroups below.
-        
+
     .. method:: state(var)
-                state_(var)
                 
-        Returns the :class:`qarray` or ``array`` respectively for state
-        variable ``var``. This is the array of values for that
-        state variable, with length the number of neurons in the
-        group. The :class:`qarray` form has units and checks for unit
-        consistency, the ``array`` form doesn't. Normally, you
-        should use the unit checking form, but it is slower
-        so if speed is a serious problem, you can use the other
-        form.
+        Returns the array of values for state
+        variable ``var``, with length the number of neurons in the
+        group.
     
+    .. method:: rest()
+    
+        Sets the neuron state values at rest for their differential
+        equations.
+
     The following usages are also possible for a group ``G``:
     
     ``G[i:j]``
         Returns the subgroup of neurons from ``i`` to ``j``.
     ``len(G)``
         Returns the number of neurons in ``G``.
-    ``G.x``, ``G.x_``
+    ``G.x``
         For any valid Python variable name ``x`` corresponding to
         a state variable of the the :class:`NeuronGroup`, this
-        returns the :class:`qarray` or ``array`` of values for the state
-        variable ``x``, as for the :meth:`state` and :meth:`state_` methods
+        returns the array of values for the state
+        variable ``x``, as for the :meth:`state` method
         above.
     
     **Subgroups**

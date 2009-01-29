@@ -154,6 +154,10 @@ class Equations(object):
         u=3*v : volt
         w=v
         ''')
+    
+    **Details**
+    
+    For more details, see :ref:`moreonequations` in the user manual.
     """
     def __init__(self,expr='',level=0,**kwds):
         # Empty object

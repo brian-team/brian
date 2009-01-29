@@ -54,7 +54,7 @@ Neuron groups
 -------------
 The key idea for efficient simulations is to update synchronously the state variables
 of all identical neuron models. A neuron group is defined by the model equations, and
-optionnally a threshold condition and a reset. For example for 100 neurons::
+optionally a threshold condition and a reset. For example for 100 neurons::
 
   eqs=Equations('dv/dt=-v/tau : volt')
   group=NeuronGroup(100,model=eqs,reset=0*mV,threshold=10*mV)
@@ -117,6 +117,11 @@ subgroups of this big group.
 	^^^^^^^^^^^^^^^^^^
 	If an underscore is added to the name of a state variable (``P.v_``) then the units are removed.
 	This can be useful when writing custom reset or threshold functions, to make the code faster.
+
+Details
+^^^^^^^
+
+For details, see the reference documentation for :class:`NeuronGroup`.
 
 Reset
 -----
