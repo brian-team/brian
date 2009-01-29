@@ -1,6 +1,7 @@
 New features since 1.0.0
 ------------------------
 
+* clear() function added for ipython users
 * New DelayConnection for heterogeneous delays
 * Short-term plasticity (Tsodyks-Markram model)
 * Simplified initialisation of Connection objects

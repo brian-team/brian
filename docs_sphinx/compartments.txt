@@ -1,4 +1,0 @@
-.. currentmodule:: brian
-
-Compartmental modelling
-=======================

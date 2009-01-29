@@ -8,6 +8,7 @@ For an overview of Brian, see the :ref:`user-manual` section.
 .. toctree::
     :maxdepth: 2
 
+    reference-scipy
     reference-units
     reference-clocks
     reference-models-and-groups
@@ -20,3 +21,4 @@ For an overview of Brian, see the :ref:`user-manual` section.
     reference-plotting
     reference-magic
     reference-tests
+    

@@ -1,6 +1,0 @@
-.. currentmodule:: brian
-
-Tabulation
-----------
-
-TODO: document brian.utils.tabulate module

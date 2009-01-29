@@ -1,4 +1,0 @@
-.. currentmodule:: brian
-
-Magic in Brian
-==============

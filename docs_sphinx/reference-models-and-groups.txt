@@ -20,18 +20,15 @@ The :class:`Equations` object
 For information on integration methods, and the :class:`StateUpdater`
 class, see :ref:`integration`.
 
-.. index::
-	single: model
-
-The :class:`Model` object (DEPRECATED IN BRIAN 1.1)
----------------------------------------------------
-
-.. autoclass:: Model
-
 The :class:`NeuronGroup` object
 -------------------------------
 
 .. autoclass:: NeuronGroup
+
+.. index::
+	single: model
+
+.. autoclass:: Model
 
 .. index:: reset
 

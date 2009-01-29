@@ -1,9 +1,5 @@
 Tutorial 2: Connections
 -----------------------
 
-In this tutorial, we will cover in more detail the concept of the Connection
+In this tutorial, we will cover in more detail the concept of a :class:`Connection`
 in Brian.
-
-This tutorial assumes you have followed :ref:`tutorial1_basic_concepts`. It would
-also be useful to read the :ref:`concepts-overview` section of the :ref:`concepts` chapter of
-the main documentation.
