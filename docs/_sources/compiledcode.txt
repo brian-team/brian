@@ -1,0 +1,42 @@
+.. currentmodule:: brian
+
+.. _compiled-code:
+
+Compiled code
+=============
+
+Compiled C code can be used in several places in Brian to get speed improvements in cases where performance
+is the most important factor.
+
+Weave
+-----
+
+Weave is a SciPy module that allows the use of inlined C++ code. Brian by default doesn't use any C++
+optimisations for maximum compatibility across platforms, but you can enable several optimised
+versions of Brian objects and functions by enabling weave compilation. See :ref:`preferences`
+for more information.
+
+See also :ref:`efficiency-vectorisation` for some information on writing your own inlined C++ code
+using Weave.
+
+Circular arrays
+---------------
+
+For maximum compatibility, Brian works with pure Python only. However, as well as the optional
+weave optimisations, there is also an object used in the spike propagation code that can run
+with a pure C++ version for a considerable speedup (1.5-3x). You need a copy of the ``gcc`` compiler
+installed (either on linux or through cygwin on Windows) to build it.
+
+Installation:
+
+In a command prompt or shell window, go to the directory where Brian is installed. On Windows this
+will probably be ``C:\Python25\lib\site-packages\brian``. Now
+go to the Brian/brian/utils/ccircular folder. If you're on Linux (and this may also work for Mac) run
+the command "python setup.py build_ext --inplace". If you're on windows you'll need to have cygwin with gcc
+installed, and then you run "setup.py build_ext --inplace -c mingw32" instead. You should see some
+compilation, possibly with some warnings but no errors.
+
+Automatically generated C code
+------------------------------
+
+There is an experimental module for automatic generation of C code, see :ref:`ccodegen` for details.

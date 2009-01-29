@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Example: jeffress (audition) &mdash; Brian v1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
+    <link rel="up" title="Examples" href="examples.html" />
+    <link rel="next" title="Example: licklider (audition)" href="examples-audition_licklider.html" />
+    <link rel="prev" title="Example: voltageclamp (electrophysiology)" href="examples-electrophysiology_voltageclamp.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="examples-audition_licklider.html" title="Example: licklider (audition)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="examples-electrophysiology_voltageclamp.html" title="Example: voltageclamp (electrophysiology)"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="slowstart.html" accesskey="U">Getting started</a> &raquo;</li>
+          <li><a href="examples.html" accesskey="U">Examples</a> &raquo;</li> 
+      </ul>
+    </div>  
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <span class="target" id="example-audition-jeffress"></span><div class="section" id="example-jeffress-audition">
+<span id="index-204"></span><h1>Example: jeffress (audition)<a class="headerlink" href="#example-jeffress-audition" title="Permalink to this headline">¶</a></h1>
+<p>Jeffress model, adapted with spiking neuron models.
+A sound source (white noise) is moving around the head.
+Delay differences between the two ears are used to determine the azimuth of the source.
+Delays are mapped to a neural place code using delay lines (each neuron receives input
+from both ears, with different delays).</p>
+<ol class="upperalpha simple" start="18">
+<li>Brette</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">from</span> <span class="nn">brian</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="n">defaultclock</span><span class="o">.</span><span class="n">dt</span><span class="o">=.</span><span class="mf">02</span><span class="o">*</span><span class="n">ms</span>
+<span class="n">dt</span><span class="o">=</span><span class="n">defaultclock</span><span class="o">.</span><span class="n">dt</span>
+
+<span class="c"># Sound</span>
+<span class="n">x</span><span class="o">=</span><span class="n">randn</span><span class="p">(</span><span class="mf">50000</span><span class="p">)</span> <span class="c"># white noise</span>
+<span class="n">nsound</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">sound</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">10</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">array</span><span class="p">(</span><span class="n">t</span><span class="o">/</span><span class="n">dt</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">%</span> <span class="n">nsound</span><span class="p">]</span>
+
+<span class="c"># Ears and sound motion around the head (constant angular speed)</span>
+<span class="n">sound_speed</span><span class="o">=</span><span class="mf">300</span><span class="o">*</span><span class="n">metre</span><span class="o">/</span><span class="n">second</span>
+<span class="n">interaural_distance</span><span class="o">=</span><span class="mf">20</span><span class="o">*</span><span class="n">cm</span> <span class="c"># big head!</span>
+<span class="n">max_delay</span><span class="o">=</span><span class="n">interaural_distance</span><span class="o">/</span><span class="n">sound_speed</span>
+<span class="k">print</span> <span class="s">&quot;Maximum interaural delay:&quot;</span><span class="p">,</span><span class="n">max_delay</span>
+<span class="n">angular_speed</span><span class="o">=</span><span class="mf">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">radian</span><span class="o">/</span><span class="n">second</span> <span class="c"># 1 turn/second</span>
+<span class="n">tau_ear</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">ms</span>
+<span class="n">sigma_ear</span><span class="o">=.</span><span class="mf">1</span>
+<span class="n">eqs_ears</span><span class="o">=</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">dx/dt=(sound(t-delay)-x)/tau_ear+sigma_ear*(2./tau_ear)**.5*xi : 1</span>
+<span class="s">delay=distance*sin(theta) : second</span>
+<span class="s">distance : second # distance to the centre of the head in time units</span>
+<span class="s">dtheta/dt=angular_speed : radian</span>
+<span class="s">&#39;&#39;&#39;</span>
+<span class="n">ears</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="mf">2</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs_ears</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="p">,</span><span class="n">refractory</span><span class="o">=</span><span class="mf">2.5</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<span class="n">ears</span><span class="o">.</span><span class="n">distance</span><span class="o">=</span><span class="p">[</span><span class="o">-.</span><span class="mf">5</span><span class="o">*</span><span class="n">max_delay</span><span class="p">,</span><span class="o">.</span><span class="mf">5</span><span class="o">*</span><span class="n">max_delay</span><span class="p">]</span>
+<span class="n">traces</span><span class="o">=</span><span class="n">StateMonitor</span><span class="p">(</span><span class="n">ears</span><span class="p">,</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="n">record</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="c"># Coincidence detectors</span>
+<span class="n">N</span><span class="o">=</span><span class="mf">300</span>
+<span class="n">tau</span><span class="o">=</span><span class="mf">1</span><span class="o">*</span><span class="n">ms</span>
+<span class="n">sigma</span><span class="o">=.</span><span class="mf">1</span>
+<span class="n">eqs_neurons</span><span class="o">=</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">dv/dt=-v/tau+sigma*(2./tau)**.5*xi : 1</span>
+<span class="s">&#39;&#39;&#39;</span>
+<span class="n">neurons</span><span class="o">=</span><span class="n">NeuronGroup</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">eqs_neurons</span><span class="p">,</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1</span><span class="p">,</span><span class="n">reset</span><span class="o">=</span><span class="mf">0</span><span class="p">)</span>
+<span class="n">synapses</span><span class="o">=</span><span class="n">Connection</span><span class="p">(</span><span class="n">ears</span><span class="p">,</span><span class="n">neurons</span><span class="p">,</span><span class="s">&#39;v&#39;</span><span class="p">,</span><span class="n">structure</span><span class="o">=</span><span class="s">&#39;dense&#39;</span><span class="p">,</span><span class="n">delay</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">max_delay</span><span class="o">=</span><span class="mf">1.1</span><span class="o">*</span><span class="n">max_delay</span><span class="p">)</span>
+<span class="n">synapses</span><span class="o">.</span><span class="n">connect_full</span><span class="p">(</span><span class="n">ears</span><span class="p">,</span><span class="n">neurons</span><span class="p">,</span><span class="n">weight</span><span class="o">=.</span><span class="mf">5</span><span class="p">)</span>
+<span class="n">synapses</span><span class="o">.</span><span class="n">delay</span><span class="p">[</span><span class="mf">0</span><span class="p">,:]</span><span class="o">=</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="mf">1.1</span><span class="o">*</span><span class="n">max_delay</span><span class="p">,</span><span class="n">N</span><span class="p">)</span>
+<span class="n">synapses</span><span class="o">.</span><span class="n">delay</span><span class="p">[</span><span class="mf">1</span><span class="p">,:]</span><span class="o">=</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="mf">1.1</span><span class="o">*</span><span class="n">max_delay</span><span class="p">,</span><span class="n">N</span><span class="p">)[::</span><span class="o">-</span><span class="mf">1</span><span class="p">]</span>
+<span class="n">spikes</span><span class="o">=</span><span class="n">SpikeMonitor</span><span class="p">(</span><span class="n">neurons</span><span class="p">)</span>
+
+<span class="n">run</span><span class="p">(</span><span class="mf">1000</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<span class="n">raster_plot</span><span class="p">(</span><span class="n">spikes</span><span class="p">)</span>
+<span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="examples-electrophysiology_voltageclamp.html" title="previous chapter">Example: voltageclamp (electrophysiology)</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="examples-audition_licklider.html" title="next chapter">Example: licklider (audition)</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/examples-audition_jeffress.txt">Show Source</a></li>
+            </ul>
+          <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="examples-audition_licklider.html" title="Example: licklider (audition)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="examples-electrophysiology_voltageclamp.html" title="Example: voltageclamp (electrophysiology)"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="slowstart.html" accesskey="U">Getting started</a> &raquo;</li>
+          <li><a href="examples.html" accesskey="U">Examples</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2008, Romain Brette, Dan Goodman.
+      Last updated on Jan 28, 2009.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
+    </div>
+  </body>
+</html>

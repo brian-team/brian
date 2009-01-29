@@ -1,0 +1,29 @@
+.. currentmodule:: brian
+
+Short-term plasticity
+=====================
+
+Brian implements the short-term plasticity model described in:
+Markram et al (1998). Differential signaling via the same axon of neocortical
+pyramidal neurons, PNAS 95(9):5323-8.
+Synaptic dynamics is described by two variables x and u, which
+follows the following differential equations::
+
+  dx/dt=(1-x)/taud  (depression)
+  du/dt=(U-u)/tauf  (facilitation)
+
+where taud, tauf are time constants and U is a parameter in 0..1.
+Each a presynaptic spike triggers modifications of the variables::
+
+  u->u+U*(1-u)
+  x->x*(1-u)
+
+Note that the update order is important. 
+Synaptic weights are modulated by the product u*x (in 0..1), which is taken
+before updating the variables. This model describes both depression and
+facilitation.
+
+To introduce short-term plasticity into an existing connection C, use the class
+:class:`STP`::
+
+  mystp=STP(C,taud=100*ms,tauf=5*ms,U=.6)

@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Short-term plasticity &mdash; Brian v1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Brian v1.0.0 documentation" href="index.html" />
+    <link rel="up" title="User manual" href="usermanual.html" />
+    <link rel="next" title="Recording" href="recording.html" />
+    <link rel="prev" title="Spike-timing-dependent plasticity" href="stdp.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="recording.html" title="Recording"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="stdp.html" title="Spike-timing-dependent plasticity"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="usermanual.html" accesskey="U">User manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <div class="section" id="short-term-plasticity">
+<h1>Short-term plasticity<a class="headerlink" href="#short-term-plasticity" title="Permalink to this headline">¶</a></h1>
+<p>Brian implements the short-term plasticity model described in:
+Markram et al (1998). Differential signaling via the same axon of neocortical
+pyramidal neurons, PNAS 95(9):5323-8.
+Synaptic dynamics is described by two variables x and u, which
+follows the following differential equations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dx</span><span class="o">/</span><span class="n">dt</span><span class="o">=</span><span class="p">(</span><span class="mf">1</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">taud</span>  <span class="p">(</span><span class="n">depression</span><span class="p">)</span>
+<span class="n">du</span><span class="o">/</span><span class="n">dt</span><span class="o">=</span><span class="p">(</span><span class="n">U</span><span class="o">-</span><span class="n">u</span><span class="p">)</span><span class="o">/</span><span class="n">tauf</span>  <span class="p">(</span><span class="n">facilitation</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where taud, tauf are time constants and U is a parameter in 0..1.
+Each a presynaptic spike triggers modifications of the variables:</p>
+<div class="highlight-python"><pre>u-&gt;u+U*(1-u)
+x-&gt;x*(1-u)</pre>
+</div>
+<p>Note that the update order is important.
+Synaptic weights are modulated by the product u*x (in 0..1), which is taken
+before updating the variables. This model describes both depression and
+facilitation.</p>
+<p>To introduce short-term plasticity into an existing connection C, use the class
+<tt class="xref docutils literal"><span class="pre">STP</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mystp</span><span class="o">=</span><span class="n">STP</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="n">taud</span><span class="o">=</span><span class="mf">100</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">tauf</span><span class="o">=</span><span class="mf">5</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span><span class="n">U</span><span class="o">=.</span><span class="mf">6</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="stdp.html" title="previous chapter">Spike-timing-dependent plasticity</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="recording.html" title="next chapter">Recording</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/stp.txt">Show Source</a></li>
+            </ul>
+          <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="recording.html" title="Recording"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="stdp.html" title="Spike-timing-dependent plasticity"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Brian v1.0.0 documentation</a> &raquo;</li>
+          <li><a href="usermanual.html" accesskey="U">User manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2008, Romain Brette, Dan Goodman.
+      Last updated on Jan 28, 2009.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
+    </div>
+  </body>
+</html>
