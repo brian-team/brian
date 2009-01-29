@@ -8,10 +8,10 @@
 	- STDP (ref done but could be improved)
 	- STP (ref done but could be improved)
 	- Utils
-	   + autodiff?
+	   + [NOT YET] autodiff?
 	   + DONE! parallelpython
 	   + DONE! parameters
-	   + statistics?
+	   + DONE! statistics? (see plotting and analysis)
 	   + tabulate?
 	   + fastexp?
 	- Experimental features could be partially documented, or at least mentioned.
