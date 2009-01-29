@@ -1,6 +1,4 @@
 * Documentation (in rough order of importance)
-	- STDP (ref)
-	- STP (ref)
 	- Equations - up to date? (ref?, user?)
 	- NeuronGroup - up to date? (ref? user?)
 	- Compartments, documentation needs updating, current documentation says it
@@ -9,22 +7,25 @@
 	  library objects I think, membrane equations and so forth...
 	- StateUpdaters - up to date? (very little in ref manual, user?)
 	- Correlated spikes not documented
+	- STDP (ref done but could be improved)
+	- STP (ref done but could be improved)
 	- Utils
 	   + autodiff?
-	   + parallelpython?
-	   + parameters?
+	   + DONE! parallelpython
+	   + DONE! parameters
 	   + statistics?
 	   + tabulate?
-	   + fastexp
+	   + fastexp?
 	- Experimental features could be partially documented, or at least mentioned.
 	   + integrodiff
 	   + morphology
-	   + multilinearstateupdater
+	   + DONE! multilinearstateupdater
 	   + DONE! ccodegen
 	- DONE! Compiled code stuff
-	   + SWIG version of circular
-	   + brian_global_config.py
-	   + ccodegen
+	   + DONE! SWIG version of circular
+	   + DONE! brian_global_config.py
+	   + DONE! ccodegen
+	- DONE! clear() function + documentation
 	- DONE! Need to mention brian_global_config.py somewhere
 	- DONE! Model deprecated
 	- DONE! MagicNetwork
@@ -37,7 +38,6 @@
 	- DONE! DelayConnection
 	- DONE! String resets and threshold
 	 
-* clear() function + documentation	
 * Update reference sheet
 * Clean NeuronGroup init, in particular S0 is strangely handled; remove the
 init keyword? (in fact S0 is used mostly for unit checking)

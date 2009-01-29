@@ -71,11 +71,29 @@ class STPUpdater(SpikeMonitor):
 
 class STP(NetworkOperation):
     '''
-    Short-term synaptic plasticity, following the Tsodyks-Markram model:
-    dx/dt=(1-x)/taud  (depression)
-    du/dt=(U-u)/tauf  (facilitation)
-    spike: u->u+U*(1-u);x->x*(1-u)
-    u*x is the modulation factor (in 0..1) for the synaptic weight
+    Short-term synaptic plasticity, following the Tsodyks-Markram model.
+
+    Implements the short-term plasticity model described in Markram et al (1998).
+    Differential signaling via the same axon of
+    neocortical pyramidal neurons, PNAS.
+    Synaptic dynamics is described by two variables x and u, which follow
+    the following differential equations::
+    
+      dx/dt=(1-x)/taud  (depression)
+      du/dt=(U-u)/tauf  (facilitation)
+    
+    where taud, tauf are time constants and U is a parameter in 0..1. Each presynaptic
+    spike triggers modifications of the variables::
+    
+      u<-u+U*(1-u)
+      x<-x*(1-u)
+    
+    Synaptic weights are modulated by the product ``u*x`` (in 0..1) (before update).
+    
+    Reference:
+    
+    * Markram et al (1998). "Differential signaling via the same axon of
+      neocortical pyramidal neurons", PNAS.
     '''
     def __init__(self,C,taud,tauf,U):
         NetworkOperation.__init__(self,lambda:None)

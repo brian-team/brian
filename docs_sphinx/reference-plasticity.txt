@@ -1,0 +1,15 @@
+.. currentmodule:: brian
+
+Plasticity
+==========
+  
+Spike timing dependent plasticity (STDP)
+----------------------------------------
+
+.. autoclass:: STDP
+.. autoclass:: ExponentialSTDP
+
+Short term plasticity (STP)
+---------------------------
+
+.. autoclass:: STP

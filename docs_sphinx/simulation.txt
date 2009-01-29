@@ -45,6 +45,10 @@ objects in the namespace (groups, connections, monitors, user operations), and r
 In complex scripts, the user might want to run only selected objects. In that case, a :class:`Network` object
 needs to be created.
 
+Users of ``ipython`` may also want to make use of the :func:`clear` function which removes all Brian objects
+and deletes their data. This is useful because ``ipython`` keeps persistent references to these objects
+which stops memory from being freed.
+
 The Network class
 -----------------
 A :class:`Network` object holds a collection of objets that can be run, i.e., objects with class :class:`NeuronGroup`,

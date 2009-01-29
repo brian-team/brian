@@ -11,4 +11,5 @@ be subject to change.
    :maxdepth: 1
   
    experimental-ccodegen
+   experimental-multilinearstateupdater
    

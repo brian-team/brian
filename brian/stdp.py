@@ -42,6 +42,42 @@ class STDPUpdater(SpikeMonitor):
 class STDP(NetworkOperation):
     '''
     Spike-timing-dependent plasticity    
+
+    Initialised with arguments:
+
+    ``C``
+        connection object
+    ``eqs``
+        differential equations (with units)
+    ``pre``
+        Python code for presynaptic spikes
+    ``post``
+        Python code for postsynaptic spikes
+    ``wmax``
+        maximum weight (default unlimited)
+    ``delay_pre``
+        presynaptic delay
+    ``delay_post``
+        postsynaptic delay (backward propagating spike)
+    
+    **Example**
+    
+    ::
+    
+        eqs_stdp = """
+        dA_pre/dt  = -A_pre/tau_pre   : 1
+        dA_post/dt = -A_post/tau_post : 1
+        """
+        stdp = STDP(synapses, eqs=eqs_stdp, pre='A_pre+=dA_pre; w+=A_post',
+                    post='A_post+=dA_post; w+=A_pre', wmax=gmax)
+    
+    **Technical details**
+    
+    The equations are split into two groups, pre and post. Two groups are created
+    to carry these variables and to update them (these are implemented as
+    :class:`NeuronGroup` objects). As well as propagating spikes from the source
+    and target of ``C`` via ``C``, spikes are also propagated to the respective
+    groups created. At spike propagation time the weight values are updated.
     '''
     #TODO: use equations instead of linearupdater (-> nonlinear equations possible)
     #TODO: allow pre and postsynaptic group variables
@@ -175,25 +211,31 @@ class ExponentialSTDP(STDP):
     '''
     Exponential STDP.
     
-    Synaptic weight change (relative to the maximum weight wmax):
-    f(s) = Ap*exp(-s/taup) if s >0
-           Am*exp(s/taum) if s <0
+    Initialised with the following arguments:
     
-    interactions =
-      'all' : contributions from all pre-post pairs are added
-      'nearest': only nearest-neighbour pairs are considered
-      'nearest_pre': nearest presynaptic spike, all postsynaptic spikes
-      'nearest_post': nearest postsynaptic spike, all presynaptic spikes
+    ``taup``, ``taum``, ``Ap``, ``Am``
+        Synaptic weight change (relative to the maximum weight wmax)::
+        
+            f(s) = Ap*exp(-s/taup) if s >0
+            f(s) = Am*exp(s/taum) if s <0
+                    
+    ``interactions``
+      * 'all': contributions from all pre-post pairs are added
+      * 'nearest': only nearest-neighbour pairs are considered
+      * 'nearest_pre': nearest presynaptic spike, all postsynaptic spikes
+      * 'nearest_post': nearest postsynaptic spike, all presynaptic spikes
+          
+    ``wmax``
+        maximum synaptic weight
+        
+    ``update``
+      * 'additive': modifications are additive (independent of synaptic weight)
+        (or "hard bounds")
+      * 'multiplicative': modifications are multiplicative (proportional to w)
+        (or "soft bounds")
+      * 'mixed': depression is multiplicative, potentiation is additive
     
-    wmax = maximum synaptic weight
-    
-    update =
-      'additive' : modifications are additive (independent of synaptic weight)
-                   (or "hard bounds")
-      'multiplicative' : modifications are multiplicative (proportional to w)
-                   (or "soft bounds")
-      'mixed' : depression is multiplicative,
-                potentiation is additive
+    See documentation for :class:`STDP` for more details.
     '''
     def __init__(self,C,taup,taum,Ap,Am,interactions='all',wmax=None,
                  update='additive',delay_pre=None,delay_post=None):

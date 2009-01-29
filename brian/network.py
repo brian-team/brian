@@ -35,7 +35,7 @@
 '''
 Network class
 '''
-__all__ = ['Network','MagicNetwork','NetworkOperation','network_operation','run','reinit','stop']
+__all__ = ['Network','MagicNetwork','NetworkOperation','network_operation','run','reinit','stop','clear']
 
 from Queue import Queue
 from connection import *
@@ -790,3 +790,22 @@ def stop():
     '''
     global globally_stopped
     globally_stopped = True
+
+def clear(erase=True):
+    '''
+    Clears all Brian objects.
+    
+    Specifically, it stops all existing Brian objects from being collected by
+    :class:`MagicNetwork` (objects created after clearing will still be collected).
+    If ``erase`` is ``True`` then it will also delete all data from these objects.
+    This is useful in, for example, ``ipython`` which stores persistent references
+    to objects in any given session, stopping the data and memory from being freed
+    up. 
+    '''
+    net = MagicNetwork(level=2)
+    for o in net.groups+net.connections+net.operations:
+        o.set_instance_id(-1)
+        if erase:
+            for k, v in o.__dict__.iteritems():
+                object.__setattr__(o, k, None)
+             

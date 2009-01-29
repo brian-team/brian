@@ -1,0 +1,24 @@
+.. currentmodule:: brian.experimental.multilinearstateupdater
+
+Multilinear state updater
+=========================
+
+.. autoclass:: MultiLinearNeuronGroup
+
+Example::
+
+    eqs = '''
+    dv/dt = k*v/(1*second) : 1
+    dw/dt = k*w/(1*second) : 1
+    k : 1
+    '''
+    k = array([-1,-2,-3])
+    subs = ['k']
+    G = MultiLinearNeuronGroup(eqs, subs)
+    G.v = 1
+    G.w = 0
+    M = StateMonitor(G, 'v', record=True)
+    run(1*second)
+    for i in range(len(G)):
+        plot(M.times, M[i])
+    show()

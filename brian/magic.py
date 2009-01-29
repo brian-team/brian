@@ -311,7 +311,7 @@ class WeakSet(set):
                 return
     def get(self, id=None):
         if id is None:
-            return [ _() for _ in self ]
+            return [ _() for _ in self if _.get_i_d() != -1 ]
         else:
             return [ _() for _ in self if _.get_i_d() == id]
 

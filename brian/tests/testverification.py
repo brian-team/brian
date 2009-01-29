@@ -78,18 +78,14 @@ class TestSequenceFunctions(unittest.TestCase):
         Vt   = 10*mV
         Vr   =  0*mV
         
-        model = Model(equations='''
-                       dV/dt = (-V+ge-gi)/taum : volt
-                       dge/dt = -ge/taue : volt
-                       dgi/dt = -gi/taui : volt
-                       ''',
-                       threshold=Vt,
-                       reset=Vr)
-        
         spiketimes = [(0,0*ms)]
         
         G1 = SpikeGeneratorGroup(2,spiketimes)
-        G2 = NeuronGroup(N=1,model=model)
+        G2 = NeuronGroup(N=1,model='''
+                       dV/dt = (-V+ge-gi)/taum : volt
+                       dge/dt = -ge/taue : volt
+                       dgi/dt = -gi/taui : volt
+                       ''', threshold=Vt, reset=Vr)
         G2.V = Vr
         
         C1 = Connection(G1,G2,'ge')
