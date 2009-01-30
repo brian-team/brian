@@ -6,7 +6,7 @@ PRL 2000
 
 Poisson inputs are replaced by integrate-and-fire neurons
 
-R. Brette
+Romain Brette
 '''
 from brian import *
 

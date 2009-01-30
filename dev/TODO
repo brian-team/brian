@@ -46,7 +46,8 @@ init keyword? (in fact S0 is used mostly for unit checking)
 (* String resets and thresholds should check for common cases and use accelerated
    versions if available (e.g. VariableThreshold, etc.).)
 
-(* Change default values of compile and freeze to true in NeuronGroup? )
+(* Change default values of compile and freeze to true in NeuronGroup? 
+[I would say no, it is less reliable])
 
 (* Cluster computing)
 Idea: use pypar, it seems really simple to use
