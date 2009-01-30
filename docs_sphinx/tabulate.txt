@@ -1,0 +1,13 @@
+.. currentmodule:: brian
+
+Precalculated tables
+--------------------
+One way to speed up simulations is to use precalculated tables for complicated
+functions. The :class:`Tabulate` class defines a table of values of the
+given function at regularly sampled points. The :class:`TabulateInterp` class
+defines a table with linear interpolation, which is much more precise. Both work
+with scalar and vector arguments.
+
+.. autoclass:: Tabulate
+
+.. autoclass:: TabulateInterp

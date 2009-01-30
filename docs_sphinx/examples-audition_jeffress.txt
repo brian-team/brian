@@ -19,7 +19,7 @@ Delay differences between the two ears are used to determine the azimuth of the 
 Delays are mapped to a neural place code using delay lines (each neuron receives input
 from both ears, with different delays).
 
-R. Brette
+Romain Brette
 
 ::
 

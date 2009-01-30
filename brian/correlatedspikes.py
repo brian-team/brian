@@ -112,7 +112,7 @@ class HomogeneousCorrelatedSpikeTrains(NeuronGroup):
         r = rate (Hz)
         c = total correlation strength (in [0,1])
         tauc = correlation time constant (ms)
-        Cross-covariance functions are c*exp(-|s|/tauc)
+        Cross-covariance functions are (c*r/tauc)*exp(-|s|/tauc)
         '''
         self.N=N
         # Correction of mu and sigma

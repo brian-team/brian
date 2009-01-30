@@ -16,12 +16,8 @@ There is also a course for biologists at the Pasteur Institute:
 
 NumPy, SciPy and Pylab
 ----------------------
-
-Unfortunately, the quality of the documentation and tutorials for SciPy lags a
-long way behind the quality of the package itself. For the moment, the first
-place to look is the SciPy `getting started
-<http://www.scipy.org/Getting_Started>`__ page, and then the `complete documentation 
-<http://www.scipy.org/Documentation>`__ page. To start using Brian, you do not need
+The first place to look is the `SciPy documentation website
+<http://docs.scipy.org/doc/>`__. To start using Brian, you do not need
 to understand much about how NumPy and SciPy work, although understanding how their
 array structures work will be useful for more advanced uses of Brian.
 

@@ -19,7 +19,7 @@ G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
               threshold=Vt, reset=Vr)
 
 C = Connection(G,G)
-C.connect_random(G,G,0.1,weight=psp)
+C.connect_random(sparseness=0.1,weight=psp)
 
 M = SpikeMonitor(G)
 

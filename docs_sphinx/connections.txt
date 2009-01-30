@@ -29,7 +29,7 @@ Here a matrix with random elements is used to define the synaptic weights from `
 to ``group2``. It is possible to build the matrix by block by using subgroups, e.g.::
 
   W=rand(20,30)*nS
-  myconnection.connect(group1[0:20],group2[10:40],W)
+  myconnection.connect(group1[0:20],group2[10:40],W=W)
 
 There are several handy functions available to set the synaptic weights:
 :meth:`~Connection.connect_full`, :meth:`~Connection.connect_random` and
@@ -40,7 +40,7 @@ is used to set uniform weights for all pairs of neurons in the (sub)groups::
 
 The second one is used to set uniform weights for random pairs of neurons in the (sub)groups::
 
-  myconnection.connect_random(group1[0:20],group2[10:40],0.02,weight=5*nS)
+  myconnection.connect_random(group1[0:20],group2[10:40],sparseness=0.02,weight=5*nS)
 
 Here the third argument (0.02) is the probability that a synaptic connection exists between two neurons.
 The number of presynaptic neurons can be made constant by setting the keyword ``fixed=True`` 
@@ -51,6 +51,12 @@ group to neuron i from the second group::
   myconnection.connect_one_to_one(group1,group2,weight=3*nS)
   
 Both groups must have the same number of neurons.
+
+If you are connecting the whole groups, you can omit the first two arguments, e.g.::
+
+  myconnection.connect_full(weight=5*nS)
+  
+connects ``group1`` to ``group2`` with weights 5 nS.
 
 Building connections with connectivity functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

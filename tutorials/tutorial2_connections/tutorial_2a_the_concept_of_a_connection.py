@@ -29,7 +29,7 @@ Differential equations
 
 This time, we will have multiple differential equations. We will use the
 :class:`Equations` object, although you could equally pass the multi-line string
-defining the differential equations directly when initialising the :class:`Model`
+defining the differential equations directly when initialising the :class:`NeuronGroup`
 object (see the next part of the tutorial for an example of this).
 '''
 eqs = Equations('''

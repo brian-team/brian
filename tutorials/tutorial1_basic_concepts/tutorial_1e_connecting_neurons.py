@@ -43,8 +43,12 @@ with probability 0.1. The weight of the connection is the
 amount that is added to the membrane potential of the target
 neuron when the source neuron fires a spike.
 '''
-C.connect_random(G,G,0.1,weight=psp)
+C.connect_random(sparseness=0.1,weight=psp)
 '''
+These two previous lines could be done in one line::
+
+  C = Connection(G,G,sparseness=0.1,weight=psp)
+
 Now we continue as before:
 '''
 M = SpikeMonitor(G)

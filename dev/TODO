@@ -4,7 +4,7 @@
 	  plus there is no reference documentation. This also holds for all the
 	  library objects I think, membrane equations and so forth...
 	- StateUpdaters - up to date? (very little in ref manual, user?)
-	- Correlated spikes not documented
+	- DONE! Correlated spikes not documented
 	- STDP (ref done but could be improved)
 	- STP (ref done but could be improved)
 	- Utils
@@ -12,11 +12,11 @@
 	   + DONE! parallelpython
 	   + DONE! parameters
 	   + DONE! statistics? (see plotting and analysis)
-	   + tabulate?
-	   + fastexp?
+	   + DONE! tabulate?
+	   + [NOT YET] fastexp?
 	- Experimental features could be partially documented, or at least mentioned.
-	   + integrodiff
-	   + morphology
+	   + [NOT YET] integrodiff
+	   + [NOT YET] morphology
 	   + DONE! multilinearstateupdater
 	   + DONE! ccodegen
 	- DONE! Compiled code stuff

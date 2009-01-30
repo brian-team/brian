@@ -19,7 +19,7 @@ G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
               threshold=Vt, reset=Vr)
 
 C = Connection(G,G)
-C.connect_random(G,G,0.1,weight=psp)
+C.connect_random(sparseness=0.1,weight=psp)
 '''
 This time we won't record the spikes.
 
@@ -59,9 +59,9 @@ measured in ms and the values so that they're measured in
 mV. We also label the plot using PyLab's ``xlabel``, ``ylabel`` and
 ``title`` functions, which again mimic the Matlab equivalents.
 '''
-plot(M.times/(1*msecond),M[0]/(1*mvolt))
+plot(M.times/ms,M[0]/mV)
 xlabel('Time (in ms)')
-ylabel('Memrane potential (in mV)')
+ylabel('Membrane potential (in mV)')
 title('Membrane potential for neuron 0')
 show()
 '''

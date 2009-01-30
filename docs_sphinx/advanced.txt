@@ -11,12 +11,11 @@ Advanced concepts
    compiledcode
    tasks_multiplefiles
    parameters
+   tabulate
    reference-preferences
    reference-logging
 
 .. TODO: advanced sections   
-   plasticity
    interfaces
    compartments
-   tabulate
    

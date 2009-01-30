@@ -1,8 +1,9 @@
 Installation
 ============
 
-If you already have a copy of Python 2.5 or 2.6, try the `Quick installation`_ below,
-otherwise take a look at `Manual installation`_. 
+If you already have a copy of Python 2.5, try the `Quick installation`_ below,
+otherwise take a look at `Manual installation`_.
+Note: the Windows version of Numpy is currently not compatible with Python 2.6.
 
 Quick installation
 ------------------
@@ -19,7 +20,7 @@ Manual installation
 
 Installing Brian requires the following components:
 
-#. `Python <http://www.python.org/download/>`__ version 2.5 or 2.6.
+#. `Python <http://www.python.org/download/>`__ version 2.5.
 #. `NumPy and Scipy <http://www.scipy.org/Download>`__ packages for Python:
    an efficient scientific library.
 #. `PyLab <http://matplotlib.sourceforge.net/>`__ package for Python:
@@ -47,6 +48,9 @@ running on Windows).
 
 Mac users: the `Scipy Superpack for Intel OS X <http://trichech.us/?page_id=5>`__ includes
 recent versions of Numpy, Scipy, Pylab and IPython.
+
+Windows users: the `Python(x,y) <http://www.pythonxy.com/>`__ distribution includes all the packages
+(including Eclipse and IPython) above except Brian.
 
 Installing Python packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

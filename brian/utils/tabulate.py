@@ -46,11 +46,14 @@ from numpy import NaN
 class Tabulate(object):
     '''
     An object to tabulate a numerical function.
-    Sample use:
+    
+    Sample use::
+    
       g=Tabulate(f,0.,1.,1000)
       y=g(.5)
       v=g([.1,.3])
       v=g(array([.1,.3]))
+      
     Arguments of g must lie in [xmin,xmax).
     An IndexError is raised is arguments are above xmax, but
     not always when they are below xmin (it can give weird results).
@@ -83,11 +86,14 @@ class Tabulate(object):
 class TabulateInterp(object):
     '''
     An object to tabulate a numerical function with linear interpolation.
-    Sample use:
+    
+    Sample use::
+    
       g=TabulateInterp(f,0.,1.,1000)
       y=g(.5)
       v=g([.1,.3])
       v=g(array([.1,.3]))
+      
     Arguments of g must lie in [xmin,xmax).
     An IndexError is raised is arguments are above xmax, but
     not always when they are below xmin (it can give weird results).

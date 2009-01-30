@@ -41,7 +41,6 @@ Compartmental neuron models can be created by merging several :class:`MembraneEq
 with the ``compartments`` module. If ``soma`` and ``dendrite`` are two compartments defined as
 :class:`MembraneEquation` objects, then a neuron with those 2 compartments can be created as follows::
 
-	from brian.compartments import *
 	neuron_eqs=Compartments({'soma':soma,'dendrite':dendrite})
 	neuron_eqs.connect('soma','dendrite',Ra)
 	neuron=NeuronGroup(1,model=neuron_eqs)

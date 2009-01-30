@@ -29,17 +29,46 @@ or::
 Correlated inputs
 -----------------
 Generation of correlated spike trains is partially implemented, using algorithms from the
-the following paper: Brette, R. (2008) `Generation of correlated spike trains <http://www.di.ens.fr/~brette/papers/Brette2008NC.html>`__, Neural Computation.
+the following paper: Brette, R. (2009) `Generation of correlated spike trains <http://www.di.ens.fr/~brette/papers/Brette2008NC.html>`__,
+Neural Computation 21(1): 188-215. Currently, only the method with Cox processes
+(or doubly stochastic processes, first method in the paper) is fully implemented.
 
+Doubly stochastic processes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To generate correlated spike trains with identical rates and homogeneous exponential correlations,
 use the class :class:`HomogeneousCorrelatedSpikeTrains`::
   
   group=HomogeneousCorrelatedSpikeTrains(100,r=10*Hz,c=0.1,tauc=10*ms)
 
 where ``r`` is the rate, ``c`` is the total correlation strength and ``tauc`` is the correlation time constant.
-The implementation uses Cox processes (or doubly stochastic processes) to generate the spike trains.
+The cross-covariance functions are `(c*r/tauc)*exp(-|s|/tauc)`.
+To generate correlated spike trains with arbitrary rates r(i) and
+cross-covariance functions `c(i,j)*exp(-|s|/tauc)`, use the class :class:`CorrelatedSpikeTrains`::
 
-Heterogeneous spike trains have not been implemented yet (but will be).
+  group=CorrelatedSpikeTrains(rates,C,tauc)
+
+where ``rates`` is the vector of rates r(i), ``C`` is the correlation matrix (which must be
+symmetrical) and ``tauc`` is the correlation time constant. Note that distortions are introduced
+with strong correlations and short correlation time constants. For short time constants,
+the mixture method is more appropriate (see the paper above).
+The two classes :class:`HomogeneousCorrelatedSpikeTrains` and :class:`CorrelatedSpikeTrains`
+define neuron groups, which can be directly used with :class:`Connection` objects.
+
+Mixture method
+^^^^^^^^^^^^^^
+The mixture method to generate correlated spike trains is only partially implemented and the
+interface may change in future releases. Currently, one can use the function
+:func:`mixture_process` to generate spike trains::
+
+  spiketrains=mixture_process(nu,P,tauc,t)
+
+where ``nu`` is the vector of rates of the source spike trains,
+``P`` is the mixture matrix (entries between 0 and 1),
+``tauc`` is the correlation time constant,
+``t`` is the duration. It returns a list of
+(neuron_number,spike_time), which can be passed to
+``SpikeGeneratorGroup``. This method is appropriate for short time constants and is explained
+in the paper mentioned above.
 
 Input spike trains
 ------------------

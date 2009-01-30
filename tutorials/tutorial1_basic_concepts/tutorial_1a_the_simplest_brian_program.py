@@ -58,30 +58,20 @@ case we will write::
 to define the variable ``V`` with units ``volt``.
 
 To complete the specification of the model, we also define a threshold and reset
-value.
+value and create a group of 40 neurons with this model.
 '''
-model = NeuronGroup(1, model='dV/dt = -(V-El)/tau : volt',
+G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
               threshold=Vt, reset=Vr)
 '''
-The statement creates a new object 'model' which is an instance of the
+The statement creates a new object 'G' which is an instance of the
 Brian class :class:`NeuronGroup`, initialised with the values in the
-line above and one single neuron. In Python, you can call a function or initialise
+line above and 40 neurons. In Python, you can call a function or initialise
 a class using keyword arguments as well as ordered arguments, so
 if I defined a function ``f(x,y)`` I could call it as ``f(1,2)`` or
 as ``f(y=2,x=1)`` and get the same effect. See the Python tutorial
 for more information on this.
 
-Group of neurons
-~~~~~~~~~~~~~~~~
-
-We create a group of 40 neurons with the model defined above.
-'''
-G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
-              threshold=Vt, reset=Vr)
-'''
-The ``N`` keyword gives the number of neurons in the group.
-
-For the moment, we leave the networks in this group unconnected
+For the moment, we leave the neurons in this group unconnected
 to each other, each evolves separately from the others.
 
 Simulation
