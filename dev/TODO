@@ -1,4 +1,3 @@
-* Update reference sheet
 * Clean NeuronGroup init, in particular S0 is strangely handled; remove the
 init keyword? (in fact S0 is used mostly for unit checking)
 (* Neuron = NeuronGroup(1,..))
