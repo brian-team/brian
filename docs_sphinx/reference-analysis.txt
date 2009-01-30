@@ -1,0 +1,16 @@
+.. currentmodule:: brian
+
+Analysis
+========
+
+Statistics of spike trains
+--------------------------
+.. autofunction:: firing_rate
+.. autofunction:: CV
+.. autofunction:: correlogram
+.. autofunction:: autocorrelogram
+.. autofunction:: CCF
+.. autofunction:: ACF
+.. autofunction:: CCVF
+.. autofunction:: ACVF
+.. autofunction:: total_correlation

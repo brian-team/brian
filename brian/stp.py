@@ -23,6 +23,7 @@ from network import NetworkOperation
 from neurongroup import NeuronGroup
 from monitor import SpikeMonitor
 from scipy import zeros,exp
+from connection import DelayConnection
 
 __all__=['STP']
 
@@ -96,6 +97,8 @@ class STP(NetworkOperation):
       neocortical pyramidal neurons", PNAS.
     '''
     def __init__(self,C,taud,tauf,U):
+        if isinstance(C,DelayConnection):
+            raise AttributeError,"STP does not handle heterogeneous connections yet."
         NetworkOperation.__init__(self,lambda:None)
         N=len(C.source)
         P=STPGroup(N)

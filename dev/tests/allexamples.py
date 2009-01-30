@@ -35,7 +35,7 @@ class GlobDirectoryWalker:
                     return fullname
 
 exclude_list=['parallelpython.py','pickle_loadnet.py','pickle_savenet.py','stim2d.py',
-              'interface.py','STDP1','STDP2']
+              'interface.py','STDP1.py','STDP2.py']
 examplefilenames = [name for name in GlobDirectoryWalker('','*.py') if all(fname not in name for fname in exclude_list)]
 examplefilenames = [ fname for fname in examplefilenames if 'parallelpythonised' not in fname ]
 exceptions = []

@@ -11,6 +11,7 @@ from stateupdater import get_linear_equations,LinearStateUpdater
 from scipy.linalg import expm
 from scipy import dot,eye,zeros,array,clip,exp,Inf
 from stdunits import ms
+from connection import DelayConnection
 import re
 
 __all__=['STDP','ExponentialSTDP']
@@ -91,6 +92,8 @@ class STDP(NetworkOperation):
         delay_pre: presynaptic delay
         delay_post: postsynaptic delay (backward propagating spike)
         '''
+        if isinstance(C,DelayConnection):
+            raise AttributeError,"STDP does not handle heterogeneous connections yet."
         NetworkOperation.__init__(self,lambda:None,clock=clock)
         # Merge multi-line statements
         #eqs=re.sub('\\\s*?\n',' ',eqs)
