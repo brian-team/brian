@@ -12,6 +12,7 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
         self.clock_dt = float(guess_clock(clock).dt)
         self.code_gpu = self.generate_forward_euler_code()
         self._prepared = False
+        
     def generate_forward_euler_code(self):
         eqs = self.eqs
         all_variables = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
@@ -37,6 +38,7 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
         self.gpu_mod = drv.SourceModule(clines)
         self.gpu_func = self.gpu_mod.get_function("stateupdate")
         return clines
+    
     def __call__(self, P):
         if not self._prepared:
             self._args = [float64(0.0)]+[P._gpu_vars[name] for name in self.eqs._diffeq_names]
@@ -68,13 +70,17 @@ class GPUNeuronGroup(NeuronGroup):
         self._owner = self
         self._N = N
         self.var_index = dict((name, -1) for name in eqs._eq_names+eqs._diffeq_names+eqs._alias.keys())
+    
     def __len__(self):
         return self._N
+    
     def state_(self, name):
         return self._gpu_vars[name].get()
     state = state_
+    
     def unit(self, name):
         return 1
+    
     def __setattr__(self, name, val):
         if hasattr(self, '_gpu_vars') and name in self._gpu_vars:
             if not isinstance(val, ndarray):
