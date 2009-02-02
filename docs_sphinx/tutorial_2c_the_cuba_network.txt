@@ -62,21 +62,14 @@ Now we define the connections. As in the previous part of the
 tutorial, ``ge`` is the excitatory current and ``gi`` is the inhibitory
 one. ``Ce`` says that an excitatory neuron can synapse onto any
 neuron in ``G``, be it excitatory or inhibitory. Similarly for
-inhibitory neurons.
-
-  ::
-
-    Ce=Connection(Ge, G, 'ge')
-    Ci=Connection(Gi, G, 'gi')
-
-We randomly connect ``Ge`` and ``Gi`` to the whole of ``G`` with
+inhibitory neurons. We also randomly connect ``Ge`` and ``Gi`` to the whole of ``G`` with
 probability 0.02 and the weights given in the list of
 parameters at the top.
 
   ::
 
-    Ce.connect_random(Ge, G, 0.02, weight=we)
-    Ci.connect_random(Gi, G, 0.02, weight=wi)
+    Ce=Connection(Ge, G, 'ge', sparseness=0.02, weight=we)
+    Ci=Connection(Gi, G, 'gi', sparseness=0.02, weight=wi)
 
 Set up some monitors as usual. The line ``record=0`` in the :class:`StateMonitor`
 declarations indicates that we only want to record the activity of

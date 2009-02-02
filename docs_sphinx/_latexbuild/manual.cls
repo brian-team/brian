@@ -3,44 +3,18 @@
 %
 
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
-\ProvidesClass{manual}[2008/05/01 Document class (Sphinx manual)]
-
-\RequirePackage{fancybox}
+\ProvidesClass{manual}[2008/10/18 Document class (Sphinx manual)]
 
 % Pass all given class options to the parent class.
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{report}}
 \ProcessOptions\relax
 \LoadClass[twoside,openright]{report}
 
-
 % Set some sane defaults for section numbering depth and TOC depth.  You can
 % reset these counters in your preamble.
 %
 \setcounter{secnumdepth}{2}
 \setcounter{tocdepth}{1}
-
-
-% The "fancyhdr" package makes nicer page footers reasonable to implement, and
-% is used to put the chapter and section information in the footers.
-%
-\RequirePackage{fancyhdr}
-
-% The "fncychap" package is used to get the nice chapter headers.
-%
-\RequirePackage[Bjarne]{fncychap}
-% Do horizontal rules it this way to match:
-\newcommand{\py@doHorizontalRule}{\mghrulefill{\RW}}
-
-% This gives us all the Sphinx-specific markup that we really want.  This should
-% come last.  Do not change this.
-%
-\RequirePackage{sphinx}
-
-% This comes after sphinx.sty because it otherwise defines its own "seealso"
-% command.
-%
-\RequirePackage{makeidx}
-
 
 % Change the title page to look a bit better, and fit in with the fncychap
 % ``Bjarne'' style a bit better.
@@ -49,8 +23,8 @@
   \begin{titlepage}%
     \let\footnotesize\small
     \let\footnoterule\relax
-    \py@doHorizontalRule%
-    \ifpdf
+    \rule{\textwidth}{1pt}%
+    \ifsphinxpdfoutput
       \begingroup
       % This \def is required to deal with multi-line authors; it
       % changes \\ to ', ' (comma-space), making it pass muster for
@@ -98,7 +72,6 @@
   \py@OldEndAbstract
 }
 
-
 % This wraps the \tableofcontents macro with all the magic to get the spacing
 % right and have the right number of pages if the 'openright' option has been
 % used.  This eliminates a fair amount of crud in the individual document files.
@@ -123,22 +96,8 @@
   \@ifundefined{fancyhf}{}{\pagestyle{normal}}%
 }
 
-
 % This is needed to get the width of the section # area wide enough in the
 % library reference.  Doing it here keeps it the same for all the manuals.
 %
 \renewcommand*\l@section{\@dottedtocline{1}{1.5em}{2.6em}}
 \renewcommand*\l@subsection{\@dottedtocline{2}{4.1em}{3.5em}}
-
-
-% Fix the theindex environment to add an entry to the Table of Contents; this is
-% much nicer than just having to jump to the end of the book and flip around,
-% especially with multiple indexes.
-%
-\let\py@OldTheindex=\theindex
-\renewcommand{\theindex}{
-  \cleardoublepage
-  \phantomsection
-  \py@OldTheindex
-  \addcontentsline{toc}{chapter}{\indexname}
-}

@@ -54,7 +54,11 @@ neuron when the source neuron fires a spike.
 
   ::
 
-    C.connect_random(G,G,0.1,weight=psp)
+    C.connect_random(sparseness=0.1,weight=psp)
+
+These two previous lines could be done in one line::
+
+  C = Connection(G,G,sparseness=0.1,weight=psp)
 
 Now we continue as before:
 

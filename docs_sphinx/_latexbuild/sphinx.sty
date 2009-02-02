@@ -9,13 +9,17 @@
 \ProvidesPackage{sphinx}[2008/05/01 LaTeX package (Sphinx markup)]
 
 \RequirePackage{textcomp}
-\RequirePackage{times}
-\RequirePackage{fancyvrb}
+\RequirePackage{fancyhdr}
+\RequirePackage{fancybox}
 \RequirePackage{titlesec}
 \RequirePackage{tabulary}
 \RequirePackage{amsmath} % for \text
-
+\RequirePackage{makeidx}
+\RequirePackage{framed}
 \RequirePackage{color}
+\RequirePackage{fancyvrb}
+\RequirePackage{threeparttable}
+
 % Redefine these colors to your liking in the preamble.
 \definecolor{TitleColor}{rgb}{0.126,0.263,0.361}
 \definecolor{InnerLinkColor}{rgb}{0.208,0.374,0.486}
@@ -25,41 +29,37 @@
 \definecolor{VerbatimColor}{rgb}{1,1,1}
 \definecolor{VerbatimBorderColor}{rgb}{1,1,1}
 
-\RequirePackage[colorlinks,
-		breaklinks,
-		linkcolor=InnerLinkColor,
-		filecolor=OuterLinkColor,
-		menucolor=OuterLinkColor,
-		pagecolor=OuterLinkColor,
-		urlcolor=OuterLinkColor,
-	       ]{hyperref}
-
-\RequirePackage{framed}
-
-\ifx\pdftexversion\undefined
-  \RequirePackage{graphicx}
-\else
-  \RequirePackage[pdftex]{graphicx}
-\fi
-
 % Uncomment these two lines to ignore the paper size and make the page 
 % size more like a typical published manual.
 %\renewcommand{\paperheight}{9in}
 %\renewcommand{\paperwidth}{8.5in}   % typical squarish manual
 %\renewcommand{\paperwidth}{7in}     % O'Reilly ``Programmming Python''
 
-% for PDF output, use maximal compression
-\newif\ifpdf\pdffalse
+% For graphicx, check if we are compiling under latex or pdflatex.
+\ifx\pdftexversion\undefined
+  \usepackage{graphicx}
+\else
+  \usepackage[pdftex]{graphicx}
+\fi
+
+% for PDF output, use colors and maximal compression
+\newif\ifsphinxpdfoutput\sphinxpdfoutputfalse
 \ifx\pdfoutput\undefined\else\ifcase\pdfoutput
   \let\py@NormalColor\relax
   \let\py@TitleColor\relax
 \else
-  \pdftrue
+  \sphinxpdfoutputtrue
   \input{pdfcolor}
-  \let\py@NormalColor=\Black
+  \def\py@NormalColor{\color[rgb]{0.0,0.0,0.0}}
   \def\py@TitleColor{\color{TitleColor}}
   \pdfcompresslevel=9
 \fi\fi
+
+% XeLaTeX can do colors, too
+\ifx\XeTeXrevision\undefined\else
+  \def\py@NormalColor{\color[rgb]{0.0,0.0,0.0}}
+  \def\py@TitleColor{\color{TitleColor}}
+\fi
 
 % Increase printable page size (copied from fullpage.sty)
 \topmargin 0pt
@@ -92,23 +92,6 @@
 % Use this to set the font family for headers and other decor:
 \newcommand{\py@HeaderFamily}{\sffamily\bfseries}
 
-% Set up abstract ways to get the normal and smaller font sizes that
-% work even in footnote context.
-\newif\ifpy@infootnote \py@infootnotefalse
-\let\py@oldmakefntext\@makefntext
-\renewcommand{\@makefntext}[1]{%
-  \begingroup%
-    \py@infootnotetrue
-    \py@oldmakefntext{#1}%
-  \endgroup%
-}
-\def\py@defaultsize{%
-  \ifpy@infootnote\footnotesize\else\normalsize\fi%
-}
-\def\py@smallsize{%
-  \ifpy@infootnote\scriptsize\else\small\fi%
-}
-
 % Redefine the 'normal' header/footer style when using "fancyhdr" package:
 \@ifundefined{fancyhf}{}{
   % Use \pagestyle{normal} as the primary pagestyle for text.
@@ -130,18 +113,6 @@
     \renewcommand{\headrulewidth}{0pt}
     \renewcommand{\footrulewidth}{0.4pt}
   }
-  % Redefine \cleardoublepage so that the blank page between chapters
-  % gets the plain style and not the fancy style.  This is described
-  % in the documentation for the fancyhdr package by Piet von Oostrum.
-  \@ifundefined{chapter}{}{
-    \renewcommand{\cleardoublepage}{
-      \clearpage\if@openright \ifodd\c@page\else
-      \hbox{}
-      \thispagestyle{plain}
-      \newpage
-      \if@twocolumn\hbox{}\newpage\fi\fi\fi
-    }
-  }
 }
 
 % Some custom font markup commands.
@@ -150,7 +121,7 @@
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\bfcode}[1]{\code{\bfseries#1}}
 \newcommand{\samp}[1]{`\code{#1}'}
-\newcommand{\email}[1]{{\py@smallsize\textsf{#1}}}
+\newcommand{\email}[1]{\textsf{#1}}
 
 \newcommand{\py@modulebadkey}{{--just-some-junk--}}
 
@@ -159,7 +130,7 @@
 \let\OriginalVerbatim=\Verbatim
 \let\endOriginalVerbatim=\endVerbatim
 
-% Play with vpsace to be able to keep the indentation.
+% Play with vspace to be able to keep the indentation.
 \newlength\distancetoright
 \newlength\leftsidespace
 \def\mycolorbox#1{%
@@ -198,15 +169,8 @@
 }
 
 
-% Lots of index-entry generation support.
+% Index-entry generation support.
 %
-% Command to wrap around stuff that refers to function / module /
-% attribute names  in the index.  Default behavior: like \code{}.  To
-% just keep the index entries in the roman font, uncomment the second
-% definition; it matches O'Reilly style more.
-%
-\newcommand{\py@idxcode}[1]{\texttt{#1}}
-%\renewcommand{\py@idxcode}[1]{#1}
 
 % Command to generate two index entries (using subentries)
 \newcommand{\indexii}[2]{\index{#1!#2}\index{#2!#1}}
@@ -221,23 +185,6 @@
 \index{#3!#4, #1 #2}
 \index{#4!#1 #2 #3}
 }
-
-% Command to generate a reference to a function, statement, keyword,
-% operator.
-\newcommand{\kwindex}[1]{\indexii{keyword}{#1@{\py@idxcode{#1}}}}
-\newcommand{\stindex}[1]{\indexii{statement}{#1@{\py@idxcode{#1}}}}
-\newcommand{\opindex}[1]{\indexii{operator}{#1@{\py@idxcode{#1}}}}
-\newcommand{\exindex}[1]{\indexii{exception}{#1@{\py@idxcode{#1}}}}
-\newcommand{\obindex}[1]{\indexii{object}{#1}}
-\newcommand{\bifuncindex}[1]{%
-  \index{#1@{\py@idxcode{#1()}} (built-in function)}}
-
-% Add an index entry for a module
-\newcommand{\py@refmodule}[2]{\index{#1@{\py@idxcode{#1}} (#2module)}}
-\newcommand{\refmodindex}[1]{\py@refmodule{#1}{}}
-\newcommand{\refbimodindex}[1]{\py@refmodule{#1}{built-in }}
-\newcommand{\refexmodindex}[1]{\py@refmodule{#1}{extension }}
-\newcommand{\refstmodindex}[1]{\py@refmodule{#1}{standard }}
 
 % support for the module index
 \newif\ifpy@UseModuleIndex
@@ -256,7 +203,6 @@
 % Add the defining entry for a module
 \newcommand{\py@modindex}[2]{%
   \renewcommand{\py@thismodule}{#1}
-  \index{#1@{\py@idxcode{#1}} (#2module)}%
   \ifpy@UseModuleIndex%
     \@ifundefined{py@modplat@\py@thismodulekey}{
       \write\modindexfile{\protect\indexentry{#1@{\texttt{#1}}|hyperpage}{\thepage}}%
@@ -273,12 +219,6 @@
 \newcommand{\py@thismoduletype}{}
 \newcommand{\py@emptymodule}{}
 
-% Module index types
-\newcommand{\py@standardIndexModule}[1]{\py@modindex{#1}{standard }}
-\newcommand{\py@builtinIndexModule}[1]{\py@modindex{#1}{built-in }}
-\newcommand{\py@extensionIndexModule}[1]{\py@modindex{#1}{extension }}
-\newcommand{\py@IndexModule}[1]{\py@modindex{#1}{}}
-
 % \declaremodule[key]{type}{name}
 \newcommand{\declaremodule}[3][\py@modulebadkey]{
   \renewcommand{\py@thismoduletype}{#2}
@@ -287,12 +227,7 @@
   \else
     \renewcommand{\py@thismodulekey}{#1}
   \fi
-  \@ifundefined{py@#2IndexModule}{%
-    \typeout{*** MACRO declaremodule called with unknown module type: `#2'}
-    \py@IndexModule{#3}%
-  }{%
-    \csname py@#2IndexModule\endcsname{#3}%
-  }
+  \py@modindex{#3}{}
   %\label{module-\py@thismodulekey}
 }
 
@@ -415,40 +350,30 @@
 % tools/anno-api.py; it pulls the value from the refcounts database.
 \newcommand{\cfuncline}[3]{
   \py@sigline{\code{#1 \bfcode{#2}}}{#3}%
-  \index{#2@{\py@idxcode{#2()}}}
 }
-\newenvironment{cfuncdesc}[4][\py@badkey]{
+\newenvironment{cfuncdesc}[3]{
   \begin{fulllineitems}
-    \cfuncline{#2}{#3}{#4}
-    \ifx\@undefined#1\relax\else%
-      \emph{Return value: \textbf{#1}.}\\
-    \fi
+    \cfuncline{#1}{#2}{#3}
 }{\end{fulllineitems}}
 
 % C variables ------------------------------------------------------------
 % \begin{cvardesc}{type}{name}
 \newenvironment{cvardesc}[2]{
   \begin{fulllineitems}
-    \item[\code{#1 \bfcode{#2}}\index{#2@{\py@idxcode{#2}}}]
+    \item[\code{#1 \bfcode{#2}}]
 }{\end{fulllineitems}}
 
 % C data types -----------------------------------------------------------
 % \begin{ctypedesc}[index name]{typedef name}
 \newenvironment{ctypedesc}[2][\py@badkey]{
   \begin{fulllineitems}
-    \item[\bfcode{#2}%
-    \ifx\@undefined#1\relax%
-      \index{#2@{\py@idxcode{#2}} (C type)}
-    \else%
-      \index{#2@{\py@idxcode{#1}} (C type)}
-    \fi]
+    \item[\bfcode{#2}]
 }{\end{fulllineitems}}
 
 % C type fields ----------------------------------------------------------
 % \begin{cmemberdesc}{container type}{ctype}{membername}
 \newcommand{\cmemberline}[3]{
   \item[\code{#2 \bfcode{#3}}]
-  \index{#3@{\py@idxcode{#3}} (#1 member)}
 }
 \newenvironment{cmemberdesc}[3]{
   \begin{fulllineitems}
@@ -460,67 +385,27 @@
 % -- "simple" because it has no args; NOT for constant definitions!
 \newenvironment{csimplemacrodesc}[1]{
   \begin{fulllineitems}
-    \item[\bfcode{#1}\index{#1@{\py@idxcode{#1}} (macro)}]
+    \item[\bfcode{#1}]
 }{\end{fulllineitems}}
 
 % simple functions (not methods) -----------------------------------------
 % \begin{funcdesc}{name}{args}
 \newcommand{\funcline}[2]{%
-  \funclineni{#1}{#2}%
-  \ifx\py@thismodule\py@emptymodule%
-  \index{#1@{\py@idxcode{#1()}}}%
-  \else%
-  \index{#1@{\py@idxcode{#1()}} (in module \py@thismodule)}%
-  \fi}
+  \py@sigline{\bfcode{#1}}{#2}}
 \newenvironment{funcdesc}[2]{
   \begin{fulllineitems}
     \funcline{#1}{#2}
 }{\end{fulllineitems}}
 
-% similar to {funcdesc}, but doesn't add to the index
-\newcommand{\funclineni}[2]{%
-  \py@sigline{\bfcode{#1}}{#2}}
-\newenvironment{funcdescni}[2]{
-  \begin{fulllineitems}
-    \funclineni{#1}{#2}
-}{\end{fulllineitems}}
-
 % classes ----------------------------------------------------------------
 % \begin{classdesc}{name}{constructor args}
 \newcommand{\classline}[2]{
-  \py@sigline{\strong{class }\bfcode{#1}}{#2}%
-  \ifx\py@thismodule\py@emptymodule%
-  \index{#1@{\py@idxcode{#1}} (class)}%
-  \else%
-  \index{#1@{\py@idxcode{#1}} (class in \py@thismodule)}%
-  \fi}
+  \py@sigline{\strong{class }\bfcode{#1}}{#2}}
 \newenvironment{classdesc}[2]{
   % Using \renewcommand doesn't work for this, for unknown reasons:
   \global\def\py@thisclass{#1}
   \begin{fulllineitems}
     \classline{#1}{#2}
-}{\end{fulllineitems}}
-
-\newcommand{\classlineni}[2]{
-  \py@sigline{\strong{class }\bfcode{#1}}{#2}}
-\newenvironment{classdescni}[2]{
-  % Using \renewcommand doesn't work for this, for unknown reasons:
-  \global\def\py@thisclass{#1}
-  \begin{fulllineitems}
-    \classlineni{#1}{#2}
-}{\end{fulllineitems}}
-
-% \begin{classdesc*}{name}
-\newenvironment{classdesc*}[1]{
-  % Using \renewcommand doesn't work for this, for unknown reasons:
-  \global\def\py@thisclass{#1}
-  \begin{fulllineitems}
-    \item[\strong{class }\code{\bfcode{#1}}%
-      \ifx\py@thismodule\py@emptymodule%
-      \index{#1@{\py@idxcode{#1}} (class)}%
-      \else%
-      \index{#1@{\py@idxcode{#1}} (class in \py@thismodule)}%
-      \fi]
 }{\end{fulllineitems}}
 
 % \begin{excclassdesc}{name}{constructor args}
@@ -530,11 +415,6 @@
   \global\def\py@thisclass{#1}
   \begin{fulllineitems}
     \py@sigline{\strong{exception }\bfcode{#1}}{#2}%
-    \ifx\py@thismodule\py@emptymodule%
-    \index{#1@{\py@idxcode{#1}} (exception)}%
-    \else%
-    \index{#1@{\py@idxcode{#1}} (exception in \py@thismodule)}%
-    \fi
 }{\end{fulllineitems}}
 
 % There is no corresponding {excclassdesc*} environment.  To describe
@@ -546,13 +426,7 @@
 % object method ----------------------------------------------------------
 % \begin{methoddesc}[classname]{methodname}{args}
 \newcommand{\methodline}[3][\@undefined]{
-  \methodlineni{#2}{#3}
-  \ifx\@undefined#1\relax
-    \index{#2@{\py@idxcode{#2()}} (\py@thisclass\ method)}
-  \else
-    \index{#2@{\py@idxcode{#2()}} (#1 method)}
-  \fi
-}
+  \py@sigline{\bfcode{#2}}{#3}}
 \newenvironment{methoddesc}[3][\@undefined]{
   \begin{fulllineitems}
     \ifx\@undefined#1\relax
@@ -563,25 +437,10 @@
     \fi
 }{\end{fulllineitems}}
 
-% similar to {methoddesc}, but doesn't add to the index
-% (never actually uses the optional argument)
-\newcommand{\methodlineni}[3][\py@classbadkey]{%
-  \py@sigline{\bfcode{#2}}{#3}}
-\newenvironment{methoddescni}[3][\py@classbadkey]{
-  \begin{fulllineitems}
-    \methodlineni{#2}{#3}
-}{\end{fulllineitems}}
-
 % static method ----------------------------------------------------------
 % \begin{staticmethoddesc}[classname]{methodname}{args}
 \newcommand{\staticmethodline}[3][\@undefined]{
-  \staticmethodlineni{#2}{#3}
-  \ifx\@undefined#1\relax
-    \index{#2@{\py@idxcode{#2()}} (\py@thisclass\ static method)}
-  \else
-    \index{#2@{\py@idxcode{#2()}} (#1 static method)}
-  \fi
-}
+  \py@sigline{static \bfcode{#2}}{#3}}
 \newenvironment{staticmethoddesc}[3][\@undefined]{
   \begin{fulllineitems}
     \ifx\@undefined#1\relax
@@ -592,24 +451,13 @@
     \fi
 }{\end{fulllineitems}}
 
-% similar to {staticmethoddesc}, but doesn't add to the index
-% (never actually uses the optional argument)
-\newcommand{\staticmethodlineni}[3][\py@classbadkey]{%
-  \py@sigline{static \bfcode{#2}}{#3}}
-\newenvironment{staticmethoddescni}[3][\py@classbadkey]{
-  \begin{fulllineitems}
-    \staticmethodlineni{#2}{#3}
-}{\end{fulllineitems}}
-
 % object data attribute --------------------------------------------------
 % \begin{memberdesc}[classname]{membername}
 \newcommand{\memberline}[2][\py@classbadkey]{%
   \ifx\@undefined#1\relax
-    \memberlineni{#2}
-    \index{#2@{\py@idxcode{#2}} (\py@thisclass\ attribute)}
+    \item[\bfcode{#2}]
   \else
-    \memberlineni{#2}
-    \index{#2@{\py@idxcode{#2}} (#1 attribute)}
+    \item[\bfcode{#2}]
   \fi
 }
 \newenvironment{memberdesc}[2][\py@classbadkey]{
@@ -622,45 +470,21 @@
     \fi
 }{\end{fulllineitems}}
 
-% similar to {memberdesc}, but doesn't add to the index
-% (never actually uses the optional argument)
-\newcommand{\memberlineni}[2][\py@classbadkey]{\item[\bfcode{#2}]}
-\newenvironment{memberdescni}[2][\py@classbadkey]{
-  \begin{fulllineitems}
-    \memberlineni{#2}
-}{\end{fulllineitems}}
-
 % For exceptions: --------------------------------------------------------
 % \begin{excdesc}{name}
 %  -- for constructor information, use excclassdesc instead
 \newenvironment{excdesc}[1]{
   \begin{fulllineitems}
-    \item[\strong{exception }\bfcode{#1}%
-          \ifx\py@thismodule\py@emptymodule%
-          \index{#1@{\py@idxcode{#1}} (exception)}%
-          \else%
-          \index{#1@{\py@idxcode{#1}} (exception in \py@thismodule)}%
-          \fi]
+    \item[\strong{exception }\bfcode{#1}]
 }{\end{fulllineitems}}
 
 % Module data or constants: ----------------------------------------------
 % \begin{datadesc}{name}
 \newcommand{\dataline}[1]{%
-  \datalineni{#1}\ifx\py@thismodule\py@emptymodule%
-    \index{#1@{\py@idxcode{#1}} (data)}%
-    \else%
-    \index{#1@{\py@idxcode{#1}} (data in \py@thismodule)}%
-    \fi}
+  \item[\bfcode{#1}]\nopagebreak}
 \newenvironment{datadesc}[1]{
   \begin{fulllineitems}
     \dataline{#1}
-}{\end{fulllineitems}}
-
-% similar to {datadesc}, but doesn't add to the index
-\newcommand{\datalineni}[1]{\item[\bfcode{#1}]\nopagebreak}
-\newenvironment{datadescni}[1]{
-  \begin{fulllineitems}
-    \datalineni{#1}
 }{\end{fulllineitems}}
 
 % bytecode instruction ---------------------------------------------------
@@ -722,90 +546,32 @@
 }
 
 % Some are quite plain:
-\newcommand{\py@noticelabel@note}{Note:}
 \newcommand{\py@noticestart@note}{}
 \newcommand{\py@noticeend@note}{}
-\newcommand{\py@noticelabel@hint}{Hint:}
 \newcommand{\py@noticestart@hint}{}
 \newcommand{\py@noticeend@hint}{}
-\newcommand{\py@noticelabel@important}{Important:}
 \newcommand{\py@noticestart@important}{}
 \newcommand{\py@noticeend@important}{}
-\newcommand{\py@noticelabel@tip}{Tip:}
 \newcommand{\py@noticestart@tip}{}
 \newcommand{\py@noticeend@tip}{}
 
 % Others gets more visible distinction:
-\newcommand{\py@noticelabel@warning}{Warning:}
 \newcommand{\py@noticestart@warning}{\py@heavybox}
 \newcommand{\py@noticeend@warning}{\py@endheavybox}
-\newcommand{\py@noticelabel@caution}{Caution:}
 \newcommand{\py@noticestart@caution}{\py@heavybox}
 \newcommand{\py@noticeend@caution}{\py@endheavybox}
-\newcommand{\py@noticelabel@attention}{Attention:}
 \newcommand{\py@noticestart@attention}{\py@heavybox}
 \newcommand{\py@noticeend@attention}{\py@endheavybox}
-\newcommand{\py@noticelabel@danger}{Danger:}
 \newcommand{\py@noticestart@danger}{\py@heavybox}
 \newcommand{\py@noticeend@danger}{\py@endheavybox}
-\newcommand{\py@noticelabel@error}{Error:}
 \newcommand{\py@noticestart@error}{\py@heavybox}
 \newcommand{\py@noticeend@error}{\py@endheavybox}
 
-
-\newenvironment{notice}[1][note]{
+\newenvironment{notice}[2]{
   \def\py@noticetype{#1}
   \csname py@noticestart@#1\endcsname
-  \par\strong{\csname py@noticelabel@#1\endcsname}
+  \par\strong{#2}
 }{\csname py@noticeend@\py@noticetype\endcsname}
-\newcommand{\note}[1]{\strong{\py@noticelabel@note} #1}
-\newcommand{\warning}[1]{\strong{\py@noticelabel@warning} #1}
-
-% Deprecation stuff.
-% Should be extended to allow an index / list of deprecated stuff.  But
-% there's a lot of stuff that needs to be done to make that automatable.
-%
-% First parameter is the release number that deprecates the feature, the
-% second is the action the should be taken by users of the feature.
-%
-% Example:
-%  \deprecated{1.5.1}{Use \method{frobnicate()} instead.}
-%
-\newcommand{\deprecated}[2]{%
-  \strong{Deprecated since release #1.}  #2\par}
-
-% New stuff.
-% This should be used to mark things which have been added to the
-% development tree but that aren't in the release, but are documented.
-% This allows release of documentation that already includes updated
-% descriptions.  Place at end of descriptor environment.
-%
-% Example:
-%  \versionadded{1.5.2}
-%  \versionchanged[short explanation]{2.0}
-%
-\newcommand{\versionadded}[2][\py@badkey]{%
-  \ifx\@undefined#1\relax%
-    {  New in version #2.  }%
-  \else%
-    {  New in version #2:\ #1  }%
-  \fi%
-}
-\newcommand{\versionchanged}[2][\py@badkey]{%
-  \ifx\@undefined#1\relax%
-    {  Changed in version #2.  }%
-  \else%
-    {  Changed in version #2:\ #1  }%
-  \fi%
-}
-
-
-% See-also environment
-\newenvironment{seealso}{
-  \par
-  \strong{See Also:}
-  \par
-}{\par}
 
 % Allow the release number to be specified independently of the
 % \date{}.  This allows the date to reflect the document's date and
@@ -914,3 +680,30 @@
     \py@Oldincludegraphics[#1]{#2}%
   \fi%
 }
+
+
+% Fix the index and bibliography environments to add an entry to the Table of
+% Contents; this is much nicer than just having to jump to the end of the book
+% and flip around, especially with multiple indexes.
+%
+\let\py@OldTheindex=\theindex
+\renewcommand{\theindex}{
+  \cleardoublepage
+  \phantomsection
+  \py@OldTheindex
+  \addcontentsline{toc}{chapter}{\indexname}
+}
+
+\let\py@OldThebibliography=\thebibliography
+\renewcommand{\thebibliography}[1]{
+  \cleardoublepage
+  \phantomsection
+  \py@OldThebibliography{1}
+  \addcontentsline{toc}{chapter}{\bibname}
+}
+
+% Include hyperref last.
+\RequirePackage[colorlinks,breaklinks,
+                linkcolor=InnerLinkColor,filecolor=OuterLinkColor,
+                menucolor=OuterLinkColor,pagecolor=OuterLinkColor,
+                urlcolor=OuterLinkColor]{hyperref}

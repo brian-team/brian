@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.0.0
+Version: 1.1.0
 Authors:
 	Romain Brette
 		http://www.di.ens.fr/~brette/index.html
@@ -11,10 +11,10 @@ Authors:
 
 ==== Installation ==========================================================
 
-Requirements: Python (version >= 2.5), the following modules:
+Requirements: Python (version 2.5), the following modules:
 
 * numpy
-* scipy
+* scipy (preferably 0.7 or later)
 * pylab
 * sympy
 
@@ -27,7 +27,7 @@ Others: run 'python setup.py install' from the download folder.
 Included in the extras download are:
 
 docs
-	Documentation for Brian - unfinished - including tutorials.
+	Documentation for Brian including tutorials.
 
 examples
 	Examples of using Brian, these serve as supplementary documentation.
@@ -42,9 +42,29 @@ benchmarks
 
 ==== Usage and Documentation ===============================================
 
-See the documentation in the extras download.
+See the documentation in the extras download, or online:
+
+	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.0.0 to 1.1.0:
+
+* STDP
+* Short-term plasticity (Tsodyks-Markram model)
+* New DelayConnection for heterogeneous delays
+* New code for Connections, including new 'dynamic' connection matrix type
+* Reset and threshold can be specified with strings (Python expressions)
+* Much improved documentation
+* clear() function added for ipython users
+* Simplified initialisation of Connection objects
+* Optional unit checking in NeuronGroup
+* Spike train statistics (utils.statistics)
+* Miscellaneous optimisations
+* New MultiStateMonitor class
+* New Group, MultiGroup objects (for convenience of people writing extensions mostly)
+* Improved contained_objects protocol with ObjectContainer class in brian.base
+* UserComputed* classes removed for this version (they will return in another form).
 
 Version 1.0.0 RC5 to version 1.0.0
 

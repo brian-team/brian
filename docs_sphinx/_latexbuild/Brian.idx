@@ -1,731 +1,319 @@
-\indexentry{brian@{\texttt  {brian}} (module)|hyperpage}{1}
-\indexentry{example usage!NeuronGroup|hyperpage}{29}
-\indexentry{NeuronGroup!example usage|hyperpage}{29}
-\indexentry{example usage!run|hyperpage}{29}
-\indexentry{run!example usage|hyperpage}{29}
-\indexentry{example usage!Connection|hyperpage}{29}
-\indexentry{Connection!example usage|hyperpage}{29}
-\indexentry{example usage!PoissonGroup|hyperpage}{29}
-\indexentry{PoissonGroup!example usage|hyperpage}{29}
-\indexentry{example usage!SpikeMonitor|hyperpage}{29}
-\indexentry{SpikeMonitor!example usage|hyperpage}{29}
-\indexentry{example usage!StateMonitor|hyperpage}{29}
-\indexentry{StateMonitor!example usage|hyperpage}{29}
-\indexentry{example usage!NeuronGroup|hyperpage}{30}
-\indexentry{NeuronGroup!example usage|hyperpage}{30}
-\indexentry{example usage!PoissonGroup|hyperpage}{30}
-\indexentry{PoissonGroup!example usage|hyperpage}{30}
-\indexentry{example usage!run|hyperpage}{30}
-\indexentry{run!example usage|hyperpage}{30}
-\indexentry{example usage!Connection|hyperpage}{30}
-\indexentry{Connection!example usage|hyperpage}{30}
-\indexentry{example usage!StateMonitor|hyperpage}{30}
-\indexentry{StateMonitor!example usage|hyperpage}{30}
-\indexentry{example usage!Current|hyperpage}{30}
-\indexentry{Current!example usage|hyperpage}{30}
-\indexentry{example usage!MembraneEquation|hyperpage}{30}
-\indexentry{MembraneEquation!example usage|hyperpage}{30}
-\indexentry{example usage!NeuronGroup|hyperpage}{30}
-\indexentry{NeuronGroup!example usage|hyperpage}{30}
-\indexentry{example usage!run|hyperpage}{30}
-\indexentry{run!example usage|hyperpage}{30}
-\indexentry{example usage!StateMonitor|hyperpage}{30}
-\indexentry{StateMonitor!example usage|hyperpage}{30}
-\indexentry{example usage!PopulationSpikeCounter|hyperpage}{31}
-\indexentry{PopulationSpikeCounter!example usage|hyperpage}{31}
-\indexentry{example usage!Connection|hyperpage}{31}
-\indexentry{Connection!example usage|hyperpage}{31}
-\indexentry{example usage!Equations|hyperpage}{31}
-\indexentry{Equations!example usage|hyperpage}{31}
-\indexentry{example usage!run|hyperpage}{31}
-\indexentry{run!example usage|hyperpage}{31}
-\indexentry{example usage!NeuronGroup|hyperpage}{31}
-\indexentry{NeuronGroup!example usage|hyperpage}{31}
-\indexentry{example usage!NeuronGroup|hyperpage}{32}
-\indexentry{NeuronGroup!example usage|hyperpage}{32}
-\indexentry{example usage!run|hyperpage}{32}
-\indexentry{run!example usage|hyperpage}{32}
-\indexentry{example usage!PopulationSpikeCounter|hyperpage}{32}
-\indexentry{PopulationSpikeCounter!example usage|hyperpage}{32}
-\indexentry{example usage!Connection|hyperpage}{32}
-\indexentry{Connection!example usage|hyperpage}{32}
-\indexentry{example usage!EmpiricalThreshold|hyperpage}{32}
-\indexentry{EmpiricalThreshold!example usage|hyperpage}{32}
-\indexentry{example usage!Equations|hyperpage}{32}
-\indexentry{Equations!example usage|hyperpage}{32}
-\indexentry{example usage!StateMonitor|hyperpage}{32}
-\indexentry{StateMonitor!example usage|hyperpage}{32}
-\indexentry{example usage!NeuronGroup|hyperpage}{34}
-\indexentry{NeuronGroup!example usage|hyperpage}{34}
-\indexentry{example usage!run|hyperpage}{34}
-\indexentry{run!example usage|hyperpage}{34}
-\indexentry{example usage!Connection|hyperpage}{34}
-\indexentry{Connection!example usage|hyperpage}{34}
-\indexentry{example usage!EmpiricalThreshold|hyperpage}{34}
-\indexentry{EmpiricalThreshold!example usage|hyperpage}{34}
-\indexentry{example usage!Equations|hyperpage}{34}
-\indexentry{Equations!example usage|hyperpage}{34}
-\indexentry{example usage!StateMonitor|hyperpage}{34}
-\indexentry{StateMonitor!example usage|hyperpage}{34}
-\indexentry{example usage!raster\_plot|hyperpage}{35}
-\indexentry{raster\_plot!example usage|hyperpage}{35}
-\indexentry{example usage!SpikeMonitor|hyperpage}{35}
-\indexentry{SpikeMonitor!example usage|hyperpage}{35}
-\indexentry{example usage!run|hyperpage}{35}
-\indexentry{run!example usage|hyperpage}{35}
-\indexentry{example usage!PopulationRateMonitor|hyperpage}{35}
-\indexentry{PopulationRateMonitor!example usage|hyperpage}{35}
-\indexentry{example usage!StateMonitor|hyperpage}{35}
-\indexentry{StateMonitor!example usage|hyperpage}{35}
-\indexentry{example usage!NeuronGroup|hyperpage}{36}
-\indexentry{NeuronGroup!example usage|hyperpage}{36}
-\indexentry{example usage!run|hyperpage}{36}
-\indexentry{run!example usage|hyperpage}{36}
-\indexentry{example usage!PopulationRateMonitor|hyperpage}{36}
-\indexentry{PopulationRateMonitor!example usage|hyperpage}{36}
-\indexentry{example usage!PopulationSpikeCounter|hyperpage}{36}
-\indexentry{PopulationSpikeCounter!example usage|hyperpage}{36}
-\indexentry{example usage!Connection|hyperpage}{36}
-\indexentry{Connection!example usage|hyperpage}{36}
-\indexentry{example usage!Equations|hyperpage}{36}
-\indexentry{Equations!example usage|hyperpage}{36}
-\indexentry{example usage!NeuronGroup|hyperpage}{37}
-\indexentry{NeuronGroup!example usage|hyperpage}{37}
-\indexentry{example usage!Equations|hyperpage}{37}
-\indexentry{Equations!example usage|hyperpage}{37}
-\indexentry{example usage!run|hyperpage}{37}
-\indexentry{run!example usage|hyperpage}{37}
-\indexentry{example usage!StateMonitor|hyperpage}{37}
-\indexentry{StateMonitor!example usage|hyperpage}{37}
-\indexentry{example usage!raster\_plot|hyperpage}{38}
-\indexentry{raster\_plot!example usage|hyperpage}{38}
-\indexentry{example usage!NeuronGroup|hyperpage}{38}
-\indexentry{NeuronGroup!example usage|hyperpage}{38}
-\indexentry{example usage!Connection|hyperpage}{38}
-\indexentry{Connection!example usage|hyperpage}{38}
-\indexentry{example usage!run|hyperpage}{38}
-\indexentry{run!example usage|hyperpage}{38}
-\indexentry{example usage!SpikeMonitor|hyperpage}{38}
-\indexentry{SpikeMonitor!example usage|hyperpage}{38}
-\indexentry{example usage!IdentityConnection|hyperpage}{38}
-\indexentry{IdentityConnection!example usage|hyperpage}{38}
-\indexentry{example usage!NeuronGroup|hyperpage}{38}
-\indexentry{NeuronGroup!example usage|hyperpage}{38}
-\indexentry{example usage!run|hyperpage}{38}
-\indexentry{run!example usage|hyperpage}{38}
-\indexentry{example usage!raster\_plot|hyperpage}{38}
-\indexentry{raster\_plot!example usage|hyperpage}{38}
-\indexentry{example usage!Connection|hyperpage}{38}
-\indexentry{Connection!example usage|hyperpage}{38}
-\indexentry{example usage!Current|hyperpage}{38}
-\indexentry{Current!example usage|hyperpage}{38}
-\indexentry{example usage!PoissonGroup|hyperpage}{38}
-\indexentry{PoissonGroup!example usage|hyperpage}{38}
-\indexentry{example usage!SpikeMonitor|hyperpage}{38}
-\indexentry{SpikeMonitor!example usage|hyperpage}{38}
-\indexentry{example usage!NeuronGroup|hyperpage}{39}
-\indexentry{NeuronGroup!example usage|hyperpage}{39}
-\indexentry{example usage!run|hyperpage}{39}
-\indexentry{run!example usage|hyperpage}{39}
-\indexentry{example usage!PopulationRateMonitor|hyperpage}{39}
-\indexentry{PopulationRateMonitor!example usage|hyperpage}{39}
-\indexentry{example usage!raster\_plot|hyperpage}{39}
-\indexentry{raster\_plot!example usage|hyperpage}{39}
-\indexentry{example usage!network\_operation|hyperpage}{39}
-\indexentry{network\_operation!example usage|hyperpage}{39}
-\indexentry{example usage!SpikeMonitor|hyperpage}{39}
-\indexentry{SpikeMonitor!example usage|hyperpage}{39}
-\indexentry{example usage!StateMonitor|hyperpage}{39}
-\indexentry{StateMonitor!example usage|hyperpage}{39}
-\indexentry{example usage!Current|hyperpage}{40}
-\indexentry{Current!example usage|hyperpage}{40}
-\indexentry{example usage!MembraneEquation|hyperpage}{40}
-\indexentry{MembraneEquation!example usage|hyperpage}{40}
-\indexentry{example usage!NeuronGroup|hyperpage}{40}
-\indexentry{NeuronGroup!example usage|hyperpage}{40}
-\indexentry{example usage!run|hyperpage}{40}
-\indexentry{run!example usage|hyperpage}{40}
-\indexentry{example usage!StateMonitor|hyperpage}{40}
-\indexentry{StateMonitor!example usage|hyperpage}{40}
-\indexentry{example usage!Current|hyperpage}{41}
-\indexentry{Current!example usage|hyperpage}{41}
-\indexentry{example usage!IdentityConnection|hyperpage}{41}
-\indexentry{IdentityConnection!example usage|hyperpage}{41}
-\indexentry{example usage!NeuronGroup|hyperpage}{41}
-\indexentry{NeuronGroup!example usage|hyperpage}{41}
-\indexentry{example usage!run|hyperpage}{41}
-\indexentry{run!example usage|hyperpage}{41}
-\indexentry{example usage!StateMonitor|hyperpage}{41}
-\indexentry{StateMonitor!example usage|hyperpage}{41}
-\indexentry{example usage!NeuronGroup|hyperpage}{41}
-\indexentry{NeuronGroup!example usage|hyperpage}{41}
-\indexentry{example usage!run|hyperpage}{41}
-\indexentry{run!example usage|hyperpage}{41}
-\indexentry{example usage!SpikeCounter|hyperpage}{41}
-\indexentry{SpikeCounter!example usage|hyperpage}{41}
-\indexentry{example usage!NeuronGroup|hyperpage}{42}
-\indexentry{NeuronGroup!example usage|hyperpage}{42}
-\indexentry{example usage!run|hyperpage}{42}
-\indexentry{run!example usage|hyperpage}{42}
-\indexentry{example usage!SpikeGeneratorGroup|hyperpage}{42}
-\indexentry{SpikeGeneratorGroup!example usage|hyperpage}{42}
-\indexentry{example usage!Connection|hyperpage}{42}
-\indexentry{Connection!example usage|hyperpage}{42}
-\indexentry{example usage!Model|hyperpage}{42}
-\indexentry{Model!example usage|hyperpage}{42}
-\indexentry{example usage!StateMonitor|hyperpage}{42}
-\indexentry{StateMonitor!example usage|hyperpage}{42}
-\indexentry{example usage!MultipleSpikeGeneratorGroup|hyperpage}{42}
-\indexentry{MultipleSpikeGeneratorGroup!example usage|hyperpage}{42}
-\indexentry{example usage!run|hyperpage}{42}
-\indexentry{run!example usage|hyperpage}{42}
-\indexentry{example usage!NeuronGroup|hyperpage}{42}
-\indexentry{NeuronGroup!example usage|hyperpage}{42}
-\indexentry{example usage!Connection|hyperpage}{42}
-\indexentry{Connection!example usage|hyperpage}{42}
-\indexentry{example usage!Model|hyperpage}{42}
-\indexentry{Model!example usage|hyperpage}{42}
-\indexentry{example usage!StateMonitor|hyperpage}{42}
-\indexentry{StateMonitor!example usage|hyperpage}{42}
-\indexentry{example usage!raster\_plot|hyperpage}{43}
-\indexentry{raster\_plot!example usage|hyperpage}{43}
-\indexentry{example usage!NeuronGroup|hyperpage}{43}
-\indexentry{NeuronGroup!example usage|hyperpage}{43}
-\indexentry{example usage!Connection|hyperpage}{43}
-\indexentry{Connection!example usage|hyperpage}{43}
-\indexentry{example usage!run|hyperpage}{43}
-\indexentry{run!example usage|hyperpage}{43}
-\indexentry{example usage!SpikeMonitor|hyperpage}{43}
-\indexentry{SpikeMonitor!example usage|hyperpage}{43}
-\indexentry{example usage!raster\_plot|hyperpage}{44}
-\indexentry{raster\_plot!example usage|hyperpage}{44}
-\indexentry{example usage!NeuronGroup|hyperpage}{44}
-\indexentry{NeuronGroup!example usage|hyperpage}{44}
-\indexentry{example usage!Connection|hyperpage}{44}
-\indexentry{Connection!example usage|hyperpage}{44}
-\indexentry{example usage!SpikeMonitor|hyperpage}{44}
-\indexentry{SpikeMonitor!example usage|hyperpage}{44}
-\indexentry{example usage!run|hyperpage}{44}
-\indexentry{run!example usage|hyperpage}{44}
-\indexentry{example usage!NeuronGroup|hyperpage}{44}
-\indexentry{NeuronGroup!example usage|hyperpage}{44}
-\indexentry{example usage!run|hyperpage}{44}
-\indexentry{run!example usage|hyperpage}{44}
-\indexentry{example usage!Clock|hyperpage}{44}
-\indexentry{Clock!example usage|hyperpage}{44}
-\indexentry{example usage!network\_operation|hyperpage}{44}
-\indexentry{network\_operation!example usage|hyperpage}{44}
-\indexentry{example usage!Model|hyperpage}{44}
-\indexentry{Model!example usage|hyperpage}{44}
-\indexentry{example usage!StateMonitor|hyperpage}{44}
-\indexentry{StateMonitor!example usage|hyperpage}{44}
-\indexentry{example usage!NeuronGroup|hyperpage}{45}
-\indexentry{NeuronGroup!example usage|hyperpage}{45}
-\indexentry{example usage!run|hyperpage}{45}
-\indexentry{run!example usage|hyperpage}{45}
-\indexentry{example usage!raster\_plot|hyperpage}{45}
-\indexentry{raster\_plot!example usage|hyperpage}{45}
-\indexentry{example usage!Connection|hyperpage}{45}
-\indexentry{Connection!example usage|hyperpage}{45}
-\indexentry{example usage!SpikeMonitor|hyperpage}{45}
-\indexentry{SpikeMonitor!example usage|hyperpage}{45}
-\indexentry{example usage!Threshold|hyperpage}{45}
-\indexentry{Threshold!example usage|hyperpage}{45}
-\indexentry{example usage!Refractoriness|hyperpage}{45}
-\indexentry{Refractoriness!example usage|hyperpage}{45}
-\indexentry{example usage!NeuronGroup|hyperpage}{45}
-\indexentry{NeuronGroup!example usage|hyperpage}{45}
-\indexentry{example usage!run|hyperpage}{45}
-\indexentry{run!example usage|hyperpage}{45}
-\indexentry{example usage!raster\_plot|hyperpage}{45}
-\indexentry{raster\_plot!example usage|hyperpage}{45}
-\indexentry{example usage!Connection|hyperpage}{45}
-\indexentry{Connection!example usage|hyperpage}{45}
-\indexentry{example usage!SpikeMonitor|hyperpage}{45}
-\indexentry{SpikeMonitor!example usage|hyperpage}{45}
-\indexentry{example usage!StateMonitor|hyperpage}{45}
-\indexentry{StateMonitor!example usage|hyperpage}{45}
-\indexentry{example usage!ppfunction|hyperpage}{46}
-\indexentry{ppfunction!example usage|hyperpage}{46}
-\indexentry{example usage!raster\_plot|hyperpage}{47}
-\indexentry{raster\_plot!example usage|hyperpage}{47}
-\indexentry{example usage!NeuronGroup|hyperpage}{47}
-\indexentry{NeuronGroup!example usage|hyperpage}{47}
-\indexentry{example usage!run|hyperpage}{47}
-\indexentry{run!example usage|hyperpage}{47}
-\indexentry{example usage!SpikeMonitor|hyperpage}{47}
-\indexentry{SpikeMonitor!example usage|hyperpage}{47}
-\indexentry{example usage!StateMonitor|hyperpage}{47}
-\indexentry{StateMonitor!example usage|hyperpage}{47}
-\indexentry{example usage!raster\_plot|hyperpage}{48}
-\indexentry{raster\_plot!example usage|hyperpage}{48}
-\indexentry{example usage!run|hyperpage}{48}
-\indexentry{run!example usage|hyperpage}{48}
-\indexentry{example usage!NeuronGroup|hyperpage}{48}
-\indexentry{NeuronGroup!example usage|hyperpage}{48}
-\indexentry{example usage!run|hyperpage}{48}
-\indexentry{run!example usage|hyperpage}{48}
-\indexentry{example usage!Network|hyperpage}{48}
-\indexentry{Network!example usage|hyperpage}{48}
-\indexentry{example usage!Clock|hyperpage}{48}
-\indexentry{Clock!example usage|hyperpage}{48}
-\indexentry{example usage!raster\_plot|hyperpage}{48}
-\indexentry{raster\_plot!example usage|hyperpage}{48}
-\indexentry{example usage!Connection|hyperpage}{48}
-\indexentry{Connection!example usage|hyperpage}{48}
-\indexentry{example usage!SpikeMonitor|hyperpage}{48}
-\indexentry{SpikeMonitor!example usage|hyperpage}{48}
-\indexentry{example usage!raster\_plot|hyperpage}{49}
-\indexentry{raster\_plot!example usage|hyperpage}{49}
-\indexentry{example usage!SpikeMonitor|hyperpage}{49}
-\indexentry{SpikeMonitor!example usage|hyperpage}{49}
-\indexentry{example usage!PoissonGroup|hyperpage}{49}
-\indexentry{PoissonGroup!example usage|hyperpage}{49}
-\indexentry{example usage!run|hyperpage}{49}
-\indexentry{run!example usage|hyperpage}{49}
-\indexentry{example usage!NeuronGroup|hyperpage}{50}
-\indexentry{NeuronGroup!example usage|hyperpage}{50}
-\indexentry{example usage!run|hyperpage}{50}
-\indexentry{run!example usage|hyperpage}{50}
-\indexentry{example usage!Connection|hyperpage}{50}
-\indexentry{Connection!example usage|hyperpage}{50}
-\indexentry{example usage!PoissonGroup|hyperpage}{50}
-\indexentry{PoissonGroup!example usage|hyperpage}{50}
-\indexentry{example usage!SpikeMonitor|hyperpage}{50}
-\indexentry{SpikeMonitor!example usage|hyperpage}{50}
-\indexentry{example usage!StateMonitor|hyperpage}{50}
-\indexentry{StateMonitor!example usage|hyperpage}{50}
-\indexentry{example usage!run|hyperpage}{50}
-\indexentry{run!example usage|hyperpage}{50}
-\indexentry{example usage!SpikeGeneratorGroup|hyperpage}{50}
-\indexentry{SpikeGeneratorGroup!example usage|hyperpage}{50}
-\indexentry{example usage!PopulationRateMonitor|hyperpage}{50}
-\indexentry{PopulationRateMonitor!example usage|hyperpage}{50}
-\indexentry{example usage!raster\_plot|hyperpage}{50}
-\indexentry{raster\_plot!example usage|hyperpage}{50}
-\indexentry{example usage!PulsePacket|hyperpage}{50}
-\indexentry{PulsePacket!example usage|hyperpage}{50}
-\indexentry{example usage!SpikeMonitor|hyperpage}{50}
-\indexentry{SpikeMonitor!example usage|hyperpage}{50}
-\indexentry{example usage!NeuronGroup|hyperpage}{51}
-\indexentry{NeuronGroup!example usage|hyperpage}{51}
-\indexentry{example usage!PoissonThreshold|hyperpage}{51}
-\indexentry{PoissonThreshold!example usage|hyperpage}{51}
-\indexentry{example usage!run|hyperpage}{51}
-\indexentry{run!example usage|hyperpage}{51}
-\indexentry{example usage!PopulationRateMonitor|hyperpage}{51}
-\indexentry{PopulationRateMonitor!example usage|hyperpage}{51}
-\indexentry{example usage!raster\_plot|hyperpage}{51}
-\indexentry{raster\_plot!example usage|hyperpage}{51}
-\indexentry{example usage!NeuronGroup|hyperpage}{51}
-\indexentry{NeuronGroup!example usage|hyperpage}{51}
-\indexentry{example usage!Connection|hyperpage}{51}
-\indexentry{Connection!example usage|hyperpage}{51}
-\indexentry{example usage!run|hyperpage}{51}
-\indexentry{run!example usage|hyperpage}{51}
-\indexentry{example usage!SpikeMonitor|hyperpage}{51}
-\indexentry{SpikeMonitor!example usage|hyperpage}{51}
-\indexentry{example usage!Model|hyperpage}{52}
-\indexentry{Model!example usage|hyperpage}{52}
-\indexentry{example usage!Network|hyperpage}{52}
-\indexentry{Network!example usage|hyperpage}{52}
-\indexentry{example usage!Parameters|hyperpage}{52}
-\indexentry{Parameters!example usage|hyperpage}{52}
-\indexentry{example usage!NeuronGroup|hyperpage}{56}
-\indexentry{NeuronGroup!example usage|hyperpage}{56}
-\indexentry{example usage!Connection|hyperpage}{56}
-\indexentry{Connection!example usage|hyperpage}{56}
-\indexentry{example usage!run|hyperpage}{56}
-\indexentry{run!example usage|hyperpage}{56}
-\indexentry{example usage!StateMonitor|hyperpage}{56}
-\indexentry{StateMonitor!example usage|hyperpage}{56}
-\indexentry{example usage!NeuronGroup|hyperpage}{57}
-\indexentry{NeuronGroup!example usage|hyperpage}{57}
-\indexentry{example usage!run|hyperpage}{57}
-\indexentry{run!example usage|hyperpage}{57}
-\indexentry{example usage!PopulationRateMonitor|hyperpage}{57}
-\indexentry{PopulationRateMonitor!example usage|hyperpage}{57}
-\indexentry{example usage!raster\_plot|hyperpage}{57}
-\indexentry{raster\_plot!example usage|hyperpage}{57}
-\indexentry{example usage!Connection|hyperpage}{57}
-\indexentry{Connection!example usage|hyperpage}{57}
-\indexentry{example usage!SpikeMonitor|hyperpage}{57}
-\indexentry{SpikeMonitor!example usage|hyperpage}{57}
-\indexentry{example usage!StateMonitor|hyperpage}{57}
-\indexentry{StateMonitor!example usage|hyperpage}{57}
-\indexentry{example usage!NeuronGroup|hyperpage}{57}
-\indexentry{NeuronGroup!example usage|hyperpage}{57}
-\indexentry{example usage!PoissonThreshold|hyperpage}{57}
-\indexentry{PoissonThreshold!example usage|hyperpage}{57}
-\indexentry{example usage!run|hyperpage}{57}
-\indexentry{run!example usage|hyperpage}{57}
-\indexentry{example usage!Connection|hyperpage}{57}
-\indexentry{Connection!example usage|hyperpage}{57}
-\indexentry{example usage!PopulationRateMonitor|hyperpage}{57}
-\indexentry{PopulationRateMonitor!example usage|hyperpage}{57}
-\indexentry{example usage!raster\_plot|hyperpage}{58}
-\indexentry{raster\_plot!example usage|hyperpage}{58}
-\indexentry{example usage!SpikeMonitor|hyperpage}{58}
-\indexentry{SpikeMonitor!example usage|hyperpage}{58}
-\indexentry{example usage!PoissonGroup|hyperpage}{58}
-\indexentry{PoissonGroup!example usage|hyperpage}{58}
-\indexentry{example usage!run|hyperpage}{58}
-\indexentry{run!example usage|hyperpage}{58}
-\indexentry{example usage!NeuronGroup|hyperpage}{59}
-\indexentry{NeuronGroup!example usage|hyperpage}{59}
-\indexentry{example usage!run|hyperpage}{59}
-\indexentry{run!example usage|hyperpage}{59}
-\indexentry{example usage!PopulationRateMonitor|hyperpage}{59}
-\indexentry{PopulationRateMonitor!example usage|hyperpage}{59}
-\indexentry{example usage!Clock|hyperpage}{59}
-\indexentry{Clock!example usage|hyperpage}{59}
-\indexentry{example usage!network\_operation|hyperpage}{59}
-\indexentry{network\_operation!example usage|hyperpage}{59}
-\indexentry{example usage!Connection|hyperpage}{59}
-\indexentry{Connection!example usage|hyperpage}{59}
-\indexentry{example usage!PoissonGroup|hyperpage}{59}
-\indexentry{PoissonGroup!example usage|hyperpage}{59}
-\indexentry{example usage!Model|hyperpage}{59}
-\indexentry{Model!example usage|hyperpage}{59}
-\indexentry{example usage!NeuronGroup|hyperpage}{60}
-\indexentry{NeuronGroup!example usage|hyperpage}{60}
-\indexentry{example usage!run|hyperpage}{60}
-\indexentry{run!example usage|hyperpage}{60}
-\indexentry{example usage!raster\_plot|hyperpage}{60}
-\indexentry{raster\_plot!example usage|hyperpage}{60}
-\indexentry{example usage!Connection|hyperpage}{60}
-\indexentry{Connection!example usage|hyperpage}{60}
-\indexentry{example usage!SpikeMonitor|hyperpage}{60}
-\indexentry{SpikeMonitor!example usage|hyperpage}{60}
-\indexentry{example usage!PulsePacket|hyperpage}{60}
-\indexentry{PulsePacket!example usage|hyperpage}{60}
-\indexentry{example usage!Equations|hyperpage}{60}
-\indexentry{Equations!example usage|hyperpage}{60}
-\indexentry{example usage!NeuronGroup|hyperpage}{61}
-\indexentry{NeuronGroup!example usage|hyperpage}{61}
-\indexentry{example usage!run|hyperpage}{61}
-\indexentry{run!example usage|hyperpage}{61}
-\indexentry{example usage!raster\_plot|hyperpage}{61}
-\indexentry{raster\_plot!example usage|hyperpage}{61}
-\indexentry{example usage!Connection|hyperpage}{61}
-\indexentry{Connection!example usage|hyperpage}{61}
-\indexentry{example usage!PoissonGroup|hyperpage}{61}
-\indexentry{PoissonGroup!example usage|hyperpage}{61}
-\indexentry{example usage!SpikeMonitor|hyperpage}{61}
-\indexentry{SpikeMonitor!example usage|hyperpage}{61}
-\indexentry{example usage!NeuronGroup|hyperpage}{62}
-\indexentry{NeuronGroup!example usage|hyperpage}{62}
-\indexentry{example usage!run|hyperpage}{62}
-\indexentry{run!example usage|hyperpage}{62}
-\indexentry{example usage!raster\_plot|hyperpage}{62}
-\indexentry{raster\_plot!example usage|hyperpage}{62}
-\indexentry{example usage!Connection|hyperpage}{62}
-\indexentry{Connection!example usage|hyperpage}{62}
-\indexentry{example usage!PoissonGroup|hyperpage}{62}
-\indexentry{PoissonGroup!example usage|hyperpage}{62}
-\indexentry{example usage!SpikeMonitor|hyperpage}{62}
-\indexentry{SpikeMonitor!example usage|hyperpage}{62}
-\indexentry{example usage!NeuronGroup|hyperpage}{63}
-\indexentry{NeuronGroup!example usage|hyperpage}{63}
-\indexentry{example usage!run|hyperpage}{63}
-\indexentry{run!example usage|hyperpage}{63}
-\indexentry{example usage!PopulationRateMonitor|hyperpage}{63}
-\indexentry{PopulationRateMonitor!example usage|hyperpage}{63}
-\indexentry{example usage!raster\_plot|hyperpage}{63}
-\indexentry{raster\_plot!example usage|hyperpage}{63}
-\indexentry{example usage!Connection|hyperpage}{63}
-\indexentry{Connection!example usage|hyperpage}{63}
-\indexentry{example usage!SpikeMonitor|hyperpage}{63}
-\indexentry{SpikeMonitor!example usage|hyperpage}{63}
-\indexentry{example usage!NeuronGroup|hyperpage}{63}
-\indexentry{NeuronGroup!example usage|hyperpage}{63}
-\indexentry{example usage!Connection|hyperpage}{63}
-\indexentry{Connection!example usage|hyperpage}{63}
-\indexentry{example usage!PopulationSpikeCounter|hyperpage}{63}
-\indexentry{PopulationSpikeCounter!example usage|hyperpage}{63}
-\indexentry{example usage!run|hyperpage}{63}
-\indexentry{run!example usage|hyperpage}{63}
-\indexentry{example usage!StateMonitor|hyperpage}{63}
-\indexentry{StateMonitor!example usage|hyperpage}{63}
-\indexentry{scipy!analysis|hyperpage}{65}
-\indexentry{analysis!scipy|hyperpage}{65}
-\indexentry{numpy!numerical computation|hyperpage}{65}
-\indexentry{numerical computation!numpy|hyperpage}{65}
-\indexentry{numpy!analysis|hyperpage}{65}
-\indexentry{analysis!numpy|hyperpage}{65}
-\indexentry{pylab!plotting|hyperpage}{65}
-\indexentry{plotting!pylab|hyperpage}{65}
-\indexentry{equations!differential|hyperpage}{68}
-\indexentry{differential!equations|hyperpage}{68}
-\indexentry{equations!equation|hyperpage}{68}
-\indexentry{equation!equations|hyperpage}{68}
-\indexentry{equation|hyperpage}{68}
-\indexentry{equations!alias|hyperpage}{68}
-\indexentry{alias!equations|hyperpage}{68}
-\indexentry{equations!parameter|hyperpage}{68}
-\indexentry{parameter!equations|hyperpage}{68}
-\indexentry{plotting|hyperpage}{77}
-\indexentry{plotting!pylab|hyperpage}{78}
-\indexentry{pylab!plotting|hyperpage}{78}
-\indexentry{clock|hyperpage}{78}
-\indexentry{simulation!control|hyperpage}{79}
-\indexentry{control!simulation|hyperpage}{79}
-\indexentry{simulation!update schedule|hyperpage}{79}
-\indexentry{equations|hyperpage}{80}
-\indexentry{equations!external variables|hyperpage}{80}
-\indexentry{external variables!equations|hyperpage}{80}
-\indexentry{equations!namespaces|hyperpage}{80}
-\indexentry{namespaces!equations|hyperpage}{80}
-\indexentry{equations!combining|hyperpage}{81}
-\indexentry{combining!equations|hyperpage}{81}
-\indexentry{equations!membrane potential|hyperpage}{81}
-\indexentry{membrane potential!equations|hyperpage}{81}
-\indexentry{equations!numerical integration|hyperpage}{81}
-\indexentry{numerical integration!equations|hyperpage}{81}
-\indexentry{equations!linear|hyperpage}{81}
-\indexentry{linear!equations|hyperpage}{81}
-\indexentry{numerical integration!exact|hyperpage}{81}
-\indexentry{exact!numerical integration|hyperpage}{81}
-\indexentry{numerical integration!semi-exact|hyperpage}{81}
-\indexentry{semi-exact!numerical integration|hyperpage}{81}
-\indexentry{numerical integration!Euler|hyperpage}{82}
-\indexentry{Euler!numerical integration|hyperpage}{82}
-\indexentry{numerical integration!exponential Euler|hyperpage}{82}
-\indexentry{exponential Euler!numerical integration|hyperpage}{82}
-\indexentry{numerical integration!Hodgin-Huxley type equations|hyperpage}{82}
-\indexentry{Hodgin-Huxley type equations!numerical integration|hyperpage}{82}
-\indexentry{equations!stochastic|hyperpage}{82}
-\indexentry{differential equations!stochastic|hyperpage}{82}
-\indexentry{stochastic!differential equations|hyperpage}{82}
-\indexentry{differential equations!non-autonomous|hyperpage}{83}
-\indexentry{non-autonomous!differential equations|hyperpage}{83}
-\indexentry{differential equations!time-dependent|hyperpage}{83}
-\indexentry{time-dependent!differential equations|hyperpage}{83}
-\indexentry{equations!time-dependent|hyperpage}{83}
-\indexentry{time-dependent!equations|hyperpage}{83}
-\indexentry{equations!non-autonomous|hyperpage}{83}
-\indexentry{non-autonomous!equations|hyperpage}{83}
-\indexentry{equations!freezing|hyperpage}{83}
-\indexentry{freezing!equations|hyperpage}{83}
-\indexentry{differential equations!freezing|hyperpage}{83}
-\indexentry{freezing!differential equations|hyperpage}{83}
-\indexentry{equations!compilation|hyperpage}{83}
-\indexentry{compilation!equations|hyperpage}{83}
-\indexentry{differential equations!compilation|hyperpage}{83}
-\indexentry{compilation!differential equations|hyperpage}{83}
-\indexentry{equations!applying|hyperpage}{83}
-\indexentry{applying!equations|hyperpage}{83}
-\indexentry{equations!fixed points|hyperpage}{83}
-\indexentry{fixed points!equations|hyperpage}{83}
-\indexentry{parallel python|hyperpage}{91}
-\indexentry{clusters|hyperpage}{91}
-\indexentry{ppfunction@{\texttt  {ppfunction()}}|hyperpage}{91}
-\indexentry{efficient code|hyperpage}{91}
-\indexentry{efficient code!vectorisation|hyperpage}{92}
-\indexentry{vectorisation!efficient code|hyperpage}{92}
-\indexentry{vectorisation|hyperpage}{92}
-\indexentry{speed!vectorisation|hyperpage}{92}
-\indexentry{multiple files|hyperpage}{93}
-\indexentry{multiple files!magic functions|hyperpage}{93}
-\indexentry{magic functions!multiple files|hyperpage}{93}
-\indexentry{multiple files!network|hyperpage}{94}
-\indexentry{network!multiple files|hyperpage}{94}
-\indexentry{extending brian!magic functions|hyperpage}{94}
-\indexentry{magic functions!extending brian|hyperpage}{94}
-\indexentry{extending brian!magic\_return|hyperpage}{94}
-\indexentry{magic\_return!extending brian|hyperpage}{94}
-\indexentry{extending brian!magic\_register|hyperpage}{94}
-\indexentry{magic\_register!extending brian|hyperpage}{94}
-\indexentry{multiple files!magic\_return|hyperpage}{94}
-\indexentry{magic\_return!multiple files|hyperpage}{94}
-\indexentry{multiple files!magic\_register|hyperpage}{94}
-\indexentry{magic\_register!multiple files|hyperpage}{94}
-\indexentry{extending brian!derived classes|hyperpage}{94}
-\indexentry{derived classes!extending brian|hyperpage}{94}
-\indexentry{multiple files!derived classes|hyperpage}{94}
-\indexentry{derived classes!multiple files|hyperpage}{94}
-\indexentry{extending brian!contained objects protocol|hyperpage}{95}
-\indexentry{contained objects protocol!extending brian|hyperpage}{95}
-\indexentry{Parameters@{\texttt  {Parameters}} (class)|hyperpage}{95}
-\indexentry{preferences|hyperpage}{96}
-\indexentry{set\_global\_preferences@{\texttt  {set\_global\_preferences()}}|hyperpage}{96}
-\indexentry{get\_global\_preference@{\texttt  {get\_global\_preference()}}|hyperpage}{96}
-\indexentry{log|hyperpage}{97}
-\indexentry{logging|hyperpage}{97}
-\indexentry{log\_level\_error@{\texttt  {log\_level\_error()}}|hyperpage}{97}
-\indexentry{log\_level\_warn@{\texttt  {log\_level\_warn()}}|hyperpage}{97}
-\indexentry{log\_level\_info@{\texttt  {log\_level\_info()}}|hyperpage}{97}
-\indexentry{log\_level\_debug@{\texttt  {log\_level\_debug()}}|hyperpage}{97}
-\indexentry{units|hyperpage}{101}
-\indexentry{quantity|hyperpage}{101}
-\indexentry{dimensions!units|hyperpage}{101}
-\indexentry{have\_same\_dimensions@{\texttt  {have\_same\_dimensions()}}|hyperpage}{101}
-\indexentry{is\_dimensionless@{\texttt  {is\_dimensionless()}}|hyperpage}{101}
-\indexentry{dimensions!inconsistent|hyperpage}{101}
-\indexentry{units!inconsistent|hyperpage}{101}
-\indexentry{DimensionMismatchError@{\texttt  {DimensionMismatchError}} (exception)|hyperpage}{101}
-\indexentry{check\_units@{\texttt  {check\_units()}}|hyperpage}{101}
-\indexentry{Quantity@{\texttt  {Quantity}} (class)|hyperpage}{102}
-\indexentry{Unit@{\texttt  {Unit}} (class)|hyperpage}{102}
-\indexentry{array!units|hyperpage}{102}
-\indexentry{units!array|hyperpage}{102}
-\indexentry{array!quantity|hyperpage}{102}
-\indexentry{quantity!array|hyperpage}{102}
-\indexentry{clock|hyperpage}{102}
-\indexentry{clock!default clock|hyperpage}{102}
-\indexentry{default clock|hyperpage}{102}
-\indexentry{clock!multiple clocks|hyperpage}{103}
-\indexentry{multiple clocks|hyperpage}{103}
-\indexentry{Clock@{\texttt  {Clock}} (class)|hyperpage}{103}
-\indexentry{reinit@{\texttt  {reinit()}} (Clock\ method)|hyperpage}{103}
-\indexentry{t@{\texttt  {t}} (Clock\ attribute)|hyperpage}{103}
-\indexentry{dt@{\texttt  {dt}} (Clock\ attribute)|hyperpage}{103}
-\indexentry{end@{\texttt  {end}} (Clock\ attribute)|hyperpage}{103}
-\indexentry{tick@{\texttt  {tick()}} (Clock\ method)|hyperpage}{103}
-\indexentry{set\_t@{\texttt  {set\_t()}} (Clock\ method)|hyperpage}{103}
-\indexentry{set\_dt@{\texttt  {set\_dt()}} (Clock\ method)|hyperpage}{103}
-\indexentry{set\_end@{\texttt  {set\_end()}} (Clock\ method)|hyperpage}{103}
-\indexentry{get\_duration@{\texttt  {get\_duration()}} (Clock\ method)|hyperpage}{103}
-\indexentry{set\_duration@{\texttt  {set\_duration()}} (Clock\ method)|hyperpage}{103}
-\indexentry{still\_running@{\texttt  {still\_running()}} (Clock\ method)|hyperpage}{103}
-\indexentry{clock!default clock|hyperpage}{103}
-\indexentry{default clock|hyperpage}{103}
-\indexentry{defaultclock@{\texttt  {defaultclock}} (data)|hyperpage}{104}
-\indexentry{define\_default\_clock@{\texttt  {define\_default\_clock()}}|hyperpage}{104}
-\indexentry{reinit\_default\_clock@{\texttt  {reinit\_default\_clock()}}|hyperpage}{104}
-\indexentry{get\_default\_clock@{\texttt  {get\_default\_clock()}}|hyperpage}{104}
-\indexentry{neuron!model|hyperpage}{104}
-\indexentry{model!neuron|hyperpage}{104}
-\indexentry{neuron!equations|hyperpage}{104}
-\indexentry{equations!neuron|hyperpage}{104}
-\indexentry{model!equations|hyperpage}{104}
-\indexentry{equations!model|hyperpage}{104}
-\indexentry{neuron!group|hyperpage}{104}
-\indexentry{group!neuron|hyperpage}{104}
-\indexentry{equations|hyperpage}{104}
-\indexentry{Equations@{\texttt  {Equations}} (class)|hyperpage}{104}
-\indexentry{xi|hyperpage}{105}
-\indexentry{xi!noise|hyperpage}{105}
-\indexentry{noise!xi|hyperpage}{105}
-\indexentry{white noise|hyperpage}{105}
-\indexentry{gaussian noise|hyperpage}{105}
-\indexentry{noise|hyperpage}{105}
-\indexentry{noise!gaussian|hyperpage}{105}
-\indexentry{noise!white|hyperpage}{105}
-\indexentry{model|hyperpage}{105}
-\indexentry{Model@{\texttt  {Model}} (class)|hyperpage}{105}
-\indexentry{NeuronGroup@{\texttt  {NeuronGroup}} (class)|hyperpage}{106}
-\indexentry{subgroup@{\texttt  {subgroup()}} (NeuronGroup\ method)|hyperpage}{107}
-\indexentry{state@{\texttt  {state()}} (NeuronGroup\ method)|hyperpage}{107}
-\indexentry{state\_@{\texttt  {state\_()}} (NeuronGroup\ method)|hyperpage}{107}
-\indexentry{reset|hyperpage}{107}
-\indexentry{Reset@{\texttt  {Reset}} (class)|hyperpage}{108}
-\indexentry{variable!reset|hyperpage}{108}
-\indexentry{reset!variable|hyperpage}{108}
-\indexentry{VariableReset@{\texttt  {VariableReset}} (class)|hyperpage}{108}
-\indexentry{refractory|hyperpage}{108}
-\indexentry{Refractoriness@{\texttt  {Refractoriness}} (class)|hyperpage}{108}
-\indexentry{SimpleCustomRefractoriness@{\texttt  {SimpleCustomRefractoriness}} (class)|hyperpage}{108}
-\indexentry{CustomRefractoriness@{\texttt  {CustomRefractoriness}} (class)|hyperpage}{109}
-\indexentry{FunReset@{\texttt  {FunReset}} (class)|hyperpage}{109}
-\indexentry{NoReset@{\texttt  {NoReset}} (class)|hyperpage}{109}
-\indexentry{threshold|hyperpage}{109}
-\indexentry{threshold!linear|hyperpage}{109}
-\indexentry{linear!threshold|hyperpage}{109}
-\indexentry{Threshold@{\texttt  {Threshold}} (class)|hyperpage}{109}
-\indexentry{threshold!variable|hyperpage}{110}
-\indexentry{variable!threshold|hyperpage}{110}
-\indexentry{VariableThreshold@{\texttt  {VariableThreshold}} (class)|hyperpage}{110}
-\indexentry{threshold!empirical|hyperpage}{110}
-\indexentry{empirical!threshold|hyperpage}{110}
-\indexentry{threshold!hodgkin-huxley|hyperpage}{110}
-\indexentry{hodgkin-huxley!threshold|hyperpage}{110}
-\indexentry{EmpiricalThreshold@{\texttt  {EmpiricalThreshold}} (class)|hyperpage}{110}
-\indexentry{threshold!functional|hyperpage}{110}
-\indexentry{SimpleFunThreshold@{\texttt  {SimpleFunThreshold}} (class)|hyperpage}{110}
-\indexentry{FunThreshold@{\texttt  {FunThreshold}} (class)|hyperpage}{111}
-\indexentry{NoThreshold@{\texttt  {NoThreshold}} (class)|hyperpage}{111}
-\indexentry{integration!methods|hyperpage}{111}
-\indexentry{methods!integration|hyperpage}{111}
-\indexentry{integration!linear|hyperpage}{111}
-\indexentry{linear!integration|hyperpage}{111}
-\indexentry{LinearStateUpdater@{\texttt  {LinearStateUpdater}} (class)|hyperpage}{111}
-\indexentry{LazyStateUpdater@{\texttt  {LazyStateUpdater}} (class)|hyperpage}{111}
-\indexentry{poisson!group|hyperpage}{112}
-\indexentry{group!poisson|hyperpage}{112}
-\indexentry{poisson!input|hyperpage}{112}
-\indexentry{input!poisson|hyperpage}{112}
-\indexentry{PoissonGroup@{\texttt  {PoissonGroup}} (class)|hyperpage}{112}
-\indexentry{input!pulse packet|hyperpage}{112}
-\indexentry{pulse packet|hyperpage}{112}
-\indexentry{PulsePacket@{\texttt  {PulsePacket}} (class)|hyperpage}{112}
-\indexentry{generate@{\texttt  {generate()}} (PulsePacket\ method)|hyperpage}{112}
-\indexentry{direct control!spikes|hyperpage}{112}
-\indexentry{spikes!direct control|hyperpage}{112}
-\indexentry{SpikeGeneratorGroup@{\texttt  {SpikeGeneratorGroup}} (class)|hyperpage}{112}
-\indexentry{MultipleSpikeGeneratorGroup@{\texttt  {MultipleSpikeGeneratorGroup}} (class)|hyperpage}{113}
-\indexentry{Connection@{\texttt  {Connection}} (class)|hyperpage}{114}
-\indexentry{connection!matrix|hyperpage}{115}
-\indexentry{matrix!connection|hyperpage}{115}
-\indexentry{connection matrix|hyperpage}{115}
-\indexentry{computed!connection|hyperpage}{115}
-\indexentry{connection!computed|hyperpage}{115}
-\indexentry{UserComputedConnectionMatrix@{\texttt  {UserComputedConnectionMatrix}} (class)|hyperpage}{115}
-\indexentry{UserComputedSparseConnectionMatrix@{\texttt  {UserComputedSparseConnectionMatrix}} (class)|hyperpage}{115}
-\indexentry{random\_row\_func@{\texttt  {random\_row\_func()}}|hyperpage}{116}
-\indexentry{random\_sparse\_row\_func@{\texttt  {random\_sparse\_row\_func()}}|hyperpage}{116}
-\indexentry{Network@{\texttt  {Network}} (class)|hyperpage}{117}
-\indexentry{network\_operation@{\texttt  {network\_operation()}}|hyperpage}{118}
-\indexentry{NetworkOperation@{\texttt  {NetworkOperation}} (class)|hyperpage}{119}
-\indexentry{run@{\texttt  {run()}}|hyperpage}{119}
-\indexentry{reinit@{\texttt  {reinit()}}|hyperpage}{119}
-\indexentry{stop@{\texttt  {stop()}}|hyperpage}{120}
-\indexentry{MagicNetwork@{\texttt  {MagicNetwork}} (class)|hyperpage}{120}
-\indexentry{SpikeMonitor@{\texttt  {SpikeMonitor}} (class)|hyperpage}{120}
-\indexentry{SpikeCounter@{\texttt  {SpikeCounter}} (class)|hyperpage}{121}
-\indexentry{PopulationSpikeCounter@{\texttt  {PopulationSpikeCounter}} (class)|hyperpage}{121}
-\indexentry{StateSpikeMonitor@{\texttt  {StateSpikeMonitor}} (class)|hyperpage}{121}
-\indexentry{nspikes@{\texttt  {nspikes}} (StateSpikeMonitor\ attribute)|hyperpage}{122}
-\indexentry{spikes@{\texttt  {spikes}} (StateSpikeMonitor\ attribute)|hyperpage}{122}
-\indexentry{times@{\texttt  {times()}} (StateSpikeMonitor\ method)|hyperpage}{122}
-\indexentry{values@{\texttt  {values()}} (StateSpikeMonitor\ method)|hyperpage}{122}
-\indexentry{StateMonitor@{\texttt  {StateMonitor}} (class)|hyperpage}{122}
-\indexentry{FileSpikeMonitor@{\texttt  {FileSpikeMonitor}} (class)|hyperpage}{123}
-\indexentry{ISIHistogramMonitor@{\texttt  {ISIHistogramMonitor}} (class)|hyperpage}{123}
-\indexentry{PopulationRateMonitor@{\texttt  {PopulationRateMonitor}} (class)|hyperpage}{123}
-\indexentry{plotting|hyperpage}{123}
-\indexentry{plotting!pylab|hyperpage}{124}
-\indexentry{pylab!plotting|hyperpage}{124}
-\indexentry{plotting!raster|hyperpage}{124}
-\indexentry{raster!plotting|hyperpage}{124}
-\indexentry{raster\_plot@{\texttt  {raster\_plot()}}|hyperpage}{124}
-\indexentry{plotting!histogram|hyperpage}{124}
-\indexentry{histogram!plotting|hyperpage}{124}
-\indexentry{hist\_plot@{\texttt  {hist\_plot()}}|hyperpage}{124}
-\indexentry{magic|hyperpage}{124}
-\indexentry{magic\_return@{\texttt  {magic\_return()}}|hyperpage}{125}
-\indexentry{magic\_register@{\texttt  {magic\_register()}}|hyperpage}{125}
-\indexentry{tests|hyperpage}{126}
-\indexentry{unit tests|hyperpage}{126}
-\indexentry{run\_all\_tests@{\texttt  {run\_all\_tests()}}|hyperpage}{126}
-\indexentry{multiple files|hyperpage}{127}
-\indexentry{multiple files!magic functions|hyperpage}{127}
-\indexentry{magic functions!multiple files|hyperpage}{127}
-\indexentry{multiple files!network|hyperpage}{127}
-\indexentry{network!multiple files|hyperpage}{127}
-\indexentry{extending brian!magic functions|hyperpage}{127}
-\indexentry{magic functions!extending brian|hyperpage}{127}
-\indexentry{extending brian!magic\_return|hyperpage}{127}
-\indexentry{magic\_return!extending brian|hyperpage}{127}
-\indexentry{extending brian!magic\_register|hyperpage}{127}
-\indexentry{magic\_register!extending brian|hyperpage}{127}
-\indexentry{multiple files!magic\_return|hyperpage}{127}
-\indexentry{magic\_return!multiple files|hyperpage}{127}
-\indexentry{multiple files!magic\_register|hyperpage}{127}
-\indexentry{magic\_register!multiple files|hyperpage}{127}
-\indexentry{extending brian!derived classes|hyperpage}{128}
-\indexentry{derived classes!extending brian|hyperpage}{128}
-\indexentry{multiple files!derived classes|hyperpage}{128}
-\indexentry{derived classes!multiple files|hyperpage}{128}
-\indexentry{extending brian!contained objects protocol|hyperpage}{128}
-\indexentry{contained objects protocol!extending brian|hyperpage}{128}
+\indexentry{brian (module)|hyperpage}{1}
+\indexentry{scipy!analysis|hyperpage}{29}
+\indexentry{analysis!scipy|hyperpage}{29}
+\indexentry{numpy!numerical computation|hyperpage}{29}
+\indexentry{numerical computation!numpy|hyperpage}{29}
+\indexentry{numpy!analysis|hyperpage}{29}
+\indexentry{analysis!numpy|hyperpage}{29}
+\indexentry{pylab!plotting|hyperpage}{29}
+\indexentry{plotting!pylab|hyperpage}{29}
+\indexentry{equations!differential|hyperpage}{32}
+\indexentry{differential!equations|hyperpage}{32}
+\indexentry{equations!equation|hyperpage}{32}
+\indexentry{equation!equations|hyperpage}{32}
+\indexentry{equation|hyperpage}{32}
+\indexentry{equations!alias|hyperpage}{32}
+\indexentry{alias!equations|hyperpage}{32}
+\indexentry{equations!parameter|hyperpage}{32}
+\indexentry{parameter!equations|hyperpage}{32}
+\indexentry{plotting|hyperpage}{45}
+\indexentry{plotting!pylab|hyperpage}{45}
+\indexentry{pylab!plotting|hyperpage}{45}
+\indexentry{clock|hyperpage}{46}
+\indexentry{simulation!control|hyperpage}{47}
+\indexentry{control!simulation|hyperpage}{47}
+\indexentry{simulation!update schedule|hyperpage}{47}
+\indexentry{equations|hyperpage}{48}
+\indexentry{equations!external variables|hyperpage}{49}
+\indexentry{external variables!equations|hyperpage}{49}
+\indexentry{equations!namespaces|hyperpage}{49}
+\indexentry{namespaces!equations|hyperpage}{49}
+\indexentry{equations!combining|hyperpage}{49}
+\indexentry{combining!equations|hyperpage}{49}
+\indexentry{equations!membrane potential|hyperpage}{50}
+\indexentry{membrane potential!equations|hyperpage}{50}
+\indexentry{equations!numerical integration|hyperpage}{50}
+\indexentry{numerical integration!equations|hyperpage}{50}
+\indexentry{equations!linear|hyperpage}{50}
+\indexentry{linear!equations|hyperpage}{50}
+\indexentry{numerical integration!exact|hyperpage}{50}
+\indexentry{exact!numerical integration|hyperpage}{50}
+\indexentry{numerical integration!semi-exact|hyperpage}{50}
+\indexentry{semi-exact!numerical integration|hyperpage}{50}
+\indexentry{numerical integration!Euler|hyperpage}{51}
+\indexentry{Euler!numerical integration|hyperpage}{51}
+\indexentry{numerical integration!exponential Euler|hyperpage}{51}
+\indexentry{exponential Euler!numerical integration|hyperpage}{51}
+\indexentry{numerical integration!Hodgin-Huxley type equations|hyperpage}{51}
+\indexentry{Hodgin-Huxley type equations!numerical integration|hyperpage}{51}
+\indexentry{equations!stochastic|hyperpage}{51}
+\indexentry{differential equations!stochastic|hyperpage}{51}
+\indexentry{stochastic!differential equations|hyperpage}{51}
+\indexentry{differential equations!non-autonomous|hyperpage}{51}
+\indexentry{non-autonomous!differential equations|hyperpage}{51}
+\indexentry{differential equations!time-dependent|hyperpage}{51}
+\indexentry{time-dependent!differential equations|hyperpage}{51}
+\indexentry{equations!time-dependent|hyperpage}{51}
+\indexentry{time-dependent!equations|hyperpage}{51}
+\indexentry{equations!non-autonomous|hyperpage}{51}
+\indexentry{non-autonomous!equations|hyperpage}{51}
+\indexentry{equations!freezing|hyperpage}{51}
+\indexentry{freezing!equations|hyperpage}{51}
+\indexentry{differential equations!freezing|hyperpage}{51}
+\indexentry{freezing!differential equations|hyperpage}{51}
+\indexentry{equations!compilation|hyperpage}{52}
+\indexentry{compilation!equations|hyperpage}{52}
+\indexentry{differential equations!compilation|hyperpage}{52}
+\indexentry{compilation!differential equations|hyperpage}{52}
+\indexentry{equations!applying|hyperpage}{52}
+\indexentry{applying!equations|hyperpage}{52}
+\indexentry{equations!fixed points|hyperpage}{52}
+\indexentry{fixed points!equations|hyperpage}{52}
+\indexentry{parallel python|hyperpage}{65}
+\indexentry{clusters|hyperpage}{65}
+\indexentry{ppfunction() (in module brian)|hyperpage}{65}
+\indexentry{efficient code|hyperpage}{65}
+\indexentry{efficient code!vectorisation|hyperpage}{66}
+\indexentry{vectorisation!efficient code|hyperpage}{66}
+\indexentry{vectorisation|hyperpage}{66}
+\indexentry{speed!vectorisation|hyperpage}{66}
+\indexentry{multiple files|hyperpage}{68}
+\indexentry{multiple files!magic functions|hyperpage}{68}
+\indexentry{magic functions!multiple files|hyperpage}{68}
+\indexentry{multiple files!network|hyperpage}{68}
+\indexentry{network!multiple files|hyperpage}{68}
+\indexentry{extending brian!magic functions|hyperpage}{69}
+\indexentry{magic functions!extending brian|hyperpage}{69}
+\indexentry{extending brian!magic\_return|hyperpage}{69}
+\indexentry{magic\_return!extending brian|hyperpage}{69}
+\indexentry{extending brian!magic\_register|hyperpage}{69}
+\indexentry{magic\_register!extending brian|hyperpage}{69}
+\indexentry{multiple files!magic\_return|hyperpage}{69}
+\indexentry{magic\_return!multiple files|hyperpage}{69}
+\indexentry{multiple files!magic\_register|hyperpage}{69}
+\indexentry{magic\_register!multiple files|hyperpage}{69}
+\indexentry{extending brian!derived classes|hyperpage}{69}
+\indexentry{derived classes!extending brian|hyperpage}{69}
+\indexentry{multiple files!derived classes|hyperpage}{69}
+\indexentry{derived classes!multiple files|hyperpage}{69}
+\indexentry{extending brian!contained objects protocol|hyperpage}{70}
+\indexentry{contained objects protocol!extending brian|hyperpage}{70}
+\indexentry{Parameters (class in brian)|hyperpage}{70}
+\indexentry{Tabulate (class in brian)|hyperpage}{71}
+\indexentry{TabulateInterp (class in brian)|hyperpage}{71}
+\indexentry{preferences|hyperpage}{71}
+\indexentry{set\_global\_preferences() (in module brian)|hyperpage}{71}
+\indexentry{get\_global\_preference() (in module brian)|hyperpage}{71}
+\indexentry{log|hyperpage}{72}
+\indexentry{logging|hyperpage}{72}
+\indexentry{log\_level\_error() (in module brian)|hyperpage}{72}
+\indexentry{log\_level\_warn() (in module brian)|hyperpage}{72}
+\indexentry{log\_level\_info() (in module brian)|hyperpage}{72}
+\indexentry{log\_level\_debug() (in module brian)|hyperpage}{72}
+\indexentry{scipy!analysis|hyperpage}{75}
+\indexentry{analysis!scipy|hyperpage}{75}
+\indexentry{numpy!numerical computation|hyperpage}{75}
+\indexentry{numerical computation!numpy|hyperpage}{75}
+\indexentry{numpy!analysis|hyperpage}{75}
+\indexentry{analysis!numpy|hyperpage}{75}
+\indexentry{pylab!plotting|hyperpage}{75}
+\indexentry{plotting!pylab|hyperpage}{75}
+\indexentry{units|hyperpage}{75}
+\indexentry{quantity|hyperpage}{75}
+\indexentry{dimensions!units|hyperpage}{75}
+\indexentry{have\_same\_dimensions() (in module brian)|hyperpage}{75}
+\indexentry{is\_dimensionless() (in module brian)|hyperpage}{75}
+\indexentry{dimensions!inconsistent|hyperpage}{75}
+\indexentry{units!inconsistent|hyperpage}{75}
+\indexentry{DimensionMismatchError|hyperpage}{75}
+\indexentry{check\_units() (in module brian)|hyperpage}{75}
+\indexentry{Quantity (class in brian)|hyperpage}{76}
+\indexentry{Unit (class in brian)|hyperpage}{76}
+\indexentry{array!units|hyperpage}{76}
+\indexentry{units!array|hyperpage}{76}
+\indexentry{array!quantity|hyperpage}{76}
+\indexentry{quantity!array|hyperpage}{76}
+\indexentry{clock|hyperpage}{76}
+\indexentry{clock!default clock|hyperpage}{77}
+\indexentry{default clock|hyperpage}{77}
+\indexentry{clock!multiple clocks|hyperpage}{77}
+\indexentry{multiple clocks|hyperpage}{77}
+\indexentry{Clock (class in brian)|hyperpage}{77}
+\indexentry{reinit() (brian.Clock method)|hyperpage}{77}
+\indexentry{t (brian.Clock attribute)|hyperpage}{77}
+\indexentry{dt (brian.Clock attribute)|hyperpage}{77}
+\indexentry{end (brian.Clock attribute)|hyperpage}{77}
+\indexentry{tick() (brian.Clock method)|hyperpage}{77}
+\indexentry{set\_t() (brian.Clock method)|hyperpage}{77}
+\indexentry{set\_dt() (brian.Clock method)|hyperpage}{77}
+\indexentry{set\_end() (brian.Clock method)|hyperpage}{77}
+\indexentry{get\_duration() (brian.Clock method)|hyperpage}{77}
+\indexentry{set\_duration() (brian.Clock method)|hyperpage}{77}
+\indexentry{still\_running() (brian.Clock method)|hyperpage}{77}
+\indexentry{clock!default clock|hyperpage}{78}
+\indexentry{default clock|hyperpage}{78}
+\indexentry{defaultclock (in module brian)|hyperpage}{78}
+\indexentry{define\_default\_clock() (in module brian)|hyperpage}{78}
+\indexentry{reinit\_default\_clock() (in module brian)|hyperpage}{78}
+\indexentry{get\_default\_clock() (in module brian)|hyperpage}{78}
+\indexentry{neuron!model|hyperpage}{78}
+\indexentry{model!neuron|hyperpage}{78}
+\indexentry{neuron!equations|hyperpage}{78}
+\indexentry{equations!neuron|hyperpage}{78}
+\indexentry{model!equations|hyperpage}{78}
+\indexentry{equations!model|hyperpage}{78}
+\indexentry{neuron!group|hyperpage}{78}
+\indexentry{group!neuron|hyperpage}{78}
+\indexentry{equations|hyperpage}{78}
+\indexentry{Equations (class in brian)|hyperpage}{78}
+\indexentry{xi|hyperpage}{79}
+\indexentry{xi!noise|hyperpage}{79}
+\indexentry{noise!xi|hyperpage}{79}
+\indexentry{white noise|hyperpage}{79}
+\indexentry{gaussian noise|hyperpage}{79}
+\indexentry{noise|hyperpage}{79}
+\indexentry{noise!gaussian|hyperpage}{79}
+\indexentry{noise!white|hyperpage}{79}
+\indexentry{NeuronGroup (class in brian)|hyperpage}{79}
+\indexentry{subgroup() (brian.NeuronGroup method)|hyperpage}{80}
+\indexentry{state() (brian.NeuronGroup method)|hyperpage}{80}
+\indexentry{rest() (brian.NeuronGroup method)|hyperpage}{80}
+\indexentry{model|hyperpage}{81}
+\indexentry{Model (class in brian)|hyperpage}{81}
+\indexentry{reset|hyperpage}{82}
+\indexentry{Reset (class in brian)|hyperpage}{82}
+\indexentry{StringReset (class in brian)|hyperpage}{82}
+\indexentry{variable!reset|hyperpage}{82}
+\indexentry{reset!variable|hyperpage}{82}
+\indexentry{VariableReset (class in brian)|hyperpage}{82}
+\indexentry{refractory|hyperpage}{82}
+\indexentry{Refractoriness (class in brian)|hyperpage}{82}
+\indexentry{SimpleCustomRefractoriness (class in brian)|hyperpage}{82}
+\indexentry{CustomRefractoriness (class in brian)|hyperpage}{83}
+\indexentry{FunReset (class in brian)|hyperpage}{83}
+\indexentry{NoReset (class in brian)|hyperpage}{83}
+\indexentry{threshold|hyperpage}{83}
+\indexentry{threshold!linear|hyperpage}{84}
+\indexentry{linear!threshold|hyperpage}{84}
+\indexentry{Threshold (class in brian)|hyperpage}{84}
+\indexentry{StringThreshold (class in brian)|hyperpage}{84}
+\indexentry{threshold!variable|hyperpage}{84}
+\indexentry{variable!threshold|hyperpage}{84}
+\indexentry{VariableThreshold (class in brian)|hyperpage}{84}
+\indexentry{threshold!empirical|hyperpage}{84}
+\indexentry{empirical!threshold|hyperpage}{84}
+\indexentry{threshold!hodgkin-huxley|hyperpage}{84}
+\indexentry{hodgkin-huxley!threshold|hyperpage}{84}
+\indexentry{EmpiricalThreshold (class in brian)|hyperpage}{84}
+\indexentry{threshold!functional|hyperpage}{85}
+\indexentry{SimpleFunThreshold (class in brian)|hyperpage}{85}
+\indexentry{FunThreshold (class in brian)|hyperpage}{85}
+\indexentry{NoThreshold (class in brian)|hyperpage}{85}
+\indexentry{integration!methods|hyperpage}{85}
+\indexentry{methods!integration|hyperpage}{85}
+\indexentry{integration!linear|hyperpage}{86}
+\indexentry{linear!integration|hyperpage}{86}
+\indexentry{LinearStateUpdater (class in brian)|hyperpage}{86}
+\indexentry{LazyStateUpdater (class in brian)|hyperpage}{86}
+\indexentry{poisson!group|hyperpage}{86}
+\indexentry{group!poisson|hyperpage}{86}
+\indexentry{poisson!input|hyperpage}{86}
+\indexentry{input!poisson|hyperpage}{86}
+\indexentry{PoissonGroup (class in brian)|hyperpage}{86}
+\indexentry{input!pulse packet|hyperpage}{87}
+\indexentry{pulse packet|hyperpage}{87}
+\indexentry{PulsePacket (class in brian)|hyperpage}{87}
+\indexentry{generate() (brian.PulsePacket method)|hyperpage}{87}
+\indexentry{direct control!spikes|hyperpage}{87}
+\indexentry{spikes!direct control|hyperpage}{87}
+\indexentry{SpikeGeneratorGroup (class in brian)|hyperpage}{87}
+\indexentry{MultipleSpikeGeneratorGroup (class in brian)|hyperpage}{88}
+\indexentry{Connection (class in brian)|hyperpage}{88}
+\indexentry{DelayConnection (class in brian)|hyperpage}{90}
+\indexentry{delay (brian.DelayConnection attribute)|hyperpage}{90}
+\indexentry{IdentityConnection (class in brian)|hyperpage}{91}
+\indexentry{connection!matrix|hyperpage}{91}
+\indexentry{matrix!connection|hyperpage}{91}
+\indexentry{connection matrix|hyperpage}{91}
+\indexentry{ConnectionMatrix (class in brian)|hyperpage}{91}
+\indexentry{DenseConnectionMatrix (class in brian)|hyperpage}{92}
+\indexentry{SparseConnectionMatrix (class in brian)|hyperpage}{92}
+\indexentry{DynamicConnectionMatrix (class in brian)|hyperpage}{92}
+\indexentry{ConstructionMatrix (class in brian)|hyperpage}{93}
+\indexentry{DenseConstructionMatrix (class in brian)|hyperpage}{93}
+\indexentry{SparseConstructionMatrix (class in brian)|hyperpage}{93}
+\indexentry{DynamicConstructionMatrix (class in brian)|hyperpage}{93}
+\indexentry{ConnectionVector (class in brian)|hyperpage}{93}
+\indexentry{DenseConnectionVector (class in brian)|hyperpage}{93}
+\indexentry{SparseConnectionVector (class in brian)|hyperpage}{93}
+\indexentry{STDP (class in brian)|hyperpage}{93}
+\indexentry{ExponentialSTDP (class in brian)|hyperpage}{94}
+\indexentry{STP (class in brian)|hyperpage}{94}
+\indexentry{Network (class in brian)|hyperpage}{95}
+\indexentry{network\_operation() (in module brian)|hyperpage}{97}
+\indexentry{NetworkOperation (class in brian)|hyperpage}{97}
+\indexentry{run() (in module brian)|hyperpage}{97}
+\indexentry{reinit() (in module brian)|hyperpage}{98}
+\indexentry{stop() (in module brian)|hyperpage}{98}
+\indexentry{clear() (in module brian)|hyperpage}{98}
+\indexentry{MagicNetwork (class in brian)|hyperpage}{98}
+\indexentry{SpikeMonitor (class in brian)|hyperpage}{99}
+\indexentry{SpikeCounter (class in brian)|hyperpage}{99}
+\indexentry{PopulationSpikeCounter (class in brian)|hyperpage}{100}
+\indexentry{StateSpikeMonitor (class in brian)|hyperpage}{100}
+\indexentry{nspikes (brian.StateSpikeMonitor attribute)|hyperpage}{100}
+\indexentry{spikes (brian.StateSpikeMonitor attribute)|hyperpage}{100}
+\indexentry{times() (brian.StateSpikeMonitor method)|hyperpage}{100}
+\indexentry{values() (brian.StateSpikeMonitor method)|hyperpage}{100}
+\indexentry{StateMonitor (class in brian)|hyperpage}{100}
+\indexentry{plot() (brian.StateMonitor method)|hyperpage}{101}
+\indexentry{MultiStateMonitor (class in brian)|hyperpage}{101}
+\indexentry{FileSpikeMonitor (class in brian)|hyperpage}{102}
+\indexentry{ISIHistogramMonitor (class in brian)|hyperpage}{102}
+\indexentry{PopulationRateMonitor (class in brian)|hyperpage}{102}
+\indexentry{plotting|hyperpage}{103}
+\indexentry{plotting!pylab|hyperpage}{103}
+\indexentry{pylab!plotting|hyperpage}{103}
+\indexentry{plotting!raster|hyperpage}{103}
+\indexentry{raster!plotting|hyperpage}{103}
+\indexentry{raster\_plot() (in module brian)|hyperpage}{103}
+\indexentry{plotting!histogram|hyperpage}{103}
+\indexentry{histogram!plotting|hyperpage}{103}
+\indexentry{hist\_plot() (in module brian)|hyperpage}{103}
+\indexentry{firing\_rate() (in module brian)|hyperpage}{104}
+\indexentry{CV() (in module brian)|hyperpage}{104}
+\indexentry{correlogram() (in module brian)|hyperpage}{104}
+\indexentry{autocorrelogram() (in module brian)|hyperpage}{104}
+\indexentry{CCF() (in module brian)|hyperpage}{104}
+\indexentry{ACF() (in module brian)|hyperpage}{104}
+\indexentry{CCVF() (in module brian)|hyperpage}{104}
+\indexentry{ACVF() (in module brian)|hyperpage}{104}
+\indexentry{total\_correlation() (in module brian)|hyperpage}{104}
+\indexentry{magic|hyperpage}{105}
+\indexentry{magic\_return() (in module brian)|hyperpage}{105}
+\indexentry{magic\_register() (in module brian)|hyperpage}{105}
+\indexentry{tests|hyperpage}{106}
+\indexentry{unit tests|hyperpage}{106}
+\indexentry{run\_all\_tests() (in module brian)|hyperpage}{106}
+\indexentry{multiple files|hyperpage}{107}
+\indexentry{multiple files!magic functions|hyperpage}{107}
+\indexentry{magic functions!multiple files|hyperpage}{107}
+\indexentry{multiple files!network|hyperpage}{107}
+\indexentry{network!multiple files|hyperpage}{107}
+\indexentry{extending brian!magic functions|hyperpage}{107}
+\indexentry{magic functions!extending brian|hyperpage}{107}
+\indexentry{extending brian!magic\_return|hyperpage}{107}
+\indexentry{magic\_return!extending brian|hyperpage}{107}
+\indexentry{extending brian!magic\_register|hyperpage}{107}
+\indexentry{magic\_register!extending brian|hyperpage}{107}
+\indexentry{multiple files!magic\_return|hyperpage}{107}
+\indexentry{magic\_return!multiple files|hyperpage}{107}
+\indexentry{multiple files!magic\_register|hyperpage}{107}
+\indexentry{magic\_register!multiple files|hyperpage}{107}
+\indexentry{extending brian!derived classes|hyperpage}{108}
+\indexentry{derived classes!extending brian|hyperpage}{108}
+\indexentry{multiple files!derived classes|hyperpage}{108}
+\indexentry{derived classes!multiple files|hyperpage}{108}
+\indexentry{extending brian!contained objects protocol|hyperpage}{108}
+\indexentry{contained objects protocol!extending brian|hyperpage}{108}
+\indexentry{MultiLinearNeuronGroup (class in brian.experimental.multilinearstateupdater)|hyperpage}{111}
