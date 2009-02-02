@@ -42,9 +42,9 @@ class AutoCompiledNonlinearStateUpdater(NonlinearStateUpdater):
 
 if __name__=='__main__':
     
-    #duration = 10*second
-    #N = 1000
-    #domonitor = False
+#    duration = 1*second
+#    N = 1000
+#    domonitor = False
     
     duration = 100*ms
     N = 10
