@@ -6,7 +6,8 @@ In all functions below, spikes is a sorted list of spike times
 from numpy import *
 from brian.stdunits import ms
 
-__all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF','total_correlation']
+__all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF',
+         'total_correlation','vector_strength']
 
 # First-order statistics
 def firing_rate(spikes):
@@ -137,8 +138,18 @@ def total_correlation(T1,T2,width=20*ms,T=None):
         x+=sum(1./(T-abs(T2[i:j]-t))) # counts coincidences with windowing (probabilities)
     return float(x/firing_rate(T1))-float(firing_rate(T2)*2*width)
 
+# Phase-locking properties
+def vector_strength(spikes,period):
+    '''
+    Returns the vector strength of the given train
+    '''
+    return abs(mean(exp(array(spikes)*1j*2*pi/period)))
+
 if __name__=='__main__':
     from brian import *
+    
+    print vector_strength([1.1*ms,1*ms,.9*ms],2*ms)
+    
     N=100000
     T1=cumsum(rand(N)*10*ms)
     T2=cumsum(rand(N)*10*ms)
@@ -147,7 +158,7 @@ if __name__=='__main__':
     T2=T2[T2<duration]
     print firing_rate(T1)
     C=CCVF(T1,T2,bin=1*ms)
-    print total_correlation(T1,T2,bin=1*ms)
+    print total_correlation(T1,T2)
     plot(C)
     show()
     #print std(C)*second

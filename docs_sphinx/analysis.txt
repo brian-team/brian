@@ -64,6 +64,10 @@ of spike trains, defined as ordered lists of spike times:
 * Total correlation coefficient: ``total_correlation(T1,T2,width=20*ms,T=None)`` is
   the integral of the cross-covariance function divided by the rate of T1, typically (but not
   always) between 0 and 1.
+* Vector strength: ``vector_strength(spikes,period)`` returns the vector strength of the given
+spike train with respect to the period. If each spike time with phase phi is represented by
+a vector with angle phi, then the vector strength is the length of the average vector.
+It equals 1 for spikes with constant phase and 0 for homogeneous phase distributions.
 
 .. TODO: docs:histograms
 	Histograms
