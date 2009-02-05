@@ -5,30 +5,39 @@ from pycuda import gpuarray
 import bisect
 import numpy, pylab, time
 from itertools import repeat
+import cProfile as profile
+import pstats
 
-N = 512*12
+N = 512*8
 blocksize = 512
+duration = 10000
+record = False
+doprofile = False
+precision = 'double'
+
+if precision=='double':
+    mydtype = numpy.float64
+else:
+    mydtype = numpy.float32
+
 block = (blocksize,1,1)
 grid = (N/blocksize,1)
-duration = 10000
-record = True
-
 Ne = int(N*0.8)
 Ni = N-Ne
 
 mod = drv.SourceModule("""
-__global__ void stateupdate(float *V, float *ge, float *gi)
+__global__ void stateupdate(SCALAR *V, SCALAR *ge, SCALAR *gi)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x; 
-    float V__tmp = (ge[i]+gi[i]-(V[i]+0.049))/0.02;
-    float ge__tmp = -ge[i]/0.005;
-    float gi__tmp = -gi[i]/0.01;
+    SCALAR V__tmp = (ge[i]+gi[i]-(V[i]+0.049))/0.02;
+    SCALAR ge__tmp = -ge[i]/0.005;
+    SCALAR gi__tmp = -gi[i]/0.01;
     V[i] += 0.0001*V__tmp;
     ge[i] += 0.0001*ge__tmp;
     gi[i] += 0.0001*gi__tmp;
 }
 
-__global__ void threshold(float *V, int *spikes, bool *spiked, unsigned int *global_j, int N)
+__global__ void threshold(SCALAR *V, int *spikes, bool *spiked, unsigned int *global_j, int N)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     bool this_spiked = V[i]>-0.05; 
@@ -40,32 +49,50 @@ __global__ void threshold(float *V, int *spikes, bool *spiked, unsigned int *glo
     }
 }
 
-__global__ void propagate(int *spikes, int numspikes, float *v, float *W, int N)
+__global__ void single_thread_threshold(SCALAR *V, int *spikes, bool *spiked, unsigned int *global_j, int N)
+{
+    unsigned int j = 0;
+    for(int i=0;i<N;i++)
+    {
+        if(V[i]>-0.05)
+        {
+            spiked[i] = true;
+            spikes[j++] = i;
+        } else
+        {
+            spiked[i] = false;
+        }
+    }
+    *global_j = j;
+}
+
+__global__ void propagate(int *spikes, int numspikes, SCALAR *v, SCALAR *W, int N)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     for(int j=0; j<numspikes; j++)
         v[i] += W[i+N*spikes[j]];
 }
 
-__global__ void reset(float *V, bool *spiked)
+__global__ void reset(SCALAR *V, bool *spiked)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     V[i] = (V[i]*!spiked[i])+(-0.06)*spiked[i]; // i.e. V[i]=-0.06 if spiked[i]
 }
-""")
+""".replace('SCALAR',precision))
 stateupdate = mod.get_function("stateupdate")
 threshold = mod.get_function("threshold")
+single_thread_threshold = mod.get_function("single_thread_threshold")
 propagate = mod.get_function("propagate")
 reset = mod.get_function("reset")
 
-V = gpuarray.to_gpu(numpy.array(numpy.random.rand(N)*0.01-0.06,dtype=numpy.float32))
-ge = gpuarray.to_gpu(numpy.zeros(N,dtype=numpy.float32))
-gi = gpuarray.to_gpu(numpy.zeros(N,dtype=numpy.float32))
+V = gpuarray.to_gpu(numpy.array(numpy.random.rand(N)*0.01-0.06,dtype=mydtype))
+ge = gpuarray.to_gpu(numpy.zeros(N,dtype=mydtype))
+gi = gpuarray.to_gpu(numpy.zeros(N,dtype=mydtype))
 
-we = numpy.float32(0.00162)
-wi = numpy.float32(-0.009)
-CeW = numpy.array((numpy.random.rand(Ne, N)<0.02)*we,dtype=numpy.float32)
-CiW = numpy.array((numpy.random.rand(Ni, N)<0.02)*wi,dtype=numpy.float32)
+we = 0.00162
+wi = -0.009
+CeW = numpy.array((numpy.random.rand(Ne, N)<0.02)*we,dtype=mydtype)
+CiW = numpy.array((numpy.random.rand(Ni, N)<0.02)*wi,dtype=mydtype)
 CeW = gpuarray.to_gpu(CeW)
 CiW = gpuarray.to_gpu(CiW)
 
@@ -81,31 +108,71 @@ drv.memcpy_htod(gpu_spike_index, spike_index)
 
 if record:
     recspikes = []
-    recv0 = numpy.zeros(duration,dtype=numpy.float32)
+    recv0 = numpy.zeros(duration,dtype=mydtype)
 totalnspikes = 0
-start = time.time()
-for t in xrange(duration):
-    stateupdate(V, ge, gi, block=block, grid=grid)
-    spike_index[0] = 0
-    drv.memcpy_htod(gpu_spike_index, spike_index)
-    threshold(V, gpu_spikes, gpu_spiked, gpu_spike_index, numpy.int32(N), block=block, grid=grid)
-    drv.memcpy_dtoh(spike_index, gpu_spike_index)
-    numspikes = spike_index[0]
-    spikes = master_spikes[:numspikes]
-    drv.memcpy_dtoh(spikes, gpu_spikes)
-    numspikes_exc = bisect.bisect_left(spikes, Ne)
-    numspikes_inh = numspikes - numspikes_exc
-    drv.memcpy_htod(gpu_spikes_exc, spikes[:numspikes_exc])
-    drv.memcpy_htod(gpu_spikes_inh, spikes[numspikes_exc:]-Ne)
-    propagate(gpu_spikes_exc, numpy.int32(numspikes_exc), ge, CeW, numpy.int32(N), block=block, grid=grid)
-    propagate(gpu_spikes_inh, numpy.int32(numspikes_inh), gi, CiW, numpy.int32(N), block=block, grid=grid)
-    reset(V, gpu_spiked, block=block, grid=grid)
-    if record:
-        recspikes += zip(spikes, repeat(t))
-        drv.memcpy_dtoh(recv0[t:t+1], V.gpudata)
-        #recv0[t:t+1] = V[0]
-    totalnspikes += numspikes
-end = time.time()
+
+stateupdate.prepare(('i', 'i', 'i'), block)
+threshold.prepare(('i', 'i', 'i', 'i', numpy.int32), block)
+single_thread_threshold.prepare(('i', 'i', 'i', 'i', numpy.int32), (1,1,1))
+propagate.prepare(('i', numpy.int32, 'i', 'i', numpy.int32), block)
+reset.prepare(('i', 'i'), block)
+
+stateupdate_args = (grid, int(V.gpudata), int(ge.gpudata), int(gi.gpudata))
+threshold_args = (grid, int(V.gpudata), int(gpu_spikes), int(gpu_spiked.gpudata), int(gpu_spike_index), numpy.int32(N))
+single_thread_threshold_args = ((1,1), int(V.gpudata), int(gpu_spikes), int(gpu_spiked.gpudata), int(gpu_spike_index), numpy.int32(N))
+reset_args = (grid, int(V.gpudata), int(gpu_spiked.gpudata))
+
+def run_sim():
+    global totalnspikes
+    for t in xrange(duration):
+        #stateupdate(V, ge, gi, block=block, grid=grid)
+        if t==0:
+            stateupdate.prepared_call(*stateupdate_args)
+        else:
+            stateupdate.launch_grid(*grid)
+        spike_index[0] = 0
+        drv.memcpy_htod(gpu_spike_index, spike_index)
+        #threshold(V, gpu_spikes, gpu_spiked, gpu_spike_index, numpy.int32(N), block=block, grid=grid)
+        if t==0:
+            threshold.prepared_call(*threshold_args)
+        else:
+            threshold.launch_grid(*grid)
+        # MUCH! slower
+        #single_thread_threshold.prepared_call(*single_thread_threshold_args)
+        drv.memcpy_dtoh(spike_index, gpu_spike_index)
+        numspikes = spike_index[0]
+        spikes = master_spikes[:numspikes]
+        drv.memcpy_dtoh(spikes, gpu_spikes)
+        numspikes_exc = bisect.bisect_left(spikes, Ne)
+        numspikes_inh = numspikes - numspikes_exc
+        drv.memcpy_htod(gpu_spikes_exc, spikes[:numspikes_exc])
+        drv.memcpy_htod(gpu_spikes_inh, spikes[numspikes_exc:]-Ne)
+        #propagate(gpu_spikes_exc, numpy.int32(numspikes_exc), ge, CeW, numpy.int32(N), block=block, grid=grid)
+        propagate.prepared_call(grid, int(gpu_spikes_exc), numpy.int32(numspikes_exc), int(ge.gpudata), int(CeW.gpudata), numpy.int32(N))
+        #propagate(gpu_spikes_inh, numpy.int32(numspikes_inh), gi, CiW, numpy.int32(N), block=block, grid=grid)
+        propagate.prepared_call(grid, int(gpu_spikes_inh), numpy.int32(numspikes_inh), int(gi.gpudata), int(CiW.gpudata), numpy.int32(N))
+        #reset(V, gpu_spiked, block=block, grid=grid)
+        if t==0:
+            reset.prepared_call(*reset_args)
+        else:
+            reset.launch_grid(*grid)
+        if record:
+            recspikes += zip(spikes, repeat(t))
+            drv.memcpy_dtoh(recv0[t:t+1], V.gpudata)
+        totalnspikes += numspikes
+
+if doprofile:
+    start = time.time()
+    profile.run('run_sim()','cudacuba.prof')
+    end = time.time()
+    stats = pstats.Stats('cudacuba.prof')
+    #stats.strip_dirs()
+    stats.sort_stats('cumulative', 'calls')
+    stats.print_stats(50)
+else:
+    start = time.time()
+    run_sim()
+    end = time.time()
 print 'GPU time:', end-start
 print 'Number of spikes:', totalnspikes
 
