@@ -96,8 +96,8 @@ if __name__=='__main__':
     #domonitor = False
     
     duration = 100*ms
-    N = 10
-    domonitor = True
+    N = 100000
+    domonitor = False
     showfinal = False
     
     eqs = Equations('''

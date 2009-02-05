@@ -34,7 +34,7 @@ double *d_y = 0;
 double *d_z = 0;
 double alpha = 1.0;
 double beta = 0.0;
-int n2 = n*n;
+int n2 = n*n; 
 
 //fprintf (stderr, "fprintf working\\n");
 

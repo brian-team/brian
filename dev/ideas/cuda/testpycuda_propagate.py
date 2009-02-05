@@ -17,7 +17,7 @@ print 'repeats:', repeats
 print 'block:', block, 'grid:', grid
 
 mod = drv.SourceModule("""
-__global__ void propagate(int *spikes, int numspikes, double *v, double *W, int N)
+__global__ void propagate(int *spikes, int numspikes, float *v, float *W, int N)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     for(int j=0; j<numspikes; j++)
@@ -28,9 +28,9 @@ __global__ void propagate(int *spikes, int numspikes, double *v, double *W, int 
 propagate = mod.get_function("propagate")
 
 W = numpy.random.randn(N,N)
-W_gpu = gpuarray.to_gpu(W)
+W_gpu = gpuarray.to_gpu(numpy.array(W,dtype=numpy.float32))
 
-v = gpuarray.to_gpu(numpy.zeros(N))
+v = gpuarray.to_gpu(numpy.zeros(N,dtype=numpy.float32))
 v_pre = v.get()
 
 gpu_spikes = drv.mem_alloc(4*len(spikes))
