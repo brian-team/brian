@@ -78,7 +78,7 @@ Design and syntax
 =================
 
 Where possible, the syntax should be as minimal as possible. For example,
-to use a GPU it would be idea to just have a global preference and/or
+to use a GPU the idea would be to just have a global preference and/or
 keywords for standard objects such as ``usegpu=True``. Cluster computing
 is more complicated because you need to set up a server, but perhaps a
 configuration file could be set up to contain this information, leaving
