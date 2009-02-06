@@ -1,0 +1,123 @@
+BEP-8: Parallel processing (GPU, clusters, etc.)
+
+Abstract:
+	Brian should be updated to have new structures for standard
+	objects facilitating algorithms using parallel hardware such as GPUs,
+	clusters, etc. In addition, algorithms should be written for standard
+	objects on various parallel platforms.
+
+Parallel processing
+===================
+
+Overview
+--------
+
+Options for parallel processing, for reference see:
+
+	http://en.wikipedia.org/wiki/Parallel_computing
+
+Multicore computing
+	Python doesn't directly support multiple cores, but the multiprocessing
+	module in Python 2.6 should make this fairly easy to support in Brian.
+	In addition, C++ extension modules can be designed that utilise
+	multiple cores by temporarily releasing the GIL (as is done in numpy).
+
+Distributed computing
+	High latencies mean that this wouldn't be very useful for single
+	simulations, but in the "embarassingly parallel" case, for example
+	trying out the same simulations with multiple parameter sets, this
+	could be useful. It's already supported to a very limited extent with
+	the ppfunction decorator in the brian.utils.parallelpython module.
+	This could be extended in various ways and doesn't require any
+	structural or algorithmic redesign. In this proposal, we are
+	ignoring distributed computing which should probably be done with
+	third party modules or maybe extensions to Brian.
+
+Cluster computing
+	Similar issues to multicore computing but no shared memory which
+	means designing algorithms which limit the amount of data that is
+	transferred from machine to machine in the cluster.
+	
+Massively parallel processing
+	Somewhere between multicore computing and cluster computing in terms
+	of how fast memory can be shared (AIUI).
+	
+Reconfigurable computing
+	Such as field-programmable gate arrays (FPGAs). I don't imagine we'll
+	be supporting this in Brian any time soon.
+
+General purpose GPU computing
+	In some ways similar to multicore computing and MPP, but algorithms
+	need to be designed to be more homogeneous and have little branching.
+
+Vector processing
+	For example the SIMD and SSE instruction sets in most recent PCs.
+	numpy ought to be making use of these as standard, but I think it
+	only does so in its BLAS libraries, not in all of its arithmetical
+	operations. Some speed increases might be gained from this. 
+
+Proposal
+--------
+
+From this list it looks like the main cases would be:
+
+GPU
+	Very fast if everything stays on the GPU, but even GPU-CPU copies
+	are not too bad, especially if you are copying into pagelocked
+	memory. Algorithms have to avoid branching as much as possible.
+Cluster
+	Algorithms designed to minimise communication costs.
+Multicore
+	Like cluster, but simpler because of shared memory.
+
+Ideally, these should be combinable, for example a cluster of
+multicore computers which also have GPUs (the GPUs can work in parallel
+with the CPU cores).
+
+Design and syntax
+=================
+
+Where possible, the syntax should be as minimal as possible. For example,
+to use a GPU it would be idea to just have a global preference and/or
+keywords for standard objects such as ``usegpu=True``. Cluster computing
+is more complicated because you need to set up a server, but perhaps a
+configuration file could be set up to contain this information, leaving
+scripts as simple as possible. In other words, as much as possible want
+to separate code that specifies the model and operation to be run from the
+code that runs the simulation.
+
+Questions:
+
+* What changes need to be made to standard objects such as NeuronGroup and
+  Connection to make them aware of parallel processing? For example, perhaps
+  if there were some schemes for dividing up data (e.g. data to be stored on
+  CPU versus on GPU, dividing groups into virtual groups, dividing connection
+  matrices into blocks), then all Brian objects could have data structures
+  specifying what their place is in these schemes, which object or machine
+  owns the data, etc. In addition, there could be procedures for copying
+  data on demand for example (e.g. buffered copy on demand from the GPU).
+
+Proposal
+--------
+
+None yet.
+
+Implementation and algorithms
+=============================
+
+Multicore
+---------
+
+See section on Clusters below.
+
+GPU
+---
+
+Basic work is done, see dev/ideas/cuda and brian.experimental.gpucodegen.
+It remains to make objects which are seamlessly compatible, for example
+by using buffered copy on demand.
+
+Clusters
+--------
+
+See ideas in dev/ideas/cluster.py.
