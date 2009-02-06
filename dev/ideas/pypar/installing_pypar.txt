@@ -1,0 +1,20 @@
+INSTALLING PYPAR ON WINDOWS
+===========================
+* Download and install MPICH2 (binary installer for Windows); you need to
+give a password (same as when logging?)
+* Add C:\Program Files\MPICH2\bin to your Path environment variable.
+* Your Windows user account needs to be password protected (if not,
+go to the control panel / user accounts and set a password).
+* Run wmpiregister and register your user name and password.
+* Download pypar.
+* Open setup.py and replace the command get_mpi_flags by the following:
+def get_mpi_flags():
+    return {'inc_dirs': ['C:\Program Files\MPICH2\include'],'lib_dirs': ['C:\Program Files\MPICH2\lib'], 'libs':['mpi'],
+            'def_macros': [], 'undef_macros': []}
+and check the directories.
+* setup.py install (possibly with MSVC 2003 but maybe not necessarily)
+* To run a python script on two processors, use:
+mpiexec -n 2 python myscript.py
+Alternatively, use the mpiexec wrapper (in Programs) and
+write e.g. python C:\Python25\Lib\site-packages\pypar\test_init.py
+and select the number of processors. The job can be saved.
