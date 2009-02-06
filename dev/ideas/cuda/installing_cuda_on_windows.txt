@@ -23,3 +23,33 @@ setup.py install.
 C:\Program Files\Microsoft Visual Studio .NET 2003\Common7\IDE
 C:\Program Files\Microsoft Visual Studio .NET 2003\VC7\BIN
 [optionnally, replace by the MS Visual Studio Express 2008 directories]
+
+** ALTERNATIVE INSTALLATION ** [UNTESTED]
+This installation uses cygwin for compiling pypar, as explained here:
+http://boodebr.org/main/python/build-windows-extensions
+MS Visual Studio is used for compiling cuda files.
+
+* Install all CUDA tools from NVIDIA, at least 2.0
+* Install MS Visual Studio Express 2008 (or other MS compiler)
+* Install Boost C++ from Boost Pro Free binary installer, include Python
+binaries for ???. [maybe a cygwin version?]
+* Create a file c:\python25\lib\distutils\distutils.cfg:
+[build]
+compiler = mingw32
+* Download PyCuda
+* Create a file siteconf.py in the pycuda folder:
+BOOST_INC_DIR = [r'C:\Program Files\boost\boost_1_37']
+BOOST_LIB_DIR = [r'C:\Program Files\boost\boost_1_37\lib']
+BOOST_PYTHON_LIBNAME = ['boost_python-vc71-mt-1_37']
+CUDA_ROOT = r'C:\CUDA'
+CUDADRV_LIB_DIR = [r'C:\CUDA\lib']
+CUDADRV_LIBNAME = ['cuda']
+CXXFLAGS = []
+LDFLAGS = []
+* Check the directories above with your configuration.
+* Copy the Boost file boost_python-vc71-mt-1_37.dll to the Windows folder.
+* Go to the pycuda folder and run setup.py install.
+* Add the following directories to your Path environment variable:
+C:\Program Files\Microsoft Visual Studio 9.0\Common7\IDE
+C:\Program Files\Microsoft Visual Studio 9.0\VC\bin
+[check with your configuration]
