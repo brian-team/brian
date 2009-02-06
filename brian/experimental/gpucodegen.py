@@ -6,6 +6,8 @@ import pycuda.driver as drv
 from pycuda import gpuarray
 import time
 
+DEBUG_BUFFER_CACHE = False
+
 class GPUNonlinearStateUpdater(NonlinearStateUpdater):
     def __init__(self,eqs,clock=None,freeze=False):
         NonlinearStateUpdater.__init__(self, eqs, clock, compile=False, freeze=freeze)
@@ -15,25 +17,25 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
         
     def generate_forward_euler_code(self):
         eqs = self.eqs
+        M = len(eqs._diffeq_names)
         all_variables = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
-        clines = '__global__ void stateupdate(double t, ' + ', '.join(['double *'+name for name in eqs._diffeq_names]) + ')\n'
+        clines = '__global__ void stateupdate(int N, double t, double *S)\n'
         clines += '{\n'
         clines += '    int i = blockIdx.x * blockDim.x + threadIdx.x;\n'
+        clines += '    if(i>=N) return;\n'
+        for j, name in enumerate(eqs._diffeq_names):
+            clines += '    double &' + name + ' = S[i+'+str(j)+'*N];\n'
         for name in eqs._eq_names:
             namespace = eqs._namespace[name]
             expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
-            for dename in eqs._diffeq_names:
-                expr = expr.replace(dename, dename+'[i]')
             clines += '    double '+name+'__tmp = '+expr+';\n'
         for j, name in enumerate(eqs._diffeq_names):
             namespace = eqs._namespace[name]
             expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
-            for dename in eqs._diffeq_names:
-                expr = expr.replace(dename, dename+'[i]')
             if name in eqs._diffeq_names_nonzero:
                 clines += '    double '+name+'__tmp = '+expr+';\n'
         for name in eqs._diffeq_names_nonzero:
-            clines += '    '+name+'[i] += '+str(self.clock_dt)+'*'+name+'__tmp;\n'
+            clines += '    '+name+' += '+str(self.clock_dt)+'*'+name+'__tmp;\n'
         clines += '}\n'
         self.gpu_mod = drv.SourceModule(clines)
         self.gpu_func = self.gpu_mod.get_function("stateupdate")
@@ -41,8 +43,7 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
     
     def __call__(self, P):
         if not self._prepared:
-            self._args = [float64(0.0)]+[P._gpu_vars[name] for name in self.eqs._diffeq_names]
-            self._stream = drv.Stream()
+            self._args = [int32(len(P)), float64(0.0), P._S_gpu]
             blocksize = 512
             if len(P)<512:
                 blocksize = len(P)
@@ -50,44 +51,68 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
                 gridsize = len(P)/blocksize
             else:
                 gridsize = len(P)/blocksize+1
-            self._kwds = {'block':(blocksize,1,1),
-                          'stream':self._stream,
-                          'grid':(gridsize,1)}
             self._prepared = True
-        #self._stream.synchronize()
-        self._args[0] = float64(P.clock._t)
-        self.gpu_func(*self._args, **self._kwds)
+            self.gpu_func.prepare((int32, float64, 'i'), (blocksize,1,1))
+            self._S_gpu_addr = int(P._S_gpu.gpudata)
+            self._gpu_N = int32(len(P))
+            self._gpu_grid = (gridsize,1)
+        self.gpu_func.prepared_call(self._gpu_grid, self._gpu_N, float64(P.clock._t), self._S_gpu_addr)
 
 class GPUNeuronGroup(NeuronGroup):
     def __init__(self, N, eqs, clock=None):
         eqs.prepare()
+        NeuronGroup.__init__(self, N, eqs, clock=clock)
         self.clock = guess_clock(clock)
         self._state_updater = GPUNonlinearStateUpdater(eqs, clock=self.clock)
-        self._resetfun = NoReset()
-        self._threshold = NoThreshold()
-        self._spiking = False
-        self._gpu_vars = dict((name, gpuarray.to_gpu(zeros(N))) for name in eqs._diffeq_names)
-        self._owner = self
-        self._N = N
-        self.var_index = dict((name, -1) for name in eqs._eq_names+eqs._diffeq_names+eqs._alias.keys())
+        self._S_gpu = gpuarray.to_gpu(self._S)
+        self._data_changed = False
+        self._gpu_data_changed = False
+        self._gpuneurongroup_init_finished = True
     
-    def __len__(self):
-        return self._N
+    def _copy_from_gpu(self):
+        if not hasattr(self, '_gpuneurongroup_init_finished'): return
+        if self._gpu_data_changed:
+            object.__setattr__(self, '_gpu_data_changed', False)
+            self._S_gpu.get(self._S)
+            if DEBUG_BUFFER_CACHE:
+                print 'copying from gpu'
     
+    def _write_to_gpu(self):
+        if not hasattr(self, '_gpuneurongroup_init_finished'): return
+        if self._data_changed:
+            object.__setattr__(self, '_data_changed', False)
+            if DEBUG_BUFFER_CACHE:
+                print 'writing to gpu'
+            self._S_gpu.set(self._S)
+    
+    def update(self):
+        self._write_to_gpu()
+        NeuronGroup.update(self)
+        self._gpu_data_changed = True
+       
     def state_(self, name):
-        return self._gpu_vars[name].get()
+        try:
+            self._gpuneurongroup_init_finished
+            self._copy_from_gpu()
+            return NeuronGroup.state_(self, name)
+        except AttributeError:
+            return NeuronGroup.state_(self, name)
     state = state_
     
-    def unit(self, name):
-        return 1
-    
+    def __getattr__(self, name):
+        try:
+            object.__getattribute__(self, '_gpuneurongroup_init_finished')
+            return NeuronGroup.__getattr__(self, name)
+        except AttributeError:
+            return object.__getattribute__(self, name) 
     def __setattr__(self, name, val):
-        if hasattr(self, '_gpu_vars') and name in self._gpu_vars:
-            if not isinstance(val, ndarray):
-                val = val*ones(self._N)
-            self._gpu_vars[name].set(val)
-        else:
+        try:
+            self._gpuneurongroup_init_finished
             NeuronGroup.__setattr__(self, name, val)
+            if name in self.var_index:
+                object.__setattr__(self, '_data_changed', True)
+        except AttributeError:
+            object.__setattr__(self, name, val)
 
 if __name__=='__main__':
     
