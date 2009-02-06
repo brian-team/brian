@@ -13,7 +13,12 @@ blocksize = 512
 duration = 10000
 record = False
 doprofile = False
-precision = 'double'
+if drv.get_version()==(2,0,0): # cuda version
+    precision = 'float'
+elif drv.get_version()>(2,0,0):
+    precision = 'double'
+else:
+    raise Exception,"CUDA 2.0 required"
 
 if precision=='double':
     mydtype = numpy.float64
