@@ -9,7 +9,7 @@ import cProfile as profile
 import pstats
 import brian
 
-N = 512*64
+N = 512*256
 blocksize = 512
 duration = 10000
 record = False

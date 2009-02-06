@@ -160,6 +160,7 @@ def run_sim():
         numspikes = spike_index[0]
         spikes = master_spikes[:numspikes]
         drv.memcpy_dtoh(spikes, gpu_spikes)
+        spikes.sort()
         numspikes_exc = bisect.bisect_left(spikes, Ne)
         numspikes_inh = numspikes - numspikes_exc
         drv.memcpy_htod(gpu_spikes_exc, spikes[:numspikes_exc])
