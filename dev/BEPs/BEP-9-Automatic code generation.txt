@@ -1,0 +1,253 @@
+BEP-9: Automatic code generation
+
+Abstract:
+	Brian should automatically generate code in various languages to
+	optimise various operations. For example, nonlinear differential
+	equations or string resets and thresholds are converted into
+	Python code at the moment, but it should be possible to convert
+	into C++ or GPU code as well. More ambitiously, a whole simulation
+	might be converted into pure C++ code to totally eliminate the
+	Python overhead.
+
+Automatic code generation
+=========================
+
+There are two main things one might want to achieve with automatic
+code generation. The simplest is just generation of code that is
+executed from within Python, for example using weave.inline or
+on a GPU. However, a more ambitious aim would be to generate C++
+code that performed the entire simulation. This would involve having
+C++ versions of most of Brian's objects, and a framework in which
+they could be placed.
+
+Work done so far
+----------------
+
+Automatic generation of Python code can be seen in several places in
+Brian, particularly in the Equations object. This is fairly stable.
+
+There are also some more experimental bits of code:
+
+C++ code for Euler state update is done in brian.experimental.ccodegen.
+
+GPU code for Euler state update is done in brian.experimental.gpucodegen.
+
+GPU code for some standard Brian objects can be found in dev/ideas/cuda.
+
+A framework for converting entire Brian simulations into pure C++ can
+be found in dev/ideas/cppgen.
+
+Worked example
+--------------
+
+Starting from the nonlinear differential equation::
+
+    dV/dt = W*W/(100*ms) : 1
+    dW/dt = -V/(100*ms) : 1
+
+We generate the following Python code::
+
+	V,W=P._S
+	V__tmp,W__tmp=P._dS
+	V__tmp[:]=W*W/(100*0.001)
+	W__tmp[:]=-V/(100*0.001)
+	P._S+=dt*P._dS
+
+the following weave.inline code::
+
+	double *V__Sbase = S+0*n;
+	double *W__Sbase = S+1*n;
+	for(int i=0;i<n;i++){
+	    double &V = *V__Sbase++;
+	    double &W = *W__Sbase++;
+	    double V__tmp = W*W/(100*0.001);
+	    double W__tmp = -V/(100*0.001);
+	    V += dt*V__tmp;
+	    W += dt*W__tmp;
+	}
+
+and the following GPU code::
+
+	__global__ void stateupdate(double t, double *V, double *W)
+	{
+	    int i = blockIdx.x * blockDim.x + threadIdx.x;
+	    double V__tmp = W[i]*W[i]/(100*0.001);
+	    double W__tmp = -V[i]/(100*0.001);
+	    V[i] += 0.0001*V__tmp;
+	    W[i] += 0.0001*W__tmp;
+	}
+
+The stages that are involved are:
+
+1.  Freezing and optimising the expressions::
+
+		V: W*W/(100*0.001)
+		W: -V/(100*0.001)
+	
+	At the moment, not much in the way of optimising is done here,
+	but for example you could obviously optimise 100*0.001 to 0.1.
+
+2.  Specifying the solver code on a per-neuron basis, involving creating
+    intermediate variables::
+    
+    	V__tmp defined by W*W/(100*0.001)
+    	W__tmp defined by -V/(100*0.001)
+    
+    and then updating::
+    
+    	V += dt*V__tmp
+    	W += dt*W__tmp
+    
+    For the Python code this final step is done in a manner vectorised over
+    variables as well as neurons::
+    
+    	P._S += dt*P._dS
+
+3.  Generating setup and loop code from the solver code in a way that is
+    specific to the output being generated. So for example in Python we
+    first load the variables into names::
+    
+		V, W = P._S
+		V__tmp, W__tmp = P._dS
+		
+	Then we transform the intermediate variables by putting [:] in 
+	front of them::
+	
+		V__tmp[:]=W*W/(100*0.001)
+		W__tmp[:]=-V/(100*0.001)
+	
+	and finally we replace the update code with a vectorised version::
+	
+		P._S += dt*P._dS
+    
+    In C++ we first load the variables with pointers:: 
+    
+		double *V__Sbase = S+0*n;
+		double *W__Sbase = S+1*n;
+	
+	Then we explicitly loop:
+	
+		for(int i=0;i<n;i++){
+			...
+		}
+	
+	We turn the variable names into references which increment the
+	pointers::
+	
+	    double &V = *V__Sbase++;
+	    double &W = *W__Sbase++;
+	
+	We create new intermediate variables from the expressions directly::
+	
+	    double V__tmp = W*W/(100*0.001);
+	    double W__tmp = -V/(100*0.001);
+	
+	And because we used references for the variables names, updating
+	can be done directly from the variables too::   
+	 
+	    V += dt*V__tmp;
+	    W += dt*W__tmp;
+    
+    Finally, on the GPU we execute multiple threads which are passed
+    a global variable specifying which neuron index they are working
+    on:: 
+    
+		__global__ void stateupdate(double t, double *V, double *W)
+		{
+		    int i = blockIdx.x * blockDim.x + threadIdx.x;
+		    ...
+	    }
+	
+	Then we proceed as for the C++ case except that rather than use
+	a reference we use an explicit array access (although presumably
+	a reference would work just as well)::
+	
+	    double V__tmp = W[i]*W[i]/(100*0.001);
+	    double W__tmp = -V[i]/(100*0.001);
+	    V[i] += 0.0001*V__tmp;
+	    W[i] += 0.0001*W__tmp;
+
+Refactoring
+-----------
+
+Refactoring the code above would be straightforward, you have:
+
+1. A function for freezing and optimising an expression.
+2. Specification of solver code, including intermediate variables
+   and final update.
+3. Transformation of expressions into target language, which can
+   involve expression rewriting (e.g. x**y -> pow(x,y)).
+
+There are some issues here, for example the optimal Python update
+at the end is::
+
+	P._S += dt*P._dS
+
+and not::
+
+	V += dt*V__tmp
+	W += dt*W__tmp
+
+In addition, the expression rewriting is not straightforward to do
+(but can work in many cases probably).
+
+Issues
+------
+
+In the above we've only considered the Euler update, but different
+solvers (in particular the implicit solver) may have more complicated
+schemes which might involve pre and post processing of the data, and
+we may also want to think about mixed exact linear state updaters with
+inexact nonlinear state updaters, etc. So can this all be specified
+in one scheme? Need to do a survey of the existing state updaters
+to determine this.
+
+In addition, there are also string thresholds and resets, various
+custom operations, etc. Ideally the code generators should be able
+to handle as much of this as possible in the easiest way possible.
+There should probably also be a fallback mechanism, whereby people can
+provide their own translated code if they wish, which can be used
+alongside other generated code. This would be useful for example if
+there were more or less optimal ways to do things in different
+languages or if our automatic translators failed or weren't defined for
+a particular case (e.g. custom operation).
+
+Proposal
+========
+
+A scheme should be defined for specifying per-neuron updates using
+expressions and potentially intermediate variables. For example
+using the template matching from the Python string module a
+specification of the Euler update might be::
+
+	intermediate:
+		$vartype ${var}__tmp = $var_expr
+	update:
+		$var += ${var}__tmp
+
+This is only a suggestion of a scheme, the precise scheme used should
+be based on a survey of the current solvers, string thresholds/resets
+and so on.
+
+In addition, some sort of scheme for dealing with more complicated
+solvers? Or just special casing these? What about mixed linear/nonlinear
+for example?
+
+Some other possible schemes for Euler update::
+
+	@foreachneuron
+		@foreachvar: $all_vars
+			@intermediate: ${var}__tmp
+				$var_expr
+		@foreachvar: $all_vars
+			$var += ${var}__tmp
+
+This latter is uglier, but maybe makes it more flexible and allows for
+better optimisation for target languages. It may also be possible to
+combine this more easily with things like mixed linear and nonlinear
+state updates. One might imagine for example something like this::
+
+	@exactlinear: $linear_vars
+	@$nonlinear_scheme: $nonlinear_vars
+	
+Is this level of complexity justified though?

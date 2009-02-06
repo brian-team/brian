@@ -113,18 +113,18 @@ if __name__=='__main__':
     ''')
     #print eqs
 
-    taum=20*ms
-    taue=5*ms
-    taui=10*ms
-    Vt=-50*mV
-    Vr=-60*mV
-    El=-49*mV
-    
-    eqs= Equations('''
-    dV/dt  = (ge+gi-(V-El))/taum : volt
-    dge/dt = -ge/taue : volt
-    dgi/dt = -gi/taui : volt
-    ''')
+#    taum=20*ms
+#    taue=5*ms
+#    taui=10*ms
+#    Vt=-50*mV
+#    Vr=-60*mV
+#    El=-49*mV
+#    
+#    eqs= Equations('''
+#    dV/dt  = (ge+gi-(V-El))/taum : volt
+#    dge/dt = -ge/taue : volt
+#    dgi/dt = -gi/taui : volt
+#    ''')
     
     G = GPUNeuronGroup(N, eqs)
     
