@@ -86,10 +86,38 @@ Also, the statement
 from brian.cluster import *
 could be avoided by placing a test in brian.__init__ that checks the number
 of processor (i.e., whether the script has been run with mpiexec).
+Alternatively, one could use a special Python script to run a script on
+a cluster (which would call mpiexec).
+
+ServerGroup:
+* stores all state variables normally
+* transfers only when network is running (e.g. use a flag when running)
+* transfers are triggered by reads/writes at run time 
+(gather operation?); more specifically:
+   + write operation triggers a flag for transfer at end of time step
+   + read operation triggers an immediate transfer if flag is up and pushes
+   flag down (flag up at end of time step).
+* updates, threshold, resets only concern the beginning of the group
+(non virtual)
+A NeuronGroup could be turned into a ServerGroup when the first
+run function is called. This way all subclasses of NeuronGroup could be
+used. The ServerGroup holds a reference to the real NeuronGroup and
+inserts the required operations.
+This way, monitors can stay on the server side, essentially unchanged.
+The problem with this strategy is that plasticity is implemented with
+monitors.
+
+In fact on the client side, one could use the same class as ServerGroup,
+except the indexes of the real subgroup are different. Reads/writes would
+be forbidden in virtual groups (not a problem if monitors stay on the
+server side).
+
 '''
 import pypar
 from brian.neurongroup import *
 from brian.network import *
+from brian.globalprefs import set_global_preferences
+from cluster_client import run_client
 
 class VirtualGroup(NeuronGroup):
     '''
@@ -131,8 +159,15 @@ class ServerNetwork(Network):
     '''
     pass
 
-class ClientNetwork(Network):
-    '''
-    Network class for running a simulation over a cluster, client side.
-    '''
-    pass
+# Identification
+myid =    pypar.rank() # id of this process
+nproc = pypar.size() # number of processors
+
+if myid>0: # client
+    import sys
+    run_client()
+    sys.exit(0)
+
+# Server
+#Network=ServerNetwork
+set_global_preferences(cluster_server=True)
