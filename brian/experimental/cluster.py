@@ -112,6 +112,17 @@ except the indexes of the real subgroup are different. Reads/writes would
 be forbidden in virtual groups (not a problem if monitors stay on the
 server side).
 
+What might be necessary for transparent use is that all objects (groups,
+connections) should have a subgrouping mechanism.
+
+Yet another strategy based on option 1), i.e., do not subdivide groups:
+* When a NeuronGroup is created, it is decided internally whether it should
+be on the main server or on a client (dynamic load balancing based only on
+the number of neurons). The corresponding groups are sent to the clients.
+* When a Connection is created, it already knows where the groups are, so
+it is simple to handle.
+* That technique duplicates all spike monitors, but maybe we can change that
+behaviour.
 '''
 import pypar
 from brian.neurongroup import *
