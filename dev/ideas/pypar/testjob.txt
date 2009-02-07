@@ -1,0 +1,12 @@
+exe python D:\EclipseWorkspace\Brian\dev\ideas\pypar\pypar_test.py
+n 2
+wdir 
+hosts 
+cfg 
+mpich1 
+env 
+map 
+channel default
+extra 
+window no
+log no
