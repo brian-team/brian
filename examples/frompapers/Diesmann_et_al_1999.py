@@ -27,8 +27,8 @@ for i in range(9):
 Cinput = Connection(Pinput,Pgp[0],'y')
 Cinput.connect_full(weight=weight)
 # Record the spikes
-Mgp = [SpikeMonitor(p,record=True) for p in Pgp]
-Minput = SpikeMonitor(Pinput,record=True)
+Mgp = [SpikeMonitor(p) for p in Pgp]
+Minput = SpikeMonitor(Pinput)
 monitors = [Minput]+Mgp
 # Setup the network, and run it
 P.V = Vr + rand(len(P)) * (Vt-Vr)

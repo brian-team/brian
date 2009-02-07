@@ -65,6 +65,8 @@ def flattened_docstring(docstr,numtabs=0,spacespertab=4,split=False):
         lines = docstr.split('\n')
     else:
         lines = docstr
+    if len(lines)<2: # nothing to do
+        return docstr
     flattenedstring = ''
     # Interpret multiline strings according to the Python docstring standard 
     indentlevel = min( # the smallest number of whitespace characters in the lines of the description
