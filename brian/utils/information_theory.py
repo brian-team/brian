@@ -7,7 +7,7 @@ Uses the ANN wrapper in scikits.
 import scikits.ann as ann
 from scipy.special import gamma,psi
 from scipy.linalg import det
-from scipy import pi
+from scipy import pi,hstack,mean,log
 
 __all__=['nearest_distances','entropy','mutual_information','entropy_gaussian']
 
@@ -33,24 +33,17 @@ def entropy_gaussian(C):
         n=C.shape[0] # dimension
         return .5*n*(1+log(2*pi))+.5*log(abs(det(C)))
 
-def entropy(*args,**kwd):
+def entropy(X,k=1):
     '''
-    Returns the entropy of the variables.
-    Each variable is given as an array X = array(n,dx)
+    Returns the entropy of X,
+    given as array X = array(n,dx)
     where
       n = number of samples
       dx = number of dimensions
     
     Optionally:
       k = number of nearest neighbors for density estimation
-      
-    Example: entropy(X), entropy(X,Y), entropy(X,k=5)
     '''
-    if len(args)==0:
-        raise AttributeError,"No variable!"
-    k=kwd.get('k',1)
-    X=hstack(args)
-
     # Distance to kth nearest neighbor
     r=nearest_distances(X,k) # squared distances
     n,d=X.shape
@@ -73,9 +66,9 @@ def entropy(*args,**kwd):
     '''
     return .5*d*mean(log(r))+log(volume_unit_ball)+psi(n)-psi(k)
 
-def mutual_information(*args,**kwd):
+def mutual_information(X,Y,k=1):
     '''
-    Returns the mutual information between any number of variables.
+    Returns the mutual information between X and Y.
     Each variable is a matrix X = array(n,dx)
     where
       n = number of samples
@@ -83,13 +76,8 @@ def mutual_information(*args,**kwd):
     
     Optionally, the following keyword argument can be specified:
       k = number of nearest neighbors for density estimation
-
-    Example: mutual_information(X,Y), mutual_information(X,Y,Z,k=5)
     '''
-    if len(args)<2:
-        raise AttributeError,"Mutual information must involve at least 2 variables"
-    k=kwd.get('k',1)
-    return sum([entropy(X,k=k) for X in args])-entropy(k=k,*args)
+    return entropy(X)+entropy(Y)-entropy(hstack((X,Y)),k=k)
 
 if __name__=='__main__':
     '''
