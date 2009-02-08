@@ -1,6 +1,11 @@
+New features since 1.1.1
+------------------------
+
 New features since 1.1.0
 ------------------------
+
 * New statistical function: vector_strength
+* Bugfix for one line string thresholds/resets
 
 New features since 1.0.0
 ------------------------

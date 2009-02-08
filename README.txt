@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.1.0
+Version: 1.1.1
 Authors:
 	Romain Brette
 		http://www.di.ens.fr/~brette/index.html
@@ -47,6 +47,11 @@ See the documentation in the extras download, or online:
 	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.1.0 to 1.1.1:
+
+* New statistical function: vector_strength
+* Bugfix for one line string thresholds/resets
 
 Version 1.0.0 to 1.1.0:
 

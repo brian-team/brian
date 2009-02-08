@@ -72,7 +72,7 @@ from magic import *
 from stdp import *
 from stp import *
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 #import unitsafefunctions as _usf
 #import numpy as _numpy
