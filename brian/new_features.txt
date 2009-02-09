@@ -1,6 +1,8 @@
 New features since 1.1.1
 ------------------------
 
+* Standard functions rand() and randn() can now be used in string resets.
+
 New features since 1.1.0
 ------------------------
 
