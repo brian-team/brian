@@ -203,13 +203,22 @@ class StringReset(Reset):
     def __init__(self,expr,level=0):
         expr = flattened_docstring(expr)
         self._namespace,unknowns=namespace(expr,level=level+1,return_unknowns=True)
-        self._vars=unknowns
-        for var in unknowns:
-            expr=re.sub("\\b"+var+"\\b",var+'[_spikes_]',expr)
-        self._code=compile(expr,"StringReset","exec")
+#        self._vars=unknowns
+#        for var in unknowns:
+#            expr=re.sub("\\b"+var+"\\b",var+'[_spikes_]',expr)
+#        self._code=compile(expr,"StringReset","exec")
+        self._prepared = False
+        self._expr = expr
         
     def __call__(self,P):
-        self._namespace['_spikes_']=P.LS.lastspikes()
+        if not self._prepared:
+            unknowns = [var for var in P.var_index if isinstance(var, str)]
+            expr = self._expr
+            for var in unknowns:
+                expr = re.sub("\\b"+var+"\\b", var+'[_spikes_]', expr)
+            self._code = compile(expr, "StringReset", "exec")
+            self._vars = unknowns
+        self._namespace['_spikes_'] = P.LS.lastspikes()
         for var in self._vars:
             self._namespace[var]=P.state(var)
         exec self._code in self._namespace
