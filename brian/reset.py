@@ -44,6 +44,7 @@ from units import *
 from clock import *
 import inspect
 import re
+import numpy
 from inspection import *
 from utils.documentation import flattened_docstring
 
@@ -196,19 +197,36 @@ class StringReset(Reset):
         The string expression used to reset. This can include 
         multiple lines or statements separated by a semicolon.
         For example, ``'V=-70*mV'`` or ``'V=-70*mV; Vt+=10*mV'``.
+        Some standard functions are provided, see below.
     ``level``
         How many levels up in the calling sequence to look for
         names in the namespace. Usually 0 for user code.
+    
+    Standard functions for expressions:
+    
+    ``rand()``
+        A uniform random number between 0 and 1.
+    ``randn()``
+        A Gaussian random number with mean 0 and standard deviation 1.
+    
+    For example, these could be used to implement an adaptive
+    model with random reset noise with the following string::
+    
+        E -= 1*mV
+        V = Vr+rand()*5*mV
     '''
     def __init__(self,expr,level=0):
         expr = flattened_docstring(expr)
         self._namespace,unknowns=namespace(expr,level=level+1,return_unknowns=True)
-#        self._vars=unknowns
-#        for var in unknowns:
-#            expr=re.sub("\\b"+var+"\\b",var+'[_spikes_]',expr)
-#        self._code=compile(expr,"StringReset","exec")
         self._prepared = False
         self._expr = expr
+        class Replacer(object):
+            def __init__(self, func, n):
+                self.n = n
+                self.func = func
+            def __call__(self):
+                return self.func(self.n)
+        self._Replacer = Replacer
         
     def __call__(self,P):
         if not self._prepared:
@@ -218,9 +236,12 @@ class StringReset(Reset):
                 expr = re.sub("\\b"+var+"\\b", var+'[_spikes_]', expr)
             self._code = compile(expr, "StringReset", "exec")
             self._vars = unknowns
-        self._namespace['_spikes_'] = P.LS.lastspikes()
+        spikes = P.LS.lastspikes()
+        self._namespace['_spikes_'] = spikes
+        self._namespace['rand'] = self._Replacer(numpy.random.rand, len(spikes))
+        self._namespace['randn'] = self._Replacer(numpy.random.randn, len(spikes))
         for var in self._vars:
-            self._namespace[var]=P.state(var)
+            self._namespace[var] = P.state(var)
         exec self._code in self._namespace
 
     def __repr__(self):
