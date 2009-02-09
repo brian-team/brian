@@ -22,7 +22,7 @@ def nearest_distances(X,k=1):
     ktree=ann.kdtree(X)
     _,d=ktree.knn(X,k+1) # the first nearest neighbor is itself
     return d[:,-1] # returns the distance to the kth nearest neighbor
-
+    
 def entropy_gaussian(C):
     '''
     Entropy of a gaussian variable with covariance matrix C
