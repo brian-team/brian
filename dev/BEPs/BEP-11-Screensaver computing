@@ -9,13 +9,17 @@ Existing projects:
 ==================
 * parallelpython
 * A Windows screensaver in Python :http://homepage.hispeed.ch/py430/python/
-* Condor (I never managed to install it!)
 * Lots of full-featured grid computing systems that look really complicated
 * An undocumented job queue system called "jobba.TheHutt()":
 http://code.google.com/p/jobba/
 * Peer-to-peer in Python:
 http://cs.berry.edu/~nhamid/p2p/framework-python.html
 http://cs.berry.edu/~nhamid/p2p/filer-python.html
+* Grid computing:
+http://en.wikipedia.org/wiki/Job_Submission_Description_Language
+http://en.wikipedia.org/wiki/Globus_Toolkit
+* Condor: I previously couldn't install it, but I just did! It looks like
+we might use it for this project.
 
 How about other O/S? (non Windows)
 
@@ -94,3 +98,9 @@ Py2exe tutorial: http://www.py2exe.org/index.cgi/Tutorial
 
 From the slave point of view, a job is simply an archive file with a file to
 execute at the root, and a "results" folder to send back at the end.
+
+Notes
+=====
+Since this does not seem to depend on Brian, it could be an independent
+effort (a Python job queueing mechanism based on a screensaver).
+It could use parallelpython for the communications.
