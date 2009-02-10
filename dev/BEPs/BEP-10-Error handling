@@ -20,6 +20,8 @@ the frames and the user script (using the get_source function from the
 inspect module).
 These could be methods of a base Exception class BrianError.
 
+[Dan adds: agreed, seems like a good idea.]
+
 Nested exceptions
 =================
 In many cases, the function that raises the exception does not know
@@ -38,6 +40,16 @@ def global_function():
 		useful_info=e.other_information
 		raise WhatEverError("I got one!",useful_info)
 		# or WhatEverError(e,...)
+
+[Dan adds: we had this in the past, or something very similar, and
+it didn't work very well, it basically made it more difficult to
+understand what was going on. We should have something like this,
+but only in those cases where an explicit error catching mechanism
+fails I think. Rather than improve the error reporting (which is
+what this tries to do), it would be much better to improve Brian's
+code so that it understands errors and deals with them more
+appropriately. At the moment we basically just hope there won't be
+any...]
 
 Real cases
 ==========
