@@ -1,0 +1,84 @@
+BEP-11: Screensaver computing
+
+Abstract: At a given time in a lab, many (most?) computers are not used.
+This huge unused computing power could be used for intensive Brian simulations.
+A simple way to do this is to write a screensaver program that would process a
+queue of Python jobs.
+
+Existing projects:
+==================
+* parallelpython
+* A Windows screensaver in Python :http://homepage.hispeed.ch/py430/python/
+* Condor (I never managed to install it!)
+* Lots of full-featured grid computing systems that look really complicated
+* An undocumented job queue system called "jobba.TheHutt()":
+http://code.google.com/p/jobba/
+* Peer-to-peer in Python:
+http://cs.berry.edu/~nhamid/p2p/framework-python.html
+http://cs.berry.edu/~nhamid/p2p/filer-python.html
+
+How about other O/S? (non Windows)
+
+Specificities of the project
+============================
+We consider a number of machines with Brian installed.
+There are two types of machines:
+* Ones that want some work to be done. These won't do the job of
+someone else, they prefer doing their job first. Let's call them "masters".
+* Ones that have nothing to do. Let's call them "slaves".
+
+Besides, most machines will be probably be used by non-Brian users,
+which means that we don't want to be updating those machines all the
+time with a new screensaver every time we change a feature.
+There should also perhaps be a Brian update mechanism.
+
+Thus, slaves do the jobs given by masters, and masters do their own jobs.
+A slave runs several scripts:
+* one script that gets jobs from masters and send the results back.
+* one script executed on each processor, given by the slave script.
+A master runs:
+* one script that gets sends to slaves and get the results back.
+* one script executed on each processor, given by the master script.
+
+The screensaver should immediately end all running scripts when it
+is stopped by the user.
+
+Time should be equally shared between masters. Simplest way to do it:
+a slave selects a random master every time it wants to get a script
+(not a random script, since there would be a bias
+for masters with many scripts).
+
+Security
+========
+The Brian screensaver executes Python scripts, which can do about
+anything bad. Maybe there should be some way to avoid accidents? (or worse!)
+
+Communication of scripts
+========================
+With parallelpython, there are many constraints. Maybe the simplest way is
+to communicate an entire script. Since there can be user-defined modules or
+even data, an entire folder could be communicated through an archive file.
+Slave-specific instructions could be given in a configuration file, e.g.:
+http://docs.python.org/library/configparser.html
+That file could be included in the archive. The main brian script
+would load that file which could contain parameters or any information.
+The slave does not even need to know about this configuration file: it directly
+executes the main script. What needs to be specified is
+* the name of the main script to execute
+* the data to send back
+* and maybe, the dependencies (Brian version and other modules)
+Here is an idea:
+* the main script is called "main.py" in the root directory, or "main_something.py".
+* the "results" folder must be sent back at the end of the script. It is up to the
+Brian script to put whatever it wants in that folder.
+
+Advantage: this scheme preserves maximum flexibility from the slave side, so that
+all the updating will be essentially for the master machines.
+
+From the master point of view, adding a job to the queue means communicating:
+* the folder with the script or the files (with possibly exclusions, etc)
+* a configuration file(s) or any picklable object. If it is a file, it is put
+in the archive sent to the slaves. If it is a picklable object (e.g. dictionary),
+it is passed directly to the slave and will be an argument to the executed
+script (sys.argv).
+* possibly, the dependencies.
