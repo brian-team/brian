@@ -4,13 +4,21 @@ from scipy import weave
 import pycuda.autoinit as autoinit
 import pycuda.driver as drv
 from pycuda import gpuarray
+from buffering import *
 import time
 
-DEBUG_BUFFER_CACHE = False
+__all__ = ['GPUNonlinearStateUpdater', 'GPUNeuronGroup']
+
+#DEBUG_BUFFER_CACHE = False
 
 class GPUNonlinearStateUpdater(NonlinearStateUpdater):
-    def __init__(self,eqs,clock=None,freeze=False):
+    def __init__(self, eqs, clock=None, freeze=False, precision='double'):
         NonlinearStateUpdater.__init__(self, eqs, clock, compile=False, freeze=freeze)
+        self.precision = precision
+        if self.precision=='double':
+            self.precision_dtype = float64
+        else:
+            self.precision_dtype = float32
         self.clock_dt = float(guess_clock(clock).dt)
         self.code_gpu = self.generate_forward_euler_code()
         self._prepared = False
@@ -19,31 +27,32 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
         eqs = self.eqs
         M = len(eqs._diffeq_names)
         all_variables = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
-        clines = '__global__ void stateupdate(int N, double t, double *S)\n'
+        clines = '__global__ void stateupdate(int N, SCALAR t, SCALAR *S)\n'
         clines += '{\n'
         clines += '    int i = blockIdx.x * blockDim.x + threadIdx.x;\n'
         clines += '    if(i>=N) return;\n'
         for j, name in enumerate(eqs._diffeq_names):
-            clines += '    double &' + name + ' = S[i+'+str(j)+'*N];\n'
+            clines += '    SCALAR &' + name + ' = S[i+'+str(j)+'*N];\n'
         for name in eqs._eq_names:
             namespace = eqs._namespace[name]
             expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
-            clines += '    double '+name+'__tmp = '+expr+';\n'
+            clines += '    SCALAR '+name+'__tmp = '+expr+';\n'
         for j, name in enumerate(eqs._diffeq_names):
             namespace = eqs._namespace[name]
             expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
             if name in eqs._diffeq_names_nonzero:
-                clines += '    double '+name+'__tmp = '+expr+';\n'
+                clines += '    SCALAR '+name+'__tmp = '+expr+';\n'
         for name in eqs._diffeq_names_nonzero:
             clines += '    '+name+' += '+str(self.clock_dt)+'*'+name+'__tmp;\n'
         clines += '}\n'
+        clines = clines.replace('SCALAR', self.precision)
         self.gpu_mod = drv.SourceModule(clines)
         self.gpu_func = self.gpu_mod.get_function("stateupdate")
         return clines
     
     def __call__(self, P):
         if not self._prepared:
-            self._args = [int32(len(P)), float64(0.0), P._S_gpu]
+            #self._args = [int32(len(P)), float64(0.0), P._S.gpu_array]
             blocksize = 512
             if len(P)<512:
                 blocksize = len(P)
@@ -52,65 +61,34 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
             else:
                 gridsize = len(P)/blocksize+1
             self._prepared = True
-            self.gpu_func.prepare((int32, float64, 'i'), (blocksize,1,1))
-            self._S_gpu_addr = int(P._S_gpu.gpudata)
+            self.gpu_func.prepare((int32, self.precision_dtype, 'i'), (blocksize,1,1))
+            self._S_gpu_addr = P._S.gpu_pointer#int(P._S_gpu.gpudata)
             self._gpu_N = int32(len(P))
             self._gpu_grid = (gridsize,1)
-        self.gpu_func.prepared_call(self._gpu_grid, self._gpu_N, float64(P.clock._t), self._S_gpu_addr)
+        P._S.sync_to_gpu()
+        self.gpu_func.prepared_call(self._gpu_grid, self._gpu_N, self.precision_dtype(P.clock._t), self._S_gpu_addr)
+        P._S.changed_gpu_data()
 
 class GPUNeuronGroup(NeuronGroup):
-    def __init__(self, N, eqs, clock=None):
+    def __init__(self, N, eqs, clock=None, precision='double'):
         eqs.prepare()
         NeuronGroup.__init__(self, N, eqs, clock=clock)
+        self.precision = precision
+        if self.precision=='double':
+            self.precision_dtype = float64
+        else:
+            self.precision_dtype = float32
         self.clock = guess_clock(clock)
-        self._state_updater = GPUNonlinearStateUpdater(eqs, clock=self.clock)
-        self._S_gpu = gpuarray.to_gpu(self._S)
-        self._data_changed = False
-        self._gpu_data_changed = False
+        self._state_updater = GPUNonlinearStateUpdater(eqs, clock=self.clock, precision=precision)
+        self._S = GPUBufferedArray(array(self._S, dtype=self.precision_dtype))
         self._gpuneurongroup_init_finished = True
-    
-    def _copy_from_gpu(self):
-        if not hasattr(self, '_gpuneurongroup_init_finished'): return
-        if self._gpu_data_changed:
-            object.__setattr__(self, '_gpu_data_changed', False)
-            self._S_gpu.get(self._S)
-            if DEBUG_BUFFER_CACHE:
-                print 'copying from gpu'
-    
-    def _write_to_gpu(self):
-        if not hasattr(self, '_gpuneurongroup_init_finished'): return
-        if self._data_changed:
-            object.__setattr__(self, '_data_changed', False)
-            if DEBUG_BUFFER_CACHE:
-                print 'writing to gpu'
-            self._S_gpu.set(self._S)
-    
-    def update(self):
-        self._write_to_gpu()
-        NeuronGroup.update(self)
-        self._gpu_data_changed = True
-       
-    def state_(self, name):
-        try:
-            self._gpuneurongroup_init_finished
-            self._copy_from_gpu()
-            return NeuronGroup.state_(self, name)
-        except AttributeError:
-            return NeuronGroup.state_(self, name)
-    state = state_
-    
-    def __getattr__(self, name):
-        try:
-            object.__getattribute__(self, '_gpuneurongroup_init_finished')
-            return NeuronGroup.__getattr__(self, name)
-        except AttributeError:
-            return object.__getattribute__(self, name) 
+
     def __setattr__(self, name, val):
         try:
             self._gpuneurongroup_init_finished
             NeuronGroup.__setattr__(self, name, val)
             if name in self.var_index:
-                object.__setattr__(self, '_data_changed', True)
+                self._S.changed_cpu_data()
         except AttributeError:
             object.__setattr__(self, name, val)
 
@@ -121,9 +99,18 @@ if __name__=='__main__':
     #domonitor = False
     
     duration = 100*ms
-    N = 100000
+    N = 1000000
     domonitor = False
     showfinal = False
+    if drv.get_version()==(2,0,0): # cuda version
+        precision = 'float'
+    elif drv.get_version()>(2,0,0):
+        precision = 'double'
+    else:
+        raise Exception,"CUDA 2.0 required"
+    #precision = 'float'
+    import buffering
+    buffering.DEBUG_BUFFER_CACHE = True
     
     eqs = Equations('''
     #dV/dt = -V*V/(10*ms) : 1
@@ -151,7 +138,7 @@ if __name__=='__main__':
 #    dgi/dt = -gi/taui : volt
 #    ''')
     
-    G = GPUNeuronGroup(N, eqs)
+    G = GPUNeuronGroup(N, eqs, precision=precision)
     
     print 'GPU loop code:'
     print G._state_updater.code_gpu
@@ -163,6 +150,7 @@ if __name__=='__main__':
     
     start = time.time()
     run(duration)
+    autoinit.context.synchronize()
     print 'GPU code:', (time.time()-start)*second
     if domonitor: M_V = M[0]
 
