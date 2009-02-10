@@ -82,3 +82,15 @@ in the archive sent to the slaves. If it is a picklable object (e.g. dictionary)
 it is passed directly to the slave and will be an argument to the executed
 script (sys.argv).
 * possibly, the dependencies.
+
+Non-Brian-friendly slaves
+=========================
+Some slaves may not have Brian installed, or not the correct dependencies, etc.
+There is still hope: py2exe could be used to compile the main script to an exe
+file. All the rest would be unchanged. The screensaver could also be an executable
+program (compiled Python).
+
+Py2exe tutorial: http://www.py2exe.org/index.cgi/Tutorial
+
+From the slave point of view, a job is simply an archive file with a file to
+execute at the root, and a "results" folder to send back at the end.
