@@ -6,10 +6,11 @@ Uses the ANN wrapper in scikits.
 '''
 import scikits.ann as ann
 from scipy.special import gamma,psi
-from scipy.linalg import det
-from scipy import pi,hstack,mean,log
+from scipy.linalg import det,inv
+from scipy import *
 
-__all__=['nearest_distances','entropy','mutual_information','entropy_gaussian']
+__all__=['nearest_distances','entropy','mutual_information','entropy_gaussian',
+         'mutual_information2']
 
 def nearest_distances(X,k=1):
     '''
@@ -78,6 +79,48 @@ def mutual_information(X,Y,k=1):
       k = number of nearest neighbors for density estimation
     '''
     return entropy(X)+entropy(Y)-entropy(hstack((X,Y)),k=k)
+
+def mutual_information2(X,p):
+    '''
+    Mutual information of continuous variable X and discrete
+    variable Y taking p values with equal probabilities.
+    X is a matrix (n,d) such that X[(n/p)*i:(n/p)*(i+1),:] are the samples
+    for the same value of Y.
+    
+    Maybe to a principal component analysis?
+    (problem of highly correlated variables)
+    
+    Method:
+    * Empirical average I=<log(p(X|Y)/p(X))>
+    * p(X) and p(X|Y) are estimated with Gaussian assumptions
+    '''
+    X=X/X.max()
+    n,d=X.shape
+    M=mean(X,axis=0).reshape((d,1))
+    C=cov(X.T)
+    C+=C.max()*.001*eye(d) # avoids degeneracy (hack!)
+    invC=inv(C)
+    m=int(n/p) # number of samples / value of Y
+    I=0.
+    for i in range(p):
+        Z=X[m*i:m*(i+1),:] # same Y
+        MZ=mean(Z,axis=0).reshape((d,1))
+        CZ=cov(Z.T)
+        CZ+=CZ.max()*.001*eye(d) # avoids degeneracy (hack!)
+        #try:
+        invCZ=inv(CZ)
+        #except LinAlgError: # singular matrix!
+        #    
+        #A=invC-invCZ
+        Ii=0.
+        for j in range(m):
+            x=X[m*i+j,:].reshape((d,1))
+            Ii=dot(dot(x.T-M.T,invC),x-M)-dot(dot(x.T-MZ.T,invCZ),x-MZ)
+            #Ii+=dot(dot(x.T,A),x)
+        Ii=.5*(log(det(C*invCZ))+1)+Ii/m
+        I+=Ii
+    I=I/p
+    return I[0,0]
 
 if __name__=='__main__':
     '''
