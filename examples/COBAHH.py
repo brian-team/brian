@@ -22,6 +22,7 @@ http://brian.di.ens.fr
 """
 
 from brian import *
+from brian.experimental.cuda.gpucodegen import *
 import time
 
 # Parameters
@@ -52,17 +53,19 @@ dn/dt = alphan*(1-n)-betan*n : 1
 dh/dt = alphah*(1-h)-betah*h : 1
 dge/dt = -ge*(1./taue) : siemens
 dgi/dt = -gi*(1./taui) : siemens
-alpham = 0.32*(mV**-1)*(13*mV-v+VT)/(exp((13*mV-v+VT)/(4*mV))-1.)/ms : Hz
-betam = 0.28*(mV**-1)*(v-VT-40*mV)/(exp((v-VT-40*mV)/(5*mV))-1)/ms : Hz
+alpham = 0.32/mV*(13*mV-v+VT)/(exp((13*mV-v+VT)/(4*mV))-1.)/ms : Hz
+betam = 0.28/mV*(v-VT-40*mV)/(exp((v-VT-40*mV)/(5*mV))-1)/ms : Hz
 alphah = 0.128*exp((17*mV-v+VT)/(18*mV))/ms : Hz
 betah = 4./(1+exp((40*mV-v+VT)/(5*mV)))/ms : Hz
-alphan = 0.032*(mV**-1)*(15*mV-v+VT)/(exp((15*mV-v+VT)/(5*mV))-1.)/ms : Hz
+alphan = 0.032/mV*(15*mV-v+VT)/(exp((15*mV-v+VT)/(5*mV))-1.)/ms : Hz
 betan = .5*exp((10*mV-v+VT)/(40*mV))/ms : Hz
 ''')
 
-P=NeuronGroup(4000,model=eqs,\
-              threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms),\
-              implicit=True,freeze=True,compile=False)
+#P=NeuronGroup(4000,model=eqs,\
+#              threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms),\
+#              implicit=True,freeze=True,compile=False)
+P=GPUNeuronGroup(4000,eqs)
+P._threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms)
 Pe=P.subgroup(3200)
 Pi=P.subgroup(800)
 Ce=Connection(Pe,P,'ge',weight=we,sparseness=0.02)

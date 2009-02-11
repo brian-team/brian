@@ -33,10 +33,6 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
         clines += '    if(i>=N) return;\n'
         for j, name in enumerate(eqs._diffeq_names):
             clines += '    SCALAR &' + name + ' = S[i+'+str(j)+'*N];\n'
-        for name in eqs._eq_names:
-            namespace = eqs._namespace[name]
-            expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
-            clines += '    SCALAR '+name+'__tmp = '+expr+';\n'
         for j, name in enumerate(eqs._diffeq_names):
             namespace = eqs._namespace[name]
             expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
@@ -66,11 +62,13 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
             self._gpu_N = int32(len(P))
             self._gpu_grid = (gridsize,1)
         P._S.sync_to_gpu()
+        #print (self._gpu_grid, self._gpu_N, self.precision_dtype(P.clock._t), self._S_gpu_addr)
         self.gpu_func.prepared_call(self._gpu_grid, self._gpu_N, self.precision_dtype(P.clock._t), self._S_gpu_addr)
         P._S.changed_gpu_data()
 
 class GPUNeuronGroup(NeuronGroup):
-    def __init__(self, N, eqs, clock=None, precision='double'):
+    def __init__(self, N, model, clock=None, precision='double'):
+        eqs=model
         eqs.prepare()
         NeuronGroup.__init__(self, N, eqs, clock=clock)
         self.precision = precision
