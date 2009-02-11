@@ -70,7 +70,7 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
             P._S.changed_cpu_data()
 
 class GPUNeuronGroup(NeuronGroup):
-    def __init__(self, N, model, clock=None, threshold=None, precision='double', maxblocksize=512, forcesync=False):
+    def __init__(self, N, model, clock=None, threshold=None, precision='double', maxblocksize=512, forcesync=False, pagelocked_mem=True):
         eqs=model
         eqs.prepare()
         NeuronGroup.__init__(self, N, eqs, clock=clock, threshold=threshold)
@@ -82,7 +82,10 @@ class GPUNeuronGroup(NeuronGroup):
         self.clock = guess_clock(clock)
         self._state_updater = GPUNonlinearStateUpdater(eqs, clock=self.clock, precision=precision, maxblocksize=maxblocksize,
                                                        forcesync=forcesync)
-        self._S = GPUBufferedArray(array(self._S, dtype=self.precision_dtype))
+        if pagelocked_mem:
+            self._S = GPUBufferedArray(drv.pagelocked_zeros(self._S.shape, dtype=self.precision_dtype))
+        else:
+            self._S = GPUBufferedArray(array(self._S, dtype=self.precision_dtype))
         self._gpuneurongroup_init_finished = True
 
     def __setattr__(self, name, val):
