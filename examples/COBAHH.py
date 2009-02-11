@@ -22,8 +22,9 @@ http://brian.di.ens.fr
 """
 
 from brian import *
-from brian.experimental.cuda.gpucodegen import *
 import time
+
+use_gpu = True
 
 # Parameters
 area=20000*umetre**2
@@ -61,11 +62,15 @@ alphan = 0.032/mV*(15*mV-v+VT)/(exp((15*mV-v+VT)/(5*mV))-1.)/ms : Hz
 betan = .5*exp((10*mV-v+VT)/(40*mV))/ms : Hz
 ''')
 
-#P=NeuronGroup(4000,model=eqs,\
-#              threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms),\
-#              implicit=True,freeze=True,compile=False)
-P=GPUNeuronGroup(4000,eqs)
-P._threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms)
+if use_gpu:
+    from brian.experimental.cuda.gpucodegen import *
+    defaultclock.dt = 0.05*ms
+    P = GPUNeuronGroup(4000, eqs, maxblocksize=256, forcesync=True,
+                     threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms))
+else:
+    P=NeuronGroup(4000,model=eqs,
+                  threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms),
+                  implicit=True,freeze=True,compile=False)
 Pe=P.subgroup(3200)
 Pi=P.subgroup(800)
 Ce=Connection(Pe,P,'ge',weight=we,sparseness=0.02)

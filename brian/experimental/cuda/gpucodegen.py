@@ -12,7 +12,7 @@ __all__ = ['GPUNonlinearStateUpdater', 'GPUNeuronGroup']
 #DEBUG_BUFFER_CACHE = False
 
 class GPUNonlinearStateUpdater(NonlinearStateUpdater):
-    def __init__(self, eqs, clock=None, freeze=False, precision='double'):
+    def __init__(self, eqs, clock=None, freeze=False, precision='double', maxblocksize=512, forcesync=False):
         NonlinearStateUpdater.__init__(self, eqs, clock, compile=False, freeze=freeze)
         self.precision = precision
         if self.precision=='double':
@@ -21,6 +21,8 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
             self.precision_dtype = float32
         self.clock_dt = float(guess_clock(clock).dt)
         self.code_gpu = self.generate_forward_euler_code()
+        self.maxblocksize = maxblocksize
+        self.forcesync = forcesync
         self._prepared = False
         
     def generate_forward_euler_code(self):
@@ -48,9 +50,8 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
     
     def __call__(self, P):
         if not self._prepared:
-            #self._args = [int32(len(P)), float64(0.0), P._S.gpu_array]
-            blocksize = 512
-            if len(P)<512:
+            blocksize = self.maxblocksize
+            if len(P)<blocksize:
                 blocksize = len(P)
             if len(P)%blocksize==0:
                 gridsize = len(P)/blocksize
@@ -58,26 +59,29 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
                 gridsize = len(P)/blocksize+1
             self._prepared = True
             self.gpu_func.prepare((int32, self.precision_dtype, 'i'), (blocksize,1,1))
-            self._S_gpu_addr = P._S.gpu_pointer#int(P._S_gpu.gpudata)
+            self._S_gpu_addr = P._S.gpu_pointer
             self._gpu_N = int32(len(P))
             self._gpu_grid = (gridsize,1)
         P._S.sync_to_gpu()
-        #print (self._gpu_grid, self._gpu_N, self.precision_dtype(P.clock._t), self._S_gpu_addr)
         self.gpu_func.prepared_call(self._gpu_grid, self._gpu_N, self.precision_dtype(P.clock._t), self._S_gpu_addr)
         P._S.changed_gpu_data()
+        if self.forcesync:
+            P._S.sync_to_cpu()
+            P._S.changed_cpu_data()
 
 class GPUNeuronGroup(NeuronGroup):
-    def __init__(self, N, model, clock=None, precision='double'):
+    def __init__(self, N, model, clock=None, threshold=None, precision='double', maxblocksize=512, forcesync=False):
         eqs=model
         eqs.prepare()
-        NeuronGroup.__init__(self, N, eqs, clock=clock)
+        NeuronGroup.__init__(self, N, eqs, clock=clock, threshold=threshold)
         self.precision = precision
         if self.precision=='double':
             self.precision_dtype = float64
         else:
             self.precision_dtype = float32
         self.clock = guess_clock(clock)
-        self._state_updater = GPUNonlinearStateUpdater(eqs, clock=self.clock, precision=precision)
+        self._state_updater = GPUNonlinearStateUpdater(eqs, clock=self.clock, precision=precision, maxblocksize=maxblocksize,
+                                                       forcesync=forcesync)
         self._S = GPUBufferedArray(array(self._S, dtype=self.precision_dtype))
         self._gpuneurongroup_init_finished = True
 
@@ -97,7 +101,7 @@ if __name__=='__main__':
     #domonitor = False
     
     duration = 100*ms
-    N = 1000000
+    N = 1000
     domonitor = False
     showfinal = False
     if drv.get_version()==(2,0,0): # cuda version
@@ -121,6 +125,7 @@ if __name__=='__main__':
     #dV/dt = h/(10*ms) : 1
     #h = -V*V : 1
     ''')
+    eqs = Equations('\n'.join('dv'+str(i)+'/dt=-v'+str(i)+'/second:1' for i in range(20))) #10 works 11 is too much
     #print eqs
 
 #    taum=20*ms
@@ -140,6 +145,8 @@ if __name__=='__main__':
     
     print 'GPU loop code:'
     print G._state_updater.code_gpu
+    gf = G._state_updater.gpu_func
+    print '(lmem, smem, registers) = ', (gf.lmem, gf.smem, gf.registers)
     
     G.V = 1
     
