@@ -5,6 +5,8 @@ This huge unused computing power could be used for intensive Brian simulations.
 A simple way to do this is to write a screensaver program that would process a
 queue of Python jobs.
 
+** It looks like Condor does most things listed here!! **
+
 Existing projects:
 ==================
 * parallelpython
