@@ -1,11 +1,14 @@
 # A simple Condor job
-executable = C:\Python25\python.exe
-arguments = brianjob.py
-output = out.$(Process)
-error = err.$(Process)
+Executable = C:\Python25\python.exe
+Universe = vanilla
+Arguments = brianjob.py
+Output = out.$(Process)
+Error = err.$(Process)
+Log =log.$(Process)
+#Requirements = Memory >= 32
 #initialdir = results
-#should_transfer_files = YES
-#when_to_transfer_output = ON_EXIT
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
 #transfer_input_files = file1,file2
 
-Queue 10
+Queue 3

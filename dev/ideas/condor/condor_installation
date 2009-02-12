@@ -1,0 +1,3 @@
+* Path: C:\condor\bin
+* What seems to be important in the config file: the hostname
+I have a bug with condor_mail.exe never stopping!
