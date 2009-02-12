@@ -340,7 +340,7 @@ class GPUBufferedArray(numpy.ndarray):
             self._gpu_data_changed = True
         if isinstance(self._gpu_arr, pycuda.gpuarray.GPUArray):
             return self._gpu_arr.gpudata
-        elif isinstance(self._gpu_arr, pycuda.DeviceAllocation):
+        elif isinstance(self._gpu_arr, pycuda.driver.DeviceAllocation):
             return self._gpu_arr
         raise TypeError('gpu_arr should be a DeviceAllocation or GPUArray.')
     def get_gpu_pointer(self):
