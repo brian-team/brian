@@ -68,9 +68,11 @@ if use_gpu:
     P = GPUNeuronGroup(4000, eqs, maxblocksize=256, forcesync=True,
                      threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms))
 else:
+    defaultclock.dt = 0.05*ms
     P=NeuronGroup(4000,model=eqs,
                   threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms),
-                  implicit=True,freeze=True,compile=False)
+                  #freeze=True, compile=True)
+                  implicit=True, freeze=True, compile=False)
 Pe=P.subgroup(3200)
 Pi=P.subgroup(800)
 Ce=Connection(Pe,P,'ge',weight=we,sparseness=0.02)

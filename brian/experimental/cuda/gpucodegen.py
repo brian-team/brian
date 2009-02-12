@@ -70,10 +70,16 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
             P._S.changed_cpu_data()
 
 class GPUNeuronGroup(NeuronGroup):
-    def __init__(self, N, model, clock=None, threshold=None, precision='double', maxblocksize=512, forcesync=False, pagelocked_mem=True):
-        eqs=model
+    def __init__(self, N, model, threshold=None, reset=NoReset(),
+                 init=None, refractory=0*msecond, level=0,
+                 clock=None, order=1, implicit=False, unit_checking=True,
+                 max_delay=0*msecond, compile=False, freeze=False, method=None,
+                 precision='double', maxblocksize=512, forcesync=False, pagelocked_mem=True):
+        eqs = model
         eqs.prepare()
-        NeuronGroup.__init__(self, N, eqs, clock=clock, threshold=threshold)
+        NeuronGroup.__init__(self, N, eqs, threshold=threshold, reset=reset,
+                             init=init, refractory=refractory, level=level,
+                             clock=clock, order=order, compile=compile, freeze=freeze, method=method)
         self.precision = precision
         if self.precision=='double':
             self.precision_dtype = float64
