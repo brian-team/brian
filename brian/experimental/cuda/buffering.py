@@ -349,10 +349,10 @@ class GPUBufferedArray(numpy.ndarray):
     gpu_array = property(fget=get_gpu_array)
     gpu_dev_alloc = property(fget=get_gpu_dev_alloc)
     gpu_pointer = property(fget=get_gpu_pointer)
-    cpu_array_nomodify = property(fget=lambda self:get_cpu_array(False))
-    gpu_array_nomodify = property(fget=lambda self:get_gpu_array(False))
-    gpu_dev_alloc_nomodify = property(fget=lambda self:get_gpu_dev_alloc(False))
-    gpu_pointer_nomodify = property(fget=lambda self:get_gpu_pointer(False))
+    cpu_array_nomodify = property(fget=lambda self:self.get_cpu_array(False))
+    gpu_array_nomodify = property(fget=lambda self:self.get_gpu_array(False))
+    gpu_dev_alloc_nomodify = property(fget=lambda self:self.get_gpu_dev_alloc(False))
+    gpu_pointer_nomodify = property(fget=lambda self:self.get_gpu_pointer(False))
     for __name in numpy_inplace_methods:
         exec __name + ' = gpu_buffered_array_inplace_method(numpy.ndarray.' + __name + ')'
     for __name in numpy_access_methods:
