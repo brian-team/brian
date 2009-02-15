@@ -1,14 +1,16 @@
 # A simple Condor job
 Executable = C:\Python25\python.exe
 Universe = vanilla
-Arguments = brianjob.py
+Arguments = D:\EclipseWorkspace\Brian\dev\ideas\condor\brianjob.py
 Output = out.$(Process)
 Error = err.$(Process)
 Log =log.$(Process)
-#Requirements = Memory >= 32
-#initialdir = results
-should_transfer_files = YES
-when_to_transfer_output = ON_EXIT
+initialdir = D:\EclipseWorkspace\Brian\dev\ideas\condor
+#should_transfer_files = YES
+#when_to_transfer_output = ON_EXIT
 #transfer_input_files = file1,file2
+run_as_owner=True
+#load_profile = True
+environment = "MPLCONFIGDIR=."
 
 Queue 3

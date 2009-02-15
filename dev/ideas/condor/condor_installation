@@ -1,3 +1,30 @@
+[Windows instruction]
+
+Personal Condor (jobs run on local machine only):
+=================================================
+What worked for me:
 * Path: C:\condor\bin
-* What seems to be important in the config file: the hostname
-I have a bug with condor_mail.exe never stopping!
+* What seems to be important in the config file: the hostname. Give it at
+installation time.
+* Do not specify the administrator email
+(I had a bug with condor_mail.exe never stopping! I don't know why)
+* Have the latest Java JRE installed
+* To debug, install Condor to accept all jobs immediately
+* Choose to create a new pool
+
+Apparently, Condor jobs are run with a special run account that doesn't have
+many rights.
+Follow the instructions there:
+http://www.cs.wisc.edu/condor/manual/v7.2/6_2Microsoft_Windows.html
+Set the local config file as they say, customize "Administrator" and don't
+forget to set the password.
+
+Then all Condor submission files need to have the following line:
+run_as_owner=True
+(otherwise weave raises an error)
+
+Second problem, Matplotlib cannot run:
+RuntimeError: Failed to create ~/.matplotlib; consider setting MPLCONFIGDIR to a writable directory for matplotlib configuration data
+Solution: add the following line to your Condor submission files:
+environment = "MPLCONFIGDIR=."
+or choose any other directory.
