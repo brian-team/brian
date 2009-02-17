@@ -7,7 +7,6 @@ Romain Brette
 from brian import *
 
 defaultclock.dt=.02*ms
-dt=defaultclock.dt
 
 # Ear and sound
 max_delay=20*ms # 50 Hz
