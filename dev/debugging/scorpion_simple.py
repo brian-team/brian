@@ -30,18 +30,18 @@ legs.d=radius/wave_speed*(1-cos(prey_angle-legs_angle))
 # Command neurons
 eqs_neuron='''
 dv/dt=(x-v)/tau : 1
-dx/dt=(y-x)/tau : 1 # alpha currents
-dy/dt=-y/tau : 1
+dx/dt=-x/tau : 1 # PSPs are alpha functions
 '''
 neurons=NeuronGroup(8,model=eqs_neuron,threshold=1,reset=0)
-synapses_ex=IdentityConnection(legs,neurons,'y',weight=7)
-synapses_inh=Connection(legs,neurons,'y',delay=.7*ms)
+synapses_ex=IdentityConnection(legs,neurons,'x',weight=4)
+synapses_inh=Connection(legs,neurons,'x',delay=.7*ms)
 for i in range(8):
-    synapses_inh[i,(4+i-1)%8]=-2
-    synapses_inh[i,(4+i)%8]=-2
-    synapses_inh[i,(4+i+1)%8]=-2
+    synapses_inh[i,(4+i-1)%8]=-1
+    synapses_inh[i,(4+i)%8]=-1
+    synapses_inh[i,(4+i+1)%8]=-1
 spikes=SpikeCounter(neurons)
 
-run(200*ms)
+run(300*ms)
 polar(legs_angle,spikes.count)
+print spikes.count
 show()
