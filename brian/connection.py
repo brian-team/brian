@@ -700,6 +700,8 @@ class SparseConnectionMatrix(ConnectionMatrix):
     row indices and 4 extra bytes for the data indices).
     '''
     def __init__(self, val, column_access=True):
+        self._useaccel = get_global_preference('useweave')
+        self._cpp_compiler = get_global_preference('weavecompiler')
         self.nnz = nnz = val.getnnz()# nnz stands for number of nonzero entries
         alldata = numpy.zeros(nnz)
         if column_access:
@@ -736,22 +738,55 @@ class SparseConnectionMatrix(ConnectionMatrix):
         rowind[val.shape[0]] = i
         if column_access:
             # counts the number of nonzero elements in each column
-            counts = numpy.bincount(allj)
-            # now allj[a] will be the columns in order, so that
-            # the first counts[0] elements of allj[a] will be 0,
-            # or in other words the first counts[0] elements of a
-            # will be the data indices of the elements (i,j) with j==0
-            self.allj_sorted_indices = a = argsort(allj)
-            # this defines s so that a[s[i]:s[i+1]] are the data
-            # indices where j==i
-            s = [0]
-            s.extend(cumsum(counts))
-            # in this loop, I are the data indices where j==i
-            # and alli[I} are the corresponding i coordinates
-            for i in xrange(len(s)-1):
-                I = a[s[i]:s[i+1]]
-                coldataindices.append(I)
-                coli.append(alli[I])
+            counts = zeros(val.shape[1], dtype=int)
+            bincounts = numpy.bincount(allj)
+            counts[:len(bincounts)] = bincounts # ensure that counts is the right length
+            # two algorithms depending on whether weave is available
+            if False and self._useaccel:
+                # this algorithm just goes through one by one adding each
+                # element to the appropriate bin whose sizes we have
+                # precomputed. alldi will contain all the data indices
+                # in blocks alldi[s[i]:s[i+1]] of length counts[i], and
+                # curcdi[i] is the current offset into each block. s is
+                # therefore just the cumulative sum of counts.
+                curcdi = numpy.zeros(val.shape[1], dtype=int)
+                alldi = numpy.zeros(sum(counts), dtype=int)
+                s = numpy.hstack(([0], cumsum(counts)))
+                code = '''
+                for(int i=0;i<nnz;i++)
+                {
+                    int j = allj[i];
+                    alldi[s[j]+curcdi[j]] = i;
+                    curcdi[j]++;
+                }
+                '''
+                weave.inline(code, ['nnz', 'allj', 'alldi', 'curcdi', 's'],
+                             compiler=self._cpp_compiler,
+                             extra_compile_args=['-O3'])
+                # now store the blocks of alldi in coldataindices and update coli too
+                for i in xrange(len(s)-1):
+                    I = alldi[s[i]:s[i+1]]
+                    coldataindices.append(I)
+                    coli.append(alli[I])
+            else:
+                # now allj[a] will be the columns in order, so that
+                # the first counts[0] elements of allj[a] will be 0,
+                # or in other words the first counts[0] elements of a
+                # will be the data indices of the elements (i,j) with j==0
+                # mergesort is necessary because we want the relative ordering
+                # of the elements of a within a block to be maintained
+                self.allj_sorted_indices = a = argsort(allj, kind='mergesort')
+                # this defines s so that a[s[i]:s[i+1]] are the data
+                # indices where j==i
+                s = numpy.hstack(([0], cumsum(counts)))
+                # in this loop, I are the data indices where j==i
+                # and alli[I} are the corresponding i coordinates
+                for i in xrange(len(s)-1):
+                    I = a[s[i]:s[i+1]]
+                    coldataindices.append(I)
+                    coli.append(alli[I])
+
+            # Pure Python version (slow in practice although O(nnz) in principle)
 #            # now we have to go through one by one unfortunately, and so we keep curcdi, the
 #            # current column data index for each column
 #            curcdi = numpy.zeros(val.shape[1], dtype=int)
@@ -764,6 +799,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
 #                curcdi[j]+=1
 #            for j in xrange(val.shape[1]):
 #                coli.append(alli[coldataindices[j]])
+            
         self.alldata = alldata
         self.rowdata = rowdata
         self.allj = allj
