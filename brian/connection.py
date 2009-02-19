@@ -739,10 +739,13 @@ class SparseConnectionMatrix(ConnectionMatrix):
         if column_access:
             # counts the number of nonzero elements in each column
             counts = zeros(val.shape[1], dtype=int)
-            bincounts = numpy.bincount(allj)
+            if len(allj):
+                bincounts = numpy.bincount(allj)
+            else:
+                bincounts = numpy.array([], dtype=int)
             counts[:len(bincounts)] = bincounts # ensure that counts is the right length
             # two algorithms depending on whether weave is available
-            if False and self._useaccel:
+            if self._useaccel:
                 # this algorithm just goes through one by one adding each
                 # element to the appropriate bin whose sizes we have
                 # precomputed. alldi will contain all the data indices

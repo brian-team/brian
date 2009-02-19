@@ -13,15 +13,17 @@ import time
 #print 'Time:', time.time()-start
 
 # verification of algorithms
-N = 50
+N = 20
+M = 50
 p = 0.2
 worked = True
 for _ in range(100):    
     G = NeuronGroup(N, 'V:1')
-    C = Connection(G, G, sparseness=p, weight=lambda i,j:randn())
+    H = NeuronGroup(M, 'V:1')
+    C = Connection(G, H, sparseness=p, weight=lambda i,j:randn())
     W = C.W.todense()
     C.compress()
-    for i in range(N):
+    for i in range(M):
         if amax(abs(C.W[:,i].todense() - W[:,i].flatten()))>0.0001:
             worked = False
 print 'Works:', worked
