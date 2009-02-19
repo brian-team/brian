@@ -736,19 +736,34 @@ class SparseConnectionMatrix(ConnectionMatrix):
         rowind[val.shape[0]] = i
         if column_access:
             # counts the number of nonzero elements in each column
-            counts = numpy.histogram(allj, numpy.arange(val.shape[1]+1, dtype=int), new=True)[0]
-            # now we have to go through one by one unfortunately, and so we keep curcdi, the
-            # current column data index for each column
-            curcdi = numpy.zeros(val.shape[1], dtype=int)
-            # initialise the memory for the column data indices
-            for j in xrange(val.shape[1]):
-                coldataindices.append(numpy.zeros(counts[j], dtype=int))
-            # one by one for every element, update the dataindices and curcdi data pointers
-            for i, j in enumerate(allj):
-                coldataindices[j][curcdi[j]] = i
-                curcdi[j]+=1
-            for j in xrange(val.shape[1]):
-                coli.append(alli[coldataindices[j]])
+            counts = numpy.bincount(allj)
+            # now allj[a] will be the columns in order, so that
+            # the first counts[0] elements of allj[a] will be 0,
+            # or in other words the first counts[0] elements of a
+            # will be the data indices of the elements (i,j) with j==0
+            self.allj_sorted_indices = a = argsort(allj)
+            # this defines s so that a[s[i]:s[i+1]] are the data
+            # indices where j==i
+            s = [0]
+            s.extend(cumsum(counts))
+            # in this loop, I are the data indices where j==i
+            # and alli[I} are the corresponding i coordinates
+            for i in xrange(len(s)-1):
+                I = a[s[i]:s[i+1]]
+                coldataindices.append(I)
+                coli.append(alli[I])
+#            # now we have to go through one by one unfortunately, and so we keep curcdi, the
+#            # current column data index for each column
+#            curcdi = numpy.zeros(val.shape[1], dtype=int)
+#            # initialise the memory for the column data indices
+#            for j in xrange(val.shape[1]):
+#                coldataindices.append(numpy.zeros(counts[j], dtype=int))
+#            # one by one for every element, update the dataindices and curcdi data pointers
+#            for i, j in enumerate(allj):
+#                coldataindices[j][curcdi[j]] = i
+#                curcdi[j]+=1
+#            for j in xrange(val.shape[1]):
+#                coli.append(alli[coldataindices[j]])
         self.alldata = alldata
         self.rowdata = rowdata
         self.allj = allj
