@@ -110,6 +110,7 @@ class STP(NetworkOperation):
         C.source=P
         C.delay=0
         C._nstate_mod=0 # modulation of synaptic weights
+        self.vars = P
         
     def __call__(self):
         pass
