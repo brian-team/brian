@@ -6,7 +6,7 @@ G.m = SpikeMonitor(G)
 H = NeuronGroup(1, 'dV/dt=-V/ms:1')
 M2 = StateMonitor(H, 'V', record=True)
 C = Connection(G, H, 'V', weight=1)
-stp = STP(C, taud=0.01*ms, tauf=5000*ms, U=0.2)
+stp = STP(C, taud=0.1*ms, tauf=5000*ms, U=0.2)
 M = MultiStateMonitor(stp.vars, record=True)
 run(.5*second)
 G.rate = 0*Hz # try it also commenting out this line!

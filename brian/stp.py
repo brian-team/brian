@@ -61,11 +61,12 @@ class STPUpdater(SpikeMonitor):
         self.clock=P.clock
         
     def propagate(self,spikes):
-        self.ux[spikes]=self.u[spikes]*self.x[spikes]
         interval=self.clock.t-self.lastt[spikes]
         self.u[spikes]=self.U+(self.u[spikes]-self.U)*exp(interval*self.minvtauf)
         tmp=1-self.u[spikes]
-        self.x[spikes]=(1+(self.x[spikes]-1)*exp(interval*self.minvtaud))*tmp
+        self.x[spikes]=1+(self.x[spikes]-1)*exp(interval*self.minvtaud)
+        self.ux[spikes]=self.u[spikes]*self.x[spikes]
+        self.x[spikes]*=tmp
         self.u[spikes]+=self.U*tmp
         self.lastt[spikes]=self.clock.t
         self.P.LS.push(spikes)
