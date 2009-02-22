@@ -60,3 +60,10 @@ being non-homogeneous]
 Real cases
 ==========
 We should list here a number of real cases that we would like to handle.
+
+1.
+   times  = property(fget=lambda self:QuantityArray(self._times))
+   AttributeError: 'StateMonitor' object has no attribute '_times'
+
+Most likely: the statemonitor was initialised without setting the
+record keyword.

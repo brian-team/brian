@@ -26,8 +26,8 @@ neuron=NeuronGroup(N,model=eqs_neuron)
 
 C=Connection(input,neuron,'i')
 C.connect_one_to_one(weight=A_SE)
-#stp=STP(C,taud=10*ms,tauf=100*ms,U=.1) # facilitation
-stp=STP(C,taud=100*ms,tauf=10*ms,U=.6) # depression
+stp=STP(C,taud=10*ms,tauf=100*ms,U=.1) # facilitation
+#stp=STP(C,taud=100*ms,tauf=10*ms,U=.6) # depression
 trace=StateMonitor(neuron,'v',record=[0,N-1])
 
 run(1000*ms)
