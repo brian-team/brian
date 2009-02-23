@@ -134,7 +134,7 @@ if __name__=='__main__':
     #dV/dt = h/(10*ms) : 1
     #h = -V*V : 1
     ''')
-    eqs = Equations('\n'.join('dv'+str(i)+'/dt=-v'+str(i)+'/second:1' for i in range(20))) #10 works 11 is too much
+    #eqs = Equations('\n'.join('dv'+str(i)+'/dt=-v'+str(i)+'/second:1' for i in range(20))) #10 works 11 is too much
     #print eqs
 
 #    taum=20*ms

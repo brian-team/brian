@@ -1,0 +1,279 @@
+\documentclass[a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage[dvips]{graphicx}
+\usepackage{psfrag}
+\usepackage{listings}
+\usepackage{listings-options}
+\usepackage[authoryear]{natbib}
+\usepackage{url}
+
+\addtolength{\marginparwidth}{0.5cm} \addtolength{\hoffset}{-2cm}
+\addtolength{\textwidth}{3cm} \addtolength{\voffset}{-2cm}
+\addtolength{\textheight}{4cm} \setlength{\parindent}{0pt}
+\setlength{\parskip}{1.3ex}
+\newcommand{\tododiagram}[2]{\begin{figure}[ht]\begin{center}\framebox[0.5\textwidth]{\textbf{Diagram to be made}}\end{center}\caption{#2}\label{#1}\end{figure}}
+\newcommand{\todo}[1]{\marginpar{\scriptsize #1}}
+\newcommand{\code}[1]{\lstinline£#1£}
+\newcommand{\ud}{\mathrm{d}}
+\newcommand{\dt}{\ud t}
+\newcommand{\remark}[1]{\textbf{[#1]}}
+\newcommand{\mV}{\mbox{ mV}}
+\newcommand{\Hz}{\mbox{ Hz}}
+\newcommand{\GHz}{\mbox{ GHz}}
+\newcommand{\GB}{\mbox{ GB}}
+\newcommand{\ms}{\mbox{ ms}}
+\newcommand{\maybe}[1]{{\color{green}#1}\todo{Keep the bit in green?}}
+\newcommand{\question}[1]{\textbf{Question: #1}}
+
+\title{CUDA algorithms for Brian}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+We use C++ on the GPU via the PyCuda library (\url{http://mathema.tician.de/software/pycuda}) for Python (which handles passing the data to nvcc, the Nvidia compiler, and so on).
+
+\section{Algorithmic overview}
+
+The basic algorithm for Brian simulations is:
+
+\begin{enumerate}
+\item Update state variables, i.e. integration time step $\dt$ (\textbf{State updates})
+\item Compute list of neurons which spiked, i.e. those with $V>V_t$ (\textbf{Thresholding})
+\item Propagate spikes according to values in weight matrix for those neurons which have spiked, i.e. for all j, $V_j \leftarrow V_j + \sum_{i} W_{ij}$ where the sum is over all neurons $i$ that spiked (\textbf{Propagation})
+\item Reset neurons which spiked $V\leftarrow V_r$ (\textbf{Reset})
+\end{enumerate}
+
+\section{Data storage}
+
+For a group of $N$ neurons we store a state matrix $S$ which is $M\times N$ where $M$ is the number of variables for each neuron and $N$ is the number of neurons (usually $N$ large and $M$ small). On the GPU, we access this data by writing \lstinline$S[i+j*N]$ where i is the neuron index from 0 to $N-1$ and j is the state variable index. At the moment, we don't pay any attention to aligning the data nicely (and presumably this would speed it up).
+
+\question{Can this be improved? For example, would it be better to store each variable as its own array rather than having a 2D array?}
+
+Dense connection matrices are stored as a 2D array, and sparse connection matrices are explained in the section below.
+
+\section{State updates}
+
+For linear systems of differential equations, we will use the CUDA BLAS library to do matrix multiplication (i.e. \code{cublasDgemm}). For nonlinear systems, we generate C++ code from the differential equations. For example, the following equations:
+
+\begin{lstlisting}
+'''
+dV/dt = W*W/(100*ms) : 1
+dW/dt = -V/(100*ms) : 1
+'''
+\end{lstlisting}
+
+automatically generate the following C++ code for the GPU (using Euler integration):
+
+\begin{lstlisting}[language=C++]
+__global__ void stateupdate(int N, double t, double *S)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if(i>=N) return;
+    double &V = S[i+0*N];
+    double &W = S[i+1*N];
+    double V__tmp = W*W/(100*0.001);
+    double W__tmp = -V/(100*0.001);
+    V += 0.0001*V__tmp;
+    W += 0.0001*W__tmp;
+}
+\end{lstlisting}
+
+\section{Threshold and Reset}
+
+The idea of the thresholding operation is that the condition $V>V_t$ should only hold on any given time step for a very small number of neurons, so we generate a thread for each neuron and have a conditionally executed write to global memory if the thresholding operation is passed. My hope is that although the atomicInc operation and the write to global memory (and the branching) are problematic for the GPU, the fact that they are rare events means that overall this is efficient. After the thresholding operation is run, the first global\_j elements of the array spikes are copied from the GPU to the CPU for the propagation operation which is managed spike by spike by the CPU (see next section).
+
+\begin{lstlisting}[language=C++]
+__global__ void threshold(SCALAR *V, int *spikes, bool *spiked,
+                          unsigned int *global_j, int N)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if(i>=N) return;
+    bool this_spiked = V[i]>-0.05; 
+    spiked[i] = this_spiked;
+    if(this_spiked)
+    {
+        unsigned int j = atomicInc(global_j, N);
+        spikes[j] = i;
+    }
+}
+\end{lstlisting}
+
+\question{Is there a faster way to do the thresholding operation? Are my assumptions about the atomicInc operation etc. correct?}
+
+The reset operation is much simpler and just uses the previously stored boolean value to conditionally reset (but without branching).
+
+\begin{lstlisting}[language=C++]
+__global__ void reset(int N, SCALAR *V, bool *spiked)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if(i>=N) return;
+    V[i] = (V[i]*!spiked[i])+(-0.06)*spiked[i]; // i.e. V[i]=-0.06 if spiked[i]
+}
+\end{lstlisting}
+
+\question{Would it be more efficient to do this another way? e.g. via indirection over the spikes array we computed earlier? My impression is that if memory access is patterned things tend to be faster than if you access memory via indirection on the GPU, but maybe because the number of neurons that spiked is so small, this would be quicker (probably it would actually).}
+
+\section{Propagation}
+
+\subsection{Dense matrix}
+
+For dense matrices, we give each target neuron a thread, and in each thread loop over the set of spikes. This involves a conditional (in the for loop), but each thread will in the end execute the same thread so if I understand the way the GPU works correctly, this means there is no performance penalty (that's only incurred when the branching goes two different ways in different threads)?
+
+\begin{lstlisting}[language=C++]
+__global__ void propagate(int *spikes, int numspikes, float *v, float *W, int N)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    for(int j=0; j<numspikes; j++)
+        v[i] += W[i+N*spikes[j]];
+}
+\end{lstlisting}
+
+\question{Am I right about the branching performance penalty on the GPU? Is there a better way of doing this for dense matrices?}
+
+\subsection{Sparse matrix}
+
+For sparse matrices the problem is much more complicated, and I'm less satisfied that my way is the optimal way to do it. We use the following data structure for sparse matrices:
+
+\begin{lstlisting}[language=C++]
+double *data[nnz];
+int *allj[nnz];
+int *rowind[numcols];
+\end{lstlisting}
+
+The array \code{data} stores the values for all the \code{nnz} nonzero entries in the matrix. The array \code{allj} stores the column index corresponding to each entry in \code{data}. The row indices are stored indirectly. \code{rowind[i]} stores the offset into the \code{data} and \code{allj} arrays for the start of the $i$th row. So the indices from \code{rowind[i]} to \code{rowind[i+1]} correspond to row $i$. This is a pretty standard format for sparse matrices I believe.
+
+The problem for spike propagation on the GPU is that with sparse matrices we can't generate a single thread for each target neuron because it would have to do a very expensive lookup in the sparse matrix. For each target neuron $j$, you want to add up $W_{ij}$ for all $i\in\mbox{\code{spikes}}$. However, with this sparse matrix structure, you would have to check for each $i$ whether or not $j$ was in row $i$ of the sparse matrix, and this would be expensive as it would involve looping through the whole row.
+
+So I decided on an alternative way of doing it, which is to do it spike by spike, for each spike $i$ you have a thread on the GPU for each of the target neurons in row $i$ of the weight matrix. You wait until these threads all finish, then you start on the next spike.
+
+The Python code to do this is:
+
+\begin{lstlisting}
+for i in spikes[:numspikes_exc]:
+    ncols = len(Ce.rowj[i])
+    if ncols%512==0:
+        spikegrid = (ncols/512, 1)
+    else:
+        spikegrid = (ncols/512+1, 1)
+    propagate_spike.prepared_call(spikegrid, numpy.int32(i),
+                                  *propagate_spike_end_args_exc)
+\end{lstlisting}
+
+The C++ bit run on the GPU is:
+
+\begin{lstlisting}[language=C++]
+__global__ void propagate_spike(int spike, SCALAR *alldata, int *allj,
+                                int *rowind, SCALAR *V)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int startindex = rowind[spike];
+    if(i>=rowind[spike+1]-startindex) return;
+    i += startindex;
+    V[allj[i]] += alldata[i];
+}
+\end{lstlisting}
+
+\question{Are there better sparse matrix structures for doing this operation on the GPU? What would the algorithm be like?}
+
+See also the section below on spike management.
+
+\section{Other stuff}
+
+\subsection{Spike management}
+
+In Brian generally, we don't always have a simple relationship that spike propagation is based on the list of neurons that just fired a spike, because for example there are refractory periods, so we might have to fetch spike indices from an earlier time period. On the CPU, we do this by keeping a circular array of spike indices but I guess this is probably not a good structure for the GPU.
+
+\question{Could a circular array structure be efficiently implemented on a GPU?}
+
+Also, sometimes we do spike propagation to or from a subset of a group of neurons (e.g. from neurons 0-100 of a group of 1000, to neurons 100-200). This means we have to handle offsets. At the moment, we're thinking that it's probably easiest to just do all this stuff on the CPU rather than on the GPU. Here is a simple example where we have an excitatory and inhibitory subgroup of neurons. First of all, the set of neurons that spiked is downloaded from the GPU, then it is sorted and divided into the group of excitatory and inhibitory neurons by bisection. Then we loop separately over the two subdivided sets of spikes.
+
+\begin{lstlisting}
+drv.memcpy_dtoh(spike_index, gpu_spike_index)
+numspikes = spike_index[0]
+spikes = master_spikes[:numspikes]
+drv.memcpy_dtoh(spikes, gpu_spikes)
+spikes.sort()
+numspikes_exc = bisect.bisect_left(spikes, Ne)
+numspikes_inh = numspikes - numspikes_exc
+for i in spikes[:numspikes_exc]:
+    ncols = len(Ce.rowj[i])
+    if ncols%512==0:
+        spikegrid = (ncols/512, 1)
+    else:
+        spikegrid = (ncols/512+1, 1)
+    propagate_spike.prepared_call(spikegrid, numpy.int32(i),
+                                  *propagate_spike_end_args_exc)
+for i in spikes[numspikes_exc:]-Ne:
+    ncols = len(Ci.rowj[i])
+    if ncols%512==0:
+        spikegrid = (ncols/512, 1)
+    else:
+        spikegrid = (ncols/512+1, 1)
+    propagate_spike.prepared_call(spikegrid, numpy.int32(i),
+                                  *propagate_spike_end_args_inh)
+\end{lstlisting}
+
+\question{Any way that any of this stuff could be implemented on the GPU?}
+
+\subsection{Filtering sounds}
+
+We're also interested in doing some simulation of the auditory system, and the first stage of this involves taking a sound and breaking it down into a large (around 3000) number of channels, using a different filter for each channel. We potentially want to run this for long periods of time, so we can't use standard implementations of filtering that filter the whole sound in one go because of memory constraints. So instead, we want to do all 3000 filters in parallel, but only for one time step $\dt$ (where $\dt=1/f_s$ and $f_s$ is the sample rate). Without going in to too many details, the code below was automatically generated for a cascade of four fourth order filters whose coefficients are stored in the arrays \code{a} and \code{b}, and which have persistent memory stored in the variable \code{zi}. The input comes from \code{x} and the output goes to \code{y}. The variables \code{a}, \code{b} are 3D arrays of size $(n,m,p)$ where $n$ is the number of channels, $m$ is the order of each filter, and $p$ is the number of filters in a chain. The variable \code{zi} has size $(n,m-1,p)$.
+
+\begin{lstlisting}[language=C++]
+#define x(i) _x[i]
+#define y(i) _y[i]
+#define a(i,j,k) _a[(i)+(j)*10000+(k)*10000*3]
+#define b(i,j,k) _b[(i)+(j)*10000+(k)*10000*3]
+#define zi(i,j,k) _zi[(i)+(j)*10000+(k)*10000*(3-1)]
+__global__ void filt(double *_b, double *_a, double *_x, double *_zi, double *_y)
+{
+    int j = blockIdx.x * blockDim.x + threadIdx.x;
+    if(j>=10000) return;
+    y(j) = b(j,0,0)*x(j) + zi(j,0,0);
+        zi(j,0,0) = b(j,0+1,0)*x(j) + zi(j,0+1,0) - a(j,0+1,0)*y(j);
+    zi(j,3-2,0) = b(j,3-1,0)*x(j) - a(j,3-1,0)*y(j);
+        x(j) = y(j);
+    y(j) = b(j,0,1)*x(j) + zi(j,0,1);
+        zi(j,0,1) = b(j,0+1,1)*x(j) + zi(j,0+1,1) - a(j,0+1,1)*y(j);
+    zi(j,3-2,1) = b(j,3-1,1)*x(j) - a(j,3-1,1)*y(j);
+        x(j) = y(j);
+    y(j) = b(j,0,2)*x(j) + zi(j,0,2);
+        zi(j,0,2) = b(j,0+1,2)*x(j) + zi(j,0+1,2) - a(j,0+1,2)*y(j);
+    zi(j,3-2,2) = b(j,3-1,2)*x(j) - a(j,3-1,2)*y(j);
+        x(j) = y(j);
+    y(j) = b(j,0,3)*x(j) + zi(j,0,3);
+        zi(j,0,3) = b(j,0+1,3)*x(j) + zi(j,0+1,3) - a(j,0+1,3)*y(j);
+    zi(j,3-2,3) = b(j,3-1,3)*x(j) - a(j,3-1,3)*y(j);
+        x(j) = y(j);
+    y(j) = b(j,0,4)*x(j) + zi(j,0,4);
+        zi(j,0,4) = b(j,0+1,4)*x(j) + zi(j,0+1,4) - a(j,0+1,4)*y(j);
+    zi(j,3-2,4) = b(j,3-1,4)*x(j) - a(j,3-1,4)*y(j);
+        x(j) = y(j);
+    y(j) = b(j,0,5)*x(j) + zi(j,0,5);
+        zi(j,0,5) = b(j,0+1,5)*x(j) + zi(j,0+1,5) - a(j,0+1,5)*y(j);
+    zi(j,3-2,5) = b(j,3-1,5)*x(j) - a(j,3-1,5)*y(j);
+        x(j) = y(j);
+    y(j) = b(j,0,6)*x(j) + zi(j,0,6);
+        zi(j,0,6) = b(j,0+1,6)*x(j) + zi(j,0+1,6) - a(j,0+1,6)*y(j);
+    zi(j,3-2,6) = b(j,3-1,6)*x(j) - a(j,3-1,6)*y(j);
+        x(j) = y(j);
+    y(j) = b(j,0,7)*x(j) + zi(j,0,7);
+        zi(j,0,7) = b(j,0+1,7)*x(j) + zi(j,0+1,7) - a(j,0+1,7)*y(j);
+    zi(j,3-2,7) = b(j,3-1,7)*x(j) - a(j,3-1,7)*y(j);
+        x(j) = y(j);
+    y(j) = b(j,0,8)*x(j) + zi(j,0,8);
+        zi(j,0,8) = b(j,0+1,8)*x(j) + zi(j,0+1,8) - a(j,0+1,8)*y(j);
+    zi(j,3-2,8) = b(j,3-1,8)*x(j) - a(j,3-1,8)*y(j);
+        x(j) = y(j);
+    y(j) = b(j,0,9)*x(j) + zi(j,0,9);
+        zi(j,0,9) = b(j,0+1,9)*x(j) + zi(j,0+1,9) - a(j,0+1,9)*y(j);
+    zi(j,3-2,9) = b(j,3-1,9)*x(j) - a(j,3-1,9)*y(j);
+}
+\end{lstlisting}
+
+\question{The code above is based on naively using the formula defining a digital filter (from the Matlab documentation to be precise), unrolling all the loops and parallelising it on the GPU. Do you know any GPU filtering algorithms? Is there a better way to do what I'm doing above?}
+
+\end{document}
