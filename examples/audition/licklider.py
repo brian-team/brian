@@ -37,7 +37,7 @@ synapses.connect_full(receptors,neurons,weight=.5)
 synapses.delay[1,:]=1./exp(linspace(log(min_freq/Hz),log(max_freq/Hz),N))
 spikes=SpikeMonitor(neurons)
 
-run(1000*ms)
+run(500*ms)
 raster_plot(spikes)
 ylabel('Frequency')
 yticks([0,99,199,299],array(1./synapses.delay.todense()[1,[0,99,199,299]],dtype=int))
