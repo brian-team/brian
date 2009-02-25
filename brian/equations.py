@@ -713,6 +713,7 @@ class Equations(object):
         for name in self._namespace:
             for var in all_variables:
                 if var in self._namespace[name]:
+                    log_warn('brian.equations','Equation variable '+var+' also exists in the namespace')
                     del self._namespace[name][var]
 
     def add_prefix_namespace(self,name):
