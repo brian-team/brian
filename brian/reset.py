@@ -149,6 +149,53 @@ def _define_and_test_interface(self):
     get_default_clock().reinit()
     
 
+def select_reset(expr, eqs, level=0):
+    '''
+    Automatically selects the appropriate Reset object from a string.
+    
+    Matches the following patterns if expr is a one liner:
+    
+    var_name = const : Reset
+    var_name = var_name : VariableReset
+    others : StringReset
+    '''
+    # plan:
+    # - strip it and see if it is one line, if not select StringReset
+    # - see if it matches A = B, if not select StringReset
+    # - check if A, B both match diffeq variable names, and if so
+    #   select VariableReset
+    # - check that A is a variable name, if not select StringReset
+    # - extract all the identifiers from B, and if none of them are
+    #   callable, assume it is a constant, try to eval it and then use
+    #   Reset. If not, or if eval fails, use StringReset
+    # This misses the case of e.g. V=10*mV*exp(1) because exp will be
+    # callable, but in general a callable means that it could be
+    # non-constant.
+    expr = expr.strip()
+    if '\n' in expr:
+        return StringReset(expr, level=level+1)
+    eqs.prepare()
+    ns = namespace(expr, level=level+1)
+    s = re.search(r'\s*(\w+)\s*=(.+)', expr)
+    if not s:
+        return StringReset(expr, level=level+1)
+    A = s.group(1)
+    B = s.group(2).strip()
+    if A not in eqs._diffeq_names:
+        return StringReset(expr, level=level+1)
+    if B in eqs._diffeq_names:
+        return VariableReset(B, A)
+    vars = get_identifiers(B)
+    all_vars = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
+    for v in vars:
+        if v not in ns or v in all_vars or callable(ns[v]):
+            return StringReset(expr, level=level+1)
+    try:
+        val = eval(B, ns)
+    except:
+        return StringReset(expr, level=level+1)
+    return Reset(val, A)    
+
 
 class Reset(object):
     '''

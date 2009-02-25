@@ -62,7 +62,8 @@ from brian_unit_prefs import bup
 import numpy
 from base import *
 from group import *
-
+from threshold import select_threshold
+from reset import select_reset
 
 class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     """Group of neurons
@@ -216,10 +217,16 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             model = Equations(model, level=level+1)        
 
         if isinstance(threshold,str):
-            threshold = StringThreshold(threshold, level=level+1)
+            if isinstance(model, Equations):
+                threshold = select_threshold(threshold, model, level=level+1)
+            else:
+                threshold = StringThreshold(threshold, level=level+1)
 
         if isinstance(reset,str):
-            reset = StringReset(reset, level=level+1)
+            if isinstance(model, Equations):
+                reset = select_reset(reset, model, level=level+1)
+            else:
+                reset = StringReset(reset, level=level+1)
 
         # Clock
         clock=guess_clock(clock)#not needed with protocol checking
