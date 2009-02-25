@@ -50,7 +50,10 @@ from network import NetworkOperation
 from quantityarray import *
 import types
 from operator import isSequenceType
-import pylab
+try:
+    import pylab
+except:
+    pass
 
 # defines and tests the interface, the docstring is considered part of the definition
 def _define_and_test_interface(self):

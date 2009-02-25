@@ -43,9 +43,8 @@ if __name__=="__main__":
 #      data_files=[('brian/utils/ccircular', ['*.cxx', '*.h', '*.i', '*.cpp', '*.bat']),
 #                  ('brian.utils.fastexp', ['*.cxx', '*.h', '*.i', '*.cpp', '*.bat', '*.c'])],
       requires=['matplotlib(>=0.90.1)',
-                'numpy(>=1.0.3)',
-                'scipy(>=0.6.0)',
-                'sympy(>=0.5.13)'
+                'numpy(>=1.1.0)',
+                'scipy(>=0.6.0)'
                 ],
       url='http://www.briansimulator.org/',
       description='A clock-driven simulator for spiking neural networks',

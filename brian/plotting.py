@@ -45,8 +45,11 @@ __docformat__ = "restructuredtext en"
 
 __all__=['plot','show','figure','xlabel','ylabel','title','axis','raster_plot','hist_plot']
 
-from pylab import plot,show,figure,xlabel,ylabel,title,axis
-import pylab
+try:
+    from pylab import plot,show,figure,xlabel,ylabel,title,axis
+    import pylab
+except:
+    plot, show, figure, xlabel, ylabel, title, axis = (None,)*7
 from stdunits import *
 import magic
 from connection import *

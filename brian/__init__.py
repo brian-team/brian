@@ -38,9 +38,14 @@ Brian
 
 __docformat__ = "restructuredtext en"
 
+import warnings as _warnings
 from scipy import *
-from pylab import *
+try:
+    from pylab import *
+except:
+    _warnings.warn("Couldn't import pylab.")
 if 'x' in globals(): del x # for some reason x is defined as 'symlog' by pylab!
+if 'f' in globals(): del f
 
 from clock import *
 from connection import *
