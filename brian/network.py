@@ -802,10 +802,13 @@ def clear(erase=True):
     to objects in any given session, stopping the data and memory from being freed
     up. 
     '''
-    net = MagicNetwork(level=2)
-    for o in net.groups+net.connections+net.operations:
-        o.set_instance_id(-1)
-        if erase:
-            for k, v in o.__dict__.iteritems():
-                object.__setattr__(o, k, None)
+    if isinstance(erase, (NeuronGroup, Connection, NetworkOperation)):
+        erase.set_instance_id(-1)
+    else:
+        net = MagicNetwork(level=2)
+        for o in net.groups+net.connections+net.operations:
+            o.set_instance_id(-1)
+            if erase:
+                for k, v in o.__dict__.iteritems():
+                    object.__setattr__(o, k, None)
              
