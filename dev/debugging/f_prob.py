@@ -5,8 +5,8 @@ from brian import *
 
 eqs='''
 dv/dt = I : 1
-I = f : Hz
 f : Hz
+I = f : Hz
 '''
 
 neurons = NeuronGroup(1, eqs)

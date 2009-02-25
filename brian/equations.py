@@ -391,6 +391,8 @@ class Equations(object):
             pass
             # TODO: WARNING log that a potential problem has occurred here?
     
+        # Clean namespace (avoids conflicts between variables and external variables)
+        self.clean_namespace()        
         # Compile strings to functions
         self.compile_functions()
         # Check units
@@ -702,6 +704,16 @@ class Equations(object):
                 # Namespace
                 self._namespace[var].update(self._namespace[name])
             #print self
+
+    def clean_namespace(self):
+        '''
+        Removes all variable names from namespaces
+        '''
+        all_variables=self._eq_names+self._diffeq_names+self._alias.keys()+['t']
+        for name in self._namespace:
+            for var in all_variables:
+                if var in self._namespace[name]:
+                    del self._namespace[name][var]
 
     def add_prefix_namespace(self,name):
         """
