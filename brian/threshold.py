@@ -572,6 +572,7 @@ class PoissonThreshold(Threshold):
     Poisson threshold: a spike is produced with some probability S[0]*dt,
     or S[state]*dt.
     '''
+    # TODO: check the state has units in Hz
     def __init__(self,state=0):
         self.state=state
     
