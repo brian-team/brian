@@ -35,7 +35,8 @@
 '''
 Network class
 '''
-__all__ = ['Network','MagicNetwork','NetworkOperation','network_operation','run','reinit','stop','clear']
+__all__ = ['Network','MagicNetwork','NetworkOperation','network_operation','run',
+           'reinit','stop','clear','forget']
 
 from Queue import Queue
 from connection import *
@@ -800,15 +801,28 @@ def clear(erase=True):
     If ``erase`` is ``True`` then it will also delete all data from these objects.
     This is useful in, for example, ``ipython`` which stores persistent references
     to objects in any given session, stopping the data and memory from being freed
-    up. 
+    up.  See also :func:`forget`.
     '''
-    if isinstance(erase, (NeuronGroup, Connection, NetworkOperation)):
-        erase.set_instance_id(-1)
-    else:
-        net = MagicNetwork(level=2)
-        for o in net.groups+net.connections+net.operations:
-            o.set_instance_id(-1)
-            if erase:
-                for k, v in o.__dict__.iteritems():
-                    object.__setattr__(o, k, None)
-             
+    net = MagicNetwork(level=2)
+    for o in net.groups+net.connections+net.operations:
+        o.set_instance_id(-1)
+        if erase:
+            for k, v in o.__dict__.iteritems():
+                object.__setattr__(o, k, None)
+
+def forget(*objs):
+    '''
+    Forgets the list of objects passed
+    
+    Forgetting means that :class:`MagicNetwork` will not pick up these objects,
+    but all data is retained. You can pass objects or lists of objects.
+    See also :func:`clear`.
+    '''
+    for obj in objs:
+        if isinstance(obj, (NeuronGroup, Connection, NetworkOperation)):
+            obj.set_instance_id(-1)
+        elif isSequenceType(obj):
+            for o in obj:
+                forget(o)
+        else:
+            raise TypeError('Only the following types of objects can be forgotten: NeuronGroup, Connection or NetworkOperation')
