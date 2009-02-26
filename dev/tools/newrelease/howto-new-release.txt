@@ -5,16 +5,19 @@ At the moment, these instructions are for Windows computers only.
 
 You need the following packages installed:
 
-* Epydoc - and make sure that epydoc.py is copied into your Python
-  Scripts/ folder, and that your PATH includes this folder.
-* reStructuredText, part of docutils - make sure that rst2html.py
-  is in your Python Scripts/ folder.
+* Sphinx version 0.5+
   
-Before releasing
-----------------
+Tests
+-----
 
-Make sure that the tests in the test/ directory run without errors.
-Also, it's better to run all of the tutorials and examples as well.
+Run dev/tests/alltests.py and if possible dev/tests/allexamples.py. Note
+that some of the allexamples.py tests will fail for known reasons (check
+individual files to make sure).
+
+Update the version number
+-------------------------
+
+Run the 
 
 Building the documentation
 --------------------------

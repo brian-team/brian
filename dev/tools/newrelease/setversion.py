@@ -5,6 +5,7 @@ i.e.:
 * Global __version__ in __init__.py
 * setup.py version
 * docs version
+* README.txt version
 '''
 
 import os, sys, brian, re
@@ -30,6 +31,10 @@ def setversion(version):
     conf_py = re.sub("version\s*=\s*'.*?'","version = '"+docs_version+"'",conf_py)
     conf_py = re.sub("release\s*=\s*'.*?'","release = '"+docs_release+"'",conf_py)
     open('docs_sphinx/conf.py','w').write(conf_py)
+    # update README.txt
+    readme_txt = open('README.txt', 'r').read()
+    readme_txt = re.sub(r"Version: .*\n", "Version: "+version+'\n', readme_txt)
+    open('README.txt', 'w').write(readme_txt)
 
 def user_input_setversion():
     print 'Current version of Brian is', brian.__version__

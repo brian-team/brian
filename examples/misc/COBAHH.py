@@ -24,7 +24,7 @@ http://brian.di.ens.fr
 from brian import *
 import time
 
-use_gpu = True
+use_gpu = False
 
 # Parameters
 area=20000*umetre**2
