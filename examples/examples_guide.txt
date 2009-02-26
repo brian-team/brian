@@ -1,5 +1,6 @@
 List of examples
 ----------------
+misc/    (miscellaneous)
 * adaptive_threshold: an integrate-and-fire model with a threshold that increases
 with each spike and relaxes exponentially, and Poisson input.
 * adaptive: an integrate-and-fire model with adaptation.
@@ -45,6 +46,7 @@ lateral connections.
 * two_neurons: two connected neurons with delays.
 
 audition/    (auditory models)
+* filterbank: an auditory filterbank implemented with Poisson neurons
 * jeffress: Jeffress model of sound localisation
 * licklider: Licklider model of pitch perception
 
