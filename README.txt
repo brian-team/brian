@@ -16,7 +16,6 @@ Requirements: Python (version 2.5), the following modules:
 * numpy
 * scipy (preferably 0.7 or later)
 * pylab
-* sympy
 
 Windows: run the installer exe file
 
@@ -47,6 +46,12 @@ See the documentation in the extras download, or online:
 	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.1.1 to 1.1.2:
+
+* Standard functions rand() and randn() can now be used in string resets.
+* New forget() function.
+* Major bugfix for STP
 
 Version 1.1.0 to 1.1.1:
 

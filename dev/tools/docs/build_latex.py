@@ -4,5 +4,3 @@ os.chdir('../../../docs_sphinx') # work from docs_sphinx/ directory until we mak
 os.system('sphinx-build -a -E -D building_as=latex -b latex . ./_latexbuild')
 os.chdir('_latexbuild')
 os.system('make')
-os.system('copy Brian.pdf ../../docs')
-# TODO: Copy the PDF to Brian/docs

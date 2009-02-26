@@ -6,9 +6,11 @@ At the moment, these instructions are for Windows computers only.
 You need the following packages installed:
 
 * Sphinx version 0.5+
+* epydoc 3.0+ (if building API documentation for website only)
+* latex (if building PDF documentation)
   
-Tests
------
+Regression testing
+------------------
 
 Run dev/tests/alltests.py and if possible dev/tests/allexamples.py. Note
 that some of the allexamples.py tests will fail for known reasons (check
@@ -17,77 +19,99 @@ individual files to make sure).
 Update the version number
 -------------------------
 
-Run the 
+Run dev/tools/newrelease/setversion.py, which will prompt you to type
+the new version number. We use the convention:
 
-Building the documentation
---------------------------
+major.minor.patch[a|b|rc1|rc2|etc.]
+
+where minor introduces significant new features and patch only introduces
+minor features or fixes bugs.
+
+Update README.txt and brian/new_features.txt
+--------------------------------------------
+
+Copy the latest new features from new_features.txt into README.txt
+following the convention there, and make a new section in new_features.txt
+for the next version.
+
+Also, you might want to update README.txt as well if there are significant
+changes such as new web page, new authors, new requirements, etc.
+
+Build the documentation
+-----------------------
+
+This probably doesn't need to be done for patch level releases, only
+minor and major releases.
 
 First of all, run the dev/tools/docs/generate_html.py script. This will
 generate all the relevant HTML files for the documentation other
-than the API documentation. It will also make a copy of the
-brian-all.html documentation in the website/manual.html file, which
-can then be uploaded to the website.
+than the API documentation.
 
-Secondly, build the API documentation. You do this by running the
-dev/tools/docs/generate_api.py file in the root Brian directory. Note that
+Secondly, build the PDF version of the documentation by running
+dev/tools/docs/build_latex.py. Copy the file
+docs_sphinx/_latexbuild/Brian.pdf to docs.
+
+Thirdly, if doing the web release, build the API documentation.
+You do this by running the dev/tools/docs/generate_api.py file. Note that
 if you want to exclude certain files from the API documentation,
 you should edit the generate_api.py file to add the names
 of the modules which should be excluded.
 
-Update README.txt
------------------
+Finally, if necessary make a new BrianReference.pdf from the doc file on
+the "More Brian" SVN.
 
-In the base Brian directory is a file README.txt which should be
-updated with the latest version numbers, etc. Also include here
-a copy of the changes from brian/new_features.txt.
+The docs folder and docs/api folder should be copied to the website.
 
 Update setup.py
 ---------------
 
-Version number
-~~~~~~~~~~~~~~
+The setup.py file is the install script for Brian and also contains
+the information that defines what people see on the pypi site, and
+what the requirements are for easy_install and so forth, so it's
+important to get the information right.
 
-Update the version=... string to reflect the new version. It should
-have no spaces, and follow the convention major.minor.patch followed
-by a text string alpha, beta, rc1, etc. if necessary.
+Extras folders:
+	The extras_folders variable specifies which files are included
+	in the extras zip file, this doesn't usually need updating
+	unless there has been a change in structure of Brian (the
+	most likely being new examples subdirectories).
+py_modules:
+	Lists the extra modules not part of the main Brian package,
+	most likely this doesn't need to be changed.
+packages:
+	Lists the subpackages inside Brian, every package within a
+	package needs to be listed explicitly so this may have changed.
+requires:
+	The minimum versions of various packages to make Brian work.
+url, description, long_description, author, author_email, download_url:
+	Most likely these won't change much, but when we change the web site
+	or our email addresses for example, these might change.
+classifiers:
+	Most likely these won't change either, there are standard names for
+	these which you can look up on the PyPI site. 
 
-Extras folders
-~~~~~~~~~~~~~~
+Create the distribution files
+-----------------------------
 
-Now update the extras_folders variable if necessary - it specifies
-which files are included in the extras zip file.
+First if you have a copy, delete the MANIFEST file. Next, if necessary,
+update the MANIFEST.in file which specifies which files should be
+included in the distribution. At the moment, we have an inclusive
+rule, include all Python and SWIG files.
 
-The setup function
-~~~~~~~~~~~~~~~~~~
+Now run the dev/tools/create_dist.py file which should have create
+three files brian-versionname.win32.exe,
+brian-versionname.tar.gz and brian-versionname.zip in the dist
+directory. Check (in the ZIP version for example) that all the files
+you expect to be there are there.
 
-Finally, update the setup function if any major changes have been
-introduced. The line py_module=... gives a list of the modules
-outside of the main package that need to be installed, which in
-our case is the three unit preference related files. The line
-packages=... defines which packages to include. Note that
-sub-packages are not automatically included, so if you add a new
-sub-package to the main Brian package, include it here.
+You can now delete old versions (they're still available
+on the SVN, but don't take up unnecessary space).
 
-Creating the distribution files
--------------------------------
+Create the extras file
+----------------------
 
-The easiest way to do this is to delete the file MANIFEST if it exists,
-run the dev/tools/create_dist.py file, then edit the
-automatically generated MANIFEST file to remove any files that shouldn't
-be included in the release. This is annoying, but as far as I can tell,
-there is no way to specify files which should be excluded, only files
-which should be included. After deleting the unwanted files from MANIFEST,
-you should run create_dist.py again.
-
-This step should have created three files brian-versionname.win32.exe,
-brian-versionname.tar.gz and brian-versionname.zip in the dist/
-directory.
-
-Creating the extras file
-------------------------
-
-Just run the create_extras.py file in the Brian root directory. This
-should create dist/brian-versionname-extras.zip.
+Just run the create_extras.py file. This should create
+dist/brian-versionname-extras.zip.
 
 Test the distribution
 ---------------------
@@ -96,30 +120,48 @@ First uninstall any installed copy of Brian you have on your machine,
 but not the SVN version. Do this by going to Add/Remove programs in
 Windows settings, and looking for 'Python 2.5 brian' and removing it.
 
-Now install Brian using the Windows installer. Open IPython, type
-from brian import *, then import inspect. Now type::
+Now install Brian using the Windows installer. Open IPython, type::
 
-  inspect.getsourcefile(run)
+	from brian import *
+	run_all_tests()
 
-The output should be a filename something like::
-
-  'C:\\Python25\\Lib\\site-packages\\brian\\network.py'
-
-It should point to the Python site-packages folder, not to your SVN
-copy. This proves it's working from the installed copy, not the SVN
-copy.
-
-Finally, run the tests. Open a command prompt, go to the Brian/tests
-folder (preferably from the unzipped extras folder, but from the
-SVN version is OK too). Run testinterface.py and testverification.py.
-These two tests should run correctly, and print a message saying that
-they were using the site-packages version rather than the SVN version.
+Note the directory it is running from (this should be in the Python
+site-packages directory, not the SVN location).
 
 Once you've verified that it all works, you can uninstall the installed
 version of Brian (which is used in preference to the SVN version).
 
-Uploading the files
--------------------
+Upload to sourceforge
+---------------------
 
-Upload all of the four created files and the README.txt file to the
-sourceforge site.
+Create a new release and upload all the files to the sourceforge
+site. To do this, you need to first of all create a new release (the
+name is just the version number), then
+upload the data files. The easiest way is the Web upload:
+
+https://frs.sourceforge.net/webupload
+
+Now fill in the data for the release (including filling out the
+changes and release notes), include the files and set their
+properties (platform, source distribution, etc.).
+
+You could also add an accouncement of the new version too (maybe
+just for major and minor but not patch releases).
+
+Upload to PyPI
+--------------
+
+You use the dev/tools/newrelease/register_pypi.py script to register
+the data on PyPI. Note that you need a PyPI account that is authorised
+to make changes to Brian. Also note that you need a file .pypirc in
+your home directory which should be be a text file like:
+
+	[server-login]
+	username:...
+	password:...
+
+The HOME environment variable must be set to point
+to your home directory (which is not standard in Windows). Due to a
+bug in distutils, on Windows this HOME environment variable cannot have
+any spaces in it, so use the old 8.3 filename, e.g. on my laptop at
+home it is C:\DOCUME~1\DANGOO~1.

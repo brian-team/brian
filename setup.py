@@ -22,9 +22,10 @@ support and extension packages.
 # containing the following files
 extras_folders = ['tutorials/tutorial1_basic_concepts/*.py',
                   'tutorials/tutorial2_connections/*.py',
-                  'examples/*.py', 'examples/audition/*.py',
+                  'examples/*.py', 'examples/*.txt', 'examples/audition/*.py',
                   'examples/electrophysiology/*.py', 'examples/frompapers/*.py',
                   'examples/interface/*.*', 'examples/plasticity/*.py',
+                  'examples/misc/*.py', 'examples/audition/*.py',
                   'benchmarks/*.sce', 'benchmarks/*.m', 'benchmarks/*.cpp',
                   'docs/*.*', 'docs/_images/*.jpg',# 'docs/api/*.*',
                   'docs/_sources/*.*', 'docs/_static/*.*' ]
@@ -35,7 +36,8 @@ if __name__=="__main__":
       py_modules=['brian_unit_prefs','brian_no_units','brian_no_units_no_warnings'],
       packages=['brian',
                 'brian.utils','brian.utils.ccircular','brian.utils.fastexp',
-                'brian.library', 'brian.tests','brian.experimental'],
+                'brian.library', 'brian.tests','brian.experimental',
+                'brian.experimental.cuda'],
 #      package_dir={'brian.utils.ccircular':'brian/utils/ccircular',
 #                   'brian.utils.fastexp':'brian/utils/fastexp'},
 #      package_data={'brian.utils.ccircular':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat'],
