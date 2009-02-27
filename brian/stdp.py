@@ -13,6 +13,7 @@ from scipy import dot,eye,zeros,array,clip,exp,Inf
 from stdunits import ms
 from connection import DelayConnection
 import re
+from utils.documentation import flattened_docstring
 
 __all__=['STDP','ExponentialSTDP']
 
@@ -102,6 +103,9 @@ class STDP(NetworkOperation):
             eqs_obj=eqs
         else:
             eqs_obj=Equations(eqs,level=level+1)
+        # handle multi-line pre, post equations
+        pre = flattened_docstring(pre)
+        post = flattened_docstring(post)
         
         # Check units
         eqs_obj.compile_functions()
