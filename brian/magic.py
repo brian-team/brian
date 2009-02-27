@@ -309,6 +309,10 @@ class WeakSet(set):
             if _() is value:
                 _.set_i_d(id)
                 return
+    def get_i_d(self, value):
+        for _ in self:
+            if _() is value:
+                return _.get_i_d()
     def get(self, id=None):
         if id is None:
             return [ _() for _ in self if _.get_i_d() != -1 ]
@@ -332,6 +336,8 @@ class InstanceFollower(object):
         for cls in value.__class__.__mro__: # MRO is the Method Resolution Order which contains all the superclasses of a class
             if cls in self.__instancesets__:
                 self.__instancesets__[cls].set_i_d(value,id)
+    def get_i_d(self, value):
+        return self.__instancesets__[value.__class__].get_i_d(value)
     def get(self,cls,id=None):
         if not cls in self.__instancesets__: return []
         return self.__instancesets__[cls].get(id)  
@@ -351,6 +357,8 @@ class InstanceTracker(object):
         if idvalue is None:
             idvalue = id(getouterframes( currentframe())[level+1][0])
         self.__instancefollower__.set_i_d(self,idvalue)
+    def get_instance_id(self):
+        return self.__instancefollower__.get_i_d(self)
     def __new__(typ, *args, **kw):
         obj = object.__new__(typ, *args, **kw)
         outer_frame = id(getouterframes( currentframe())[1][0]) # the id is the id of the calling frame

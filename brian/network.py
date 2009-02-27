@@ -36,7 +36,7 @@
 Network class
 '''
 __all__ = ['Network','MagicNetwork','NetworkOperation','network_operation','run',
-           'reinit','stop','clear','forget']
+           'reinit','stop','clear','forget','recall']
 
 from Queue import Queue
 from connection import *
@@ -926,14 +926,31 @@ def forget(*objs):
     Forgets the list of objects passed
     
     Forgetting means that :class:`MagicNetwork` will not pick up these objects,
-    but all data is retained. You can pass objects or lists of objects.
-    See also :func:`clear`.
+    but all data is retained. You can pass objects or lists of objects. Forgotten
+    objects can be recalled with :func:`recall`. See also :func:`clear`.
     '''
     for obj in objs:
         if isinstance(obj, (NeuronGroup, Connection, NetworkOperation)):
+            obj._forgotten_instance_id = obj.get_instance_id()
             obj.set_instance_id(-1)
         elif isSequenceType(obj):
             for o in obj:
                 forget(o)
         else:
             raise TypeError('Only the following types of objects can be forgotten: NeuronGroup, Connection or NetworkOperation')
+
+def recall(*objs):
+    '''
+    Recalls previously forgotten objects
+    
+    See :func:`forget` and :func:`clear`.
+    '''
+    for obj in objs:
+        if isinstance(obj, (NeuronGroup, Connection, NetworkOperation)):
+            if hasattr(obj, '_forgotten_instance_id'):
+                obj.set_instance_id(obj._forgotten_instance_id)
+        elif isSequenceType(obj):
+            for o in obj:
+                recall(o)
+        else:
+            raise TypeError('Only the following types of objects can be recalled: NeuronGroup, Connection or NetworkOperation')

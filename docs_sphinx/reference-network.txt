@@ -26,4 +26,5 @@ in the ``brian/magic.py`` source code.
 .. autofunction:: stop
 .. autofunction:: clear
 .. autofunction:: forget
+.. autofunction:: recall
 .. autoclass:: MagicNetwork
