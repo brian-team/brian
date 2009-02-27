@@ -178,6 +178,16 @@ class STDP(NetworkOperation):
         pre_code=compile(pre,"Presynaptic code","exec")
         post_code=compile(post,"Postsynaptic code","exec")
         
+        # Report
+#        print pre_namespace
+#        print pre
+#        print
+#        print post_namespace
+#        print post
+#        print
+#        print M_pre
+#        print M_post
+        
         # Delays
         connection_delay=C.delay*C.source.clock.dt
         if (delay_pre is None) and (delay_post is None): # same delays as the Connnection C
