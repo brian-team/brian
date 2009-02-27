@@ -37,17 +37,19 @@ eqs_stdp='''
 dA_pre/dt=-A_pre/tau_pre : 1
 dA_post/dt=-A_post/tau_post : 1
 '''
+dA_post*=gmax
+dA_pre*=gmax
 stdp=STDP(synapses,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
           post='A_post+=dA_post;w+=A_pre',wmax=gmax)
 
 rate=PopulationRateMonitor(neurons)
 
 start_time=time()
-run(50*ms,report='text')
+run(100*second,report='text')
 print "Simulation time:",time()-start_time
 
 subplot(311)
-#plot(rate.times/second,rate.smooth_rate(100*ms))
+plot(rate.times/second,rate.smooth_rate(100*ms))
 subplot(312)
 plot(synapses.W.todense()/gmax,'.')
 subplot(313)
