@@ -50,6 +50,8 @@ from itertools import chain
 from collections import defaultdict
 import copy
 from base import *
+from units import second
+import time
 
 globally_stopped = False
 
@@ -89,9 +91,10 @@ class Network(object):
     ``add(...)``
         Add additional objects after initialisation, works the same way
         as initialisation.
-    ``run(duration)``
+    ``run(duration[, report[, report_period]])``
         Runs the network for the given duration. See below for details about
-        what happens when you do this.
+        what happens when you do this. See documentation for :func:`run` for
+        an explanation of the ``report`` and ``report_period`` keywords.
     ``reinit()``
         Reinitialises the network, runs each object's ``reinit()`` and each
         clock's ``reinit()`` method (resetting them to 0).
@@ -437,7 +440,7 @@ class Network(object):
             op()
     """
         
-    def run(self,duration,threads=1):
+    def run(self, duration, threads=1, report=None, report_period=10*second):
         '''
         Runs the simulation for the given duration.
         '''
@@ -452,17 +455,105 @@ class Network(object):
                 c.set_duration(duration)
         except AttributeError:
             pass
+        if report is not None:
+            start_time = time.time()
+            next_report_time = start_time + float(report_period)
+            def time_rep(t):
+                t = int(t)
+                if t<60:
+                    return str(t)+'s'
+                secs = t%60
+                mins = t//60
+                if mins<60:
+                    return str(mins)+'m '+str(secs)+'s'
+                mins = mins%60
+                hours = t//(60*60)
+                if hours<24:
+                    return str(hours)+'h '+str(mins)+'m '+str(secs)+'s'
+                hours = hours%24
+                days = t//(60*60*24)
+                return str(days)+'d '+str(hours)+'h '+str(mins)+'m '+str(secs)+'s'
+            def make_text_report(elapsed, complete):
+                s = str(int(100*complete))+'% complete, '
+                s += time_rep(elapsed)+' elapsed'
+                if complete>.001:
+                    remtime = elapsed/complete-elapsed
+                    s += ', approximately '+time_rep(remtime)+' remaining.'
+                else:
+                    s += '.'
+                return s
+            def text_report(elapsed, complete):
+                s = make_text_report(elapsed, complete)+'\n'
+                output_stream.write(s)
+                output_stream.flush()
+            import sys
+            if report=='print' or report=='text' or report=='stdout':
+                report = text_report
+                output_stream = sys.stdout
+            elif report=='stderr':
+                report = text_report
+                output_stream = sys.stderr
+            elif hasattr(report, 'write') and hasattr(report, 'flush'):
+                output_stream = report
+                report = text_report
+            elif report=='graphical' or report=='tkinter':
+                import Tkinter
+                class ProgressBar(object):
+                    '''
+                    Adapted from: http://code.activestate.com/recipes/492230/
+                    '''
+                    # Create Progress Bar
+                    def __init__(self, width, height):
+                        self.__root = Tkinter.Tk()
+                        self.__root.resizable(False, False)
+                        self.__root.title('Progress Bar')
+                        self.__canvas = Tkinter.Canvas(self.__root, width=width, height=height)
+                        self.__canvas.grid()
+                        self.__width = width
+                        self.__height = height
+                    # Open Progress Bar
+                    def open(self):
+                        self.__root.deiconify()
+                    # Close Progress Bar
+                    def close(self):
+                        self.__root.withdraw()
+                    # Update Progress Bar
+                    def update(self, ratio, newtitle=None):
+                        self.__canvas.delete(Tkinter.ALL)
+                        self.__canvas.create_rectangle(0, 0, self.__width * ratio, \
+                                                       self.__height, fill='blue')
+                        if newtitle is not None:
+                            self.__root.title(newtitle)
+                        self.__root.update()
+                pb = ProgressBar(500, 20)
+                pb.closed = False
+                def report(elapsed, complete):
+                    try:
+                        if complete==1.0 and pb.closed==False:
+                            pb.close()
+                            pb.closed = True
+                        else:
+                            pb.update(complete, make_text_report(elapsed, complete))
+                    except Tkinter.TclError:
+                        # exception handling in the case that the user shuts the window
+                        pass
+                
         if self.clock.still_running() and not self.stopped and not globally_stopped:
-            if self.same_clocks():
-                while self.clock.still_running() and not self.stopped and not globally_stopped:
-                    self.update()
-                    self.clock.tick()
-            else:
-                while self.clock.still_running() and not self.stopped and not globally_stopped:
-                    self.update()
-                    self.clock.tick()
+            not_same_clocks = not self.same_clocks()
+            while self.clock.still_running() and not self.stopped and not globally_stopped:
+                if report is not None:
+                    cur_time = time.time()
+                    if cur_time>next_report_time:
+                        next_report_time = cur_time + float(report_period)
+                        report((cur_time-start_time)*second, self.clock.t/duration) 
+                self.update()
+                self.clock.tick()
+                if not_same_clocks:
                     # Find the next clock to update
                     self.clock=min([(clock.t,clock) for clock in self.clocks])[1]
+        if report is not None:
+            cur_time = time.time()
+            report((cur_time-start_time)*second, 1.0)
     
     def stop(self):
         '''
@@ -751,22 +842,42 @@ class MagicNetwork(Network):
         Network.__init__(self,list(set(groups)),list(set(connections)),list(set(operations)))
 
 
-def run(duration,threads=1):
+def run(duration, threads=1, report=None, report_period=10*second):
     '''
     Run a network created from any suitable objects that can be found
     
-    **Usage:** ::
+    Arguments:
     
-        run(duration)
-    
-    where ``duration`` is the length of time to run the network for.
+    ``duration``
+        the length of time to run the network for.
+    ``report``
+        How to report progress, the default ``None`` doesn't report the
+        progress. Some standard values for ``report``:
+        ``text``, ``stdout``
+            Prints progress to the standard output.
+        ``stderr``
+            Prints progress to the standard error output stderr.
+        ``graphical``, ``tkinter``
+            Uses the Tkinter module to show a graphical progress bar,
+            this may interfere with any other GUI code you have.
+        Alternatively, you can provide your own callback function by
+        setting ``report`` to be a function ``report(elapsed, complete)``
+        of two variables ``elapsed``, the amount of time elapsed in
+        seconds, and ``complete`` the proportion of the run duration
+        simulated (between 0 and 1). The ``report`` function is
+        guaranteed to be called at the end of the run with
+        ``complete=1.0`` so this can be used as a condition for
+        reporting that the computation is finished.
+    ``report_period``
+        How often the progress is reported (by default, every 10s).
     
     Works by constructing a :class:`MagicNetwork` object from all the suitable
     objects that could be found (:class:`NeuronGroup`, :class:`Connection`, etc.) and
     then running that network. Not suitable for repeated runs or situations
     in which you need precise control.
     '''
-    MagicNetwork(verbose=False,level=2).run(duration,threads=threads)
+    MagicNetwork(verbose=False,level=2).run(duration, threads=threads,
+                                            report=report, report_period=report_period)
 
 
 def reinit():
