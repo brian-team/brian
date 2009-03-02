@@ -457,12 +457,13 @@ class Network(object):
         except AttributeError:
             pass
         if report is not None:
+            start_time = time.time()
             if not isinstance(report, ProgressReporter):
                 report = ProgressReporter(report, report_period)
+                next_report_time = start_time + float(report_period)
             else:
                 report_period = report.period
-            start_time = time.time()
-            next_report_time = start_time + float(report_period)
+                next_report_time = report.next_report_time
                 
         if self.clock.still_running() and not self.stopped and not globally_stopped:
             not_same_clocks = not self.same_clocks()
