@@ -1,0 +1,9 @@
+.. currentmodule:: brian
+
+.. index::
+	pair: progress; reporting
+
+Progress reporting
+==================
+
+.. autoclass:: brian.utils.progressreporting.ProgressReporter

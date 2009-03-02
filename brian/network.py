@@ -52,6 +52,7 @@ import copy
 from base import *
 from units import second
 import time
+from utils.progressreporting import *
 
 globally_stopped = False
 
@@ -456,87 +457,12 @@ class Network(object):
         except AttributeError:
             pass
         if report is not None:
+            if not isinstance(report, ProgressReporter):
+                report = ProgressReporter(report, report_period)
+            else:
+                report_period = report.period
             start_time = time.time()
             next_report_time = start_time + float(report_period)
-            def time_rep(t):
-                t = int(t)
-                if t<60:
-                    return str(t)+'s'
-                secs = t%60
-                mins = t//60
-                if mins<60:
-                    return str(mins)+'m '+str(secs)+'s'
-                mins = mins%60
-                hours = t//(60*60)
-                if hours<24:
-                    return str(hours)+'h '+str(mins)+'m '+str(secs)+'s'
-                hours = hours%24
-                days = t//(60*60*24)
-                return str(days)+'d '+str(hours)+'h '+str(mins)+'m '+str(secs)+'s'
-            def make_text_report(elapsed, complete):
-                s = str(int(100*complete))+'% complete, '
-                s += time_rep(elapsed)+' elapsed'
-                if complete>.001:
-                    remtime = elapsed/complete-elapsed
-                    s += ', approximately '+time_rep(remtime)+' remaining.'
-                else:
-                    s += '.'
-                return s
-            def text_report(elapsed, complete):
-                s = make_text_report(elapsed, complete)+'\n'
-                output_stream.write(s)
-                output_stream.flush()
-            import sys
-            if report=='print' or report=='text' or report=='stdout':
-                report = text_report
-                output_stream = sys.stdout
-            elif report=='stderr':
-                report = text_report
-                output_stream = sys.stderr
-            elif hasattr(report, 'write') and hasattr(report, 'flush'):
-                output_stream = report
-                report = text_report
-            elif report=='graphical' or report=='tkinter':
-                import Tkinter
-                class ProgressBar(object):
-                    '''
-                    Adapted from: http://code.activestate.com/recipes/492230/
-                    '''
-                    # Create Progress Bar
-                    def __init__(self, width, height):
-                        self.__root = Tkinter.Tk()
-                        self.__root.resizable(False, False)
-                        self.__root.title('Progress Bar')
-                        self.__canvas = Tkinter.Canvas(self.__root, width=width, height=height)
-                        self.__canvas.grid()
-                        self.__width = width
-                        self.__height = height
-                    # Open Progress Bar
-                    def open(self):
-                        self.__root.deiconify()
-                    # Close Progress Bar
-                    def close(self):
-                        self.__root.withdraw()
-                    # Update Progress Bar
-                    def update(self, ratio, newtitle=None):
-                        self.__canvas.delete(Tkinter.ALL)
-                        self.__canvas.create_rectangle(0, 0, self.__width * ratio, \
-                                                       self.__height, fill='blue')
-                        if newtitle is not None:
-                            self.__root.title(newtitle)
-                        self.__root.update()
-                pb = ProgressBar(500, 20)
-                pb.closed = False
-                def report(elapsed, complete):
-                    try:
-                        if complete==1.0 and pb.closed==False:
-                            pb.close()
-                            pb.closed = True
-                        else:
-                            pb.update(complete, make_text_report(elapsed, complete))
-                    except Tkinter.TclError:
-                        # exception handling in the case that the user shuts the window
-                        pass
                 
         if self.clock.still_running() and not self.stopped and not globally_stopped:
             not_same_clocks = not self.same_clocks()
@@ -545,15 +471,14 @@ class Network(object):
                     cur_time = time.time()
                     if cur_time>next_report_time:
                         next_report_time = cur_time + float(report_period)
-                        report((cur_time-start_time)*second, self.clock.t/duration) 
+                        report.update(self.clock.t/duration) 
                 self.update()
                 self.clock.tick()
                 if not_same_clocks:
                     # Find the next clock to update
                     self.clock=min([(clock.t,clock) for clock in self.clocks])[1]
         if report is not None:
-            cur_time = time.time()
-            report((cur_time-start_time)*second, 1.0)
+            report.update(1.0)
     
     def stop(self):
         '''
@@ -853,6 +778,7 @@ def run(duration, threads=1, report=None, report_period=10*second):
     ``report``
         How to report progress, the default ``None`` doesn't report the
         progress. Some standard values for ``report``:
+        
         ``text``, ``stdout``
             Prints progress to the standard output.
         ``stderr``
@@ -860,6 +786,7 @@ def run(duration, threads=1, report=None, report_period=10*second):
         ``graphical``, ``tkinter``
             Uses the Tkinter module to show a graphical progress bar,
             this may interfere with any other GUI code you have.
+            
         Alternatively, you can provide your own callback function by
         setting ``report`` to be a function ``report(elapsed, complete)``
         of two variables ``elapsed``, the amount of time elapsed in

@@ -20,6 +20,7 @@ For an overview of Brian, see the :ref:`user-manual` section.
     reference-monitors
     reference-plotting
     reference-analysis
+    reference-progressreporting
     reference-magic
     reference-tests
     
