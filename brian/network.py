@@ -206,12 +206,15 @@ class Network(object):
         """
         for obj in objs:
             if isinstance(obj,NeuronGroup):
-                self.groups.append(obj)
+                if obj not in self.groups:
+                    self.groups.append(obj)
             elif isinstance(obj,Connection):
-                self.connections.append(obj)
+                if obj not in self.connections:
+                    self.connections.append(obj)
             elif isinstance(obj,NetworkOperation):
-                self._operations_dict[obj.when].append(obj)
-                self._all_operations.append(obj)
+                if obj not in self._all_operations:
+                    self._operations_dict[obj.when].append(obj)
+                    self._all_operations.append(obj)
             elif isSequenceType(obj):
                 for o in obj:
                     self.add(o)
