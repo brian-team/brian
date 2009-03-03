@@ -71,6 +71,37 @@ class STPUpdater(SpikeMonitor):
         self.lastt[spikes]=self.clock.t
         self.P.LS.push(spikes)
 
+class SynapticDepressionUpdater(SpikeMonitor):
+    '''
+    Event-driven updates of STP variables.
+    Special case: tauf=0*ms (synaptic depression).
+    
+      dx/dt=(1-x)/taud  (depression)
+      u<-u+U*(1-u)
+      x<-x*(1-U)
+
+    NOT FINISHED
+    '''
+    def __init__(self,source,P,taud,tauf,U,delay=0):
+        SpikeMonitor.__init__(self,source,record=False,delay=delay)
+        # P is the group with the STP variables
+        N=len(P)
+        self.P=P
+        self.minvtaud=-1./taud
+        self.U=U
+        self.ux=P.ux
+        self.x=P.x
+        self.lastt=zeros(N) # last update
+        self.clock=P.clock
+        
+    def propagate(self,spikes):
+        interval=self.clock.t-self.lastt[spikes]
+        self.x[spikes]=1+(self.x[spikes]-1)*exp(interval*self.minvtaud)
+        self.ux[spikes]=self.U*self.x[spikes]
+        self.x[spikes]*=1-self.U
+        self.lastt[spikes]=self.clock.t
+        self.P.LS.push(spikes)
+
 class STP(NetworkOperation):
     '''
     Short-term synaptic plasticity, following the Tsodyks-Markram model.
