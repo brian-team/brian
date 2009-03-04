@@ -66,10 +66,17 @@ class ProgressReporter(object):
     
     Methods:
     
-    .. method:: start
+    .. method:: start()
     
         Call at the beginning of a task to start timing it.
-        
+    
+    .. method:: finish()
+    
+        Call at the end of a task to finish timing it. Note that
+        with the Tkinter class, if you do not call this it will
+        stop the Python script from finishing, stopping memory
+        from being freed up.
+    
     .. method:: update(complete)
     
         Call with the fraction of the task (or subtask if
@@ -102,6 +109,8 @@ class ProgressReporter(object):
         self.next_report_time = self.start_time+self.period
         self.subtask_complete = 0.0
         self.subtask_size = 1.0
+    def finish(self):
+        self.update(1)
     def subtask(self, complete, tasksize):
         self.subtask_complete = complete
         self.subtask_size = tasksize
@@ -109,7 +118,7 @@ class ProgressReporter(object):
         self.subtask(float(tasknum)/float(numtasks), 1./numtasks)
     def update(self, complete):
         cur_time = time.time()
-        if cur_time>self.next_report_time or complete==1.0:
+        if cur_time>self.next_report_time or complete==1.0 or complete==1:
             self.next_report_time = cur_time+self.period
             elapsed = time.time()-self.start_time
             self.report(elapsed, self.subtask_complete+complete*self.subtask_size)
