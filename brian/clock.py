@@ -280,17 +280,25 @@ class Clock(magic.InstanceTracker):
         """Sets the end-point for the clock
         """
         self._end = float(end)
+
+    @check_units(start=second)
+    def set_start(self,start):
+        """Sets the start-point for the clock
+        """
+        self._start = float(start)
     
     # Clock object internally stores floats, but these properties
     # return quantities
     t=property(fget=lambda self:self._t*second,fset=set_t)
     dt=property(fget=lambda self:self._dt*second,fset=set_dt)
     end=property(fget=lambda self:self._end*second,fset=set_end)
+    start=property(fget=lambda self:self._start*second,fset=set_start)
     
     @check_units(duration=second)
     def set_duration(self,duration):
         """Sets the duration of the clock
         """
+        self._start = self._t
         self._end = self._t + float(duration)
     
     def get_duration(self):

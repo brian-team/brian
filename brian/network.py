@@ -475,7 +475,7 @@ class Network(object):
                     cur_time = time.time()
                     if cur_time>next_report_time:
                         next_report_time = cur_time + float(report_period)
-                        report.update(self.clock.t/duration) 
+                        report.update((self.clock.t-self.clock.start)/duration) 
                 self.update()
                 self.clock.tick()
                 if not_same_clocks:
