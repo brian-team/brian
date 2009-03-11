@@ -549,21 +549,29 @@ class ISIHistogramMonitor(HistogramMonitorBase):
     This object can be passed directly to the plotting function
     :func:`hist_plot`.
     '''
-    def __init__(self,source,bins,delay=0):
-        SpikeMonitor.__init__(self,source,delay)
+    def __init__(self, source, bins, delay=0):
+        SpikeMonitor.__init__(self, source,delay)
         self.bins = array(bins)
         self.reinit()
     def reinit(self):
-        super(ISIHistogramMonitor,self).reinit()
+        super(ISIHistogramMonitor, self).reinit()
         self.count = zeros(len(self.bins))
         self.LS = 1000*second*ones(len(self.source))
-    def propagate(self,spikes):
-        super(ISIHistogramMonitor,self).propagate(spikes)
+    def propagate(self, spikes):
+        super(ISIHistogramMonitor, self).propagate(spikes)
         isi = self.source.clock.t-self.LS[spikes]
-        self.LS[spikes]=self.source.clock.t
-        #print isi
-        h,a = histogram(isi,self.bins)
-        self.count = self.count + h
+        self.LS[spikes] = self.source.clock.t
+        # all this nonsense is necessary to deal with the fact that
+        # numpy changed the semantics of histogram in 1.2.0 or thereabouts
+        try:
+            h, a = histogram(isi, self.bins, new=True)
+        except TypeError:
+            h, a = histogram(isi, self.bins)
+        if len(h)==len(self.count):
+            self.count += h
+        else:
+            self.count[:-1] += h
+            self.count[-1] += len(isi)-sum(h)
 
 
 class FileSpikeMonitor(SpikeMonitor):
