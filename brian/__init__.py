@@ -76,6 +76,7 @@ from tests import *
 from magic import *
 from stdp import *
 from stp import *
+from timedarray import *
 
 __version__ = '1.1.2'
 

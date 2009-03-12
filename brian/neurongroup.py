@@ -592,6 +592,11 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         else:
             return 'Subgroup of '+str(len(self))+' neurons'
 
+    def set_var_by_array(self, var, arr, times=None, clock=None):
+        # ugly hack, have to import this here because otherwise the order of imports
+        # is messed up.
+        import timedarray
+        timedarray.set_group_var_by_array(self, var, arr, times, clock)
 
 class PoissonGroup(NeuronGroup):
     '''
