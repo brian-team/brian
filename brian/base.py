@@ -23,7 +23,8 @@ class ObjectContainer(object):
     def get_contained_objects(self):
         if hasattr(self, '_contained_objects'):
             return self._contained_objects
-        return []
+        self._contained_objects = []
+        return self._contained_objects
     def set_contained_objects(self, newobjs):
         self._contained_objects = self.get_contained_objects()
         self._contained_objects.extend(newobjs)
