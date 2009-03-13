@@ -739,12 +739,14 @@ class StateMonitor(NetworkOperation,Monitor):
     
     Methods:
     
-    .. method:: plot([indices=None])
+    .. method:: plot([indices=None[, cmap=None]])
         
         Plots the recorded values using pylab. You can specify an index or
         list of indices, otherwise all the recorded values will be plotted.
         The graph plotted will have legends of the form ``name[i]`` for
-        ``name`` the variable name, and ``i`` the neuron index.
+        ``name`` the variable name, and ``i`` the neuron index. If cmap is
+        specified then the colours will be set according to the matplotlib
+        colormap cmap.
     '''
     times  = property(fget=lambda self:QuantityArray(self._times))
     mean   = property(fget=lambda self:self.unit*QuantityArray(self._mu/self.N))
@@ -867,15 +869,24 @@ class StateMonitor(NetworkOperation,Monitor):
         else:
             return self.record
         
-    def plot(self, indices=None):
+    def plot(self, indices=None, cmap=None):
         if indices is None:
-            for i in self.get_record_indices():
-                pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
+            recind = self.get_record_indices()
+            for j, i in enumerate(recind):
+                if cmap is None:
+                    pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
+                else:
+                    pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']',
+                               color=cmap(float(j)/(len(recind)-1)))
         elif isinstance(indices, int):
             pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
         else:
-            for i in indices:
-                pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
+            for j, i in enumerate(indices):
+                if cmap is None:
+                    pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
+                else:
+                    pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']',
+                               color=cmap(float(j)/(len(indices)-1)))
 
 class MultiStateMonitor(NetworkOperation):
     '''
@@ -898,8 +909,9 @@ class MultiStateMonitor(NetworkOperation):
         Returns the variables
     ``items()``, ``iteritems()``
         Returns the pairs (var, mon)
-    ``plot(indices)``
-        Plots all the monitors.
+    ``plot([indices[, cmap]])``
+        Plots all the monitors (with optional choice of indices and
+        colour map).
     
     Attributes:
     
@@ -943,9 +955,9 @@ class MultiStateMonitor(NetworkOperation):
         return self.monitors.iteritems()
     def items(self):
         return self.monitors.items()
-    def plot(self, indices=None):
+    def plot(self, indices=None, cmap=None):
         for k, m in self.monitors.iteritems():
-            m.plot(indices)
+            m.plot(indices, cmap=cmap)
     def get_times(self):
         return self.monitors.values()[0].times
     times = property(fget = lambda self:self.get_times())
