@@ -922,14 +922,14 @@ class MultiStateMonitor(NetworkOperation):
         legend()
         show()
     '''
-    def __init__(self, G, vars=None, **kwds):
-        NetworkOperation.__init__(self, lambda : None)
+    def __init__(self, G, vars=None, clock=None, **kwds):
+        NetworkOperation.__init__(self, lambda : None, clock=clock)
         self.monitors = {}
         if vars is None:
             vars = [name for name in G.var_index.keys() if isinstance(name,str)]
         self.vars = vars
         for varname in vars:
-            self.monitors[varname] = StateMonitor(G, varname, **kwds)
+            self.monitors[varname] = StateMonitor(G, varname, clock=clock, **kwds)
         self.contained_objects = self.monitors.values()
     def __getitem__(self, varname):
         if isinstance(varname, tuple):
