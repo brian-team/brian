@@ -1,5 +1,6 @@
 from clock import *
 from network import *
+from units import second
 import numpy
 import pylab
 import warnings
@@ -8,29 +9,89 @@ __all__ = ['TimedArray', 'TimedArraySetter', 'set_group_var_by_array']
 
 class TimedArray(numpy.ndarray):
     '''
-    An array which also stores times.
+    An array where each value has an associated time.
     
-    Brief notes (unfinished):
+    Initialisation arguments:
     
-    The first index of the array must be the time index. Shapes in mind
-    are (T,) and (T, N) for T the number of time steps and N the number
-    of neurons.
+    ``arr``
+        The values of the array. The first index is the time index. Any
+        array shape works in principle, but only 1D/2D arrays are
+        supported (other shapes may work, but may not). The idea is to,
+        have the shapes (T,) or (T, N) for T the number of time steps and
+        N the number of neurons.
+    ``times``
+        A 1D array of times whose length should be the same as the first
+        dimension of ``arr``. Usually it is preferable to specify a
+        clock rather than an array of times, but this doesn't work in
+        the case where the time intervals are not fixed.
+    ``clock``
+        Specify the times corresponding to array values by a clock. The
+        ``t`` attribute of the clock is the time of the first value
+        in the array, and the time interval is the ``dt`` attribute of
+        the clock. If neither ``times`` nor ``clock`` is specified, a
+        clock will be guessed in the usual way (see :class:`Clock`).
+    ``start, dt``
+        Rather than specifying a clock, you can specify the start time
+        and time interval explicitly. Technically, this is useful
+        because it doesn't create a :class:`Clock` object which can
+        lead to ambiguity about which clock is the default. If dt is
+        specified and start is not, start is assumed to be 0.
     
-    Slicing operations are supported to some extent but not entirely.
+    Arbitrary slicing of the array is supported, but the clock will only
+    be preserved where the intervals can be guaranteed to be fixed, that
+    is except for the case where lists or numpy arrays are used on the
+    time index.
+
+    Timed arrays can be called as if they were a function of time if the
+    array times are based on a clock (but not if the array times are
+    arbitrary as the look up costs would be excessive). If ``x(t)`` is called
+    where ``times[i]<=t<times[i]+dt`` for some index i then ``x(t)`` will
+    have the value ``x[i]``.
     
-    The __call__ operation requires the times to be set by a clock rather
-    than an array of times, and operated on versions of the array will not
-    have this property and so cannot be called. (But they can be plotted.)
+    Has one method:
+    
+    .. method: plot(*args, **kwds)
+    
+        Plots the values on the y axis and times on the x axis. If the array
+        is 1D then this is a single plot, if it is 2D then there will be one
+        plot for each second index. 3D or greater arrays are not supported.
+        The args and keywords are passed to matplotlib's plot() command. In
+        the 2D case, each plot is labelled with the second index.
+    
+    See also :class:`TimedArraySetter`, :func:`set_group_var_by_array` and
+    :meth:`NeuronGroup.set_var_by_array`.
     '''
-    def __new__(subtype, arr, times=None, clock=None):
+    def __new__(subtype, arr, times=None, clock=None, start=None, dt=None):
+        # All numpy.ndarray subclasses need something like this, see
+        # http://www.scipy.org/Subclasses
         return numpy.array(arr, copy=False).view(subtype)
+    
     def __array_finalize__(self, orig):
+        # This is called each time a new TimedArray object is created from
+        # an old one, we just copy across the clock attribs here because
+        # when a new one is made from an old one, the times will be the
+        # same.
         try:
             self.times = orig.times
+            self.clock = orig.clock
+            self._t_init = orig._t_init
+            self._dt = orig._dt
         except AttributeError:
             pass
         return self
-    def __init__(self, arr, times=None, clock=None):
+    
+    def __init__(self, arr, times=None, clock=None, start=None, dt=None):
+        # Mostly this is straightforward, the point about having
+        # times and clock separate is that you don't have to limit
+        # yourself to fixed time intervals, although you usually
+        # will do that (and some things will rely on this, such
+        # as the __call__ method).
+        if start is not None or dt is not None:
+            if start is None:
+                start = 0*second
+            if clock is not None:
+                raise ValueError('Specify start and dt or block, but not both.')
+            clock = Clock(t=start, dt=dt)
         if times is not None and clock is not None:
             raise ValueError('Specify times or clock but not both.')
         if times is None and clock is None:
@@ -40,32 +101,53 @@ class TimedArray(numpy.ndarray):
             self._t_init = clock._t
             self._dt = clock._dt
             times = clock._t+numpy.arange(len(arr))*clock._dt
+        else:
+            self._t_init = None
+            self._dt = None
         self.times = times
+        
     def __getitem__(self, item):
+        # __getitem__ can deal with all sorts of indexing, we consider the
+        # following types specially for an array x
+        #   - x[a:b:c], if x has a clock then the slice can have a clock too
+        #   - x[integer], no clock for this because it's just one time value
+        #   - x[a, b, ...] with a a slice, this can have a clock based on a
+        # For the remaining cases, we assume that we cannot define a clock for
+        # the sliced object, e.g. if x[a,b,...] with a, b numpy arrays.
+        
+        # The values are the same as the numpy array version of __getitem__ in
+        # all cases
         x = numpy.ndarray.__getitem__(self, item)
         if isinstance(item, slice):
-            return TimedArray(x, self.times[item])
+            newtimes = self.times[item]
+            if self.clock is not None and len(newtimes)>1:
+                newdt = newtimes[1]-newtimes[0]
+                newclock = Clock(t=newtimes[0]*second, dt=newdt*second)
+                return TimedArray(x, clock=newclock)
+            else:
+                return TimedArray(x, self.times[item])
         if isinstance(item, int):
             return TimedArray(x, self.times[item:item+1])
-        try:
-            times = self.times[item]
-            if not isinstance(times, numpy.ndarray):
-                times = numpy.array([times])
-            return TimedArray(x, times)
-        except IndexError:
-            pass
-        try:
+        if isinstance(item, tuple):
             item0 = item[0]
             times = self.times[item0]
+            if isinstance(item0, slice) and self.clock is not None and hasattr(times, '__len__') and len(times)>1:
+                newdt = times[1]-times[0]
+                newclock = Clock(t=times[0]*second, dt=newdt*second)
+                return TimedArray(x, clock=newclock)
             if not isinstance(times, numpy.ndarray):
                 times = numpy.array([times])
             return TimedArray(x, times)
-        except TypeError:
-            pass
-        raise IndexError('Not sure what is going on.')
+        times = self.times[item]
+        if not isinstance(times, numpy.ndarray):
+            times = numpy.array([times])
+        return TimedArray(x, times)
+    
     def __getslice__(self, start, end):
-        x = numpy.ndarray.__getslice__(self, start, end)
-        return TimedArray(x, self.times[start:end])
+        # Just use __getitem__ for this (it's been deprecated since Python 2.0
+        # but you need to implement it because the base class does)
+        return self.__getitem__(slice(start, end))
+    
     def plot(self, *args, **kwds):
         if self.size>self.times.size and len(self.shape)==2:
             for i in xrange(self.shape[1]):
@@ -73,6 +155,7 @@ class TimedArray(numpy.ndarray):
                 self[:, i].plot(*args, **kwds)
         else:
             pylab.plot(self.times, self, *args, **kwds)
+            
     def __call__(self, t):
         if self.clock is None:
             raise ValueError('Can only call timed arrays if they are based on a clock.')
@@ -91,21 +174,79 @@ class TimedArray(numpy.ndarray):
             return numpy.asarray(self)[t]
 
 class TimedArraySetter(NetworkOperation):
-    def __init__(self, group, var, arr, times=None, clock=None, when='start'):
-        self.clock = guess_clock(clock)
+    '''
+    Sets NeuronGroup values with a TimedArray.
+    
+    At the beginning of each update step, this object will set the
+    values of a given state variable of a group with the value from
+    the array corresponding to the current simulation time.
+    
+    Initialisation arguments:
+    
+    ``group``
+        The :class:`NeuronGroup` to which the variable belongs.
+    ``var``
+        The name or index of the state variable in the group.
+    ``arr``
+        The array of values used to set the variable in the group.
+        Can be an array or a :class:`TimedArray`. If it is an array,
+        you should specify the ``times`` or ``clock`` arguments, or
+        leave them blank to use the default clock.
+    ``times``
+        Times corresponding to the array values, see :class:`TimedArray`
+        for more details.
+    ``clock``
+        The clock for the :class:`NetworkOperation`. If none is specified,
+        use the group's clock. If ``arr`` is not a :class:`TimedArray`
+        then this clock will be used to initialise it too.
+    ``start, dt``
+        Can specify these instead of a clock (see :class:`TimedArray` for
+        details).
+    ``when``
+        The standard :class:`NetworkOperation` ``when`` keyword, although
+        note that the default value is 'start'.
+    '''
+    def __init__(self, group, var, arr, times=None, clock=None, start=None, dt=None, when='start'):
+        if clock is None:
+            self.clock = group.clock
+        else:
+            self.clock = clock
         self.when = when
         self.group = group
         self.var = var
         if not isinstance(arr, TimedArray):
-            arr = TimedArray(arr, times=times, clock=clock)
+            arr = TimedArray(arr, times=times, clock=clock, start=start, dt=dt)
         self.arr = arr
+        self.reinit()
+        
     def __call__(self):
-        # Could write an efficient implementation of this that works even if
-        # the array doesn't have an associated clock. Have a reinit method
-        # and a generator that steps through updating to the next index when
-        # necessary.
-        self.group.state_(self.var)[:] = self.arr(self.clock._t)
+        if self.arr.clock is None:
+            # in this case, the time intervals need not be fixed so we
+            # have to step through the array until we find the appropriate
+            # one
+            tcur = self.clock._t
+            while True:
+                if self._cur_i==len(self.arr.times)-1:
+                    self.group.state_(self.var)[:] = self.arr[self._cur_i]
+                    return
+                ti_now = self.arr.times[self._cur_i]
+                ti_next = self.arr.times[self._cur_i+1]
+                if ti_next>=tcur:
+                    self.group.state_(self.var)[:] = self.arr[self._cur_i]
+                    return
+                self._cur_i += 1
+        else:
+            self.group.state_(self.var)[:] = self.arr(self.clock._t)
+    
+    def reinit(self):
+        if self.arr.clock is None:
+            self._cur_i = 0
 
-def set_group_var_by_array(group, var, arr, times=None, clock=None):
-    array_setter = TimedArraySetter(group, var, arr, times=times, clock=clock)
+def set_group_var_by_array(group, var, arr, times=None, clock=None, start=None, dt=None):
+    '''
+    Sets NeuronGroup values with a TimedArray.
+    
+    Creates a :class:`TimedArraySetter`, see that class for details.
+    '''
+    array_setter = TimedArraySetter(group, var, arr, times=times, clock=clock, start=start, dt=dt)
     group.contained_objects.append(array_setter) 
