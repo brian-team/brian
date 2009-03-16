@@ -879,7 +879,7 @@ class StateMonitor(NetworkOperation,Monitor):
                     pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']',
                                color=cmap(float(j)/(len(recind)-1)))
         elif isinstance(indices, int):
-            pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
+            pylab.plot(self.times, self[indices], label=self.varname+'['+str(indices)+']')
         else:
             for j, i in enumerate(indices):
                 if cmap is None:
