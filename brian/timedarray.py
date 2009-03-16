@@ -1,5 +1,6 @@
 from clock import *
 from network import *
+import neurongroup
 from units import second
 import numpy
 import pylab
@@ -46,7 +47,8 @@ class TimedArray(numpy.ndarray):
     array times are based on a clock (but not if the array times are
     arbitrary as the look up costs would be excessive). If ``x(t)`` is called
     where ``times[i]<=t<times[i]+dt`` for some index i then ``x(t)`` will
-    have the value ``x[i]``.
+    have the value ``x[i]``. You can also call ``x(t)`` with ``t`` a 1D array.
+    If x is 1D then ``x(t)[i]=x(t[i])``, if x is 2D then ``x(t)[i]=x(t[i])[i]``.
     
     Has one method:
     
@@ -59,7 +61,7 @@ class TimedArray(numpy.ndarray):
         the 2D case, each plot is labelled with the second index.
     
     See also :class:`TimedArraySetter`, :func:`set_group_var_by_array` and
-    :meth:`NeuronGroup.set_var_by_array`.
+    :class:`NeuronGroup`.
     '''
     def __new__(subtype, arr, times=None, clock=None, start=None, dt=None):
         # All numpy.ndarray subclasses need something like this, see
@@ -160,14 +162,23 @@ class TimedArray(numpy.ndarray):
         if self.clock is None:
             raise ValueError('Can only call timed arrays if they are based on a clock.')
         else:
-            if isinstance(t, numpy.ndarray):
-                # Normally would not support numpy.ndarray except Brian uses it for
-                # the value of t in equations at the moment (this may change). So
-                # we just the first value because when used by Brian all values are
-                # the same.
-                t = t[0] 
-            else:
-                t = float(t)
+            if isinstance(t, (list, tuple)):
+                t = numpy.array(t)
+            if isinstance(t, neurongroup.TArray):
+                # In this case, we know that t = ones(N)*t so we just use the first value
+                t = t[0]
+            elif isinstance(t, numpy.ndarray):
+                if len(self.shape)>2:
+                    raise ValueError('Calling TimedArray with array valued t only supported for 1D or 2D TimedArray.')
+                if len(self.shape)==2 and len(t)!=self.shape[1]:
+                    raise ValueError('Calling TimedArray with array valued t on 2D TimedArray requires len(t)=arr.shape[1]')
+                t = numpy.array((t-self._t_init)/self._dt, dtype=int)
+                t[t<0] = 0
+                t[t>=len(self.times)] = len(self.times)-1
+                if len(self.shape)==1:
+                    return numpy.asarray(self)[t]
+                return numpy.asarray(self)[t, numpy.arange(len(t))]
+            t = float(t)
             t = int((t-self._t_init)/self._dt)
             if t<0: t=0
             if t>=len(self.times): t=len(self.times)-1

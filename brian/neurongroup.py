@@ -64,6 +64,19 @@ from base import *
 from group import *
 from threshold import select_threshold
 from reset import select_reset
+timedarray = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
+
+class TArray(numpy.ndarray):
+    '''
+    This internal class is just used for when Brian sends an array t
+    to an object. All the elements will be the same in this case, and
+    you can check for isinstance(arr, TArray) to do optimisations based
+    on this. This behaviour may change in the future.
+    '''
+    def __new__(subtype, arr):
+        # All numpy.ndarray subclasses need something like this, see
+        # http://www.scipy.org/Subclasses
+        return numpy.array(arr, copy=False).view(subtype)
 
 class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     """Group of neurons
@@ -161,7 +174,9 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         a state variable of the the :class:`NeuronGroup`, this
         returns the array of values for the state
         variable ``x``, as for the :meth:`state` method
-        above.
+        above. Writing ``G.x = arr`` for ``arr`` a :class:`TimedArray`
+        will set the values of variable x to be ``arr(t)`` at time t.
+        See :class:`TimedArraySetter` for details. 
     
     **Subgroups**
     
@@ -179,13 +194,6 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     TODO: details of other methods and properties for people
     wanting to write extensions?
     """
-#    Group of neurons.
-#    Important variables:
-#    + S (state variables)
-#    + LS (last spike times) (rather use getspikes())
-#    + var_index (mapping from variable name -> index in state matrix)
-#    Delays can be incorporated
-#    + N (number of neurons in group)
     
     @check_units(refractory=second,max_delay=second)
     def __init__(self, N, model=None, threshold=None, reset=NoReset(),
@@ -244,11 +252,6 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                 raise AttributeError,"The group must be initialized."
             self._state_updater,var_names=magic_state_updater(model,clock=clock,order=order,check_units=check_units,implicit=implicit,compile=compile,freeze=freeze,method=method)
             Group.__init__(self, model, N)
-#            self.staticvars=dict([(name,model._function[name]) for name in model._eq_names])
-#            self.var_index=dict(zip(var_names,count()))
-#            self.var_index.update(zip(range(len(var_names)),range(len(var_names)))) # name integer i -> state variable i
-#            for var1,var2 in model._alias.iteritems():
-#                self.var_index[var1]=self.var_index[var2]
             # Converts S0 from dictionary to tuple
             if self._S0==None: # No initialization: 0 with units
                 S0={}
@@ -330,13 +333,6 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         self._max_delay = 0
         self.period = period
         self.set_max_delay(max_delay)
-#        self._max_delay=int(max_delay/clock.dt)+2 # in time bins
-#        mp = period-2
-#        if mp<1: mp=1
-#        self.LS = SpikeContainer(int((N*self._max_delay)/mp)+1,
-#                                 self._max_delay,
-#                                 useweave=get_global_preference('useweave'),
-#                                 compiler=get_global_preference('weavecompiler')) # Spike storage
         
         self._owner=self # owner (for subgroups)
         self._origin=0 # start index from owner if subgroup
@@ -353,7 +349,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         self._spikesarray = zeros(N,dtype=int)
         
         # various things for optimising
-        self.__t = zeros(N)
+        self.__t = TArray(zeros(N))
         self._var_array = {}
         for i in range(self.num_states()):
             self._var_array[i] = self._S[i]
@@ -362,11 +358,8 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             if sv.base is self._S:
                 self._var_array[kk] = sv
         
-        # state array accessor, only use if var_index array exists
         # todo: should we have a guarantee that var_index exists (even if it just
         # consists of mappings i->i)?
-#        if hasattr(self,'var_index'):
-#            self.neuron = neuron_array_accessor(self)
 
     def set_max_delay(self, max_delay):
         _max_delay = int(max_delay/self.clock.dt)+2 # in time bins
@@ -384,12 +377,6 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         Sets the variables at rest.
         '''
         self._state_updater.rest(self)
-
-#    def get_var_index(self,name):
-#        '''
-#        Returns the index of state variable "name".
-#        '''
-#        return self.var_index[name]
 
     def reinit(self):
         '''
@@ -453,15 +440,6 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         self._next_subgroup+=N;
         return P
        
-#    def __len__(self):
-#        '''
-#        Number of neurons in the group.
-#        '''
-#        return self._S.shape[1]
-#
-#    def num_states(self):
-#        return self._S.shape[0]
-    
     def unit(self,name):
         '''
         Returns the unit of variable name
@@ -482,76 +460,9 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             return Group.state_(self, name)
     state = state_
     
-#    def state_(self,name):
-#        '''
-#        Gets the state variable named "name" as a reference to the underlying array
-#        '''
-#        # why doesn't this work?
-##        if name in self._var_array:
-##            return self._var_array[name]
-#        if isinstance(name,int):
-#            return self._S[name]
-#        if name=='t':
-#            self.__t[:] = self.clock._t
-#            return self.__t
-#        if name in self.staticvars:
-#            f=self.staticvars[name]
-#            return f(*[self.state_(var) for var in f.func_code.co_varnames])
-#        i=self.var_index[name]
-#        return self._S[i]
-#    state = state_
-
-#    def state(self,name):
-#        '''
-#        Gets the state variable named "name" as a safe qarray
-#        [Romain: I got rid of safeqarray here, which makes a huge speed difference!]
-#        '''
-#        return self.state_(name)
-#        #if name=='t':
-#        #    return safeqarray(self.state_('t'),units=second)
-#        #return safeqarray(self.state_(name),units=self.unit(name))
-    
     def __getitem__(self,i):
         return self[i:i+1]
     
-#    def __getattr__(self,name):
-#        if name=='var_index':
-#            # this seems mad - the reason is that getattr is only called if the thing hasn't
-#            # been found using the standard methods of finding attributes, which for var_index
-#            # should have worked, this is important because the next line looks for var_index
-#            # and if we haven't got a var_index we don't want to get stuck in an infinite
-#            # loop
-#            raise AttributeError  
-#        if not hasattr(self,'var_index'):
-#            # only provide lookup of variable names if we have some variable names, i.e.
-#            # if the var_index attribute exists
-#            raise AttributeError
-#        try:
-#            return self.state(name)
-#        except KeyError:
-#            if len(name) and name[-1]=='_':
-#                try:
-#                    origname = name[:-1]
-#                    return self.state_(origname)
-#                except KeyError:
-#                    raise AttributeError
-#            raise AttributeError
-#    
-#    def __setattr__(self,name,val):
-#        origname = name
-#        if len(name) and name[-1]=='_':
-#            origname = name[:-1]
-#        if not hasattr(self,'var_index') or (name not in self.var_index and origname not in self.var_index):
-#            object.__setattr__(self,name,val)
-#            if not hasattr(self,'_setattrcount'):
-#                object.__setattr__(self,'_setattrcount',0)
-#            object.__setattr__(self,'_setattrcount',self._setattrcount+1)
-#        else:
-#            if name in self.var_index:
-#                self.state(name)[:]=val
-#            else:
-#                self.state_(origname)[:]=val
-
     def __getslice__(self,i,j):
         '''
         Creates subgroup (view).
@@ -592,11 +503,20 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         else:
             return 'Subgroup of '+str(len(self))+' neurons'
 
-    def set_var_by_array(self, var, arr, times=None, clock=None):
+    def __setattr__(self, name, val):
+        global timedarray
+        if timedarray is None:
+            import timedarray
+        if isinstance(val, timedarray.TimedArray):
+            self.set_var_by_array(name, val)
+        else:
+            Group.__setattr__(self, name, val)
+
+    def set_var_by_array(self, var, arr, times=None, clock=None, start=None, dt=None):
         # ugly hack, have to import this here because otherwise the order of imports
         # is messed up.
         import timedarray
-        timedarray.set_group_var_by_array(self, var, arr, times, clock)
+        timedarray.set_group_var_by_array(self, var, arr, times=times, clock=clock, start=start, dt=dt)
 
 class PoissonGroup(NeuronGroup):
     '''
