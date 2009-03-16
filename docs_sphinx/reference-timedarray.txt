@@ -1,0 +1,8 @@
+.. currentmodule:: brian
+
+Timed Arrays
+============
+
+.. autoclass:: TimedArray
+.. autoclass:: TimedArraySetter
+.. autofunction:: set_group_var_by_array

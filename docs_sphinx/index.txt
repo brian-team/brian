@@ -6,11 +6,6 @@ Welcome to Brian's documentation!
 .. moduleauthor:: Romain Brette
 .. moduleauthor:: Dan Goodman
 
-The manual for Brian is not yet entirely complete, we are working on filling in the gaps signposted 'TODO'.
-See also the automatically generated `API documentation <http://brian.di.ens.fr/docs/api/>`__ and
-the `reference sheet <http://brian.di.ens.fr//BrianReference.pdf>`__. You can also download a PDF
-version of the documentation `here <http://brian.di.ens.fr/docs/Brian.pdf>`__.
-
 .. toctree::
    :maxdepth: 2
    
@@ -24,6 +19,10 @@ version of the documentation `here <http://brian.di.ens.fr/docs/Brian.pdf>`__.
    reference
    typicaltasks
    experimental
+
+See also the automatically generated `API documentation <http://brian.di.ens.fr/docs/api/>`__ and
+the `reference sheet <http://brian.di.ens.fr//BrianReference.pdf>`__. You can download a PDF
+version of the documentation `here <http://brian.di.ens.fr/docs/Brian.pdf>`__.
 
 .. current removed because it's not written yet
    quickstart

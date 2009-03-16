@@ -19,6 +19,7 @@ For an overview of Brian, see the :ref:`user-manual` section.
     reference-network
     reference-monitors
     reference-plotting
+    reference-timedarray
     reference-analysis
     reference-progressreporting
     reference-magic
