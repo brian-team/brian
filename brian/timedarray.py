@@ -260,4 +260,4 @@ def set_group_var_by_array(group, var, arr, times=None, clock=None, start=None, 
     Creates a :class:`TimedArraySetter`, see that class for details.
     '''
     array_setter = TimedArraySetter(group, var, arr, times=times, clock=clock, start=start, dt=dt)
-    group.contained_objects.append(array_setter) 
+    group._owner.contained_objects.append(array_setter) 
