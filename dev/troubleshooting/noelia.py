@@ -1,29 +1,43 @@
-from brian import *
-from brian.compartments import *
-from brian.library.synapses import *
+from pylab import *
+from scipy import integrate
 
-Ces=200*pF
-Ced=200*pF
-taue=5*ms
-taui=10*ms
-Ee=0*mV
-Ei=-80*mV
-El=-70*mV
-gl=20*nS
-gld=20*nS
-Ra=1*Mohm
+# parameters
+area=0.0002
+Cm=(1)*area
+El=-63.8
+EK=-90
+ENa=55
+gl=(0.1025)*area
+g_na=(35)*area
+g_kd=(9)*area
+Iapp=0.001
 
-soma = MembraneEquation(C=Ces) +  Current('I=gl*(El-vm):amp')
-soma += alpha_conductance(input='ge' ,E=Ee,tau=taue)
-soma += alpha_conductance(input='gi' ,E=Ei,tau=taui)
 
-dend = MembraneEquation(C=Ced) +  Current('I=gld*(El-vm):amp')
-dend += alpha_conductance(input='ged' ,E=Ee,tau=taue,conductance_name='gee')
-dend += alpha_conductance(input='gid' ,E=Ei,tau=taui)
+def dV_dt(V, t=0):
 
-neuron_eqs=Compartments({'soma':soma,'dendrite':dend})
-neuron_eqs.connect('soma','dendrite',Ra)
+    alpham=0.1*(V[0]+35.)/(1.-exp(-(V[0]+35.)/10.))
+    betam=4.*exp(-(V[0]+60.)/18.)
+    alphah=0.07*exp(-(V[0]+58.)/20.)
+    betah=1./(1.+exp(-(V[0]+28.)/10.))
+    alphan=0.05*(V[0]+34)/(1.-exp(-(V[0]+34)/10))
+    betan=0.625*exp(-(V[0]+44)/80)
+    minf= alpham/(alpham+betam)
+    return array([(gl*(El-V[0])-g_na*(minf)**3*V[1]*(V[0]-ENa)-g_kd*(V
+[2]**4)*(V[0]-EK)+ Iapp)/Cm,
+                   5*(alphah*(1-V[1])-betah*V[1]),
+                   alphan*(1-V[2])-betan*V[2] ])
 
-neuron=NeuronGroup(2,model=neuron_eqs)
 
-connexion_EE=Connection(neuron,neuron,'gee_dendrite')
+V0=([-65, 0, 0])
+
+t = linspace(0, 100,  100000)
+
+print " running..."
+
+V, infodict = integrate.odeint(dV_dt, V0, t, full_output=True)
+
+infodict['message']
+
+plot(t, V[:,0], 'r-')
+
+show()
