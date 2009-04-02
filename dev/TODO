@@ -1,3 +1,11 @@
+* Some problem with adding equations together using the same equation more than
+  once, e.g. something like (not tested):
+    eqs_base = Equations('...')
+    eqs_additional_1 = Equations('...')
+    eqs_additional_2 = Equations('...')
+    eqs_1 = eqs_base+eqs_additional_1
+    eqs_2 = eqs_base+eqs_additional_2
+
 * Clean NeuronGroup init, in particular S0 is strangely handled; remove the
 init keyword? (in fact S0 is used mostly for unit checking)
 (* Neuron = NeuronGroup(1,..))
