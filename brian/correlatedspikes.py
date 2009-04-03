@@ -278,7 +278,10 @@ def mixture_process(nu,P,tauc,t):
         for i in xrange(P.shape[0]):
             m=nik[i,k]
             if m>0:
-                selection=sample(spikes,m)+qarray(exponential(tauc,m))*second
+                if tauc>0:
+                    selection=sample(spikes,m)+array(exponential(tauc,m))
+                else:
+                    selection=sample(spikes,m)
                 result.extend(zip([i]*m,selection))
     return result
 
