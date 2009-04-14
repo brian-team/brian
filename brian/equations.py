@@ -469,6 +469,7 @@ class Equations(object):
             expr=optimiser.freeze(self._string[name],all_variables,namespace)
             lines+=name+'__tmp[:]='+expr+'\n'
         lines+='P._S+=dt*P._dS\n'
+        #print lines
         return lines
         # Return a function f(P) or a namespace (exec code in namespace)
         # 1st option: include directly in neurongroup._state_updater (good?)        

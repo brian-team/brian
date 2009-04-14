@@ -104,15 +104,19 @@ class GPUNeuronGroup(NeuronGroup):
             object.__setattr__(self, name, val)
 
 if __name__=='__main__':
+
+    from brian.experimental.ccodegen import AutoCompiledNonlinearStateUpdater
     
     #duration = 10*second
     #N = 1000
     #domonitor = False
     
-    duration = 100*ms
-    N = 1000
+    duration = 1000*ms
+    N = 100000
     domonitor = False
     showfinal = False
+    method = 'python' # methods are 'c', 'python' and 'gpu'
+    
     if drv.get_version()==(2,0,0): # cuda version
         precision = 'float'
     elif drv.get_version()>(2,0,0):
@@ -126,11 +130,11 @@ if __name__=='__main__':
     eqs = Equations('''
     #dV/dt = -V*V/(10*ms) : 1
     #dV/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
-    dV/dt = W*W/(100*ms) : 1
-    dW/dt = -V/(100*ms) : 1
-    #dV/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
-    #dW/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
-    #dW2/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
+    #dV/dt = W*W/(100*ms) : 1
+    #dW/dt = -V/(100*ms) : 1
+    dV/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
+    dW/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
+    dW2/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
     #dV/dt = h/(10*ms) : 1
     #h = -V*V : 1
     ''')
@@ -150,12 +154,20 @@ if __name__=='__main__':
 #    dgi/dt = -gi/taui : volt
 #    ''')
     
-    G = GPUNeuronGroup(N, eqs, precision=precision)
-    
-    print 'GPU loop code:'
-    print G._state_updater.code_gpu
-    gf = G._state_updater.gpu_func
-    print '(lmem, smem, registers) = ', (gf.lmem, gf.smem, gf.registers)
+    if method=='gpu':
+        G = GPUNeuronGroup(N, eqs, precision=precision, maxblocksize=256)
+        
+        print 'GPU loop code:'
+        print G._state_updater.code_gpu
+        gf = G._state_updater.gpu_func
+        print '(lmem, smem, registers) = ', (gf.lmem, gf.smem, gf.registers)
+    elif method=='c':
+        G = NeuronGroup(N, eqs, compile=True, freeze=True)
+        su = AutoCompiledNonlinearStateUpdater(eqs, G.clock, freeze=True)
+        G._state_updater = su
+    elif method=='python':
+        #G = NeuronGroup(N, eqs, freeze=True)#, compile=True, freeze=True)
+        G = NeuronGroup(N, eqs, compile=True, freeze=True)
     
     G.V = 1
     
@@ -165,7 +177,7 @@ if __name__=='__main__':
     start = time.time()
     run(duration)
     autoinit.context.synchronize()
-    print 'GPU code:', (time.time()-start)*second
+    print method, 'code:', (time.time()-start)
     if domonitor: M_V = M[0]
 
     if domonitor:
