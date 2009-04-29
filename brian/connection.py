@@ -1905,7 +1905,7 @@ class DelayConnection(Connection):
             for i in xrange(self.W.shape[0]):
                 inds, data = getrow(i)
                 self.delayvec[i, inds] = delay
-        elif isinstance(delay, (tuple, list)) and len(delays)==2:
+        elif isinstance(delay, (tuple, list)) and len(delay)==2:
             delaymin, delaymax = delay
             for i in xrange(self.W.shape[0]):
                 inds, data = getrow(i)
