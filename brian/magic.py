@@ -337,7 +337,9 @@ class InstanceFollower(object):
             if cls in self.__instancesets__:
                 self.__instancesets__[cls].set_i_d(value,id)
     def get_i_d(self, value):
-        return self.__instancesets__[value.__class__].get_i_d(value)
+        for cls in value.__class__.__mro__:
+            if cls in self.__instancesets__:
+                return self.__instancesets__[cls].get_i_d(value)
     def get(self,cls,id=None):
         if not cls in self.__instancesets__: return []
         return self.__instancesets__[cls].get(id)  
