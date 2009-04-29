@@ -1,6 +1,6 @@
 '''
 An example of single-electrode current clamp recording
-with bridge compensation (using the electrophysiology library).
+with discontinuous current clamp (using the electrophysiology library).
 '''
 from brian import *
 from brian.library.electrophysiology import *
