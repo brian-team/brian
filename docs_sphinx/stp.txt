@@ -15,8 +15,8 @@ follows the following differential equations::
 where taud, tauf are time constants and U is a parameter in 0..1.
 Each a presynaptic spike triggers modifications of the variables::
 
-  u->u+U*(1-u)
   x->x*(1-u)
+  u->u+U*(1-u)
 
 Note that the update order is important. 
 Synaptic weights are modulated by the product u*x (in 0..1), which is taken
