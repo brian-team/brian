@@ -9,11 +9,11 @@ described by two variables x and u, which follows the following differential equ
   dx/dt=(1-x)/taud  (depression)
   du/dt=(U-u)/tauf  (facilitation)
 
-where taud, tauf are time constants and U is a parameter in 0..1. Each a presynaptic
+where taud, tauf are time constants and U is a parameter in 0..1. Each presynaptic
 spike triggers modifications of the variables::
 
-  u<-u+U*(1-u)
   x<-x*(1-u)
+  u<-u+U*(1-u)
 
 Synaptic weights are modulated by the product u*x (in 0..1) (before update).
 '''
