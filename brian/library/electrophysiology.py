@@ -91,7 +91,8 @@ def voltage_clamp(vm='vm',v_cmd='v_cmd',i_rec='i_rec',
 
 # TODO: Re, Ce as lists
 def current_clamp(vm='vm',i_inj='i_inj',v_rec='v_rec',i_cmd='i_cmd',
-                  Re=80*Mohm,Ce=4*pF,bridge=0*ohm,capa_comp=0*farad):
+                  Re=80*Mohm,Ce=4*pF,bridge=0*ohm,capa_comp=0*farad,
+                  v_uncomp=None):
     '''
     Continuous current-clamp amplifier + electrode.
     
@@ -103,13 +104,14 @@ def current_clamp(vm='vm',i_inj='i_inj',v_rec='v_rec',i_cmd='i_cmd',
     capa_comp = capacitance neutralization
     Re = electrode resistance
     Ce = electrode capacitance (input capacitance)
+    v_uncomp = uncompensated potential (raw measured potential)
     '''
     if capa_comp!=Ce:
         return Equations('''
         Vr=U-R*Ic    : volt
         I=(U-V)/Re : amp
         dU/dt=(Ic-I)/(Ce-CC) : volt
-        ''',Vr=v_rec,V=vm,I=i_inj,Ic=i_cmd,R=bridge,Ce=Ce,CC=capa_comp,U=None,Re=Re)
+        ''',Vr=v_rec,V=vm,I=i_inj,Ic=i_cmd,R=bridge,Ce=Ce,CC=capa_comp,U=v_uncomp,Re=Re)
     else:
         return Equations('''
         Vr=V+(Re-R)*I    : volt
