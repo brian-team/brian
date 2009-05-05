@@ -33,7 +33,14 @@ class ScheduledEventDelayConnection(DelayConnection):
                 ptr = self.scheduled_events_ptr[self.scheduled_events_index, :num_scheduled_events]
                 val = self.scheduled_events_val[self.scheduled_events_index, :num_scheduled_events]
                 sv = self.target._S[self.nstate]
-                sv[ptr] += val
+                #sv[ptr] += val
+                J = unique(ptr)
+                K = digitize(ptr, J)-1
+                b = bincount(K)
+                sv[J] += b*val
+                # with a bit of work, this can be made to work for any ufunc using
+                # the .reduceat method of ufuncs after sorting ptr, etc. Still doesn't work
+                # in the general case of any Python expression though.
                 self.num_scheduled_events[self.scheduled_events_index] = 0
             self.scheduled_events_index = (self.scheduled_events_index+1)%self._max_delay 
         self.contained_objects.append(process_scheduled_events)
@@ -126,7 +133,8 @@ G.V = 1
 run(1.2*ms)
 
 print 'H.spikemon.nspikes', H.spikemon.nspikes
-#print 'H.spikemon.spikes', H.spikemon.spikes
+print H.spikemon.spikes
+print asarray(C.delay)/ms
 
 subplot(221)
 raster_plot(G.spikemon)

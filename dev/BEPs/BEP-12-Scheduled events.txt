@@ -1,0 +1,138 @@
+BEP-12: Scheduled events
+
+Abstract:
+	Objects should be able to schedule simple future events
+	in large numbers. For example, heterogeneous axonal delays
+	could be implemented in this way by allowing a connection
+	to schedule 'add' events in the future. It could also be
+	used for combining STDP with heterogeneous delays, and
+	several other things. It can be done in particular cases
+	with pure Python, but there are probably significant speed
+	advantages to using C code here.
+
+Scheduled events
+================
+
+Consider the following scheme for a heterogeneous axonal delay
+connection. Each time a spike arrives at neuron i, the set of
+target neurons j with corresponding delays d_ij are found. For
+each target neuron the event V_j+=W_ij is scheduled at time
+t+d_ij. This mechanism can be made generally useful for other
+things by allowing more complicated events than just +=.
+
+The problem is speed and vectorisation. Computations that involve
+O(number of synaptic events) Python overheads are too slow.
+However, at least in specific cases it is possible to reduce the
+Python overheads to O(number of spikes) as in the case of
+connections at the moment.
+
+The trick is to use a dynamic cylindrical array implementing an event
+queue. Consider the event x+=y for some x, y. At each time t, there
+should be a linear array I of indices and then we simply evaluate
+the code X[I]+=Y[I] for X, Y the arrays where the x, y are found.
+In fact, this doesn't work exactly as stated if I has repeats (see
+the section below).
+
+The cylindrical array is a 2D array with two indices, a time index and
+an event number index. The time index is circular. Each time the
+event queue at a particular time is evaluted, the event queue at
+that time is emptied and can be reused later on (this is done by
+simply setting the number of events in that queue to zero, where
+the number of events is a circular array).
+
+Pushing events on to the queue also needs to be vectorised. This
+problem can also be solved using pure Python in a generic way,
+although a C version is likely much more efficient (see below).
+
+Issues
+------
+
+*How fast could the pure Python version be?* If the pure Python code
+was significantly slower and Brian came to rely on this scheduled
+event stuff it would necessitate a move to built distributions or
+requiring users to have a compiler. This may not be as bad as it
+sounds because a built distribution could be produced for Windows
+and maybe even Mac users, and for Linux most users will have a
+compiler installed on their system already.
+
+*Can it be made generic?* A difficulty is that it seems hard to
+make this scheme generic so that users can write their own events
+which would be necessary for STDP for example. The example of
+implementing x+=y below illustrates the difficulties. Generation
+of C code gives one approach, but ideally we don't want to rely
+on users having to have a C compiler on their system.
+
+Technical details and sample implementation
+-------------------------------------------
+
+To evaluate x+=y in a vectorised way, we would like to write
+X[I]+=Y[I], but unfortunately this doesn't work with numpy if
+there are repeats in I. There is a way around this::
+
+	J = unique(I)
+	K = digitize(I, J)-1
+	b = bincount(K)
+	X[J] += b*Y[J]
+
+Unfortunately, this is slower than it needs to be because
+unique(I) involves a sort operation and is therefore O(n log(n))
+rather than just O(n), for n=len(I). It is also not generic
+because it relies on the properties of addition (repeated
+addition -> multiplication). It could be made generic for any
+numpy ufunc by using the reduceat method of ufuncs however. The
+equivalent C code for the above is just::
+
+	for(int i=0; i<numevents; i++)
+		X[I[i]] += Y[I[i]];
+
+Another way of writing this that makes clear it can be made generic
+would be::
+
+	for(int i=0; i<numevents; i++)
+	{
+		double &x = X[I[i]];
+		double &y = Y[I[i]];
+		x += y; // this line can be user code
+	}
+
+Pushing events on to the queue is also a tricky problem in pure Python.
+Consider the case of pushing add events onto a queue when a spike
+is produced by a neuron. With C it is just::
+
+    for(int i=0; i<nspikes; i++)
+    {
+        int k = spikes(i);
+        for(int j=0; j<m; j++)
+        {
+            int queue_index = (current_time_index+(int)(delay(k, j)/dt))%max_delay;
+            int event_index = numevents(queue_index)++;
+            neuron_index(queue_index, event_index) = j;
+            weight_index_i(queue_index, event_index) = k;
+            weight_index_j(queue_index, event_index) = j;
+        }
+    }
+
+With pure Python it is::
+
+    for i in spikes:
+        dvecrow = delay[i, :]
+        int_delay = numpy.array(dvecrow/dt, dtype=int)
+        sort_indices = argsort(int_delay)
+        int_delay = int_delay[sort_indices]
+        queue_index = (current_time_index+int_delay)%max_delay
+        J = int_delay[1:]!=int_delay[:-1]
+        K = int_delay[1:]==int_delay[:-1]
+        A = hstack((0, cumsum(array(J, dtype=int))))
+        B = hstack((0, cumsum(array(K, dtype=int))))
+        BJ = hstack((0, B[J]))
+        event_index_offset = B-BJ[A]
+        event_index = event_index_offset+numevents[queue_index]
+        neuron_index[queue_index, event_index] = sort_indices
+        weight_index_i[queue_index, event_index] = i
+        weight_index_j[queue_index, event_index] = sort_indices
+        Jp = hstack((J, True))
+        added_events = event_index_offset[Jp]+1
+        numevents[queue_index[Jp]] += added_events
+
+Again, this involves a sort operation making it O(n log(n)) rather than
+O(n).
