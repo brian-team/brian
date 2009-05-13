@@ -553,10 +553,12 @@ class ISIHistogramMonitor(HistogramMonitorBase):
         SpikeMonitor.__init__(self, source,delay)
         self.bins = array(bins)
         self.reinit()
+        
     def reinit(self):
         super(ISIHistogramMonitor, self).reinit()
         self.count = zeros(len(self.bins))
         self.LS = 1000*second*ones(len(self.source))
+        
     def propagate(self, spikes):
         super(ISIHistogramMonitor, self).propagate(spikes)
         isi = self.source.clock.t-self.LS[spikes]
