@@ -882,6 +882,6 @@ def disjoint_dict_union(d1,d2):
     result.update(d1)
     for key,value in d2.iteritems(): # Bug here
         if (key in d1) and (d1[key]!=value):
-            raise AttributeError,"Incompatible dictionaries in disjoint union."
+            raise AttributeError,"Incompatible dictionaries in disjoint union, problem with key "+key
         result[key]=value
     return result
