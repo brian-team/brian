@@ -90,6 +90,17 @@ object::
 	legend()
 	show()  
 
+Recording only recent values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can use the :class:`RecentStateMonitor` object, e.g.::
+
+    G = NeuronGroup(1, 'dV/dt = xi/(10*ms)**0.5 : 1')
+    MR = RecentStateMonitor(G, 'V', duration=5*ms)
+    run(7*ms)
+    MR.plot()
+    show()
+
 Counting spikes
 ---------------
 To count the total number of spikes produced by a group, use a :class:`PopulationSpikeCounter` object::
