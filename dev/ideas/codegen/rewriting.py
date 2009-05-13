@@ -3,6 +3,8 @@ import sympy
 from brian.optimiser import *
 from brian.inspection import *
 
+__all__ = ['rewrite_to_c_expression', 'sympy_rewrite']
+
 pow = sympy.Function('pow')
 
 def rewrite_pow(e):
@@ -19,6 +21,13 @@ def make_sympy_expressions(eqs):
     for name in eqs._diffeq_names+eqs._eq_names:
         exprs[name] = symbolic_eval(eqs._string[name])
     return exprs
+
+def sympy_rewrite(s):
+    return str(symbolic_eval(s))
+
+def rewrite_to_c_expression(s):
+    e = symbolic_eval(s)
+    return str(rewrite_pow(e))
 
 def generate_c_expressions(eqs):
     exprs = make_sympy_expressions(eqs)

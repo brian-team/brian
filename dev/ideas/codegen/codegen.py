@@ -2,47 +2,138 @@ from brian import *
 import brian.optimiser as optimiser
 from string import Template
 import re
+from rewriting import *
 
-euler_scheme = [
-    (('foreachvar', 'all'),
-        '''
-        $vartype ${var}__tmp = $var_expr
-        '''),
-    (('foreachvar', 'all'),
-        '''
-        $var += ${var}__tmp
-        ''')
-    ]
-
-rk2_scheme = [
-    (('foreachvar', 'all'),
-        '''
-        $vartype ${var}__buf = $var_expr
-        $vartype ${var}__half = $var+dt*${var}__buf
-        '''),
-    (('foreachvar', 'all'),
-        '''
-        ${var}__buf = @substitute(var_expr, {var:var+'__buf'})
-        $var += dt*${var}__buf
-        ''')
-    ]
-
-exp_euler_scheme = [
-    (('foreachvar', 'all'),
-        '''
-        $vartype ${var}__B = @substitute(var_expr, {var:0})
-        $vartype ${var}__A = @substitute(var_expr, {var:1})-${var}__B
-        ${var}__B /= ${var}__A
-        '''),
-    (('foreachvar', 'all'),
-        '''
-        $var = ($var+${var}__B)*exp(${var}__A*dt)-${var}__B
-        ''')
-    ] 
+__all__ = ['CodeGenerator']
 
 class CodeGenerator(object):
+    '''
+    CodeGenerator base class for generating code in a variety of languages from mathematical expressions
+    
+    Base classes can define their own behaviour, but the following scheme is expected to be fairly
+    standard.
+    
+    The initialiser takes at least one argument ``sympy_rewrite``, which defaults to ``True``, which
+    specifies whether or not expressions should be simplified by passing them through sympy, so that
+    e.g. ``V/(10*0.1)`` gets simplified to ``V*1.0`` (but not to ``V`` for some reason).
+    
+    There are also the following methods::
+    
+    .. method:: generate(eqs, scheme)
+    
+        Returns code in the target language for the set of equations ``eqs`` according to the
+        integration scheme ``scheme``. The following schemes are included by default:
+        
+        * ``euler_scheme``
+        * ``rk2_scheme``
+        * ``exp_euler_scheme``
+    
+        This method may also call the :meth:`initialisation` and :meth:`finalisation` methods
+        for code to include at the start and end. By default, it will call the :meth:`scheme`
+        method to fill in the code in between.
+        
+    .. method:: initialisation(eqs)
+    
+        Returns initialisation code.
+        
+    .. method:: finalisation(eqs)
+    
+        Returns finalisation code.
+    
+    .. method:: scheme(eqs, scheme)
+    
+        Returns code for the given set of equations integrated according to the given scheme.
+        See below for an explanation of integration schemes. In the process of generating
+        code from the schemes, this method may call any of the following methods:
+        :meth:`single_statement` to convert a single statement into code;
+        :meth:`single_expr` to convert a single expression into code;
+        :meth:`substitute` to substitute different values for specific variable names in
+        given expressions; :meth:`vartype` to get the variable type specifier if necessary
+        for that language.
+    
+    .. method:: single_statement(expr)
+    
+        Convert the given statement into code. By default, this looks for statements of the
+        form ``A = B``, ``A += B``, etc. and applies the method :meth:`single_expr` to ``B``.
+        Classes deriving from the base class typically only need to write a :meth:`single_expr`
+        method and not a :meth:`single_statement` one.
+    
+    .. method:: single_expr(expr)
+    
+        Convert the given expression into code. For example, for Python you can do nothing, but
+        for C, for example the expression ``A**B`` should be converted to ``pow(A, B)``, and
+        this is done using sympy replacement. By default, this method will simplify the
+        expression using sympy if the code generator was initialised with ``sympy_rewrite=True``.
+        
+    .. method:: substitute(var_expr, substitutions)
+    
+        Makes the given substitutions into the expression. ``substitutions`` should be a
+        dictionary with keys the names of the variables to substitute, and values the
+        value to substitute for that expression. By default these values are passed to
+        the :meth:`single_substitute` method to check if there are any language specific
+        things that need to be done to it, for example something substituting ``1`` should
+        be replaced by ``ones(num_neurons)`` for Python which is vectorised. Typically
+        this method shouldn't need to be rewritten for derived classes, whereas
+        :meth:`single_substitute` might.
+    
+    .. method:: single_substitute(s)
+    
+        Replaces ``s``, a substitution value from :meth:`substitute`, with a language
+        specific version if necessary. Should return a string.
+    
+    **Schemes**
+
+    A scheme consists of a sequence of pairs ``(block_specifier, block_code)``. The
+    ``block_specifier`` is currently unused, the schemes available at the moment all use
+    ``('foreachvar', 'all')`` in this space - other specifiers are possible, e.g.
+    ``'all_nonzero'`` instead of ``'all'``. ``block_code`` is a multi-line template string
+    expressing that stage of the scheme (templating explained below). For each specifier,
+    code pair, a block of code is generated in that order - multiple pairs can be used for
+    separating stages in an integration scheme (i.e. do something for all variables, then
+    do something else for all variables, etc.).
+    
+    Templating has two features, the first is standard Python templating replacements, e.g.
+    the template string ``'${var}__buf'`` would be replaced by ``'x__buf'`` where the Python
+    variable ``var='x'``. The available variables are:
+    
+    ``var``
+        The current variable in the loop over each variable.
+    ``var_expr``
+        The right hand side of the differential equation, f(x) for the equation dx/dt=f(x).
+    ``vartype``
+        The data type (or ``''`` if none). Should be used at the start of the statement if
+        the statement is declaring a new variable.
+    
+    The other feature of templating is that expressions of the form ``'@func(args)'`` will
+    call the method ``func`` of the code generator with the given ``args`` and be replaced by
+    that expression. Typically, this is used for the :meth:`substitute` method.
+    
+    Example scheme::
+
+        rk2_scheme = [
+            (('foreachvar', 'all'),
+                """
+                $vartype ${var}__buf = $var_expr
+                $vartype ${var}__half = $var+dt*${var}__buf
+                """),
+            (('foreachvar', 'all'),
+                """
+                ${var}__buf = @substitute(var_expr, {var:var+'__buf'})
+                $var += dt*${var}__buf
+                """)
+            ]
+    '''
+    def __init__(self, sympy_rewrite=True):
+        self.sympy_rewrite = sympy_rewrite
+    def single_statement(self, expr):
+        m = re.search(r'[^><=]=', expr)
+        if m:
+            return expr[:m.end()]+' '+self.single_expr(expr[m.end():])
+        return expr       
     def single_expr(self, expr):
-        return expr
+        if self.sympy_rewrite:
+            return sympy_rewrite(expr.strip())
+        return expr.strip()
     def vartype(self):
         return ''
     def initialisation(self, eqs):
@@ -90,7 +181,7 @@ class CodeGenerator(object):
                                          'var':var,
                                          'var_expr':var_expr}
                         t = Template(line)
-                        code += self.single_expr(t.substitute(**substitutions))+'\n'
+                        code += self.single_statement(t.substitute(**substitutions))+'\n'
         return code
     def single_substitute(self, s):
         return str(s)
@@ -98,88 +189,3 @@ class CodeGenerator(object):
         for var, replace_var in substitutions.iteritems():
             var_expr = re.sub(r'\b'+var+r'\b', self.single_substitute(replace_var), var_expr)
         return var_expr
-
-class PythonCodeGenerator(CodeGenerator):
-    def initialisation(self, eqs):
-        return ', '.join(eqs._diffeq_names) + ' = P._S\n'
-    def single_expr(self, expr):
-        return expr.strip()
-    def single_substitute(self, s):
-        if s==0:
-            return 'zeros(num_neurons)'
-        if s==1:
-            return 'ones(num_neurons)'
-
-class CCodeGenerator(CodeGenerator):
-    def __init__(self, dtype='double'):
-        self._dtype = dtype
-    def vartype(self):
-        return self._dtype
-    def initialisation(self, eqs):
-        vartype = self.vartype()
-        code = ''
-        for j, name in enumerate(eqs._diffeq_names):
-            code += vartype+' *' + name + '__Sbase = S+'+str(j)+'*num_neurons;\n'
-        return code
-    def generate(self, eqs, scheme):
-        vartype = self.vartype()
-        code = self.initialisation(eqs)
-        code += 'for(int i=0;i<n;i++){\n'
-        for j, name in enumerate(eqs._diffeq_names):
-            code += '    '+vartype+' &'+name+' = *'+name+'__Sbase++;\n'
-        for line in self.scheme(eqs, scheme).split('\n'):
-            line = line.strip()
-            if line:
-                code += '    '+line+'\n'
-        code += '}\n'
-        code += self.finalisation(eqs)
-        return code            
-
-class GPUCodeGenerator(CCodeGenerator):
-    def initialisation(self, eqs):
-        vartype = self.vartype()
-        code = '__global__ void stateupdate(int num_neurons, '+vartype+' t, '+vartype+' *S)\n'
-        code += '{\n'
-        code += '    int i = blockIdx.x * blockDim.x + threadIdx.x;\n'
-        code += '    if(i>=num_neurons) return;\n'
-        for j, name in enumerate(eqs._diffeq_names):
-            code += '    '+vartype+' &' + name + ' = S[i+'+str(j)+'*num_neurons];\n'
-        return code
-    def finalisation(self, eqs):
-        return '}\n'
-    def generate(self, eqs, scheme):
-        vartype = self.vartype()
-        code = self.initialisation(eqs)
-        for j, name in enumerate(eqs._diffeq_names):
-            code += '    '+vartype+' &'+name+' = *'+name+'__Sbase++;\n'
-        for line in self.scheme(eqs, scheme).split('\n'):
-            line = line.strip()
-            if line:
-                code += '    '+line+'\n'
-        code += self.finalisation(eqs)
-        return code            
-
-if __name__=='__main__':
-    import pprint
-    eqs = Equations('''
-    dV/dt = -W*V/(10*second) : volt 
-    dW/dt = -V/(1*second) : volt
-    ''')
-    scheme = exp_euler_scheme
-    print 'Equations'
-    print '========='
-    print eqs
-    print 'Scheme'
-    print '======'
-    for block_specifier, block_code in scheme:
-        print block_specifier
-        print block_code
-    print 'Python code'
-    print '==========='
-    print PythonCodeGenerator().generate(eqs, scheme)
-    print 'C code'
-    print '======'
-    print CCodeGenerator().generate(eqs, scheme)
-    print 'GPU code'
-    print '======'
-    print GPUCodeGenerator().generate(eqs, scheme)
