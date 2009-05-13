@@ -94,7 +94,8 @@ class STDP(NetworkOperation):
         delay_post: postsynaptic delay (backward propagating spike)
         '''
         if isinstance(C,DelayConnection):
-            raise AttributeError,"STDP does not handle heterogeneous connections yet."
+            #raise AttributeError,"STDP does not handle heterogeneous connections yet."
+            warnings.warn("STDP with heterogeneous delays is experimental!")
         NetworkOperation.__init__(self,lambda:None,clock=clock)
         # Merge multi-line statements
         #eqs=re.sub('\\\s*?\n',' ',eqs)
