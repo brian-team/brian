@@ -4,7 +4,7 @@ Spike-timing-dependent plasticity
 # See BEP-2-STDP
 from inspection import *
 from equations import *
-from monitor import SpikeMonitor
+from monitor import SpikeMonitor, RecentStateMonitor
 from network import NetworkOperation
 from neurongroup import NeuronGroup
 from stateupdater import get_linear_equations,LinearStateUpdater
@@ -14,6 +14,7 @@ from stdunits import ms
 from connection import DelayConnection
 import re
 from utils.documentation import flattened_docstring
+import warnings
 
 __all__=['STDP','ExponentialSTDP']
 
@@ -39,6 +40,36 @@ class STDPUpdater(SpikeMonitor):
     def propagate(self,spikes):
         self._namespace['spikes']=spikes
         self._namespace['w']=self.C.W
+        exec self._code in self._namespace
+
+class DelaySTDPUpdater(SpikeMonitor):
+    '''
+    Updates STDP variables at spike times for DelayConnection
+    '''
+    def __init__(self, source, C, vars, var_monitors, code, namespace, delay=0*ms):
+        '''
+        source = source group
+        C = connection
+        vars = variable names
+        M = matrix of the linear differential system
+        code = code to execute for every spike
+        namespace = namespace for the code
+        delay = maximum transmission delay 
+        '''
+        super(STDPUpdater,self).__init__(source,record=False,delay=delay)
+        self._code = code # update code
+        self._namespace = namespace # code namespace
+        self._orignamespace = copy(namespace)
+        self.C = C
+        self.vars = var
+        self.var_monitors = var_monitors
+        
+    def propagate(self,spikes):
+        self._namespace['spikes']=spikes
+        self._namespace['w']=self.C.W
+        # TODO: replace variables with delayed versions
+        for var in self.vars:
+            pass
         exec self._code in self._namespace
 
 class STDP(NetworkOperation):
@@ -181,29 +212,46 @@ class STDP(NetworkOperation):
         
         # Report
 #        print pre_namespace
-#        print pre
+        print pre
 #        print
 #        print post_namespace
-#        print post
+        print post
 #        print
 #        print M_pre
 #        print M_post
         
         # Delays
-        connection_delay=C.delay*C.source.clock.dt
-        if (delay_pre is None) and (delay_post is None): # same delays as the Connnection C
-            delay_pre=connection_delay
-            delay_post=0*ms
-        elif delay_pre is None:
-            delay_pre=connection_delay-delay_post
-            if delay_pre<0*ms: raise AttributeError,"Postsynaptic delay is too large"
-        elif delay_post is None:
-            delay_post=connection_delay-delay_pre
-            if delay_post<0*ms: raise AttributeError,"Postsynaptic delay is too large"
-        
-        # create forward and backward Connection objects or SpikeMonitor objects
-        pre_updater=STDPUpdater(C.source,C,vars=vars_pre,code=pre_code,namespace=pre_namespace,delay=delay_pre)
-        post_updater=STDPUpdater(C.target,C,vars=vars_post,code=post_code,namespace=post_namespace,delay=delay_post)
+        if isinstance(C, DelayConnection):
+            if delay_pre is not None or delay_post is not None:
+                raise ValueError("Must use delay_pre=delay_post=None for the moment.")
+            max_delay = C._max_delay*C.target.clock.dt
+            delay_pre = max_delay
+            delay_post = max_delay
+            # Ensure that the source and target neuron spikes are kept for at least the
+            # DelayConnection's maximum delay
+            C.source.set_max_delay(max_delay)
+            C.target.set_max_delay(max_delay)
+            G_pre_monitors = {} # these get values put in them later
+            G_post_monitors = {}
+            # create forward and backward Connection objects or SpikeMonitor objects
+            pre_updater = DelaySTDPUpdater(C.source, C, vars=vars_pre, var_monitors=G_pre_monitors,
+                                           code=pre_code, namespace=pre_namespace, delay=delay_pre)
+            post_updater = DelaySTDPUpdater(C.target, C, vars=vars_post, var_monitors=G_post_monitors,
+                                            code=post_code, namespace=post_namespace, delay=delay_post)
+        else:
+            connection_delay=C.delay*C.source.clock.dt
+            if (delay_pre is None) and (delay_post is None): # same delays as the Connnection C
+                delay_pre=connection_delay
+                delay_post=0*ms
+            elif delay_pre is None:
+                delay_pre=connection_delay-delay_post
+                if delay_pre<0*ms: raise AttributeError,"Postsynaptic delay is too large"
+            elif delay_post is None:
+                delay_post=connection_delay-delay_pre
+                if delay_post<0*ms: raise AttributeError,"Postsynaptic delay is too large"
+            # create forward and backward Connection objects or SpikeMonitor objects
+            pre_updater=STDPUpdater(C.source,C,vars=vars_pre,code=pre_code,namespace=pre_namespace,delay=delay_pre)
+            post_updater=STDPUpdater(C.target,C,vars=vars_post,code=post_code,namespace=post_namespace,delay=delay_post)
         
         # Neuron groups
         G_pre=NeuronGroup(len(C.source),model=LinearStateUpdater(M_pre,clock=self.clock))
@@ -212,15 +260,27 @@ class STDP(NetworkOperation):
         G_post._S[:]=0
         
         # Put variables in namespaces
-        for i,var in enumerate(vars_pre):
-            pre_updater._namespace[var]=G_pre._S[i]
-            post_updater._namespace[var]=G_pre._S[i]
+        vars_pre_ind = {}
+        for i, var in enumerate(vars_pre):
+            vars_pre_ind[var] = i
+            pre_updater._namespace[var] = G_pre._S[i]
+            post_updater._namespace[var] = G_pre._S[i]
 
-        for i,var in enumerate(vars_post):
-            pre_updater._namespace[var]=G_post._S[i]
-            post_updater._namespace[var]=G_post._S[i]
+        vars_post_ind = {}
+        for i, var in enumerate(vars_post):
+            vars_post_ind[var] = i
+            pre_updater._namespace[var] = G_post._S[i]
+            post_updater._namespace[var] = G_post._S[i]
+
+        if isinstance(C, DelayConnection):
+            self.G_pre_monitors = G_pre_monitors
+            self.G_post_monitors = G_post_monitors
+            self.G_pre_monitors.update(((var, RecentStateMonitor(G_pre, vars_pre_ind[var], duration=C._max_delay*C.target.clock.dt, clock=G_pre.clock)) for var in vars_pre))
+            self.G_post_monitors.update(((var, RecentStateMonitor(G_post, vars_post_ind[var], duration=C._max_delay*C.target.clock.dt, clock=G_post.clock)) for var in vars_post))
+            self.contained_objects += self.G_pre_monitors.values()
+            self.contained_objects += self.G_post_monitors.values()
         
-        self.contained_objects=[pre_updater,post_updater,G_pre,G_post]
+        self.contained_objects += [pre_updater, post_updater, G_pre, G_post]
     
     def __call__(self):
         pass
