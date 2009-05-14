@@ -17,8 +17,8 @@ C = DelayConnection(G, H, weight=1, max_delay=max_delay, structure='dense')
 C.delay[:, 0] = linspace(0*second, max_delay, N)
 Cd = Connection(Gd, Hd, weight=1, structure='dense')
 
-stdp = ExponentialSTDP(C, 10*ms, 10*ms, 1.0, -1.0, wmax=2.)
 stdpd = ExponentialSTDP(Cd, 10*ms, 10*ms, 1.0, -1.0, wmax=2.)
+stdp = ExponentialSTDP(C, 10*ms, 10*ms, 1.0, -1.0, wmax=2.)
 
 subplot(243)
 plot(Cd.W[:,0])
