@@ -134,6 +134,6 @@ if __name__=='__main__':
     M = StateMonitor(G, 'V', record=True)
     run(7*ms)
     M.plot()
-    plot(MR.times, MR.values[:,0]+0.1)
+    plot(MR.times, MR[0]+0.1)
     MR.plot()
     show()
