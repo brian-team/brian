@@ -507,6 +507,9 @@ class ConnectionMatrix(object):
     ``get_rows(rows)``
         Returns a list of rows, should be implemented without Python
         function calls for efficiency if possible.
+    ``get_cols(cols)``
+        Returns a list of cols, should be implemented without Python
+        function calls for efficiency if possible.
     ``insert(i,j,x)``, ``remove(i,j)``
         For sparse connection matrices which support it, insert a new
         entry or remove an existing one.
@@ -541,6 +544,9 @@ class ConnectionMatrix(object):
     
     def get_rows(self, rows):
         return [self.get_row(i) for i in rows]
+
+    def get_cols(self, cols):
+        return [self.get_col(i) for i in cols]
     
     def insert(self, i, j, x):
         return NotImplemented
@@ -631,6 +637,9 @@ class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
     
     def get_rows(self, rows):
         return [self.rows[i] for i in rows]
+
+    def get_cols(self, cols):
+        return [self.cols[i] for i in cols]
     
     def get_row(self, i):
         return self.rows[i]
@@ -841,6 +850,12 @@ class SparseConnectionMatrix(ConnectionMatrix):
             return SparseConnectionVector(self.shape[0], self.coli[j], self.alldata[self.coldataindices[j]])
         else:
             raise TypeError('No column access.')
+
+    def get_cols(self, cols):
+        if self.column_access:
+            return [SparseConnectionVector(self.shape[0], self.coli[j], self.alldata[self.coldataindices[j]]) for j in cols]
+        else:
+            raise TypeError('No column access.')
     
     def set_row(self, i, val):
         if isinstance(val, SparseConnectionVector):
@@ -1048,6 +1063,9 @@ class DynamicConnectionMatrix(ConnectionMatrix):
     
     def get_col(self, j):
         return SparseConnectionVector(self.shape[0], self.coli[j], self.alldata[self.coldataind[j]])
+
+    def get_cols(self, cols):
+        return [SparseConnectionVector(self.shape[0], self.coli[j], self.alldata[self.coldataind[j]]) for j in cols]
     
     def set_row(self, i, val):
         if isinstance(val, SparseConnectionVector):
