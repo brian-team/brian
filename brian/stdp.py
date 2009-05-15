@@ -17,7 +17,7 @@ from utils.documentation import flattened_docstring
 from copy import copy
 import warnings
 from itertools import izip
-from numpy import arange
+from numpy import arange, floor
 
 __all__=['STDP','ExponentialSTDP']
 
@@ -173,11 +173,13 @@ class STDP(NetworkOperation):
                 outcode_delayed += 'max_delay = varmon0.num_duration\n'
                 outcode_delayed += 'dvecrows = delayconn.delayvec.get_rows(spikes)\n'
                 outcode_delayed += 'for dvecrow, i in izip(dvecrows, spikes):\n'
-                # note this only works for structure='dense'
-                # TODO: these delays are meaningless... fix
+                # TODO: this only works for structure='dense'
+                # TODO: need to be careful about which delayed value to take, the ones below might be slightly
+                # wrong by 1 index or so - why cur_delay_ind-1 for example? I think because cur_delay_ind always
+                # points to where the next values will be recorded, which at this point they won't yet have been
                 delay_expr = re.sub(r'\bd\b', 'dvecrow', delay_expr)
                 delay_expr = re.sub(r'\bmax_delay\b', str(float(max_delay)), delay_expr)
-                outcode_delayed += '    inds = (cur_delay_ind+array(invtargetdt*('+delay_expr+'), dtype=int))%max_delay\n'
+                outcode_delayed += '    inds = (cur_delay_ind-1+array(floor(invtargetdt*('+delay_expr+')), dtype=int))%max_delay\n'
                 for var in other_vars:
                     outcode_delayed += '    '+var+'__delayed = var_monitors["'+var+'"]._values[inds, jinds]\n'
                 for line in incode_lines:
@@ -192,33 +194,42 @@ class STDP(NetworkOperation):
                         outcode_immediate += '    '+line+'\n'
                 outcode_delayed = re.sub(r'\bw\b', wreplacement, outcode_delayed)
                 outcode_delayed += '\n    %(w)s = clip(%(w)s, 0, %(max)f)' % {'max':wmax, 'w':wreplacement}
-                print 'Delayed:'
-                print outcode_delayed
-                print 'Immediate:'
-                print outcode_immediate
+#                print 'Delayed:'
+#                print outcode_delayed
+#                print 'Immediate:'
+#                print outcode_immediate
                 return (outcode_immediate, outcode_delayed)
-            print 'PRE'
+#            print 'PRE'
             pre_immediate, pre_delayed = gencode(pre, vars_pre, vars_post, 'w[i,:]', len(C.target), '-max_delay+d')
-            print 'POST'
-            post_immediate, post_delayed = gencode(post, vars_post, vars_pre, 'w[:,i]', len(C.source), '-d')
+#            print 'POST'
+#            post_immediate, post_delayed = gencode(post, vars_post, vars_pre, 'w[:,i]', len(C.source), '-d')
             pre_namespace['array'] = array
             pre_namespace['arange'] = arange
             pre_namespace['izip'] = izip
             pre_namespace['delayconn'] = C
             pre_namespace['var_monitors'] = G_post_monitors
             pre_namespace['clip'] = clip
-            post_namespace['array'] = array
-            post_namespace['arange'] = arange
-            post_namespace['izip'] = izip
-            post_namespace['delayconn'] = C
-            post_namespace['var_monitors'] = G_pre_monitors
+            pre_namespace['floor'] = floor
+#            post_namespace['array'] = array
+#            post_namespace['arange'] = arange
+#            post_namespace['izip'] = izip
+#            post_namespace['delayconn'] = C
+#            post_namespace['var_monitors'] = G_pre_monitors
             post_namespace['clip'] = clip
             pre_code_immediate = compile(pre_immediate, "Presynaptic code immediate", "exec")
 #            post_code_immediate = compile(post_immediate, "Postsynaptic code immediate", "exec")
             pre_code_delayed = compile(pre_delayed, "Presynaptic code delayed", "exec")
 #            post_code_delayed = compile(post_delayed, "Postsynaptic code delayed", "exec")
-            post_code = compile(post_immediate+post_delayed, "Postsynaptic code", "exec")
-            #exit()
+#            post_code = compile(post_immediate+post_delayed, "Postsynaptic code", "exec")
+
+            post = re.compile('^',re.M).sub('    ', post)
+            post = 'for i in spikes:\n'+post
+            # Post code
+            for var in vars_post: # postsynaptic variables (vectorisation)
+                post = re.sub(r'\b'+var+r'\b', var+'[i]',post)
+            post = re.sub(r'\bw\b','w[:,i]', post) # synaptic weight
+            post += '\n    w[:,i]=clip(w[:,i],0,%(max)f)' % {'max':wmax}
+            post_code = compile(post,"Postsynaptic code","exec")
         else:
             # Indent and loop
             pre=re.compile('^',re.M).sub('    ',pre)
