@@ -11,7 +11,7 @@ from stateupdater import get_linear_equations,LinearStateUpdater
 from scipy.linalg import expm
 from scipy import dot,eye,zeros,array,clip,exp,Inf
 from stdunits import ms
-from connection import DelayConnection
+from connection import DelayConnection, DenseConstructionMatrix
 import re
 from utils.documentation import flattened_docstring
 from copy import copy
@@ -101,6 +101,8 @@ class STDP(NetworkOperation):
         if isinstance(C,DelayConnection):
             #raise AttributeError,"STDP does not handle heterogeneous connections yet."
             warnings.warn("STDP with heterogeneous delays is experimental!")
+            if not isinstance(C.W, DenseConstructionMatrix):
+                raise TypeError('STDP only works with dense DelayConnection objects at the moment.')
         NetworkOperation.__init__(self,lambda:None,clock=clock)
         # Merge multi-line statements
         #eqs=re.sub('\\\s*?\n',' ',eqs)
@@ -162,7 +164,7 @@ class STDP(NetworkOperation):
             G_pre_monitors = {} # these get values put in them later
             G_post_monitors = {}
             max_delay = C._max_delay*C.target.clock.dt
-            def gencode(incode, vars, other_vars, wreplacement, varlen, delay_expr):
+            def gencode(incode, vars, other_vars, wreplacement, varlen, delay_expr, dvec_get):
                 incode_lines = [line.strip() for line in incode.split('\n')]
                 outcode_immediate = 'for i in spikes:\n'
                 # delayed variables
@@ -171,12 +173,9 @@ class STDP(NetworkOperation):
                 outcode_delayed += 'cur_delay_ind = varmon0.current_time_index\n'
                 outcode_delayed += 'invtargetdt = 1.0/varmon0.clock._dt\n'
                 outcode_delayed += 'max_delay = varmon0.num_duration\n'
-                outcode_delayed += 'dvecrows = delayconn.delayvec.get_rows(spikes)\n'
+                outcode_delayed += 'dvecrows = delayconn.delayvec.'+dvec_get+'(spikes)\n'
                 outcode_delayed += 'for dvecrow, i in izip(dvecrows, spikes):\n'
                 # TODO: this only works for structure='dense'
-                # TODO: need to be careful about which delayed value to take, the ones below might be slightly
-                # wrong by 1 index or so - why cur_delay_ind-1 for example? I think because cur_delay_ind always
-                # points to where the next values will be recorded, which at this point they won't yet have been
                 delay_expr = re.sub(r'\bd\b', 'dvecrow', delay_expr)
                 delay_expr = re.sub(r'\bmax_delay\b', str(float(max_delay)), delay_expr)
                 outcode_delayed += '    inds = (cur_delay_ind-1+array(floor(invtargetdt*('+delay_expr+')), dtype=int))%max_delay\n'
@@ -200,9 +199,9 @@ class STDP(NetworkOperation):
 #                print outcode_immediate
                 return (outcode_immediate, outcode_delayed)
 #            print 'PRE'
-            pre_immediate, pre_delayed = gencode(pre, vars_pre, vars_post, 'w[i,:]', len(C.target), '-max_delay+d')
+            pre_immediate, pre_delayed = gencode(pre, vars_pre, vars_post, 'w[i,:]', len(C.target), '-max_delay+d', 'get_rows')
 #            print 'POST'
-#            post_immediate, post_delayed = gencode(post, vars_post, vars_pre, 'w[:,i]', len(C.source), '-d')
+            post_immediate, post_delayed = gencode(post, vars_post, vars_pre, 'w[:,i]', len(C.source), '-d', 'get_cols')
             pre_namespace['array'] = array
             pre_namespace['arange'] = arange
             pre_namespace['izip'] = izip
@@ -210,26 +209,19 @@ class STDP(NetworkOperation):
             pre_namespace['var_monitors'] = G_post_monitors
             pre_namespace['clip'] = clip
             pre_namespace['floor'] = floor
-#            post_namespace['array'] = array
-#            post_namespace['arange'] = arange
-#            post_namespace['izip'] = izip
-#            post_namespace['delayconn'] = C
-#            post_namespace['var_monitors'] = G_pre_monitors
+            post_namespace['array'] = array
+            post_namespace['arange'] = arange
+            post_namespace['izip'] = izip
+            post_namespace['delayconn'] = C
+            post_namespace['var_monitors'] = G_pre_monitors
             post_namespace['clip'] = clip
+            post_namespace['floor'] = floor
             pre_code_immediate = compile(pre_immediate, "Presynaptic code immediate", "exec")
-#            post_code_immediate = compile(post_immediate, "Postsynaptic code immediate", "exec")
+            post_code_immediate = compile(post_immediate, "Postsynaptic code immediate", "exec")
             pre_code_delayed = compile(pre_delayed, "Presynaptic code delayed", "exec")
-#            post_code_delayed = compile(post_delayed, "Postsynaptic code delayed", "exec")
-#            post_code = compile(post_immediate+post_delayed, "Postsynaptic code", "exec")
-
-            post = re.compile('^',re.M).sub('    ', post)
-            post = 'for i in spikes:\n'+post
-            # Post code
-            for var in vars_post: # postsynaptic variables (vectorisation)
-                post = re.sub(r'\b'+var+r'\b', var+'[i]',post)
-            post = re.sub(r'\bw\b','w[:,i]', post) # synaptic weight
-            post += '\n    w[:,i]=clip(w[:,i],0,%(max)f)' % {'max':wmax}
-            post_code = compile(post,"Postsynaptic code","exec")
+            post_code_delayed = compile(post_delayed, "Postsynaptic code delayed", "exec")
+#            print post_immediate+post_delayed
+            post_code = compile(post_immediate+post_delayed, "Postsynaptic code", "exec")
         else:
             # Indent and loop
             pre=re.compile('^',re.M).sub('    ',pre)

@@ -18,7 +18,8 @@ Hd = NeuronGroup(1, 'V:1', reset=0, threshold=3*N, clock=clk)
 CH = Connection(Hi, H, 'V', weight=3*N+1)
 CHd = Connection(Hi, Hd, 'V', weight=3*N+1)
 C = DelayConnection(G, H, weight=1, max_delay=max_delay, structure='dense')
-C.delay[:, 0] = arange(N)*max_delay/N
+for i in arange(N):
+    C.delay[i,0] = i*max_delay/N
 Cd = Connection(Gd, Hd, weight=1, structure='dense')
 
 stdpd = ExponentialSTDP(Cd, stdp_tau, stdp_tau, dA, -dA, wmax=2.)
