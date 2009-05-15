@@ -877,18 +877,18 @@ class StateMonitor(NetworkOperation,Monitor):
             recind = self.get_record_indices()
             for j, i in enumerate(recind):
                 if cmap is None:
-                    pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
+                    pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']')
                 else:
-                    pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']',
+                    pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']',
                                color=cmap(float(j)/(len(recind)-1)))
         elif isinstance(indices, int):
-            pylab.plot(self.times, self[indices], label=self.varname+'['+str(indices)+']')
+            pylab.plot(self.times, self[indices], label=str(self.varname)+'['+str(indices)+']')
         else:
             for j, i in enumerate(indices):
                 if cmap is None:
-                    pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']')
+                    pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']')
                 else:
-                    pylab.plot(self.times, self[i], label=self.varname+'['+str(i)+']',
+                    pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']',
                                color=cmap(float(j)/(len(indices)-1)))
 
 class RecentStateMonitor(StateMonitor):

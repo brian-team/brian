@@ -214,9 +214,10 @@ class STDP(NetworkOperation):
             post_namespace['var_monitors'] = G_pre_monitors
             post_namespace['clip'] = clip
             pre_code_immediate = compile(pre_immediate, "Presynaptic code immediate", "exec")
-            post_code_immediate = compile(post_immediate, "Postsynaptic code immediate", "exec")
+#            post_code_immediate = compile(post_immediate, "Postsynaptic code immediate", "exec")
             pre_code_delayed = compile(pre_delayed, "Presynaptic code delayed", "exec")
-            post_code_delayed = compile(post_delayed, "Postsynaptic code delayed", "exec")
+#            post_code_delayed = compile(post_delayed, "Postsynaptic code delayed", "exec")
+            post_code = compile(post_immediate+post_delayed, "Postsynaptic code", "exec")
             #exit()
         else:
             # Indent and loop
@@ -269,15 +270,20 @@ class STDP(NetworkOperation):
             # create forward and backward Connection objects or SpikeMonitor objects
             pre_updater_immediate = STDPUpdater(C.source, C, vars=vars_pre,
                                            code=pre_code_immediate, namespace=pre_namespace, delay=0*ms)
-            post_updater_immediate = STDPUpdater(C.target, C, vars=vars_post,
-                                            code=post_code_immediate, namespace=post_namespace, delay=0*ms)
             pre_updater_delayed = STDPUpdater(C.source, C, vars=vars_pre,
                                            code=pre_code_delayed, namespace=pre_namespace, delay=max_delay)
-            post_updater_delayed = STDPUpdater(C.target, C, vars=vars_post,
-                                            code=post_code_delayed, namespace=post_namespace, delay=0*ms)
-            updaters = [pre_updater_immediate, post_updater_immediate]
+            post_updater = STDPUpdater(C.target, C, vars=vars_post,
+                                       code=post_code, namespace=post_namespace, delay=0*ms)
+            updaters = [pre_updater_immediate, pre_updater_delayed, post_updater]
             self.contained_objects += [pre_updater_immediate, pre_updater_delayed,
-                                       post_updater_immediate, post_updater_delayed]
+                                       post_updater]
+#            post_updater_immediate = STDPUpdater(C.target, C, vars=vars_post,
+#                                            code=post_code_immediate, namespace=post_namespace, delay=0*ms)
+#            post_updater_delayed = STDPUpdater(C.target, C, vars=vars_post,
+#                                            code=post_code_delayed, namespace=post_namespace, delay=0*ms)
+#            updaters = [pre_updater_immediate, post_updater_immediate]
+#            self.contained_objects += [pre_updater_immediate, pre_updater_delayed,
+#                                       post_updater_immediate, post_updater_delayed]
         else:
             connection_delay=C.delay*C.source.clock.dt
             if (delay_pre is None) and (delay_post is None): # same delays as the Connnection C
@@ -317,8 +323,8 @@ class STDP(NetworkOperation):
         if isinstance(C, DelayConnection):
             self.G_pre_monitors = G_pre_monitors
             self.G_post_monitors = G_post_monitors
-            self.G_pre_monitors.update(((var, RecentStateMonitor(G_pre, vars_pre_ind[var], duration=C._max_delay*C.target.clock.dt, clock=G_pre.clock)) for var in vars_pre))
-            self.G_post_monitors.update(((var, RecentStateMonitor(G_post, vars_post_ind[var], duration=C._max_delay*C.target.clock.dt, clock=G_post.clock)) for var in vars_post))
+            self.G_pre_monitors.update(((var, RecentStateMonitor(G_pre, vars_pre_ind[var], duration=(C._max_delay+1)*C.target.clock.dt, clock=G_pre.clock)) for var in vars_pre))
+            self.G_post_monitors.update(((var, RecentStateMonitor(G_post, vars_post_ind[var], duration=(C._max_delay+1)*C.target.clock.dt, clock=G_post.clock)) for var in vars_post))
             self.contained_objects += self.G_pre_monitors.values()
             self.contained_objects += self.G_post_monitors.values()
         
