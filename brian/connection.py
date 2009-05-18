@@ -354,8 +354,11 @@ class SparseConnectionVector(ConnectionVector, numpy.ndarray):
     template = '''
 def __add__(self, other):
     if isinstance(other, SparseConnectionVector):
-        if other.ind is not self.ind:
-            raise TypeError('__add__(SparseConnectionVector, SparseConnectionVector) only defined if indices are the same')
+        # Note that removing this check is potentially dangerous, but only in weird circumstances would it cause
+        # any problems, and leaving it in causes problems for STDP with DelayConnection (because the indices are
+        # not the same, but should be presumed to be equal).
+        #if other.ind is not self.ind:
+        #    raise TypeError('__add__(SparseConnectionVector, SparseConnectionVector) only defined if indices are the same')
         return SparseConnectionVector(self.n, self.ind, numpy.ndarray.__add__(asarray(self), asarray(other)))
     if isinstance(other, numpy.ndarray):
         return SparseConnectionVector(self.n, self.ind, numpy.ndarray.__add__(asarray(self), other[self.ind]))

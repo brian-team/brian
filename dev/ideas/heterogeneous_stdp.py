@@ -7,7 +7,7 @@ repeats = 20
 N = 10
 max_delay = 2.5*ms
 offset = 1.25*ms
-dA = 0.5
+dA = 0.1
 stdp_tau = 10*ms
 
 G = SpikeGeneratorGroup(N, [(i, t*second) for i in xrange(N) for t in arange(repeats)*interval], clock=clk)
@@ -17,7 +17,7 @@ H = NeuronGroup(1, 'V:1', reset=0, threshold=3*N, clock=clk)
 Hd = NeuronGroup(1, 'V:1', reset=0, threshold=3*N, clock=clk)
 CH = Connection(Hi, H, 'V', weight=3*N+1)
 CHd = Connection(Hi, Hd, 'V', weight=3*N+1)
-C = DelayConnection(G, H, weight=1, max_delay=max_delay, structure='dense')
+C = DelayConnection(G, H, weight=1, max_delay=max_delay, structure='sparse')
 for i in arange(N):
     C.delay[i,0] = i*max_delay/N
 Cd = Connection(Gd, Hd, weight=1, structure='dense')

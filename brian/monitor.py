@@ -42,8 +42,8 @@ __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMo
            'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor']
 
 from units import *
-from connection import Connection
-from numpy import array, zeros, histogram, copy, ones, exp, arange, convolve, argsort
+from connection import Connection, SparseConnectionVector
+from numpy import array, zeros, histogram, copy, ones, exp, arange, convolve, argsort, floor, asarray
 from itertools import repeat, izip
 from clock import guess_clock
 from network import NetworkOperation
@@ -941,6 +941,8 @@ class RecentStateMonitor(StateMonitor):
         self._times = zeros(self.num_duration)
         self.current_time_index = 0
         self.has_looped = False
+        self._invtargetdt = 1.0/self.clock._dt
+        self._arange = arange(len(P))
         
     def __call__(self):
         V = self.P.state_(self.varname)
@@ -976,7 +978,25 @@ class RecentStateMonitor(StateMonitor):
                     raise
         elif self.record is True:
             return QuantityArray(self._values[timeinds, i])*self.unit
-        
+    
+    def get_past_values(self, times):
+        # probably mostly to be used internally by Brian itself
+        time_indices = (self.current_time_index-1-array(self._invtargetdt*asarray(times), dtype=int))%self.num_duration
+        if isinstance(times, SparseConnectionVector):
+            return SparseConnectionVector(times.n, times.ind, self._values[time_indices, times.ind])
+        else:
+            return self._values[time_indices, self._arange]
+    
+    def get_past_values_sequence(self, times_seq):
+        # probably mostly to be used internally by Brian itself
+        if len(times_seq)==0:
+            return []
+        time_indices_seq = [(self.current_time_index-1-array(self._invtargetdt*asarray(times), dtype=int))%self.num_duration for times in times_seq]
+        if isinstance(times_seq[0], SparseConnectionVector):
+            return [SparseConnectionVector(times.n, times.ind, self._values[time_indices, times.ind]) for times, time_indices in izip(times_seq, time_indices_seq)]
+        else:
+            return [self._values[time_indices, self._arange] for times, time_indices in izip(times_seq, time_indices_seq)]
+    
     def getvalues(self):
         return safeqarray(self._values, units=self.unit)
 
