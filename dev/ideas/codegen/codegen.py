@@ -131,8 +131,12 @@ class CodeGenerator(object):
             return expr[:m.end()]+' '+self.single_expr(expr[m.end():])
         return expr       
     def single_expr(self, expr):
-        if self.sympy_rewrite:
-            return sympy_rewrite(expr.strip())
+        if self.sympy_rewrite is not False:
+            if self.sympy_rewrite is True:
+                rewriters = [floatify_numbers]
+            else:
+                rewriters = self.sympy_rewrite
+            return sympy_rewrite(expr.strip(), rewriters)
         return expr.strip()
     def vartype(self):
         return ''

@@ -3,7 +3,7 @@ import sympy
 from brian.optimiser import *
 from brian.inspection import *
 
-__all__ = ['rewrite_to_c_expression', 'sympy_rewrite']
+__all__ = ['rewrite_to_c_expression', 'sympy_rewrite', 'rewrite_pow', 'floatify_numbers']
 
 pow = sympy.Function('pow')
 
@@ -16,17 +16,37 @@ def rewrite_pow(e):
     else:
         return e.new(*newargs)
 
+def floatify_numbers(e):
+    if not len(e.args):
+        if e.is_number:
+            return sympy.Number(float(e))
+        return e
+    newargs = tuple(floatify_numbers(a) for a in e.args)
+    return e.new(*newargs)
+
 def make_sympy_expressions(eqs):
     exprs = {}
     for name in eqs._diffeq_names+eqs._eq_names:
         exprs[name] = symbolic_eval(eqs._string[name])
     return exprs
 
-def sympy_rewrite(s):
-    return str(symbolic_eval(s))
+def sympy_rewrite(s, rewriters=None):
+    if rewriters is not None:
+        if callable(rewriters):
+            rewriters = [rewriters]
+    else:
+        rewriters = []
+    expr = symbolic_eval(s)
+    if not hasattr(expr, 'args'):
+        return str(expr)
+    for f in rewriters:
+        expr = f(expr)
+    return str(expr)
 
 def rewrite_to_c_expression(s):
     e = symbolic_eval(s)
+    if not hasattr(e, 'args'):
+        return str(e)
     return str(rewrite_pow(e))
 
 def generate_c_expressions(eqs):
@@ -38,6 +58,12 @@ def generate_c_expressions(eqs):
 
 if __name__=='__main__':
     if True:
+        s = '-V**2/(10*0.001)'
+        print sympy_rewrite(s)
+        print sympy_rewrite(s, rewrite_pow)
+        print sympy_rewrite(s, floatify_numbers)
+        print sympy_rewrite(s, [rewrite_pow, floatify_numbers])
+    if False:
         area=20000*umetre**2
         Cm=(1*ufarad*cm**-2)*area
         gl=(5e-5*siemens*cm**-2)*area

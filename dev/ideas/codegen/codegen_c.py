@@ -4,8 +4,8 @@ from rewriting import *
 __all__ = ['CCodeGenerator']
 
 class CCodeGenerator(CodeGenerator):
-    def __init__(self, dtype='double'):
-        CodeGenerator.__init__(self, sympy_rewrite=True)
+    def __init__(self, dtype='double', sympy_rewrite=True):
+        CodeGenerator.__init__(self, sympy_rewrite=sympy_rewrite)
         self._dtype = dtype
     def vartype(self):
         return self._dtype
@@ -31,4 +31,4 @@ class CCodeGenerator(CodeGenerator):
     def single_statement(self, expr):
         return CodeGenerator.single_statement(self, expr)+';'
     def single_expr(self, expr):
-        return rewrite_to_c_expression(expr.strip()).strip()       
+        return rewrite_to_c_expression(CodeGenerator.single_expr(self, expr.strip())).strip()       
