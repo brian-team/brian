@@ -7,7 +7,7 @@ euler_scheme = [
         '''),
     (('foreachvar', 'all'),
         '''
-        $var += ${var}__tmp
+        $var += ${var}__tmp*dt
         ''')
     ]
 

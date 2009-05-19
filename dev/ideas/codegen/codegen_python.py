@@ -4,7 +4,7 @@ __all__ = ['PythonCodeGenerator']
 
 class PythonCodeGenerator(CodeGenerator):
     def initialisation(self, eqs):
-        return ', '.join(eqs._diffeq_names) + ' = P._S\n'
+        return ', '.join(eqs._diffeq_names) + ' = _S\n'
     def single_statement(self, expr):
         return CodeGenerator.single_statement(self, expr).strip()
     def single_expr(self, expr):

@@ -13,12 +13,12 @@ class CCodeGenerator(CodeGenerator):
         vartype = self.vartype()
         code = ''
         for j, name in enumerate(eqs._diffeq_names):
-            code += vartype+' *' + name + '__Sbase = S+'+str(j)+'*num_neurons;\n'
+            code += vartype+' *' + name + '__Sbase = _S+'+str(j)+'*num_neurons;\n'
         return code
     def generate(self, eqs, scheme):
         vartype = self.vartype()
         code = self.initialisation(eqs)
-        code += 'for(int i=0;i<n;i++){\n'
+        code += 'for(int _i=0;_i<num_neurons;_i++){\n'
         for j, name in enumerate(eqs._diffeq_names):
             code += '    '+vartype+' &'+name+' = *'+name+'__Sbase++;\n'
         for line in self.scheme(eqs, scheme).split('\n'):
