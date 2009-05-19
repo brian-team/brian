@@ -66,6 +66,7 @@ from utils.approximatecomparisons import is_within_absolute_tolerance
 from globalprefs import *
 from base import *
 from stdunits import ms
+from operator import isSequenceType
 # We should do this:
 # from network import network_operation
 # but instead we do it at the bottom of the module (see comments there for explanation)
@@ -461,6 +462,11 @@ class SparseMatrix(scipy.sparse.lil_matrix):
             row, data = izip(*items)
             self.rows[i] = list(row)
             self.data[i] = list(data)
+        elif isinstance(i, slice) and isinstance(j, int) and isSequenceType(W):
+            # This corrects a bug in scipy sparse matrix as of version 0.7.0, but
+            # it is not efficient!
+            for w, k in izip(W, xrange(*i.indices(self.shape[1]))):
+                scipy.sparse.lil_matrix.__setitem__(self, (k,j), w)
         else:
             scipy.sparse.lil_matrix.__setitem__(self,index,W)
 

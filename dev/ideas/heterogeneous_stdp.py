@@ -3,15 +3,15 @@ from time import time
 
 clk = Clock()
 
-do_monitor = False
-do_normal_connection = False
+do_monitor = True
+do_normal_connection = True
 do_delayed_connection = True
-use_stdp = False
-structure = 'dense'
+use_stdp = True
+structure = 'sparse'
 
 interval = 50*ms
 repeats = 20
-N = 1000
+N = 10
 M = 1
 max_delay = 2.5*ms
 offset = 1.25*ms
@@ -31,9 +31,11 @@ if do_normal_connection:
     CHd = IdentityConnection(Hi, Hd, 'V', weight=3*N+1)
 if do_delayed_connection:
     C = DelayConnection(G, H, weight=1, max_delay=max_delay, structure=structure)
-    for i in arange(N):
-        for j in xrange(M):
-            C.delay[i,j] = i*max_delay/N
+    for j in xrange(M):
+        C.delay[:,j] = arange(N)*max_delay/N
+#    for i in arange(N):
+#        for j in xrange(M):
+#            C.delay[i,j] = i*max_delay/N
 if do_normal_connection:
     Cd = Connection(Gd, Hd, weight=1, structure=structure)
 
