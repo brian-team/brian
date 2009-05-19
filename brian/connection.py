@@ -465,7 +465,7 @@ class SparseMatrix(scipy.sparse.lil_matrix):
         elif isinstance(i, slice) and isinstance(j, int) and isSequenceType(W):
             # This corrects a bug in scipy sparse matrix as of version 0.7.0, but
             # it is not efficient!
-            for w, k in izip(W, xrange(*i.indices(self.shape[1]))):
+            for w, k in izip(W, xrange(*i.indices(self.shape[0]))):
                 scipy.sparse.lil_matrix.__setitem__(self, (k,j), w)
         else:
             scipy.sparse.lil_matrix.__setitem__(self,index,W)
