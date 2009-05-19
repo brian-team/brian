@@ -1,0 +1,21 @@
+Connecting var x in G to var y in H via function f optionally:
+
+H.y = linked_var(G, 'x', func=f, when='start', clock=H.clock)
+
+erbspace(low, high, n, earQ=..., minBW=...)
+
+
+sound = Sound('filename.wav')
+defaultclock.dt = 1/sound.samplerate 
+#fb = GammatoneFilterbank(erbspace(20*Hz, 20*kHz, 3000), samplerate=sound.samplerate, order=4, ...)
+#G = FilterbankGroup(fb,sound)
+G = GammatoneGroup(erbspace(20*Hz, 20*kHz, 3000), sound=sound, order=4, ...)
+
+neurons=NeuronGroup(len(G),model='''dv/dt=(I-v)/(5*ms):1
+                                    I:1''',...)
+neurons.I=linked_var(G,'output')
+
+run(1*second)
+G.load_sound(sound2)
+# G.input=sound2 ?
+run(1*second)
