@@ -133,7 +133,8 @@ class CodeGenerator(object):
     def single_expr(self, expr):
         if self.sympy_rewrite is not False:
             if self.sympy_rewrite is True:
-                rewriters = [floatify_numbers]
+                #rewriters = [floatify_numbers]
+                rewriters = []
             else:
                 rewriters = self.sympy_rewrite
             return sympy_rewrite(expr.strip(), rewriters)
@@ -160,6 +161,7 @@ class CodeGenerator(object):
                 if line:
                     origline = line
                     for var in eqs._diffeq_names:
+                        vars = eqs._diffeq_names
                         line = origline
                         namespace = eqs._namespace[var]
                         var_expr = optimiser.freeze(eqs._string[var], all_variables, namespace)
@@ -180,6 +182,7 @@ class CodeGenerator(object):
                             if numopen!=0:
                                 raise SyntaxError('Parentheses unmatching.')
                             args = line[start+1:i+1]
+                            #print args
                             exec 'line = line[:start]+self.'+args+'+line[i+1:]'
                         substitutions = {'vartype':vartype,
                                          'var':var,

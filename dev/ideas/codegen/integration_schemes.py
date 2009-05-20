@@ -15,11 +15,12 @@ rk2_scheme = [
     (('foreachvar', 'all'),
         '''
         $vartype ${var}__buf = $var_expr
-        $vartype ${var}__half = $var+dt*${var}__buf
+        $vartype ${var}__half = (.5*dt)*${var}__buf
+        ${var}__half += $var
         '''),
     (('foreachvar', 'all'),
         '''
-        ${var}__buf = @substitute(var_expr, {var:var+'__buf'})
+        ${var}__buf = @substitute(var_expr, dict((var, var+'__half') for var in vars))
         $var += dt*${var}__buf
         ''')
     ]
@@ -28,11 +29,15 @@ exp_euler_scheme = [
     (('foreachvar', 'all'),
         '''
         $vartype ${var}__B = @substitute(var_expr, {var:0})
-        $vartype ${var}__A = @substitute(var_expr, {var:1})-${var}__B
+        $vartype ${var}__A = @substitute(var_expr, {var:1})
+        ${var}__A -= ${var}__B
         ${var}__B /= ${var}__A
+        ${var}__A *= dt
         '''),
     (('foreachvar', 'all'),
         '''
-        $var = ($var+${var}__B)*exp(${var}__A*dt)-${var}__B
+        $var += ${var}__B
+        $var *= exp(${var}__A)
+        $var -= ${var}__B
         ''')
     ] 
