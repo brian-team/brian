@@ -18,6 +18,8 @@ from copy import copy
 import warnings
 from itertools import izip
 from numpy import arange, floor
+from clock import Clock
+from units import second
 
 __all__=['STDP','ExponentialSTDP']
 
@@ -363,8 +365,8 @@ class STDP(NetworkOperation):
             self.contained_objects += [pre_updater, post_updater]
         
         # Neuron groups
-        G_pre=NeuronGroup(len(C.source),model=LinearStateUpdater(M_pre,clock=self.clock))
-        G_post=NeuronGroup(len(C.target),model=LinearStateUpdater(M_post,clock=self.clock))
+        G_pre=NeuronGroup(len(C.source),model=LinearStateUpdater(M_pre,clock=self.clock),clock=self.clock)
+        G_post=NeuronGroup(len(C.target),model=LinearStateUpdater(M_post,clock=self.clock),clock=self.clock)
         G_pre._S[:]=0
         G_post._S[:]=0
         
@@ -425,7 +427,7 @@ class ExponentialSTDP(STDP):
     See documentation for :class:`STDP` for more details.
     '''
     def __init__(self,C,taup,taum,Ap,Am,interactions='all',wmax=None,
-                 update='additive',delay_pre=None,delay_post=None):
+                 update='additive',delay_pre=None,delay_post=None,clock=None):
         if wmax is None:
             raise AttributeError,"You must specify the maximum synaptic weight"
 
@@ -477,7 +479,7 @@ class ExponentialSTDP(STDP):
                     raise AttributeError,"There is no potentiation in STDP rule"
         else:
             raise AttributeError,"Unknown update type "+update
-        STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,wmax=wmax,delay_pre=delay_pre,delay_post=delay_post)
+        STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,wmax=wmax,delay_pre=delay_pre,delay_post=delay_post,clock=clock)
 
 # TODO: insert it in Equations, as a method returning an Equations object
 # for a given list of variables, with dependent variables
