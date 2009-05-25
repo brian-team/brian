@@ -38,7 +38,8 @@ Clocks for the simulator
 
 __docformat__ = "restructuredtext en"
 
-__all__ = ['Clock','defaultclock','guess_clock','define_default_clock','reinit_default_clock','get_default_clock']
+__all__ = ['Clock','defaultclock','guess_clock','define_default_clock','reinit_default_clock','get_default_clock',
+           'EventClock']
 
 from inspect import stack
 from units import *
@@ -341,6 +342,17 @@ define_global_preference('defaultclock','Clock(dt=0.1*msecond)',
                                   The default clock to use if none is provided or defined
                                   in any enclosing scope.
                                   """)
+
+class EventClock(Clock):
+    '''
+    Clock that is used for events.
+    
+    Works the same as a :class:`Clock` except that it is never guessed as a clock to
+    use by :class:`NeuronGroup`, etc. These clocks can be used to make multiple clock
+    simulations without causing ambiguous clock problems.
+    '''
+    @staticmethod
+    def _track_instances(): return False    
 
 def define_default_clock(**kwds):
     '''
