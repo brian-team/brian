@@ -1,6 +1,8 @@
 New features since 1.1.2
 ------------------------
 
+* Added EventClock
+* Added RecentStateMonitor
 * Added colormap option to StateMonitor.plot
 * Added timed array module, see TimedArray class for details.
 * Added optional progress reporting to run()

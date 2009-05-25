@@ -39,6 +39,7 @@ The :class:`Clock` class
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: Clock
+.. autoclass:: EventClock
 
 .. index::
    single: clock; default clock
