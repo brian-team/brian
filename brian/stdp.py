@@ -154,9 +154,15 @@ class STDP(NetworkOperation):
             eqs_obj=eqs
         else:
             eqs_obj=Equations(eqs,level=level+1)
-        # handle multi-line pre, post equations
-        pre = flattened_docstring(pre)
-        post = flattened_docstring(post)
+        # handle multi-line pre, post equations and multi-statement equations separated by ;
+        if '\n' in pre:
+            pre = flattened_docstring(pre)
+        elif ';' in pre:
+            pre = '\n'.join([line.strip() for line in pre.split(';')])
+        if '\n' in post:
+            post = flattened_docstring(post)
+        elif ';' in post:
+            post = '\n'.join([line.strip() for line in post.split(';')])
         
         # Check units
         eqs_obj.compile_functions()
