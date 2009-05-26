@@ -1,0 +1,16 @@
+.. currentmodule:: brian
+
+Variable updating
+-----------------
+
+Timed Arrays
+============
+
+.. autoclass:: TimedArray
+.. autoclass:: TimedArraySetter
+.. autofunction:: set_group_var_by_array
+
+Linked variables
+================
+
+.. autofunction:: linked_var

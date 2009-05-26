@@ -901,13 +901,11 @@ class RecentStateMonitor(StateMonitor):
     isntead of ``False``, and there are some different or additional
     attributes:
     
-    ``values``, ``values_``,
-    ``times``, ``times_``
+    ``values``, ``values_``, ``times``, ``times_``
         These will now return at most the most recent values over an
         interval of maximum time ``duration``. These arrays are copies,
         so for faster access use ``unsorted_values``, etc.
-    ``unsorted_values``, ``unsorted_values_``,
-    ``unsorted_times``, ``unsorted_times_``
+    ``unsorted_values``, ``unsorted_values_``, ``unsorted_times``, ``unsorted_times_``
         The raw versions of the data, the associated times may not be
         in sorted order and if ``duration`` hasn't passed, not all the
         values will be meaningful.

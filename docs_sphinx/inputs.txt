@@ -120,6 +120,10 @@ to do this is to insert parameters in the equations::
 
 Here the value of the parameter I for each neuron is provided at initialisation time
 (evenly distributed between 0 mV and 20 mV).
+
+Time varying inputs
+^^^^^^^^^^^^^^^^^^^
+
 It is possible to change the value of I every timestep by using a user-defined operation (see next
 section). Alternatively, you can use a :class:`TimedArray` to specify the values the variable will
 have at each time interval, for example::
@@ -141,4 +145,18 @@ Here ``I`` will have value ``0*mV`` for t between 0 and ``10*ms`, ``0.2*mV`` bet
   group = NeuronGroup(1, model=eqs, reset=0*mV, threshold=15*mV)
 
 Note however that the more efficient exact linear differential equations solver won't be used in this
-case because ``I(t)`` could be any function, so the previous mechanism is often preferable.  
+case because ``I(t)`` could be any function, so the previous mechanism is often preferable.
+
+Linked variables
+^^^^^^^^^^^^^^^^
+
+Another option is to link the variable of one group to the variables of another group using
+:func:`linked_var`, for example::
+
+    G = NeuronGroup(...)
+    H = NeuronGroup(...)
+    G.V = linked_var(H, 'W')
+
+In this scenario, the variable V in group G will always be updated with
+the values from variable W in group H. The groups G and H must be the
+same size (although subgroups can be used if they are not the same size).

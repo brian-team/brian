@@ -36,7 +36,7 @@
 Neuron groups
 '''
 
-__all__=['NeuronGroup','PoissonGroup']
+__all__ = ['NeuronGroup', 'PoissonGroup', 'linked_var']
 
 from numpy import *
 from scipy import rand,linalg,random
@@ -65,6 +65,7 @@ from group import *
 from threshold import select_threshold
 from reset import select_reset
 timedarray = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
+network = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
 
 class TArray(numpy.ndarray):
     '''
@@ -77,6 +78,47 @@ class TArray(numpy.ndarray):
         # All numpy.ndarray subclasses need something like this, see
         # http://www.scipy.org/Subclasses
         return numpy.array(arr, copy=False).view(subtype)
+
+class LinkedVar(object):
+    def __init__(self, source, var=0, func=None, when='start', clock=None):
+        self.source = source
+        self.var = var
+        self.func = func
+        self.when = when
+        self.clock = clock
+
+def linked_var(source, var=0, func=None, when='start', clock=None):
+    """
+    Used for linking one :class:`NeuronGroup` variable to another.
+    
+    Sample usage::
+    
+        G = NeuronGroup(...)
+        H = NeuronGroup(...)
+        G.V = linked_var(H, 'W')
+
+    In this scenario, the variable V in group G will always be updated with
+    the values from variable W in group H. The groups G and H must be the
+    same size (although subgroups can be used if they are not the same size).
+    
+    Arguments:
+    
+    ``source``
+        The group from which values will be taken.
+    ``var``
+        The state variable of the source group to take values from.
+    ``func``
+        An additional function of one argument to pass the source variable
+        values through, e.g. ``func=lambda x:clip(x,0,Inf)`` to half rectify the
+        values.
+    ``when``
+        The time in the main Brian loop at which the copy operation is performed,
+        as explained in :class:`Network`.
+    ``clock``
+        The update clock for the copy operation, by default it will use the clock
+        of the target group.
+    """
+    return LinkedVar(source, var, func, when, clock)
 
 class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     """Group of neurons
@@ -509,8 +551,28 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             import timedarray
         if isinstance(val, timedarray.TimedArray):
             self.set_var_by_array(name, val)
+        elif isinstance(val, LinkedVar):
+            self.link_var(name, val.source, val.var, val.func, val.when, val.clock)
         else:
             Group.__setattr__(self, name, val)
+
+    def link_var(self, var, source, sourcevar, func=None, when='start', clock=None):
+        global network
+        if network is None:
+            import network
+        if clock is None:
+            clock = self.clock
+        selfarr = self.state_(var)
+        sourcearr = source.state_(sourcevar)
+        if func is None:
+            @network.network_operation(when=when, clock=clock)
+            def update_link_var():
+                selfarr[:] = sourcearr
+        else:
+            @network.network_operation(when=when, clock=clock)
+            def update_link_var():
+                selfarr[:] = func(sourcearr)
+        self.contained_objects.append(update_link_var)
 
     def set_var_by_array(self, var, arr, times=None, clock=None, start=None, dt=None):
         # ugly hack, have to import this here because otherwise the order of imports
