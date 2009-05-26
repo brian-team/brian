@@ -97,7 +97,7 @@ The equations are obtained in the same way as for one-dimensional models::
 and two state variables are defined: ``vm`` (membrane potential) and ``w`` (adaptation variable).
 The equivalent equations for Izhikevich model are::
 
-  dvm/dt=(0.04/ms/mV)*vm**2+(5/ms)*vm+140*mV/ms-w : volt/second
+  dvm/dt=(0.04/ms/mV)*vm**2+(5/ms)*vm+140*mV/ms-w : volt
   dw/dt=a*(b*vm-w)                            : volt/second
 
 and for Brette-Gerstner model::
