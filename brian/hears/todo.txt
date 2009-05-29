@@ -6,6 +6,5 @@ TODO for brian.hears
 * Gammachirp filter
 * Butterworth filterbank object directly (not via IIRFilterbank)
 * xGroup objects from xFilterbank objects
-* Resampling? Maybe not for v1.
 * Check syntax is what we want
 * Documentation

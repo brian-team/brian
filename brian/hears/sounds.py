@@ -8,6 +8,11 @@ try:
     have_pygame = True
 except ImportError:
     have_pygame = False
+try:
+    from scikits.samplerate import resample
+    have_scikits_samplerate = True
+except ImportError:
+    have_scikits_samplerate = False
 
 __all__ = ['Sound', 'play_stereo_sound',
            'whitenoise', 'tone', 'click', 'silent', 'sequence']
@@ -105,11 +110,11 @@ class Sound(numpy.ndarray):
         return Sound(x, rate=self.rate)
     
     @check_units(rate=Hz)
-    def resample(self, rate):
+    def resample(self, rate, resample_type='sinc_best'):
         '''
         Returns a resampled version of the sound.
         '''
-        rate, x = resample_sound(self, self.rate, rate)
+        rate, x = resample_sound(self, self.rate, rate, resample_type=resample_type)
         return Sound(x, rate=rate)
     
     def copy_from(self, other):
@@ -328,11 +333,10 @@ def make_click(duration, amplitude=1, sound_rate = 44100*Hz):
     return (sound_rate, sound_x)
 
 @check_units(oldrate=Hz, newrate=Hz)
-def resample_sound(x, oldrate, newrate):
-    duration = len(x)/oldrate
-    newsize = int(duration*newrate)
-    y = zeros(newsize)
-    y[:] = x[array(arange(len(y))*oldrate/newrate, dtype=int)]
+def resample_sound(x, oldrate, newrate, resample_type='sinc_best'):
+    if not have_scikits_samplerate:
+        raise ImportError('Need scikits.samplerate package for resampling')
+    y = array(resample(x, float(newrate/oldrate), resample_type), dtype=float64)
     return (newrate, y)
 
 @check_units(rate=Hz)
