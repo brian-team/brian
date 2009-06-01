@@ -171,19 +171,23 @@ class Sound(numpy.ndarray):
         ylabel('Frequency (Hz)')
         return (pxx, freqs, bins, im)
     
-    def atvolume(self, peakdb=None, rmsdb=None, normalise=True):
+    def intensity(self):
         '''
-        Returns sound in Pascals at various loudnesses (in dB SPL)
+        Returns intensity in dB SPL assuming array is in Pascals
         '''
-        if peakdb is None and rmsdb is None:
-            raise ArgumentError('Must specify peak or rms dB')
-        if rmsdb is not None:
-            raise ArgumentError('rms dB not supported yet.')
-        if peakdb is not None:
-            peakamp = 10.0**(peakdb/20.0)*28e-6
-            if normalise:
-                peakamp /= amax(abs(self))
-            return self*peakamp
+        return 20.0*log10(sqrt(mean(asarray(self)**2))/2e-5)
+    
+    def atintensity(self, db):
+        '''
+        Returns sound in Pascals at various intensities (in RMS dB SPL)
+        '''
+        return self.amplified(db-self.intensity())
+        
+    def amplified(self, db):
+        '''
+        Returns sound amplified by a given amount in dB pressure.
+        '''
+        return self*10.0**(db/20.0)
     
     def ramp(self, when='both', duration=10*ms, func=None, inplace=False):
         '''
@@ -390,8 +394,13 @@ sequence = Sound.sequence
 if __name__=='__main__':
 
     import time
-    x = tone(500*Hz, 1*second)
-    x.save('tone.wav', sampwidth=2)
+    x = tone(500*Hz, 1*second).atintensity(rmsdb=80.)
+    
+    print amax(x)
+    print 20*log10(sqrt(mean(x**2))/2e-5)
+    print x.intensity()
+    
+    #x.save('tone.wav', sampwidth=2)
     #x.play()
     #time.sleep(x.duration)
 
