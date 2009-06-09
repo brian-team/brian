@@ -1,3 +1,5 @@
+(* Modulation keyword with variables defined as functions)
+
 * Some problem with adding equations together using the same equation more than
   once, e.g. something like (not tested):
     eqs_base = Equations('...')
