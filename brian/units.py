@@ -857,6 +857,15 @@ class Quantity(numpy.float64):
         else:
             return NotImplemented
             #return super(Quantity,self).__rtruediv__(other)
+    def __mod__(self,other):
+        if isinstance(other,Quantity) or is_scalar_type(other):
+            dim = get_dimensions(other)
+            if dim==self.dim:
+                return Quantity.with_dimensions(float(self)%float(other),self.dim)
+            else: raise DimensionMismatchError("Addition",self.dim,dim)
+        else:
+            return NotImplemented
+            #return super(Quantity,self).__add__(other)    
     def __add__(self,other):
         if isinstance(other,Quantity) or is_scalar_type(other):
             dim = get_dimensions(other)
@@ -865,7 +874,7 @@ class Quantity(numpy.float64):
             else: raise DimensionMismatchError("Addition",self.dim,dim)
         else:
             return NotImplemented
-            #return super(Quantity,self).__add__(other)
+            #return super(Quantity,self).__add__(other)    
     def __radd__(self,other):
         return self.__add__(other)
     def __sub__(self,other):

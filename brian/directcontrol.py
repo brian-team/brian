@@ -435,15 +435,18 @@ class SpikeGeneratorGroup(NeuronGroup):
         thresh = SpikeGeneratorThreshold(N,spiketimes,period=period)
         self.period = period
         NeuronGroup.__init__(self,N,model=LazyStateUpdater(),threshold=thresh,clock=clock)
+        
     def reinit(self):
         super(SpikeGeneratorGroup,self).reinit()
         self._threshold.reinit()
+        
     def __repr__(self):
         return "SpikeGeneratorGroup"
 
 class SpikeGeneratorThreshold(Threshold):
     def __init__(self,N,spiketimes,period=None):
         self.set_spike_times(N,spiketimes,period=period)
+        
     def reinit(self):
         def makeiter(obj):
             if callable(obj): return iter(obj())
@@ -455,6 +458,7 @@ class SpikeGeneratorThreshold(Threshold):
             self.nextspiketime = None
             self.nextspikenumber = 0
         self.curperiod = -1
+        
     def set_spike_times(self,N,spiketimes,period=None):
         # N is the number of neurons, spiketimes is an iterable object of tuples (i,t) where
         # t is the spike time, and i is the neuron number. If spiketimes is a list or tuple,
@@ -465,6 +469,7 @@ class SpikeGeneratorThreshold(Threshold):
         self.N = N
         self.period = period
         self.reinit()
+        
     def __call__(self,P):
         firing = zeros(self.N)
         t = P.clock.t
