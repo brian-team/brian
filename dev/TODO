@@ -1,3 +1,10 @@
+* Check that StringReset and StringThreshold etc. work correctly with e.g. (v>1)&(w>1), see
+  bug found by Mark Orphanides 20 June 2009
+* Make sure that EmpiricalThreshold and others work correctly with state variables defined
+  by equations as well as those defined by differential equations and aliases, a lot of
+  them probably assume that it is an element of group._S (this is particularly tricky for
+  the C++ compiled versions).
+
 (* Modulation keyword with variables defined as functions)
 
 * Some problem with adding equations together using the same equation more than

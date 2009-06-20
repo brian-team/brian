@@ -266,7 +266,10 @@ def select_threshold(expr, eqs, level=0):
         return StringThreshold(expr, level=level+1)
     if B in eqs._diffeq_names:
         return VariableThreshold(B, A)
-    vars = get_identifiers(B)
+    try:
+        vars = get_identifiers(B)
+    except SyntaxError:
+        return StringThreshold(expr, level=level+1)
     all_vars = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
     for v in vars:
         if v not in ns or v in all_vars or callable(ns[v]):
