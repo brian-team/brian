@@ -49,6 +49,7 @@ from clock import guess_clock
 from network import NetworkOperation
 from quantityarray import *
 from stdunits import ms
+from collections import defaultdict
 import types
 from operator import isSequenceType
 try:
@@ -293,13 +294,17 @@ class SpikeMonitor(Connection,Monitor):
         numbers that have fired called each step, to define
         custom spike monitoring.
     
-    Has two attributes:
+    Has three attributes:
     
     ``nspikes``
         The number of recorded spikes
     ``spikes``
         A time ordered list of pairs ``(i,t)`` where neuron ``i`` fired
         at time ``t``.
+    ``spiketimes``
+        A dictionary with keys the indices of the neurons, and values an
+        array of the spike times of that neuron. For example,
+        ``t=M.spiketimes[3]`` gives the spike times for neuron 3.
 
     For ``M`` a :class:`SpikeMonitor`, you can also write:
     
@@ -324,6 +329,7 @@ class SpikeMonitor(Connection,Monitor):
         self.W=None # should we just remove this variable?
         source.set_max_delay(delay)
         self.delay=int(delay/source.clock.dt) # Synaptic delay in time bins
+        self._newspikes = True
         if function!=None:
             self.propagate=function
         
@@ -340,6 +346,8 @@ class SpikeMonitor(Connection,Monitor):
         Overload this function to store or process spikes.
         Default: counts the spikes (variable nspikes)
         '''
+        if len(spikes):
+            self._newspikes = True
         self.nspikes+=len(spikes)
         if self.record:
             self.spikes+=zip(spikes,repeat(self.source.clock.t))
@@ -356,6 +364,19 @@ class SpikeMonitor(Connection,Monitor):
     
     def __getitem__(self, i):
         return qarray([t for j,t in self.spikes if j==i])
+    
+    def getspiketimes(self):
+        if self._newspikes:
+            self._newspikes = False
+            self._spiketimes = {}
+            for i in xrange(len(self.source)):
+                self._spiketimes[i] = []
+            for i, t in self.spikes:
+                self._spiketimes[i].append(float(t))
+            for i in xrange(len(self.source)):
+                self._spiketimes[i] = array(self._spiketimes[i])
+        return self._spiketimes
+    spiketimes = property(fget=getspiketimes)
 
 class AutoCorrelogram(SpikeMonitor):
     '''
