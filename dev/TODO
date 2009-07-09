@@ -1,3 +1,4 @@
+* Better progress reporting: the estimated time should adapt, maybe use only the last few seconds rather the entire simulation.
 * Check that StringReset and StringThreshold etc. work correctly with e.g. (v>1)&(w>1), see
   bug found by Mark Orphanides 20 June 2009
 * Make sure that EmpiricalThreshold and others work correctly with state variables defined
