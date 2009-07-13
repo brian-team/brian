@@ -7,8 +7,9 @@ tau = 200*ms
 N = 3
 
 eqs = Equations('''
-dV/dt = (-V+I)/tau : 1
+dV/dt = (-V+I*Im)/tau : 1
 I : 1
+Im : 1
 ''')
 
 if use_gpu:
@@ -24,10 +25,15 @@ M = StateMonitor(G, 'V', record=True)
 
 G.V = 0
 G.I = 0
+G.Im = 1
 if use_gpu:
     G._S.sync_to_gpu()
 
-run(1*second)
+run(.5*second)
+G.Im = 2
+if use_gpu:
+    G.copyvar_cpu_to_gpu('Im')
+run(.5*second)
 
 M.plot()
 show()

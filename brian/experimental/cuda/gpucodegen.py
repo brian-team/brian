@@ -136,6 +136,18 @@ class GPUNeuronGroup(NeuronGroup):
         else:
             self._S = GPUBufferedArray(array(self._S, dtype=self.precision_dtype))
         self._gpuneurongroup_init_finished = True
+    
+    def copyvar_cpu_to_gpu(self, var):
+        i, j, k = (self.get_var_index(var)*len(self)*self.precision_nbytes,
+                   self.get_var_index(var)*len(self),
+                   (self.get_var_index(var)+1)*len(self))
+        pycuda.driver.memcpy_htod(self._state_updater._gpuoffset+i, self._state_updater._cpuflat[j:k])
+
+    def copyvar_gpu_to_cpu(self, var):
+        i, j, k = (self.get_var_index(var)*len(self)*self.precision_nbytes,
+                   self.get_var_index(var)*len(self),
+                   (self.get_var_index(var)+1)*len(self))
+        pycuda.driver.memcpy_dtoh(self._state_updater._cpuflat[j:k], self._state_updater._gpuoffset+i)
 
     def __setattr__(self, name, val):
         try:
