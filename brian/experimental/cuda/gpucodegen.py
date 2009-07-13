@@ -1,6 +1,7 @@
 from brian import *
 import brian.optimiser as optimiser
 from scipy import weave
+import pycuda
 import pycuda.autoinit as autoinit
 import pycuda.driver as drv
 from pycuda import gpuarray
@@ -48,20 +49,23 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
         self.gpu_func = self.gpu_mod.get_function("stateupdate")
         return clines
     
+    def _prepare(self, P):
+        blocksize = self.maxblocksize
+        if len(P)<blocksize:
+            blocksize = len(P)
+        if len(P)%blocksize==0:
+            gridsize = len(P)/blocksize
+        else:
+            gridsize = len(P)/blocksize+1
+        self._prepared = True
+        self.gpu_func.prepare((int32, self.precision_dtype, 'i'), (blocksize,1,1))
+        self._S_gpu_addr = P._S.gpu_pointer
+        self._gpu_N = int32(len(P))
+        self._gpu_grid = (gridsize,1)
+    
     def __call__(self, P):
         if not self._prepared:
-            blocksize = self.maxblocksize
-            if len(P)<blocksize:
-                blocksize = len(P)
-            if len(P)%blocksize==0:
-                gridsize = len(P)/blocksize
-            else:
-                gridsize = len(P)/blocksize+1
-            self._prepared = True
-            self.gpu_func.prepare((int32, self.precision_dtype, 'i'), (blocksize,1,1))
-            self._S_gpu_addr = P._S.gpu_pointer
-            self._gpu_N = int32(len(P))
-            self._gpu_grid = (gridsize,1)
+            self._prepare(P)
         P._S.sync_to_gpu()
         self.gpu_func.prepared_call(self._gpu_grid, self._gpu_N, self.precision_dtype(P.clock._t), self._S_gpu_addr)
         P._S.changed_gpu_data()
@@ -69,12 +73,39 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
             P._S.sync_to_cpu()
             P._S.changed_cpu_data()
 
+class UserControlledGPUNonlinearStateUpdater(GPUNonlinearStateUpdater):
+    def __init__(self, eqs, clock=None, freeze=False, precision='double', maxblocksize=512, gpu_to_cpu_vars=None, cpu_to_gpu_vars=None):
+        GPUNonlinearStateUpdater.__init__(self, eqs, clock=clock, freeze=freeze, precision=precision, maxblocksize=maxblocksize, forcesync=False)
+        self.gpu_to_cpu_vars = gpu_to_cpu_vars
+        self.cpu_to_gpu_vars = cpu_to_gpu_vars
+    def _prepare(self, P):
+        GPUNonlinearStateUpdater._prepare(self, P)
+        if isinstance(P._S._gpu_arr, pycuda.gpuarray.GPUArray):
+            self._gpuoffset = int(P._S._gpu_arr.gpudata)
+        elif isinstance(P._S._gpu_arr, pycuda.driver.DeviceAllocation):
+            self._gpuoffset = int(P._S._gpu_arr)
+        self._cpuflat = array(P._S, copy=False)
+        self._cpuflat.shape = self._cpuflat.size
+    def __call__(self, P):
+        if not self._prepared:
+            self._prepare(P)
+        # copy from CPU to GPU
+        for i, j, k in self.cpu_to_gpu_vars:
+            pycuda.driver.memcpy_htod(self._gpuoffset+i, self._cpuflat[j:k])
+        self.gpu_func.prepared_call(self._gpu_grid, self._gpu_N, self.precision_dtype(P.clock._t), self._S_gpu_addr)
+        # copy from GPU back to CPU
+        for i, j, k in self.gpu_to_cpu_vars:
+            pycuda.driver.memcpy_dtoh(self._cpuflat[j:k], self._gpuoffset+i)
+        P._S._cpu_data_changed = False # override any buffering
+        P._S._gpu_data_changed = False # override any buffering
+
 class GPUNeuronGroup(NeuronGroup):
     def __init__(self, N, model, threshold=None, reset=NoReset(),
                  init=None, refractory=0*msecond, level=0,
                  clock=None, order=1, implicit=False, unit_checking=True,
                  max_delay=0*msecond, compile=False, freeze=False, method=None,
-                 precision='double', maxblocksize=512, forcesync=False, pagelocked_mem=True):
+                 precision='double', maxblocksize=512, forcesync=False, pagelocked_mem=True,
+                 gpu_to_cpu_vars=None, cpu_to_gpu_vars=None):
         eqs = model
         eqs.prepare()
         NeuronGroup.__init__(self, N, eqs, threshold=threshold, reset=reset,
@@ -83,11 +114,23 @@ class GPUNeuronGroup(NeuronGroup):
         self.precision = precision
         if self.precision=='double':
             self.precision_dtype = float64
+            self.precision_nbytes = 8
         else:
             self.precision_dtype = float32
+            self.precision_nbytes = 4
         self.clock = guess_clock(clock)
-        self._state_updater = GPUNonlinearStateUpdater(eqs, clock=self.clock, precision=precision, maxblocksize=maxblocksize,
-                                                       forcesync=forcesync)
+        if gpu_to_cpu_vars is None and cpu_to_gpu_vars is None:
+            self._state_updater = GPUNonlinearStateUpdater(eqs, clock=self.clock, precision=precision, maxblocksize=maxblocksize,
+                                                           forcesync=forcesync)
+        else:
+            cpu_to_gpu_vars = [(self.get_var_index(var)*len(self)*self.precision_nbytes,
+                                self.get_var_index(var)*len(self),
+                                (self.get_var_index(var)+1)*len(self)) for var in cpu_to_gpu_vars]
+            gpu_to_cpu_vars = [(self.get_var_index(var)*len(self)*self.precision_nbytes,
+                                self.get_var_index(var)*len(self),
+                                (self.get_var_index(var)+1)*len(self)) for var in gpu_to_cpu_vars]
+            self._state_updater = UserControlledGPUNonlinearStateUpdater(eqs, clock=self.clock, precision=precision, maxblocksize=maxblocksize,
+                                                           gpu_to_cpu_vars=gpu_to_cpu_vars, cpu_to_gpu_vars=cpu_to_gpu_vars)
         if pagelocked_mem:
             self._S = GPUBufferedArray(drv.pagelocked_zeros(self._S.shape, dtype=self.precision_dtype))
         else:
