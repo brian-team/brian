@@ -84,6 +84,8 @@ def magic_state_updater(model,clock=None,order=1,implicit=False,compile=False,fr
     elif method=='RK':
         implicit=False
         order=2
+    elif method is None:
+        pass
     else:
         raise AttributeError,"Unknown integration method!"
     
