@@ -341,7 +341,9 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                 self._S[i,:]=self._S0[i]
                 
         # Reset and refractory period
-        if is_scalar_type(reset):
+        if is_scalar_type(reset) or reset.__class__ is Reset:
+            if reset.__class__ is Reset:
+                reset = reset.resetvalue
             # Check unit
             if self._S0!=None:
                 try:
