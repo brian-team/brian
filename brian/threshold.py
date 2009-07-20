@@ -56,6 +56,7 @@ from log import *
 import inspect
 from inspection import *
 import re
+import numpy
 
 def _define_and_test_interface(self):
     """
@@ -361,10 +362,19 @@ class StringThreshold(Threshold):
         self._namespace,unknowns=namespace(expr,level=level+1,return_unknowns=True)
         self._vars=unknowns
         self._code=compile(expr,"StringThreshold","eval")
+        class Replacer(object):
+            def __init__(self, func, n):
+                self.n = n
+                self.func = func
+            def __call__(self):
+                return self.func(self.n)
+        self._Replacer = Replacer
         
     def __call__(self,P):
         for var in self._vars:
             self._namespace[var]=P.state(var)
+        self._namespace['rand'] = self._Replacer(numpy.random.rand, len(P))
+        self._namespace['randn'] = self._Replacer(numpy.random.randn, len(P))
         return eval(self._code,self._namespace).nonzero()[0]
 
     def __repr__(self):
