@@ -571,7 +571,7 @@ class EmpiricalThreshold(Threshold):
         P is the neuron group.
         '''
         #spikes=where((P._S[0,:]>self.Vt) & ((P.LS<P.clock.t-self.refractory) | (P.LS==P.clock.t)))[0]
-        spikescond=P._S[self.state]>self.threshold
+        spikescond=P.state_(self.state)>self.threshold
         spikescond[P.LS[0:self.refractory]]=False
         return spikescond.nonzero()[0]
         #P.LS[spikes]=P.clock.t # Time of last spike (this line should be general)

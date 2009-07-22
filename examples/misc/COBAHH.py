@@ -70,7 +70,7 @@ if use_gpu:
 else:
     defaultclock.dt = 0.05*ms
     P=NeuronGroup(4000,model=eqs,
-                  threshold=EmpiricalThreshold(threshold=-20*mV,refractory=3*ms),
+                  threshold=EmpiricalThreshold(state='v',threshold=-20*mV,refractory=3*ms),
                   #freeze=True, compile=True)
                   implicit=True, freeze=True, compile=False)
 Pe=P.subgroup(3200)
