@@ -1,0 +1,35 @@
+BEP-13: The Brian console
+Abstract:
+    The Brian console allows access to objects from a running Brian script, such as
+    groups, connections and monitors. Two independent applications can be made:
+    1) a text console, possibly based on an existing interpreter (e.g. ipython);
+    2) a graphical interface, which would also allow online visualisation. The Brian
+    console could also be used to control the simulation.
+
+Communication with the Brian script
+===================================
+The communication server in the Brian script could be implemented simply as
+a network operation (called, say, every second), which would have access
+to a running Network object. The client would be an independent application, which
+would send Python commands and obtain information about objects in the Brian script,
+while the simulation is still running. Commands (start/stop/save/resume) could also
+be sent.
+
+Graphical interface
+===================
+The server sends the list of objects in the Network to the client. That list is then
+displayed (possibly with names, if they exist). The user can pick variables to monitor
+them.
+Online imaging could even be done using monitors (e.g. a monitor is added to the network
+and reset every second).
+
+Online visualisation
+====================
+* Oscilloscope: traces of a variable are monitored.
+* Imaging: variables or spikes are displayed in real time with color coding.
+* Connectivity: fibers with varying thickness (3D?) represent the synaptic weights.
+Dendrites and/or axon from a specific neuron can be selected.
+
+Implementation
+==============
+We could use for example Pyro for the communications.

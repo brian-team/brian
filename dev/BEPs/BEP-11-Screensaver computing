@@ -5,12 +5,15 @@ This huge unused computing power could be used for intensive Brian simulations.
 A simple way to do this is to write a screensaver program that would process a
 queue of Python jobs.
 
-** It looks like Condor does most things listed here!! **
+*********************************************************
+It looks like Condor does most things listed here!!
+
 So what we should do maybe is:
 1) something to automatize/simplify making Condor configuration files
 2) something to gather Condor results
 3) something to manage jobs (i.e., system calls to the the many Condor
 executables to look at the job queue etc), a GUI could be cool.
+*********************************************************
 
 Existing projects:
 ==================
