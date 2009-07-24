@@ -12,7 +12,7 @@ class BrianServer(Pyro.core.ObjBase):
 Pyro.core.initServer()
 daemon = Pyro.core.Daemon()
 print
-print 'The Pyro Deamon is running on ',daemon.hostname+':'+str(daemon.port)
+print 'The Pyro Daemon is running on ',daemon.hostname+':'+str(daemon.port)
 print '(you may need this info for the client to connect to)'
 print
 
@@ -38,6 +38,6 @@ M=SpikeMonitor(P)
 def server():
     pass
 
-run(100*second)
+run(1*second)
 raster_plot(M)
 show()
