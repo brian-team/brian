@@ -272,7 +272,6 @@ def _define_and_test_interface(self):
 class Monitor(object):
     pass
 
-
 class SpikeMonitor(Connection,Monitor):
     '''
     Counts or records spikes from a :class:`NeuronGroup`
