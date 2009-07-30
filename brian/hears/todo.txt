@@ -8,3 +8,4 @@ TODO for brian.hears
 * xGroup objects from xFilterbank objects
 * Check syntax is what we want
 * Documentation
+* Stereo sounds (e.g. Sound(x) where x is (2,N) array, or Sound(left=L,right=R))
