@@ -1,0 +1,20 @@
+BEP-14: GPU Numpy
+
+Abstract:
+	To implement GPU operations in a transparent way, an idea would be to have a package that
+	mimicks all Numpy functionality with a new data type, gpuarray (or possibly a new dtype).
+	There seems to be a similar attempt named GpuPy that has not been publicly released.
+	(http://www.tricity.wsu.edu/~bobl/personal/mypubs/2009_gpupy_toms.pdf).
+
+Examples
+========
+from gpunumpy import *
+x=zeros(100,dtype='gpufloat') # Creates an array of 100 elements on the GPU
+y=ones(100,dtype='gpufloat')
+z=exp(2*x+y) # z in on the GPU, all operations on CPU with no transfer
+z_cpu=array(z,dtype='float') # z is copied to the CPU
+i=(z>2.3).nonzero()[0] # operation on GPU, returns a CPU integer array
+
+Low-level implementation
+========================
+CUDA (maybe using pycuda?) or OpenCL.
