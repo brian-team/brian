@@ -15,7 +15,7 @@ except ImportError:
     have_scikits_samplerate = False
 
 __all__ = ['Sound', 'play_stereo_sound',
-           'whitenoise', 'tone', 'click', 'silent', 'sequence']
+           'whitenoise', 'tone', 'click', 'silent', 'sequence','mix_sounds']
 
 class Sound(numpy.ndarray):
     duration = property(fget=lambda self:len(self)/self.rate)
