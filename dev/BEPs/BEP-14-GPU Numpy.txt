@@ -15,6 +15,35 @@ z=exp(2*x+y) # z in on the GPU, all operations on CPU with no transfer
 z_cpu=array(z,dtype='float') # z is copied to the CPU
 i=(z>2.3).nonzero()[0] # operation on GPU, returns a CPU integer array
 
+Existing packages
+=================
+PyCuda: http://mathema.tician.de/software/pycuda
+PyOpenCL: http://pypi.python.org/pypi/pyopencl/
+Gpulib: http://gpulib.txcorp.com/
+GpuPy: http://www.tricity.wsu.edu/~bobl/personal/mypubs/2009_gpupy_toms.pdf
+Cuda-ndarray: http://code.google.com/p/cuda-ndarray/
+Matlab toolbox: http://www.accelereyes.com/
+
+Taskforce
+=========
+* Dan, Romain
+* Jean-Eric Cazamea
+* Ian Mallett (http://www.geometrian.com/Programs.php)
+* cuda-ndarray guys: James Bergstra, Frédéric Bastien
+* PyOpenCL: Andreas Kloeckner
+
 Low-level implementation
 ========================
 CUDA (maybe using pycuda?) or OpenCL.
+
+Functionality
+=============
+* element-wise operations on vectors (arithmetical, exp/log, exponentiation)
+* same but on views (x[2:7])
+* assignment (x[:]=2*y)
+* boolean operations on vectors (x>2.5) and the nonzero() method
+* multiplying a N*M matrix by an M*M matrix, where N is large and M is
+small (but this could be done with vector operations).
+* random number generation (gpurand(N))
+The syntax must be the same as with normal arrays.
+
