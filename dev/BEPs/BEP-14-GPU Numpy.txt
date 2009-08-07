@@ -24,14 +24,6 @@ GpuPy: http://www.tricity.wsu.edu/~bobl/personal/mypubs/2009_gpupy_toms.pdf
 Cuda-ndarray: http://code.google.com/p/cuda-ndarray/
 Matlab toolbox: http://www.accelereyes.com/
 
-Taskforce
-=========
-* Dan, Romain
-* Jean-Eric Cazamea
-* Ian Mallett (http://www.geometrian.com/Programs.php)
-* cuda-ndarray guys: James Bergstra, Frédéric Bastien
-* PyOpenCL: Andreas Kloeckner
-
 Low-level implementation
 ========================
 CUDA (maybe using pycuda?) or OpenCL.
