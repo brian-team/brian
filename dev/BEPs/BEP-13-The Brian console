@@ -33,3 +33,4 @@ Dendrites and/or axon from a specific neuron can be selected.
 Implementation
 ==============
 We could use for example Pyro for the communications.
+The GUI could use wxpython.

@@ -56,6 +56,10 @@ There is a great project named Theano which seem to do what we need:
 http://www.pylearn.org/theano/
 Unfortunately there is no Windows build at the moment.
 
+There is another module called numexpr, which accelerates Numpy evaluations,
+and it seems rather stable. Versions > 1.2 crash. The acceleration is significant
+only for very large vectors (>100 000) or transcendental functions.
+
 Cleaning
 --------
 * Move obsolete modules/methods to a specific folder
