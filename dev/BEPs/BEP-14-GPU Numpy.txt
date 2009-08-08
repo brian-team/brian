@@ -17,16 +17,30 @@ i=(z>2.3).nonzero()[0] # operation on GPU, returns a CPU integer array
 
 Existing packages
 =================
-PyCuda: http://mathema.tician.de/software/pycuda
-PyOpenCL: http://pypi.python.org/pypi/pyopencl/
-Gpulib: http://gpulib.txcorp.com/
-GpuPy: http://www.tricity.wsu.edu/~bobl/personal/mypubs/2009_gpupy_toms.pdf
-Cuda-ndarray: http://code.google.com/p/cuda-ndarray/
-Matlab toolbox: http://www.accelereyes.com/
+* PyCuda: http://mathema.tician.de/software/pycuda
+and PyOpenCL: http://pypi.python.org/pypi/pyopencl/
+There is a GPUArray which does what we want, but there is probably no
+lazy evaluation (so it is probably slow).
+
+* GpuPy: http://www.tricity.wsu.edu/~bobl/personal/mypubs/2009_gpupy_toms.pdf
+It is based on OpenGL/CG and uses lazy evaluation. It is very close to what we
+want. Unfortunately there is no public release, and
+the first author has no email address, the second author does not reply.
+
+* Cuda-ndarray: http://code.google.com/p/cuda-ndarray/
+It uses CUDA and is based on Theano, which does lazy evaluation.
+It is currently undocumented and there is no Windows build, but the
+project looks cool.
+
+* Gpulib: http://gpulib.txcorp.com/
+does not seem to maintain the Python interface.
+
+* Matlab toolbox: http://www.accelereyes.com/
 
 Low-level implementation
 ========================
-CUDA (maybe using pycuda?) or OpenCL.
+CUDA / OpenCL: OpenCL probably has more future than CUDA and it is more
+universal.
 
 Functionality
 =============
@@ -38,4 +52,3 @@ Functionality
 small (but this could be done with vector operations).
 * random number generation (gpurand(N))
 The syntax must be the same as with normal arrays.
-

@@ -1,0 +1,74 @@
+Refactoring Brian
+=================
+Abstract: I propose to do some refactoring to improve the readability of the code,
+in order to welcome new developers in the future (see also BEP 4).
+
+Increase modularity
+-------------------
+As much as possible, you should try to have independent modules, which could be
+developed and maintained by people who don't know the rest of the code. These should
+be all those that do not import any Brian module.
+
+Here is a list of such modules:
+* globalprefs
+* inspection
+* log
+* magic
+* optimiser
+* units
+* unitsafefunctions
+* stdunits
+* library.*
+* utils.*
+Those modules should be better documented/tested, so that external people could start
+working on it. The plotting module should be made more independent.
+A list of tests for those modules could quickly be established by searching for places
+where methods are called (in the rest of Brian).
+
+Unify syntax
+------------
+See BEP 4.
+
+Separate C code from pure Python
+--------------------------------
+Each class could have a separate pure Python implementation and C implementation.
+For example, there could be a CircularVector class and a CircularVector_C class, and
+using the latter would simply be done by the line:
+CircularVector=CircularVector_C
+Alternatively, the separation could be at the level of methods rather than classes,
+and the switch could be done at initialization.
+
+Another option is to have a separate module for the C implementation, e.g. circular_c.py,
+which would redefine some of the classes, and the last lines of circular.py would import
+circular_c if C code is switched on. The advantage of this option is that it simplifies
+the code. The C modules could also be gathered in a specific folder.
+
+Integration methods
+-------------------
+A template mechanism could be provided, which would help people write their own
+integration methods.
+
+Code generation
+---------------
+Instead of doing code generation ourselves, maybe we could leave that to Numpy,
+e.g. with the lazy evaluation ideas.
+There is a great project named Theano which seem to do what we need:
+http://www.pylearn.org/theano/
+Unfortunately there is no Windows build at the moment.
+
+Cleaning
+--------
+* Move obsolete modules/methods to a specific folder
+* Remove dead code
+
+Obsolete modules:
+* credits
+* neuronmodel
+* quantityarray
+
+For the cleaning operations, we should find automation tools.
+
+Tests
+-----
+It should be easier for people to add new tests.
+Maybe the tests should be outside the modules (possibly in a specific folder).
