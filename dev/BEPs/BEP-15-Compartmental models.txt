@@ -1,0 +1,61 @@
+BEP-15: Compartmental models
+
+Abstract: I describe a way to implement compartmental models in Brian.
+
+To model a neuron with a morphology, the standard approach to divide the morphology in many
+isopotential compartments, with currents flowing through the membrane or through the two sides of
+the compartment. In the limit of infinitely many compartments, we obtain the cable equation.
+If there any many compartments with the same equations (but possibly different parameter values),
+then the same trick that applies for neuron groups applies for groups of compartments. The main difference
+is that there is only 1 output spike. There are several possible designs:
+* New NeuronGroup, indexes correspond to input synapses. In that case, each row of the state matrix
+would be a (spatially distributed) variable, while columns would correspond to different compartments. A function
+would map location ("LLR.15*um") to compartment index.
+* A NeuronGroup with a new StateUpdater and relevant methods. Maybe N should be 1.
+
+Description of a compartmental model
+====================================
+I feel that the notion of "compartment" should be mostly hidden because it is in fact an implementation detail
+much as the choice of the timestep. Most models can be described by:
+* currents that are spatially distributed (membrane currents)
+* point currents (synapses and soma)
+* morphology
+* a few global parameters (axial resistance, etc)
+* a threshold condition (and probably no reset), which is really a spike detection mechanism
+
+The Connection object needs to address variables by their spatial location, in a single string
+(although this might actually work with an object, with minor modifications to Connection and a few
+other places). It involves changing the method get_var_index(state) in NeuronGroup, where state would
+be for example "LLR.15*um.v" (branch left twice, branch right, advance 15 µm) or "LLR.end.v".
+In the same way, state monitors need to address by spatial location for distributed variables
+and also by name for point processes. Another possibility for names could be "v@LLR.15*um" or "v@mysynapse".
+Those names are translated into indexes.
+
+How to describe the spatial models? One possibility is to have a special term in the equation which would
+correspond to the longitudinal current. This way we keep the spirit of Brian. For example:
+eqs='''
+dv/dt=(gl*(El-v)+Icable)/C : volt
+'''
+The term Icable would then be replaced by the adequate value by the updater. This is very easy to implement
+internally, Icable just needs to be another variable.
+The NeuronGroup is then initialized with:
+* spatial model equations (above)
+* morphology (we need a new module here, maybe using the experimental one)
+* global parameters
+* point currents (possibly later), which could actually be non-spiking NeuronGroups.
+* optionnally, threshold condition
+
+Data structure
+==============
+I can imagine that there are at least two matrices:
+* One for spatially distributed variables, each row of the state matrix
+would be a (spatially distributed) variable, while columns would correspond to different compartments. A function
+would map location ("LLR.15*um") to compartment index. This would be the standard state matrix.
+* One or several for point processes, each row is a variable, columns index processes. Each such block could
+actually by handled as a NeuronGroup (with spike input, possibly a Connection structure).
+
+State update
+============
+1) Update point processes, as NeuronGroups
+2) Update the spatial equation (e.g. using Hines method)
+3) Add point currents
