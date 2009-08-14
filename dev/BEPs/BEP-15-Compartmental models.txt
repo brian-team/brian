@@ -59,3 +59,12 @@ State update
 1) Update point processes, as NeuronGroups
 2) Update the spatial equation (e.g. using Hines method)
 3) Add point currents
+
+Neuron groups
+=============
+How to describe neuron groups with morphologies? Two options:
+* neurons have the same morphology
+* neurons have different morphologies, but the same models
+It seems to me that option 2 is possible.
+However the threshold mechanism must be changed.
+It might also be possible to have gap junctions with this scheme.
