@@ -40,9 +40,11 @@ The term Icable would then be replaced by the adequate value by the updater. Thi
 internally, Icable just needs to be another variable.
 The NeuronGroup is then initialized with:
 * spatial model equations (above)
-* morphology (we need a new module here, maybe using the experimental one)
+* morphology (we need a new module here, maybe using the experimental one); the morphology is
+a binary tree, except perhaps at the soma (e.g. 1 axon + 2 dendritic trees)
 * global parameters
 * point currents (possibly later), which could actually be non-spiking NeuronGroups.
+* maybe somatic equations, possibly as point currents
 * optionnally, threshold condition
 
 Data structure
