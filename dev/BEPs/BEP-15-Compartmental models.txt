@@ -56,6 +56,22 @@ would map location ("LLR.15*um") to compartment index. This would be the standar
 * One or several for point processes, each row is a variable, columns index processes. Each such block could
 actually by handled as a NeuronGroup (with spike input, possibly a Connection structure).
 
+One also needs to find a simple way to set the distributed parameters, which could be the following:
+neuron["LLR.15*um":"LLR.30*um"] would create a subgroup that corresponds to a branch of the neuron. Internally,
+it is essentially a view on the relevant compartments. Then one could write things like
+  branch=neuron["LLR.15*um":"LLR.30*um"]
+  branch.gl=2*branch.gK
+where the latter is a vector operation. Morphological parameters would be available as variables
+(e.g. branch.diameter, branch.surface). The location of the compartment in the branch should also be indicated (branch.x),
+but we have to decide whether it should be the relative or absolute location.
+It could also be interesting if the branch was iterable:
+for compartment in branch:
+	compartment.gl=2*compartment.gK # this is in surfacic units
+
+Monitoring
+==========
+Special monitors need to be added to monitor distributed variables.
+
 State update
 ============
 1) Update point processes, as NeuronGroups
