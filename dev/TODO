@@ -1,3 +1,7 @@
+* eqs = MembraneEquation(C=200*pF) + leak + K_current + Na_current
+works, but not eqs = leak + K_current + Na_current + MembraneEquation(C=200*pF).
+Solution: have a new class that is a set of currents, or (easier) use a new variable with the sum of currents.
+
 * Better progress reporting: the estimated time should adapt, maybe use only the last few seconds rather the entire simulation.
 * Check that StringReset and StringThreshold etc. work correctly with e.g. (v>1)&(w>1), see
   bug found by Mark Orphanides 20 June 2009
