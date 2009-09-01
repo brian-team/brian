@@ -7,7 +7,7 @@ Abstract:
 
 Code Example
 ============
-from brian.fitting import *
+from brian.fitting import * # maybe brian.library.modelfitting
 
 data = [(i,t),...,(j,s)] # experimental spike trains with N neurons
 model = NeuronGroup(N, model="dv/dt=-v/tau : volt", reset=0*mV, threshold=10*mV) # neuron model
@@ -20,11 +20,49 @@ fit = FitNeuronModel(data, model, parameters) # this function defines an object 
 # - 'fit.best_value' may contain the best gamma factor 
 # - ... etc.
 
+[Romain] I can see 2 options:
+1) Object-oriented (more flexible but heavier):
+data = [(i,t),...,(j,s)] # experimental spike trains with N neurons
+fit = ModelFitting(model="dv/dt=-v/tau : volt", reset=0*mV, threshold=10*mV,
+                   data=data,
+                   input=I, # a vector or a matrix or a list of vectors
+                   dt=0.1*ms # timestep of the input
+                   ) # and possibly other optional parameters
+# The NeuronGroup is created by the ModelFitting object; nothing happens at this point
+# Alternatively the options could be given after initialisation.
+fit.init(tau=10*ms,C=2*pF) # or could be passed at initialisation: init={'tau':10*ms,'C':2*pF}
+# fit.init(tau=(5*ms,10*ms),C=(1*pF,2*pF)) # the method checks the type to know what to do
+fit.bounds={'tau':(0*ms,30*ms), 'C':(0*pF,inf)} # or could be passed at initialisation
+fit.run() # or fit() or optimise()
+# fit.run(iterations=10) # options here
+
+Then
+- 'fit.best_parameters' contains the best parameters found : {'tau': array([.012, .009, ..., .015])}
+- 'fit.best_value' may contain the best gamma factor 
+- ... etc.
+
+2) Functional:
+params, value=modelfitting(model="dv/dt=-v/tau : volt", reset=0*mV, threshold=10*mV,
+                  		   data=data,
+                           input=I, # a vector or a matrix or a list of vectors
+                           dt=0.1*ms, # timestep of the input
+                           init={'tau':(5*ms,10*ms),'C':(1*pF,2*pF)},
+                           bounds={'tau':(0*ms,30*ms), 'C':(0*pF,inf)} # and optional parameters
+                           )
+
+or merge init and bounds:
+						   params={'tau':(0*ms,5*ms,10*ms,30*ms),'C':(0*pF,1*pF,2*pF,inf)}
+or even:
+					       tau=(0*ms,5*ms,10*ms,30*ms)
+					       C=(0*pF,1*pF,2*pF,inf)
+
+I would favor option #2 (functional), which is more compact.
+
 Notes
 =====
 This toolbox exposes two classes : ModelParameters and FitNeuronModel.
 
-ModelParameters
+ModelParameters [probably not very useful because it is only a structure (no method)]
 ---------------
 Example:
 ModelParameters(tau={'init': 10*ms, 'min': 1*ms}, R={'init_min': 3e9, 'init_max': 4e9})
@@ -33,7 +71,7 @@ This class contains the free parameters of the model one wants to fit to the dat
 Each parameter has a name, an initial value or an initial interval, and boundaries (optionally).
 
 - If an initial value is set ('init'), the fitting procedure will start from initial parameters values 
-  sampled from a normal distribution centered on that value.
+  sampled from a normal distribution centered on that value. [what is the standard deviation?]
 - If an initial interval is set ('init_min' and 'init_max'), the fitting procedure will start from 
   initial parameters values sampled from an uniform distribution within that interval.
 
