@@ -4,9 +4,6 @@ Ionic currents for Brian
 from brian.units import check_units,siemens,volt
 from brian.membrane_equations import Current
 
-__credits__=dict(author    = 'Romain Brette (brette@di.ens.fr)',
-                 date      = 'April 2008')
-
 @check_units(El=volt)
 def leak_current(gl,El,current_name=None):
     '''

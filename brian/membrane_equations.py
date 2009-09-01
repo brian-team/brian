@@ -43,6 +43,9 @@ from units import have_same_dimensions,get_unit,second,volt,amp
 class Current(Equations):
     '''
     A set of equations defining a current.
+    
+    current_name is the name of the variable that must be added as a membrane current
+    to the membrane equation.
     '''
     def __init__(self,expr='',current_name=None,level=0,surfacic=False,**kwd):
         Equations.__init__(self,expr,level=level+1,**kwd)
@@ -54,7 +57,11 @@ class Current(Equations):
             self.set_current_name(current_name)
         else: # Guess
             if len(self._units)==2: # only one variable (the other one is t)
-                self.set_current_name(self._units.keys()[0])
+                correct_names=[name for name in self._units.keys() if name!='t']
+                if len(correct_names)!=1:
+                    raise NameError,"The equations do not include time (variable t)"
+                name,=correct_names
+                self.set_current_name(name)
             else:
                 current_names=[name for name,unit in self._units.iteritems()\
                                if have_same_dimensions(unit,amp)]
