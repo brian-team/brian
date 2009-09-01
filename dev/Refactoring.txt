@@ -64,6 +64,8 @@ Cleaning
 --------
 * Move obsolete modules/methods to a specific folder
 * Remove dead code
+* Remove brian.benchmarks?
+* Merge dev.debugging and dev.troubleshooting?
 
 Obsolete modules:
 * credits

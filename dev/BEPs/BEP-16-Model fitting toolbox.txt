@@ -10,7 +10,7 @@ Code Example
 from brian.fitting import *
 
 data = [(i,t),...,(j,s)] # experimental spike trains with N neurons
-model = NeuronGroup(N, model=’dv/dt=-v/tau : volt’, reset=0*mV, threshold=10*mV) # neuron model
+model = NeuronGroup(N, model="dv/dt=-v/tau : volt", reset=0*mV, threshold=10*mV) # neuron model
 parameters = ModelParameters(tau={'init': 10*ms, 'min': 1*ms}) # model parameters
 fit = FitNeuronModel(data, model, parameters) # this function defines an object and immediately 
                                               # launches the fitting procedure (in the constructor)
