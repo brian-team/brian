@@ -1,4 +1,58 @@
 BEP-16: Model fitting toolbox
 
 Abstract:
+    This toolbox allows to fit a neuron model to data : give a data set (a set of experimentally-recorded 
+    spike trains from a single neuron), give a neuron model with free parameters, and the toolbox 
+    finds the best fitting model parameters.
 
+Code Example
+============
+from brian.fitting import *
+
+data = [(i,t),...,(j,s)] # experimental spike trains with N neurons
+model = NeuronGroup(N, model=’dv/dt=-v/tau : volt’, reset=0*mV, threshold=10*mV) # neuron model
+parameters = ModelParameters(tau={'init': 10*ms, 'min': 1*ms}) # model parameters
+fit = FitNeuronModel(data, model, parameters) # this function defines an object and immediately 
+                                              # launches the fitting procedure (in the constructor)
+
+# Now 'fit' is an object with the following properties :
+# - 'fit.best_parameters' contains the best parameters found : {'tau': array([.012, .009, ..., .015])}
+# - 'fit.best_value' may contain the best gamma factor 
+# - ... etc.
+
+Notes
+=====
+This toolbox exposes two classes : ModelParameters and FitNeuronModel.
+
+ModelParameters
+---------------
+Example:
+ModelParameters(tau={'init': 10*ms, 'min': 1*ms}, R={'init_min': 3e9, 'init_max': 4e9})
+
+This class contains the free parameters of the model one wants to fit to the data set.
+Each parameter has a name, an initial value or an initial interval, and boundaries (optionally).
+
+- If an initial value is set ('init'), the fitting procedure will start from initial parameters values 
+  sampled from a normal distribution centered on that value.
+- If an initial interval is set ('init_min' and 'init_max'), the fitting procedure will start from 
+  initial parameters values sampled from an uniform distribution within that interval.
+
+Boundaries are defined by keywords 'min' and 'max'.
+
+FitNeuronModel
+--------------
+Example:
+fit = FitNeuronModel(data, model, parameters)
+    # data is a [(i,t)]-like list,
+    # model is a Brian NeuronGroup,
+    # parameters is a ModelParameters object
+    
+This class basically launches the fitting procedure and finds the best model parameters.
+An user-defined fitness function may be defined with an optional argument to the constructor.
+
+The fitting procedure populates the following properties :
+- 'best_parameters' contains the best parameters found : {'tau': array([.012, .009, ..., .015])}
+- 'best_value' contains the best fitness value (the gamma factor by default)
+
+
+ 
