@@ -53,8 +53,9 @@ params, value=modelfitting(model="dv/dt=-v/tau : volt", reset=0*mV, threshold=10
 or merge init and bounds:
 						   params={'tau':(0*ms,5*ms,10*ms,30*ms),'C':(0*pF,1*pF,2*pF,inf)}
 or even:
-					       tau=(0*ms,5*ms,10*ms,30*ms)
+					       tau=(0*ms,5*ms,10*ms,30*ms)     # [Cyrille] : it seems good to me.
 					       C=(0*pF,1*pF,2*pF,inf)
+
 
 I would favor option #2 (functional), which is more compact.
 
@@ -71,7 +72,8 @@ This class contains the free parameters of the model one wants to fit to the dat
 Each parameter has a name, an initial value or an initial interval, and boundaries (optionally).
 
 - If an initial value is set ('init'), the fitting procedure will start from initial parameters values 
-  sampled from a normal distribution centered on that value. [what is the standard deviation?]
+  sampled from a normal distribution centered on that value. The standard deviation may be specified,
+  for example : init = init * (1+sigma*randn(N)), with a fixed default sigma (.3 or ?).
 - If an initial interval is set ('init_min' and 'init_max'), the fitting procedure will start from 
   initial parameters values sampled from an uniform distribution within that interval.
 
