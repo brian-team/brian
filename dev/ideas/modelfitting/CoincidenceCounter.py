@@ -1,19 +1,34 @@
 from brian import *
 
-#def spikestimes2dict(list):
-#    """
-#    Converts a (i,t)-like list to a dictionary of spike trains.
-#    """
-#    spikes = {}
-#    for (i,t) in list:
-#        if i not in spikes.keys():
-#            spikes[i] = [t]
-#        else:
-#            spikes[i].append(t)
-#    for key in spikes.keys():
-#        spikes[key].sort()
-#        spikes[key] = array(spikes[key])
-#    return spikes
+def spikestimes2dict(list):
+    """
+    Converts a (i,t)-like list into a dictionary of spike trains.
+    """
+    spikes = {}
+    for (i,t) in list:
+        if i not in spikes.keys():
+            spikes[i] = [t]
+        else:
+            spikes[i].append(t)
+    for key in spikes.keys():
+        spikes[key].sort()
+        spikes[key] = array(spikes[key])
+    return spikes
+
+def dict2spiketimes(trains):
+    """
+    Converts a dictionary of spike trains into a (i,t)-like list.
+    """
+    spiketimes = []
+    duration = 0.0
+    for (i,train) in trains.iteritems():
+        for t in train:
+            spiketimes.append((i, t*second))
+            if (t > duration):
+                duration = t
+    duration += .01
+    spiketimes.sort(cmp = lambda x,y: int(x[1]>y[1])*2-1)
+    return spiketimes
 
 class CoincidenceCounter(SpikeMonitor):
     
@@ -34,8 +49,8 @@ class CoincidenceCounter(SpikeMonitor):
         self.delay = 0
         self.data = array(data)
         
-        self.NTarget = data[:,0].max()+1
-        self.NModel = source.N
+        self.NTarget = self.data[:,0].max()+1
+        self.NModel = len(source)
         
         self.model_target = model_target
         self.delta = delta
@@ -51,9 +66,8 @@ class CoincidenceCounter(SpikeMonitor):
         the neurons which have just spiked.
         self.close_target_spikes is the list of the closest target spike for each target train in the current bin self.current_bin
         '''
-        
-        if defaultclock._t in self.all_bins:
-            if (self.current_bin < len(self.all_bins)-1):
+        if (self.current_bin < len(self.all_bins)-1):
+            if defaultclock._t > self.all_bins[self.current_bin+1]:
                 self.current_bin += 1
                 self.close_target_spikes = self.close_target_spikes_matrix[:,self.current_bin]
         
@@ -94,12 +108,11 @@ class CoincidenceCounter(SpikeMonitor):
         Computes self.all_bins : the reunion of target_train+/- delta for all target trains
         '''
         all_times = array([t for i,t in self.data])
-        all_times = int(all_times/self.dt)*self.dt # HACK : forces the precision of 
+        all_times = floor(all_times/self.dt)*self.dt # HACK : forces the precision of 
                                                    # data spike trains to be the same
                                                    # as defaultclock.dt
-        all_bins = sort(list(all_times - self.delta - self.dt/10) + list(all_times + self.delta + self.dt/10))
-        self.all_bins = all_bins
-
+        self.all_bins = sort(list(all_times - self.delta - self.dt/10) + list(all_times + self.delta + self.dt/10))
+        
     def compute_close_target_spikes(self):
         '''
         Called during the online preparation step.
@@ -114,18 +127,46 @@ class CoincidenceCounter(SpikeMonitor):
         The second bin is between the first target spike +- delta : the closest target spike is the number 0 (the first spike of the target train)
         etc.
         '''
-        close_target_spikes_matrix = -1*ones((self.NTarget, len(self.all_bins)))
-        dt = self.dt
-        for j in range(len(self.all_bins)):
-            for i in range(self.NTarget):
-                t = self.target_trains[i]
-                if (j+1 < len(self.all_bins)):
-                    b = (self.all_bins[j]+self.all_bins[j+1])/2
-                    ind = nonzero(abs(t-b) <= self.delta+dt/10)[0]
-                    if (len(ind)>0):
-                        close_target_spikes_matrix[i, j] = ind[0]
-                else: # Last bin
-                    close_target_spikes_matrix[i, j] = -1
-        self.close_target_spikes_matrix = close_target_spikes_matrix
-    
+        self.close_target_spikes_matrix = -1*ones((self.NTarget, len(self.all_bins)))
+        all_bins_centers = (self.all_bins[0:-1] + self.all_bins[1:])/2
+        target_trains = spikestimes2dict(self.data)
+        for j,b in enumerate(all_bins_centers):
+            for i,train in target_trains.iteritems():
+                ind = nonzero(abs(train-b) <= self.delta+self.dt/10)[0]
+                if (len(ind)>0):
+                    self.close_target_spikes_matrix[i, j] = ind[0]
 
+
+def CoincidenceCounterTest():
+    eqs = 'dV/dt = -V/tau+I : 1'
+    tau = 20*ms
+    I = 150/second
+    n = 10
+    isi = -tau*log(1-1/(tau*I)) # we compute the isi 
+    duration = n*isi+.002*second
+
+    group = NeuronGroup(1, 
+                        model = eqs,
+                        reset = 0,
+                        threshold = 1)
+    data = [(0,floor(10000*t)/10000*second) for t in cumsum(isi*ones(n))] # we compute the predicted spike train
+    cd = CoincidenceCounter(group, data, model_target = [0])
+    M = SpikeMonitor(group)
+    run(duration)
+    
+    print "Model spikes :"
+    print M.spikes
+    print "Predicted spikes :"
+    print data
+    print "Coincidences :"
+    print "%d/%d" % (cd.coincidences, n)
+    if cd.coincidences == n:
+        print 'Coincidence counter test : OK'
+        return True
+    else:
+        print 'Coincidence counter test : Failed'
+        return False
+
+
+if __name__ == '__main__':
+    CoincidenceCounterTest()
