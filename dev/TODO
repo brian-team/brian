@@ -1,3 +1,8 @@
+* STDP should allow for parameters in equations, not just DEs (currently
+  raises LinAlgError). Also, should be able to access STDP variables
+  directly somehow - currently not possible. Ideally, this would be via
+  the STDP object, e.g. stdp.A_pre, etc.
+
 * library.ionic_currents: might not work if units are off (looks for amp to recognize the current)
 * eqs = MembraneEquation(C=200*pF) + leak + K_current + Na_current
 works, but not eqs = leak + K_current + Na_current + MembraneEquation(C=200*pF).
