@@ -55,16 +55,19 @@ class attribdict(dict):
     """
     def __init__(self,**kwds):
         super(attribdict,self).__init__(**kwds)
+        
     def __getattr__(self,name):
         try:
             return self[name]
         except KeyError:
             raise AttributeError
+        
     def __setattr__(self,name,val):
         if name in dir(self) or (len(name) and name[0]=='_'):
             dict.__setattr__(self,name,val)
             return
-        self[name]=val            
+        self[name]=val     
+               
     def __repr__(self):
         s = 'Attributes:'
         for k,v in self.iteritems():
@@ -116,6 +119,7 @@ class Parameters(attribdict):
     def __init__(self,**kwds):
         super(Parameters,self).__init__(**kwds)
         self._recompute()
+        
     def __getattr__(self,name):
         try:
             return self[name]
@@ -124,11 +128,13 @@ class Parameters(attribdict):
                 return self._computed_values[name]
             except KeyError:
                 raise AttributeError
+            
     def __setattr__(self,name,val):
         if hasattr(self,'_computed_values') and name in self._computed_values:
             raise AttributeError('Cannot set computed value')
         attribdict.__setattr__(self,name,val)
         self._recompute()
+        
     def _recompute(self):
         cv = dict(self)
         items = self.items()
@@ -143,6 +149,7 @@ class Parameters(attribdict):
         for k in self.iterkeys():
             cv.pop(k)
         object.__setattr__(self,'_computed_values',cv)
+        
     def ascode(self,name):
         """
         Returns a string which can be executed which gives all the parameters
@@ -162,6 +169,7 @@ class Parameters(attribdict):
             if k[:9]!='computed_':
                 s+=k+'='+name+'.'+k+'\n'
         return s
+    
     def get_vars(self, *vars):
         '''
         Returns a tuple of variables given their names
@@ -170,6 +178,7 @@ class Parameters(attribdict):
         '''
         vars = [v.split(' ') for v in vars]
         return tuple(getattr(self, v) for v in chain(*vars))
+    
     def __repr__(self):
         s = 'Values:'
         for k,v in self.iteritems():
@@ -179,6 +188,7 @@ class Parameters(attribdict):
         for k,v in self._computed_values.iteritems():
             s += '\n    ' + k + ' = ' + str(v)
         return s
+    
     def __call__(self,**kwds):
         '''
         Returns a copy with specified arguments overwritten

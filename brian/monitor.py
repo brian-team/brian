@@ -433,7 +433,6 @@ class PopulationSpikeCounter(SpikeMonitor):
     def __init__(self, source, delay=0):
         SpikeMonitor.__init__(self,source,record=False,delay=delay)
 
-
 class SpikeCounter(PopulationSpikeCounter):
     '''
     Counts spikes from a :class:`NeuronGroup`

@@ -67,24 +67,20 @@ def log_info(logname, message):
 def log_debug(logname, message):
     get_log(logname).debug(message)
 
-
 def log_level_error():
     '''Shows log messages only of level ERROR or higher.
     '''
     logging.getLogger('brian').setLevel(logging.ERROR)
-
 
 def log_level_warn():
     '''Shows log messages only of level WARNING or higher (including ERROR level).
     '''
     logging.getLogger('brian').setLevel(logging.WARN)
 
-
 def log_level_info():
     '''Shows log messages only of level INFO or higher (including WARNING and ERROR levels).
     '''
     logging.getLogger('brian').setLevel(logging.INFO)
-
 
 def log_level_debug():
     '''Shows log messages only of level DEBUG or higher (including INFO, WARNING and ERROR levels).
