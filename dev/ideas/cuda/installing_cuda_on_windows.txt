@@ -24,6 +24,47 @@ C:\Program Files\Microsoft Visual Studio .NET 2003\Common7\IDE
 C:\Program Files\Microsoft Visual Studio .NET 2003\VC7\BIN
 [optionnally, replace by the MS Visual Studio Express 2008 directories]
 
+Installing PyCUDA on Windows update
+-----------------------------------
+
+I just installed PyCUDA 0.93 and it required some significant modifications of
+the above:
+
+* Install CUDA 2.3
+* Install MSVS 2003
+* Install Boost latest version (I used 1.37 not the latest)
+* Download PyCuda
+* Compile Boost with MSVS:
+  - Run MSVS command prompt and go to boost directory
+  - Build Boost for Python:
+    + bjam toolset=msvs-7.1 -–with-python -–build-type=complete stage
+    + (wait a long time)
+  - Build Boost threads:
+    + bjam toolset=msvs-7.1 -–with-thread -–build-type=complete stage
+  - Build Boost date_time (no idea why):
+    + bjam toolset=msvs-7.1 -–with-date_time -–build-type=complete stage
+  - Copy BoostDir/stage/lib/*.dll to C:\Windows
+* Compile PyCuda with MSVS:
+  - Run MSVS command prompt and go to PyCuda download directory
+  - Configure:
+    + configure.py –boost-inc-dir=c:\boost_1_37_0
+                   –boost-lib-dir=c:\boost_1_37_0\stage\lib
+                   –boost-python-libname=boost_python-vc71-mt-1_37
+                   –boost-thread-libname=boost_thread-vc71-mt-1_37
+                   –cuda-root=c:\cuda
+  - Build and install:
+    + setup.py build
+    + setup.py install
+* Make sure you have a HOME environment variable set
+
+
+
+
+
+
+
+
+
 ** ALTERNATIVE INSTALLATION ** [UNTESTED]
 This installation uses cygwin for compiling pypar, as explained here:
 http://boodebr.org/main/python/build-windows-extensions
