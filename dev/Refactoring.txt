@@ -3,6 +3,11 @@ Refactoring Brian
 Abstract: I propose to do some refactoring to improve the readability of the code,
 in order to welcome new developers in the future (see also BEP 4).
 
+Priority #1 = moving tests
+Priority #2 = developer's guide
+
+*** Simplify connection.py and equations.py ***
+
 Increase modularity
 -------------------
 As much as possible, you should try to have independent modules, which could be
@@ -43,6 +48,9 @@ which would redefine some of the classes, and the last lines of circular.py woul
 circular_c if C code is switched on. The advantage of this option is that it simplifies
 the code. The C modules could also be gathered in a specific folder.
 
+Problem: synchronization of C and Python code.
+Solution(?): testing with and without weave/swig.
+
 Integration methods
 -------------------
 A template mechanism could be provided, which would help people write their own
@@ -63,14 +71,11 @@ only for very large vectors (>100 000) or transcendental functions.
 Cleaning
 --------
 * Move obsolete modules/methods to a specific folder
-* Remove dead code
-* Remove brian.benchmarks?
-* Merge dev.debugging and dev.troubleshooting?
+(which ones?)
+* Remove dead code (tool?)
 
 Obsolete modules:
-* credits
-* neuronmodel
-* quantityarray
+* quantityarray: TODO after release
 
 For the cleaning operations, we should find automation tools.
 

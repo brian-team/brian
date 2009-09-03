@@ -39,10 +39,10 @@ Neuron model base class : DEPRECATED
 __all__ = ['Model']
 
 from units import *
-import neurongroup
-import magic
-from equations import *
-from brian_unit_prefs import bup
+import brian.neurongroup as neurongroup
+import brian.magic as magic
+from brian.equations import *
+from brian.brian_unit_prefs import bup
 import warnings
 
 class Model(object):

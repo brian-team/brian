@@ -2147,7 +2147,6 @@ def random_matrix_row_by_row(n,m,p,value=1.):
             row.sort()
             yield row, value 
 
-
 def eye_lil_matrix(n):
     '''
     Returns the identity matrix of size n as a lil_matrix
