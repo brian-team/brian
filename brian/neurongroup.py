@@ -35,7 +35,6 @@
 '''
 Neuron groups
 '''
-
 __all__ = ['NeuronGroup', 'PoissonGroup', 'linked_var']
 
 from numpy import *

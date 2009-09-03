@@ -70,7 +70,6 @@ from utils.parameters import *
 from membrane_equations import *
 from compartments import *
 from log import *
-from credits import *
 from utils.parallelpython import *
 from tests import *
 from magic import *

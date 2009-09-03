@@ -38,11 +38,11 @@ Neuron model base class : DEPRECATED
 
 __all__ = ['Model']
 
-from units import *
-import brian.neurongroup as neurongroup
-import brian.magic as magic
+from brian.units import *
+#from brian.neurongroup import NeuronGroup
+from brian.magic import magic_return
 from brian.equations import *
-from brian.brian_unit_prefs import bup
+from brian_unit_prefs import bup
 import warnings
 
 class Model(object):
@@ -146,13 +146,13 @@ class Model(object):
                 kwds['model']=Equations(kwds['model'],level=2)
             else:
                 kwds['model']=Equations(kwds['model'],level=1)
-        G = neurongroup.NeuronGroup(N=1,model=self) # just to make sure it can be done
+        #G = NeuronGroup(N=1,model=self) # just to make sure it can be done
     
-    @magic.magic_return
+    @magic_return
     def __mul__(self, N):
         model = self.kwds['model']
         if isinstance(model,(str,list,tuple)):
             model = Equations(model, level=2)
         self.kwds['model'] = model       
-        return neurongroup.NeuronGroup(N, model=self)
+        return NeuronGroup(N, model=self)
     __rmul__ = __mul__
