@@ -40,7 +40,6 @@ STILL LOTS OF WORK TO DO ON THIS, SAVE FOR FUTURE RELEASE?
 
 from connection import *
 from stateupdater import *
-from neuronmodel import *
 from neurongroup import *
 from network import *
 from units import *

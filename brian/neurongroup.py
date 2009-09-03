@@ -56,7 +56,6 @@ from itertools import count
 from equations import *
 from globalprefs import *
 from quantityarray import *
-from neuronmodel import *
 import sys
 from brian_unit_prefs import bup
 import numpy
@@ -64,6 +63,7 @@ from base import *
 from group import *
 from threshold import select_threshold
 from reset import select_reset
+from deprecated.neuronmodel import Model
 timedarray = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
 network = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
 
@@ -128,7 +128,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     ``N``
         The number of neurons in the group.
     ``model``
-        An object defining the neuron model. It can be a ``Model`` object,
+        An object defining the neuron model. It can be
         an :class:`Equations` object, a string defining an :class:`Equations` object,
         a :class:`StateUpdater` object, or a list or tuple of :class:`Equations` and
         strings.
