@@ -1,10 +1,9 @@
 '''
 Input-Frequency curve of a IF model
-Network: 1000 unconnected integrate-and-fire neurons (Brette-Gerstner)
-with an input parameter I.
+Network: 1000 unconnected integrate-and-fire neurons (leaky IF)
+with an input parameter v0.
 The input is set differently for each neuron.
-Spikes are sent to a 'neuron' group with the same size and variable n,
-which has the role of a spike counter.
+Spikes are sent to a spike counter (counts the spikes emitted by each neuron).
 '''
 from brian import *
 
