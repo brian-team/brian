@@ -1,40 +1,22 @@
-import brian
+from brian import *
+import os
 
-# Tests to run:
-import testinterface
-import testverification
-
-__all__ = [ 'run_all_tests' ]
-
-def run_all_tests():
-    '''
-    Run all of Brian's test functions
-    '''
-    # For running tests from an IPython shell, use magic_useframes=True, but we restore the state
-    # after running 
-    magic_useframes = brian.get_global_preference('magic_useframes')
-    brian.set_global_preferences(magic_useframes=True)
-    testset = [v for v in globals().itervalues() if hasattr(v,'run_test')]
-    result = True
-    print '======================='
-    print 'Running all known tests'
-    print '======================='
-    print
-    brian.reinit_default_clock()
-    for v in testset:
-        result = result & v.run_test()
-        brian.reinit_default_clock()
-    print
-    if result:
-        print '======================'
-        print 'All tests completed OK'
-        print '======================'
-    else:
-        print '=============================='
-        print 'Test failure, see output above'
-        print '=============================='
-    brian.set_global_preferences(magic_useframes=magic_useframes)
-    return result
+def go():
+    try:
+        import nose
+    except ImportError:
+        print "Brian testing framework uses the 'nose' package."
+    # For running tests from an IPython shell, use magic_useframes=True, but we
+    # restore the state after running 
+    magic_useframes = get_global_preference('magic_useframes')
+    set_global_preferences(magic_useframes=True)
+    nose.config.logging.disable(nose.config.logging.ERROR)
+    basedir, _ = os.path.split(__file__)
+    cwd = os.getcwd()
+    os.chdir(basedir)
+    nose.run()
+    os.chdir(cwd)
+    set_global_preferences(magic_useframes=magic_useframes)
 
 if __name__=='__main__':
-    run_all_tests()
+    go()

@@ -342,19 +342,22 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         # Reset and refractory period
         if is_scalar_type(reset) or reset.__class__ is Reset:
             if reset.__class__ is Reset:
+                numstate = reset.state
                 reset = reset.resetvalue
+            else:
+                numstate = 0
             # Check unit
             if self._S0!=None:
                 try:
-                    reset+self._S0[0]
+                    reset+self._S0[numstate]
                 except DimensionMismatchError,inst:
                     raise DimensionMismatchError("The reset does not have correct units.",*inst._dims)
             # What is this 0.9 ?!! Answer: it's just to check that the refractory period is at least clock.dt otherwise don't bother
             if refractory>0.9*clock.dt: # Refractory period - unit checking is done here
-                self._resetfun=Refractoriness(period=refractory,resetvalue=reset)
+                self._resetfun=Refractoriness(period=refractory,resetvalue=reset,state=numstate)
                 period=int(refractory/clock.dt)+1
             else: # Simple reset
-                self._resetfun=Reset(reset)
+                self._resetfun=Reset(reset,state=numstate)
                 period=1
         elif type(reset)==types.FunctionType:
             self._resetfun=FunReset(reset)

@@ -73,40 +73,6 @@ from numpy.random import *
 from scipy.integrate import *
 import inspect
 
-def _define_and_test_interface(self):
-    """
-    Each of the following functions f(x) should use units if they are passed a
-    :class:`Quantity` object or fall back on their numpy versions
-    otherwise.
-    
-        sqrt, log, exp, sin, cos, tan, arcsin, arccos, arctan,
-        sinh, cosh, tanh, arcsinh, arccosh, arctanh    
-    """
-    # check sqrt behaves as expected
-    x = 3*second
-    z = numpy.array([3.,2.])
-    self.assert_(have_same_dimensions(sqrt(x),second**0.5))
-    self.assert_(isinstance(sqrt(z),numpy.ndarray))
-    
-    # check the return types are right for all other functions
-    x = 0.5*second/second
-    funcs = [
-        sqrt, log, exp, sin, cos, tan, arcsin, arccos, arctan,
-        sinh, cosh, tanh, arcsinh, arccosh, arctanh
-            ]
-    for f in funcs:
-        self.assert_(isinstance(f(x),Quantity))
-        self.assert_(isinstance(f(z),numpy.ndarray))
-
-    # check that attempting to use these functions on something with units fails
-    funcs = [
-        log, exp, sin, cos, tan, arcsin, arccos, arctan,
-        sinh, cosh, tanh, arcsinh, arccosh, arctanh
-            ]
-    x = 3*second
-    for f in funcs:
-        self.assertRaises(DimensionMismatchError,f,x)
-
 __all__ = []
 
 # these functions are the ones that will work with the template immediately below, and

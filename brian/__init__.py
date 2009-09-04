@@ -71,7 +71,7 @@ from membrane_equations import *
 from compartments import *
 from log import *
 from utils.parallelpython import *
-from tests import *
+#from tests import *
 from magic import *
 from stdp import *
 from stp import *
@@ -154,6 +154,16 @@ try:
 except ImportError:
     pass
 
+try:
+    import nose
+    @nose.tools.nottest
+    def run_all_tests():
+        import tests
+        tests.go()
+except ImportError:
+    def run_all_tests():
+        print "Brian test framework requires 'nose' package."
+    
 #__all__ = dir()
 #
 #import sys

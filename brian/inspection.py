@@ -344,16 +344,3 @@ def get_global_term(f,x,x0):
         f.func_globals[x]=oldx # previous value
     
     return result
-    
-def _define_and_test_interface(self):
-    '''
-    Inspection module
-    '''
-    expr='''
-x_12+=y*12 # comment
-pour(water,\
-   "on desk")'''
-    # Check that identifiers are correctly extracted
-    self.assert_(get_identifiers(expr)==('x_12','y','pour','water'))
-    # Check that modified variables are correctly extracted
-    self.assert_(modified_variables(expr)==['x_12','pour'])

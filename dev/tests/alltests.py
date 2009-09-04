@@ -1,2 +1,3 @@
-from brian import *
-run_all_tests()
+import os
+os.chdir('../../brian/tests')
+os.system('nosetests --logging-clear-handlers')

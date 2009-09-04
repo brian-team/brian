@@ -3,8 +3,7 @@ Refactoring Brian
 Abstract: I propose to do some refactoring to improve the readability of the code,
 in order to welcome new developers in the future (see also BEP 4).
 
-Priority #1 = moving tests
-Priority #2 = developer's guide
+Priority #1 = developer's guide
 
 *** Simplify connection.py and equations.py ***
 
