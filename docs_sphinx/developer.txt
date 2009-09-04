@@ -1,0 +1,195 @@
+Developer's guide
+=================
+
+This section is intended as a guide to how Brian functions internally for
+people developing Brian itself, or extensions to Brian. It may also be of some
+interest to others wishing to better understand how Brian works internally.
+
+Overview
+--------
+
+Brian features can be broadly categorised into *construction* of the network,
+and *running* the network.
+
+Constructing the network
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following objects need to be specified by the user explicitly or implicitly:
+
+* :class:`NeuronGroup`
+* :class:`Connection`
+* Monitors
+* :class:`Network`
+
+After that, the network needs to be *prepared*. Preparation of the network
+involves initialising objects' data structures appropriately, in particular
+compressing the :class:`Connection` matrices. Connection matrices are initially
+stored as instances of a :class:`ConstructionMatrix` class (sparse, dense, etc.),
+and then later *compressed* into an instance of a :class:`ConnectionMatrix`
+class. Two levels are necessary, because at construction time, all matrices have
+to be editable, whereas at runtime, for efficiency reasons, some matrix types
+are read-only or partially read-only. Data structures appropriate to the
+construction of a matrix, particularly sparse matrices, are not the most
+efficient for runtime access.
+
+Constructing the :class:`NeuronGroup` object is a rather complicated operation,
+involving the construction of many subsididary objects. The most complicated
+aspect is the creation, manipulation and analysis of an :class:`Equations`
+object.
+
+Running the network
+~~~~~~~~~~~~~~~~~~~
+
+The network is run by repeatedly evaluating the 'update schedule' and updating
+the clock or clocks. The 'update schedule' is user specifiable, but usually
+consists of the following sequence of operations (interspersed with optional
+user network operation calls):
+
+* Update state variables of :class:`NeuronGroup`
+* Call thresholding function
+* Push spikes into :class:`SpikeContainer`
+* Propagate spikes (possibly with delays) via :class:`Connection`
+* Call reset function on neurons which have spiked
+
+Details of network construction
+-------------------------------
+
+Construction of :class:`NeuronGroup`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :func:`magic_state_updater` function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :class:`Equations` object
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Construction of :class:`Connection`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Construction of monitors
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Construction of :class:`Network`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The magic module
+~~~~~~~~~~~~~~~~
+
+Details of network running
+--------------------------
+
+Update schedules
+~~~~~~~~~~~~~~~~
+
+Network operations
+~~~~~~~~~~~~~~~~~~
+
+:class:`NeuronGroup` update
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:class:`NeuronGroup` reset
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spike propagation
+~~~~~~~~~~~~~~~~~
+
+Package structure
+-----------------
+
+List of modules with descriptions of contents:
+
+**Root package**
+
+``base``
+	TODO
+``clock``
+	TODO
+``compartments``
+	todo
+``connection``
+	todo
+``correlatedspikes``
+	todo
+``directcontrol``
+	todo
+``equations``
+	todo
+``globalprefs``
+	todo
+``group``
+	todo
+``inspection``
+	todo
+``log``
+	todo
+``magic``
+	todo
+``membrane_equations``
+	todo
+``monitor``
+	todo
+``network``
+	todo
+``neurongroup``
+	todo
+``optimiser``
+	todo
+``plotting``
+	todo
+``quantityarray``
+	todo
+``reset``
+	todo
+``stateupdater``
+	todo
+``stdp``
+	todo
+``stdunits``
+	todo
+``stp``
+	todo
+``threshold``
+	todo
+``timedarray``
+	todo
+``units``
+	todo
+``unitsafefunctions``
+	todo
+
+**``library`` subpackage**
+
+``electrophysiology``
+	todo
+``IF``
+	todo
+``ionic_currents``
+	todo
+``random_processes``
+	todo
+``synapses``
+	todo
+
+**``utils`` subpackage**
+
+``approximatecomparisons``
+	todo
+``autodiff``
+	todo
+``circular`` and the ``ccircular`` subpackage
+	todo
+``documentation``
+	todo
+``information_theory``
+	todo
+``parallelpython``
+	todo
+``parameters``
+	todo
+``progressreporting``
+	todo
+``statistics``
+	todo
+``tabulate``
+	todo
+	
