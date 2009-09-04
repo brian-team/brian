@@ -17,15 +17,17 @@ def modelfitting(eqs, reset, threshold, data, input, dt = 0.1*ms,
                                )
     
     Parameters:
-    - eqs           Neuron model equations
+    - model         Neuron model equations
     - reset         Neuron model reset
     - threshold     Neuron model threshold
     - data          A list of spike times (i,t)
     - input         The input current (a list of values)
     - dt            Timestep of the input
+    - **params        Model parameters list : tau=(min,init_min,init_max,max)
     - verbose       Print iterations?
-    - params        Model parameters list : tau=(min,init_min,init_max,max)
-    - timeslices    Number of time slices, 1 by default
+    - particle_number
+                    Number of particles in the particle swarm algorithm
+    - slice_number  Number of time slices, 1 by default
     
     Outputs:
     - params        The parameter values found by the optimization process

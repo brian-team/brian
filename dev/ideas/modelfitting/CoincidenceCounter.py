@@ -34,8 +34,11 @@ class CoincidenceCounter(SpikeMonitor):
     
     def __init__(self, source, data, model_target, delta = .004):
         """
-        Computes in an online fashion the gamma factor of model spike trains against
-        some data spike trains.
+        Computes in an online fashion the number of coincidences between model 
+        spike trains and some data spike trains.
+        
+        Usage example:
+        cd = CoincidenceCounter(group, data, model_target = [0])
         
         Inputs:
         - source        The NeuronGroup object
@@ -43,6 +46,10 @@ class CoincidenceCounter(SpikeMonitor):
         - model_target  The target train index associated to each model neuron.
                         It is a list of size NTarget.
         - delta         The half-width of the time window
+        
+        Outputs:
+        - cd.coincidences is a N-long vector with the coincidences of each neuron
+        versus its linked target spike train.
         """
         source.set_max_delay(0)
         self.source = source
@@ -138,6 +145,10 @@ class CoincidenceCounter(SpikeMonitor):
 
 
 def CoincidenceCounterTest():
+    """
+    Simulates an IF model with constant input current and checks
+    the total number of coincidences with prediction.
+    """
     eqs = 'dV/dt = -V/tau+I : 1'
     tau = 20*ms
     I = 150/second
@@ -170,3 +181,5 @@ def CoincidenceCounterTest():
 
 if __name__ == '__main__':
     CoincidenceCounterTest()
+    
+    
