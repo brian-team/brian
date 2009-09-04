@@ -16,14 +16,14 @@ dge/dt = -ge/(5*ms) : volt
 dgi/dt = -gi/(10*ms) : volt
 '''
 
-P=NeuronGroup(4000,model=eqs,
+P=NeuronGroup(N,model=eqs,
               threshold=-50*mV,reset=-60*mV)
 P.v=-60*mV+10*mV*rand(len(P))
-Pe=P.subgroup(3200)
-Pi=P.subgroup(800)
+Pe=P.subgroup(Ne)
+Pi=P.subgroup(Ni)
 
-Ce=Connection(Pe,P,'ge',weight=1.62*mV,sparseness=0.02)
-Ci=Connection(Pi,P,'gi',weight=-9*mV,sparseness=0.02)
+Ce=Connection(Pe,P,'ge',weight=1.62*mV,sparseness=p)
+Ci=Connection(Pi,P,'gi',weight=-9*mV,sparseness=p)
 
 M=SpikeMonitor(P)
 trace=StateMonitor(P,'v',record=0)
