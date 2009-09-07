@@ -4,9 +4,6 @@ Random processes for Brian.
 from brian.equations import Equations
 from brian.units import get_unit
 
-__credits__=dict(author    = 'Romain Brette (brette@di.ens.fr)',
-                 date      = 'April 2008')
-
 def OrnsteinUhlenbeck(x,mu,sigma,tau):
     '''
     An Ornstein-Uhlenbeck process.

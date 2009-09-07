@@ -33,7 +33,7 @@
 # ----------------------------------------------------------------------------------
 # 
 '''
-Miscellanous functions.
+Tabulation of numerical functions.
 '''
 
 __all__=['Tabulate','TabulateInterp']

@@ -81,15 +81,15 @@ List of modules with descriptions of contents:
 **``library`` subpackage**
 
 ``electrophysiology``
-	todo
+	Electrophysiology library with electrode and amplifier models.
 ``IF``
-	todo
+	Integrate-and-fire models (leaky, quadratic, exponential...).
 ``ionic_currents``
-	todo
+	Ionic current models (K+, Na+...).
 ``random_processes``
-	todo
+	Currently only Ornstein-Uhlenbeck.
 ``synapses``
-	todo
+	Synaptic models (exponential, alpha and biexponential models).
 
 **``utils`` subpackage**
 
@@ -97,7 +97,7 @@ List of modules with descriptions of contents:
 	Some tools for doing approximate comparisons with floating point numbers
 	(because they are inexact).
 ``autodiff``
-	Automatic differentiation routines.
+	Automatic differentiation routines (for single-valued functions).
 ``circular`` and the ``ccircular`` subpackage
 	The important :class:`SpikeContainer` and related classes. The ``C`` version
 	uses SWIG and is much faster but requires the user to compile themselves
@@ -105,7 +105,7 @@ List of modules with descriptions of contents:
 ``documentation``
 	Some utility functions related to documentation.
 ``information_theory``
-	todo
+	Entropy and mutual information estimators. Requires the ANN wrapper in scikits.
 ``parallelpython``
 	A utility function for using the Parallel Python module.
 ``parameters``
@@ -115,7 +115,6 @@ List of modules with descriptions of contents:
 	A progress reporting framework which :meth:`Network.run` can use to report
 	how long it is taking to run, with text or graphical options.
 ``statistics``
-	todo
+	Statistics of spike trains (CV, vector strength, correlograms...).
 ``tabulate``
-	todo
-
+	Tabulation of numerical functions (precalculation).
