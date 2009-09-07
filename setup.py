@@ -4,7 +4,7 @@ Setup script for Brian
 
 from distutils.core import setup
 
-version = '1.1.2'
+version = '1.1.3'
 
 long_description='''
 Brian is a simulator for spiking neural networks available on almost all platforms.
@@ -26,7 +26,6 @@ extras_folders = ['tutorials/tutorial1_basic_concepts/*.py',
                   'examples/electrophysiology/*.py', 'examples/frompapers/*.py',
                   'examples/interface/*.*', 'examples/plasticity/*.py',
                   'examples/misc/*.py', 'examples/audition/*.py',
-                  'benchmarks/*.sce', 'benchmarks/*.m', 'benchmarks/*.cpp',
                   'docs/*.*', 'docs/_images/*.jpg',# 'docs/api/*.*',
                   'docs/_sources/*.*', 'docs/_static/*.*' ]
 
@@ -35,18 +34,27 @@ if __name__=="__main__":
       version=version,
       py_modules=['brian_unit_prefs','brian_no_units','brian_no_units_no_warnings'],
       packages=['brian',
-                'brian.utils','brian.utils.ccircular','brian.utils.fastexp',
-                'brian.library', 'brian.tests','brian.experimental',
-                'brian.experimental.cuda'],
+                    'brian.deprecated',
+                    'brian.experimental',
+                        'brian.experimental.cuda',
+                    'brian.hears',
+                    'brian.library',
+                    'brian.tests',
+                        'brian.tests.testcorrectness',
+                        'brian.tests.testinterface',
+                    'brian.utils',
+                        'brian.utils.ccircular',
+                        'brian.utils.fastexp',
+                ],
 #      package_dir={'brian.utils.ccircular':'brian/utils/ccircular',
 #                   'brian.utils.fastexp':'brian/utils/fastexp'},
-#      package_data={'brian.utils.ccircular':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat'],
-#                    'brian.utils.fastexp':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat', '*.c']},
+      package_data={'brian.utils.ccircular':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat'],
+                    'brian.utils.fastexp':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat', '*.c']},
 #      data_files=[('brian/utils/ccircular', ['*.cxx', '*.h', '*.i', '*.cpp', '*.bat']),
 #                  ('brian.utils.fastexp', ['*.cxx', '*.h', '*.i', '*.cpp', '*.bat', '*.c'])],
       requires=['matplotlib(>=0.90.1)',
                 'numpy(>=1.1.0)',
-                'scipy(>=0.6.0)'
+                'scipy(>=0.7.0)'
                 ],
       url='http://www.briansimulator.org/',
       description='A clock-driven simulator for spiking neural networks',

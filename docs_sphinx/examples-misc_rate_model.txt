@@ -1,0 +1,35 @@
+.. currentmodule:: brian
+
+.. _example-misc_rate_model:
+
+.. index::
+   pair: example usage; NeuronGroup
+   pair: example usage; run
+   pair: example usage; group
+   pair: example usage; PoissonThreshold
+   pair: example usage; PopulationRateMonitor
+
+Example: rate_model (misc)
+==========================
+
+A rate model
+
+::
+
+    from brian import *
+    
+    N=50000
+    tau=20*ms
+    I=10*Hz
+    eqs='''
+    dv/dt=(I-v)/tau : Hz # note the unit here: this is the output rate
+    '''
+    group=NeuronGroup(N,eqs,threshold=PoissonThreshold())
+    S=PopulationRateMonitor(group,bin=1*ms)
+    
+    run(100*ms)
+    
+    plot(S.rate)
+    show()
+    
+

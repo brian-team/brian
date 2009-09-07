@@ -9,7 +9,7 @@ input=HomogeneousCorrelatedSpikeTrains(1000,r=10*Hz,c=0.1,tauc=10*ms)
 
 S=SpikeMonitor(input)
 S2=PopulationRateMonitor(input)
-M=StateMonitor(input,'rate',record=True)
+M=StateMonitor(input,'rate',record=0)
 run(1000*ms)
 subplot(211)
 raster_plot(S)

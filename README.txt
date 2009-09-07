@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.1.2
+Version: 1.1.3
 Authors:
 	Romain Brette
 		http://www.di.ens.fr/~brette/index.html
@@ -35,10 +35,6 @@ tutorials
 	Fully worked through tutorials on using Brian. These can be read
 	through in the documentation too.	
 
-benchmarks
-	Currently includes Scilab and Matlab versions of the CUBA and COBA
-	examples, and a C++ version of the CUBA example.
-
 ==== Usage and Documentation ===============================================
 
 See the documentation in the extras download, or online:
@@ -46,6 +42,21 @@ See the documentation in the extras download, or online:
 	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.1.2 to 1.1.3:
+
+* STDP now works with DelayConnection
+* Added EventClock
+* Added RecentStateMonitor
+* Added colormap option to StateMonitor.plot
+* Added timed array module, see TimedArray class for details.
+* Added optional progress reporting to run()
+* New recall() function (converse to forget())
+* Added progress reporting module (brian.utils.progressreporting)
+* Added SpikeMonitor.spiketimes
+* Added developer's guide to docs
+* Early version of brian.hears subpackage for auditory modelling
+* Various bug fixes
 
 Version 1.1.1 to 1.1.2:
 

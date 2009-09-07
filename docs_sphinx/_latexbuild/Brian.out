@@ -5,6 +5,7 @@
 \BOOKMARK [1][-]{section.2.3}{Testing}{chapter.2}
 \BOOKMARK [0][-]{chapter.3}{Getting started}{}
 \BOOKMARK [1][-]{section.3.1}{Tutorials}{chapter.3}
+\BOOKMARK [1][-]{section.3.2}{Examples}{chapter.3}
 \BOOKMARK [0][-]{chapter.4}{User manual}{}
 \BOOKMARK [1][-]{section.4.1}{Units}{chapter.4}
 \BOOKMARK [1][-]{section.4.2}{Models and neuron groups}{chapter.4}
@@ -45,13 +46,21 @@
 \BOOKMARK [1][-]{section.8.9}{Network}{chapter.8}
 \BOOKMARK [1][-]{section.8.10}{Monitors}{chapter.8}
 \BOOKMARK [1][-]{section.8.11}{Plotting}{chapter.8}
-\BOOKMARK [1][-]{section.8.12}{Analysis}{chapter.8}
-\BOOKMARK [1][-]{section.8.13}{Magic in Brian}{chapter.8}
-\BOOKMARK [1][-]{section.8.14}{Tests}{chapter.8}
+\BOOKMARK [1][-]{section.8.12}{Variable updating}{chapter.8}
+\BOOKMARK [1][-]{section.8.13}{Analysis}{chapter.8}
+\BOOKMARK [1][-]{section.8.14}{Progress reporting}{chapter.8}
+\BOOKMARK [1][-]{section.8.15}{Magic in Brian}{chapter.8}
+\BOOKMARK [1][-]{section.8.16}{Tests}{chapter.8}
 \BOOKMARK [0][-]{chapter.9}{Typical Tasks}{}
 \BOOKMARK [1][-]{section.9.1}{Projects with multiple files or functions}{chapter.9}
 \BOOKMARK [0][-]{chapter.10}{Experimental features}{}
 \BOOKMARK [1][-]{section.10.1}{Automatic C code generation for nonlinear state updaters}{chapter.10}
 \BOOKMARK [1][-]{section.10.2}{Multilinear state updater}{chapter.10}
-\BOOKMARK [0][-]{section*.76}{Module Index}{}
-\BOOKMARK [0][-]{section*.77}{Index}{}
+\BOOKMARK [0][-]{chapter.11}{Developer's guide}{}
+\BOOKMARK [1][-]{section.11.1}{Guidelines}{chapter.11}
+\BOOKMARK [1][-]{section.11.2}{Simulation principles}{chapter.11}
+\BOOKMARK [1][-]{section.11.3}{Main code structure}{chapter.11}
+\BOOKMARK [1][-]{section.11.4}{Brian package structure}{chapter.11}
+\BOOKMARK [1][-]{section.11.5}{Repository structure}{chapter.11}
+\BOOKMARK [0][-]{section*.153}{Module Index}{}
+\BOOKMARK [0][-]{section*.154}{Index}{}

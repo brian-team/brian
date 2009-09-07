@@ -1,0 +1,29 @@
+.. currentmodule:: brian
+
+.. _example-misc_pickle_loadnet:
+
+.. index::
+   pair: example usage; raster_plot
+   pair: example usage; run
+
+Example: pickle_loadnet (misc)
+==============================
+
+Pickling example, see also pickle_savenet.py
+
+::
+
+    
+    from brian import *
+    import pickle
+    
+    inputfile = open('data.pkl','rb')
+    obj = pickle.load(inputfile)
+    inputfile.close()
+    
+    clk, eqs, P, Pe, Pi, Ce, Ci, M, net = obj
+    
+    net.run(100*ms)
+    raster_plot(M)
+    show()
+

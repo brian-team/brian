@@ -12,45 +12,6 @@ in the extras package.
 .. toctree::
    :maxdepth: 1
 
-   examples-adaptive
-   examples-adaptive_threshold
-   examples-cable
-   examples-COBA
-   examples-COBAHH
-   examples-cobahh_simplified
-   examples-correlated_inputs
-   examples-CUBA
-   examples-current_clamp
-   examples-delays
-   examples-expIF_network
-   examples-gap_junctions
-   examples-heterogeneous_delays
-   examples-HodgkinHuxley
-   examples-I-F_curve
-   examples-I-F_curve2
-   examples-if
-   examples-leaky_if
-   examples-minimalexample
-   examples-mirollo_strogatz
-   examples-multipleclocks
-   examples-named_threshold
-   examples-noisy_ring
-   examples-parallelpython
-   examples-phase_locking
-   examples-pickle_loadnet
-   examples-pickle_savenet
-   examples-poisson
-   examples-poissongroup
-   examples-pulsepacket
-   examples-rate_model
-   examples-reliability
-   examples-ring
-   examples-stim2d
-   examples-stopping
-   examples-topographic_map
-   examples-topographic_map2
-   examples-transient_sync
-   examples-two_neurons
 
 plasticity
 ----------
@@ -62,6 +23,52 @@ plasticity
    examples-plasticity_short_term_plasticity2
    examples-plasticity_STDP1
    examples-plasticity_STDP2
+
+misc
+----
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-misc_adaptive
+   examples-misc_adaptive_threshold
+   examples-misc_cable
+   examples-misc_COBA
+   examples-misc_COBAHH
+   examples-misc_cobahh_simplified
+   examples-misc_correlated_inputs
+   examples-misc_CUBA
+   examples-misc_current_clamp
+   examples-misc_delays
+   examples-misc_expIF_network
+   examples-misc_gap_junctions
+   examples-misc_heterogeneous_delays
+   examples-misc_HodgkinHuxley
+   examples-misc_I-F_curve
+   examples-misc_I-F_curve2
+   examples-misc_if
+   examples-misc_leaky_if
+   examples-misc_minimalexample
+   examples-misc_mirollo_strogatz
+   examples-misc_multipleclocks
+   examples-misc_named_threshold
+   examples-misc_noisy_ring
+   examples-misc_parallelpython
+   examples-misc_phase_locking
+   examples-misc_pickle_loadnet
+   examples-misc_pickle_savenet
+   examples-misc_poisson
+   examples-misc_poissongroup
+   examples-misc_pulsepacket
+   examples-misc_rate_model
+   examples-misc_reliability
+   examples-misc_ring
+   examples-misc_stim2d
+   examples-misc_stopping
+   examples-misc_topographic_map
+   examples-misc_topographic_map2
+   examples-misc_transient_sync
+   examples-misc_two_neurons
 
 interface
 ---------
@@ -100,5 +107,6 @@ audition
 .. toctree::
    :maxdepth: 1
 
+   examples-audition_filterbank
    examples-audition_jeffress
    examples-audition_licklider

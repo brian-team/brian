@@ -77,7 +77,7 @@ from stdp import *
 from stp import *
 from timedarray import *
 
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 #import unitsafefunctions as _usf
 #import numpy as _numpy

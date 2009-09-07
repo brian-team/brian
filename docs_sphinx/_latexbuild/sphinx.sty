@@ -17,8 +17,15 @@
 \RequirePackage{makeidx}
 \RequirePackage{framed}
 \RequirePackage{color}
+% For highlighted code.
 \RequirePackage{fancyvrb}
+% For table captions.
 \RequirePackage{threeparttable}
+% Handle footnotes in tables.
+\RequirePackage{footnote}
+\makesavenoteenv{tabulary}
+% For floating figures in the text.
+\RequirePackage{wrapfig}
 
 % Redefine these colors to your liking in the preamble.
 \definecolor{TitleColor}{rgb}{0.126,0.263,0.361}
@@ -451,6 +458,20 @@
     \fi
 }{\end{fulllineitems}}
 
+% class method ----------------------------------------------------------
+% \begin{classmethoddesc}[classname]{methodname}{args}
+\newcommand{\classmethodline}[3][\@undefined]{
+  \py@sigline{class \bfcode{#2}}{#3}}
+\newenvironment{classmethoddesc}[3][\@undefined]{
+  \begin{fulllineitems}
+    \ifx\@undefined#1\relax
+      \classmethodline{#2}{#3}
+    \else
+      \def\py@thisclass{#1}
+      \classmethodline{#2}{#3}
+    \fi
+}{\end{fulllineitems}}
+
 % object data attribute --------------------------------------------------
 % \begin{memberdesc}[classname]{membername}
 \newcommand{\memberline}[2][\py@classbadkey]{%
@@ -707,3 +728,15 @@
                 linkcolor=InnerLinkColor,filecolor=OuterLinkColor,
                 menucolor=OuterLinkColor,pagecolor=OuterLinkColor,
                 urlcolor=OuterLinkColor]{hyperref}
+
+% From docutils.writers.latex2e
+\providecommand{\DUspan}[2]{%
+  {% group ("span") to limit the scope of styling commands
+    \@for\node@class@name:=#1\do{%
+    \ifcsname docutilsrole\node@class@name\endcsname%
+      \csname docutilsrole\node@class@name\endcsname%
+    \fi%
+    }%
+    {#2}% node content
+  }% close "span"
+}

@@ -1,215 +1,313 @@
 \select@language {english}
-\contentsline {chapter}{\numberline {1}Introduction}{3}{chapter.1}
-\contentsline {chapter}{\numberline {2}Installation}{7}{chapter.2}
-\contentsline {section}{\numberline {2.1}Quick installation}{7}{section.2.1}
-\contentsline {section}{\numberline {2.2}Manual installation}{7}{section.2.2}
-\contentsline {subsection}{\numberline {2.2.1}Installing Python packages}{8}{subsection.2.2.1}
-\contentsline {subsection}{\numberline {2.2.2}Installing Eclipse}{8}{subsection.2.2.2}
-\contentsline {subsection}{\numberline {2.2.3}Installing IPython}{8}{subsection.2.2.3}
-\contentsline {subsection}{\numberline {2.2.4}C++ compilers}{8}{subsection.2.2.4}
-\contentsline {section}{\numberline {2.3}Testing}{8}{section.2.3}
-\contentsline {chapter}{\numberline {3}Getting started}{9}{chapter.3}
-\contentsline {section}{\numberline {3.1}Tutorials}{9}{section.3.1}
-\contentsline {subsection}{\numberline {3.1.1}Tutorials for Python and Scipy}{9}{subsection.3.1.1}
-\contentsline {subsubsection}{Python}{9}{subsubsection*.2}
-\contentsline {subsubsection}{NumPy, SciPy and Pylab}{9}{subsubsection*.3}
-\contentsline {subsection}{\numberline {3.1.2}Tutorial 1: Basic Concepts}{9}{subsection.3.1.2}
-\contentsline {subsubsection}{Tutorial 1a: The simplest Brian program}{10}{subsubsection*.4}
-\contentsline {paragraph}{Importing the Brian module}{10}{paragraph*.5}
-\contentsline {paragraph}{Integrate and Fire model}{10}{paragraph*.6}
-\contentsline {paragraph}{Parameters}{11}{paragraph*.7}
-\contentsline {paragraph}{Neuron model and equations}{11}{paragraph*.8}
-\contentsline {paragraph}{Simulation}{11}{paragraph*.9}
-\contentsline {paragraph}{Exercise}{12}{paragraph*.10}
-\contentsline {paragraph}{Solution}{12}{paragraph*.11}
-\contentsline {subsubsection}{Tutorial 1b: Counting spikes}{12}{subsubsection*.12}
-\contentsline {paragraph}{Counting spikes}{12}{paragraph*.13}
-\contentsline {paragraph}{Results}{13}{paragraph*.14}
-\contentsline {subsubsection}{Tutorial 1c: Making some activity}{13}{subsubsection*.15}
-\contentsline {paragraph}{Exercises}{13}{paragraph*.16}
-\contentsline {paragraph}{Solution}{14}{paragraph*.17}
-\contentsline {subsubsection}{Tutorial 1d: Introducing randomness}{14}{subsubsection*.18}
-\contentsline {subsubsection}{Tutorial 1e: Connecting neurons}{15}{subsubsection*.19}
-\contentsline {paragraph}{Connections}{15}{paragraph*.20}
-\contentsline {paragraph}{Exercise}{16}{paragraph*.21}
-\contentsline {paragraph}{Solution}{16}{paragraph*.22}
-\contentsline {subsubsection}{Tutorial 1f: Recording spikes}{16}{subsubsection*.23}
-\contentsline {subsubsection}{Tutorial 1g: Recording membrane potentials}{18}{subsubsection*.24}
-\contentsline {paragraph}{Recording states}{18}{paragraph*.25}
-\contentsline {subsection}{\numberline {3.1.3}Tutorial 2: Connections}{19}{subsection.3.1.3}
-\contentsline {subsubsection}{Tutorial 2a: The concept of a Connection}{19}{subsubsection*.26}
-\contentsline {paragraph}{The network}{19}{paragraph*.27}
-\contentsline {paragraph}{Differential equations}{20}{paragraph*.28}
-\contentsline {paragraph}{SpikeGeneratorGroup}{20}{paragraph*.29}
-\contentsline {paragraph}{Connections}{21}{paragraph*.30}
-\contentsline {paragraph}{Exercises}{22}{paragraph*.31}
-\contentsline {paragraph}{Solutions}{22}{paragraph*.32}
-\contentsline {subsubsection}{Tutorial 2b: Excitatory and inhibitory currents}{23}{subsubsection*.33}
-\contentsline {paragraph}{The scheme}{23}{paragraph*.34}
-\contentsline {paragraph}{Connections}{23}{paragraph*.35}
-\contentsline {paragraph}{Exercises}{25}{paragraph*.36}
-\contentsline {paragraph}{Solutions}{25}{paragraph*.37}
-\contentsline {subsubsection}{Tutorial 2c: The CUBA network}{26}{subsubsection*.38}
-\contentsline {chapter}{\numberline {4}User manual}{29}{chapter.4}
-\contentsline {section}{\numberline {4.1}Units}{29}{section.4.1}
-\contentsline {subsection}{\numberline {4.1.1}Basics}{29}{subsection.4.1.1}
-\contentsline {subsection}{\numberline {4.1.2}Units defined in Brian}{30}{subsection.4.1.2}
-\contentsline {subsection}{\numberline {4.1.3}Arrays and units}{30}{subsection.4.1.3}
-\contentsline {subsection}{\numberline {4.1.4}Checking units}{31}{subsection.4.1.4}
-\contentsline {subsection}{\numberline {4.1.5}Disabling units}{31}{subsection.4.1.5}
-\contentsline {subsection}{\numberline {4.1.6}Converting quantities}{31}{subsection.4.1.6}
-\contentsline {section}{\numberline {4.2}Models and neuron groups}{32}{section.4.2}
-\contentsline {subsection}{\numberline {4.2.1}\texttt {Equations}}{32}{subsection.4.2.1}
-\contentsline {subsection}{\numberline {4.2.2}Neuron groups}{32}{subsection.4.2.2}
-\contentsline {subsubsection}{Important options}{33}{subsubsection*.39}
-\contentsline {subsubsection}{Subgroups}{33}{subsubsection*.40}
-\contentsline {subsubsection}{Details}{33}{subsubsection*.41}
-\contentsline {subsection}{\numberline {4.2.3}Reset}{33}{subsection.4.2.3}
-\contentsline {subsubsection}{Reset as Python code}{34}{subsubsection*.42}
-\contentsline {subsubsection}{Functional reset}{34}{subsubsection*.43}
-\contentsline {subsubsection}{Resetting another variable}{34}{subsubsection*.44}
-\contentsline {subsubsection}{Resetting to the value of another variable}{34}{subsubsection*.45}
-\contentsline {subsection}{\numberline {4.2.4}Threshold}{35}{subsection.4.2.4}
-\contentsline {subsubsection}{Threshold as Python expression}{35}{subsubsection*.46}
-\contentsline {subsubsection}{Functional threshold}{35}{subsubsection*.47}
-\contentsline {subsubsection}{Thresholding another variable}{35}{subsubsection*.48}
-\contentsline {subsubsection}{Using another variable as the threshold value}{35}{subsubsection*.49}
-\contentsline {subsubsection}{Empirical threshold}{36}{subsubsection*.50}
-\contentsline {subsubsection}{Poisson threshold}{36}{subsubsection*.51}
-\contentsline {section}{\numberline {4.3}Connections}{36}{section.4.3}
-\contentsline {subsection}{\numberline {4.3.1}Building connections}{36}{subsection.4.3.1}
-\contentsline {subsubsection}{Building connections with connectivity functions}{37}{subsubsection*.52}
-\contentsline {subsection}{\numberline {4.3.2}Delays}{38}{subsection.4.3.2}
-\contentsline {subsection}{\numberline {4.3.3}Connection structure}{38}{subsection.4.3.3}
-\contentsline {subsection}{\numberline {4.3.4}Modulation}{38}{subsection.4.3.4}
-\contentsline {subsection}{\numberline {4.3.5}Direct connection}{39}{subsection.4.3.5}
-\contentsline {subsection}{\numberline {4.3.6}Simple connections}{39}{subsection.4.3.6}
-\contentsline {section}{\numberline {4.4}Spike-timing-dependent plasticity}{39}{section.4.4}
-\contentsline {subsection}{\numberline {4.4.1}Current limitations}{40}{subsection.4.4.1}
-\contentsline {subsubsection}{Exponential STDP}{40}{subsubsection*.53}
-\contentsline {subsubsection}{Delays}{40}{subsubsection*.54}
-\contentsline {section}{\numberline {4.5}Short-term plasticity}{40}{section.4.5}
-\contentsline {section}{\numberline {4.6}Recording}{41}{section.4.6}
-\contentsline {subsection}{\numberline {4.6.1}Recording spikes}{41}{subsection.4.6.1}
-\contentsline {subsubsection}{Custom monitoring}{41}{subsubsection*.55}
-\contentsline {subsection}{\numberline {4.6.2}Recording state variables}{41}{subsection.4.6.2}
-\contentsline {subsubsection}{Recording spike triggered state values}{42}{subsubsection*.56}
-\contentsline {subsubsection}{Recording multiple state variables}{42}{subsubsection*.57}
-\contentsline {subsection}{\numberline {4.6.3}Counting spikes}{42}{subsection.4.6.3}
-\contentsline {subsection}{\numberline {4.6.4}Recording population rates}{43}{subsection.4.6.4}
-\contentsline {section}{\numberline {4.7}Inputs}{43}{section.4.7}
-\contentsline {subsection}{\numberline {4.7.1}Poisson inputs}{43}{subsection.4.7.1}
-\contentsline {subsection}{\numberline {4.7.2}Correlated inputs}{43}{subsection.4.7.2}
-\contentsline {subsubsection}{Doubly stochastic processes}{44}{subsubsection*.58}
-\contentsline {subsubsection}{Mixture method}{44}{subsubsection*.59}
-\contentsline {subsection}{\numberline {4.7.3}Input spike trains}{44}{subsection.4.7.3}
-\contentsline {subsubsection}{Gaussian spike packets}{45}{subsubsection*.60}
-\contentsline {subsection}{\numberline {4.7.4}Direct input}{45}{subsection.4.7.4}
-\contentsline {section}{\numberline {4.8}User-defined operations}{45}{section.4.8}
-\contentsline {section}{\numberline {4.9}Analysis and plotting}{45}{section.4.9}
-\contentsline {subsection}{\numberline {4.9.1}Raster plots}{46}{subsection.4.9.1}
-\contentsline {subsection}{\numberline {4.9.2}Statistics}{46}{subsection.4.9.2}
-\contentsline {section}{\numberline {4.10}Clocks}{47}{section.4.10}
-\contentsline {section}{\numberline {4.11}Simulation control}{47}{section.4.11}
-\contentsline {subsection}{\numberline {4.11.1}The update schedule}{47}{subsection.4.11.1}
-\contentsline {subsection}{\numberline {4.11.2}Basic simulation control}{48}{subsection.4.11.2}
-\contentsline {subsection}{\numberline {4.11.3}The Network class}{48}{subsection.4.11.3}
-\contentsline {subsection}{\numberline {4.11.4}The \texttt {MagicNetwork} object}{48}{subsection.4.11.4}
-\contentsline {section}{\numberline {4.12}More on equations}{49}{section.4.12}
-\contentsline {subsection}{\numberline {4.12.1}External variables}{49}{subsection.4.12.1}
-\contentsline {subsubsection}{Issues}{49}{subsubsection*.61}
-\contentsline {subsection}{\numberline {4.12.2}Combining equations}{49}{subsection.4.12.2}
-\contentsline {subsection}{\numberline {4.12.3}Which variable is the membrane potential?}{50}{subsection.4.12.3}
-\contentsline {subsection}{\numberline {4.12.4}Numerical integration}{50}{subsection.4.12.4}
-\contentsline {subsubsection}{Exact integration}{50}{subsubsection*.62}
-\contentsline {subsubsection}{Euler integration}{51}{subsubsection*.63}
-\contentsline {subsubsection}{Exponential Euler integration}{51}{subsubsection*.64}
-\contentsline {subsection}{\numberline {4.12.5}Stochastic differential equations}{51}{subsection.4.12.5}
-\contentsline {subsection}{\numberline {4.12.6}Non-autonomous equations}{51}{subsection.4.12.6}
-\contentsline {subsection}{\numberline {4.12.7}Freezing}{52}{subsection.4.12.7}
-\contentsline {subsection}{\numberline {4.12.8}Compilation}{52}{subsection.4.12.8}
-\contentsline {subsection}{\numberline {4.12.9}Working with equations}{52}{subsection.4.12.9}
-\contentsline {subsubsection}{Applying an equation}{52}{subsubsection*.65}
-\contentsline {subsubsection}{Calculating a fixed point}{52}{subsubsection*.66}
-\contentsline {subsubsection}{Issues}{53}{subsubsection*.67}
-\contentsline {chapter}{\numberline {5}The library}{55}{chapter.5}
-\contentsline {section}{\numberline {5.1}Library models}{55}{section.5.1}
-\contentsline {subsection}{\numberline {5.1.1}Membrane equations}{55}{subsection.5.1.1}
-\contentsline {subsection}{\numberline {5.1.2}Compartmental modelling}{56}{subsection.5.1.2}
-\contentsline {subsection}{\numberline {5.1.3}Integrate-and-Fire models}{56}{subsection.5.1.3}
-\contentsline {subsection}{\numberline {5.1.4}Two-dimensional IF models}{57}{subsection.5.1.4}
-\contentsline {subsection}{\numberline {5.1.5}Synapses}{57}{subsection.5.1.5}
-\contentsline {subsection}{\numberline {5.1.6}Ionic currents}{58}{subsection.5.1.6}
-\contentsline {section}{\numberline {5.2}Random processes}{59}{section.5.2}
-\contentsline {section}{\numberline {5.3}Electrophysiology}{59}{section.5.3}
-\contentsline {subsection}{\numberline {5.3.1}Electrodes}{59}{subsection.5.3.1}
-\contentsline {subsection}{\numberline {5.3.2}Amplifiers}{59}{subsection.5.3.2}
-\contentsline {subsubsection}{Current-clamp amplifier}{59}{subsubsection*.68}
-\contentsline {subsubsection}{Voltage-clamp amplifier}{60}{subsubsection*.69}
-\contentsline {subsubsection}{Acquisition board}{60}{subsubsection*.70}
-\contentsline {subsubsection}{Discontinuous current clamp}{61}{subsubsection*.71}
-\contentsline {subsubsection}{Discontinuous voltage clamp}{61}{subsubsection*.72}
-\contentsline {subsection}{\numberline {5.3.3}Active Electrode Compensation (AEC)}{61}{subsection.5.3.3}
-\contentsline {subsubsection}{Offline AEC}{61}{subsubsection*.73}
-\contentsline {subsubsection}{Online AEC}{62}{subsubsection*.74}
-\contentsline {subsubsection}{Voltage-clamp with AEC}{62}{subsubsection*.75}
-\contentsline {section}{\numberline {5.4}Extending the library}{63}{section.5.4}
-\contentsline {chapter}{\numberline {6}Advanced concepts}{65}{chapter.6}
-\contentsline {section}{\numberline {6.1}Parallel computing}{65}{section.6.1}
-\contentsline {section}{\numberline {6.2}How to write efficient Brian code}{65}{section.6.2}
-\contentsline {subsection}{\numberline {6.2.1}Brian specifics}{65}{subsection.6.2.1}
-\contentsline {subsection}{\numberline {6.2.2}Vectorisation}{66}{subsection.6.2.2}
-\contentsline {section}{\numberline {6.3}Compiled code}{67}{section.6.3}
-\contentsline {subsection}{\numberline {6.3.1}Weave}{68}{subsection.6.3.1}
-\contentsline {subsection}{\numberline {6.3.2}Circular arrays}{68}{subsection.6.3.2}
-\contentsline {subsection}{\numberline {6.3.3}Automatically generated C code}{68}{subsection.6.3.3}
-\contentsline {section}{\numberline {6.4}Projects with multiple files or functions}{68}{section.6.4}
-\contentsline {subsection}{\numberline {6.4.1}Use the \texttt {Network} object explicitly}{68}{subsection.6.4.1}
-\contentsline {subsection}{\numberline {6.4.2}Use the \texttt {magic\_return()} decorator or \texttt {magic\_register()} function}{69}{subsection.6.4.2}
-\contentsline {subsection}{\numberline {6.4.3}Use derived classes}{69}{subsection.6.4.3}
-\contentsline {section}{\numberline {6.5}Parameters}{70}{section.6.5}
-\contentsline {section}{\numberline {6.6}Precalculated tables}{71}{section.6.6}
-\contentsline {section}{\numberline {6.7}Preferences}{71}{section.6.7}
-\contentsline {subsection}{\numberline {6.7.1}Functions}{71}{subsection.6.7.1}
-\contentsline {subsection}{\numberline {6.7.2}Global configuration file}{72}{subsection.6.7.2}
-\contentsline {subsection}{\numberline {6.7.3}Global preferences for Brian}{72}{subsection.6.7.3}
-\contentsline {section}{\numberline {6.8}Logging}{72}{section.6.8}
-\contentsline {chapter}{\numberline {7}Extending Brian}{73}{chapter.7}
-\contentsline {chapter}{\numberline {8}Reference}{75}{chapter.8}
-\contentsline {section}{\numberline {8.1}SciPy, NumPy and PyLab}{75}{section.8.1}
-\contentsline {section}{\numberline {8.2}Units system}{75}{section.8.2}
-\contentsline {section}{\numberline {8.3}Clocks}{77}{section.8.3}
-\contentsline {subsection}{\numberline {8.3.1}The \texttt {Clock} class}{77}{subsection.8.3.1}
-\contentsline {subsection}{\numberline {8.3.2}The default clock}{78}{subsection.8.3.2}
-\contentsline {section}{\numberline {8.4}Neuron models and groups}{78}{section.8.4}
-\contentsline {subsection}{\numberline {8.4.1}The \texttt {Equations} object}{78}{subsection.8.4.1}
-\contentsline {subsection}{\numberline {8.4.2}The \texttt {NeuronGroup} object}{79}{subsection.8.4.2}
-\contentsline {subsection}{\numberline {8.4.3}Resets}{82}{subsection.8.4.3}
-\contentsline {subsection}{\numberline {8.4.4}Thresholds}{84}{subsection.8.4.4}
-\contentsline {section}{\numberline {8.5}Integration}{85}{section.8.5}
-\contentsline {subsection}{\numberline {8.5.1}StateUpdaters}{86}{subsection.8.5.1}
-\contentsline {section}{\numberline {8.6}Standard Groups}{86}{section.8.6}
-\contentsline {section}{\numberline {8.7}Connections}{88}{section.8.7}
-\contentsline {subsection}{\numberline {8.7.1}Connection matrix types}{91}{subsection.8.7.1}
-\contentsline {subsection}{\numberline {8.7.2}Construction matrix types}{93}{subsection.8.7.2}
-\contentsline {subsection}{\numberline {8.7.3}Connection vector types}{93}{subsection.8.7.3}
-\contentsline {section}{\numberline {8.8}Plasticity}{93}{section.8.8}
-\contentsline {subsection}{\numberline {8.8.1}Spike timing dependent plasticity (STDP)}{93}{subsection.8.8.1}
-\contentsline {subsection}{\numberline {8.8.2}Short term plasticity (STP)}{94}{subsection.8.8.2}
-\contentsline {section}{\numberline {8.9}Network}{95}{section.8.9}
-\contentsline {section}{\numberline {8.10}Monitors}{99}{section.8.10}
-\contentsline {section}{\numberline {8.11}Plotting}{103}{section.8.11}
-\contentsline {section}{\numberline {8.12}Analysis}{104}{section.8.12}
-\contentsline {subsection}{\numberline {8.12.1}Statistics of spike trains}{104}{subsection.8.12.1}
-\contentsline {section}{\numberline {8.13}Magic in Brian}{105}{section.8.13}
-\contentsline {section}{\numberline {8.14}Tests}{106}{section.8.14}
-\contentsline {chapter}{\numberline {9}Typical Tasks}{107}{chapter.9}
-\contentsline {section}{\numberline {9.1}Projects with multiple files or functions}{107}{section.9.1}
-\contentsline {subsection}{\numberline {9.1.1}Use the \texttt {Network} object explicitly}{107}{subsection.9.1.1}
-\contentsline {subsection}{\numberline {9.1.2}Use the \texttt {magic\_return()} decorator or \texttt {magic\_register()} function}{108}{subsection.9.1.2}
-\contentsline {subsection}{\numberline {9.1.3}Use derived classes}{108}{subsection.9.1.3}
-\contentsline {chapter}{\numberline {10}Experimental features}{111}{chapter.10}
-\contentsline {section}{\numberline {10.1}Automatic C code generation for nonlinear state updaters}{111}{section.10.1}
-\contentsline {section}{\numberline {10.2}Multilinear state updater}{111}{section.10.2}
-\contentsline {chapter}{Module Index}{113}{section*.76}
-\contentsline {chapter}{Index}{115}{section*.77}
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}
+\contentsline {chapter}{\numberline {2}Installation}{5}{chapter.2}
+\contentsline {section}{\numberline {2.1}Quick installation}{5}{section.2.1}
+\contentsline {section}{\numberline {2.2}Manual installation}{5}{section.2.2}
+\contentsline {subsection}{\numberline {2.2.1}Installing Python packages}{6}{subsection.2.2.1}
+\contentsline {subsection}{\numberline {2.2.2}Installing Eclipse}{6}{subsection.2.2.2}
+\contentsline {subsection}{\numberline {2.2.3}Installing IPython}{6}{subsection.2.2.3}
+\contentsline {subsection}{\numberline {2.2.4}C++ compilers}{6}{subsection.2.2.4}
+\contentsline {section}{\numberline {2.3}Testing}{6}{section.2.3}
+\contentsline {chapter}{\numberline {3}Getting started}{7}{chapter.3}
+\contentsline {section}{\numberline {3.1}Tutorials}{7}{section.3.1}
+\contentsline {subsection}{\numberline {3.1.1}Tutorials for Python and Scipy}{7}{subsection.3.1.1}
+\contentsline {subsubsection}{Python}{7}{subsubsection*.2}
+\contentsline {subsubsection}{NumPy, SciPy and Pylab}{7}{subsubsection*.3}
+\contentsline {subsection}{\numberline {3.1.2}Tutorial 1: Basic Concepts}{7}{subsection.3.1.2}
+\contentsline {subsubsection}{Tutorial 1a: The simplest Brian program}{8}{subsubsection*.4}
+\contentsline {paragraph}{Importing the Brian module}{8}{paragraph*.5}
+\contentsline {paragraph}{Integrate and Fire model}{8}{paragraph*.6}
+\contentsline {paragraph}{Parameters}{9}{paragraph*.7}
+\contentsline {paragraph}{Neuron model and equations}{9}{paragraph*.8}
+\contentsline {paragraph}{Simulation}{9}{paragraph*.9}
+\contentsline {paragraph}{Exercise}{10}{paragraph*.10}
+\contentsline {paragraph}{Solution}{10}{paragraph*.11}
+\contentsline {subsubsection}{Tutorial 1b: Counting spikes}{10}{subsubsection*.12}
+\contentsline {paragraph}{Counting spikes}{10}{paragraph*.13}
+\contentsline {paragraph}{Results}{11}{paragraph*.14}
+\contentsline {subsubsection}{Tutorial 1c: Making some activity}{11}{subsubsection*.15}
+\contentsline {paragraph}{Exercises}{11}{paragraph*.16}
+\contentsline {paragraph}{Solution}{12}{paragraph*.17}
+\contentsline {subsubsection}{Tutorial 1d: Introducing randomness}{12}{subsubsection*.18}
+\contentsline {subsubsection}{Tutorial 1e: Connecting neurons}{13}{subsubsection*.19}
+\contentsline {paragraph}{Connections}{13}{paragraph*.20}
+\contentsline {paragraph}{Exercise}{14}{paragraph*.21}
+\contentsline {paragraph}{Solution}{14}{paragraph*.22}
+\contentsline {subsubsection}{Tutorial 1f: Recording spikes}{14}{subsubsection*.23}
+\contentsline {subsubsection}{Tutorial 1g: Recording membrane potentials}{16}{subsubsection*.24}
+\contentsline {paragraph}{Recording states}{16}{paragraph*.25}
+\contentsline {subsection}{\numberline {3.1.3}Tutorial 2: Connections}{17}{subsection.3.1.3}
+\contentsline {subsubsection}{Tutorial 2a: The concept of a Connection}{17}{subsubsection*.26}
+\contentsline {paragraph}{The network}{17}{paragraph*.27}
+\contentsline {paragraph}{Differential equations}{18}{paragraph*.28}
+\contentsline {paragraph}{SpikeGeneratorGroup}{18}{paragraph*.29}
+\contentsline {paragraph}{Connections}{19}{paragraph*.30}
+\contentsline {paragraph}{Exercises}{20}{paragraph*.31}
+\contentsline {paragraph}{Solutions}{20}{paragraph*.32}
+\contentsline {subsubsection}{Tutorial 2b: Excitatory and inhibitory currents}{21}{subsubsection*.33}
+\contentsline {paragraph}{The scheme}{21}{paragraph*.34}
+\contentsline {paragraph}{Connections}{21}{paragraph*.35}
+\contentsline {paragraph}{Exercises}{23}{paragraph*.36}
+\contentsline {paragraph}{Solutions}{23}{paragraph*.37}
+\contentsline {subsubsection}{Tutorial 2c: The CUBA network}{24}{subsubsection*.38}
+\contentsline {section}{\numberline {3.2}Examples}{26}{section.3.2}
+\contentsline {subsection}{\numberline {3.2.1}plasticity}{26}{subsection.3.2.1}
+\contentsline {subsubsection}{Example: short\_term\_plasticity (plasticity)}{26}{subsubsection*.39}
+\contentsline {subsubsection}{Example: short\_term\_plasticity2 (plasticity)}{27}{subsubsection*.40}
+\contentsline {subsubsection}{Example: STDP1 (plasticity)}{28}{subsubsection*.41}
+\contentsline {subsubsection}{Example: STDP2 (plasticity)}{29}{subsubsection*.42}
+\contentsline {subsection}{\numberline {3.2.2}misc}{30}{subsection.3.2.2}
+\contentsline {subsubsection}{Example: adaptive (misc)}{30}{subsubsection*.43}
+\contentsline {subsubsection}{Example: adaptive\_threshold (misc)}{30}{subsubsection*.44}
+\contentsline {subsubsection}{Example: cable (misc)}{31}{subsubsection*.45}
+\contentsline {subsubsection}{Example: COBA (misc)}{32}{subsubsection*.46}
+\contentsline {paragraph}{R. Brette - Dec 2007}{32}{paragraph*.47}
+\contentsline {subsubsection}{Example: COBAHH (misc)}{33}{subsubsection*.48}
+\contentsline {paragraph}{R. Brette - Dec 2007}{33}{paragraph*.49}
+\contentsline {subsubsection}{Example: cobahh\_simplified (misc)}{35}{subsubsection*.50}
+\contentsline {subsubsection}{Example: correlated\_inputs (misc)}{36}{subsubsection*.51}
+\contentsline {subsubsection}{Example: CUBA (misc)}{36}{subsubsection*.52}
+\contentsline {paragraph}{R. Brette - Oct 2007}{37}{paragraph*.53}
+\contentsline {subsubsection}{Example: current\_clamp (misc)}{38}{subsubsection*.54}
+\contentsline {subsubsection}{Example: delays (misc)}{38}{subsubsection*.55}
+\contentsline {subsubsection}{Example: expIF\_network (misc)}{39}{subsubsection*.56}
+\contentsline {subsubsection}{Example: gap\_junctions (misc)}{40}{subsubsection*.57}
+\contentsline {subsubsection}{Example: heterogeneous\_delays (misc)}{41}{subsubsection*.58}
+\contentsline {subsubsection}{Example: HodgkinHuxley (misc)}{41}{subsubsection*.59}
+\contentsline {subsubsection}{Example: I-F\_curve (misc)}{42}{subsubsection*.60}
+\contentsline {subsubsection}{Example: I-F\_curve2 (misc)}{43}{subsubsection*.61}
+\contentsline {subsubsection}{Example: if (misc)}{43}{subsubsection*.62}
+\contentsline {subsubsection}{Example: leaky\_if (misc)}{43}{subsubsection*.63}
+\contentsline {subsubsection}{Example: minimalexample (misc)}{44}{subsubsection*.64}
+\contentsline {subsubsection}{Example: mirollo\_strogatz (misc)}{45}{subsubsection*.65}
+\contentsline {subsubsection}{Example: multipleclocks (misc)}{45}{subsubsection*.66}
+\contentsline {subsubsection}{Example: named\_threshold (misc)}{46}{subsubsection*.67}
+\contentsline {subsubsection}{Example: noisy\_ring (misc)}{46}{subsubsection*.68}
+\contentsline {subsubsection}{Example: parallelpython (misc)}{47}{subsubsection*.69}
+\contentsline {subsubsection}{Example: phase\_locking (misc)}{48}{subsubsection*.70}
+\contentsline {subsubsection}{Example: pickle\_loadnet (misc)}{49}{subsubsection*.71}
+\contentsline {subsubsection}{Example: pickle\_savenet (misc)}{49}{subsubsection*.72}
+\contentsline {subsubsection}{Example: poisson (misc)}{50}{subsubsection*.73}
+\contentsline {subsubsection}{Example: poissongroup (misc)}{51}{subsubsection*.74}
+\contentsline {subsubsection}{Example: pulsepacket (misc)}{51}{subsubsection*.75}
+\contentsline {subsubsection}{Example: rate\_model (misc)}{52}{subsubsection*.76}
+\contentsline {subsubsection}{Example: reliability (misc)}{52}{subsubsection*.77}
+\contentsline {subsubsection}{Example: ring (misc)}{53}{subsubsection*.78}
+\contentsline {subsubsection}{Example: stim2d (misc)}{53}{subsubsection*.79}
+\contentsline {subsubsection}{Example: stopping (misc)}{54}{subsubsection*.80}
+\contentsline {subsubsection}{Example: topographic\_map (misc)}{55}{subsubsection*.81}
+\contentsline {subsubsection}{Example: topographic\_map2 (misc)}{56}{subsubsection*.82}
+\contentsline {subsubsection}{Example: transient\_sync (misc)}{57}{subsubsection*.83}
+\contentsline {subsubsection}{Example: two\_neurons (misc)}{57}{subsubsection*.84}
+\contentsline {subsection}{\numberline {3.2.3}interface}{58}{subsection.3.2.3}
+\contentsline {subsubsection}{Example: interface (interface)}{58}{subsubsection*.85}
+\contentsline {subsection}{\numberline {3.2.4}frompapers}{59}{subsection.3.2.4}
+\contentsline {subsubsection}{Example: Brette\_Gerstner\_2005 (frompapers)}{59}{subsubsection*.86}
+\contentsline {subsubsection}{Example: Diesmann\_et\_al\_1999 (frompapers)}{59}{subsubsection*.87}
+\contentsline {subsubsection}{Example: Diesmann\_et\_al\_1999\_longer (frompapers)}{60}{subsubsection*.88}
+\contentsline {subsubsection}{Example: Sturzl\_et\_al\_2000 (frompapers)}{64}{subsubsection*.89}
+\contentsline {subsection}{\numberline {3.2.5}electrophysiology}{65}{subsection.3.2.5}
+\contentsline {subsubsection}{Example: AEC (electrophysiology)}{65}{subsubsection*.90}
+\contentsline {subsubsection}{Example: bridge (electrophysiology)}{66}{subsubsection*.91}
+\contentsline {subsubsection}{Example: DCC (electrophysiology)}{67}{subsubsection*.92}
+\contentsline {subsubsection}{Example: SEVC (electrophysiology)}{68}{subsubsection*.93}
+\contentsline {subsubsection}{Example: voltageclamp (electrophysiology)}{69}{subsubsection*.94}
+\contentsline {subsection}{\numberline {3.2.6}audition}{69}{subsection.3.2.6}
+\contentsline {subsubsection}{Example: filterbank (audition)}{69}{subsubsection*.95}
+\contentsline {subsubsection}{Example: jeffress (audition)}{70}{subsubsection*.96}
+\contentsline {subsubsection}{Example: licklider (audition)}{71}{subsubsection*.97}
+\contentsline {chapter}{\numberline {4}User manual}{73}{chapter.4}
+\contentsline {section}{\numberline {4.1}Units}{73}{section.4.1}
+\contentsline {subsection}{\numberline {4.1.1}Basics}{73}{subsection.4.1.1}
+\contentsline {subsection}{\numberline {4.1.2}Units defined in Brian}{74}{subsection.4.1.2}
+\contentsline {subsection}{\numberline {4.1.3}Arrays and units}{74}{subsection.4.1.3}
+\contentsline {subsection}{\numberline {4.1.4}Checking units}{75}{subsection.4.1.4}
+\contentsline {subsection}{\numberline {4.1.5}Disabling units}{75}{subsection.4.1.5}
+\contentsline {subsection}{\numberline {4.1.6}Converting quantities}{75}{subsection.4.1.6}
+\contentsline {section}{\numberline {4.2}Models and neuron groups}{76}{section.4.2}
+\contentsline {subsection}{\numberline {4.2.1}\texttt {Equations}}{76}{subsection.4.2.1}
+\contentsline {subsection}{\numberline {4.2.2}Neuron groups}{76}{subsection.4.2.2}
+\contentsline {subsubsection}{Important options}{77}{subsubsection*.98}
+\contentsline {subsubsection}{Subgroups}{77}{subsubsection*.99}
+\contentsline {subsubsection}{Details}{77}{subsubsection*.100}
+\contentsline {subsection}{\numberline {4.2.3}Reset}{77}{subsection.4.2.3}
+\contentsline {subsubsection}{Reset as Python code}{78}{subsubsection*.101}
+\contentsline {subsubsection}{Functional reset}{78}{subsubsection*.102}
+\contentsline {subsubsection}{Resetting another variable}{78}{subsubsection*.103}
+\contentsline {subsubsection}{Resetting to the value of another variable}{78}{subsubsection*.104}
+\contentsline {subsection}{\numberline {4.2.4}Threshold}{79}{subsection.4.2.4}
+\contentsline {subsubsection}{Threshold as Python expression}{79}{subsubsection*.105}
+\contentsline {subsubsection}{Functional threshold}{79}{subsubsection*.106}
+\contentsline {subsubsection}{Thresholding another variable}{79}{subsubsection*.107}
+\contentsline {subsubsection}{Using another variable as the threshold value}{79}{subsubsection*.108}
+\contentsline {subsubsection}{Empirical threshold}{80}{subsubsection*.109}
+\contentsline {subsubsection}{Poisson threshold}{80}{subsubsection*.110}
+\contentsline {section}{\numberline {4.3}Connections}{80}{section.4.3}
+\contentsline {subsection}{\numberline {4.3.1}Building connections}{80}{subsection.4.3.1}
+\contentsline {subsubsection}{Building connections with connectivity functions}{81}{subsubsection*.111}
+\contentsline {subsection}{\numberline {4.3.2}Delays}{82}{subsection.4.3.2}
+\contentsline {subsection}{\numberline {4.3.3}Connection structure}{82}{subsection.4.3.3}
+\contentsline {subsection}{\numberline {4.3.4}Modulation}{82}{subsection.4.3.4}
+\contentsline {subsection}{\numberline {4.3.5}Direct connection}{83}{subsection.4.3.5}
+\contentsline {subsection}{\numberline {4.3.6}Simple connections}{83}{subsection.4.3.6}
+\contentsline {section}{\numberline {4.4}Spike-timing-dependent plasticity}{83}{section.4.4}
+\contentsline {subsection}{\numberline {4.4.1}Current limitations}{84}{subsection.4.4.1}
+\contentsline {subsubsection}{Exponential STDP}{84}{subsubsection*.112}
+\contentsline {subsubsection}{Delays}{84}{subsubsection*.113}
+\contentsline {section}{\numberline {4.5}Short-term plasticity}{84}{section.4.5}
+\contentsline {section}{\numberline {4.6}Recording}{85}{section.4.6}
+\contentsline {subsection}{\numberline {4.6.1}Recording spikes}{85}{subsection.4.6.1}
+\contentsline {subsubsection}{Custom monitoring}{85}{subsubsection*.114}
+\contentsline {subsection}{\numberline {4.6.2}Recording state variables}{85}{subsection.4.6.2}
+\contentsline {subsubsection}{Recording spike triggered state values}{86}{subsubsection*.115}
+\contentsline {subsubsection}{Recording multiple state variables}{86}{subsubsection*.116}
+\contentsline {subsubsection}{Recording only recent values}{86}{subsubsection*.117}
+\contentsline {subsection}{\numberline {4.6.3}Counting spikes}{86}{subsection.4.6.3}
+\contentsline {subsection}{\numberline {4.6.4}Recording population rates}{87}{subsection.4.6.4}
+\contentsline {section}{\numberline {4.7}Inputs}{87}{section.4.7}
+\contentsline {subsection}{\numberline {4.7.1}Poisson inputs}{87}{subsection.4.7.1}
+\contentsline {subsection}{\numberline {4.7.2}Correlated inputs}{88}{subsection.4.7.2}
+\contentsline {subsubsection}{Doubly stochastic processes}{88}{subsubsection*.118}
+\contentsline {subsubsection}{Mixture method}{88}{subsubsection*.119}
+\contentsline {subsection}{\numberline {4.7.3}Input spike trains}{88}{subsection.4.7.3}
+\contentsline {subsubsection}{Gaussian spike packets}{89}{subsubsection*.120}
+\contentsline {subsection}{\numberline {4.7.4}Direct input}{89}{subsection.4.7.4}
+\contentsline {subsubsection}{Time varying inputs}{89}{subsubsection*.121}
+\contentsline {subsubsection}{Linked variables}{90}{subsubsection*.122}
+\contentsline {section}{\numberline {4.8}User-defined operations}{90}{section.4.8}
+\contentsline {section}{\numberline {4.9}Analysis and plotting}{90}{section.4.9}
+\contentsline {subsection}{\numberline {4.9.1}Raster plots}{91}{subsection.4.9.1}
+\contentsline {subsection}{\numberline {4.9.2}Statistics}{91}{subsection.4.9.2}
+\contentsline {section}{\numberline {4.10}Clocks}{91}{section.4.10}
+\contentsline {section}{\numberline {4.11}Simulation control}{92}{section.4.11}
+\contentsline {subsection}{\numberline {4.11.1}The update schedule}{92}{subsection.4.11.1}
+\contentsline {subsection}{\numberline {4.11.2}Basic simulation control}{93}{subsection.4.11.2}
+\contentsline {subsection}{\numberline {4.11.3}The Network class}{93}{subsection.4.11.3}
+\contentsline {subsection}{\numberline {4.11.4}The \texttt {MagicNetwork} object}{93}{subsection.4.11.4}
+\contentsline {section}{\numberline {4.12}More on equations}{93}{section.4.12}
+\contentsline {subsection}{\numberline {4.12.1}External variables}{93}{subsection.4.12.1}
+\contentsline {subsubsection}{Issues}{94}{subsubsection*.123}
+\contentsline {subsection}{\numberline {4.12.2}Combining equations}{94}{subsection.4.12.2}
+\contentsline {subsection}{\numberline {4.12.3}Which variable is the membrane potential?}{94}{subsection.4.12.3}
+\contentsline {subsection}{\numberline {4.12.4}Numerical integration}{95}{subsection.4.12.4}
+\contentsline {subsubsection}{Exact integration}{95}{subsubsection*.124}
+\contentsline {subsubsection}{Euler integration}{95}{subsubsection*.125}
+\contentsline {subsubsection}{Exponential Euler integration}{96}{subsubsection*.126}
+\contentsline {subsection}{\numberline {4.12.5}Stochastic differential equations}{96}{subsection.4.12.5}
+\contentsline {subsection}{\numberline {4.12.6}Non-autonomous equations}{96}{subsection.4.12.6}
+\contentsline {subsection}{\numberline {4.12.7}Freezing}{96}{subsection.4.12.7}
+\contentsline {subsection}{\numberline {4.12.8}Compilation}{96}{subsection.4.12.8}
+\contentsline {subsection}{\numberline {4.12.9}Working with equations}{97}{subsection.4.12.9}
+\contentsline {subsubsection}{Applying an equation}{97}{subsubsection*.127}
+\contentsline {subsubsection}{Calculating a fixed point}{97}{subsubsection*.128}
+\contentsline {subsubsection}{Issues}{97}{subsubsection*.129}
+\contentsline {chapter}{\numberline {5}The library}{99}{chapter.5}
+\contentsline {section}{\numberline {5.1}Library models}{99}{section.5.1}
+\contentsline {subsection}{\numberline {5.1.1}Membrane equations}{99}{subsection.5.1.1}
+\contentsline {subsection}{\numberline {5.1.2}Compartmental modelling}{100}{subsection.5.1.2}
+\contentsline {subsection}{\numberline {5.1.3}Integrate-and-Fire models}{100}{subsection.5.1.3}
+\contentsline {subsection}{\numberline {5.1.4}Two-dimensional IF models}{101}{subsection.5.1.4}
+\contentsline {subsection}{\numberline {5.1.5}Synapses}{101}{subsection.5.1.5}
+\contentsline {subsection}{\numberline {5.1.6}Ionic currents}{102}{subsection.5.1.6}
+\contentsline {section}{\numberline {5.2}Random processes}{103}{section.5.2}
+\contentsline {section}{\numberline {5.3}Electrophysiology}{103}{section.5.3}
+\contentsline {subsection}{\numberline {5.3.1}Electrodes}{103}{subsection.5.3.1}
+\contentsline {subsection}{\numberline {5.3.2}Amplifiers}{103}{subsection.5.3.2}
+\contentsline {subsubsection}{Current-clamp amplifier}{103}{subsubsection*.130}
+\contentsline {subsubsection}{Voltage-clamp amplifier}{104}{subsubsection*.131}
+\contentsline {subsubsection}{Acquisition board}{104}{subsubsection*.132}
+\contentsline {subsubsection}{Discontinuous current clamp}{105}{subsubsection*.133}
+\contentsline {subsubsection}{Discontinuous voltage clamp}{105}{subsubsection*.134}
+\contentsline {subsection}{\numberline {5.3.3}Active Electrode Compensation (AEC)}{105}{subsection.5.3.3}
+\contentsline {subsubsection}{Offline AEC}{105}{subsubsection*.135}
+\contentsline {subsubsection}{Online AEC}{106}{subsubsection*.136}
+\contentsline {subsubsection}{Voltage-clamp with AEC}{106}{subsubsection*.137}
+\contentsline {section}{\numberline {5.4}Extending the library}{107}{section.5.4}
+\contentsline {chapter}{\numberline {6}Advanced concepts}{109}{chapter.6}
+\contentsline {section}{\numberline {6.1}Parallel computing}{109}{section.6.1}
+\contentsline {section}{\numberline {6.2}How to write efficient Brian code}{109}{section.6.2}
+\contentsline {subsection}{\numberline {6.2.1}Brian specifics}{109}{subsection.6.2.1}
+\contentsline {subsection}{\numberline {6.2.2}Vectorisation}{110}{subsection.6.2.2}
+\contentsline {section}{\numberline {6.3}Compiled code}{111}{section.6.3}
+\contentsline {subsection}{\numberline {6.3.1}Weave}{112}{subsection.6.3.1}
+\contentsline {subsection}{\numberline {6.3.2}Circular arrays}{112}{subsection.6.3.2}
+\contentsline {subsection}{\numberline {6.3.3}Automatically generated C code}{112}{subsection.6.3.3}
+\contentsline {section}{\numberline {6.4}Projects with multiple files or functions}{112}{section.6.4}
+\contentsline {subsection}{\numberline {6.4.1}Use the \texttt {Network} object explicitly}{112}{subsection.6.4.1}
+\contentsline {subsection}{\numberline {6.4.2}Use the \texttt {magic\_return()} decorator or \texttt {magic\_register()} function}{113}{subsection.6.4.2}
+\contentsline {subsection}{\numberline {6.4.3}Use derived classes}{113}{subsection.6.4.3}
+\contentsline {section}{\numberline {6.5}Parameters}{114}{section.6.5}
+\contentsline {section}{\numberline {6.6}Precalculated tables}{115}{section.6.6}
+\contentsline {section}{\numberline {6.7}Preferences}{115}{section.6.7}
+\contentsline {subsection}{\numberline {6.7.1}Functions}{115}{subsection.6.7.1}
+\contentsline {subsection}{\numberline {6.7.2}Global configuration file}{116}{subsection.6.7.2}
+\contentsline {subsection}{\numberline {6.7.3}Global preferences for Brian}{116}{subsection.6.7.3}
+\contentsline {section}{\numberline {6.8}Logging}{116}{section.6.8}
+\contentsline {chapter}{\numberline {7}Extending Brian}{117}{chapter.7}
+\contentsline {chapter}{\numberline {8}Reference}{119}{chapter.8}
+\contentsline {section}{\numberline {8.1}SciPy, NumPy and PyLab}{119}{section.8.1}
+\contentsline {section}{\numberline {8.2}Units system}{119}{section.8.2}
+\contentsline {section}{\numberline {8.3}Clocks}{121}{section.8.3}
+\contentsline {subsection}{\numberline {8.3.1}The \texttt {Clock} class}{121}{subsection.8.3.1}
+\contentsline {subsection}{\numberline {8.3.2}The default clock}{122}{subsection.8.3.2}
+\contentsline {section}{\numberline {8.4}Neuron models and groups}{122}{section.8.4}
+\contentsline {subsection}{\numberline {8.4.1}The \texttt {Equations} object}{122}{subsection.8.4.1}
+\contentsline {subsection}{\numberline {8.4.2}The \texttt {NeuronGroup} object}{124}{subsection.8.4.2}
+\contentsline {subsection}{\numberline {8.4.3}Resets}{126}{subsection.8.4.3}
+\contentsline {subsection}{\numberline {8.4.4}Thresholds}{128}{subsection.8.4.4}
+\contentsline {section}{\numberline {8.5}Integration}{130}{section.8.5}
+\contentsline {subsection}{\numberline {8.5.1}StateUpdaters}{130}{subsection.8.5.1}
+\contentsline {section}{\numberline {8.6}Standard Groups}{131}{section.8.6}
+\contentsline {section}{\numberline {8.7}Connections}{133}{section.8.7}
+\contentsline {subsection}{\numberline {8.7.1}Connection matrix types}{136}{subsection.8.7.1}
+\contentsline {subsection}{\numberline {8.7.2}Construction matrix types}{137}{subsection.8.7.2}
+\contentsline {subsection}{\numberline {8.7.3}Connection vector types}{137}{subsection.8.7.3}
+\contentsline {section}{\numberline {8.8}Plasticity}{138}{section.8.8}
+\contentsline {subsection}{\numberline {8.8.1}Spike timing dependent plasticity (STDP)}{138}{subsection.8.8.1}
+\contentsline {subsection}{\numberline {8.8.2}Short term plasticity (STP)}{139}{subsection.8.8.2}
+\contentsline {section}{\numberline {8.9}Network}{139}{section.8.9}
+\contentsline {section}{\numberline {8.10}Monitors}{144}{section.8.10}
+\contentsline {section}{\numberline {8.11}Plotting}{148}{section.8.11}
+\contentsline {section}{\numberline {8.12}Variable updating}{149}{section.8.12}
+\contentsline {subsection}{\numberline {8.12.1}Timed Arrays}{149}{subsection.8.12.1}
+\contentsline {subsection}{\numberline {8.12.2}Linked variables}{150}{subsection.8.12.2}
+\contentsline {section}{\numberline {8.13}Analysis}{151}{section.8.13}
+\contentsline {subsection}{\numberline {8.13.1}Statistics of spike trains}{151}{subsection.8.13.1}
+\contentsline {section}{\numberline {8.14}Progress reporting}{152}{section.8.14}
+\contentsline {section}{\numberline {8.15}Magic in Brian}{152}{section.8.15}
+\contentsline {section}{\numberline {8.16}Tests}{154}{section.8.16}
+\contentsline {chapter}{\numberline {9}Typical Tasks}{155}{chapter.9}
+\contentsline {section}{\numberline {9.1}Projects with multiple files or functions}{155}{section.9.1}
+\contentsline {subsection}{\numberline {9.1.1}Use the \texttt {Network} object explicitly}{155}{subsection.9.1.1}
+\contentsline {subsection}{\numberline {9.1.2}Use the \texttt {magic\_return()} decorator or \texttt {magic\_register()} function}{156}{subsection.9.1.2}
+\contentsline {subsection}{\numberline {9.1.3}Use derived classes}{156}{subsection.9.1.3}
+\contentsline {chapter}{\numberline {10}Experimental features}{159}{chapter.10}
+\contentsline {section}{\numberline {10.1}Automatic C code generation for nonlinear state updaters}{159}{section.10.1}
+\contentsline {section}{\numberline {10.2}Multilinear state updater}{159}{section.10.2}
+\contentsline {chapter}{\numberline {11}Developer's guide}{161}{chapter.11}
+\contentsline {section}{\numberline {11.1}Guidelines}{161}{section.11.1}
+\contentsline {section}{\numberline {11.2}Simulation principles}{161}{section.11.2}
+\contentsline {subsection}{\numberline {11.2.1}Sample script}{162}{subsection.11.2.1}
+\contentsline {subsubsection}{Original Brian script}{162}{subsubsection*.138}
+\contentsline {subsubsection}{Equivalent in pure Python}{162}{subsubsection*.139}
+\contentsline {section}{\numberline {11.3}Main code structure}{165}{section.11.3}
+\contentsline {subsection}{\numberline {11.3.1}Overview}{165}{subsection.11.3.1}
+\contentsline {subsubsection}{Constructing the network}{165}{subsubsection*.140}
+\contentsline {subsubsection}{Running the network}{166}{subsubsection*.141}
+\contentsline {subsection}{\numberline {11.3.2}Details of network construction}{166}{subsection.11.3.2}
+\contentsline {subsubsection}{Construction of \texttt {NeuronGroup}}{166}{subsubsection*.142}
+\contentsline {subsubsection}{The \texttt {magic\_state\_updater()} function and the \texttt {Equations} object}{167}{subsubsection*.143}
+\contentsline {subsubsection}{Construction of \texttt {Connection}}{167}{subsubsection*.144}
+\contentsline {subsubsection}{Construction of monitors}{168}{subsubsection*.145}
+\contentsline {subsubsection}{Construction of \texttt {Network}}{168}{subsubsection*.146}
+\contentsline {subsubsection}{The magic module}{168}{subsubsection*.147}
+\contentsline {subsection}{\numberline {11.3.3}Details of network running}{169}{subsection.11.3.3}
+\contentsline {subsubsection}{Update schedules}{169}{subsubsection*.148}
+\contentsline {subsubsection}{Network operations}{169}{subsubsection*.149}
+\contentsline {subsubsection}{\texttt {NeuronGroup} update}{169}{subsubsection*.150}
+\contentsline {subsubsection}{\texttt {NeuronGroup} reset}{169}{subsubsection*.151}
+\contentsline {subsubsection}{Spike propagation}{169}{subsubsection*.152}
+\contentsline {section}{\numberline {11.4}Brian package structure}{169}{section.11.4}
+\contentsline {section}{\numberline {11.5}Repository structure}{171}{section.11.5}
+\contentsline {chapter}{Module Index}{173}{section*.153}
+\contentsline {chapter}{Index}{175}{section*.154}
