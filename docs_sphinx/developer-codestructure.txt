@@ -1,0 +1,280 @@
+Main code structure
+===================
+
+Overview
+--------
+
+Brian features can be broadly categorised into *construction* of the network,
+and *running* the network.
+
+Constructing the network
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following objects need to be specified by the user explicitly or implicitly:
+
+* :class:`NeuronGroup`
+* :class:`Connection`
+* Monitors
+* :class:`Network`
+
+After that, the network needs to be *prepared*. Preparation of the network
+involves initialising objects' data structures appropriately, in particular
+compressing the :class:`Connection` matrices. Connection matrices are initially
+stored as instances of a :class:`ConstructionMatrix` class (sparse, dense, etc.),
+and then later *compressed* into an instance of a :class:`ConnectionMatrix`
+class. Two levels are necessary, because at construction time, all matrices have
+to be editable, whereas at runtime, for efficiency reasons, some matrix types
+are read-only or partially read-only. Data structures appropriate to the
+construction of a matrix, particularly sparse matrices, are not the most
+efficient for runtime access.
+
+Constructing the :class:`NeuronGroup` object is a rather complicated operation,
+involving the construction of many subsididary objects. The most complicated
+aspect is the creation, manipulation and analysis of an :class:`Equations`
+object.
+
+Running the network
+~~~~~~~~~~~~~~~~~~~
+
+The network is run by repeatedly evaluating the 'update schedule' and updating
+the clock or clocks. The 'update schedule' is user specifiable, but usually
+consists of the following sequence of operations (interspersed with optional
+user network operation calls):
+
+* Update state variables of :class:`NeuronGroup`
+* Call thresholding function
+* Push spikes into :class:`SpikeContainer`
+* Propagate spikes (possibly with delays) via :class:`Connection`
+* Call reset function on neurons which have spiked
+
+Details of network construction
+-------------------------------
+
+Construction of :class:`NeuronGroup`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :class:`NeuronGroup` object is responsible for storing the state variables
+of each of its neurons, for updating them each time step, generating spikes
+via a thresholding mechanism, storing spikes so that they can be accessed with
+a delay, and resetting state variables after spiking. State variable update
+is done by a ``StateUpdater`` class defined in ``brian/stateupdater.py``.
+Thresholding is done by a :class:`Threshold` class defined in
+``brian/threshold.py`` and resetting is done by a :class:`Reset` class defined
+in ``brian/reset.py``. The ``__init__`` method of :class:`NeuronGroup` takes
+these objects as arguments, but it also has various additional keywords which
+can be used more intuitively. In this case, the appropriate object is selected
+automatically. For example, if you specify ``reset=0*mV`` in the keyword
+arguments, Brian generates a ``Reset(0*mV)`` object. The
+:meth:`NeuronGroup.__init__` method code is rather complicated and deals with
+many special cases.
+
+The most complicated aspect of this is the definition of the state variables and
+the update procedure. Typically, the user simply gives a list of differential
+equations, and Brian attempts to automatically extract the appropriate state
+variable definitions, and creates a differential equation solver appropriate to
+them (it needs some help in this at the moment, e.g. specifying the order or
+type of the solver). The main work in this is done by the
+:func:`magic_state_updater` function, which uses the
+:class:`Equations` object (see next section).
+
+Once the state variables are defined, various internal objects are created.
+The state variables are stored in the ``_S`` attribute of a :class:`NeuronGroup`.
+This is an MxN matrix where M is the number of variables and N is the number
+of neurons.
+
+The other major data structure generated is the ``LS`` attribute (last spikes).
+This is a ``SpikeContainer`` instance, a circular array used to contain spikes.
+See ``brian/utils/circular.py``.
+
+Finally note that the construction of many of these objects requires a
+:class:`Clock` object, which can either be specified explicitly, or is guessed
+by the :func:`guess_clock` function which searches for clocks using the magic
+module (see below). :class:`EventClock` objects are excluded from this guessing.
+
+The :func:`magic_state_updater` function and the :class:`Equations` object
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function returns an appropriate ``StateUpdater`` object and a list of
+the dynamic variables of an :class:`Equations` object. It uses methods of the
+:class:`Equations` object to do this (such as :meth:`Equations.is_linear`).
+
+The :class:`Equations` object can be constructed in various ways. It can be
+constructed from a multi-line string or by adding (concatenating) other
+:class:`Equations` objects. Construction by multi-line string is done by
+pattern matching. The four forms are:
+
+1. ``dx/dt = f : unit`` (differential equation)
+2. ``x = f : unit`` (equation)
+3. ``x = y`` (alias)
+4. ``x : unit`` (parameter)
+
+Differential equations and parameters are dynamic variables, equations and
+aliases are just computed and substituted when necessary. The ``f`` patterns in
+the forms above are stored for differential equations and parameters. For the
+solution of nonlinear equations, these ``f`` patterns are executed as Python
+code in the evaluation of the state update. For example, the equations
+``dV/dt = -V*V/(10*ms) : 1`` and ``dW/dt = cos(W)/(20*ms) : 1`` are 
+numerically evaluated with an Euler method
+as the following code (generated from the list of dynamic variables and their
+defining strings)::
+
+	V, W = P._S
+	V__tmp, W__tmp = P._dS
+	V__tmp[:] = -V*V/(10*ms)
+	W__tmp[:] = cos(W)/(20*ms)
+	P._S += dt*P._dS
+
+This is code generation is done by the :meth:`Equations.forward_euler` family
+of methods.
+
+In the case where the equations are linear, they are solved by a matrix
+exponential using the code in :func:`get_linear_equations` defined in
+``brian/stateupdater.py``.
+
+Finally, note that equations strings can contain references to names of objects
+that are defined in the namespace of the string, and the :class:`Equations`
+object can pick these out. It does this by inspecting the call stack, extracting
+the namespace for the appropriate level (which has to be kept track of), and
+plucking out the appropriate name. The ``level=...`` keywords you see dotted
+around Brian's code are there to keep track of these levels for this reason.
+
+Construction of :class:`Connection`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:class:`Connection` objects provide methods for storing weight matrices and
+propagating spikes. Spike propagation is done via the :meth:`Connection.do_propagate`
+and :meth:`Connection.propagate` methods. Weight matrices are stored in the ``W``
+attribute. Initially, weight matrices are :class:`ConstructionMatrix` objects
+and are converted by the :meth:`Connection.compress` method, via the matrices'
+``connection_matrix()`` methods to :class:`ConnectionMatrix` objects. The idea
+is to have two data structures, one appropriate to the construction of a matrix,
+supporting adding and removing new synapses, and one appropriate to runtime
+behaviour, focussing on fast row access above all else. There are three matrix
+structures, 'dense', 'sparse' and 'dynamic' (and 'computed' may be added later).
+The 'dense' matrix is just a full 2D array, and the matrix objects just reproduce
+the functionality of numpy arrays. The 'sparse' and 'dynamic' structures are
+sparse matrices. The first doesn't allow you to add or remove elements at runtime
+and is very optimised, the second does allow you to and is less optimised. Both
+are more optimised than scipy's sparse matrices, which are used as the basis for
+the construction phase.
+
+:class:`Connection` objects can handle homogeneous delays (all synapses with the
+same delay) by pulling spikes from :class:`NeuronGroup`'s ``LS`` object with a
+delay. Heterogeneous delays (each synapse with a different delay) are done by
+the :class:`DelayConnection` object, which stores a ``_delayvec`` attribute
+alongside the ``W`` attribute. The delay matrix is of the same type as the
+weight matrix and in the case of sparse matrices must have nonzero elements at
+the same places. The :class:`Connection` object automatically turns itself into
+a :class:`DelayConnection` object if heterogeneous delays are requested, so that
+the user doesn't even need to know of the existence of :class:`DelayConnection`.
+
+The :class:`Connection` object also provides methods for initialising the weight
+matrices either fully, randomly, etc. (See the user docs.)
+
+Construction of monitors
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :class:`SpikeMonitor` class of monitors derive from :class:`Connection`.
+Rather than propagating spikes to another group, they store them in a list. The
+work is done in the :meth:`SpikeMonitor.propagate` method.
+
+The :class:`StateMonitor` class of monitors derive from :class:`NetworkOperation`.
+Network operations are called once every time step and execute arbitrary Python
+code. The :class:`StateMonitor` class of monitors record state variables each
+time step to a list.
+
+Construction of :class:`Network`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the user calls the function :func:`run`, a :class:`MagicNetwork` object is
+created, and the :meth:`Network.run` method is called. :class:`MagicNetwork`
+gathers, using the magic module, a list of all appropriate objects and runs them
+together. Alternatively, the user can specify their own list of objects using
+a :class:`Network` object. Each time an object is added to a :class:`Network`
+either via the initialiser or the :meth:`Network.add` method, it checks to see
+if it has an attribute ``contained_objects``, and if so it adds all the objects
+in that to the network too. This allows, for example, the :class:`STDP` object
+to contained :class:`NeuronGroup` and :class:`Connection` objects which the user
+doesn't see, but are used to implement the STDP functionality.
+
+The :meth:`Network.run` method calls the :meth:`Connection.compress` method
+on every :class:`Connection` object to convert construction matrices to
+connection matrices. It also builds an update schedule (see below).
+
+The magic module
+~~~~~~~~~~~~~~~~
+
+The magic module is used for tracking instances of objects. A class that derives
+from the :class:`magic.InstanceTracker` class can be tracked in this way,
+including :class:`NeuronGroup`, :class:`Connection`, :class:`NetworkOperation`
+and :class:`Clock`. The :func:`find_instances` function can be used to search
+for instances. Note that :func:`find_instances` will only return instances which
+were instantiated in the same execution frame as the :func:`find_instances`
+calling frame, or (if the ``level`` keyword is used) one of the frames higher up
+in the call stack. The idea is that you may have modular code with objects
+defined in different places, but that you don't want to use all objects that
+exist at all in the network. This system causes a bit of trouble, but seems
+unavoidable. See the user manual section
+:ref:`projects-with-multiple-files` for details on getting around this.
+
+Details of network running
+--------------------------
+
+Update schedules
+~~~~~~~~~~~~~~~~
+
+An update schedule gives the sequence of operations to be carried out each time
+step of the simulation. Typically this is: state update and threshold;
+propagation; reset, although an option is available for switching propagation
+and reset around. Network operations can be weaved in anywhere amongst these
+basic steps. See the reference documentation for the :class:`Network` object
+for more details.
+
+Simulation proceeds by choosing the clock with the lowest current time,
+selecting all objects which have that clock as their clock, and performing the
+update schedule on those objects, before applying the :meth:`Clock.tick` method
+to increment the clock time by ``dt``. 
+
+Network operations
+~~~~~~~~~~~~~~~~~~
+
+A :class:`NetworkOperation` object is called as if it were a function, i.e. the
+``__call__()`` method is called with no arguments. The :func:`network_operation`
+decorator exists to convert a function into a suitable :class:`NetworkOperation`
+object. This technique is used for the internal functioning of many of Brian's
+features (such as :class:`StateMonitor`).
+
+:class:`NeuronGroup` update
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :meth:`NeuronGroup.update` method does the following three things. First of
+all it calls the ``StateUpdater`` to update the state variables. Then it calls
+its :class:`Threshold` object if one exists to extract the indices of the spiking
+neurons. Finally it pushes these into the ``LS`` attribute for extraction by
+any :class:`Connection` objects.
+
+:class:`NeuronGroup` reset
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :meth:`Reset.__call__` method pulls spike from the :class:`NeuronGroup`'s
+``LS`` attribute and then resets the state variables for those.
+
+Spike propagation
+~~~~~~~~~~~~~~~~~
+
+The :meth:`Connection.do_propagate` method does two things, it gets the spike
+indices to propagate (with homogeneous delays if chosen) from the ``LS``
+attribute of the :class:`NeuronGroup` and then passes these to its
+:meth:`Connection.propagate` method. This method extracts a list of connection
+matrix rows using the :meth:`ConnectionMatrix.get_rows` method. This method
+returns a list of :class:`ConnectionVector` instances. There are two types of
+:class:`ConnectionVector`, dense and sparse. Dense ones are simply numpy arrays,
+sparse ones consist of two numpy arrays, an array of values and an array of
+corresponding column indices. The :class:`SparseConnectionVector` class has
+some methods which make this distinction seamless to the user in most instances,
+although developers need to be aware of it. Finally, the
+:meth:`Connection.propagate` method goes through this list applying the row
+vectors one by one. The pure Python version of this is straightforward, but
+there is also a ``C++`` accelerated version which uses the scipy Weave package
+if the user has a suitable compiler on their system. This version is much more
+efficient, but the code is rather dense and difficult to understand.

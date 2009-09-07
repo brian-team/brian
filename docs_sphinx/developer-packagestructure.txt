@@ -1,0 +1,121 @@
+Brian package structure
+-----------------------
+
+List of modules with descriptions of contents:
+
+**Root package**
+
+``base``
+	Shared base classes for some Brian clases. At the moment, just the
+	:class:`ObjectContainer` class used to implement the ``contained_objects``
+	protocol.
+``clock``
+	The :class:`Clock` object, :func:`guess_clock` function, and other clock
+	manipulation functions.
+``compartments``
+	A class used in compartmental modelling (see user documentation).
+``connection``
+	Everything to do with connections, including the :class:`Connection` and
+	:class:`DelayConnection` classes, but also construction/connection matrices
+	and connection vector code. One of the longest and most technical parts of
+	Brian.
+``correlatedspikes``
+	A tool for producing correlated spike trains.
+``directcontrol``
+	Classes for producing groups which fire spikes at user specified times.
+``equations``
+	Everything to do with the :class:`Equations` class.
+``globalprefs``
+	Global preferences for Brian, a few routines for getting and setting.
+``group``
+	A base class for :class:`NeuronGroup` which creates an ``_S`` attribute from
+	an :class:`Equations` object with the appropriate dynamical variables, and
+	allows these variables to be accessed by e.g. ``grp.V`` by overriding the
+	``__getattr__`` and ``__setattr__`` methods.
+``inspection``
+	Utility functions for inspecting namespaces, checking consistency of
+	equations, some code manipulation, etc.
+``log``
+	Brian's somewhat under-developed logging capabilities.
+``magic``
+	Classes and functions for tracking and finding instances of classes.
+``membrane_equations``
+	More code for compartmental modelling (see user docs).
+``monitor``
+	All the monitors, including :class:`SpikeMonitor` and :class:`StateMonitor`.
+``network``
+	The :class:`Network` and :class:`MagicNetwork` classes as well as the
+	:class:`NetworkOperation` class. Also includes the :func:`run`, etc.
+	functions.
+``neurongroup``
+	The :class:`NeuronGroup` definition and some related stuff, including linked
+	variables (the :class:`LinkedVar` class) and :class:`PoissonGroup`.
+``optimiser``
+	Some tools for freezing expressions (converting e.g. ``3*ms`` into 0.003) and
+	simplifying some equations (e.g. ``a/(10*ms)`` converted to ``a*100``). 
+``plotting``
+	Plotting tools, mostly ``raster_plot``.
+``quantityarray``
+	A leftover from the day when Brian had support for arrays with units, will
+	be removed when practical.
+``reset``
+	Reset classes.
+``stateupdater``
+	State update classes and the :func:`magic_state_updater` function.
+``stdp``
+	STDP features.
+``stdunits``
+	Standard unit names such as ``mV`` for ``mvolt``, etc.
+``stp``
+	Short term plasticity features.
+``threshold``
+	Threshold classes.
+``timedarray``
+	The :class:`TimedArray` class and related functions.
+``units``
+	The Brian units package, including the :class:`Quantity` class.
+``unitsafefunctions``
+	Some functions which override the numpy ones which are safe to use with
+	units, e.g. ``sin(3*volt)`` raises a dimensionality error.
+
+**``library`` subpackage**
+
+``electrophysiology``
+	todo
+``IF``
+	todo
+``ionic_currents``
+	todo
+``random_processes``
+	todo
+``synapses``
+	todo
+
+**``utils`` subpackage**
+
+``approximatecomparisons``
+	Some tools for doing approximate comparisons with floating point numbers
+	(because they are inexact).
+``autodiff``
+	Automatic differentiation routines.
+``circular`` and the ``ccircular`` subpackage
+	The important :class:`SpikeContainer` and related classes. The ``C`` version
+	uses SWIG and is much faster but requires the user to compile themselves
+	at the moment (this will be addressed at some point in the future).
+``documentation``
+	Some utility functions related to documentation.
+``information_theory``
+	todo
+``parallelpython``
+	A utility function for using the Parallel Python module.
+``parameters``
+	The :class:`Parameters` class, basically independent of Brian but
+	potentially useful. 
+``progressreporting``
+	A progress reporting framework which :meth:`Network.run` can use to report
+	how long it is taking to run, with text or graphical options.
+``statistics``
+	todo
+``tabulate``
+	todo
+

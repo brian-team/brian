@@ -1,0 +1,47 @@
+Guidelines
+----------
+
+The basic principles of developing Brian are:
+
+1. For the user, the emphasis is on making the package flexible, readable and
+   easy to use. See the paper "The Brian simulator" in Frontiers in Neuroscience
+   for more details.
+2. For the developer, the emphasis is on keeping the package maintainable by
+   a small number of people. To this end, we use stable, well maintained,
+   existing open source packages whenever possible, rather than writing our
+   own code.
+
+*Coding conventions.*
+We use the `PEP-8 coding conventions <http://www.python.org/dev/peps/pep-0008/>`__
+for our code. Syntax is chosen as much as possible from the user point of view,
+to reflect the concepts as directly as possible. Ideally, a Brian script
+should be readable by someone who doesn't know Python or Brian, although this
+isn't always possible.
+
+*Documentation.*
+It is very important to maintain documentation. We use the
+`Sphinx documentation generator <http://sphinx.pocoo.org/>`__ tools. The
+documentation is all hand written. Sphinx source files are stored in the
+``docs_sphinx`` folder in the repository, and compiled HTML files are stored in
+the ``docs`` folder. Most of the documentation is stored directly in the Sphinx
+source text files, but reference documentation for important Brian classes and
+functions are kept in the documentation strings of those classes themselves.
+This is automatically pulled from these classes for the reference manual
+section of the documentation. The idea is to keep the definitive reference
+documentation near the code that it documents, serving as both a comment for
+the code itself, and to keep the documentation up to date with the code.
+
+*Testing.*
+Brian uses the `nose package <http://somethingaboutorange.com/mrl/projects/nose/0.11.1/>`__
+for its testing framework. Tests are stored in the ``brian/tests`` directory.
+Tests associated to a Brian module are stored in ``brian/tests/testinterface``
+and tests of the mathematical correctness of Brian's algorithms are stored in
+``brian/tests/testinterface``.
+
+*Enhancements.*
+Brian uses a system parallel to the
+`Python Enhancement Proposals (PEPs) <http://www.python.org/dev/peps/>`__ system
+for Python, called *Brian Enhancement Proposals* (BEPs). These are stored in
+``dev/BEPs``. Ideas for new functionality for Brian are put in here for comment
+and discussion. We also use the `Brian development <http://groups.google.fr/group/brian-development>`__
+mailing list.

@@ -1,0 +1,78 @@
+Repository structure
+--------------------
+
+The Brian source code repository is broken into the following directories:
+
+``brian``
+	The main package, documented above, with the following additional directories:
+	
+	``deprecated``
+		For code that is no longer up to date.
+	``experimental``
+		Package for storing experimental code that can be used but whose
+		syntax and functionality may change.
+	``tests``
+		Package for storing tests, composed of:
+		
+		``testcorrectness``
+			Package for tests of mathematical correctness of algoriths, etc.
+		``testinterface``
+			Package for tests of individual Brian modules. Module names are
+			the names of the module being tested prepended by 'test'.
+	``unused``
+		Old stuff
+``dev``
+	The main development folder, for works in progress, debugging stuff, tools,
+	etc. Consists of:
+	
+	``benchmarking``
+		Code for benchmarking performance against other languages and
+		simulators.
+	``BEPs``
+		The Brian Enhancement Proposals.
+	``debugging``
+		Dumping ground for files used for debugging a problem.
+		
+		``troubleshooting``
+			Used for debugging problems from the ``brian-support`` mailing list.
+	``ideas``
+		For ideas for new features, incomplete implementations, etc. This is
+		where new things go before going into the main Brian package or the
+		``experimental`` package.
+	``logo``
+		The Brian logo in various sizes.
+	``optimising``
+		Ideas for making Brian faster.
+	``speedtracking``
+		A sort of testing framework which tracks, over time, the speed of
+		various Brian features.
+	``tests``
+		A few scripts to run Brian's tests.
+	``tools``
+		The main folder for developer tools.
+		
+		``docs``
+			Scripts for invoking Sphinx and building the documentation. Includes
+			script to automatically generate documentation for examples and
+			tutorials, and to build index entries for these.
+		``newrelease``
+			Tools for creating a new public release of Brian.
+		``searchreplace``
+			Some tools for doing global changes to the code (e.g. syntax
+			changes).
+``dist``
+	Automatically generated distribution files.
+``docs``
+	Automatically generated documentation files in HTML/PDF format.
+``docs_sphinx``
+	Sources for Sphinx documentation.
+``examples``
+	Examples of Brian's use. Documentation is automatically generated from all
+	of these examples.
+``tutorials``
+	Source files for the tutorials, documentation is automatically generated
+	from these. Each tutorial has a directory, possibly containing an
+	``introduction.txt`` Sphinx source, followed by a series of files in
+	alphabetical order (e.g. 1a, 1b, 1c, etc.). Multi-line strings are treated
+	as Sphinx source code (take a look at a few examples to get the idea).
+
