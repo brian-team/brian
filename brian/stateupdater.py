@@ -349,7 +349,7 @@ class LinearStateUpdater(StateUpdater):
 
     def rest(self,P):
         if self._useB:
-            if self.B == NotImplemented:
+            if self.B is NotImplemented:
                 raise NotImplementedError,\
                     "The resting potential cannot be found because the equations are degenerate "+\
                     "(most likely because they include a parameter)"
