@@ -213,7 +213,7 @@ The script above translated into pure Python (no Brian)::
 	plot(trace.times/ms,trace[0]/mV)
 	show()
 	
-	Ok here we cheat because plotting will be done on the CPU anyway.
+	Here we cheat a little.
 	"""
 	from brian import raster_plot
 	class M:

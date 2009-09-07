@@ -7,20 +7,26 @@ The Brian source code repository is broken into the following directories:
 	The main package, documented above, with the following additional directories:
 	
 	``deprecated``
-		For code that is no longer up to date.
+		For code that is no longer up to date, but that we keep for backwards
+		compatibility.
 	``experimental``
 		Package for storing experimental code that can be used but whose
 		syntax and functionality may change.
+	``library``
+		Modules where specific models are defined (e.g. neuron and synaptic models).
 	``tests``
 		Package for storing tests, composed of:
 		
 		``testcorrectness``
-			Package for tests of mathematical correctness of algoriths, etc.
+			Package for tests of mathematical correctness of algorithms, etc.
 		``testinterface``
 			Package for tests of individual Brian modules. Module names are
 			the names of the module being tested prepended by 'test'.
 	``unused``
 		Old stuff
+	``utils``
+		Modules that are not Brian-specific, for example circular.py defines
+		circular arrays used for storing spiking events.
 ``dev``
 	The main development folder, for works in progress, debugging stuff, tools,
 	etc. Consists of:

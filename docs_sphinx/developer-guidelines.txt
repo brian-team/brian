@@ -36,7 +36,7 @@ Brian uses the `nose package <http://somethingaboutorange.com/mrl/projects/nose/
 for its testing framework. Tests are stored in the ``brian/tests`` directory.
 Tests associated to a Brian module are stored in ``brian/tests/testinterface``
 and tests of the mathematical correctness of Brian's algorithms are stored in
-``brian/tests/testinterface``.
+``brian/tests/testcorrectness``.
 
 *Enhancements.*
 Brian uses a system parallel to the
