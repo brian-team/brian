@@ -372,9 +372,9 @@ class LinearStateUpdater(StateUpdater):
                 add(P._S, self._C, P._S)
                 #P._S[:]=dot(self.A,P._S-self.B)+self.B
             else:
-                n = len(P)
                 m = len(self)
                 S = P._S
+                n = S.shape[1] #n = len(P)
                 A = self.A
                 c = self._C
                 code = '''
