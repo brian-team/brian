@@ -1,6 +1,7 @@
 New features since 1.1.2
 ------------------------
 
+* STDP now works with DelayConnection
 * Added EventClock
 * Added RecentStateMonitor
 * Added colormap option to StateMonitor.plot
@@ -8,6 +9,10 @@ New features since 1.1.2
 * Added optional progress reporting to run()
 * New recall() function (converse to forget())
 * Added progress reporting module (brian.utils.progressreporting)
+* Added SpikeMonitor.spiketimes
+* Added developer's guide to docs
+* Early version of brian.hears subpackage for auditory modelling
+* Various bug fixes
 
 New features since 1.1.1
 ------------------------
