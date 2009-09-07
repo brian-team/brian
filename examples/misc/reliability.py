@@ -26,6 +26,7 @@ spikes=SpikeMonitor(neurons)
 @network_operation
 def inject():
     neurons.I=input.x[0]
+#neurons.I=linked_var(input,'x')
 
 run(500*ms)
 raster_plot(spikes)

@@ -13,10 +13,7 @@ defaultclock.dt=.02*ms
 dt=defaultclock.dt
 
 # Sound
-x=randn(50000) # white noise
-nsound=len(x)
-def sound(t):
-    return 10*x[array(t/dt,dtype=int) % nsound]
+sound=TimedArray(10*randn(50000)) # white noise
 
 # Ears and sound motion around the head (constant angular speed)
 sound_speed=300*metre/second
