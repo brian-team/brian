@@ -129,7 +129,7 @@ class HomogeneousCorrelatedSpikeTrains(NeuronGroup):
         return self.N
 
     def __getslice__(self,i,j):
-        Q=NeuronGroup.__getslice__(self,i,j)
+        Q=NeuronGroup.__getslice__(self,i,j) # Is this correct?
         Q.N=j-i
         return Q
 
