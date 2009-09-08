@@ -124,7 +124,7 @@ defining strings)::
 	W__tmp[:] = cos(W)/(20*ms)
 	P._S += dt*P._dS
 
-This is code generation is done by the :meth:`Equations.forward_euler` family
+This code generation is done by the :meth:`Equations.forward_euler` family
 of methods.
 
 In the case where the equations are linear, they are solved by a matrix
