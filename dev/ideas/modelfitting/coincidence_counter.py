@@ -1,7 +1,7 @@
 from brian import *
 from vectorized_neurongroup import *
 
-def spikestimes2dict(list):
+def spiketimes2dict(list):
     """
     Converts a (i,t)-like list into a dictionary of spike trains.
     """
@@ -46,8 +46,6 @@ def slice_data(data = None, slice_number = 1, duration = None):
             sliced_data.append((sliced_i, sliced_t))
         return sliced_data
 
-#data=[(0,0),(0,1),(0,1.4),(0,1.9)]
-#print slice_data(data = data, slice_number = 2, duration = 2)
 
 class CoincidenceCounter(SpikeMonitor):
     
@@ -63,7 +61,7 @@ class CoincidenceCounter(SpikeMonitor):
         - source        The NeuronGroup object
         - data          The data as an (i,t)-like list.
         - model_target  The target train index associated to each model neuron.
-                        It is a list of size NTarget.
+                        It is a list of size NModel.
         - delta         The half-width of the time window
         
         Outputs:
@@ -77,26 +75,37 @@ class CoincidenceCounter(SpikeMonitor):
         # Adapts data if there are several time slices
         if isinstance(source, VectorizedNeuronGroup):
             self.data = slice_data(data = data, slice_number = source.slice_number, duration = source.total_duration)
+            self.duration = source.total_duration
         else:
             self.data = data
-        
+            self.duration = array(self.data)[:,1].max()
+            
         self.NModel = len(source)
         self.NTarget = int(array(self.data)[:,0].max()+1)
+        
+        # Number of spikes for each neuron
+        self._model_length = zeros(self.NModel)
+        self._target_length = zeros(self.NTarget)
+        for i,t in self.data:
+            self._target_length[i] += 1
         
         # Adapts model_target if there are several time slices
         model_target = array(model_target)
         if isinstance(source, VectorizedNeuronGroup):
+            self.original_model_target = array(model_target, dtype = 'int')
             self.model_target = []
             for i in range(source.slice_number):
                 self.model_target += list(model_target*source.slice_number + i)
             self.model_target = array(self.model_target)
         else:
+            self.original_model_target = array(model_target, dtype = 'int')
             self.model_target = array(model_target)
         
         self.delta = delta
         self.dt = defaultclock._dt
         
         self._coincidences = zeros(self.NModel)
+        self._gamma = None
         
         self.prepare_online_computation()
         
@@ -114,6 +123,7 @@ class CoincidenceCounter(SpikeMonitor):
         if (len(spiking_neurons) > 0):
             close_target_spikes = (self.close_target_spikes >= 0)
             target_spikes = nonzero(close_target_spikes)[0]
+            self._model_length[spiking_neurons] += 1
             if (len(target_spikes) > 0):
                 for i in spiking_neurons:
                     target_spikes2 = nonzero(close_target_spikes & (self.close_target_spikes > self.last_target_spikes[i]))[0]
@@ -169,20 +179,52 @@ class CoincidenceCounter(SpikeMonitor):
         '''
         self.close_target_spikes_matrix = -1*ones((self.NTarget, len(self.all_bins)))
         all_bins_centers = (self.all_bins[0:-1] + self.all_bins[1:])/2
-        target_trains = spikestimes2dict(self.data)
+        # TODO: may be faster with a more efficient algorithm
+        target_trains = spiketimes2dict(self.data)
         for j,b in enumerate(all_bins_centers):
             for i,train in target_trains.iteritems():
                 ind = nonzero(abs(train-b) <= self.delta+self.dt/10)[0]
                 if (len(ind)>0):
                     self.close_target_spikes_matrix[i, j] = ind[0]
 
-    def get_coincidences(self):
-        if isinstance(self.source, VectorizedNeuronGroup):
-            return self._coincidences.reshape((self.source.slice_number,self.source.neuron_number)).sum(axis=0)
+    def sum_vectorized_values(self, vector):
+        """
+        Converts a vector indexed over sliced neurons to a vector indexed over
+        original neurons.
+        vector is a slice_number*neuron_number-long vector, and the result is
+            a neuron_number-long vector.
+        """
+        if self.source.slice_number == 1:
+            return vector
         else:
-            return self._coincidences
+            return vector.reshape((self.source.slice_number,self.source.neuron_number)).sum(axis=0)
+
+    def get_coincidences(self):
+        return self.sum_vectorized_values(self._coincidences)[self.original_model_target]
         
     def set_coincidences(self, value):
         self._coincidences = value
         
     coincidences = property(get_coincidences, set_coincidences)
+    
+    def get_gamma(self):
+        if self._gamma is None:
+            target_length = self.sum_vectorized_values(self._target_length)
+            model_length = self.sum_vectorized_values(self._model_length)
+            target_rates = target_length/self.duration
+            NCoincAvg = 2 * self.delta * target_length[self.original_model_target] * target_rates[self.original_model_target]
+            alpha = 2.0/(1.0 - 2 * target_rates[self.original_model_target] * self.delta)
+            
+#            print target_rates[self.original_model_target]
+#            print alpha
+#            print self.coincidences
+#            print NCoincAvg
+#            print target_length[self.original_model_target]
+#            print model_length
+
+            self._gamma = alpha * (self.coincidences - NCoincAvg)/(target_length[self.original_model_target] + model_length)
+            
+        return self._gamma
+    
+    gamma = property(get_gamma)
+    

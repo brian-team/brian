@@ -1,4 +1,5 @@
 from brian import *
+from IPython.DPyGetOpt import ArgumentError
 
 class VectorizedNeuronGroup(NeuronGroup):
     """
@@ -23,6 +24,10 @@ class VectorizedNeuronGroup(NeuronGroup):
                  overlap = 0*ms, slice_number = 1, **params):
         
         values_number = len(params.values()[0]) # Number of parameter values
+        for param, value in params.iteritems():
+            if not(len(value) == values_number):
+                raise AttributeError, 'The parameters must have the same number of values'
+        
         N = values_number * slice_number # Total number of neurons
         NeuronGroup.__init__(self, N = N, model = model, threshold = threshold, reset = reset)
         input_length = len(input_values)
@@ -34,7 +39,7 @@ class VectorizedNeuronGroup(NeuronGroup):
         self.duration = self.total_duration/slice_number+overlap
         
         if overlap >= input_length*dt/slice_number:
-            raise AttributeError,'Overlap should be less than %.2f' % input_length*dt/slice_number
+            raise AttributeError, 'Overlap should be less than %.2f' % input_length*dt/slice_number
         
         for param,value in params.iteritems():
             # each neuron is duplicated slice_number times, with the same parameters. 
@@ -49,4 +54,5 @@ class VectorizedNeuronGroup(NeuronGroup):
                 input_sliced_values = input_values[input_length/slice_number*_-int(overlap/dt):input_length/slice_number*(_+1)]
             sliced_subgroup = self.subgroup(values_number)
             sliced_subgroup.set_var_by_array(input_name, TimedArray(input_sliced_values))
+        
         
