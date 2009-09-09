@@ -9,27 +9,29 @@ plugin (Pydev) and SVN plugin, but of course you can use your preferred IDE.
 The next step is to carefully read the guidelines in this guide.
 
 Now that you wrote your code:
-* write a test for it in brian.tests.testinterface. If it is a new module,
-create a new file test_mymodule.py;
+
+* write a test for it in ``brian/tests/testinterface``. If it is a new module,
+  create a new file ``test_mymodule.py``;
 * write documentation, both in the file (see how it's done in existing modules)
-and, if appropriate, in the relevant file in brian.docs_sphinx. We use the
-`Sphinx documentation generator <http://sphinx.pocoo.org/>`__ tools. If you want
-to see how it looks, generate the html docs by executing dev/tools/docs/build_html.py.
-The html files will then be in docs.
+  and, if appropriate, in the relevant file in ``brian/docs_sphinx``. We use the
+  `Sphinx documentation generator <http://sphinx.pocoo.org/>`__ tools. If you want
+  to see how it looks, generate the html docs by executing ``dev/tools/docs/build_html.py``.
+  The html files will then be in ``docs``.
 * create a patch file. For example with Eclipse, right-click on the Brian project,
-then Team > Create Patch > Save in filesystem, then Next > Project.
+  then Team > Create Patch > Save in filesystem, then Next > Project.
 * send your patch to both the
-`patch tracker <https://sourceforge.net/tracker/?group_id=226798&atid=1068581>`__ and the
-`developers mailing list <http://groups.google.fr/group/brian-development>`__.
+  `patch tracker <https://sourceforge.net/tracker/?group_id=226798&atid=1068581>`__ and the
+  `developers mailing list <http://groups.google.fr/group/brian-development>`__.
 
 *New modules.*
-New Brian modules start in the dev.ideas folder, then go to brian.experimental
+New Brian modules start in the ``dev/ideas`` folder, then go to ``brian.experimental``
 when they starting looking like modules. They move to the main folder when they are
 stable (especially the user syntax).
 
 *New ideas.*
 When we want to introduce significant new features and think about the design, we
-write a BEP: "Brian Enhancement Proposal" (like Python PEPs). BEPs reside in dev.BEPs.
+write a BEP: "Brian Enhancement Proposal" (like Python PEPs). BEPs reside in ``dev/BEPs``.
 A BEP typically includes:
+
 * How the feature will look from user point of view, with example scripts.
 * Detailed implementation ideas and options.
