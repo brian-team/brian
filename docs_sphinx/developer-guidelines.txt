@@ -16,7 +16,8 @@ We use the `PEP-8 coding conventions <http://www.python.org/dev/peps/pep-0008/>`
 for our code. Syntax is chosen as much as possible from the user point of view,
 to reflect the concepts as directly as possible. Ideally, a Brian script
 should be readable by someone who doesn't know Python or Brian, although this
-isn't always possible.
+isn't always possible. Function and class names should be explicit rather
+than abbreviated.
 
 *Documentation.*
 It is very important to maintain documentation. We use the
@@ -53,5 +54,44 @@ Brian uses a system parallel to the
 `Python Enhancement Proposals (PEPs) <http://www.python.org/dev/peps/>`__ system
 for Python, called *Brian Enhancement Proposals* (BEPs). These are stored in
 ``dev/BEPs``. Ideas for new functionality for Brian are put in here for comment
-and discussion. We also use the `Brian development <http://groups.google.fr/group/brian-development>`__
+and discussion. A BEP typically includes:
+
+* How the feature will look from user point of view, with example scripts.
+* Detailed implementation ideas and options.
+
+We also use the `Brian development <http://groups.google.fr/group/brian-development>`__
 mailing list.
+
+Contributing code
+~~~~~~~~~~~~~~~~~
+
+First of all, you should register to the
+`developers mailing list <http://groups.google.fr/group/brian-development>`__.
+If you want to modify existing modules, you should make sure that you
+work on the latest SVN version. We use the Eclipse IDE because it has a nice Python
+plugin (Pydev) and SVN plugin, but of course you can use your preferred IDE.
+The next step is to carefully read the guidelines in this guide.
+
+Now that you wrote your code:
+
+* Write a test for it in ``brian/tests/testinterface``. If it is a new module,
+  create a new file ``test_mymodule.py``;
+* Write documentation, both in the file (see how it's done in existing modules)
+  and, if appropriate, in the relevant file in ``brian/docs_sphinx``. We use the
+  `Sphinx documentation generator <http://sphinx.pocoo.org/>`__ tools. If you want
+  to see how it looks, generate the html docs by executing ``dev/tools/docs/build_html.py``.
+  The html files will then be in ``docs``.
+* Create a patch file. For example with Eclipse, right-click on the Brian project,
+  then Team > Create Patch > Save in filesystem, then Next > Project.
+* Send your patch as an attachment to the
+`developers mailing list <http://groups.google.fr/group/brian-development>`__
+and make sure the subject of your message starts with [PATCH]. Then describe your
+patch in your message.
+
+From that point, your patch will either be directly included in the svn or
+(more likely) will be first discussed in the mailing list.
+
+*New modules.*
+New Brian modules typically start in the ``dev/ideas`` folder, then go to ``brian.experimental``
+when they starting looking like modules. They move to the main folder when they are
+stable (especially the user syntax).
