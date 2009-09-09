@@ -31,12 +31,22 @@ section of the documentation. The idea is to keep the definitive reference
 documentation near the code that it documents, serving as both a comment for
 the code itself, and to keep the documentation up to date with the code.
 
+In the code, every class or function should start with an explanation of what it does,
+unless it is trivial. A good idea is to use explicit names rather than abbreviations,
+so that you instantly understand what it is about. Inside a function, important chunks
+should also be commented. 
+
 *Testing.*
 Brian uses the `nose package <http://somethingaboutorange.com/mrl/projects/nose/0.11.1/>`__
 for its testing framework. Tests are stored in the ``brian/tests`` directory.
 Tests associated to a Brian module are stored in ``brian/tests/testinterface``
 and tests of the mathematical correctness of Brian's algorithms are stored in
 ``brian/tests/testcorrectness``.
+
+*Errors*
+It is a good idea to start an important function (e.g. object initialisation)
+with a check of the arguments, and possibly issue errors. This way errors are
+more understandable by the user.
 
 *Enhancements.*
 Brian uses a system parallel to the

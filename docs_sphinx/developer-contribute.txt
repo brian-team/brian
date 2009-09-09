@@ -10,18 +10,22 @@ The next step is to carefully read the guidelines in this guide.
 
 Now that you wrote your code:
 
-* write a test for it in ``brian/tests/testinterface``. If it is a new module,
+* Write a test for it in ``brian/tests/testinterface``. If it is a new module,
   create a new file ``test_mymodule.py``;
-* write documentation, both in the file (see how it's done in existing modules)
+* Write documentation, both in the file (see how it's done in existing modules)
   and, if appropriate, in the relevant file in ``brian/docs_sphinx``. We use the
   `Sphinx documentation generator <http://sphinx.pocoo.org/>`__ tools. If you want
   to see how it looks, generate the html docs by executing ``dev/tools/docs/build_html.py``.
   The html files will then be in ``docs``.
-* create a patch file. For example with Eclipse, right-click on the Brian project,
+* Create a patch file. For example with Eclipse, right-click on the Brian project,
   then Team > Create Patch > Save in filesystem, then Next > Project.
-* send your patch to both the
-  `patch tracker <https://sourceforge.net/tracker/?group_id=226798&atid=1068581>`__ and the
-  `developers mailing list <http://groups.google.fr/group/brian-development>`__.
+* Send your patch as an attachment to the
+`developers mailing list <http://groups.google.fr/group/brian-development>`__
+and make sure the subject of your message starts with [PATCH]. Then describe your
+patch in your message.
+
+From that point, your patch will either be directly included in the svn or
+(more likely) will be first discussed in the mailing list.
 
 *New modules.*
 New Brian modules start in the ``dev/ideas`` folder, then go to ``brian.experimental``
