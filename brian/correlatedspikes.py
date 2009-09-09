@@ -34,8 +34,8 @@
 # 
 '''
 Generation of correlated spike trains.
-Based on the article: Brette, R. (2008). Generation of correlated spike trains.
-http://www.di.ens.fr/~brette/papers/Brette2008NC.html
+Based on the article: Brette, R. (2009). Generation of correlated spike trains.
+http://audition.ens.fr/brette/papers/Brette2008NC.html
 
 The models for correlated spike trains are from the paper
 but the implemented algorithms are simple ones.
@@ -55,14 +55,6 @@ from random import sample
 
 __all__=['rectified_gaussian','inv_rectified_gaussian','HomogeneousCorrelatedSpikeTrains',\
          'CorrelatedSpikeTrains','mixture_process','find_mixture']
-
-# Contributor information
-__credits__=dict(
-author='Romain Brette (brette@di.ens.fr)',
-date='April 2008',
-paper='Brette, R. (2008). Generation of correlated spike trains. Neural Computation (in press)',
-url='http://www.di.ens.fr/~brette/papers/Brette2008NC.html'
-)
 
 """
 Utility functions
