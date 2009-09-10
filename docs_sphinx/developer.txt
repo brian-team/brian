@@ -9,7 +9,6 @@ interest to others wishing to better understand how Brian works internally.
    :maxdepth: 2
 
    developer-guidelines
-   developer-contribute
    developer-simulationprinciples
    developer-codestructure
    developer-packagestructure

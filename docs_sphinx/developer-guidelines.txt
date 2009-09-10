@@ -44,7 +44,7 @@ Tests associated to a Brian module are stored in ``brian/tests/testinterface``
 and tests of the mathematical correctness of Brian's algorithms are stored in
 ``brian/tests/testcorrectness``.
 
-*Errors*
+*Errors.*
 It is a good idea to start an important function (e.g. object initialisation)
 with a check of the arguments, and possibly issue errors. This way errors are
 more understandable by the user.
@@ -77,21 +77,23 @@ Now that you wrote your code:
 * Write a test for it in ``brian/tests/testinterface``. If it is a new module,
   create a new file ``test_mymodule.py``;
 * Write documentation, both in the file (see how it's done in existing modules)
-  and, if appropriate, in the relevant file in ``brian/docs_sphinx``. We use the
+  and, if appropriate, in the relevant file in ``docs_sphinx``. We use the
   `Sphinx documentation generator <http://sphinx.pocoo.org/>`__ tools. If you want
   to see how it looks, generate the html docs by executing ``dev/tools/docs/build_html.py``.
   The html files will then be in ``docs``.
+* If it is a significant feature, write an example script in ``examples`` and insert a
+  line in ``examples/examples_guide.txt``.
 * Create a patch file. For example with Eclipse, right-click on the Brian project,
   then Team > Create Patch > Save in filesystem, then Next > Project.
 * Send your patch as an attachment to the
-`developers mailing list <http://groups.google.fr/group/brian-development>`__
-and make sure the subject of your message starts with [PATCH]. Then describe your
-patch in your message.
+  `developers mailing list <http://groups.google.fr/group/brian-development>`__
+  and make sure the subject of your message starts with [PATCH]. Then describe your
+  patch in your message.
 
 From that point, your patch will either be directly included in the svn or
 (more likely) will be first discussed in the mailing list.
 
 *New modules.*
-New Brian modules typically start in the ``dev/ideas`` folder, then go to ``brian.experimental``
+New Brian modules typically start in the ``dev/ideas`` folder, then go to ``brian/experimental``
 when they starting looking like modules. They move to the main folder when they are
 stable (especially the user syntax).
