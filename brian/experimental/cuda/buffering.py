@@ -185,6 +185,7 @@ def gpu_buffered_array_inplace_method(func):
     new_func.__name__ = func.__name__
     new_func.__doc__ = func.__doc__
     return new_func
+
 def gpu_buffered_array_access_method(func):
     def new_func(self, *args, **kwds):
         self.sync_to_cpu()
@@ -266,6 +267,7 @@ class GPUBufferedArray(numpy.ndarray):
     '''
     def __new__(subtype, cpu_arr, gpu_arr=None):
         return numpy.array(cpu_arr, copy=False).view(subtype)
+    
     def __init__(self, cpu_arr, gpu_arr=None):
         if gpu_arr is None:
             if DEBUG_BUFFER_CACHE:
@@ -277,6 +279,7 @@ class GPUBufferedArray(numpy.ndarray):
             self._gpu_arr = gpu_arr
             self._gpu_data_changed = False
             self._cpu_data_changed = True
+            
     def _check_synchronisation(self):
         if not hasattr(self, '_cpu_data_changed'):
             # This happens if you do, for example, y[0,:][:]=1 because the y[0,:] will
@@ -291,9 +294,11 @@ class GPUBufferedArray(numpy.ndarray):
             return
         if self._cpu_data_changed and self._gpu_data_changed:
             raise SynchronisationError('GPU and CPU data desynchronised.')
+        
     def sync(self):
         self.sync_to_gpu()
         self.sync_to_cpu()
+        
     def sync_to_gpu(self):
         self._check_synchronisation()
         if self._cpu_data_changed:
@@ -305,6 +310,7 @@ class GPUBufferedArray(numpy.ndarray):
             self._cpu_data_changed = False
             if DEBUG_BUFFER_CACHE:
                 print 'Synchronised to GPU'
+                
     def sync_to_cpu(self):
         self._check_synchronisation()
         if self._gpu_data_changed:
@@ -316,17 +322,21 @@ class GPUBufferedArray(numpy.ndarray):
             self._gpu_data_changed = False
             if DEBUG_BUFFER_CACHE:
                 print 'Synchronised to CPU'
+                
     def changed_gpu_data(self):
         self._gpu_data_changed = True
         self._check_synchronisation()
+        
     def changed_cpu_data(self):
         self._cpu_data_changed = True
         self._check_synchronisation()
+        
     def get_cpu_array(self, modify=True):
         self.sync_to_cpu()
         if modify: # assume that the user is going to modify the data
             self._cpu_data_changed = True
         return self
+    
     def get_gpu_array(self, modify=True):
         self.sync_to_gpu()
         if modify: # assume that the user is going to modify the data
@@ -334,6 +344,7 @@ class GPUBufferedArray(numpy.ndarray):
         if isinstance(self._gpu_arr, pycuda.gpuarray.GPUArray):
             return self._gpu_arr
         raise TypeError('GPU buffer is not a GPUArray')
+    
     def get_gpu_dev_alloc(self, modify=True):
         self.sync_to_gpu()
         if modify: # assume that the user is going to modify the data
@@ -343,8 +354,10 @@ class GPUBufferedArray(numpy.ndarray):
         elif isinstance(self._gpu_arr, pycuda.driver.DeviceAllocation):
             return self._gpu_arr
         raise TypeError('gpu_arr should be a DeviceAllocation or GPUArray.')
+    
     def get_gpu_pointer(self):
         return int(self.gpu_dev_alloc)
+    
     cpu_array = property(fget=get_cpu_array)
     gpu_array = property(fget=get_gpu_array)
     gpu_dev_alloc = property(fget=get_gpu_dev_alloc)
@@ -357,6 +370,7 @@ class GPUBufferedArray(numpy.ndarray):
         exec __name + ' = gpu_buffered_array_inplace_method(numpy.ndarray.' + __name + ')'
     for __name in numpy_access_methods:
         exec __name + ' = gpu_buffered_array_access_method(numpy.ndarray.' + __name + ')'
+        
     def __array_wrap__(self, obj, context=None):
         # normally, __array_wrap__ calls __array_finalize__ to convert the result obj into an object of its own type
         # but here, we don't want that, we want it to be a straight numpy array which doesn't maintain a connection
