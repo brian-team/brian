@@ -410,6 +410,9 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
             ndarray.__setitem__(self,index,W.todense())
         else:
             ndarray.__setitem__(self,index,W)
+    
+    def todense(self):
+        return asarray(self)
 
 oldscipy = scipy.__version__.startswith('0.6.')
 
