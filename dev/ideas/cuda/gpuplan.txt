@@ -1,0 +1,43 @@
+Plan for Brian on GPU
+---------------------
+
+* PyCuda installation (Windows): produce a binary?
+
+From the CUBA example:
+
+P=NeuronGroup(N,model=eqs,
+              threshold=-50*mV,reset=-60*mV)
+
+	* Create state matrix and maybe LS structure on GPU.
+	* Create GPU update code from equations.
+	* Create GPU threshold code.
+	* Create GPU reset code.
+	
+P.v=-60*mV+10*mV*rand(len(P))
+
+	* P.v is a view on the state matrix, with a special cached structure.
+	  Uploading is only necessary before code is executed on the GPU.
+	  Downloading is only necessary if CPU is not in sync with GPU.
+
+Pe=P.subgroup(Ne)
+Pi=P.subgroup(Ni)
+
+	* Should work correctly if views are implemented on cached arrays.
+
+Ce=Connection(Pe,P,'ge',weight=1.62*mV,sparseness=p)
+Ci=Connection(Pi,P,'gi',weight=-9*mV,sparseness=p)
+
+	* Create weight matrices on GPU (sparse array structure).
+	* Create GPU propagate code.
+
+M=SpikeMonitor(P)
+
+	* Should work correctly (runs on CPU).
+	  It could be useful if data were not transferred at every timestep,
+	  using some sort of cache mechanism.
+
+trace=StateMonitor(P,'v',record=0)
+
+	* Should work correctly (runs on CPU).
+
+run(1*second)
