@@ -47,7 +47,7 @@ __all__=['plot','show','figure','xlabel','ylabel','title','axis','raster_plot','
 
 try:
     from pylab import plot,show,figure,xlabel,ylabel,title,axis
-    import pylab
+    import pylab, matplotlib
 except:
     plot, show, figure, xlabel, ylabel, title, axis = (None,)*7
 from stdunits import *
@@ -55,8 +55,12 @@ import magic
 from connection import *
 from monitor import *
 from monitor import HistogramMonitorBase
+from network import network_operation
+from clock import EventClock
 import warnings
 from log import *
+from numpy import amax, amin, array
+import bisect
 
 def _take_options(myopts,givenopts):
     """Takes options from one dict into another
@@ -90,8 +94,8 @@ def raster_plot(*monitors,**plotoptions):
     
     ``showplot=False``
         set to ``True`` to run pylab's ``show()`` function
-    ``newfigure=True``
-        set to ``False`` not to create a new figure with pylab's ``figure()`` function
+    ``newfigure=False``
+        set to ``True`` to create a new figure with pylab's ``figure()`` function
     ``xlabel``
         label for the x-axis
     ``ylabel``
@@ -105,6 +109,15 @@ def raster_plot(*monitors,**plotoptions):
     ``spacebetweengroups``
         value between 0 and 1 to insert a space between
         each group on the y-axis
+    ``refresh``
+        Specify how often (in simulation time) you would like the plot to
+        refresh. Note that this will only work if pylab is in interactive mode,
+        to ensure this call the pylab ``ion()`` command.
+    ``showlast``
+        If you are using the ``refresh`` option above, plots are much quicker
+        if you specify a fixed time window to display (e.g. the last 100ms).
+        If specified, times will be shown relative to the simulation clock time
+        (e.g. from -100ms to 0ms). 
     """
     if len(monitors)==0:
         (monitors,monitornames) = magic.find_instances(SpikeMonitor)
@@ -112,7 +125,8 @@ def raster_plot(*monitors,**plotoptions):
         # OPTIONS
         # Defaults
         myopts = {"title":"", "xlabel":"Time (ms)", "showplot":False, "showgrouplines":False,\
-                  "spacebetweengroups":0.0, "grouplinecol":"k", 'newfigure':False}
+                  "spacebetweengroups":0.0, "grouplinecol":"k", 'newfigure':False,
+                  'refresh':None, 'showlast':None}
         if len(monitors)==1:
             myopts["ylabel"]='Neuron number'
         else:
@@ -120,18 +134,46 @@ def raster_plot(*monitors,**plotoptions):
         # User options
         _take_options(myopts,plotoptions)
         # PLOTTING ROUTINE
-        st = []
-        sn = []
         spacebetween = myopts['spacebetweengroups']
-        for (m,i) in zip(monitors,range(len(monitors))):
-            st = st + [float(a[1]/ms) for a in m.spikes]
+        class SecondTupleArray(object):
+            def __init__(self, obj):
+                self.obj = obj
+            def __getitem__(self, i):
+                return float(self.obj[i][1])
+            def __len__(self):
+                return len(self.obj)
+        def get_plot_coords(tmin=None, tmax=None):
+            st = []
+            sn = []
+            for (m,i) in zip(monitors,range(len(monitors))):
+                mspikes = m.spikes
+                if tmin is not None and tmax is not None:
+                    x = SecondTupleArray(mspikes)
+                    imin = bisect.bisect_left(x, tmin)
+                    imax = bisect.bisect_right(x, tmax)
+                    mspikes = mspikes[imin:imax]
+                st = st + [float(a[1]/ms) for a in mspikes]
+                if len(monitors)==1:
+                    sn = sn + [a[0] for a in mspikes]
+                else:
+                    sn = sn + [float(i)+(1-spacebetween)*float(a[0])/float(len(m.source)) for a in mspikes]
             if len(monitors)==1:
-                sn = sn + [a[0] for a in m.spikes]
+                nmax = len(monitors[0].source)
             else:
-                sn = sn + [float(i)+(1-spacebetween)*float(a[0])/float(len(m.source)) for a in m.spikes]
+                nmax = len(monitors)
+            return st, sn, nmax
+        st, sn, nmax = get_plot_coords()
         if myopts['newfigure']:
             pylab.figure()
-        pylab.plot(st,sn,'.',**plotoptions)
+        if myopts['refresh'] is None:
+            line, = pylab.plot(st,sn,'.',**plotoptions)
+        else:
+            line, = pylab.plot([], [], '.', **plotoptions)
+        if myopts['refresh'] is not None:
+            pylab.axis(ymin=0, ymax=nmax)
+            if myopts['showlast'] is not None:
+                pylab.axis(xmin=-myopts['showlast']/ms, xmax=0)
+        ax = pylab.gca()
         if myopts['showgrouplines']:
             for i in range(len(monitors)):
                 pylab.axhline(i,color=myopts['grouplinecol'])
@@ -141,6 +183,21 @@ def raster_plot(*monitors,**plotoptions):
         pylab.title(myopts["title"])
         if myopts["showplot"]:
             pylab.show()
+        if myopts['refresh'] is not None:
+            @network_operation(clock=EventClock(dt=myopts['refresh']))
+            def refresh_raster_plot(clk):
+                if matplotlib.is_interactive():
+                    if myopts['showlast'] is None:
+                        st, sn, nmax = get_plot_coords()
+                        line.set_xdata(st)
+                        line.set_ydata(sn)
+                        ax.set_xlim(0, amax(st))
+                    else:
+                        st, sn, nmax = get_plot_coords(clk._t-float(myopts['showlast']), clk._t)
+                        line.set_xdata(array(st)-clk.t/ms)
+                        line.set_ydata(sn)
+                    pylab.draw()
+            monitors[0].contained_objects.append(refresh_raster_plot)
 
 
 def hist_plot(histmon=None,**plotoptions):
