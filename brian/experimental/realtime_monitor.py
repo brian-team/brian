@@ -2,6 +2,8 @@ from brian import *
 import pygame
 import matplotlib.cm as cm
 
+__all__ = ['RealtimeConnectionMonitor']
+
 class RealtimeConnectionMonitor(NetworkOperation):
     '''
     Realtime monitoring of weight matrix
