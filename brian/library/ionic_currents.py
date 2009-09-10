@@ -23,6 +23,16 @@ def K_current_HH(gmax,EK,current_name=None):
     alphan=.01*(10*mV-vm)/(exp(1-.1*vm/mV)-1)/mV/ms : Hz
     betan=.125*exp(-.0125*vm/mV)/ms : Hz
     ''',gmax=gmax,EK=EK,I=current_name)
+    # 2 problems here:
+    # * The current variable is determined thanks to the units,
+    #   so it doesn't work if units are off.
+    # * Variables n, alphan and betan may conflict with other variables
+    #   (e.g. in other currents).
+    #
+    # Solutions:
+    # * Set current_name explicitly. If None, generate an id or use I_K.
+    # * Anonymise names with unique id, on option. This could be an option in
+    #   Current().
 
 #check_units(ENa=volt)
 def Na_current_HH(gmax,ENa,current_name=None):
