@@ -4,10 +4,11 @@ Very short example program.
 from brian import *
 from time import time
 
-N=10000        # number of neurons
+N=10        # number of neurons
 Ne=int(N*0.8) # excitatory neurons 
 Ni=N-Ne       # inhibitory neurons
-p=80./N
+#p=80./N
+p=.1
 duration=1000*ms
 
 eqs='''

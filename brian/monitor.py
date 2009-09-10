@@ -558,7 +558,7 @@ class StateMonitor(NetworkOperation,Monitor):
         specified then the colours will be set according to the matplotlib
         colormap cmap.
     '''
-    times  = property(fget=lambda self:QuantityArray(self._times))
+    times  = property(fget=lambda self:QuantityArray(self._times)*second)
     mean   = property(fget=lambda self:self.unit*QuantityArray(self._mu/self.N))
     _mean  = property(fget=lambda self:self._mu/self.N)
     var    = property(fget=lambda self:(self.unit*self.unit*QuantityArray(self._sqr-self.N*self._mean**2)/(self.N-1)))
@@ -621,7 +621,7 @@ class StateMonitor(NetworkOperation,Monitor):
                 self._values.append(V[self.record])
             elif self.record is True:
                 self._values.append(V.copy())
-            self._times.append(self.clock.t)
+            self._times.append(self.clock._t)
             self._recordstep += 1
         self.curtimestep-=1
         if self.curtimestep==0: self.curtimestep=self.timestep

@@ -1,14 +1,14 @@
 Plan for Brian on GPU
----------------------
+=====================
 
 * PyCuda installation (Windows): produce a binary?
 
-From the CUBA example:
-
+From the CUBA example
+---------------------
 P=NeuronGroup(N,model=eqs,
               threshold=-50*mV,reset=-60*mV)
 
-	* Create state matrix and maybe LS structure on GPU.
+	* Create state matrix and LS structure on GPU.
 	* Create GPU update code from equations.
 	* Create GPU threshold code.
 	* Create GPU reset code.
