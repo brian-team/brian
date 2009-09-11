@@ -160,10 +160,10 @@ class Clock(magic.InstanceTracker):
     
     # Clock object internally stores floats, but these properties
     # return quantities
-    t=property(fget=lambda self:self._t*second,fset=set_t)
-    dt=property(fget=lambda self:self._dt*second,fset=set_dt)
-    end=property(fget=lambda self:self._end*second,fset=set_end)
-    start=property(fget=lambda self:self._start*second,fset=set_start)
+    t=property(fget=lambda self:Quantity.with_dimensions(self._t,second.dim),fset=set_t)
+    dt=property(fget=lambda self:Quantity.with_dimensions(self._dt,second.dim),fset=set_dt)
+    end=property(fget=lambda self:Quantity.with_dimensions(self._end,second.dim),fset=set_end)
+    start=property(fget=lambda self:Quantity.with_dimensions(self._start,second.dim),fset=set_start)
     
     @check_units(duration=second)
     def set_duration(self,duration):
