@@ -608,9 +608,10 @@ class StateMonitor(NetworkOperation,Monitor):
         This function is called every time step.
         '''
         V=self.P.state_(self.varname)
-        self._mu+=V
-        self._sqr+=V*V
-        if self.record is not False and self.curtimestep==self.timestep:
+        if self.record is False:
+            self._mu+=V
+            self._sqr+=V*V
+        elif self.curtimestep==self.timestep:
             i = self._recordstep
             if self._values is None:
                 #numrecord = len(self.get_record_indices())
