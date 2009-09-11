@@ -607,8 +607,9 @@ class StateMonitor(NetworkOperation,Monitor):
         self.varname=varname
         self.N=0 # number of steps
         self._recordstep = 0
-        self._mu=zeros(len(P)) # sum
-        self._sqr=zeros(len(P)) # sum of squares
+        if record is False:
+            self._mu=zeros(len(P)) # sum
+            self._sqr=zeros(len(P)) # sum of squares
         self.unit = 1.0*P.unit(varname)
         self._times = []
         self._values = []

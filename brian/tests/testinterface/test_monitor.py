@@ -165,13 +165,6 @@ def test():
     for M in [M3, M4]:
         assert (is_within_absolute_tolerance(float(max(abs(M.times-M2.times))),float(0*ms)))
         assert (is_within_absolute_tolerance(float(max(abs(M.times_-M2.times_))),0.))
-    for M in [M2, M3, M4]:
-        assert (is_within_absolute_tolerance(float(max(abs(M.mean-M1.mean))),0.))
-        assert (is_within_absolute_tolerance(float(max(abs(M.var-M1.var))),0.))
-        assert (is_within_absolute_tolerance(float(max(abs(M.std-M1.std))),0.))
-        assert (is_within_absolute_tolerance(float(max(abs(M.mean_-M1.mean_))),0.))
-        assert (is_within_absolute_tolerance(float(max(abs(M.var_-M1.var_))),0.))
-        assert (is_within_absolute_tolerance(float(max(abs(M.std_-M1.std_))),0.))
     assert (is_within_absolute_tolerance(float(M2.times[0]),float(0*ms)))
     d = diff(M2.times)
     assert (is_within_absolute_tolerance(max(d),min(d)))

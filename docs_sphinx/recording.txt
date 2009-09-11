@@ -57,7 +57,9 @@ To record the values of the state variables over the whole simulation, use the k
 
 The first monitor records the value of ``v`` for all neurons while the second one records ``v`` for
 neurons 3, 5 and 9 only. The list of times is stored in ``M1.times`` and the lists of values are stored in
-``M1[i]``, where i the index of the neuron.
+``M1[i]``, where i the index of the neuron. Means and variances are no longer recorded if you
+record traces.
+
 By default, the values of the state variables are recorded every timestep, but one may record every n timesteps
 by setting the keyword ``timestep``::
 
