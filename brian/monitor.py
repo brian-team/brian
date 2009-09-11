@@ -43,17 +43,18 @@ __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMo
 
 from units import *
 from connection import Connection, SparseConnectionVector
-from numpy import array, zeros, histogram, copy, ones, exp, arange, convolve, argsort, floor, asarray
+from numpy import array, zeros, histogram, copy, ones, exp, arange, convolve, argsort, floor, asarray, Inf, amin, amax
 from itertools import repeat, izip
-from clock import guess_clock
-from network import NetworkOperation
+from clock import guess_clock, EventClock
+from network import NetworkOperation, network_operation
 from quantityarray import *
 from stdunits import ms
 from collections import defaultdict
 import types
 from operator import isSequenceType
+import bisect
 try:
-    import pylab
+    import pylab, matplotlib
 except:
     pass
         
@@ -549,14 +550,21 @@ class StateMonitor(NetworkOperation,Monitor):
     
     Methods:
     
-    .. method:: plot([indices=None[, cmap=None]])
+    .. method:: plot([indices=None[, cmap=None[, refresh=None[, showlast=None[, donotredraw=False]]]]])
         
         Plots the recorded values using pylab. You can specify an index or
         list of indices, otherwise all the recorded values will be plotted.
         The graph plotted will have legends of the form ``name[i]`` for
         ``name`` the variable name, and ``i`` the neuron index. If cmap is
         specified then the colours will be set according to the matplotlib
-        colormap cmap.
+        colormap cmap. ``refresh`` specifies how often (in simulation time)
+        you would like the plot to refresh. Note that this will only work if
+        pylab is in interactive mode, to ensure this call the pylab ``ion()``
+        command. If you are using the ``refresh`` option, ``showlast`` specifies
+        a fixed time window to display (e.g. the last 100ms).
+        If you are using more than one realtime monitor, only one of them needs
+        to issue a redraw command, therefore set this to ``True`` for all but
+        one of them.
     '''
     times  = property(fget=lambda self:QuantityArray(self._times)*second)
     mean   = property(fget=lambda self:self.unit*QuantityArray(self._mu/self.N))
@@ -602,6 +610,8 @@ class StateMonitor(NetworkOperation,Monitor):
         self._mu=zeros(len(P)) # sum
         self._sqr=zeros(len(P)) # sum of squares
         self.unit = 1.0*P.unit(varname)
+        self._times = []
+        self._values = []
         
     def __call__(self):
         '''
@@ -680,24 +690,63 @@ class StateMonitor(NetworkOperation,Monitor):
         else:
             return self.record
         
-    def plot(self, indices=None, cmap=None):
+    def plot(self, indices=None, cmap=None, refresh=None, showlast=None, donotredraw=False):
+        lines = []
+        inds = []
         if indices is None:
             recind = self.get_record_indices()
             for j, i in enumerate(recind):
                 if cmap is None:
-                    pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']')
+                    line, = pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']')
                 else:
-                    pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']',
+                    line, = pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']',
                                color=cmap(float(j)/(len(recind)-1)))
+                inds.append(i)
+                lines.append(line)
         elif isinstance(indices, int):
-            pylab.plot(self.times, self[indices], label=str(self.varname)+'['+str(indices)+']')
+            line, = pylab.plot(self.times, self[indices], label=str(self.varname)+'['+str(indices)+']')
+            lines.append(line)
+            inds.append(indices)
         else:
             for j, i in enumerate(indices):
                 if cmap is None:
-                    pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']')
+                    line, = pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']')
                 else:
-                    pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']',
+                    line, = pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']',
                                color=cmap(float(j)/(len(indices)-1)))
+                inds.append(i)
+                lines.append(line)
+        ax = pylab.gca()
+        if refresh is not None:
+            ylim = [Inf, -Inf]
+            @network_operation(clock=EventClock(dt=refresh))
+            def refresh_state_monitor_plot(clk):
+                ymin, ymax = ylim
+                if matplotlib.is_interactive():
+                    if showlast is not None:
+                        tmin = clk._t-float(showlast)
+                        tmax = clk._t
+                    for line, i in zip(lines, inds):
+                        if showlast is None:
+                            line.set_xdata(self.times)
+                            y = self[i]
+                        else:
+                            imin = bisect.bisect_left(self.times, tmin)
+                            imax = bisect.bisect_right(self.times, tmax)
+                            line.set_xdata(self.times[imin:imax])
+                            y = self[i][imin:imax]
+                        line.set_ydata(y)
+                        ymin = min(ymin, amin(y))
+                        ymax = max(ymax, amax(y))
+                    if showlast is None:
+                        ax.set_xlim(0, clk._t)
+                    else:
+                        ax.set_xlim(clk._t-float(showlast), clk._t)
+                    ax.set_ylim(ymin, ymax)
+                    ylim[:] = [ymin, ymax]
+                    if not donotredraw:
+                        pylab.draw()
+            self.contained_objects.append(refresh_state_monitor_plot)
 
 class RecentStateMonitor(StateMonitor):
     '''
@@ -706,7 +755,7 @@ class RecentStateMonitor(StateMonitor):
     Works in the same way as a :class:`StateMonitor` except that it has one
     additional initialiser keyword ``duration`` which gives the length of
     time to record values for, the ``record`` keyword defaults to ``True``
-    isntead of ``False``, and there are some different or additional
+    instead of ``False``, and there are some different or additional
     attributes:
     
     ``values``, ``values_``, ``times``, ``times_``
@@ -734,6 +783,7 @@ class RecentStateMonitor(StateMonitor):
     '''
     def __init__(self, P, varname, duration=5*ms, clock=None, record=True, timestep=1, when='end'):
         StateMonitor.__init__(self, P, varname, clock=clock, record=record, timestep=timestep, when=when)
+        self.duration = duration
         self.num_duration = int(duration/(timestep*self.clock.dt))+1
         if record is False:
             self.record_size = 0
@@ -845,6 +895,11 @@ class RecentStateMonitor(StateMonitor):
         self._sqr=zeros(len(self.P))
         self.has_looped = False
 
+    def plot(self, indices=None, cmap=None, refresh=None, showlast=None, donotredraw=False):
+        if refresh is not None and showlast is None:
+            showlast = self.duration
+        StateMonitor.plot(self, indices=indices, cmap=cmap, refresh=refresh, showlast=showlast, donotredraw=donotredraw)
+
 class MultiStateMonitor(NetworkOperation):
     '''
     Monitors multiple state variables of a group
@@ -867,8 +922,8 @@ class MultiStateMonitor(NetworkOperation):
     ``items()``, ``iteritems()``
         Returns the pairs (var, mon)
     ``plot([indices[, cmap]])``
-        Plots all the monitors (with optional choice of indices and
-        colour map).
+        Plots all the monitors (note that real-time plotting is not supported
+        for this class).
     
     Attributes:
     

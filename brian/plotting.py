@@ -116,8 +116,10 @@ def raster_plot(*monitors,**plotoptions):
     ``showlast``
         If you are using the ``refresh`` option above, plots are much quicker
         if you specify a fixed time window to display (e.g. the last 100ms).
-        If specified, times will be shown relative to the simulation clock time
-        (e.g. from -100ms to 0ms). 
+    ``donotredraw``
+        If you are using more than one realtime monitor, only one of them needs
+        to issue a redraw command, therefore set this to ``True`` for all but
+        one of them.
     """
     if len(monitors)==0:
         (monitors,monitornames) = magic.find_instances(SpikeMonitor)
@@ -126,7 +128,7 @@ def raster_plot(*monitors,**plotoptions):
         # Defaults
         myopts = {"title":"", "xlabel":"Time (ms)", "showplot":False, "showgrouplines":False,\
                   "spacebetweengroups":0.0, "grouplinecol":"k", 'newfigure':False,
-                  'refresh':None, 'showlast':None}
+                  'refresh':None, 'showlast':None, 'donotredraw':False}
         if len(monitors)==1:
             myopts["ylabel"]='Neuron number'
         else:
@@ -201,9 +203,11 @@ def raster_plot(*monitors,**plotoptions):
                         ax.set_xlim(0, amax(st))
                     else:
                         st, sn, nmax = get_plot_coords(clk._t-float(myopts['showlast']), clk._t)
-                        line.set_xdata(array(st)-clk.t/ms)
+                        ax.set_xlim((clk.t-myopts['showlast'])/ms, clk.t/ms)
+                        line.set_xdata(array(st))
                         line.set_ydata(sn)
-                    pylab.draw()
+                    if not myopts['donotredraw']:
+                        pylab.draw()
             monitors[0].contained_objects.append(refresh_raster_plot)
 
 
