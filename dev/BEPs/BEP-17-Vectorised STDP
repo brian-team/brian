@@ -22,4 +22,5 @@ case could be treated explicitly since it should not happen so often.
 
 In summary, what is needed is essentially a new connection matrix structure
 which implements duplicates over layers.
-For example, W[i].data would return W0[i]
+For example, W[i].data would return W0[i].repeat(M)
+and W[i].target would be precomputed.
