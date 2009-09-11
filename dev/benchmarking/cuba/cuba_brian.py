@@ -1,21 +1,14 @@
 '''
 Very short example program.
-
-Profiling:
-* state update = 0.17 s
-* threshold = 0.22 s
-* reset = 0.06 s
-* each connection = about 0.20 s (even with no spike)
 '''
 #import brian_no_units
 from brian import *
 from time import time
 
-N=10        # number of neurons
+N=10000        # number of neurons
 Ne=int(N*0.8) # excitatory neurons 
 Ni=N-Ne       # inhibitory neurons
-#p=80./N
-p=.1
+p=80./N
 duration=1000*ms
 
 eqs='''
@@ -29,13 +22,12 @@ P.v=-60*mV+10*mV*rand(len(P))
 Pe=P.subgroup(Ne)
 Pi=P.subgroup(Ni)
 
-Ce=Connection(Pe,P,'ge',weight=0*1.62*mV,sparseness=p)
-Ci=Connection(Pi,P,'gi',weight=0*-9*mV,sparseness=p)
+Ce=Connection(Pe,P,'ge',weight=1.62*mV,sparseness=p)
+Ci=Connection(Pi,P,'gi',weight=-9*mV,sparseness=p)
 
 M=SpikeMonitor(P)
 trace=StateMonitor(P,'v',record=0)
 
-run(1*ms)
 t1=time()
 run(1*second)
 t2=time()
