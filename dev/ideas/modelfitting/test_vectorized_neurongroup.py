@@ -23,8 +23,6 @@ def test():
     net = Network(vgroup, M)
     net.run(vgroup.duration)
     
-    # TODO: alter SpikeMonitor to support vectorizedneurongroup
-    M.spikes = [(mod(i,N),t+i/N*(vgroup.duration-overlap)*second) for i,t in M.spikes if t >= overlap]
     # TODO: for now, just checks that the code runs !
     assert True
 

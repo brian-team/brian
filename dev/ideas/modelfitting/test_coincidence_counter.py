@@ -1,8 +1,8 @@
 from brian import *
 from coincidence_counter import *
 from vectorized_neurongroup import *
+from vectorized_monitor import *
 from nose.tools import *
-
 
 def test():
     """
@@ -15,42 +15,29 @@ def test():
     I : Hz"""
 
     I = 120/second
-    tau = 1/I/second + arange(.001, .005, .001)
+    tau = arange(.03, .06, .01)
     N = len(tau)
-    n = 10
     dt = .1*ms
     isi = -tau*log(1-1/(tau*I))
-    durations = n*isi
-    duration = durations.min() 
-
-    group = VectorizedNeuronGroup(
-                        model = eqs,
-                        reset = 0,
-                        threshold = 1,
-                        input_name = 'I',
-                        input_values = I*ones(int(duration/dt)),
-                        dt = dt, 
-                        overlap = 0*ms,
-                        slice_number = 1,
-                        tau = tau)
+    duration = 120*ms
     
-    # we compute the predicted spike train
     data = []
     for i in range(N):
-        data += [(i,floor(t/dt)*dt) for t in cumsum(isi[i]*ones(n)) if t <= duration]
+        for j in range(1,int(duration/isi[i])+1):
+            t = int(j*isi[i]/dt)*dt
+            if t <= duration:
+                data += [(i,t)]
     data.sort(cmp=lambda x,y:2*int(x[1]>y[1])-1)
-    
-    
-    cd = CoincidenceCounter(group, data, model_target = arange(N))
-    
-    M = SpikeMonitor(group)
-    run(group.duration)
-    
-    print int(duration/dt)*dt
-    print cd.gamma
-    print data
-    print M.spikes
 
-#    assert (cd.coincidences == n).all()
+    group = VectorizedNeuronGroup(model = eqs, reset = 0, threshold = 1,
+                        input_name = 'I', input_values = I*ones(int(duration/dt)),
+                        dt = dt, overlap = 30*ms,slice_number = 1,
+                        tau = tau)
+    
+    cd = CoincidenceCounter(group, data, model_target = arange(N), delta = .004)
+    M = VectorizedSpikeMonitor(group)
+    run(group.duration)
+
+    assert cd.gamma.min() > .999999
 
 test()

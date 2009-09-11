@@ -209,21 +209,12 @@ class CoincidenceCounter(SpikeMonitor):
     
     def get_gamma(self):
         if self._gamma is None:
-            target_length = self.sum_vectorized_values(self._target_length)
+            target_length = self.sum_vectorized_values(self._target_length)[self.original_model_target]
             model_length = self.sum_vectorized_values(self._model_length)
             target_rates = target_length/self.duration
-            NCoincAvg = 2 * self.delta * target_length[self.original_model_target] * target_rates[self.original_model_target]
-            alpha = 2.0/(1.0 - 2 * target_rates[self.original_model_target] * self.delta)
-            
-#            print target_rates[self.original_model_target]
-#            print alpha
-#            print self.coincidences
-#            print NCoincAvg
-#            print target_length[self.original_model_target]
-#            print model_length
-
-            self._gamma = alpha * (self.coincidences - NCoincAvg)/(target_length[self.original_model_target] + model_length)
-            
+            NCoincAvg = 2 * self.delta * target_rates * target_length
+            alpha = 2.0/(1.0 - 2 * self.delta * target_rates)
+            self._gamma = alpha * (self.coincidences - NCoincAvg)/(target_length + model_length)
         return self._gamma
     
     gamma = property(get_gamma)

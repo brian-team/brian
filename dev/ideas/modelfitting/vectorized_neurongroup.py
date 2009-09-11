@@ -16,14 +16,16 @@ class VectorizedNeuronGroup(NeuronGroup):
     - dt              Timestep of the input
     - overlap         Overlap between time slices
     - slice_number    Number of time slices (default 1)
-    - **params        Model parameters list : tau=(min,init_min,init_max,max)
+    - **param_values  Model parameters values
     """
     
     def __init__(self, model = None, threshold = None, reset = NoReset(), 
                  input_name = 'I', input_values = None, dt = .1*ms, 
-                 overlap = 0*ms, slice_number = 1, **params):
+                 overlap = 0*ms, slice_number = 1, **param_values):
         
-        values_number = len(params.values()[0]) # Number of parameter values
+        if slice_number == 1:
+            overlap = 0*ms
+        values_number = len(param_values.values()[0]) # Number of parameter values
         for param, value in params.iteritems():
             if not(len(value) == values_number):
                 raise AttributeError, 'The parameters must have the same number of values'
@@ -41,11 +43,8 @@ class VectorizedNeuronGroup(NeuronGroup):
         if overlap >= input_length*dt/slice_number:
             raise AttributeError, 'Overlap should be less than %.2f' % input_length*dt/slice_number
         
-        for param,value in params.iteritems():
-            # each neuron is duplicated slice_number times, with the same parameters. 
-            # Only the input current changes.
-            # new group = [neuron1, ..., neuronN, ..., neuron1, ..., neuronN]
-            self.state(param)[:] = kron(ones(slice_number), value)
+        self.set_param_values(param_values)
+        
         # Injects sliced current to each subgroup
         for _ in range(slice_number):
             if _ == 0:
@@ -54,5 +53,14 @@ class VectorizedNeuronGroup(NeuronGroup):
                 input_sliced_values = input_values[input_length/slice_number*_-int(overlap/dt):input_length/slice_number*(_+1)]
             sliced_subgroup = self.subgroup(values_number)
             sliced_subgroup.set_var_by_array(input_name, TimedArray(input_sliced_values))
+        
+    def set_param_values(self, param_values):
+        for param,value in param_values.iteritems():
+            # each neuron is duplicated slice_number times, with the same parameters. 
+            # Only the input current changes.
+            # new group = [neuron1, ..., neuronN, ..., neuron1, ..., neuronN]
+            self.state(param)[:] = kron(ones(slice_number), value)
+        
+        
         
         
