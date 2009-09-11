@@ -59,7 +59,7 @@ from network import network_operation
 from clock import EventClock
 import warnings
 from log import *
-from numpy import amax, amin, array
+from numpy import amax, amin, array, hstack
 import bisect
 
 def _take_options(myopts,givenopts):
@@ -143,20 +143,27 @@ def raster_plot(*monitors,**plotoptions):
             def __len__(self):
                 return len(self.obj)
         def get_plot_coords(tmin=None, tmax=None):
-            st = []
-            sn = []
-            for (m,i) in zip(monitors,range(len(monitors))):
+            allsn = []
+            allst = []
+            for i, m in enumerate(monitors):
                 mspikes = m.spikes
                 if tmin is not None and tmax is not None:
                     x = SecondTupleArray(mspikes)
                     imin = bisect.bisect_left(x, tmin)
                     imax = bisect.bisect_right(x, tmax)
                     mspikes = mspikes[imin:imax]
-                st = st + [float(a[1]/ms) for a in mspikes]
-                if len(monitors)==1:
-                    sn = sn + [a[0] for a in mspikes]
+                if len(mspikes):
+                    sn, st = array(mspikes).T
                 else:
-                    sn = sn + [float(i)+(1-spacebetween)*float(a[0])/float(len(m.source)) for a in mspikes]
+                    sn, st = array([]), array([])
+                st /= ms
+                if len(monitors)==1:
+                    allsn = [sn]
+                else:
+                    allsn.append(i+((1.-spacebetween)/float(len(m.source)))*sn)
+                allst.append(st)
+            sn = hstack(allsn)
+            st = hstack(allst)
             if len(monitors)==1:
                 nmax = len(monitors[0].source)
             else:
