@@ -1,0 +1,25 @@
+BEP-17: Vectorised STDP
+Abstract: Synaptic plasticity and learning act on a slow timescale. In many
+cases, the network is presented with many stimuli (e.g. sounds) sequentially.
+I propose to present the stimuli in parallel, and either have a shared connection
+matrix or regularly collect the weight changes.
+
+One simple idea
+---------------
+* Create a big group.
+* Divide in subgroups P[i].
+* Create connections between subgroups, but change C.W to refer to those of
+  layer 0 (subgroup P[0]). It should be done after the connection is compressed.
+* Define STDP in each layer.
+
+Here we probably only save computation time on the state update.
+A better way would be to have a single Connection and STDP object rather than
+one per layer, but the difficulty is to have a shared connection matrix.
+I think it could work, except when two different layers want to change the
+same synaptic weight at the same time, which would happen any time two
+corresponding neurons fire simultaneously in different layers. Maybe this
+case could be treated explicitly since it should not happen so often.
+
+In summary, what is needed is essentially a new connection matrix structure
+which implements duplicates over layers.
+For example, W[i].data would return W0[i]
