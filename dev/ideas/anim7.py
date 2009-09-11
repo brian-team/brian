@@ -18,7 +18,7 @@ trace = RecentStateMonitor(P, 'v', record=0, duration=200*ms)
 
 ion()
 subplot(211)
-raster_plot(M, refresh=10*ms, showlast=200*ms, donotredraw=True)
+raster_plot(M, refresh=10*ms, showlast=200*ms, redraw=False)
 subplot(212)
 trace.plot(refresh=10*ms)
 

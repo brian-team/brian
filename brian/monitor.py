@@ -550,7 +550,7 @@ class StateMonitor(NetworkOperation,Monitor):
     
     Methods:
     
-    .. method:: plot([indices=None[, cmap=None[, refresh=None[, showlast=None[, donotredraw=False]]]]])
+    .. method:: plot([indices=None[, cmap=None[, refresh=None[, showlast=None[, redraw=True]]]]])
         
         Plots the recorded values using pylab. You can specify an index or
         list of indices, otherwise all the recorded values will be plotted.
@@ -563,7 +563,7 @@ class StateMonitor(NetworkOperation,Monitor):
         command. If you are using the ``refresh`` option, ``showlast`` specifies
         a fixed time window to display (e.g. the last 100ms).
         If you are using more than one realtime monitor, only one of them needs
-        to issue a redraw command, therefore set this to ``True`` for all but
+        to issue a redraw command, therefore set ``redraw=False`` for all but
         one of them.
     '''
     times  = property(fget=lambda self:QuantityArray(self._times)*second)
@@ -690,7 +690,7 @@ class StateMonitor(NetworkOperation,Monitor):
         else:
             return self.record
         
-    def plot(self, indices=None, cmap=None, refresh=None, showlast=None, donotredraw=False):
+    def plot(self, indices=None, cmap=None, refresh=None, showlast=None, redraw=True):
         lines = []
         inds = []
         if indices is None:
@@ -744,7 +744,7 @@ class StateMonitor(NetworkOperation,Monitor):
                         ax.set_xlim(clk._t-float(showlast), clk._t)
                     ax.set_ylim(ymin, ymax)
                     ylim[:] = [ymin, ymax]
-                    if not donotredraw:
+                    if redraw:
                         pylab.draw()
             self.contained_objects.append(refresh_state_monitor_plot)
 
@@ -895,10 +895,10 @@ class RecentStateMonitor(StateMonitor):
         self._sqr=zeros(len(self.P))
         self.has_looped = False
 
-    def plot(self, indices=None, cmap=None, refresh=None, showlast=None, donotredraw=False):
+    def plot(self, indices=None, cmap=None, refresh=None, showlast=None, redraw=True):
         if refresh is not None and showlast is None:
             showlast = self.duration
-        StateMonitor.plot(self, indices=indices, cmap=cmap, refresh=refresh, showlast=showlast, donotredraw=donotredraw)
+        StateMonitor.plot(self, indices=indices, cmap=cmap, refresh=refresh, showlast=showlast, redraw=redraw)
 
 class MultiStateMonitor(NetworkOperation):
     '''

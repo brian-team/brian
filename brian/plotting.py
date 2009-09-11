@@ -116,9 +116,9 @@ def raster_plot(*monitors,**plotoptions):
     ``showlast``
         If you are using the ``refresh`` option above, plots are much quicker
         if you specify a fixed time window to display (e.g. the last 100ms).
-    ``donotredraw``
+    ``redraw``
         If you are using more than one realtime monitor, only one of them needs
-        to issue a redraw command, therefore set this to ``True`` for all but
+        to issue a redraw command, therefore set this to ``False`` for all but
         one of them.
     """
     if len(monitors)==0:
@@ -128,7 +128,7 @@ def raster_plot(*monitors,**plotoptions):
         # Defaults
         myopts = {"title":"", "xlabel":"Time (ms)", "showplot":False, "showgrouplines":False,\
                   "spacebetweengroups":0.0, "grouplinecol":"k", 'newfigure':False,
-                  'refresh':None, 'showlast':None, 'donotredraw':False}
+                  'refresh':None, 'showlast':None, 'redraw':True}
         if len(monitors)==1:
             myopts["ylabel"]='Neuron number'
         else:
@@ -206,7 +206,7 @@ def raster_plot(*monitors,**plotoptions):
                         ax.set_xlim((clk.t-myopts['showlast'])/ms, clk.t/ms)
                         line.set_xdata(array(st))
                         line.set_ydata(sn)
-                    if not myopts['donotredraw']:
+                    if myopts['redraw']:
                         pylab.draw()
             monitors[0].contained_objects.append(refresh_raster_plot)
 
