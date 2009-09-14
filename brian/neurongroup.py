@@ -241,7 +241,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                  init=None, refractory=0*msecond, level=0,
                  clock=None, order=1, implicit=False,unit_checking=True,
                  max_delay=0*msecond, compile=False, freeze=False, method=None,
-                 **args):
+                 ):#**args): # any reason why **args was included here?
         '''
         Initializes the group.
         '''
