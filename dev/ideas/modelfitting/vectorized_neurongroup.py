@@ -26,7 +26,7 @@ class VectorizedNeuronGroup(NeuronGroup):
         if slice_number == 1:
             overlap = 0*ms
         values_number = len(param_values.values()[0]) # Number of parameter values
-        for param, value in params.iteritems():
+        for param, value in param_values.iteritems():
             if not(len(value) == values_number):
                 raise AttributeError, 'The parameters must have the same number of values'
         
@@ -42,7 +42,7 @@ class VectorizedNeuronGroup(NeuronGroup):
         
         if overlap >= input_length*dt/slice_number:
             raise AttributeError, 'Overlap should be less than %.2f' % input_length*dt/slice_number
-        
+
         self.set_param_values(param_values)
         
         # Injects sliced current to each subgroup
@@ -59,8 +59,7 @@ class VectorizedNeuronGroup(NeuronGroup):
             # each neuron is duplicated slice_number times, with the same parameters. 
             # Only the input current changes.
             # new group = [neuron1, ..., neuronN, ..., neuron1, ..., neuronN]
-            self.state(param)[:] = kron(ones(slice_number), value)
-        
+            self.state(param)[:] = kron(ones(self.slice_number), value)
         
         
         

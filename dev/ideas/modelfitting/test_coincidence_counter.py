@@ -12,7 +12,8 @@ def test():
     eqs = """
     dV/dt = -V/tau+I : 1
     tau : second
-    I : Hz"""
+    I : Hz
+    """
 
     I = 120/second
     tau = arange(.03, .06, .01)

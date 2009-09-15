@@ -104,9 +104,6 @@ class CoincidenceCounter(SpikeMonitor):
         self.delta = delta
         self.dt = defaultclock._dt
         
-        self._coincidences = zeros(self.NModel)
-        self._gamma = None
-        
         self.prepare_online_computation()
         
     def propagate(self, spiking_neurons):
@@ -150,7 +147,8 @@ class CoincidenceCounter(SpikeMonitor):
         self.close_target_spikes    = -1 * ones(self.NTarget)
         self.last_target_spikes     = -1 * ones(self.NModel)
         self.current_bin            = -1
-        self._coincidences           = zeros(self.NModel)
+        self._coincidences          = zeros(self.NModel)
+#        self._gamma = None
     
     def compute_all_bins(self):
         '''
@@ -200,7 +198,7 @@ class CoincidenceCounter(SpikeMonitor):
             return vector.reshape((self.source.slice_number,self.source.neuron_number)).sum(axis=0)
 
     def get_coincidences(self):
-        return self.sum_vectorized_values(self._coincidences)[self.original_model_target]
+        return self.sum_vectorized_values(self._coincidences)
         
     def set_coincidences(self, value):
         self._coincidences = value
@@ -208,14 +206,13 @@ class CoincidenceCounter(SpikeMonitor):
     coincidences = property(get_coincidences, set_coincidences)
     
     def get_gamma(self):
-        if self._gamma is None:
-            target_length = self.sum_vectorized_values(self._target_length)[self.original_model_target]
-            model_length = self.sum_vectorized_values(self._model_length)
-            target_rates = target_length/self.duration
-            NCoincAvg = 2 * self.delta * target_rates * target_length
-            alpha = 2.0/(1.0 - 2 * self.delta * target_rates)
-            self._gamma = alpha * (self.coincidences - NCoincAvg)/(target_length + model_length)
-        return self._gamma
+        target_length = self.sum_vectorized_values(self._target_length)[self.original_model_target]
+        model_length = self.sum_vectorized_values(self._model_length)
+        target_rates = target_length/self.duration
+        NCoincAvg = 2 * self.delta * target_rates * target_length
+        alpha = 2.0/(1.0 - 2 * self.delta * target_rates)
+        gamma = alpha * (self.coincidences - NCoincAvg)/(target_length + model_length)
+        return gamma
     
     gamma = property(get_gamma)
     

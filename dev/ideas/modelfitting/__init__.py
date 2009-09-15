@@ -1,13 +1,6 @@
 from brian import *
 from coincidence_counter import *
-
-
-# TODO
-def get_initial_param_values(params, N):
-    """
-    Samples random initial param values around default values
-    """
-    pass
+from optimization import *
 
 def get_param_names(params):
     """
@@ -15,6 +8,22 @@ def get_param_names(params):
     """
     param_names = sort(params.keys())
     return param_names
+
+def get_initial_param_values(params, N):
+    """
+    Samples random initial param values around default values
+    """
+    random_param_values = {}
+    for key, value in params.iteritems():
+        if len(value) == 3:
+            # One default value, value = [min, init, max]
+            random_param_values[key] = value[1]*(1+.5*randn(N))
+        elif len(value) == 4:
+            # One default interval, value = [min, init_min, init_max, max]
+            random_param_values[key] = value[1] + (value[2]-value[1])*rand(N)
+        else:  
+            raise ArgumentError, "Param values length should be 3 or 4"
+    return random_param_values
 
 def get_param_values(X, param_names):
     """
@@ -36,8 +45,7 @@ def get_matrix(param_values, param_names):
     return X
 
 
-# TODO
-def fit(fun, X0, group_size):
+def fit(fun, X0, group_size, iterations = 10, min_values = None, max_values = None):
     """
     Maximizes a function starting from initial values X0
     if y=fun(x), 
@@ -46,11 +54,40 @@ def fit(fun, X0, group_size):
     fit maximizes fun independently over Ntarget subgroups
     fit returns a D*Ntarget matrix.
     """
-    pass
+    # TODO
+    
+    X, val, T = optimize(X0, fun, iterations = iterations, pso_params = [.9, 2.0, 2.0], 
+                         min_values = min_values, max_values = max_values, 
+                         group_size = group_size)
+    
+    return X, val
 
 
-def modelfitting(eqs, reset, threshold, data, input_name, input_values, dt = 0.1*ms,
-                 timeslices = 1, verbose = False, particle_number = 1, slice_number = 1,
+def set_constraints(N = None, **params):
+    """
+    Returns constraints of a given model
+    constraints is an array of length p where p is the number of parameters
+    constraints[i] is the minimum value for parameter i
+    """
+    min_values = []
+    max_values = []
+    param_names = get_param_names(params)
+    p = len(param_names)
+    for key in param_names:
+        value = params[key]
+        min_values.append(value[0])
+        max_values.append(value[-1])
+    min_values = array(min_values)
+    max_values = array(max_values)
+    min_values = tile(min_values.reshape((p, 1)), (1, N))
+    max_values = tile(max_values.reshape((p, 1)), (1, N))
+    return min_values, max_values
+
+
+def modelfitting(model = None, reset = NoReset(), threshold = None, data = None, 
+                 input_name = None, input_values = None, dt = 0.1*ms,
+                 timeslices = 1, verbose = False, particle_number = 10, slice_number = 1,
+                 iterations = 10,
                  **params):
     """
     Fits a neuron model to data.
@@ -85,29 +122,75 @@ def modelfitting(eqs, reset, threshold, data, input_name, input_values, dt = 0.1
     
     param_names = get_param_names(params)
     
-    Ntarget = array(data)[:,0].max()+1
+    NTarget = int(array(data)[:,0].max()+1)
     # N is the number of neurons
     # There are particle_number neurons per target spike train
-    N = particle_number * Ntarget
+    N = particle_number * NTarget
     
     initial_param_values = get_initial_param_values(params, N)
     
     vgroup = VectorizedNeuronGroup(model = model, threshold = threshold, reset = reset, 
                  input_name = input_name, input_values = input_values, dt = dt, 
-                 params = initial_param_values)
-    model_target = kron(arange(vgroup.neuron_number), ones(particle_number))
+                 **initial_param_values)
+    model_target = kron(arange(NTarget), ones(particle_number))
     cd = CoincidenceCounter(vgroup, data, model_target = model_target)
     
     def fun(X):
         param_values = get_param_values(X, param_names)
+        net = Network(vgroup, cd)
         vgroup.set_param_values(param_values)
+        reinit_default_clock()
         cd.reinit()
-        run(vgroup.duration)
-        return cd.gamma
+        net.run(vgroup.duration)
+        gamma = cd.gamma
+        return gamma
     
     X0 = get_matrix(initial_param_values, param_names)
-    fit(fun, X0, group_size = particle_number)
+    min_values, max_values = set_constraints(N = N, **params)
     
-    return (Parameters(tau = rand(3)), .8)
+    X, value = fit(fun, X0, group_size = particle_number, 
+                   iterations = iterations,
+                   min_values = min_values, max_values = max_values)
+    best_params = get_param_values(X, param_names) 
+    
+    return (Parameters(**best_params), value)
+
+
+if __name__ == '__main__':
+    
+    eqs = """
+    dV/dt = -V/tau+I : 1
+    tau : second
+    I : Hz
+    """
+    NTarget = 1
+    tau = .02+.02*rand(NTarget)
+    dt = .1*ms
+    duration = 500*ms
+    I = 120.0/second + 5.0/second * randn(int(duration/dt))
+
+    # Generates data from an IF neuron with tau between 20-40ms
+    vgroup = VectorizedNeuronGroup(model = eqs, reset = 0, threshold = 1, 
+             input_name = 'I', input_values = I, dt = dt, 
+             tau = tau)
+    M = SpikeMonitor(vgroup)
+    net = Network(vgroup, M)
+    net.run(duration)
+    data = M.spikes
+    
+    # Tries to find tau
+    params, value = modelfitting(model = eqs, reset = 0, threshold = 1,
+                               data = data, 
+                               input_name = 'I', 
+                               input_values = I,
+                               dt = dt,
+                               particle_number = 10,
+                               iterations = 10,
+                               tau = [1*ms, 20*ms, 40*ms, 100*ms]
+                               )
+    
+    print "real tau =", tau
+    print "computed tau =", params['tau']
+    
     
     
