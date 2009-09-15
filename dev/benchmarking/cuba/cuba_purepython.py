@@ -1,7 +1,11 @@
 '''
 A pure Python version of the CUBA example, that reproduces basic Brian principles.
+
+Fixed overhead is about 0.35 s.
+Real time simulation for N=1300.
 '''
 from pylab import *
+import bisect
 from time import time
 from random import sample
 from scipy import random as scirandom
@@ -9,7 +13,7 @@ from scipy import random as scirandom
 """
 Parameters
 """
-N=10000        # number of neurons
+N=1300        # number of neurons
 Ne=int(N*0.8) # excitatory neurons 
 Ni=N-Ne       # inhibitory neurons
 mV=ms=1e-3    # units
@@ -71,16 +75,16 @@ for _ in range(Ne):
     k=scirandom.binomial(N,p,1)[0]
     target=sample(xrange(N),k)
     target.sort()
-    We_target.append(target)
-    We_weight.append([1.62*mV]*k)
+    We_target.append(array(target))
+    We_weight.append(array([1.62*mV]*k))
 Wi_target=[]
 Wi_weight=[]
 for _ in range(Ni):
     k=scirandom.binomial(N,p,1)[0]
     target=sample(xrange(N),k)
     target.sort()
-    Wi_target.append(target)
-    Wi_weight.append([-9*mV]*k)
+    Wi_target.append(array(target))
+    Wi_weight.append(array([-9*mV]*k))
 
 """
 Spike monitor
@@ -114,12 +118,12 @@ while t<duration:
 
     # PROPAGATION OF SPIKES
     # Excitatory neurons
-    spikes=(S[0,:Ne]>Vt).nonzero()[0]       # In Brian we actually use bisection to speed it up    
+    spikes=all_spikes[0:bisect.bisect_left(all_spikes,Ne)]
     for i in spikes:
         S[1,We_target[i]]+=We_weight[i]
         
     # Inhibitory neurons
-    spikes=(S[0,Ne:N]>Vt).nonzero()[0]
+    spikes=all_spikes[bisect.bisect_left(all_spikes,Ne):]-Ne
     for i in spikes:
         S[2,Wi_target[i]]+=Wi_weight[i]
     
@@ -146,15 +150,10 @@ raster_plot(M)
 subplot(212)
 plot(trace.times/ms,trace[0]/mV)
 show()
-
-Ok here we cheat because plotting will be done on the CPU anyway.
 """
-from brian import raster_plot
-class M:
-    pass
-M.spikes=spike_monitor
 subplot(211)
-raster_plot(M)
+i,t=zip(*spike_monitor)
+plot(i,t,'.')
 subplot(212)
 plot(arange(len(trace))*dt/ms,array(trace)/mV)
 show()
