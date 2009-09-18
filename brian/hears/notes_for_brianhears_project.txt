@@ -1,8 +1,6 @@
-Connecting var x in G to var y in H via function f optionally:
-
-H.y = linked_var(G, 'x', func=f, when='start', clock=H.clock)
-
-erbspace(low, high, n, earQ=..., minBW=...)
+Brianhears
+===========
+Brianhears is a auditory library for Brian.
 
 Example
 =======
@@ -21,8 +19,62 @@ G.load_sound(sound2) # G.load(sound2) ?
 # G.input=sound2 ?
 run(1*second)
 
+Linked variables
+----------------
+Connecting var x in G to var y in H via function f optionally:
+H.y = linked_var(G, 'x', func=f, when='start', clock=H.clock)
 
 Existing libraries
 ==================
 http://www.pdn.cam.ac.uk/groups/dsam/
 http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/index.html
+http://cobweb.ecn.purdue.edu/~malcolm/interval/1998-010/
+http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm
+
+Spirit of Brianhears
+====================
+In existing libraries, sound generation and filtering are done offline, i.e., functions are
+applied to the entire sound. It takes a lot of memory and is not adapted to Brian. In Brianhears,
+we need online sound generation and filtering. Besides, for efficiency, operations need to be
+vectorised across channels.
+In most auditory models, there are two types of filtering: global (external and middle ear)
+and local (inner ear, one filter per channel). For each channel, there are one or two pathways,
+each pathway is a chain of operations (filter/rectification/compression). These operations are
+identical for all channels, except the parameters are different. This arrangement
+may be duplicated for stereo models. For optimal efficiency, simulation should be vectorised
+also over the two ears (left/right).
+
+Global operations
+-----------------
+The most efficient way to do global filtering or other operations is to vectorise over time
+by using a buffer mechanism: output is delayed by time T and input is processed by blocks of T.
+
+What operations?
+* linear filters
+* compression
+
+Local operations
+----------------
+IIR filters (e.g. gammatone) can often be implemented as linear differential systems,
+with discrete-time updates (matrix product). This is the simplest approach with Brian.
+If this is not possible, we have two options:
+* approximate the filter by a finite-dimensional linear filter;
+* use convolutions, and possibly vectorise over time using buffering.
+
+What filters:
+* Gammatone
+* Gammachirp
+* Butterworth
+
+GPU implementation
+==================
+Local operations should be very easy to parallelize. For optimal efficiency (using shared
+memory etc), it is likely that using buffering would help (i.e., many timesteps are computed
+within the same kernel execution). The whole chain can probably be simulated on GPU.
+
+Other features
+==============
+* general sound manipulation functions
+* online/offline sound generation (including stereo)
+* analysis of HRTF databases (e.g. ITD/ILD estimation)
+* compression/rectification

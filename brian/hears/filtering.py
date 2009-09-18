@@ -119,9 +119,12 @@ class Filterbank(object):
     '''
     def timestep(self, input):
         raise NotImplementedError
+    
     def __len__(self):
         raise NotImplementedError
+    
     samplerate = property(fget=lambda self:NotImplemented)
+    
     def apply(self, input):
         return array([self.timestep(x) for x in input])
 
@@ -138,12 +141,15 @@ class FilterbankChain(Filterbank):
     '''
     def __init__(self, filterbanks):
         self.filterbanks = filterbanks
+    
     def timestep(self, input):
         for fb in filterbanks:
             input = fb.timestep(input)
         return input
+    
     def __len__(self):
         return len(self.filterbanks[0])
+    
     samplerate = property(fget=lambda self:self.filterbanks[0].samplerate)
 
 class FunctionFilterbank(Filterbank):
@@ -154,10 +160,13 @@ class FunctionFilterbank(Filterbank):
         self.fs = samplerate
         self.N = N
         self.func = func
+    
     def timestep(self, input):
         return self.func(input)
+    
     def __len__(self):
         return self.N
+    
     samplerate = property(fget=lambda self:self.fs)   
 
 class ParallelLinearFilterbank(Filterbank):
@@ -175,11 +184,15 @@ class ParallelLinearFilterbank(Filterbank):
         self.fs = samplerate
         self.N = b.shape[0]
         self.filt_state = zeros((b.shape[0], b.shape[1]-1, b.shape[2]))
+    
     def reset(self):
         self.filt_state[:] = 0
+    
     def __len__(self):
         return self.N
+    
     samplerate = property(fget=lambda self:self.fs)   
+    
     def timestep(self, input):
         if isinstance(input, ndarray):
             input = input.flatten()
@@ -291,11 +304,15 @@ if use_gpu:
             self.grid = (gridsize,1)
             self.gpu_filt_func.prepare(('i','i','i','i','i'), self.block)
             self._has_run_once = False
+    
         def reset(self):
             self.filt_state.set(zeros(self.filt_state.shape, dtype=self.filt_state.dtype))
+        
         def __len__(self):
             return self.N
+        
         samplerate = property(fget=lambda self:self.fs)   
+        
         def timestep(self, input):
             b = self.filt_b
             a = self.filt_a
@@ -329,12 +346,14 @@ if use_gpu:
             if self.forcesync:
                 y.sync_to_cpu()#might need to turn this on although it slows everything down
             return y
+        
         def apply(self, input):
             return array([self.timestep(x).copy() for x in input])
 
 class FilterbankGroupStateUpdater(StateUpdater):
     def __init__(self):
         pass
+    
     def __call__(self, P):
         if P._x_stilliter is not None:
             try:
@@ -382,6 +401,7 @@ class FilterbankGroup(NeuronGroup):
         self._state_updater = FilterbankGroupStateUpdater()
         fs = float(fs)
         self.load_sound(x)
+        
     def load_sound(self, x):
         self._x = x
         if x is not None:
@@ -390,6 +410,7 @@ class FilterbankGroup(NeuronGroup):
         else:
             self._x_iter = None
             self._x_stilliter = False
+            
     def reinit(self):
         NeuronGroup.reinit(self)
         self.load_sound(self._x)
@@ -442,9 +463,12 @@ class HohmannGammatoneFilterbank(Filterbank):
             2 * (1 - abs(self.coefficient)) ** self.gamma_order
         self.state = zeros((len(center_frequency_hz), self.gamma_order))
         self.state = self.state*reshape(self.coefficient, self.coefficient.shape+(1,))
+        
     def __len__(self):
         return len(self.center_frequency_hz)
+    
     samplerate = property(fget=lambda self:self.sampling_rate_hz)
+    
     def timestep(self, input):
         factor = self.normalization_factor
         filter_state = self.state
@@ -582,14 +606,18 @@ class IIRFilterbank(Filterbank):
         self.b = b
         self.N = N
         self.zi = zeros((N, max(len(a), len(b))-1))
+    
     def timestep(self, input):
         input = reshape(input, (self.N,1))
         y, self.zi = signal.lfilter(self.b, self.a, input, zi=self.zi)
         return y
+    
     def apply_single(self, input):
         return signal.lfilter(self.b, self.a, input)
+    
     def __len__(self):
         return self.N
+    
     samplerate = property(fget=lambda self:self.fs)
 
 @check_units(samplerate=Hz)
