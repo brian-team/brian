@@ -3,7 +3,8 @@
 * STDP should allow for parameters in equations, not just DEs (currently
   raises LinAlgError). Also, should be able to access STDP variables
   directly somehow - currently not possible. Ideally, this would be via
-  the STDP object, e.g. stdp.A_pre, etc.
+  the STDP object, e.g. stdp.A_pre, etc. The separation code is basically written
+  now, see dev/ideas/separate_equations.py.
 
 * library.ionic_currents: might not work if units are off (looks for amp to recognize the current)
 * eqs = MembraneEquation(C=200*pF) + leak + K_current + Na_current
@@ -37,7 +38,9 @@ http://datamining.anu.edu.au/~ole/pypar/
 (* Compound linear/nonlinear state updaters?)
 For example, often there is a linear and nonlinear part of the equation,
 e.g. dv/dt is nonlinear, but you have some auxiliary variables to define
-an alpha synapse that can be considered separately and are linear.
+an alpha synapse that can be considered separately and are linear. The
+separate_equations() function in dev/ideas/separate_equations.py could be
+used for this purpose.
 
 (* Better LinearStateUpdater)
 In most cases, the update matrix is degenerate only because of the parameters.

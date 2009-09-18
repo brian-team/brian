@@ -172,7 +172,7 @@ class InstanceTracker(object):
     def get_instance_id(self):
         return self.__instancefollower__.get_i_d(self)
     def __new__(typ, *args, **kw):
-        obj = object.__new__(typ, *args, **kw)
+        obj = object.__new__(typ)#, *args, **kw)
         outer_frame = id(getouterframes( currentframe())[1][0]) # the id is the id of the calling frame
         if obj._track_instances():
             obj.__instancefollower__.add(obj,outer_frame)

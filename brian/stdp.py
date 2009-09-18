@@ -96,19 +96,43 @@ class STDP(NetworkOperation):
     Initialised with arguments:
 
     ``C``
-        connection object
+        Connection object to apply STDP to.
     ``eqs``
-        differential equations (with units)
+        Differential equations (with units)
     ``pre``
-        Python code for presynaptic spikes
+        Python code for presynaptic spikes, use the reserved symbol ``w`` to
+        refer to the synaptic weight.
     ``post``
-        Python code for postsynaptic spikes
+        Python code for postsynaptic spikes, use the reserved symbol ``w`` to
+        refer to the synaptic weight.
     ``wmax``
-        maximum weight (default unlimited)
+        Maximum weight (default unlimited), weights are restricted to be within
+        0 and this value.
     ``delay_pre``
-        presynaptic delay
+        Presynaptic delay
     ``delay_post``
-        postsynaptic delay (backward propagating spike)
+        Postsynaptic delay (backward propagating spike)
+    
+    The STDP object works by specifying a set of differential equations
+    associated to each synapse (``eqs``) and two rules to specify what should
+    happen when a presynaptic neuron fires (``pre``) and when a postsynaptic
+    neuron fires (``post``). The equations should be standard set of equations
+    in the usual string format. The ``pre`` and ``post`` rules should be a
+    sequence of statements to be executed triggered on pre- and post-synaptic
+    spikes. The sequence of statements can be separated by a ``;`` or by
+    using a multiline string. The reserved symbol ``w`` can be used to refer
+    to the synaptic weight of the associated synapse.
+    
+    This framework allows you to implement most STDP rules. Specifying
+    differential equations and pre- and post-synaptic event code allows for a
+    much more efficient implementation than specifying, for example, the
+    spike pair weight modification function, but does unfortunately require
+    transforming the definition into this form.
+    
+    There is one restriction on the equations that can be implemented in this
+    system, they need to be separable into independent pre- and post-synaptic
+    systems (this is done automatically). In this way, synaptic variables and
+    updates can be stored per neuron rather than per synapse. 
     
     **Example**
     
@@ -118,8 +142,8 @@ class STDP(NetworkOperation):
         dA_pre/dt  = -A_pre/tau_pre   : 1
         dA_post/dt = -A_post/tau_post : 1
         """
-        stdp = STDP(synapses, eqs=eqs_stdp, pre='A_pre+=dA_pre; w+=A_post',
-                    post='A_post+=dA_post; w+=A_pre', wmax=gmax)
+        stdp = STDP(synapses, eqs=eqs_stdp, pre='A_pre+=delta_A_pre; w+=A_post',
+                    post='A_post+=delta_A_post; w+=A_pre', wmax=gmax)
     
     **Technical details**
     
