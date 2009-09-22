@@ -31,6 +31,14 @@ http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/index.html
 http://cobweb.ecn.purdue.edu/~malcolm/interval/1998-010/
 http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm
 
+References
+==========
+A good review of physiological models (check Fig.6 for the global structure): 
+Int Rev Neurobiol. 2005;70:7-48.
+Spectral processing by the peripheral auditory system: facts and models.
+Lopez-Poveda EA.
+http://www.ncbi.nlm.nih.gov/pubmed/16472630
+
 Spirit of Brianhears
 ====================
 In existing libraries, sound generation and filtering are done offline, i.e., functions are
@@ -52,6 +60,7 @@ by using a buffer mechanism: output is delayed by time T and input is processed 
 What operations?
 * linear filters
 * compression
+* pre-cochlear processing described in http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/PCP/PCPframeset.htm
 
 Local operations
 ----------------
@@ -65,12 +74,20 @@ What filters:
 * Gammatone
 * Gammachirp
 * Butterworth
+* Lyon's cochlear model
+* Hair cell / Auditory nerve models? (e.g. Meddis)
 
 GPU implementation
 ==================
 Local operations should be very easy to parallelize. For optimal efficiency (using shared
 memory etc), it is likely that using buffering would help (i.e., many timesteps are computed
 within the same kernel execution). The whole chain can probably be simulated on GPU.
+
+Spike production
+----------------
+For optimal efficiency, spikes should be produced on the GPU and transferred to the CPU,
+without transferring anything else (smaller bandwidth consumption). Thus the filterbank
+code should be interfaced with generic GPU features of Brian.
 
 Other features
 ==============
