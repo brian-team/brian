@@ -1,6 +1,6 @@
 Brianhears
 ===========
-Brianhears is a auditory library for Brian.
+Brianhears is an auditory library for Brian.
 
 Example
 =======
