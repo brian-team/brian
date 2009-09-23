@@ -35,14 +35,18 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
         clines += '    int i = blockIdx.x * blockDim.x + threadIdx.x;\n'
         clines += '    if(i>=N) return;\n'
         for j, name in enumerate(eqs._diffeq_names):
-            clines += '    SCALAR &' + name + ' = S[i+'+str(j)+'*N];\n'
+            clines += '    int _index_' + name + ' = i+'+str(j)+'*N;\n'
+        for j, name in enumerate(eqs._diffeq_names):
+#            clines += '    SCALAR &' + name + ' = S[i+'+str(j)+'*N];\n'
+            clines += '    SCALAR ' + name + ' = S[_index_'+name+'];\n'
         for j, name in enumerate(eqs._diffeq_names):
             namespace = eqs._namespace[name]
             expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
             if name in eqs._diffeq_names_nonzero:
                 clines += '    SCALAR '+name+'__tmp = '+expr+';\n'
         for name in eqs._diffeq_names_nonzero:
-            clines += '    '+name+' += '+str(self.clock_dt)+'*'+name+'__tmp;\n'
+#            clines += '    '+name+' += '+str(self.clock_dt)+'*'+name+'__tmp;\n'
+            clines += '    S[_index_'+name+'] = '+name+'+'+str(self.clock_dt)+'*'+name+'__tmp;\n'
         clines += '}\n'
         clines = clines.replace('SCALAR', self.precision)
         self.gpu_mod = drv.SourceModule(clines)
@@ -166,11 +170,12 @@ if __name__=='__main__':
     #N = 1000
     #domonitor = False
     
-    duration = 1000*ms
-    N = 100000
+    duration = 100*ms
+    N = 10000
     domonitor = False
     showfinal = False
-    method = 'python' # methods are 'c', 'python' and 'gpu'
+    forcesync = False
+    method = 'gpu' # methods are 'c', 'python' and 'gpu'
     
     if drv.get_version()==(2,0,0): # cuda version
         precision = 'float'
@@ -180,16 +185,16 @@ if __name__=='__main__':
         raise Exception,"CUDA 2.0 required"
     #precision = 'float'
     import buffering
-    buffering.DEBUG_BUFFER_CACHE = True
+    buffering.DEBUG_BUFFER_CACHE = False
     
     eqs = Equations('''
     #dV/dt = -V*V/(10*ms) : 1
-    #dV/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
-    #dV/dt = W*W/(100*ms) : 1
-    #dW/dt = -V/(100*ms) : 1
     dV/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
-    dW/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
-    dW2/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
+    #dV/dt = -V*V*V*V*V/(100*ms) : 1
+    #dW/dt = -W*W*W*W*W/(100*ms) : 1
+    #dV/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
+    #dW/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
+    #dW2/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
     #dV/dt = h/(10*ms) : 1
     #h = -V*V : 1
     ''')
@@ -210,12 +215,18 @@ if __name__=='__main__':
 #    ''')
     
     if method=='gpu':
-        G = GPUNeuronGroup(N, eqs, precision=precision, maxblocksize=256)
+        G = GPUNeuronGroup(N, eqs, precision=precision, maxblocksize=256, forcesync=forcesync)
         
         print 'GPU loop code:'
         print G._state_updater.code_gpu
         gf = G._state_updater.gpu_func
         print '(lmem, smem, registers) = ', (gf.lmem, gf.smem, gf.registers)
+        devdata = pycuda.tools.DeviceData()
+        orec = pycuda.tools.OccupancyRecord(devdata, 256)
+        print 'tb_per_mp', orec.tb_per_mp
+        print 'limited_by', orec.limited_by
+        print 'warps_per_mp', orec.warps_per_mp
+        print 'occupancy', orec.occupancy
     elif method=='c':
         G = NeuronGroup(N, eqs, compile=True, freeze=True)
         su = AutoCompiledNonlinearStateUpdater(eqs, G.clock, freeze=True)
