@@ -8,8 +8,8 @@ print 'Compilation on', get_global_preference('useweave')
 duration = 1*second
 Nsyn = 80.
 we = 1.62*mV
-N = 512*8
-structure = 'sparse'
+N = 512*16
+structure = 'dense'
 
 eqs='''
 dv/dt = (ge+gi-(v+49*mV))/(20*ms) : volt
@@ -21,7 +21,7 @@ Ne = int(N*0.8)
 Ni = N-Ne
 
 P=NeuronGroup(N,model=eqs,
-              threshold=-50*mV,reset=-60*mV,method='euler',compile=True,freeze=True)#, refractory=5*ms)
+              threshold=-50*mV,reset=-60*mV,method='Euler',compile=True,freeze=True)#, refractory=5*ms)
 P.v=-60*mV+10*mV*rand(len(P))
 Pe=P.subgroup(Ne)
 Pi=P.subgroup(Ni)
@@ -46,7 +46,8 @@ def f():
     run(duration)
     tend = time.time()
     
-    print 'Time taken', tend-tstart
+    print 'N:', N
+    print 'CPU time:', tend-tstart
     print 'Num spikes', M.nspikes
 
 f()
