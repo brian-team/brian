@@ -6,7 +6,7 @@ import bisect
 import numpy, pylab, time
 
 N = 1000000
-blocksize = 128
+blocksize = 512
 duration = 10000
 
 N = int(numpy.ceil(1.*N/blocksize)*blocksize)
