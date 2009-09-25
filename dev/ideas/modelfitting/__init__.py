@@ -51,15 +51,15 @@ def fit(fun, X0, group_size, iterations = 10, min_values = None, max_values = No
     if y=fun(x), 
         x is a D*(group_size*Ntarget) matrix
         y is a group_size*Ntarget vector
+    D is the number of parameters
+    group_size is the number of particles per target train
+    Ntarget is the number of target trains
     fit maximizes fun independently over Ntarget subgroups
     fit returns a D*Ntarget matrix.
     """
-    # TODO
-    
     X, val, T = optimize(X0, fun, iterations = iterations, pso_params = [.9, 2.0, 2.0], 
                          min_values = min_values, max_values = max_values, 
                          group_size = group_size)
-    
     return X, val
 
 
@@ -87,7 +87,7 @@ def set_constraints(N = None, **params):
 def modelfitting(model = None, reset = NoReset(), threshold = None, data = None, 
                  input_name = None, input_values = None, dt = 0.1*ms,
                  timeslices = 1, verbose = False, particle_number = 10, slice_number = 1,
-                 iterations = 10,
+                 iterations = 10, delta = None,
                  **params):
     """
     Fits a neuron model to data.
@@ -109,11 +109,12 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     - data          A list of spike times (i,t)
     - input         The input current (a list of values)
     - dt            Timestep of the input
-    - **params        Model parameters list : tau=(min,init_min,init_max,max)
+    - **params      Model parameters list : tau=(min,init_min,init_max,max)
     - verbose       Print iterations?
     - particle_number
                     Number of particles in the particle swarm algorithm
     - slice_number  Number of time slices, 1 by default
+    - delta         Time window
     
     Outputs:
     - params        The parameter values found by the optimization process
@@ -131,9 +132,10 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     
     vgroup = VectorizedNeuronGroup(model = model, threshold = threshold, reset = reset, 
                  input_name = input_name, input_values = input_values, dt = dt, 
+                 slice_number = slice_number,
                  **initial_param_values)
     model_target = kron(arange(NTarget), ones(particle_number))
-    cd = CoincidenceCounter(vgroup, data, model_target = model_target)
+    cd = CoincidenceCounter(vgroup, data, model_target = model_target, delta = delta)
     
     def fun(X):
         param_values = get_param_values(X, param_names)
@@ -164,9 +166,9 @@ if __name__ == '__main__':
     I : Hz
     """
     NTarget = 1
-    tau = .02+.02*rand(NTarget)
+    tau = .04+.02*rand(NTarget)
     dt = .1*ms
-    duration = 500*ms
+    duration = 400*ms
     I = 120.0/second + 5.0/second * randn(int(duration/dt))
 
     # Generates data from an IF neuron with tau between 20-40ms
@@ -186,7 +188,8 @@ if __name__ == '__main__':
                                dt = dt,
                                particle_number = 10,
                                iterations = 10,
-                               tau = [1*ms, 20*ms, 40*ms, 100*ms]
+                               tau = [1*ms, 20*ms, 40*ms, 100*ms],
+                               delta = .005
                                )
     
     print "real tau =", tau

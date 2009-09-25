@@ -10,18 +10,16 @@ def optimize(X0, fun, iterations, pso_params, min_values = None, max_values = No
     X0 is a N*M matrix
     N is the space dimension
     M is the number of particles
-    If constraints is set, it is a N-long array such that X >= constraints.
+    If min_values is set, it is a N-long array such that X >= min_values.
+    If max_values is set, it is a N-long array such that X <= max_values.
     fun(x0) is a 1*M row vector
-    If group_number is set, it means that particles are grouped within groups of size M/group_number
+    If group_size is set, it means that particles are grouped within groups of size group_size
     The objective function is assumed to make a different computation for each group.
     The PSO algorithm then maximizes f in each group independently. It returns a matrix
-    of size N*group_number : each column is the result of the optimization for the corresponding group.
+    of size N*M/group_size : each column is the result of the optimization for the corresponding group.
     
     OUTPUTS
     pso(x0, fun) returns argmax fun(x)
-    pso_state_filename is the filename of the state
-    of the optimization algorithm at a certain iteration.
-    If set, the optimization is resumed after that iteration.
     """
 
     (N,M) = X0.shape

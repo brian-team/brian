@@ -1,4 +1,8 @@
+import time
+t1 = time.clock()
 from brian import *
+t2 = time.clock()-t1
+print t2
 from coincidence_counter import *
 from vectorized_neurongroup import *
 from vectorized_monitor import *
@@ -14,31 +18,38 @@ def test():
     tau : second
     I : Hz
     """
-
-    I = 120/second
-    tau = arange(.03, .06, .01)
-    N = len(tau)
+    NTarget = 1
+    group_size = 10
+    N = NTarget * group_size
+    tau = .04+.02*rand(N)
     dt = .1*ms
-    isi = -tau*log(1-1/(tau*I))
-    duration = 120*ms
-    
-    data = []
-    for i in range(N):
-        for j in range(1,int(duration/isi[i])+1):
-            t = int(j*isi[i]/dt)*dt
-            if t <= duration:
-                data += [(i,t)]
-    data.sort(cmp=lambda x,y:2*int(x[1]>y[1])-1)
+    duration = 400*ms
+    I = 120.0/second + 5.0/second * randn(int(duration/dt))
 
-    group = VectorizedNeuronGroup(model = eqs, reset = 0, threshold = 1,
-                        input_name = 'I', input_values = I*ones(int(duration/dt)),
-                        dt = dt, overlap = 30*ms,slice_number = 1,
-                        tau = tau)
+    # Generates data from an IF neuron
+    vgroup = VectorizedNeuronGroup(model = eqs, reset = 0, threshold = 1, 
+             input_name = 'I', input_values = I, dt = dt, 
+             tau = tau)
+    M = SpikeMonitor(vgroup)
+    net = Network(vgroup, M)
+    net.run(duration)
+    data = M.spikes
     
-    cd = CoincidenceCounter(group, data, model_target = arange(N), delta = .004)
+    # Runs simulation
+    vgroup = VectorizedNeuronGroup(model = eqs, reset = 0, threshold = 1,
+                        input_name = 'I', input_values = I,
+                        dt = dt, 
+                        tau = tau)
+    model_target = kron(arange(NTarget), 10)
+    cd = CoincidenceCounter(vgroup, data, model_target = model_target, delta = .005)
     M = VectorizedSpikeMonitor(group)
+    
+    net = Network(vgroup, cd)
+    reinit_default_clock()
+    cd.reinit()
+    
     run(group.duration)
 
-    assert cd.gamma.min() > .999999
+    gamma = cd.gamma
 
 test()

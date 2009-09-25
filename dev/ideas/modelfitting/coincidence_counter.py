@@ -212,6 +212,8 @@ class CoincidenceCounter(SpikeMonitor):
         NCoincAvg = 2 * self.delta * target_rates * target_length
         alpha = 2.0/(1.0 - 2 * self.delta * target_rates)
         gamma = alpha * (self.coincidences - NCoincAvg)/(target_length + model_length)
+        print "coinc :", self.coincidences
+        print "gamma :", gamma
         return gamma
     
     gamma = property(get_gamma)
