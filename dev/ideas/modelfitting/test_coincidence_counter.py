@@ -1,14 +1,9 @@
 import time
-t1 = time.clock()
 from brian import *
-t2 = time.clock()-t1
-print t2
 from coincidence_counter import *
 from vectorized_neurongroup import *
 from vectorized_monitor import *
 from nose.tools import *
-
-# TODO: compare with gamma_factor (utils.statistics)
 
 def test():
     """
@@ -20,38 +15,50 @@ def test():
     tau : second
     I : Hz
     """
-    NTarget = 1
-    group_size = 10
-    N = NTarget * group_size
-    tau = .04+.02*rand(N)
-    dt = .1*ms
-    duration = 400*ms
-    I = 120.0/second + 5.0/second * randn(int(duration/dt))
+#    source = [10*ms, 20*ms]
+#    target = [10*ms, 22.01*ms]
+#    delta = 2*ms
+#    gamma = gamma_factor(source, target, delta)
+#    print gamma
+#    exit()
+    
+    N = 2
+    taus = [30*ms, 32*ms]
+    duration = 200*ms
+    input = 120.0/second * ones(int(duration/defaultclock._dt))
+    delta = 2*ms
 
     # Generates data from an IF neuron
-    vgroup = VectorizedNeuronGroup(model = eqs, reset = 0, threshold = 1, 
-             input_name = 'I', input_values = I, dt = dt, 
-             tau = tau)
-    M = SpikeMonitor(vgroup)
-    net = Network(vgroup, M)
-    net.run(duration)
+    group = NeuronGroup(N = N, model = eqs, reset = 0, threshold = 1)
+    group.tau = taus
+    group.I = TimedArray(input)
+    M = SpikeMonitor(group)
+
+    run(duration)
     data = M.spikes
     
-    # Runs simulation
-    vgroup = VectorizedNeuronGroup(model = eqs, reset = 0, threshold = 1,
-                        input_name = 'I', input_values = I,
-                        dt = dt, 
-                        tau = tau)
-    model_target = kron(arange(NTarget), 10)
-    cd = CoincidenceCounter(vgroup, data, model_target = model_target, delta = .005)
-    M = VectorizedSpikeMonitor(group)
-    
-    net = Network(vgroup, cd)
     reinit_default_clock()
-    cd.reinit()
     
-    run(group.duration)
-
-    gamma = cd.gamma
+    group = NeuronGroup(N = 1, model = eqs, reset = 0, threshold = 1)
+    group.tau = taus[0]
+    group.I = TimedArray(input)
+    
+    train0 = [t for i,t in data if i == 0]
+    train1 = [t for i,t in data if i == 1]
+    cd = CoincidenceCounter(source = group, data = train1, delta = delta)
+    run(duration)
+    
+    online_gamma = cd.gamma[0]
+    online_coinc = cd.coincidences[0]
+    offline_gamma = gamma_factor(train0, train1, delta = delta)
+    offline_coinc = offline_gamma[0]
+    offline_gamma = offline_gamma[1]
+    
+    print "online coinc =", online_coinc
+    print "offline coinc =", offline_coinc
+    print
+    print "online gamma =", online_gamma
+    print "offline gamma =", offline_gamma
+    
 
 test()

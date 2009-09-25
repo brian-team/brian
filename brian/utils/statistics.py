@@ -4,8 +4,8 @@ Spike statistics
 In all functions below, spikes is a sorted list of spike times
 '''
 from numpy import *
-from brian.units import check_units
-from brian.stdunits import ms,second
+from brian.units import check_units,second
+from brian.stdunits import ms,Hz
 
 __all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF',
          'total_correlation','vector_strength','gamma_factor']
@@ -148,15 +148,47 @@ def vector_strength(spikes,period):
 
 # Gamma factor
 @check_units(delta=second)
-def gamma_factor(source,target,delta):
+def gamma_factor(source, target, delta):
     '''
     Returns the gamma precision factor between source and target trains,
     with precision delta.
-    [REF]
+    
+    source and target are lists of spikes, delta is the time window in second
+    
+    Reference:
+    R. Jolivet et al., 'A benchmark test for a quantitative assessment of simple neuron models',
+        Journal of Neuroscience Methods 169, no. 2 (2008): 417-424.
     '''
-    pass
+    source = array(source)
+    target = array(target)
+    
+    source_length = len(source)
+    target_length = len(target)
+    target_rate = firing_rate(target)*Hz
+    
+    if (target_length == 0 or source_length == 0):
+        return 0
+    
+    if (source_length>1):
+        bins = .5 * (source[1:] + source[:-1])
+        indices = digitize(target, bins)
+        diff = abs(target - source[indices])
+        matched_spikes = (diff <= delta + .01*ms)
+        coincidences = sum(matched_spikes)
+    else:
+        indices = [amin(abs(source - target[i])) <= delta + .01*ms for i in xrange(target_length)]
+        coincidences = sum(indices)
+    coincidences = coincidences
+    
+    # Normalization of the coincidences count
+    coincidences_average = 2 * delta * target_length * target_rate
+    norm = 1 - 2 * target_rate * delta
+    gamma = (coincidences - coincidences_average)/(norm*.5*(source_length + target_length))   
+        
+    return coincidences,gamma
 
 if __name__=='__main__':
+    
     from brian import *
     
     print vector_strength([1.1*ms,1*ms,.9*ms],2*ms)
