@@ -307,18 +307,22 @@ class StateSpikeMonitor(SpikeMonitor):
         self._vars = [source.state_(v) for v in var]
         self._varindex = dict((v,i+2) for i, v in enumerate(var))
         self._units = [source.unit(v) for v in var]
+        
     def propagate(self,spikes):
         self.nspikes+=len(spikes)
         recordedstate = [ [x*u for x in v[spikes]] for v, u in izip(self._vars, self._units) ]
         self.spikes+=zip(spikes, repeat(self.source.clock.t), *recordedstate)
+        
     def __getitem__(self,i):
         return NotImplemented # don't use the version from SpikeMonitor
+    
     def times(self, i=None):
         '''Returns the spike times (of neuron ``i`` if specified)'''
         if i is not None:
             return qarray([x[1] for x in self.spikes if x[0]==i])
         else:
             return qarray([x[1] for x in self.spikes])
+        
     def values(self, var, i=None):
         '''Returns the recorded values of ``var`` (for spikes from neuron ``i`` if specified)'''
         v = self._varindex[var]

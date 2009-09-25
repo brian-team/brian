@@ -1,5 +1,4 @@
 from brian import *
-from IPython.DPyGetOpt import ArgumentError
 
 class VectorizedNeuronGroup(NeuronGroup):
     """
@@ -12,54 +11,52 @@ class VectorizedNeuronGroup(NeuronGroup):
     - threshold       Model threshold 
     - data            A list of spike times (i,t)
     - input_name      The parameter name of the input current in the model equations
-    - input_values    The input values
-    - dt              Timestep of the input
+    - input    The input values
     - overlap         Overlap between time slices
     - slice_number    Number of time slices (default 1)
     - **param_values  Model parameters values
     """
     
     def __init__(self, model = None, threshold = None, reset = NoReset(), 
-                 input_name = 'I', input_values = None, dt = .1*ms, 
-                 overlap = 0*ms, slice_number = 1, **param_values):
+                 input_var = 'I', input = None,
+                 overlap = 0*ms, slices = 1, **param_values):
         
-        if slice_number == 1:
+        if slices == 1:
             overlap = 0*ms
         values_number = len(param_values.values()[0]) # Number of parameter values
         for param, value in param_values.iteritems():
             if not(len(value) == values_number):
                 raise AttributeError, 'The parameters must have the same number of values'
         
-        N = values_number * slice_number # Total number of neurons
+        N = values_number * slices # Total number of neurons
         NeuronGroup.__init__(self, N = N, model = model, threshold = threshold, reset = reset)
-        input_length = len(input_values)
+        dt=self.clock.dt
+        input_length = len(input)
         
         self.neuron_number = values_number
-        self.slice_number = slice_number
+        self.slices = slices
         self.overlap = overlap
         self.total_duration = input_length*dt
-        self.duration = self.total_duration/slice_number+overlap
+        self.duration = self.total_duration/slices+overlap
         
-        if overlap >= input_length*dt/slice_number:
-            raise AttributeError, 'Overlap should be less than %.2f' % input_length*dt/slice_number
+        if overlap >= input_length*dt/slices:
+            raise AttributeError, 'Overlap should be less than %.2f' % input_length*dt/slices
 
         self.set_param_values(param_values)
         
         # Injects sliced current to each subgroup
-        for _ in range(slice_number):
+        for _ in range(slices):
             if _ == 0:
-                input_sliced_values = concatenate((zeros(int(overlap/dt)),input_values[0:input_length/slice_number]))
+                input_sliced_values = concatenate((zeros(int(overlap/dt)),input[0:input_length/slices]))
             else:
-                input_sliced_values = input_values[input_length/slice_number*_-int(overlap/dt):input_length/slice_number*(_+1)]
+                input_sliced_values = input[input_length/slices*_-int(overlap/dt):input_length/slices*(_+1)]
             sliced_subgroup = self.subgroup(values_number)
-            sliced_subgroup.set_var_by_array(input_name, TimedArray(input_sliced_values))
+            sliced_subgroup.set_var_by_array(input_var, TimedArray(input_sliced_values))
         
     def set_param_values(self, param_values):
         for param,value in param_values.iteritems():
             # each neuron is duplicated slice_number times, with the same parameters. 
             # Only the input current changes.
             # new group = [neuron1, ..., neuronN, ..., neuron1, ..., neuronN]
-            self.state(param)[:] = kron(ones(self.slice_number), value)
-        
-        
+            self.state(param)[:] = kron(ones(self.slices), value)
         

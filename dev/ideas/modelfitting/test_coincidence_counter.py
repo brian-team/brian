@@ -8,6 +8,8 @@ from vectorized_neurongroup import *
 from vectorized_monitor import *
 from nose.tools import *
 
+# TODO: compare with gamma_factor (utils.statistics)
+
 def test():
     """
     Simulates an IF model with constant input current and checks

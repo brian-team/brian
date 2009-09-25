@@ -12,24 +12,24 @@ def spiketimes2dict(list):
         else:
             spikes[i].append(t)
     for key in spikes.keys():
-        spikes[key].sort()
+        #spikes[key].sort()
         spikes[key] = array(spikes[key])
     return spikes
 
-def dict2spiketimes(trains):
-    """
-    Converts a dictionary of spike trains into a (i,t)-like list.
-    """
-    spiketimes = []
-    duration = 0.0
-    for (i,train) in trains.iteritems():
-        for t in train:
-            spiketimes.append((i, t*second))
-            if (t > duration):
-                duration = t
-    duration += .01
-    spiketimes.sort(cmp = lambda x,y: int(x[1]>y[1])*2-1)
-    return spiketimes
+#def dict2spiketimes(trains):
+#    """
+#    Converts a dictionary of spike trains into a (i,t)-like list.
+#    """
+#    spiketimes = []
+#    duration = 0.0*second
+#    for (i,train) in trains.iteritems():
+#        for t in train:
+#            spiketimes.append((i, t*second))
+#            if (t > duration):
+#                duration = t
+#    duration += .01
+#    spiketimes.sort(cmp = lambda x,y: int(x[1]>y[1])*2-1)
+#    return spiketimes
 
 def slice_data(data = None, slice_number = 1, duration = None):
         """
@@ -46,10 +46,10 @@ def slice_data(data = None, slice_number = 1, duration = None):
             sliced_data.append((sliced_i, sliced_t))
         return sliced_data
 
-
 class CoincidenceCounter(SpikeMonitor):
     
-    def __init__(self, source, data, model_target, delta = .004):
+    @check_units(delta=second)
+    def __init__(self, source, data, model_target=None, delta = 4*ms):
         """
         Computes in an online fashion the number of coincidences between model 
         spike trains and some data spike trains.
@@ -59,7 +59,7 @@ class CoincidenceCounter(SpikeMonitor):
         
         Inputs:
         - source        The NeuronGroup object
-        - data          The data as an (i,t)-like list.
+        - data          The data as an (i,t)-like list or a list of spike times.
         - model_target  The target train index associated to each model neuron.
                         It is a list of size NModel.
         - delta         The half-width of the time window
@@ -71,14 +71,20 @@ class CoincidenceCounter(SpikeMonitor):
         source.set_max_delay(0)
         self.source = source
         self.delay = 0
-        
+                
         # Adapts data if there are several time slices
         if isinstance(source, VectorizedNeuronGroup):
             self.data = slice_data(data = data, slice_number = source.slice_number, duration = source.total_duration)
             self.duration = source.total_duration
+            Nneurons = source.neuron_number
         else:
             self.data = data
             self.duration = array(self.data)[:,1].max()
+            Nneurons = len(source)
+
+        if model_target is None:
+            model_target=zeros(Nneurons,dtype=int)
+            data=[(0,t) for t in data]
             
         self.NModel = len(source)
         self.NTarget = int(array(self.data)[:,0].max()+1)
@@ -102,7 +108,7 @@ class CoincidenceCounter(SpikeMonitor):
             self.model_target = array(model_target)
         
         self.delta = delta
-        self.dt = defaultclock._dt
+        self.dt = source.clock.dt
         
         self.prepare_online_computation()
         
@@ -113,7 +119,7 @@ class CoincidenceCounter(SpikeMonitor):
         self.close_target_spikes is the list of the closest target spike for each target train in the current bin self.current_bin
         '''
         if (self.current_bin < len(self.all_bins)-1):
-            if defaultclock._t > self.all_bins[self.current_bin+1]:
+            if self.source.clock._t > self.all_bins[self.current_bin+1]:
                 self.current_bin += 1
                 self.close_target_spikes = self.close_target_spikes_matrix[:,self.current_bin]
         
@@ -158,7 +164,7 @@ class CoincidenceCounter(SpikeMonitor):
         all_times = array([t for i,t in self.data])
         all_times = floor(all_times/self.dt)*self.dt # HACK : forces the precision of 
                                                    # data spike trains to be the same
-                                                   # as defaultclock.dt
+                                                   # as self.source.clock.dt
         self.all_bins = sort(list(all_times - self.delta - self.dt/10) + list(all_times + self.delta + self.dt/10))
         
     def compute_close_target_spikes(self):
@@ -203,9 +209,12 @@ class CoincidenceCounter(SpikeMonitor):
     def set_coincidences(self, value):
         self._coincidences = value
         
-    coincidences = property(get_coincidences, set_coincidences)
+    coincidences = property(fget=get_coincidences,fset=set_coincidences)
     
     def get_gamma(self):
+        """
+        Returns the Gamma factor.
+        """
         target_length = self.sum_vectorized_values(self._target_length)[self.original_model_target]
         model_length = self.sum_vectorized_values(self._model_length)
         target_rates = target_length/self.duration
@@ -216,5 +225,5 @@ class CoincidenceCounter(SpikeMonitor):
         print "gamma :", gamma
         return gamma
     
-    gamma = property(get_gamma)
+    gamma = property(fget=get_gamma)
     

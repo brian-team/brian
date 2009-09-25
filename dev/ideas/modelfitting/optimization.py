@@ -1,7 +1,11 @@
 from scipy import * 
 from time import *
-import pickle
 
+# TODO: move to utils
+
+__all__=['optimize']
+
+#particle_swarm
 def optimize(X0, fun, iterations, pso_params, min_values = None, max_values = None, group_size = None):
     """
     Computes the argument of fun which maximizes it using the Particle Swarm Optimization algorithm.

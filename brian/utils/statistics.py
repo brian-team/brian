@@ -7,7 +7,7 @@ from numpy import *
 from brian.stdunits import ms
 
 __all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF',
-         'total_correlation','vector_strength']
+         'total_correlation','vector_strength','gamma_factor']
 
 # First-order statistics
 def firing_rate(spikes):
@@ -145,6 +145,16 @@ def vector_strength(spikes,period):
     '''
     return abs(mean(exp(array(spikes)*1j*2*pi/period)))
 
+# Gamma factor
+@check_units(delta=second)
+def gamma_factor(source,target,delta):
+    '''
+    Returns the gamma precision factor between source and target trains,
+    with precision delta.
+    [REF]
+    '''
+    pass
+
 if __name__=='__main__':
     from brian import *
     
@@ -161,4 +171,3 @@ if __name__=='__main__':
     print total_correlation(T1,T2)
     plot(C)
     show()
-    #print std(C)*second

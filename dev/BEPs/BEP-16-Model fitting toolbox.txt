@@ -13,7 +13,6 @@ data = [(i,t),...,(j,s)] # experimental spike trains with N neurons
 params, value=modelfitting(model="dv/dt=-v/tau : volt", reset=0*mV, threshold=10*mV,
                   		   data=data,
                            input=I, # a vector or a matrix or a list of vectors
-                           dt=0.1*ms, # timestep of the input
 					       tau=(0*ms,5*ms,10*ms,30*ms),     # (min,init_min,init_max,max)
 					       C=(0*pF,1*pF,2*pF,inf),
 					       verbose=False # display information
