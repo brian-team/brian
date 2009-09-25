@@ -4,7 +4,8 @@ Spike statistics
 In all functions below, spikes is a sorted list of spike times
 '''
 from numpy import *
-from brian.stdunits import ms
+from brian.units import check_units
+from brian.stdunits import ms,second
 
 __all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF',
          'total_correlation','vector_strength','gamma_factor']
