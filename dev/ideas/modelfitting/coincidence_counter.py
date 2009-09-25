@@ -131,7 +131,7 @@ class CoincidenceCounter(SpikeMonitor):
                 for i in spiking_neurons:
                     target_spikes2 = nonzero(close_target_spikes & (self.close_target_spikes > self.last_target_spikes[i]))[0]
                     j = self.model_target[i]
-                    if j in target_spikes2:
+                    if j in target_spikes2: # merge with previous instructions?
                         self._coincidences[i] += 1
                         self.last_target_spikes[i] = self.close_target_spikes[j]
 
