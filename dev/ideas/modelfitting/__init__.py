@@ -11,34 +11,34 @@ if __name__ == '__main__':
     I : Hz
     """
     NTarget = 1
-    tau = .04+.02*rand(NTarget)
+    taus = .03+.03*rand(NTarget)
     dt = .1*ms
-    duration = 400*ms
-    I = 120.0/second + 5.0/second * randn(int(duration/dt))
+    duration = 1000*ms
+    input = 120.0/second + 1.0/second * randn(int(duration/dt))
 
     # Generates data from an IF neuron with tau between 20-40ms
-    # TODO: Replace by TimedArray
-    vgroup = VectorizedNeuronGroup(model = eqs, reset = 0, threshold = 1, 
-             input_var = 'I', input = I,
-             tau = tau)
-    M = SpikeMonitor(vgroup)
-    net = Network(vgroup, M)
-    net.run(duration)
+    group = NeuronGroup(N = NTarget, model = eqs, reset = 0, threshold = 1)
+    group.tau = taus
+    group.I = TimedArray(input)
+    M = SpikeMonitor(group)
+    run(duration)
     data = M.spikes
     
+    # TODO : initial values for V : init = dict(V=-60*mV,...)
     # Tries to find tau
     params, value = modelfitting(model = eqs, reset = 0, threshold = 1,
                                data = data,
-                               input = I,
-                               particles = 10,
-                               iterations = 10,
-                               tau = [1*ms, 20*ms, 40*ms, 100*ms],
-                               delta = 5*ms#,
-                               #init = dict(V=-60*mV,...)
-                               )
+                               input = input,
+                               particles = 100,
+                               iterations = 5,
+                               tau = [20*ms, 30*ms, 60*ms, 70*ms],
+                               delta = .3*ms)
     
-    print "real tau =", tau
-    print "computed tau =", params['tau']
+    for i in range(NTarget):
+        real_tau = taus[i]*1000
+        computed_tau = params['tau'][i]*1000
+        error = 100.0*abs(real_tau-computed_tau)/real_tau
+        print "%d. Real tau = %.2f ms, computed tau = %.2f, rel. error = %.2f %%" % (i+1, real_tau, computed_tau, error)
     
     
     

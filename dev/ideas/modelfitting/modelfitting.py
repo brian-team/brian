@@ -46,22 +46,22 @@ def get_matrix(param_values, param_names):
         X[i,:] = param_values[param_names[i]]
     return X
 
-def fit(fun, X0, group_size, iterations = 10, min_values = None, max_values = None):
-    """
-    Maximizes a function starting from initial values X0
-    if y=fun(x), 
-        x is a D*(group_size*Ntarget) matrix
-        y is a group_size*Ntarget vector
-    D is the number of parameters
-    group_size is the number of particles per target train
-    Ntarget is the number of target trains
-    fit maximizes fun independently over Ntarget subgroups
-    fit returns a D*Ntarget matrix.
-    """
-    X, val, T = optimize(X0, fun, iterations = iterations, pso_params = [.9, 2.0, 2.0], 
-                         min_values = min_values, max_values = max_values, 
-                         group_size = group_size)
-    return X, val
+#def fit(fun, X0, group_size, iterations = 10, min_values = None, max_values = None):
+#    """
+#    Maximizes a function starting from initial values X0
+#    if y=fun(x), 
+#        x is a D*(group_size*Ntarget) matrix
+#        y is a group_size*Ntarget vector
+#    D is the number of parameters
+#    group_size is the number of particles per target train
+#    Ntarget is the number of target trains
+#    fit maximizes fun independently over Ntarget subgroups
+#    fit returns a D*Ntarget matrix.
+#    """
+#    X, val, T = optimize(X0, fun, iterations = iterations, pso_params = [.8, 1.8, 1.8], 
+#                         min_values = min_values, max_values = max_values, 
+#                         group_size = group_size)
+#    return X, val
 
 def set_constraints(N = None, **params):
     """
@@ -124,7 +124,7 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     
     NTarget = int(array(data)[:,0].max()+1)
     # N is the number of neurons
-    # There are particles neurons per target spike train
+    # There are 'particles' neurons per target spike train
     N = particles * NTarget
     
     initial_param_values = get_initial_param_values(params, N)
@@ -149,9 +149,10 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     X0 = get_matrix(initial_param_values, param_names)
     min_values, max_values = set_constraints(N = N, **params)
     
-    X, value = fit(fun, X0, group_size = particles, 
-                   iterations = iterations,
-                   min_values = min_values, max_values = max_values)
+    X, value, T = particle_swarm(X0, fun, iterations = iterations, pso_params = [.9, 1.9, 1.9], 
+                     min_values = min_values, max_values = max_values, 
+                     group_size = particles)
+    
     best_params = get_param_values(X, param_names) 
     
     return (Parameters(**best_params), value)

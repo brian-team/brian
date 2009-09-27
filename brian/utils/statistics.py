@@ -153,8 +153,6 @@ def gamma_factor(source, target, delta):
     Returns the gamma precision factor between source and target trains,
     with precision delta.
     
-    source and target are lists of spikes, delta is the time window in second
-    
     Reference:
     R. Jolivet et al., 'A benchmark test for a quantitative assessment of simple neuron models',
         Journal of Neuroscience Methods 169, no. 2 (2008): 417-424.
@@ -166,6 +164,8 @@ def gamma_factor(source, target, delta):
     target_length = len(target)
     target_rate = firing_rate(target)*Hz
     
+    epsilon = 1E-9*second
+    
     if (target_length == 0 or source_length == 0):
         return 0
     
@@ -173,10 +173,10 @@ def gamma_factor(source, target, delta):
         bins = .5 * (source[1:] + source[:-1])
         indices = digitize(target, bins)
         diff = abs(target - source[indices])
-        matched_spikes = (diff <= delta + .01*ms)
+        matched_spikes = (diff <= delta + epsilon)
         coincidences = sum(matched_spikes)
     else:
-        indices = [amin(abs(source - target[i])) <= delta + .01*ms for i in xrange(target_length)]
+        indices = [amin(abs(source - target[i])) <= delta + epsilon for i in xrange(target_length)]
         coincidences = sum(indices)
     coincidences = coincidences
     
@@ -185,7 +185,7 @@ def gamma_factor(source, target, delta):
     norm = 1 - 2 * target_rate * delta
     gamma = (coincidences - coincidences_average)/(norm*.5*(source_length + target_length))   
         
-    return coincidences,gamma
+    return gamma
 
 if __name__=='__main__':
     
