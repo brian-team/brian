@@ -8,7 +8,7 @@ from brian.utils.parameters import Parameters
 from brian.monitor import CoincidenceCounter
 from numpy import *
 from numpy.random import rand, randn
-from vectorized_neurongroup import VectorizedNeuronGroup
+from brian.neurongroup import VectorizedNeuronGroup
 
 __all__ = ['modelfitting']
 

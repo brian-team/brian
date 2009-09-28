@@ -1,7 +1,5 @@
 from scipy import * 
-from time import *
-
-# TODO: move to utils
+from time import time,clock
 
 __all__=['particle_swarm']
 

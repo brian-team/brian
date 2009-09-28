@@ -52,7 +52,7 @@ from stdunits import ms, Hz
 from collections import defaultdict
 import types
 from operator import isSequenceType
-from library.modelfitting.vectorized_neurongroup import VectorizedNeuronGroup
+from neurongroup import VectorizedNeuronGroup
 from utils.statistics import firing_rate
 import bisect
 try:

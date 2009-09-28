@@ -2,7 +2,7 @@ from brian import *
 from nose.tools import *
 from brian.utils.approximatecomparisons import is_approx_equal, is_within_absolute_tolerance
 
-def test():
+def test_spikemonitor():
     '''
     :class:`SpikeMonitor`
     ~~~~~~~~~~~~~~~~~~~~~
@@ -199,5 +199,49 @@ def test():
         
     reinit_default_clock() # for next test
 
+def test_coincidencecounter():
+    """
+    Simulates an IF model with constant input current and checks
+    the total number of coincidences with prediction.
+    """
+    eqs = """
+    dV/dt = -V/tau+I : 1
+    tau : second
+    I : Hz
+    """ 
+    N = 2
+    taus = 30*ms + 10*ms * rand(N)
+    duration = 400*ms
+    input = 120.0/second * ones(int(duration/defaultclock._dt))
+    delta = 1*ms
+
+    # Generates data from an IF neuron
+    group = NeuronGroup(N = N, model = eqs, reset = 0, threshold = 1)
+    group.tau = taus
+    group.I = TimedArray(input)
+    M = SpikeMonitor(group)
+
+    run(duration)
+    data = M.spikes
+#    print data
+    
+    reinit_default_clock()
+    
+    group = NeuronGroup(N = 1, model = eqs, reset = 0, threshold = 1)
+    group.tau = taus[0]
+    group.I = TimedArray(input)
+    
+    train0 = [t for i,t in data if i == 0]
+    train1 = [t for i,t in data if i == 1]
+    cd = CoincidenceCounter(source = group, data = train1, delta = delta)
+    run(duration)
+    
+    online_gamma = cd.gamma[0]
+    offline_gamma = gamma_factor(train0, train1, delta = delta)
+
+    assert is_within_absolute_tolerance(online_gamma,offline_gamma)    
+
+
 if __name__=='__main__':
-    test()
+    test_spikemonitor()
+    test_coincidencecounter()

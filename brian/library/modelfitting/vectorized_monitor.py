@@ -1,5 +1,4 @@
 from brian import *
-from vectorized_neurongroup import *
 
 class VectorizedSpikeMonitor(SpikeMonitor):
     def getvspikes(self):
