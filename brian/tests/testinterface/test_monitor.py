@@ -241,7 +241,25 @@ def test_coincidencecounter():
 
     assert is_within_absolute_tolerance(online_gamma,offline_gamma)    
 
+def test_vectorized_spikemonitor():
+    eqs = """
+    dV/dt = (-V+I)/tau : 1
+    tau : second
+    I : 1
+    """ 
+    N = 30
+    taus = 10*ms + 90*ms * rand(N)
+    duration = 1000*ms
+    input = 2.0 + 3.0 * rand(int(duration/defaultclock._dt))
+    vgroup = VectorizedNeuronGroup(model=eqs, reset=0, threshold=1,
+                                   input=input, slices=2, overlap=200*ms, tau=taus)
+    M = SpikeMonitor(vgroup)
+    run(vgroup.duration)
+    raster_plot(M)
+    show()
 
 if __name__=='__main__':
     test_spikemonitor()
     test_coincidencecounter()
+#    test_vectorized_spikemonitor()
+    

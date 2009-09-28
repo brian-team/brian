@@ -3,14 +3,14 @@ from modelfitting import *
 if __name__ == '__main__':
     from brian import *
     eqs = """
-    dV/dt = -V/tau+I : 1
+    dV/dt = (-V+I)/tau : 1
     tau : second
-    I : Hz
+    I : 1
     """
-    NTarget = 2
+    NTarget = 3
     taus = .03+.03*rand(NTarget)
-    duration = 1000*ms
-    input = 120.0/second + 0.0/second * randn(int(duration/defaultclock.dt))
+    duration = 500*ms
+    input = 3.0 + 0.0 * rand(int(duration/defaultclock.dt))
 
     # Generates data from an IF neuron with tau between 20-40ms
     group = NeuronGroup(N = NTarget, model = eqs, reset = 0, threshold = 1)
@@ -25,12 +25,12 @@ if __name__ == '__main__':
     params, value = modelfitting(model = eqs, reset = 0, threshold = 1,
                                data = data,
                                input = input,
-                               particles = 50,
+                               particles = 100,
                                iterations = 5,
-                               slices = 4,
-                               overlap = 100*ms,
-                               tau = [-inf, 30*ms, 60*ms, +inf],
-                               delta = .5*ms)
+                               slices = 2,
+                               overlap = 200*ms,
+                               tau = [30*ms, 30*ms, 60*ms, 60*ms],
+                               delta = 2*ms)
     
     for i in range(NTarget):
         real_tau = taus[i]*1000

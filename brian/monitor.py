@@ -43,7 +43,7 @@ __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMo
 
 from units import *
 from connection import Connection, SparseConnectionVector
-from numpy import array, zeros, histogram, copy, ones, exp, arange, convolve, argsort, floor, asarray, Inf, amin, amax, sort, nonzero
+from numpy import array, zeros, histogram, copy, ones, exp, arange, convolve, argsort, mod, floor, asarray, Inf, amin, amax, sort, nonzero
 from itertools import repeat, izip
 from clock import guess_clock, EventClock
 from network import NetworkOperation, network_operation
@@ -167,6 +167,16 @@ class SpikeMonitor(Connection,Monitor):
                 self._spiketimes[i] = array(self._spiketimes[i])
         return self._spiketimes
     spiketimes = property(fget=getspiketimes)
+
+    def getvspikes(self):
+        if isinstance(self.source, VectorizedNeuronGroup):
+            N = self.source.neuron_number
+            overlap = self.source.overlap
+            duration = self.source.duration
+            vspikes = [(mod(i,N),(t-overlap)+i/N*(duration-overlap)*second) for (i,t) in self.spikes if t >= overlap]
+            vspikes.sort(cmp=lambda x,y:2*int(x[1]>y[1])-1)
+            return vspikes
+    concatenated_spikes = property(fget=getvspikes)
 
 class AutoCorrelogram(SpikeMonitor):
     '''

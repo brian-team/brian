@@ -649,7 +649,7 @@ class VectorizedNeuronGroup(NeuronGroup):
                  overlap = None, slices = 1, **param_values):
         
         if (slices == 1) or (overlap is None):
-            overlap = 0*ms
+            overlap = 0*msecond
         values_number = len(param_values.values()[0]) # Number of parameter values
         for param, value in param_values.iteritems():
             if not(len(value) == values_number):

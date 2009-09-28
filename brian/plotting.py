@@ -53,6 +53,7 @@ except:
 from stdunits import *
 import magic
 from connection import *
+from neurongroup import VectorizedNeuronGroup
 from monitor import *
 from monitor import HistogramMonitorBase
 from network import network_operation
@@ -148,7 +149,10 @@ def raster_plot(*monitors,**plotoptions):
             allsn = []
             allst = []
             for i, m in enumerate(monitors):
-                mspikes = m.spikes
+                if isinstance(m.source, VectorizedNeuronGroup):
+                    mspikes = m.concatenated_spikes
+                else:
+                    mspikes = m.spikes
                 if tmin is not None and tmax is not None:
                     x = SecondTupleArray(mspikes)
                     imin = bisect.bisect_left(x, tmin)
