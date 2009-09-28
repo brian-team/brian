@@ -3,6 +3,7 @@ New features since 1.1.3
 
 * Speed improvements to monitors and plotting functions
 * New real-time ``refresh=`` options added to plotting functions
+* Gamma factor in utils.statistics
 
 New features since 1.1.2
 ------------------------
