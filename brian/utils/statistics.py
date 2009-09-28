@@ -178,7 +178,6 @@ def gamma_factor(source, target, delta):
     else:
         indices = [amin(abs(source - target[i])) <= delta + epsilon for i in xrange(target_length)]
         coincidences = sum(indices)
-    coincidences = coincidences
     
     # Normalization of the coincidences count
     coincidences_average = 2 * delta * target_length * target_rate

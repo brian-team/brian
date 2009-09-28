@@ -86,7 +86,7 @@ def set_constraints(N = None, **params):
 @check_units(delta=second)
 def modelfitting(model = None, reset = NoReset(), threshold = None, data = None, 
                  input_var = 'I', input = None,
-                 timeslices = 1, verbose = False, particles = 10, slices = 1,
+                 verbose = False, particles = 10, slices = 1, overlap = None,
                  iterations = 10, delta = None,
                  **params):
     """
@@ -131,7 +131,7 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     
     vgroup = VectorizedNeuronGroup(model = model, threshold = threshold, reset = reset, 
                  input_var = input_var, input = input,
-                 slices = slices,
+                 slices = slices, overlap = overlap,
                  **initial_param_values)
     model_target = kron(arange(NTarget), ones(particles))
     cd = CoincidenceCounter(vgroup, data, model_target = model_target, delta = delta)

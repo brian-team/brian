@@ -29,8 +29,10 @@ if __name__ == '__main__':
     params, value = modelfitting(model = eqs, reset = 0, threshold = 1,
                                data = data,
                                input = input,
-                               particles = 100,
-                               iterations = 5,
+                               particles = 50,
+                               iterations = 3,
+                               slices = 4,
+                               overlap = 100*ms,
                                tau = [20*ms, 30*ms, 60*ms, 70*ms],
                                delta = .4*ms)
     

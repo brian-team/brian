@@ -13,15 +13,15 @@ class VectorizedNeuronGroup(NeuronGroup):
     - input_name      The parameter name of the input current in the model equations
     - input    The input values
     - overlap         Overlap between time slices
-    - slice_number    Number of time slices (default 1)
+    - slices    Number of time slices (default 1)
     - **param_values  Model parameters values
     """
     
     def __init__(self, model = None, threshold = None, reset = NoReset(), 
                  input_var = 'I', input = None,
-                 overlap = 0*ms, slices = 1, **param_values):
+                 overlap = None, slices = 1, **param_values):
         
-        if slices == 1:
+        if (slices == 1) or (overlap is None):
             overlap = 0*ms
         values_number = len(param_values.values()[0]) # Number of parameter values
         for param, value in param_values.iteritems():
