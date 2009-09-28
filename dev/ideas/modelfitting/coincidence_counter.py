@@ -92,7 +92,7 @@ class CoincidenceCounter(SpikeMonitor):
             Nneurons = len(source)
 
         if model_target is None:
-            model_target = zeros(Nneurons, dtype=int)
+            model_target = zeros(Nneurons)
             
         self.NModel = len(source)
         self.NTarget = int(array(self.data)[:,0].max()+1)
@@ -104,7 +104,7 @@ class CoincidenceCounter(SpikeMonitor):
             self._target_length[i] += 1
         
         # Adapts model_target if there are several time slices
-        model_target = array(model_target)
+        model_target = array(model_target, dtype=int)
         if isinstance(source, VectorizedNeuronGroup):
             self.original_model_target = array(model_target, dtype = 'int')
             self.model_target = []
@@ -125,22 +125,32 @@ class CoincidenceCounter(SpikeMonitor):
         the neurons which have just spiked.
         self.close_target_spikes is the list of the closest target spike for each target train in the current bin self.current_bin
         '''
+        # Updates close_target_spikes from close_target_spikes_matrix
         if (self.current_bin < len(self.all_bins)-1):
             if self.source.clock._t > self.all_bins[self.current_bin+1]:
                 self.current_bin += 1
                 self.close_target_spikes = self.close_target_spikes_matrix[:,self.current_bin]
         
+        # Updates coincidences
         if (len(spiking_neurons) > 0):
-            close_target_spikes = (self.close_target_spikes >= 0)
-            target_spikes = nonzero(close_target_spikes)[0]
-            self._model_length[spiking_neurons] += 1
-            if (len(target_spikes) > 0):
-                for i in spiking_neurons:
-                    target_spikes2 = nonzero(close_target_spikes & (self.close_target_spikes > self.last_target_spikes[i]))[0]
-                    j = self.model_target[i]
-                    if j in target_spikes2: # merge with previous instructions?
-                        self._coincidences[i] += 1
-                        self.last_target_spikes[i] = self.close_target_spikes[j]
+            # Vector of spiking neurons
+            i = array(spiking_neurons)
+            # Updates length of model spike trains
+            self._model_length[i] += 1
+            # 'j' contains the target spike trains indices of each spiking neuron
+            j = self.model_target[i]
+            close_target_spikes = self.close_target_spikes[j]
+            # 'coincidences' contains the indices of the model neurons which are
+            #     coincident with their associated target spike train
+            # This line implicitly assumes that close_target_spikes >= 0, since
+            #    self.last_target_spikes[i] is always >= -1
+            coincidences = i[close_target_spikes > self.last_target_spikes[i]]
+            # Updates coincidences
+            self._coincidences[coincidences] += 1
+            # Updates the indices of the last coincident target spikes for
+            #    each model neuron, so that each coincidence is counted
+            #    only once
+            self.last_target_spikes[coincidences] = self.close_target_spikes[j]
 
     def prepare_online_computation(self):
         '''

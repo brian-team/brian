@@ -11,14 +11,13 @@ def test():
     threshold = 1
     duration = 400*ms
     overlap = 50*ms
-    dt = defaultclock.dt
-    I = arange(50.0, 100.0, 50.0/int(duration/dt))
+    input = arange(50.0, 100.0, 50.0/int(duration/defaultclock.dt))
     tau = arange(.01,.07,.001)
     N = len(tau)
-    slice_number = 4
+    slices = 4
     vgroup = VectorizedNeuronGroup(model = model, reset = reset, threshold = threshold, 
-                                   input_name = 'I', input_values = I, overlap = overlap, 
-                                   slice_number = slice_number, tau = tau)
+                                   input = input, overlap = overlap, 
+                                   slices = slices, tau = tau)
     M = SpikeMonitor(vgroup)
     net = Network(vgroup, M)
     net.run(vgroup.duration)

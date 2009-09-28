@@ -49,10 +49,10 @@ def test_if():
     I : Hz
     """ 
     N = 2
-    taus = [30*ms, 31*ms]
+    taus = 30*ms + 10*ms * rand(N)
     duration = 400*ms
     input = 120.0/second * ones(int(duration/defaultclock._dt))
-    delta = 4*ms
+    delta = 1*ms
 
     # Generates data from an IF neuron
     group = NeuronGroup(N = N, model = eqs, reset = 0, threshold = 1)
