@@ -68,6 +68,8 @@ of spike trains, defined as ordered lists of spike times:
   spike train with respect to the period. If each spike time with phase phi is represented by
   a vector with angle phi, then the vector strength is the length of the average vector.
   It equals 1 for spikes with constant phase and 0 for homogeneous phase distributions.
+* Gamma precision factor: ``gamma_factor(source, target, delta)`` returns the gamma precision 
+  factor between source and target trains, with precision delta.
 
 .. TODO: docs:histograms
 	Histograms

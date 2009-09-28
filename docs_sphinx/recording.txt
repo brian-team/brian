@@ -116,6 +116,22 @@ separately for each neuron, use a :class:`SpikeCounter` object::
   
 Then ``M[i]`` is the number of spikes produced by neuron i.
 
+Counting coincidences
+---------------------
+To count the number of coincident spikes between the neurons of a group
+and given target spike trains, use a :class:`CoincidenceCounter` object::
+
+  C=CoincidenceCounter(source=group, data=data, delta=delta)
+  
+``data`` is a list of pairs (neuron_index, spike time), and delta is the time window
+in second. To get the number of coincidences for each neuron of the group, use ::
+
+  coincidences = C.coincidences
+
+The gamma precision factor can be obtained with ::
+
+  gamma = C.gamma
+
 Recording population rates
 --------------------------
 The population rate can be monitored with a :class:`PopulationRateMonitor` object::

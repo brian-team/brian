@@ -1,0 +1,29 @@
+.. currentmodule:: brian
+
+Model fitting
+=============
+The modelfitting library allows to fit a neuron model to data. To import the
+library, use ::
+
+  from brian.library.modelfitting import *
+  
+Usage example
+-------------
+To fit the parameters of a neuron model with respect to some data, use the
+``modelfitting`` function ::
+
+  params, value = modelfitting(model=equations, reset=reset, threshold=threshold,
+                               data=data, input=input,
+                               tau=[-inf, 30*ms, 60*ms, +inf])
+
+The model is defined by ``equations``, ``reset`` and ``threshold``. The data
+is defined by ``data`` (a list of pairs (neuron index, spike time)), and the input
+is a list of current values. The input variable should be ``I`` in the equations.
+Each parameter of the model is defined by four values ::
+  
+  param_name = [min, init_min, init_max, max]
+
+``min`` and ``max`` are constraints set on the parameter. ``init_min`` and
+``init_max`` define the initial interval of the parameter.
+The parameters found by the optimization procedure are stored in the Parameter
+object ``params``.
