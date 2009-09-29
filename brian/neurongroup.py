@@ -633,20 +633,21 @@ class VectorizedNeuronGroup(NeuronGroup):
     parameter values and with time parallelization.
     
     Inputs:
-    - model           Model equations
-    - reset           Model reset
-    - threshold       Model threshold 
-    - data            A list of spike times (i,t)
-    - input_name      The parameter name of the input current in the model equations
-    - input    The input values
-    - overlap         Overlap between time slices
-    - slices    Number of time slices (default 1)
+    - model          Model equations
+    - reset          Model reset
+    - threshold      Model threshold 
+    - data           A list of spike times (i,t)
+    - input_name     The parameter name of the input current in the model equations
+    - input          The input values
+    - overlap        Overlap between time slices
+    - slices         Number of time slices (default 1)
+    - init           Initial values : dictionary (state variable=initial value)
     - **param_values  Model parameters values
     """
     
     def __init__(self, model = None, threshold = None, reset = NoReset(), 
                  input_var = 'I', input = None,
-                 overlap = None, slices = 1, **param_values):
+                 overlap = None, slices = 1, init = None, **param_values):
         
         if (slices == 1) or (overlap is None):
             overlap = 0*msecond
@@ -659,6 +660,11 @@ class VectorizedNeuronGroup(NeuronGroup):
         NeuronGroup.__init__(self, N = N, model = model, threshold = threshold, reset = reset)
         dt=self.clock.dt
         input_length = len(input)
+        
+        # Sets initial state values
+        if init is not None:
+            for var, value in init.iteritems():
+                self.state(var)[:] = value
         
         self.neuron_number = values_number
         self.slices = slices

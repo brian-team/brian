@@ -20,9 +20,8 @@ if __name__ == '__main__':
     run(duration)
     data = M.spikes
     
-    # TODO : initial values for V : init = dict(V=-60*mV,...)
     # Tries to find tau
-    params, value = modelfitting(model = eqs, reset = 0, threshold = 1,
+    params = modelfitting(model = eqs, reset = 0, threshold = 1,
                                data = data,
                                input = input,
                                particles = 100,
@@ -36,6 +35,6 @@ if __name__ == '__main__':
         real_tau = taus[i]*1000
         computed_tau = params['tau'][i]*1000
         error = 100.0*abs(real_tau-computed_tau)/real_tau
-        print "%d. Real tau = %.2f ms, found tau = %.2f, rel. error = %.2f %%" % \
+        print "%d. Real tau = %.2f ms, found tau = %.2f ms, rel. error = %.2f %%" % \
             (i+1, real_tau, computed_tau, error)
     

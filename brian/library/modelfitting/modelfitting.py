@@ -95,13 +95,13 @@ def set_constraints(N = None, **params):
 def modelfitting(model = None, reset = NoReset(), threshold = None, data = None, 
                  input_var = 'I', input = None,
                  verbose = False, particles = 10, slices = 1, overlap = None,
-                 iterations = 10, delta = None,
+                 iterations = 10, delta = None, init = None,
                  **params):
     """
     Fits a neuron model to data.
     
     Usage example:
-    params, value = modelfitting(model="dv/dt=-v/tau : volt", reset=0*mV, threshold=10*mV,
+    params = modelfitting(model="dv/dt=-v/tau : volt", reset=0*mV, threshold=10*mV,
                                data=data, # data = [(i,t),...,(j,s)] 
                                input=I, 
                                dt=0.1*ms,
@@ -116,16 +116,16 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     - threshold     Neuron model threshold
     - data          A list of spike times (i,t)
     - input         The input current (a list of values)
+    - input_var     The input variable name in the equations ('I' by default) 
     - **params      Model parameters list : tau=(min,init_min,init_max,max)
     - verbose       Print iterations?
-    - particles
-                    Number of particles in the particle swarm algorithm
-    - slices  Number of time slices, 1 by default
+    - particles     Number of particles in the particle swarm algorithm
+    - slices        Number of time slices, 1 by default
     - delta         Time window
+    - init          Initial values : dictionary (state variable=initial value)
     
     Outputs:
     - params        The parameter values found by the optimization process
-    - value         The final value of the fitness function
     """
     
     param_names = get_param_names(params)
@@ -139,7 +139,7 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     
     vgroup = VectorizedNeuronGroup(model = model, threshold = threshold, reset = reset, 
                  input_var = input_var, input = input,
-                 slices = slices, overlap = overlap,
+                 slices = slices, overlap = overlap, init = init,
                  **initial_param_values)
     model_target = kron(arange(NTarget), ones(particles))
     cd = CoincidenceCounter(vgroup, data, model_target = model_target, delta = delta)
@@ -163,4 +163,4 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     
     best_params = get_param_values(X, param_names) 
     
-    return (Parameters(**best_params), value)
+    return Parameters(**best_params)

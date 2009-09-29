@@ -12,7 +12,7 @@ Usage example
 To fit the parameters of a neuron model with respect to some data, use the
 ``modelfitting`` function ::
 
-  params, value = modelfitting(model=equations, reset=reset, threshold=threshold,
+  params = modelfitting(model=equations, reset=reset, threshold=threshold,
                                data=data, input=input,
                                tau=[-inf, 30*ms, 60*ms, +inf])
 
@@ -23,7 +23,17 @@ Each parameter of the model is defined by four values ::
   
   param_name = [min, init_min, init_max, max]
 
-``min`` and ``max`` are constraints set on the parameter. ``init_min`` and
+``min`` and ``max`` are constraints on the parameter. ``init_min`` and
 ``init_max`` define the initial interval of the parameter.
 The parameters found by the optimization procedure are stored in the Parameter
 object ``params``.
+
+Additional parameters are :
+* ``input_var`` : The input variable name in the equations ('I' by default)
+* ``verbose`` : Set to False for not printing iterations (True by default)
+* ``particles`` : Number of particles in the particle swarm algorithm
+* ``slices`` : Number of time slices (1 by default)
+* ``overlap`` : Overlap in second between time slices (0*ms by default)
+* ``iterations`` : Number of iterations in the optimization algorithm (10 by default)
+* ``delta`` : Time window for the computation of the gamma precision factor (4*ms by default)
+* ``init`` : Initial state values, as a dictionary {state variable=initial value}
