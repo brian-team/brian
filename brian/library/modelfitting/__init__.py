@@ -7,10 +7,10 @@ if __name__ == '__main__':
     tau : second
     I : 1
     """
-    NTarget = 3
+    NTarget = 1
     taus = .03+.03*rand(NTarget)
-    duration = 500*ms
-    input = 3.0 + 0.0 * rand(int(duration/defaultclock.dt))
+    duration = 800*ms
+    input = 3.0 * ones(int(duration/defaultclock.dt))
 
     # Generates data from an IF neuron with tau between 20-40ms
     group = NeuronGroup(N = NTarget, model = eqs, reset = 0, threshold = 1)
@@ -27,9 +27,9 @@ if __name__ == '__main__':
                                particles = 100,
                                iterations = 5,
                                slices = 2,
-                               overlap = 200*ms,
+                               overlap = 250*ms,
                                tau = [30*ms, 30*ms, 60*ms, 60*ms],
-                               delta = 2*ms)
+                               delta = 1*ms)
     
     for i in range(NTarget):
         real_tau = taus[i]*1000
