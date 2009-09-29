@@ -1,3 +1,5 @@
+# NON-ATOMIC ALGORITHM STILL DOESN'T WORK IF N>16K,
+# ALMOST CERTAINLY TO DO WITH SHARED MEMORY SIZE
 import pycuda.autoinit as autoinit
 import pycuda.driver as drv
 from pycuda.gpuarray import GPUArray
@@ -6,10 +8,11 @@ import bisect
 import numpy, pylab, time, random
 from scipy import weave
 
-N = 1024
+N = 512*512
 nspike = int(0.1*N)
 blocksize = 512
 duration = 10000
+use_atomic_threshold = False
 
 N = int(numpy.ceil(1.*N/blocksize)*blocksize)
 
@@ -60,12 +63,12 @@ __global__ void threshold(SCALAR *V, int *spikes, bool *spiked, unsigned int *gl
 
 __global__ void threshold_blocksumcount(SCALAR *V, unsigned int *blocksumcount)
 { 
-    __shared__ unsigned int partialsum[BLOCKSIZE];
+    __shared__ unsigned short int partialsum[BLOCKSIZE];
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int t = threadIdx.x;
     int b = blockIdx.x;
     bool this_spiked = V[i]>-0.05;
-    partialsum[t] = (unsigned int)this_spiked;
+    partialsum[t] = (unsigned short int)this_spiked;
     for(unsigned int stride=blockDim.x/2; stride>=1; stride/=2)
     {
         __syncthreads();
@@ -93,7 +96,7 @@ __global__ void threshold_cumsum(unsigned int *blocksumcount, unsigned int *cumb
 
 __global__ void threshold_compact(SCALAR *V, int *spikes, unsigned int *blocksumcount, unsigned int *cumblocksumcount)
 {
-    __shared__ unsigned int partialsum[BLOCKSIZE];
+    __shared__ unsigned short int partialsum[BLOCKSIZE];
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int t = threadIdx.x;
     int b = blockIdx.x;
@@ -101,7 +104,7 @@ __global__ void threshold_compact(SCALAR *V, int *spikes, unsigned int *blocksum
     if(blocksumcount[b]>0)
     {
         bool this_spiked = V[i]>-0.05;
-        partialsum[t] = (unsigned int)this_spiked;
+        partialsum[t] = (unsigned short int)this_spiked;
         for(unsigned int stride=1; stride<blockDim.x; stride*=2)
         {
             __syncthreads();
@@ -110,7 +113,7 @@ __global__ void threshold_compact(SCALAR *V, int *spikes, unsigned int *blocksum
         }
         __syncthreads();
         if(this_spiked)
-          spikes[partialsum[t]+cumblocksumcount[b]-1] = i;
+          spikes[(unsigned int)partialsum[t]+cumblocksumcount[b]-1] = i;
         //spikes[i] = partialsum[t]+cumblocksumcount[b];
     }
 }
@@ -153,40 +156,68 @@ threshold_compact_args = (grid, int(V.gpudata), int(gpu_spikes), int(gpu_blocksu
 stateupdate.prepared_call(*stateupdate_args)
 threshold.prepared_call(*threshold_args)
 
-print 'before blocksumcount'
-threshold_blocksumcount.prepared_call(*threshold_blocksumcount_args)
-autoinit.context.synchronize()
-print gpu_blocksumcount.get()
-print sum(V_cpu[:512]>-0.05), sum(V_cpu[512:1024]>-0.05) # these two should be the same...
-
-print numpy.cumsum(gpu_blocksumcount.get())
-print 'before cumsum'
-threshold_cumsum.prepared_call(*threshold_cumsum_args)
-autoinit.context.synchronize()
-print gpu_cumblocksumcount.get()
-print 'before compact'
-threshold_compact.prepared_call(*threshold_compact_args)
-autoinit.context.synchronize()
-
-drv.memcpy_dtoh(spikes, gpu_spikes)
-print spikes[:102]
-print gpu_cumblocksumcount.get()[-1]
-print sum(V_cpu>-0.05)
-S1 = spikes[:gpu_cumblocksumcount.get()[-1]]
-S2 = (V_cpu>-0.05).nonzero()[0]
-S1.sort()
-S2.sort()
-print S1
-print S2
-print (S1==S2).all() # TODO: not quite there yet...
-
-exit()
+if 0:
+    #print 'before blocksumcount'
+    threshold_blocksumcount.prepared_call(*threshold_blocksumcount_args)
+    autoinit.context.synchronize()
+    #print gpu_blocksumcount.get()
+    #print sum(V_cpu[:512]>-0.05), sum(V_cpu[512:1024]>-0.05) # these two should be the same...
+    
+    #print numpy.cumsum(gpu_blocksumcount.get())
+    #print 'before cumsum'
+    threshold_cumsum.prepared_call(*threshold_cumsum_args)
+    autoinit.context.synchronize()
+    #print gpu_cumblocksumcount.get()
+    A1 = gpu_cumblocksumcount.get()[1:]
+    A2 = numpy.cumsum(gpu_blocksumcount.get())
+    print 'Passed first cumsum test:', (A1==A2).all()
+    #print 'before compact'
+    threshold_compact.prepared_call(*threshold_compact_args)
+    autoinit.context.synchronize()
+    
+    drv.memcpy_dtoh(spikes, gpu_spikes)
+    
+    #pylab.plot(spikes)
+    #pylab.plot(numpy.cumsum(numpy.array(V_cpu>-0.05, dtype=int)))
+    #pylab.show()
+    #
+    #exit()
+    
+    #print spikes[:102]
+    #print gpu_cumblocksumcount.get()[-1]
+    #print sum(V_cpu>-0.05)
+    S1 = spikes[:gpu_cumblocksumcount.get()[-1]]
+    S2 = (V_cpu>-0.05).nonzero()[0]
+    S1.sort()
+    S2.sort()
+    #print S1
+    #print S2
+    print 'Passed spikes test:', (S1==S2).all() # TODO: not quite there yet...
+    
+    exit()
+else:
+    threshold_blocksumcount.prepared_call(*threshold_blocksumcount_args)
+    autoinit.context.synchronize()
+    threshold_cumsum.prepared_call(*threshold_cumsum_args)
+    autoinit.context.synchronize()
+    threshold_compact.prepared_call(*threshold_compact_args)
+    autoinit.context.synchronize()
 
 def run_sim():
-    for t in xrange(duration):
-        spike_index[0] = 0
-        drv.memcpy_htod(gpu_spike_index, spike_index)
-        threshold.launch_grid(*grid)
+    if use_atomic_threshold:
+        for t in xrange(duration):
+            spike_index[0] = 0
+            drv.memcpy_htod(gpu_spike_index, spike_index)
+            threshold.launch_grid(*grid)
+    else:
+        for t in xrange(duration):
+            threshold_blocksumcount.launch_grid(*grid)
+            autoinit.context.synchronize()
+            threshold_cumsum.launch_grid(*grid)
+            autoinit.context.synchronize()
+            threshold_compact.launch_grid(*grid)
+            autoinit.context.synchronize()
+        
 
 def run_sim_cpu():
     for t in xrange(duration):
@@ -211,5 +242,6 @@ run_sim_cpu()
 timetaken_cpu = time.time()-start
 
 print 'N:', N, 'nspike', nspike, 'blocksize:', blocksize, 'numsteps:', duration
+print 'Atomic threshold algorithm:', use_atomic_threshold
 print 'GPU time:', timetaken_gpu
 print 'CPU time:', timetaken_cpu
