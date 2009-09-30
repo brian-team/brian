@@ -27,18 +27,32 @@ block = (blocksize,1,1)
 grid = (N/blocksize,1)
 
 mod = drv.SourceModule("""
-__global__ void stateupdate(SCALAR *V_arr, SCALAR *ge_arr, SCALAR *gi_arr)
+/*__global__ void stateupdate(SCALAR *V_arr, SCALAR *ge_arr, SCALAR *gi_arr)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     SCALAR V = V_arr[i];
     SCALAR ge = ge_arr[i];
     SCALAR gi = gi_arr[i]; 
-    SCALAR V__tmp = (ge+gi-(V+0.049))/0.02;
-    SCALAR ge__tmp = -ge/0.005;
-    SCALAR gi__tmp = -gi/0.01;
+//    SCALAR V__tmp = (ge+gi-(V+0.049))/0.02;
+//    SCALAR ge__tmp = -ge/0.005;
+//    SCALAR gi__tmp = -gi/0.01;
+    SCALAR V__tmp = (ge+gi-(V+0.049))*50;
+    SCALAR ge__tmp = -ge*200;
+    SCALAR gi__tmp = -gi*100;
     V_arr[i] = V+0.0001*V__tmp;
     ge_arr[i] = ge+0.0001*ge__tmp;
     gi_arr[i] = gi+0.0001*gi__tmp;
+}*/
+
+__global__ void stateupdate(SCALAR *V_arr, SCALAR *ge_arr, SCALAR *gi_arr)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    SCALAR V = V_arr[i];
+    SCALAR ge = ge_arr[i];
+    SCALAR gi = gi_arr[i];
+    V_arr[i] = V+1;
+    ge_arr[i] = ge+1;
+    gi_arr[i] = gi+1;
 }
 
 __global__ void stateupdate_noglobal(SCALAR *V_arr, SCALAR *ge_arr, SCALAR *gi_arr)
