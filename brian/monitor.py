@@ -1003,6 +1003,24 @@ class MultiStateMonitor(NetworkOperation):
 
 
 class CoincidenceCounter(SpikeMonitor):
+    """
+    Computes in an online fashion the number of coincidences between model 
+    spike trains and some data spike trains.
+    
+    Usage example:
+    cd = CoincidenceCounter(group, data, model_target = [0])
+    
+    Inputs:
+    - source        The NeuronGroup object
+    - data          The data as an (i,t)-like list or a list of spike times.
+    - model_target  The target train index associated to each model neuron.
+                    It is a list of size NModel.
+    - delta         The half-width of the time window
+    
+    Outputs:
+    - cd.coincidences is a N-long vector with the coincidences of each neuron
+    versus its linked target spike train.
+    """
     epsilon = 1E-9*second
     
     def slice_data(self, data = None, slices = 1, duration = None):
@@ -1037,24 +1055,6 @@ class CoincidenceCounter(SpikeMonitor):
     
     @check_units(delta=second)
     def __init__(self, source, data, model_target = None, delta = 4*ms):
-        """
-        Computes in an online fashion the number of coincidences between model 
-        spike trains and some data spike trains.
-        
-        Usage example:
-        cd = CoincidenceCounter(group, data, model_target = [0])
-        
-        Inputs:
-        - source        The NeuronGroup object
-        - data          The data as an (i,t)-like list or a list of spike times.
-        - model_target  The target train index associated to each model neuron.
-                        It is a list of size NModel.
-        - delta         The half-width of the time window
-        
-        Outputs:
-        - cd.coincidences is a N-long vector with the coincidences of each neuron
-        versus its linked target spike train.
-        """
         source.set_max_delay(0)
         self.source = source
         self.delay = 0
