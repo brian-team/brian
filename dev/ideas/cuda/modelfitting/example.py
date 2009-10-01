@@ -6,6 +6,11 @@ from pycuda import gpuarray
 import bisect
 import numpy, pylab, time
 from matplotlib.cm import jet
+major, minor = pycuda.VERSION
+if minor>92:
+    from pycuda.compiler import SourceModule
+else:
+    from pycuda.driver import SourceModule
 
 N = 10000
 blocksize = 256 # too many registers for 512
@@ -28,7 +33,7 @@ else:
 block = (blocksize,1,1)
 grid = (N/blocksize,1)
 
-mod = pycuda.compiler.SourceModule("""
+mod = SourceModule("""
 __global__ void runsim(
                     SCALAR *V_arr,            // State variables for each neuron
                     SCALAR *tau_arr,
