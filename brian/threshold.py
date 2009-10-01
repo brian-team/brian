@@ -185,6 +185,7 @@ class StringThreshold(Threshold):
     def __init__(self,expr,level=0):
         self._namespace,unknowns=namespace(expr,level=level+1,return_unknowns=True)
         self._vars=unknowns
+        self._expr = expr
         self._code=compile(expr,"StringThreshold","eval")
         class Replacer(object):
             def __init__(self, func, n):

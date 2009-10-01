@@ -342,7 +342,10 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         # Reset and refractory period
         if is_scalar_type(reset) or reset.__class__ is Reset:
             if reset.__class__ is Reset:
-                numstate = reset.state
+                if isinstance(reset.state, str):
+                    numstate = self.get_var_index(reset.state)
+                else:
+                    numstate = reset.state
                 reset = reset.resetvalue
             else:
                 numstate = 0

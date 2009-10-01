@@ -37,7 +37,8 @@ Reset mechanisms
 '''
 
 __all__=['Reset','VariableReset','Refractoriness','NoReset','FunReset',
-         'CustomRefractoriness', 'SimpleCustomRefractoriness','StringReset']
+         'CustomRefractoriness', 'SimpleCustomRefractoriness','StringReset',
+         'select_reset']
 
 from numpy import where, zeros
 from units import *
