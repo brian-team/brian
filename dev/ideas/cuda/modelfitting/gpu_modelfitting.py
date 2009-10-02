@@ -14,16 +14,11 @@ from numpy import *
 __all__ = ['GPUModelFitting']
 
 if drv.get_version()==(2,0,0): # cuda version
-    precision = 'float'
+    default_precision = 'float'
 elif drv.get_version()>(2,0,0):
-    precision = 'double'
+    default_precision = 'double'
 else:
     raise Exception,"CUDA 2.0 required"
-
-if precision=='double':
-    mydtype = float64
-else:
-    mydtype = float32
 
 modelfitting_kernel_template = """
 __global__ void runsim(
@@ -36,7 +31,8 @@ __global__ void runsim(
     int *num_coincidences,    // Count of coincidences for each neuron
     int *spiketimes,          // Array of all spike times as integers (begin and
                               // end each train with large negative value)
-    int *spiketime_indices    // Pointer into above array for each neuron
+    int *spiketime_indices,   // Pointer into above array for each neuron
+    int *spikedelay_arr       // Integer delay for each spike
     )
 {
     const int neuron_index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -46,9 +42,11 @@ __global__ void runsim(
     int spiketime_index = spiketime_indices[neuron_index];
     int last_spike_time = spiketimes[spiketime_index];
     int next_spike_time = spiketimes[spiketime_index+1];
+    %COINCIDENCE_COUNT_INIT%
     int ncoinc = num_coincidences[neuron_index];
     int nspikes = spikecount[neuron_index];
     int I_offset = I_arr_offset[neuron_index];
+    int spikedelay = spikedelay_arr[neuron_index];
     for(int T=Tstart; T<Tend; T++)
     {
         %SCALAR% t = T*%DT%;
@@ -71,11 +69,13 @@ __global__ void runsim(
             %RESET%
         }
         // Coincidence counter
-        ncoinc += has_spiked && (((last_spike_time+%DELTA%)>=T) || ((next_spike_time-%DELTA%)<=T));
-        if(T==next_spike_time){
+        const int Tspike = T+spikedelay;
+        %COINCIDENCE_COUNT_TEST%
+        if(Tspike>=next_spike_time){
             spiketime_index++;
             last_spike_time = next_spike_time;
             next_spike_time = spiketimes[spiketime_index+1];
+            %COINCIDENCE_COUNT_NEXT%
         }
     }
     // Store variables at end
@@ -86,7 +86,37 @@ __global__ void runsim(
 }
 """
 
-def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons, delta):
+coincidence_counting_algorithm_src = {
+    'inclusive':{
+        '%COINCIDENCE_COUNT_INIT%':'',
+        '%COINCIDENCE_COUNT_TEST%':'''
+            ncoinc += has_spiked && (((last_spike_time+%DELTA%)>=Tspike) || ((next_spike_time-%DELTA%)<=Tspike));
+            ''',
+        '%COINCIDENCE_COUNT_NEXT%':''
+        },
+    'exclusive':{
+        '%COINCIDENCE_COUNT_INIT%':'''
+            bool last_spike_allowed = true, next_spike_allowed = true;
+            ''',
+        '%COINCIDENCE_COUNT_TEST%':'''
+            ncoinc += has_spiked &&
+                      ((((last_spike_time+%DELTA%)>=Tspike)&&last_spike_allowed)
+                       ||
+                       (((next_spike_time-%DELTA%)<=Tspike)&&next_spike_allowed));
+            last_spike_allowed = !(has_spiked && ((last_spike_time+%DELTA%)>=Tspike));
+            next_spike_allowed = !(has_spiked && (((last_spike_time+%DELTA%)<Tspike) && ((next_spike_time-%DELTA%)<=Tspike)));
+            ''',
+        '%COINCIDENCE_COUNT_NEXT%':'''
+            last_spike_allowed = next_spike_allowed;
+            next_spike_allowed = true;
+            '''
+        },
+    }
+
+def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons,
+                                     delta,
+                                     coincidence_count_algorithm='exclusive',
+                                     precision=default_precision):
     eqs.prepare()
     src = modelfitting_kernel_template
     # Substitute state variable declarations
@@ -116,7 +146,11 @@ def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons, del
             sulines += '        %SCALAR% '+name+'__tmp = '+expr+';\n'
     for name in eqs._diffeq_names_nonzero:
         sulines += '        '+name+' += %DT%*'+name+'__tmp;\n'
-    src = src.replace('%STATE_UPDATE%', sulines.strip())    
+    src = src.replace('%STATE_UPDATE%', sulines.strip())
+    # Substitute coincidence counting algorithm
+    ccalgo = coincidence_counting_algorithm_src[coincidence_count_algorithm]
+    for search, replace in ccalgo.iteritems():
+        src = src.replace(search, replace)
     # Substitute dt
     src = src.replace('%DT%', str(float(dt)))
     # Substitute SCALAR
@@ -141,12 +175,21 @@ class GPUModelFitting(object):
         The current array and offsets (see below).
     ``spiketimes``, ``spiketimes_offset``
         The spike times array and offsets (see below).
+    ``spikedelays``,
+        Array of delays for each neuron.
     ``delta``
         The half-width of the coincidence window.
+    ``precision``
+        Should be 'float' or 'double' - by default the highest precision your
+        GPU supports.
+    ``coincidence_count_algorithm``
+        Should be 'inclusive' if multiple predicted spikes can match one
+        target spike, or 'exclusive' (default) if multiple predicted spikes
+        can match only one target spike (earliest spikes are matched first). 
     
     Methods:
     
-    ``reinit_vars(I, I_offset, spiketimes, spiketimes_offset)``
+    ``reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)``
         Reinitialises all the variables, counters, etc. The state variable values
         are copied from the NeuronGroup G again, and the variables I, I_offset, etc.
         are copied from the method arguments.
@@ -175,13 +218,21 @@ class GPUModelFitting(object):
     The experimentally recorded spike times should be passed in a similar way,
     put all the spike times in a single array and pass an offsets array
     spiketimes_offset. One difference is that it is essential that each spike
-    train with the spiketimes array should begin and end with a spike at a
-    large negative time (e.g. -1*second). The GPU uses this is mark the
-    beginning and end of the train rather than storing the number of spikes for
-    each train. 
+    train with the spiketimes array should begin with a spike at a
+    large negative time (e.g. -1*second) and end with a spike that is a long time
+    after the duration of the run (e.g. duration+1*second). The GPU uses this to
+    mark the beginning and end of the train rather than storing the number of
+    spikes for each train. 
     '''
-    def __init__(self, G, eqs, I, I_offset, spiketimes, spiketimes_offset, delta):
+    def __init__(self, G, eqs, I, I_offset, spiketimes, spiketimes_offset, spikedelays,
+                       delta, coincidence_count_algorithm='exclusive',
+                       precision=default_precision):
         eqs.prepare()
+        self.precision = precision
+        if precision=='double':
+            self.mydtype = float64
+        else:
+            self.mydtype = float32
         self.N = N = len(G)
         self.dt = dt = G.clock.dt
         self.delta = delta
@@ -200,8 +251,10 @@ class GPUModelFitting(object):
             threshold = state+'>'+threshold.threshold_state
         elif isinstance(threshold, StringThreshold):
             namespace = threshold._namespace
-            threshold = threshold._expr
-            # TODO: namespace substitutions
+            expr = threshold._expr
+            all_variables = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
+            expr = optimiser.freeze(expr, all_variables, namespace)
+            threshold = expr
         else:
             raise ValueError('Threshold must be constant, VariableThreshold or StringThreshold.')
         self.threshold = threshold
@@ -218,20 +271,25 @@ class GPUModelFitting(object):
             reset = state+' = '+reset.resetvaluestate
         elif isinstance(reset, StringReset):
             namespace = reset._namespace
-            reset = reset._expr
-            # TODO: namespace substitutions
+            expr = reset._expr
+            all_variables = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
+            expr = optimiser.freeze(expr, all_variables, namespace)
+            reset = expr
         self.reset = reset
-        self.kernel_src, self.declarations_seq = generate_modelfitting_kernel_src(eqs, threshold, reset, dt, N, delta)
+        self.kernel_src, self.declarations_seq = generate_modelfitting_kernel_src(eqs, threshold, reset, dt, N, delta,
+                                                                                  coincidence_count_algorithm=coincidence_count_algorithm,
+                                                                                  precision=precision)
         self.kernel_module = SourceModule(self.kernel_src)
         self.kernel_func = self.kernel_module.get_function('runsim')
-        self.reinit_vars(I, I_offset, spiketimes, spiketimes_offset)
+        self.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
         # TODO: compute block, grid, etc. with best maximum blocksize
         blocksize = 256
         self.block = (blocksize, 1, 1)
         self.grid = (int(ceil(float(N)/blocksize)), 1)
         self.kernel_func_kwds = {'block':self.block, 'grid':self.grid}
             
-    def reinit_vars(self, I, I_offset, spiketimes, spiketimes_offset):
+    def reinit_vars(self, I, I_offset, spiketimes, spiketimes_offset, spikedelays):
+        mydtype = self.mydtype
         N = self.N
         eqs = self.eqs
         statevar_names = eqs._diffeq_names+[]
@@ -246,8 +304,9 @@ class GPUModelFitting(object):
         self.spiketime_indices = gpuarray.to_gpu(zeros(N, dtype=int))
         self.num_coincidences = gpuarray.to_gpu(zeros(N, dtype=int))
         self.spikecount = gpuarray.to_gpu(zeros(N, dtype=int))
+        self.spikedelay_arr = gpuarray.to_gpu(array(spikedelays/self.dt, dtype=int))
         self.kernel_func_args = [self.state_vars[name] for name in self.declarations_seq]
-        self.kernel_func_args += [self.I_offset, self.spikecount, self.num_coincidences, self.spiketimes, self.spiketime_indices]
+        self.kernel_func_args += [self.I_offset, self.spikecount, self.num_coincidences, self.spiketimes, self.spiketime_indices, self.spikedelay_arr]
         
     def launch(self, duration):
         self.kernel_func(int32(0), int32(duration/self.dt),
@@ -274,17 +333,23 @@ if __name__=='__main__':
         R : 1
         I : 1
         ''')
+        Vr = 0.0
+        Vt = 1.0
         I = loadtxt('current.txt')
         spiketimes = loadtxt('spikes.txt')
         spiketimes -= int(min(spiketimes))
-        spiketimes = hstack((-1, spiketimes, -1))
         I_offset = zeros(N, dtype=int)
         spiketimes_offset = zeros(N, dtype=int)
-        G = NeuronGroup(N, eqs, reset='V=0', threshold='V>1')
+        G = NeuronGroup(N, eqs, reset='V=Vr', threshold='V>Vt')
         G.R = rand(N)*2e9+1e9
         G.tau = rand(N)*49*ms+1*ms
+        spikedelays = rand(N)*5*ms
         duration = len(I)*G.clock.dt
-        mf = GPUModelFitting(G, eqs, I, I_offset, spiketimes, spiketimes_offset, delta)
+        spiketimes = hstack((-1, spiketimes, float(duration)+1))
+        mf = GPUModelFitting(G, eqs, I, I_offset, spiketimes, spiketimes_offset,
+                             spikedelays,
+                             delta,
+                             coincidence_count_algorithm='exclusive')
         print mf.kernel_src
         start_time = time.time()
         mf.launch(duration)
