@@ -8,6 +8,9 @@ from codegen_gpu import *
 import time
 from scipy import weave
 
+N = 10000
+record_and_plot = N==1
+
 El=10.6*mV
 EK=-12*mV
 ENa=120*mV
@@ -24,9 +27,10 @@ print '.............................'
 ccode = CCodeGenerator().generate(eqs, exp_euler_scheme)
 print ccode
 
-neuron=NeuronGroup(1,eqs,implicit=True,freeze=True)
+neuron=NeuronGroup(N,eqs,implicit=True,freeze=True)
 
-trace=StateMonitor(neuron,'vm',record=True)
+if record_and_plot:
+    trace=StateMonitor(neuron,'vm',record=True)
 
 neuron.I=10*uA
 
@@ -38,14 +42,16 @@ pycode_comp = compile(pycode, '', 'exec')
 
 start = time.time()
 run(100*ms)
+print 'N:', N
 print 'Brian:', time.time()-start
 
 start = time.time()
 hand_trace_python = []
 for T in xrange(int(100*ms/defaultclock.dt)):
     exec pycode_comp in ns
-    hand_trace_python.append(copy(_S_python[0]))
-print 'Hand Python:', time.time()-start
+    if record_and_plot:
+        hand_trace_python.append(copy(_S_python[0]))
+print 'Codegen Python:', time.time()-start
 
 start = time.time()
 hand_trace_c = []
@@ -57,10 +63,12 @@ for T in xrange(int(100*ms/defaultclock.dt)):
                  compiler='gcc',
                  #type_converters=weave.converters.blitz,
                  extra_compile_args=['-O3'])#O2 seems to be faster than O3 here
-    hand_trace_c.append(copy(_S[0]))
-print 'Hand C:', time.time()-start
+    if record_and_plot:
+        hand_trace_c.append(copy(_S[0]))
+print 'Codegen C:', time.time()-start
 
-plot(trace[0])
-plot(array(hand_trace_python))
-plot(array(hand_trace_c))
-show()
+if record_and_plot:
+    plot(trace[0])
+    plot(array(hand_trace_python))
+    plot(array(hand_trace_c))
+    show()
