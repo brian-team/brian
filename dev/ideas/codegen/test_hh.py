@@ -1,0 +1,66 @@
+from brian import *
+from brian.library.ionic_currents import *
+from codegen import *
+from integration_schemes import *
+from codegen_python import *
+from codegen_c import *
+from codegen_gpu import *
+import time
+from scipy import weave
+
+El=10.6*mV
+EK=-12*mV
+ENa=120*mV
+eqs=MembraneEquation(1*uF)+leak_current(.3*msiemens,El)
+eqs+=K_current_HH(36*msiemens,EK)+Na_current_HH(120*msiemens,ENa)
+eqs+=Current('I:amp')
+eqs.prepare()
+
+print eqs
+print '.............................'
+pycode = PythonCodeGenerator().generate(eqs, exp_euler_scheme)
+print pycode
+print '.............................'
+ccode = CCodeGenerator().generate(eqs, exp_euler_scheme)
+print ccode
+
+neuron=NeuronGroup(1,eqs,implicit=True,freeze=True)
+
+trace=StateMonitor(neuron,'vm',record=True)
+
+neuron.I=10*uA
+
+_S_python = array(neuron._S)
+_S = array(neuron._S)
+
+ns = {'_S':_S_python, 'exp':exp, 'dt':defaultclock._dt}
+pycode_comp = compile(pycode, '', 'exec')
+
+start = time.time()
+run(100*ms)
+print 'Brian:', time.time()-start
+
+start = time.time()
+hand_trace_python = []
+for T in xrange(int(100*ms/defaultclock.dt)):
+    exec pycode_comp in ns
+    hand_trace_python.append(copy(_S_python[0]))
+print 'Hand Python:', time.time()-start
+
+start = time.time()
+hand_trace_c = []
+for T in xrange(int(100*ms/defaultclock.dt)):
+    dt = defaultclock._dt
+    t = T*defaultclock._dt
+    num_neurons = len(neuron)
+    weave.inline(ccode, ['_S', 'num_neurons', 'dt', 't'],
+                 compiler='gcc',
+                 #type_converters=weave.converters.blitz,
+                 extra_compile_args=['-O3'])#O2 seems to be faster than O3 here
+    hand_trace_c.append(copy(_S[0]))
+print 'Hand C:', time.time()-start
+
+plot(trace[0])
+plot(array(hand_trace_python))
+plot(array(hand_trace_c))
+show()

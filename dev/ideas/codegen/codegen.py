@@ -155,12 +155,16 @@ class CodeGenerator(object):
         all_variables = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
         vartype = self.vartype()
         for block_specifier, block_code in scheme:
-            # for the moment, ignore block_specifier as it is always foreachvar all
+            # for the moment, processing of block_specifier is very crude
+            if block_specifier==('foreachvar', 'all'):
+                vars_to_use = eqs._diffeq_names
+            elif block_specifier==('foreachvar', 'nonzero'):
+                vars_to_use = eqs._diffeq_names_nonzero
             for line in block_code.split('\n'):
                 line = line.strip()
                 if line:
                     origline = line
-                    for var in eqs._diffeq_names:
+                    for var in vars_to_use:
                         vars = eqs._diffeq_names
                         line = origline
                         namespace = eqs._namespace[var]
