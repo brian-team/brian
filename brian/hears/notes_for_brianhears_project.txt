@@ -95,3 +95,30 @@ Other features
 * online/offline sound generation (including stereo)
 * analysis of HRTF databases (e.g. ITD/ILD estimation)
 * compression/rectification
+
+HRTF module
+===========
+It would be good to have a set of functions to load and analyse HRTF data.
+A good way to do that would be to have HRTFSet class, which would contain and manage
+a complete set of HRTFs (class HRTF).
+
+HRTF
+----
+This is basically two arrays with some general information (sampling frequency).
+* Binaural information: phase, ITD and ILD with several methods (frequency-dependent)
+** hrtf.ITD(freq1,freq2,method="MaxICC")
+** hrtf.phase(freq) or hrtf.phase() # all frequencies
+* Fourier domain / time domain conversion
+* hrtf.left, hrtf.right (the two impulse responses, as Sound objects)
+
+The HRTF class could derive from a stereo Sound class.
+
+HRTFSet
+-------
+* Loading
+* Coordinate conversion
+* hrtf[azimuth,elevation] returns the HRTF for the given direction
+* Slices: hrtf[a1:a2,e1:e2]
+* Maybe interpolation (I would say: interpolate in the Fourier domain, then convert to time domain)
+* Artificial HRTFs (sphere etc?)
+* Simultaneous calculations (all directions): ITD, etc

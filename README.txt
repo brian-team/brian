@@ -5,7 +5,7 @@ A clock-driven simulator for spiking neural networks
 Version: 1.1.3
 Authors:
 	Romain Brette
-		http://www.di.ens.fr/~brette/index.html
+		http://audition.ens.fr/brette/
 	Dan Goodman
 		http://thesamovar.net/neuroscience
 
