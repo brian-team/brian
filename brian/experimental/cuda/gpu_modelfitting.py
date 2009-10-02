@@ -335,8 +335,8 @@ if __name__=='__main__':
         ''')
         Vr = 0.0
         Vt = 1.0
-        I = loadtxt('current.txt')
-        spiketimes = loadtxt('spikes.txt')
+        I = loadtxt('../../../dev/ideas/cuda/modelfitting/current.txt')
+        spiketimes = loadtxt('../../../dev/ideas/cuda/modelfitting/spikes.txt')
         spiketimes -= int(min(spiketimes))
         I_offset = zeros(N, dtype=int)
         spiketimes_offset = zeros(N, dtype=int)
