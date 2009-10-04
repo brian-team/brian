@@ -11,5 +11,6 @@ interest to others wishing to better understand how Brian works internally.
    developer-guidelines
    developer-simulationprinciples
    developer-codestructure
+   developer-equations
    developer-packagestructure
    developer-repositorystructure

@@ -1,0 +1,122 @@
+An overview of how equations are handled by Brian
+=================================================
+An Equation is a set of single lines in a string:
+    (1) ``dx/dt = f : unit`` (differential equation)
+    (2) ``x = f : unit`` (equation)
+    (3) ``x = y`` (alias)
+    (4) ``x : unit`` (parameter)
+    
+The equations may be defined on multiple lines with the character \.
+Comments using # may also be included.
+
+Two special variables are defined: t (time) and xi (white noise).
+Ultimately, it should be possible (using Sympy) to define equations implicitly,
+e.g.: 'tau*dv/dt=-v : unit' (although it makes unit specification ambiguous).
+
+An equation can be seen as a set of functions or code and a namespace to evaluate
+them. A key part of object construction is the construction of the namespace
+(after parsing).
+
+Namespace construction
+----------------------
+The namespace is stored in eq._namespace.
+
+Variable substitution
+~~~~~~~~~~~~~~~~~~~~~
+These are simply string substitutions.
+
+* Equation('dv/dt=-v/tau:volt',tau='taum')
+The name of the variable (tau) is changed in the string to taum.
+
+* Equation('dv/dt=-v/tau:volt',tau=None)
+The name of the variable (tau) is changed in the string to a unique identifier.
+
+Explicit namespace
+~~~~~~~~~~~~~~~~~~
+* Equation('dv/dt=-v/tau:volt',tau=2*ms)
+The namespace is explicitly given: {'tau':2*ms}. In this case, Brian does not try
+to build a namespace "magically", so the namespace must be exhaustive.
+Units need not be passed.
+
+Implicit namespace
+~~~~~~~~~~~~~~~~~~
+* Equation('dv/dt=-v/tau:volt')
+The namespace is built from the globals and locals in the caller's frame.
+For each identifier in the string, the name is looked up in:
+1) locals of caller
+2) globals of caller
+3) globals of equations.py module (typically units).
+Identifiers can be any Python object (for example functions).
+
+Issues
+~~~~~~
+* Special variables (xi and t) are not taken into account
+  at this stage, i.e., they are integrated in the namespace if present.
+  This should probably be fixed and a warning should be raised.
+* If identifiers are not found, then no error is raised. This is to allow
+  equations to be built in several pieces, which is useful in particular for
+  library objects.
+* If an identifier is found whose name is the same as the name of a variable,
+  then no error is raised and it is included in the namespace. This is difficult
+  to avoid in the case when equations are built in several pieces (e.g. the conflict
+  appears only when the pieces are put together).
+  However, a warning should probably be issued when this occurs.
+
+Attributes after initialisation
+-------------------------------
+After initialisation, an Equation object contains:
+* a namespace (_namespace)
+* a dictionary of units for all variables (_units)
+* a dictionary of strings corresponding to each variable (right hand side of each
+  equation), including parameters and aliases (_string). Parameters are defined as differential
+  equations with RHS 0*unit/second. All comments are removed and multiline strings are
+  concatenated.
+* a list of variables of non-differential equations (_eq_names)
+* a list of variables of differential equations, including parameters (_diffeq_names)
+* a list of variables of differential equations, excluding parameters (_diffeq_names_nonzero)
+* a dictionary of aliases (_alias), mapping a variable name to its alias
+
+There is no explicit list of parameters, maybe it should be added.
+Nothing more is done at initialisation time (no units checking, etc).
+The reason is that the equation set might not be complete at this time, in the case when
+equations are built in several pieces. Various checks are done using the prepare() method.
+
+Finalisation (prepare())
+------------------------
+The Equation object is finalised by an explicit call to the prepare() method.
+
+Finding Vm
+~~~~~~~~~~
+The first step is to find the name of the membrane potential variable (getVm()).
+This is useful when the variable name for threshold or reset is not given (e.g. threshold=10*mV).
+The method looks for one these names: 'v','V','vm','Vm'. If one is present, it is the
+membrane potential variable. If none or more than one is present, no variable is found.
+If it is found, the corresponding variable is swapped with the first variable in the
+_diffeq_names list (note: not in the _diffeq_names_nonzero list). Otherwise, nothing happens.
+This way, the first variable in the list is the membrane potential.
+Possibly, a warning could be issued if it is not found. The problem it might issue
+warnings too often. A better way would be to issue warnings only when threshold and reset
+are used ambiguously.
+
+Cleaning the namespace
+~~~~~~~~~~~~~~~~~~~~~~
+Then variables and t are removed from the namespace if present (N.B.: xi does not appear to be
+removed), and warnings are issued using log_warn (method clean_namespace()).
+
+Compiling functions
+~~~~~~~~~~~~~~~~~~~
+
+Checking units
+~~~~~~~~~~~~~~
+
+Ordering static variables
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Inserting static variables into differential equations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Recompiling functions
+~~~~~~~~~~~~~~~~~~~~~
+
+Checking free variables
+~~~~~~~~~~~~~~~~~~~~~~~
