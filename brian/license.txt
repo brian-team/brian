@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------
 Copyright ENS, INRIA, CNRS
-Contributors: Romain Brette (brette@di.ens.fr) and Dan Goodman (goodman@di.ens.fr)
+Contributors: Romain Brette (romain.brette@ens.fr) and Dan Goodman (dan.goodman@ens.fr)
 
 Brian is a computer program whose purpose is to simulate models
 of biological neural networks.
