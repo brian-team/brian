@@ -3,6 +3,7 @@ from numpy import *
 import numpy
 import wave
 import array as pyarray
+import time
 try:
     import pygame
     have_pygame = True
@@ -127,7 +128,7 @@ class Sound(numpy.ndarray):
             other = other.resample(self.rate)
         self[:min(len(other),len(self))] = other[:min(len(other),len(self))]
     
-    def play(self, normalise=False):
+    def play(self, normalise=False, sleep=False):
         '''
         Plays the sound (normalised to avoid clipping if required).
         '''
@@ -135,6 +136,8 @@ class Sound(numpy.ndarray):
             play_sound(self.rate, self/amax(abs(self)))
         else:
             play_sound(self.rate, self)
+        if sleep:
+            time.sleep(self.duration)
         
     def spectrogram(self, frequency_range=None, log_spectrogram=True, **kwds):
         '''
@@ -369,7 +372,7 @@ def mix_sounds(rate, *sounds):
 def play_sound(rate, x):
     if have_pygame:
         pygame.mixer.init(int(rate), -16, 1)
-        y = array(2**15*clip(x,-1,1), dtype=int16)
+        y = array((2**15-1)*clip(x,-1,1), dtype=int16)
         s = pygame.sndarray.make_sound(y)
         s.play()
     else:
