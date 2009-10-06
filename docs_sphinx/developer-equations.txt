@@ -1,5 +1,5 @@
-An overview of how equations are handled by Brian
-=================================================
+Equations
+=========
 An Equation is a set of single lines in a string:
     (1) ``dx/dt = f : unit`` (differential equation)
     (2) ``x = f : unit`` (equation)
@@ -19,7 +19,7 @@ them. A key part of object construction is the construction of the namespace
 
 Namespace construction
 ----------------------
-The namespaces are stored in eq._namespace. Each equation (string) as a specific namespace.
+The namespaces are stored in eq._namespace. Each equation (string) has a specific namespace.
 
 Proposition for a simplification: there could be just one namespace per Equation object rather
 than per string. Possible conflicts would be dealt with when equations are added (with prefix
@@ -30,14 +30,17 @@ Variable substitution
 These are simply string substitutions.
 
 * Equation('dv/dt=-v/tau:volt',tau='taum')
+
 The name of the variable (tau) is changed in the string to taum.
 
 * Equation('dv/dt=-v/tau:volt',tau=None)
+
 The name of the variable (tau) is changed in the string to a unique identifier.
 
 Explicit namespace
 ~~~~~~~~~~~~~~~~~~
 * Equation('dv/dt=-v/tau:volt',tau=2*ms)
+
 The namespace is explicitly given: {'tau':2*ms}. In this case, Brian does not try
 to build a namespace "magically", so the namespace must be exhaustive.
 Units need not be passed.
@@ -45,10 +48,11 @@ Units need not be passed.
 Implicit namespace
 ~~~~~~~~~~~~~~~~~~
 * Equation('dv/dt=-v/tau:volt')
+
 The namespace is built from the globals and locals in the caller's frame.
 For each identifier in the string, the name is looked up in:
-1) locals of caller
-2) globals of caller
+1) locals of caller,
+2) globals of caller,
 3) globals of equations.py module (typically units).
 Identifiers can be any Python object (for example functions).
 
@@ -70,6 +74,7 @@ Issues
 Attributes after initialisation
 -------------------------------
 After initialisation, an Equation object contains:
+
 * a namespace (_namespace)
 * a dictionary of units for all variables (_units)
 * a dictionary of strings corresponding to each variable (right hand side of each
@@ -117,12 +122,16 @@ then only those referring to variables are kept. A Python lambda function of the
 compiled (using eval) and put in the _function dictionary.
 
 Compiled functions are used for:
+
 * checking units
 * obtaining the list of arguments (this could be done independently)
 * state updates
 
 This step might be avoided and replaced by eval calls. It might actually be a little simpler because
-arguments would be replaced by namespace.
+arguments would be replaced by namespace. It seems to be faster with the current implementation,
+but the string could be compiled with compile() (then evaluated in the relevant namespace).
+Besides, with the way it is currently evaluated in the Euler update: ``f(*[S[var] for var in f.func_code.co_varnames])``,
+it is not faster than direct evaluation in the namespace.
 
 Checking units
 ~~~~~~~~~~~~~~
@@ -158,6 +167,9 @@ The value of static variables are then replaced by their string value (RHS) in a
 static variables anymore.
 To avoid namespace conflicts, all identifiers in the namespace of a static variable is augmented by a
 prefix: name+'_' (e.g. 'x_y' for identifier y in equation 'x=2*y'). Then namespaces are merged.
+
+It might not be optimal to do it in this way, because some of calculations will be done several times in
+an update step. It might be better to keep the static variables separate.
 
 Recompiling functions
 ~~~~~~~~~~~~~~~~~~~~~
