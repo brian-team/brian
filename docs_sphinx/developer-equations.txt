@@ -19,7 +19,11 @@ them. A key part of object construction is the construction of the namespace
 
 Namespace construction
 ----------------------
-The namespace is stored in eq._namespace.
+The namespaces are stored in eq._namespace. Each equation (string) as a specific namespace.
+
+Proposition for a simplification: there could be just one namespace per Equation object rather
+than per string. Possible conflicts would be dealt with when equations are added (with prefix
+as when inserting static variables, see below).
 
 Variable substitution
 ~~~~~~~~~~~~~~~~~~~~~
@@ -97,7 +101,7 @@ _diffeq_names list (note: not in the _diffeq_names_nonzero list). Otherwise, not
 This way, the first variable in the list is the membrane potential.
 Possibly, a warning could be issued if it is not found. The problem it might issue
 warnings too often. A better way would be to issue warnings only when threshold and reset
-are used ambiguously.
+are used ambiguously (i.e., no Vm found and more than 1 variable).
 
 Cleaning the namespace
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -106,20 +110,72 @@ removed), and warnings are issued using log_warn (method clean_namespace()).
 
 Compiling functions
 ~~~~~~~~~~~~~~~~~~~
+This is done by the compile_functions() method.
+Python functions are created from the string definition of equations.
+For each equation/differential equation, the list of identifiers is obtained from the string definition,
+then only those referring to variables are kept. A Python lambda function of these remaining identifiers is then
+compiled (using eval) and put in the _function dictionary.
+
+Compiled functions are used for:
+* checking units
+* obtaining the list of arguments (this could be done independently)
+* state updates
+
+This step might be avoided and replaced by eval calls. It might actually be a little simpler because
+arguments would be replaced by namespace.
 
 Checking units
 ~~~~~~~~~~~~~~
+This is done by the check_units() method.
+First, the static equations are ordered (see next section).
+
+To check the units of a static equation, one calls the associated function (giving the RHS) where the
+arguments are units (e.g., 1*volt for v, etc.) and adds the units of the LHS. A dimension error is raised
+if it is not homogeneous. Currently, the message states "The differential equation is not homogeneous" but it
+should be adapted to non-differential equations. One problem with this way of checking units is that the RHS function
+may not be defined at the point it is checked.
+
+Differential equations are checked in the same way, with two specificities: the units of RHS should be the units
+of the variable divided by second (dx/dt), and noise (xi) has units of second**-.5 (this is put in the globals of
+the function, which might not be a very clean way to do it).
 
 Ordering static variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+It seems that this method (set_eq_order()) is already called by check_units() and therefore it is probably
+not necessary to call it here.
+This method computes the dependency graph of (static) equations on other static variables,
+which must have no cycle (otherwise an error is raised). From that graph, an update list is built and
+put in _eq_names. Then for each variable (static or differential), the list of dependent static variables is built
+and sorted in update order. The result is put in the _dependencies dictionary.
+
+This is a necessary step to calculate the RHS of any equation: it gives the ordered list of static variables
+to calculate first before calculating the RHS.
 
 Inserting static variables into differential equations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The value of static variables are then replaced by their string value (RHS) in all differential equations
+(substitute_eq()). The previous step (ordering) ensures that the result if correct and does not depend on
+static variables anymore.
+To avoid namespace conflicts, all identifiers in the namespace of a static variable is augmented by a
+prefix: name+'_' (e.g. 'x_y' for identifier y in equation 'x=2*y'). Then namespaces are merged.
 
 Recompiling functions
 ~~~~~~~~~~~~~~~~~~~~~
+Functions are then recompiled so that differential equations are now independent of static variables.
 
 Checking free variables
 ~~~~~~~~~~~~~~~~~~~~~~~
 Finally, the list of undefined identifiers is checked (free_variables()) and a warning is issued if
 any is found.
+
+Freezing
+--------
+Freezing is done by calling compile_functions(freeze=True). Each string expression is then frozen
+with optimiser.freeze(), which replaces identifiers by their float value. This step does not necessarily
+succeed, in which case a warning (not an error) is issued.
+
+Adding Equation objects
+-----------------------
+Adding equations consists simply in merging the lists/dictionaries of variables, namespaces, strings, units
+and functions. Conflicts raise an error.
+This step must precede preparation of the object.
