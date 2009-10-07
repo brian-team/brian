@@ -239,7 +239,7 @@ class GPUModelFitting(object):
         self.eqs = eqs
         self.G = G
         threshold = G._threshold
-        if isinstance(threshold, Threshold):
+        if threshold.__class__ is Threshold:
             state = threshold.state
             if isinstance(state, int):
                 state = eqs._diffeq_names[state]            
@@ -259,7 +259,7 @@ class GPUModelFitting(object):
             raise ValueError('Threshold must be constant, VariableThreshold or StringThreshold.')
         self.threshold = threshold
         reset = G._resetfun
-        if isinstance(reset, Reset):
+        if reset.__class__ is Reset:
             state = reset.state
             if isinstance(state, int):
                 state = eqs._diffeq_names[state]
@@ -301,7 +301,7 @@ class GPUModelFitting(object):
         self.state_vars['I'] = self.I
         self.I_offset = gpuarray.to_gpu(array(I_offset, dtype=int))
         self.spiketimes = gpuarray.to_gpu(array(spiketimes/self.dt, dtype=int))
-        self.spiketime_indices = gpuarray.to_gpu(zeros(N, dtype=int))
+        self.spiketime_indices = gpuarray.to_gpu(array(spiketimes_offset, dtype=int))
         self.num_coincidences = gpuarray.to_gpu(zeros(N, dtype=int))
         self.spikecount = gpuarray.to_gpu(zeros(N, dtype=int))
         self.spikedelay_arr = gpuarray.to_gpu(array(spikedelays/self.dt, dtype=int))

@@ -9,6 +9,13 @@ from brian.monitor import CoincidenceCounter
 from numpy import *
 from numpy.random import rand, randn
 from brian.neurongroup import VectorizedNeuronGroup
+try:
+    import pycuda
+    from brian.experimental.cuda.gpu_modelfitting import GPUModelFitting
+    use_gpu = True
+except ImportError:
+    use_gpu = False
+#use_gpu = False
 
 __all__ = ['modelfitting']
 
@@ -137,6 +144,9 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     
     initial_param_values = get_initial_param_values(params, N)
     
+    if use_gpu:
+        slices = 1
+        
     vgroup = VectorizedNeuronGroup(model = model, threshold = threshold, reset = reset, 
                  input_var = input_var, input = input,
                  slices = slices, overlap = overlap, init = init,
@@ -144,15 +154,50 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     model_target = kron(arange(NTarget), ones(particles))
     cd = CoincidenceCounter(vgroup, data, model_target = model_target, delta = delta)
     
-    def fun(X):
-        param_values = get_param_values(X, param_names)
-        net = Network(vgroup, cd)
-        vgroup.set_param_values(param_values)
-        reinit_default_clock()
-        cd.reinit()
-        net.run(vgroup.duration)
-        gamma = cd.gamma
-        return gamma
+    if use_gpu:
+        I = array(input)
+        I_offset = zeros(len(vgroup), dtype=int)
+        i, t = zip(*data)
+        i = array(i)
+        t = array(t)
+        alls = []
+        n = 0
+        pointers = []
+        for j in xrange(amax(i)+1):
+            s = sort(t[i==j])
+            s = hstack((-1*second, s, vgroup.duration+1*second))
+            alls.append(s)
+            pointers.append(n)
+            n += len(s)
+        spiketimes = hstack(alls)
+        pointers = array(pointers, dtype=int)
+        spiketimes_offset = pointers[array(model_target, dtype=int)] # [pointers[i] for i in model_target]
+        spikedelays = zeros(len(vgroup))
+        mf = GPUModelFitting(vgroup, model,
+                             I, I_offset, spiketimes, spiketimes_offset,
+                             spikedelays,
+                             delta)
+        def fun(X):
+            param_values = get_param_values(X, param_names)
+            vgroup.set_param_values(param_values)
+            mf.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
+            mf.launch(vgroup.duration)
+            cc = mf.coincidence_count
+            sc = mf.spike_count
+            cd._model_length = sc
+            cd._coincidences = cc
+            gamma = cd.gamma
+            return gamma
+    else:
+        def fun(X):
+            param_values = get_param_values(X, param_names)
+            net = Network(vgroup, cd)
+            vgroup.set_param_values(param_values)
+            reinit_default_clock()
+            cd.reinit()
+            net.run(vgroup.duration)
+            gamma = cd.gamma
+            return gamma
     
     X0 = get_matrix(initial_param_values, param_names)
     min_values, max_values = set_constraints(N = N, **params)

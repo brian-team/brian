@@ -2,13 +2,14 @@ from modelfitting import *
 
 if __name__ == '__main__':
     from brian import *
-    eqs = """
+    eqs = Equations("""
     dV/dt = (-V+I)/tau : 1
     tau : second
     I : 1
-    """
-    NTarget = 1
-    taus = .03+.03*rand(NTarget)
+    """)
+    NTarget = 10
+    #taus = .03+.03*rand(NTarget)
+    taus = .01+.09*rand(NTarget)
     duration = 800*ms
     input = 3.0 * ones(int(duration/defaultclock.dt))
 
@@ -24,11 +25,11 @@ if __name__ == '__main__':
     params = modelfitting(model = eqs, reset = 0, threshold = 1,
                                data = data,
                                input = input,
-                               particles = 100,
-                               iterations = 5,
-                               slices = 2,
+                               particles = 20000,
+                               iterations = 50,
+                               slices = 1,
                                overlap = 250*ms,
-                               tau = [30*ms, 30*ms, 60*ms, 60*ms],
+                               tau = [10*ms, 10*ms, 100*ms, 100*ms],
                                delta = 1*ms)
     
     for i in range(NTarget):
