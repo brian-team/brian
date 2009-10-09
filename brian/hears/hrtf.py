@@ -47,7 +47,7 @@ __all__ = [
     # Base classes
     'HRTF', 'HRTFSet', 'HRTFDatabase',
     # Coordinate systems
-    'CartesianCoordinates', 'SphericalCoordinates', 'AzimElevCoordinates',
+    'CartesianCoordinates', 'SphericalCoordinates', 'AzimElev', 'AzimElevDegrees',
     # IRCAM LISTEN database
     'IRCAM_HRTFSet', 'IRCAM_LISTEN',
     ]
@@ -155,7 +155,7 @@ class Coordinates(ndarray):
     names = None
     def convert_to(self, target):
         raise NotImplementedError
-    @classmethod
+    @staticmethod
     def convert_from(source):
         raise NotImplementedError
     @property
@@ -179,15 +179,15 @@ class AzimElev(Coordinates):
     names = ('azim', 'elev')
     def convert_to(self, target):
         out = target.make(self.shape)
-        if isinstance(target, self.system):
+        if target is self.system:
             return self
-        elif isinstance(target, CartesianCoordinates):
-            # TODO: check
-            out['x'] = cos(self['azim'])*cos(self['elev'])
-            out['y'] = sin(self['azim'])*cos(self['elev'])
+        elif target is CartesianCoordinates:
+            # Individual looking along x axis, ears at +- 1 on y axis, z vertical
+            out['x'] = sin(self['azim'])*cos(self['elev'])
+            out['y'] = cos(self['azim'])*cos(self['elev'])
             out['z'] = sin(self['elev'])
             return out
-        elif isinstance(target, AzimElevDegrees):
+        elif target is AzimElevDegrees:
             azim = self['azim']*180/pi
             azim[azim<0] += 360
             out['azim'] = azim
@@ -197,19 +197,43 @@ class AzimElev(Coordinates):
             # Try to convert by going via Cartesian coordinates
             inter = self.convert_to(CartesianCoordinates)
             return target.convert_from(inter)
+    @staticmethod
+    def convert_from(source):
+        if isinstance(source, AzimElev):
+            return source
+        elif isinstance(source, CartesianCoordinates):
+            out = AzimElev.make(source.shape)
+            x, y, z = source['x'], source['y'], source['z']
+            r = sqrt(x**2+y**2+z**2)
+            x /= r
+            y /= r
+            z /= r
+            elev = arcsin(z/r)
+            azim = arctan2(x, y)
+            out['azim'] = azim
+            out['elev'] = elev
+            return out
 
 class AzimElevDegrees(Coordinates):
     names = ('azim', 'elev')
     def convert_to(self, target):
-        if isinstance(target, self.system):
+        if target is self.system:
             return self
-        elif isinstance(target, AzimElev):
+        elif target is AzimElev:
+            out = target.make(self.shape)
             out['azim'] = self['azim']*pi/180
             out['elev'] = self['elev']*pi/180
             return out
         else:
             inter = self.convert_to(AzimElev)
             return inter.convert_to(target)
+    @staticmethod
+    def convert_from(source):
+        if isinstance(source, AzimElevDegrees):
+            return source
+        elif isinstance(source, CartesianCoordinates):
+            inter = AzimElev.convert_from(source)
+            return inter.convert_to(AzimElevDegrees)
 
 ############# IRCAM HRTF DATABASE ##############################################
 
@@ -252,14 +276,30 @@ class IRCAM_LISTEN(HRTFDatabase):
         return IRCAM_HRTFSet(fname, samplerate=self.samplerate)   
 
 if __name__=='__main__':
-    ircam = IRCAM_LISTEN(r'D:\HRTF\IRCAM')
+    ircam_locations = [
+        r'D:\HRTF\IRCAM',
+        r'C:\Documents and Settings\dan\My Documents\Programming\IRCAM'
+        ]
+    for path in ircam_locations:
+        if os.path.exists(path):
+            break
+    else:
+        raise IOError('Cannot find IRCAM HRTF location, add to ircam_locations')
+    ircam = IRCAM_LISTEN(path)
     h = ircam.load_subject(1002)
     subplot(211)
     plot(h.hrtf[100].left)
     plot(h.hrtf[100].right)
     subplot(212)
-    c = h.coordinates.convert_to(AzimElev)
+    #c = h.coordinates.convert_to(AzimElev)
     #plot(h.coordinates['azim'], h.coordinates['elev'], 'o')
+#    from enthought.mayavi import mlab
+#    c = h.coordinates.convert_to(CartesianCoordinates)
+#    mlab.points3d(c['x'], c['y'], c['z'])
+#    mlab.show()
+    c = h.coordinates
+    c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
+    print amax(c['elev']-c2['elev'])
     plot(c['azim'], c['elev'], 'o')
     show()
     
