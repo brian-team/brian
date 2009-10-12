@@ -41,6 +41,7 @@ from sounds import *
 from scipy.signal import lfilter
 from scipy.io import loadmat # NOTE: this requires scipy 0.7+
 from glob import glob
+from copy import copy
 import os
 
 __all__ = [
@@ -106,7 +107,15 @@ class HRTFSet(object):
     ``num_indices``
         The number of HRTF locations.
     ``num_samples``
-        The sample length of each HRTF.        
+        The sample length of each HRTF.
+    
+    Has methods:
+    
+    ``subset(cond)``
+        Generates the subset of the set of HRTFs whose coordinates satisfy
+        the condition cond. cond should be a function whose argument names are
+        names of the parameters of the coordinate system, e.g. for AzimElev you
+        might do cond=lambda azim:azim<pi/2.
     '''
     def __init__(self, *args, **kwds):
         self.load(*args, **kwds)
@@ -120,6 +129,17 @@ class HRTFSet(object):
             l = Sound(self.data[0, i, :], rate=self.samplerate)
             r = Sound(self.data[1, i, :], rate=self.samplerate)
             self.hrtf.append(HRTF(l, r))
+    def subset(self, cond):
+        ns = dict((name, self.coordinates[name]) for name in cond.func_code.co_varnames)
+        I = cond(**ns)
+        hrtf = [self.hrtf[i] for i in I]
+        coords = self.coordinates[I]
+        data = self.data[:, I, :]
+        obj = copy(self)
+        obj.hrtf = hrtf
+        obj.coordinates = coords
+        obj.data = data
+        return obj
     @property
     def num_indices(self):
         return self.data.shape[1]
@@ -171,6 +191,11 @@ class Coordinates(ndarray):
     
 class CartesianCoordinates(Coordinates):
     names = ('x', 'y', 'z')
+    def convert_to(self, target):
+        if target is self.system:
+            return self
+        else:
+            return target.convert_from(self)
 
 class SphericalCoordinates(Coordinates):
     names = ('r', 'theta', 'phi')
@@ -239,7 +264,7 @@ class AzimElevDegrees(Coordinates):
 
 class IRCAM_HRTFSet(HRTFSet):
     def load(self, filename, samplerate=None, coordsys=None):
-        # TODO: check samplerate, coordinates
+        # TODO: check samplerate
         m = loadmat(filename, struct_as_record=True)
         if 'l_hrir_S' in m.keys(): # RAW DATA
             affix = '_hrir_S'
@@ -250,10 +275,13 @@ class IRCAM_HRTFSet(HRTFSet):
         self.elev = l['elev_v'][0][0][:, 0]
         l = l['content_m'][0][0]
         r = r['content_m'][0][0]
-        coordsys = AzimElevDegrees
-        self.coordinates = coordsys.make(len(self.azim))
-        self.coordinates['azim'] = self.azim
-        self.coordinates['elev'] = self.elev
+        coords = AzimElevDegrees.make(len(self.azim))
+        coords['azim'] = self.azim
+        coords['elev'] = self.elev
+        if coordsys is not None:
+            self.coordinates = coords.convert_to(coordsys)
+        else:
+            self.coordinates = coords 
         # self.data has shape (num_ears=2, num_indices, hrir_length)
         self.data = vstack((reshape(l, (1,)+l.shape), reshape(r, (1,)+r.shape)))
         self.samplerate = 44.1*kHz
@@ -287,6 +315,7 @@ if __name__=='__main__':
         raise IOError('Cannot find IRCAM HRTF location, add to ircam_locations')
     ircam = IRCAM_LISTEN(path)
     h = ircam.load_subject(1002)
+    h = h.subset(lambda azim:azim<90)
     subplot(211)
     plot(h.hrtf[100].left)
     plot(h.hrtf[100].right)
