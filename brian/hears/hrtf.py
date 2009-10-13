@@ -80,6 +80,8 @@ class HRTFSet(object):
     
     Should have attributes:
     
+    ``name``
+        A unique string identifying this individual.
     ``data``
         An array of shape (2, num_indices, num_samples) where data[0,:,:] is
         the left ear and data[1,:,:] is the right ear, num_indices is the number
@@ -87,7 +89,7 @@ class HRTFSet(object):
     ``samplerate``
         The sample rate for the HRTFs (should have units of Hz).
     ``coordinates``
-        The record array of length num_indices of coordinates. 
+        The record array of length num_indices of coordinates.
     
     Derived classes should override the ``load(...)`` method which should create
     the attributes above. The ``load`` method should have the following optional
@@ -263,8 +265,11 @@ class AzimElevDegrees(Coordinates):
 ############# IRCAM HRTF DATABASE ##############################################
 
 class IRCAM_HRTFSet(HRTFSet):
-    def load(self, filename, samplerate=None, coordsys=None):
+    def load(self, filename, samplerate=None, coordsys=None, name=None):
         # TODO: check samplerate
+        if name is None:
+            _, name = os.path.split(filename)
+        self.name = name
         m = loadmat(filename, struct_as_record=True)
         if 'l_hrir_S' in m.keys(): # RAW DATA
             affix = '_hrir_S'
@@ -301,7 +306,7 @@ class IRCAM_LISTEN(HRTFDatabase):
             fname = os.path.join(fname, 'COMPENSATED/MAT/HRIR/IRC_'+subject+'_C_HRIR.mat')
         else:
             fname = os.path.join(fname, 'RAW/MAT/HRIR/IRC_'+subject+'_R_HRIR.mat')
-        return IRCAM_HRTFSet(fname, samplerate=self.samplerate)   
+        return IRCAM_HRTFSet(fname, samplerate=self.samplerate, name='IRCAM_'+subject)   
 
 if __name__=='__main__':
     ircam_locations = [
