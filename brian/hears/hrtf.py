@@ -165,6 +165,12 @@ class HRTFDatabase(object):
     ``coordsys``
         The intended coordinate system (conversion will be performed if it is
         different).
+    
+    Should have a method:
+    
+    ``subject_name(subject)``
+        Which returns a unique string id for the database and subject within
+        the database.
     '''
     def __init__(self, samplerate=None, coordsys=None):
         raise NotImplementedError
@@ -299,6 +305,8 @@ class IRCAM_LISTEN(HRTFDatabase):
         splitnames = [os.path.split(name) for name in names]
         self.subjects = [int(name[4:]) for base, name in splitnames]
         self.samplerate = samplerate
+    def subject_name(self, subject):
+        return 'IRCAM_'+str(subject)
     def load_subject(self, subject):
         subject = str(subject)
         fname = os.path.join(self.basedir, 'IRC_'+subject)
@@ -306,7 +314,7 @@ class IRCAM_LISTEN(HRTFDatabase):
             fname = os.path.join(fname, 'COMPENSATED/MAT/HRIR/IRC_'+subject+'_C_HRIR.mat')
         else:
             fname = os.path.join(fname, 'RAW/MAT/HRIR/IRC_'+subject+'_R_HRIR.mat')
-        return IRCAM_HRTFSet(fname, samplerate=self.samplerate, name='IRCAM_'+subject)   
+        return IRCAM_HRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
 
 if __name__=='__main__':
     ircam_locations = [
