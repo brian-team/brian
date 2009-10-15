@@ -202,6 +202,12 @@ class Parameters(attribdict):
         for k, v in kwds.iteritems():
             setattr(p,k,v)
         return p
+    
+    def __reduce__(self):
+        return (_load_Parameters_from_pickle, (self.items(),))
+
+def _load_Parameters_from_pickle(items):
+    return Parameters(**dict(items))
                 
 if __name__=="__main__":
     # turn off warning about attribute defined outside __init__
