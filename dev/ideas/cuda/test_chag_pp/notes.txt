@@ -1,0 +1,3 @@
+To get this thing to build, need to have an NVCC supported version of MS CL
+(i.e. MS8.0+) which can build to Python compatible format - i.e. will have to
+wait until not using 32 bit Python 2.5.
