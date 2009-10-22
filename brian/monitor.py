@@ -819,8 +819,9 @@ class RecentStateMonitor(StateMonitor):
         
     def __call__(self):
         V = self.P.state_(self.varname)
-        self._mu += V
-        self._sqr += V*V
+        if self.record is False:
+            self._mu += V
+            self._sqr += V*V
         if self.record is not False and self.curtimestep==self.timestep:
             i = self._recordstep
             if self.record is not True:
