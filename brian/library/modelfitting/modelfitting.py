@@ -137,6 +137,9 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     
     param_names = get_param_names(params)
     
+    if array(data).ndim == 1:
+        data = concatenate((zeros((len(data), 1)), array(data).reshape((-1,1))), axis=1)
+    
     NTarget = int(array(data)[:,0].max()+1)
     # N is the number of neurons
     # There are 'particles' neurons per target spike train

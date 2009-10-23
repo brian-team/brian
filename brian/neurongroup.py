@@ -648,7 +648,7 @@ class VectorizedNeuronGroup(NeuronGroup):
     - **param_values  Model parameters values
     """
     
-    def __init__(self, model = None, threshold = None, reset = NoReset(), 
+    def __init__(self, model = None, reset = NoReset(), threshold = None, 
                  input_var = 'I', input = None,
                  overlap = None, slices = 1, init = None, **param_values):
         
