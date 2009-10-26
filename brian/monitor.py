@@ -39,7 +39,7 @@ if properly coded.
 '''
 
 __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMonitor','StateMonitor','ISIHistogramMonitor',
-           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter']
+           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter', 'CoincidenceCounterBis']
 
 from units import *
 from connection import Connection, SparseConnectionVector
@@ -1244,4 +1244,104 @@ class CoincidenceCounter(SpikeMonitor):
     
     gamma = property(fget=get_gamma)
     
+class CoincidenceCounterBis(SpikeMonitor):
+    """
+    Another coincidence counter algorithm, based on the GPU version.
+    Simpler, but may be slower (check) ?
+    Additional features wrt CoincidenceCounter :
+    * Spike delays
+    * Exclusive or inclusive algorithms
+    
+    Parameters:
+    data : 
+    The experimentally recorded spike times are passed in the following way. Define a single 1D
+    array data which contains all the target spike times one after the
+    other. Now define an array spiketimes_offset of integers so that neuron i should 
+    be linked to target train : data[spiketimes_offset[i]], data[spiketimes_offset[i]+1], etc.
+    
+    It is essential that each spike  train with the spiketimes array should begin with a spike at a
+    large negative time (e.g. -1*second) and end with a spike that is a long time
+    after the duration of the run (e.g. duration+1*second).
+    """
+    def __init__(self, source, data = None, spiketimes_offset = None, spikedelays = None, 
+                 coincidence_count_algorithm = 'exclusive', delta = 4*ms):
+        source.set_max_delay(0)
+        self.source = source
+        self.delay = 0
+        self.N = len(source)
+        self.coincidence_count_algorithm = coincidence_count_algorithm
 
+        self.data = data
+        if spiketimes_offset is None:
+            spiketimes_offset = zeros(self.N, dtype='int')
+        self.spiketimes_offset = array(spiketimes_offset)
+
+        if spikedelays is None:
+            spikedelays = zeros(self.N)
+        self.spikedelays = array(spikedelays)
+        
+        self.delta = delta
+        dt = source.clock.dt
+            
+        # Number of spikes for each neuron
+        self.model_length = zeros(self.N, dtype = 'int')
+        self.target_length = zeros(self.N, dtype = 'int')
+        
+        self.coincidences = zeros(self.N, dtype = 'int')
+        self.spiketime_index = self.spiketimes_offset
+        self.last_spike_time = self.data[self.spiketime_index]
+        self.next_spike_time = self.data[self.spiketime_index+1]
+        
+        # First target spikes (needed for the computation of 
+        #   the target train firing rates)
+        self.first_target_spike = zeros(self.N)
+        
+        self.last_spike_allowed = ones(self.N, dtype = 'bool')
+        self.next_spike_allowed = ones(self.N, dtype = 'bool')
+        
+    def propagate(self, spiking_neurons):
+        T = self.source.clock.t + self.spikedelays
+        spiking_neurons = array(spiking_neurons)
+        self.model_length[spiking_neurons] += 1
+        
+        # Updates coincidences count
+        indices_coincidences = zeros(self.N, dtype = 'bool')
+        indices_coincidences[spiking_neurons] = True
+        indices_coincidences = indices_coincidences & \
+                               ((((self.last_spike_time + self.delta) >= T) & self.last_spike_allowed) | \
+                               (((self.next_spike_time - self.delta) <= T) & self.next_spike_allowed))
+        self.coincidences[indices_coincidences] += 1
+        
+        # Allows no more than 1 coincident spike per target spike
+        if self.coincidence_count_algorithm == 'exclusive':
+            self.last_spike_allowed[indices_coincidences] = -((self.last_spike_time[indices_coincidences] + self.delta) >= T[indices_coincidences])
+            self.next_spike_allowed[indices_coincidences] = -(((self.last_spike_time[indices_coincidences] + self.delta) <  T[indices_coincidences]) & \
+                                        ((self.next_spike_time[indices_coincidences] - self.delta) <= T[indices_coincidences]))
+
+        # Updates last and next spikes for each neuron
+        indices = (T >= self.next_spike_time)
+        self.target_length[indices] += 1
+        self.spiketime_index[indices] += 1
+        self.last_spike_time[indices] = self.next_spike_time[indices]
+        self.next_spike_time[indices] = self.data[self.spiketime_index[indices]+1]
+        
+        # Records first target spikes
+        indices_first = indices & (self.target_length == 1)
+        self.first_target_spike[indices_first] = self.last_spike_time[indices_first]
+        
+        if self.coincidence_count_algorithm == 'exclusive':
+            self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
+            self.next_spike_allowed[indices] = True
+
+    def get_gamma(self):
+        """
+        Returns the Gamma factor.
+        """
+        target_rates = (self.target_length-1)/(1.0*(self.last_spike_time - self.first_target_spike))
+        NCoincAvg = 2 * self.delta * self.target_length * target_rates
+        alpha = 2.0/(1.0 - 2 * self.delta * target_rates)
+        gamma = alpha * (self.coincidences - NCoincAvg)/(self.target_length + self.model_length)
+        return gamma
+    
+    gamma = property(fget=get_gamma)
+    
