@@ -287,6 +287,12 @@ class Sound(numpy.ndarray):
         data = pyarray.array(typecode, data)
         w.writeframes(data)
         w.close()
+
+    def __reduce__(self):
+        return (_load_Sound_from_pickle, (asarray(self), float(self.rate)))
+
+def _load_Sound_from_pickle(arr, rate):
+    return Sound(arr, rate=rate*Hz)
         
 
 def get_wav(filename, forced_rate=None):
