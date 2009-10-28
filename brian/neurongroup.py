@@ -383,6 +383,9 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         self.period = period
         self.set_max_delay(max_delay)
         
+        self._next_allowed_spiketime = -ones(N)
+        self._refractory_time = float(refractory)-0.5*clock._dt
+        
         self._owner=self # owner (for subgroups)
         self._origin=0 # start index from owner if subgroup
         self._next_subgroup=0 # start index of next subgroup
@@ -439,6 +442,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                     self._S[i,:]=self._S0[i]
             else:
                 self._S[:]=zeros((len(self._state_updater),len(self))) # State matrix
+            self._next_allowed_spiketime[:] = -1
             self.LS.reinit()
         
     def update(self):
@@ -450,6 +454,8 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             spikes=self._threshold(self) # get spikes
             if not isinstance(spikes, numpy.ndarray):
                 spikes = array(spikes, dtype=int)
+            spikes = spikes[self._next_allowed_spiketime[spikes]<=self.clock._t]
+            self._next_allowed_spiketime[spikes] = self.clock._t+self._refractory_time
             self.LS.push(spikes) # Store spikes
         
     def get_spikes(self,delay=0):
