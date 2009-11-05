@@ -1,3 +1,4 @@
+* Testing new svn
 * 'copy' keyword for turning delayed construction matrix to connection matrix
 
 * STDP should allow for parameters in equations, not just DEs (currently
