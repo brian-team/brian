@@ -696,7 +696,7 @@ class VectorizedNeuronGroup(NeuronGroup):
             global timedarray
             if timedarray is None:
                 import timedarray
-            sliced_subgroup.set_var_by_array(input_var, timedarray.TimedArray(input_sliced_values))
+            sliced_subgroup.set_var_by_array(input_var, timedarray.TimedArray(input_sliced_values, clock=self.clock))
         
     def set_param_values(self, param_values):
         for param,value in param_values.iteritems():

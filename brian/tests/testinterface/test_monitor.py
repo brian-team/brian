@@ -112,7 +112,7 @@ def test_spikemonitor():
 
     spikes = [(0,3*ms),(1,4*ms),(0,7*ms)]
     
-    G = SpikeGeneratorGroup(2,spikes)
+    G = SpikeGeneratorGroup(2,spikes,clock=defaultclock)
     M = SpikeMonitor(G)
     net = Network(G,M)
     net.run(10*ms)
@@ -130,7 +130,7 @@ def test_spikemonitor():
         if len(spikes):
             f_spikes.extend(spikes)
     
-    G = SpikeGeneratorGroup(2,spikes)
+    G = SpikeGeneratorGroup(2,spikes,clock=defaultclock)
     M = SpikeMonitor(G,function=f)
     net = Network(G,M)
     reinit_default_clock()
@@ -340,7 +340,7 @@ def test_vectorized_spikemonitor():
     show()
 
 if __name__=='__main__':
-#    test_spikemonitor()
+    test_spikemonitor()
+    test_coincidencecounter()
     test_coincidencecounterbis()
-#    test_vectorized_spikemonitor()
-    
+    test_vectorized_spikemonitor()
