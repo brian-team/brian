@@ -509,7 +509,7 @@ class Quantity(numpy.float64):
     def __init__(self,value):
         """Initialises as dimensionless
         """
-        super(Quantity,self).__init__(value)
+        super(Quantity,self).__init__()
         self.dim = Dimension()
     @staticmethod
     def with_dimensions(value,*args,**keywords):
