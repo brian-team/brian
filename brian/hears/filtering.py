@@ -14,6 +14,10 @@ try:
     from pycuda import gpuarray
     from brian.experimental.cuda.buffering import *
     import re
+    def set_gpu_device(n):
+        global _gpu_context
+        autoinit.context.pop()
+        _gpu_context = drv.Device(n).make_context()
     use_gpu = True
 except ImportError:
     use_gpu = False
@@ -199,6 +203,9 @@ class ParallelLinearFilterbank(Filterbank):
         return parallel_lfilter_step(self.filt_b, self.filt_a, input, self.filt_state)
 
 if use_gpu:
+    
+    nongpu_ParallelLinearFilterbank = ParallelLinearFilterbank
+    
     class ParallelLinearFilterbank(Filterbank):
         '''
         Generalised parallel linear filterbank
@@ -225,6 +232,10 @@ if use_gpu:
         '''
         def __init__(self, b, a, samplerate=None,
                      precision='double', forcesync=True, pagelocked_mem=True, unroll_filterorder=True):
+            if not use_gpu:
+                self.__class__ = nongpu_ParallelLinearFilterbank
+                self.__init__(b, a, samplerate=samplerate)
+                return
             self.precision = precision
             if self.precision=='double':
                 self.precision_dtype = float64
