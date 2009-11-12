@@ -460,6 +460,7 @@ class ExponentialSTDP(STDP):
                  update='additive',delay_pre=None,delay_post=None,clock=None):
         if wmax is None:
             raise AttributeError,"You must specify the maximum synaptic weight"
+        wmax=float(wmax) # removes units
 
         eqs=Equations('''
         dA_pre/dt=-A_pre/taup : 1
