@@ -184,7 +184,10 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
             param_values = get_param_values(X, param_names)
             vgroup.set_param_values(param_values)
             mf.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
-            mf.launch(vgroup.duration)
+            for i in xrange(int(ceil(duration))):
+                #mf.launch(vgroup.duration)
+                windowduration = min(duration-i*second, 1*second)
+                mf.launch(windowduration)
             cc = mf.coincidence_count
             sc = mf.spike_count
             cd._model_length = sc
