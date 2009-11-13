@@ -317,7 +317,7 @@ class GPUModelFitting(object):
             stepsize = int(stepsize/self.dt)
             duration = int(duration/self.dt)
             for Tstart in xrange(0, duration, stepsize):
-                Tend = min(Tstart+stepsize, duration-Tstart)
+                Tend = Tstart+min(Tstart, duration-Tstart)
                 self.kernel_func(int32(Tstart), int32(Tend),
                                  *self.kernel_func_args, **self.kernel_func_kwds)
                 autoinit.context.synchronize()
