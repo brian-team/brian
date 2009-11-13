@@ -308,10 +308,20 @@ class GPUModelFitting(object):
         self.kernel_func_args = [self.state_vars[name] for name in self.declarations_seq]
         self.kernel_func_args += [self.I_offset, self.spikecount, self.num_coincidences, self.spiketimes, self.spiketime_indices, self.spikedelay_arr]
         
-    def launch(self, duration):
-        self.kernel_func(int32(0), int32(duration/self.dt),
-                         *self.kernel_func_args, **self.kernel_func_kwds)
-        autoinit.context.synchronize()
+    def launch(self, duration, stepsize=None):
+        if stepsize is None:
+            self.kernel_func(int32(0), int32(duration/self.dt),
+                             *self.kernel_func_args, **self.kernel_func_kwds)
+            autoinit.context.synchronize()
+        else:
+            stepsize = int(stepsize/self.dt)
+            duration = int(duration/self.dt)
+            for Tstart in xrange(0, duration, stepsize):
+                Tend = min(Tstart+stepsize, duration-Tstart)
+                self.kernel_func(int32(Tstart), int32(Tend),
+                                 *self.kernel_func_args, **self.kernel_func_kwds)
+                autoinit.context.synchronize()
+                
     
     def get_coincidence_count(self):
         return self.num_coincidences.get()
