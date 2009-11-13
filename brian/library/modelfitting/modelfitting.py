@@ -102,7 +102,7 @@ def set_constraints(N = None, **params):
 def modelfitting(model = None, reset = NoReset(), threshold = None, data = None, 
                  input_var = 'I', input = None,
                  verbose = False, particles = 10, slices = 1, overlap = None,
-                 iterations = 10, delta = None, init = None,
+                 iterations = 10, delta = None, init = None, stepsize = 100*ms,
                  **params):
     """
     Fits a neuron model to data.
@@ -184,9 +184,9 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
             param_values = get_param_values(X, param_names)
             vgroup.set_param_values(param_values)
             mf.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
-            for i in xrange(int(ceil(duration))):
+            for i in xrange(int(ceil(vgroup.duration/stepsize))):
                 #mf.launch(vgroup.duration)
-                windowduration = min(duration-i*second, 1*second)
+                windowduration = min(vgroup.duration-i*stepsize, stepsize)
                 mf.launch(windowduration)
             cc = mf.coincidence_count
             sc = mf.spike_count
