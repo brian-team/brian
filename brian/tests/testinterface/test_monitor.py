@@ -273,9 +273,9 @@ def test_coincidencecounter():
     mf.reinit_vars(inp, I_offset, spiketimes, spiketimes_offset, spikedelays)
     mf.launch(duration)
     cc = mf.coincidence_count
-    sc = mf.spike_count
-    cd._model_length = sc
-    cd._coincidences = cc
+#    sc = mf.spike_count
+#    cd._model_length = sc
+#    cd._coincidences = cc
 #    gpu_gamma = cd.gamma
     gpu_gamma = cc
 
