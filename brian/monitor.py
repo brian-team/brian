@@ -1253,8 +1253,8 @@ class CoincidenceCounter(SpikeMonitor):
 #        print model_length[ind]
 #        gamma -= .5 * maximum(0, (-target_length + model_length)/target_length)
 
-#        return gamma
-        return self.coincidences
+        return gamma
+#        return self.coincidences
     
     gamma = property(fget=get_gamma)
     

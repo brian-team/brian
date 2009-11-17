@@ -133,6 +133,7 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     
     Outputs:
     - params        The parameter values found by the optimization process
+    - values        The gamma factor values of the best parameters found
     """
     
     param_names = get_param_names(params)
@@ -211,4 +212,4 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     
     best_params = get_param_values(X, param_names) 
     
-    return Parameters(**best_params)
+    return Parameters(**best_params), value
