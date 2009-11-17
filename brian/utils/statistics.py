@@ -148,7 +148,7 @@ def vector_strength(spikes,period):
 
 # Gamma factor
 @check_units(delta=second)
-def gamma_factor(source, target, delta):
+def gamma_factor(source, target, delta, normalize = True):
     '''
     Returns the gamma precision factor between source and target trains,
     with precision delta.
@@ -190,9 +190,11 @@ def gamma_factor(source, target, delta):
 #    print
 
     gamma = (coincidences - NCoincAvg)/(norm*(source_length + target_length))   
-        
-#    return gamma
-    return coincidences
+    
+    if normalize:
+        return gamma
+    else:
+        return coincidences
 
 if __name__=='__main__':
     

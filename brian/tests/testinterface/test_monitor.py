@@ -258,9 +258,9 @@ def test_coincidencecounter():
     net.run(duration)
     reinit_default_clock()
     
-    online_gamma1 = cc1.gamma
-    online_gamma2 = cc2.gamma
-    offline_gamma = array([gamma_factor(sm[i], train0, delta = delta) for i in range(n)])
+    online_coincidences1 = cc1.coincidences
+    online_coincidences2 = cc2.coincidences
+    offline_coincidences = array([gamma_factor(sm[i], train0, delta = delta, normalize = False) for i in range(n)])
 
     # Compute gamma factor with GPU
     inp = array(input)
@@ -279,23 +279,23 @@ def test_coincidencecounter():
 #    cd._model_length = sc
 #    cd._coincidences = cc
 #    gpu_gamma = cd.gamma
-    gpu_gamma = cc
+    gpu_coincidences = cc
 
     
     print "Offline"
-    print offline_gamma
+    print offline_coincidences
     print 
     print "Online"
-    print online_gamma1
-    print "max error : %.6f" % max(abs(online_gamma1-offline_gamma))
+    print online_coincidences1
+    print "max error : %.6f" % max(abs(online_coincidences1-offline_coincidences))
     print
     print "Online bis"
-    print online_gamma2
-    print "max error : %.6f" % max(abs(online_gamma2-offline_gamma))
+    print online_coincidences2
+    print "max error : %.6f" % max(abs(online_coincidences2-offline_coincidences))
     print
     print "GPU"
-    print gpu_gamma
-    print "max error : %.6f" % max(abs(gpu_gamma-offline_gamma))
+    print gpu_coincidences
+    print "max error : %.6f" % max(abs(gpu_coincidences-offline_coincidences))
 
 
 #    assert is_within_absolute_tolerance(online_gamma1,offline_gamma1)    

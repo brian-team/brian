@@ -1362,8 +1362,9 @@ class CoincidenceCounterBis(SpikeMonitor):
 #        print
     
         gamma = (self.coincidences - NCoincAvg)/(norm*(self.target_length + self.model_length))
-#        return gamma
-        return self.coincidences
+        
+        return gamma
+#        return self.coincidences
     
     gamma = property(fget=get_gamma)
     
