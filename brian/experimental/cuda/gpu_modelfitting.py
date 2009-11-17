@@ -279,6 +279,7 @@ class GPUModelFitting(object):
         self.kernel_src, self.declarations_seq = generate_modelfitting_kernel_src(eqs, threshold, reset, dt, N, delta,
                                                                                   coincidence_count_algorithm=coincidence_count_algorithm,
                                                                                   precision=precision)
+        print self.kernel_src
         self.kernel_module = SourceModule(self.kernel_src)
         self.kernel_func = self.kernel_module.get_function('runsim')
         self.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
@@ -333,7 +334,7 @@ class GPUModelFitting(object):
 if __name__=='__main__':
     import time
     from matplotlib.cm import jet
-    if 1:
+    if 0:
         N = 10000
         delta = 4*ms
         doplot = True
@@ -429,3 +430,109 @@ if __name__=='__main__':
         print src
         print
         print declarations_seq
+    if 1:
+        # test traces
+        
+        class PreciseClock(Clock):              
+            @check_units(dt=second,t=second)
+            def __init__(self,dt=0.1*msecond,t=0*msecond,makedefaultclock=False):
+                self.__t = int(t/dt)
+                self.__dt = 1
+                self._dt = float(dt)
+                self.__end = self.__t
+                if not exists_global_preference('defaultclock') or makedefaultclock:
+                    set_global_preferences(defaultclock=self)
+            @check_units(t=second)
+            def reinit(self,t=0*msecond):
+                self.__t = int(float(t)/self._dt)
+            def tick(self):
+                self.__t += self.__dt
+            @check_units(t=second)
+            def set_t(self,t):
+                self.__t = int(float(t)/self._dt)
+                self.__end = int(float(t)/self._dt)
+            @check_units(dt=second)
+            def set_dt(self,dt):
+                self._dt = float(dt)
+            @check_units(end=second)
+            def set_end(self,end):
+                self.__end = int(float(end)/self._dt)
+            @check_units(start=second)
+            def set_start(self,start):
+                self.__start = int(float(start)/self._dt)
+            # Clock object internally stores floats, but these properties
+            # return quantities
+            _t = property(fget=lambda self:self.__t*self._dt+1e-15)
+            _end = property(fget=lambda self:self.__end*self._dt+1e-15)
+            _start = property(fget=lambda self:self.__start*self._dt)
+            if isinstance(second,Quantity):
+                t=property(fget=lambda self:Quantity.with_dimensions(self._t,second.dim),fset=set_t)
+                dt=property(fget=lambda self:Quantity.with_dimensions(self._dt,second.dim),fset=set_dt)
+                end=property(fget=lambda self:Quantity.with_dimensions(self._end,second.dim),fset=set_end)
+                start=property(fget=lambda self:Quantity.with_dimensions(self._start,second.dim),fset=set_start)
+            else:
+                t=property(fget=lambda self:self._t,fset=set_t)
+                dt=property(fget=lambda self:self._dt,fset=set_dt)
+                end=property(fget=lambda self:self._end,fset=set_end)
+                start=property(fget=lambda self:self._start,fset=set_start)
+            @check_units(duration=second)
+            def set_duration(self,duration):
+                self.__start = self.__t
+                self.__end = self.__t + int(float(duration)/self._dt)            
+            def get_duration(self):
+                return self.end-self.t
+            def still_running(self):
+                return self.__t < self.__end
+            
+        clk = PreciseClock(makedefaultclock=True)
+        
+        N = 1
+        duration = 100*ms
+        eqs = Equations('''
+        dV/dt = (-V+I)/(10*ms) : 1
+        I : 1
+        ''')
+        threshold = 'V>1'
+        reset = 'V=0'
+        G = NeuronGroup(N, eqs, threshold=threshold, reset=reset, method='Euler',
+                        clock=clk)
+        from brian.experimental.ccodegen import *
+        su = AutoCompiledNonlinearStateUpdater(eqs, G.clock, freeze=True)
+        G._state_updater = su
+        #I = 1.1*ones(int(duration/defaultclock.dt))
+        I = 3.0*rand(int(duration/defaultclock.dt))
+        #I = hstack((zeros(100), 10*ones(int(duration/defaultclock.dt))))
+        #I = hstack((zeros(100), 10*ones(100))*(int(duration/defaultclock.dt)/200))
+        #I = hstack((zeros(100), 10*exp(-linspace(0,2,100)))*(int(duration/defaultclock.dt)/200))
+        #G.I = TimedArray(hstack((0, I)))
+        #G.I = TimedArray(I[1:], clock=clk)
+        G.I = TimedArray(I, clock=clk)
+        M = StateMonitor(G, 'V', record=True, when='end', clock=clk)
+        MS = SpikeMonitor(G)
+        run(duration)
+        delta = 4*ms
+        #spiketimes = array([-1*second, duration+1*second])
+        #spiketimes_offset = zeros(N, dtype=int)
+        spiketimes = [-1*second]+MS[0]+[duration+1*second]
+        spiketimes_offset = zeros(N, dtype=int)
+        #I = array([0]+I)
+        I_offset = zeros(N, dtype=int)
+        spikedelays = zeros(N)
+        reinit_default_clock()
+        G.V = 0
+        mf = GPUModelFitting(G, eqs, I, I_offset, spiketimes, spiketimes_offset,
+                             spikedelays,
+                             delta,
+                             coincidence_count_algorithm='exclusive')
+        allV = []
+        for i in xrange(int(duration/defaultclock.dt)):
+            mf.kernel_func(int32(i), int32(i+1),
+                             *mf.kernel_func_args, **mf.kernel_func_kwds)
+            autoinit.context.synchronize()
+            allV.append(mf.state_vars['V'].get())
+        
+        print mf.coincidence_count    
+        
+        plot(M[0])
+        plot(allV)
+        show()

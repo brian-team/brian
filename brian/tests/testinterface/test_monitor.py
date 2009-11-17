@@ -222,7 +222,8 @@ def test_coincidencecounter():
 
     def get_data(n):
         # Generates data from an IF neuron
-        group = NeuronGroup(N = 1, model = eqs, reset = reset, threshold = threshold)
+        group = NeuronGroup(N = 1, model = eqs, reset = reset, threshold = threshold,
+                            method='Euler')
         group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
         group.R = 1.0
         group.tau = 20*ms
@@ -244,7 +245,8 @@ def test_coincidencecounter():
     data = get_data(n = n)
     train0 = [t for i,t in data]
     
-    group = NeuronGroup(n, eqs, reset = reset, threshold = threshold)
+    group = NeuronGroup(n, eqs, reset = reset, threshold = threshold,
+                        method='Euler')
     group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
     group.R = 1.0*ones(n)
     group.tau = 30*ms*(1+.1*(2*rand(n)-1))

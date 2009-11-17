@@ -100,7 +100,7 @@ class TimedArray(numpy.ndarray):
             clock = guess_clock(clock)
         self.clock = clock
         if clock is not None:
-            self._t_init = clock._t
+            self._t_init = int(clock._t/clock._dt)*clock._dt
             self._dt = clock._dt
             times = clock._t+numpy.arange(len(arr))*clock._dt
         else:
@@ -159,6 +159,7 @@ class TimedArray(numpy.ndarray):
             pylab.plot(self.times, self, *args, **kwds)
             
     def __call__(self, t):
+        global tlast
         if self.clock is None:
             raise ValueError('Can only call timed arrays if they are based on a clock.')
         else:
@@ -179,10 +180,19 @@ class TimedArray(numpy.ndarray):
                     return numpy.asarray(self)[t]
                 return numpy.asarray(self)[t, numpy.arange(len(t))]
             t = float(t)
+            ot = t
             t = int((t-self._t_init)/self._dt)
+            if t-tlast!=1:
+                print 'int t:', t, tlast
+                print 't:', repr(ot)
+                print 't_init:', repr(self._t_init)
+                print 't/dt:', repr((ot-self._t_init)/self._dt)
+            tlast = t
             if t<0: t=0
             if t>=len(self.times): t=len(self.times)-1
             return numpy.asarray(self)[t]
+
+tlast = 0
 
 class TimedArraySetter(NetworkOperation):
     '''
