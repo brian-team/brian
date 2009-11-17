@@ -204,143 +204,112 @@ def test_coincidencecounter():
     Simulates an IF model with constant input current and checks
     the total number of coincidences with prediction.
     """
+    
     eqs = """
     dV/dt = (-V+R*I)/tau : 1
-    tau : second
     I : 1
     R : 1
+    tau : second
     """
+    reset = 0
+    threshold = 1
     
-    taus = [20*ms, 30*ms, 40*ms]
     duration = 500*ms
     input = 1.1 + .5 * randn(int(duration/defaultclock._dt))
     delta = 1*ms
+    n = 5
+    c = .9
 
-    # Generates data from an IF neuron
-    group = NeuronGroup(N = 3, model = eqs, reset = 0, threshold = 1)
-    group.tau = taus
-    group.R = 1.0
-    group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
-    M = SpikeMonitor(group)
-    net = Network(group, M)
+    def get_data(n, c=0.8):
+        # Generates data from an IF neuron
+        group = NeuronGroup(N = 1, model = eqs, reset = reset, threshold = threshold)
+        group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
+        group.R = 1.0
+        group.tau = 20*ms
+        M = SpikeMonitor(group)
+        net = Network(group, M)
+        net.run(duration)
+        data = M.spikes
+        train0 = M.spiketimes[0]
+        reinit_default_clock()
+        
+        trains = []
+        for i in range(n):
+            trains += zip(i*ones(len(train0), dtype='int'), (array(train0) + (delta*c) * rand(len(train0))))
+        trains.sort(lambda x,y: (2*int(x[1]>y[1])-1))
+        trains = [(i,t*second) for i,t in trains]
+        
+        return data, trains
+    
+    data, trains = get_data(n = n, c = c)
+    train0 = [t for i,t in data]
+    group = SpikeGeneratorGroup(N = n, spiketimes = trains)
+    cc1 = CoincidenceCounter(source = group, data = data, delta = delta)
+    cc2 = CoincidenceCounterBis(source = group, data = ([-1*second]+train0+[data[-1][1]+1*second]), delta = delta)
+    net = Network(group, cc1, cc2)
     net.run(duration)
-    
-    data = M.spikes
-    
-    train0 = M.spiketimes[0]
-    train1 = M.spiketimes[1]
-    train2 = M.spiketimes[2]
-    
     reinit_default_clock()
     
-    group = NeuronGroup(N = 2, model = eqs, reset = 0, threshold = 1)
-    group.tau = taus[0:2]
-    group.R = 1.0
-    group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
-    cd = CoincidenceCounter(source = group, data = train2, delta = delta)
-    
-    net = Network(group, cd)
-    
-    net.run(duration)
-    
-    online_gamma = cd.gamma
-    online_gamma1 = cd.gamma[0]
-    online_gamma2 = cd.gamma[1]
-    offline_gamma1 = gamma_factor(train0, train2, delta = delta)
-    offline_gamma2 = gamma_factor(train1, train2, delta = delta)
+    online_gamma1 = cc1.gamma
+    online_gamma2 = cc2.gamma
+    offline_gamma = [gamma_factor(train0, [t for j,t in trains if j==i], delta = delta) for i in range(n)]
 
-    print cd.coincidences
-    print [online_gamma1, online_gamma2]
-    print [offline_gamma1, offline_gamma2]
+    # Compute gamma factor with GPU
+    I = array(input)
+    I_offset = zeros(n, dtype=int)
+    spiketimes = ([-1*second]+train0+[data[-1][1]+1*second])
+    spiketimes_offset = zeros(n, dtype=int)
+    spikedelays = zeros(n)
+    stepsize = 500*ms
+    cd = CoincidenceCounter(source = group, data = data, delta = delta)
+    mf = GPUModelFitting(group, eqs,
+                         I, I_offset, spiketimes, spiketimes_offset,
+                         spikedelays,
+                         delta)
+    mf.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
+    mf.launch(duration, stepsize)
+    cc = mf.coincidence_count
+    sc = mf.spike_count
+    cd._model_length = sc
+    cd._coincidences = cc
+    gpu_gamma = cd.gamma
 
-    assert is_within_absolute_tolerance(online_gamma1,offline_gamma1)    
-    assert is_within_absolute_tolerance(online_gamma2,offline_gamma2)   
+    
+    print "Online"
+    print online_gamma1
+    print
+    print "Online bis"
+    print online_gamma2
+    print
+    print "GPU"
+    print gpu_gamma
+    print
+    print "Offline"
+    print offline_gamma
 
-def test_coincidencecounterbis():
-    """
-    Simulates an IF model with constant input current and checks
-    the total number of coincidences with prediction.
-    """
-    eqs = """
-    dV/dt = (-V+R*I)/tau : 1
-    tau : second
-    R : 1
-    I : 1
-    """
-    
-    taus = [29.7*ms, 30.5*ms, 30*ms]
-    duration = 1000*ms
-    input = 1.1 + .3 * randn(int(duration/defaultclock._dt))
-    delta = 2*ms
 
-    # Generates data from an IF neuron
-    group = NeuronGroup(N = 3, model = eqs, reset = 0, threshold = 1)
-    group.tau = taus
-    group.R = 1.0
-    group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
-    M = SpikeMonitor(group)
+#    assert is_within_absolute_tolerance(online_gamma1,offline_gamma1)    
+#    assert is_within_absolute_tolerance(online_gamma2,offline_gamma2)   
 
-    net = Network(group, M)
-    net.run(duration)
-    data = M.spikes
-    
-    train0 = M.spiketimes[0]
-    train1 = M.spiketimes[1]
-    train2 = M.spiketimes[2]
-    
-    reinit_default_clock()
-    
-    group = NeuronGroup(N = 2, model = eqs, reset = 0, threshold = 1)
-    group.tau = taus[0:2]
-    group.R = 1.0
-    group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
-    
-    spiketimes = hstack((-1*second, train2, duration+1*second))
-    spiketimes_offset = zeros(len(group), dtype = 'int')
-    spikedelays = array([1*ms, 0*ms]) 
-    
-    cd = CoincidenceCounterBis(source = group, data = spiketimes, 
-                               spiketimes_offset = spiketimes_offset, 
-                               spikedelays = spikedelays, delta = delta)
-    
-    net = Network(group, cd)
-    net.run(duration)
-    
-    online_gamma = cd.gamma
-    online_gamma1 = cd.gamma[0]
-    online_gamma2 = cd.gamma[1]
-    offline_gamma1 = gamma_factor(train0+spikedelays[0], train2, delta = delta)
-    offline_gamma2 = gamma_factor(train1+spikedelays[1], train2, delta = delta)
 
-#    print train1
-#    print train2
-#    print
-
-#    print [online_gamma1, online_gamma2]
-#    print [offline_gamma1, offline_gamma2]
-
-    assert is_within_absolute_tolerance(online_gamma1,offline_gamma1)    
-    assert is_within_absolute_tolerance(online_gamma2,offline_gamma2)   
-
-def test_vectorized_spikemonitor():
-    eqs = """
-    dV/dt = (-V+I)/tau : 1
-    tau : second
-    I : 1
-    """ 
-    N = 30
-    taus = 10*ms + 90*ms * rand(N)
-    duration = 1000*ms
-    input = 2.0 + 3.0 * rand(int(duration/defaultclock._dt))
-    vgroup = VectorizedNeuronGroup(model=eqs, reset=0, threshold=1,
-                                   input=input, slices=2, overlap=200*ms, tau=taus)
-    M = SpikeMonitor(vgroup)
-    run(vgroup.duration)
-    raster_plot(M)
-    show()
+#def test_vectorized_spikemonitor():
+#    eqs = """
+#    dV/dt = (-V+I)/tau : 1
+#    tau : second
+#    I : 1
+#    """ 
+#    N = 30
+#    taus = 10*ms + 90*ms * rand(N)
+#    duration = 1000*ms
+#    input = 2.0 + 3.0 * rand(int(duration/defaultclock._dt))
+#    vgroup = VectorizedNeuronGroup(model=eqs, reset=0, threshold=1,
+#                                   input=input, slices=2, overlap=200*ms, tau=taus)
+#    M = SpikeMonitor(vgroup)
+#    run(vgroup.duration)
+#    raster_plot(M)
+#    show()
 
 if __name__=='__main__':
-    test_spikemonitor()
+#    test_spikemonitor()
     test_coincidencecounter()
-    test_coincidencecounterbis()
-    test_vectorized_spikemonitor()
+    
