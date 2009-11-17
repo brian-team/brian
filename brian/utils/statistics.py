@@ -180,11 +180,19 @@ def gamma_factor(source, target, delta):
         coincidences = sum(indices)
     
     # Normalization of the coincidences count
-    coincidences_average = 2 * delta * target_length * target_rate
-    norm = 1 - 2 * target_rate * delta
-    gamma = (coincidences - coincidences_average)/(norm*.5*(source_length + target_length))   
+    NCoincAvg = 2 * delta * target_length * target_rate
+    norm = .5*(1 - 2 * target_rate * delta)
+    
+#    print "offline"
+#    print delta, target_length, target_rate
+#    print NCoincAvg
+#    print norm
+#    print
+
+    gamma = (coincidences - NCoincAvg)/(norm*(source_length + target_length))   
         
-    return gamma
+#    return gamma
+    return coincidences
 
 if __name__=='__main__':
     

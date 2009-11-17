@@ -1,4 +1,5 @@
 from brian import *
+from brian.experimental.cuda.gpu_modelfitting import *
 from nose.tools import *
 from brian.utils.approximatecomparisons import is_approx_equal, is_within_absolute_tolerance
 
@@ -216,11 +217,10 @@ def test_coincidencecounter():
     
     duration = 500*ms
     input = 1.1 + .5 * randn(int(duration/defaultclock._dt))
-    delta = 1*ms
-    n = 5
-    c = .9
+    delta = 4*ms
+    n = 10
 
-    def get_data(n, c=0.8):
+    def get_data(n):
         # Generates data from an IF neuron
         group = NeuronGroup(N = 1, model = eqs, reset = reset, threshold = threshold)
         group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
@@ -230,62 +230,70 @@ def test_coincidencecounter():
         net = Network(group, M)
         net.run(duration)
         data = M.spikes
-        train0 = M.spiketimes[0]
+#        train0 = M.spiketimes[0]
         reinit_default_clock()
         
-        trains = []
-        for i in range(n):
-            trains += zip(i*ones(len(train0), dtype='int'), (array(train0) + (delta*c) * rand(len(train0))))
-        trains.sort(lambda x,y: (2*int(x[1]>y[1])-1))
-        trains = [(i,t*second) for i,t in trains]
+#        trains = []
+#        for i in range(n):
+#            trains += zip(i*ones(len(train0), dtype='int'), (array(train0) + (delta*c) * rand(len(train0))))
+#        trains.sort(lambda x,y: (2*int(x[1]>y[1])-1))
+#        trains = [(i,t*second) for i,t in trains]
         
-        return data, trains
+        return data#, trains
     
-    data, trains = get_data(n = n, c = c)
+    data = get_data(n = n)
     train0 = [t for i,t in data]
-    group = SpikeGeneratorGroup(N = n, spiketimes = trains)
+    
+    group = NeuronGroup(n, eqs, reset = reset, threshold = threshold)
+    group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
+    group.R = 1.0*ones(n)
+    group.tau = 30*ms*(1+.1*(2*rand(n)-1))
+    
     cc1 = CoincidenceCounter(source = group, data = data, delta = delta)
-    cc2 = CoincidenceCounterBis(source = group, data = ([-1*second]+train0+[data[-1][1]+1*second]), delta = delta)
-    net = Network(group, cc1, cc2)
+    cc2 = CoincidenceCounterBis(source = group, data = ([-1*second]+train0+[train0[-1]+1*second]), delta = delta)
+    sm = SpikeMonitor(group)
+    net = Network(group, cc1, cc2, sm)
     net.run(duration)
     reinit_default_clock()
     
     online_gamma1 = cc1.gamma
     online_gamma2 = cc2.gamma
-    offline_gamma = [gamma_factor(train0, [t for j,t in trains if j==i], delta = delta) for i in range(n)]
+    offline_gamma = array([gamma_factor(sm[i], train0, delta = delta) for i in range(n)])
 
     # Compute gamma factor with GPU
-    I = array(input)
+    inp = array(input)
     I_offset = zeros(n, dtype=int)
-    spiketimes = ([-1*second]+train0+[data[-1][1]+1*second])
+    spiketimes = array([-1*second]+train0+[data[-1][1]+1*second])
     spiketimes_offset = zeros(n, dtype=int)
     spikedelays = zeros(n)
-    stepsize = 500*ms
     cd = CoincidenceCounter(source = group, data = data, delta = delta)
-    mf = GPUModelFitting(group, eqs,
-                         I, I_offset, spiketimes, spiketimes_offset,
-                         spikedelays,
-                         delta)
-    mf.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
-    mf.launch(duration, stepsize)
+    mf = GPUModelFitting(group, Equations(eqs),
+                         inp, I_offset, spiketimes, spiketimes_offset,
+                         spikedelays, delta)
+    mf.reinit_vars(inp, I_offset, spiketimes, spiketimes_offset, spikedelays)
+    mf.launch(duration)
     cc = mf.coincidence_count
     sc = mf.spike_count
     cd._model_length = sc
     cd._coincidences = cc
-    gpu_gamma = cd.gamma
+#    gpu_gamma = cd.gamma
+    gpu_gamma = cc
 
     
+    print "Offline"
+    print offline_gamma
+    print 
     print "Online"
     print online_gamma1
+    print "max error : %.6f" % max(abs(online_gamma1-offline_gamma))
     print
     print "Online bis"
     print online_gamma2
+    print "max error : %.6f" % max(abs(online_gamma2-offline_gamma))
     print
     print "GPU"
     print gpu_gamma
-    print
-    print "Offline"
-    print offline_gamma
+    print "max error : %.6f" % max(abs(gpu_gamma-offline_gamma))
 
 
 #    assert is_within_absolute_tolerance(online_gamma1,offline_gamma1)    

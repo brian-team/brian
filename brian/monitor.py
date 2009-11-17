@@ -43,7 +43,7 @@ __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMo
 
 from units import *
 from connection import Connection, SparseConnectionVector
-from numpy import array, zeros, histogram, copy, ones, exp, arange, convolve, argsort, mod, floor, asarray, Inf, amin, amax, sort, nonzero
+from numpy import array, zeros, histogram, copy, ones, exp, arange, convolve, argsort, mod, floor, asarray, maximum, Inf, amin, amax, sort, nonzero
 from itertools import repeat, izip
 from clock import guess_clock, EventClock
 from network import NetworkOperation, network_operation
@@ -1238,9 +1238,23 @@ class CoincidenceCounter(SpikeMonitor):
         target_rates = target_rates[self.original_model_target]
         
         NCoincAvg = 2 * self.delta * target_length * target_rates
-        alpha = 2.0/(1.0 - 2 * self.delta * target_rates)
-        gamma = alpha * (self.coincidences - NCoincAvg)/(target_length + model_length)
-        return gamma
+        norm = .5*(1 - 2 * self.delta * target_rates)
+        
+#        print "online 1"
+#        print NCoincAvg
+#        print norm
+#        print
+        
+        gamma = (self.coincidences - NCoincAvg)/(norm*(target_length + model_length))
+        
+#        ind = (gamma>1)
+#        print self.coincidences[ind]
+#        print target_length[ind]
+#        print model_length[ind]
+#        gamma -= .5 * maximum(0, (-target_length + model_length)/target_length)
+
+#        return gamma
+        return self.coincidences
     
     gamma = property(fget=get_gamma)
     
@@ -1339,9 +1353,17 @@ class CoincidenceCounterBis(SpikeMonitor):
         """
         target_rates = (self.target_length-1)/(1.0*(self.last_spike_time - self.first_target_spike))
         NCoincAvg = 2 * self.delta * self.target_length * target_rates
-        alpha = 2.0/(1.0 - 2 * self.delta * target_rates)
-        gamma = alpha * (self.coincidences - NCoincAvg)/(self.target_length + self.model_length)
-        return gamma
+        norm = .5*(1 - 2 * self.delta * target_rates)
+        
+#        print "online 2"
+#        print self.delta, self.target_length, target_rates
+#        print NCoincAvg
+#        print norm
+#        print
+    
+        gamma = (self.coincidences - NCoincAvg)/(norm*(self.target_length + self.model_length))
+#        return gamma
+        return self.coincidences
     
     gamma = property(fget=get_gamma)
     

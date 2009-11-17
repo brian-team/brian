@@ -15,7 +15,7 @@ try:
     use_gpu = True
 except ImportError:
     use_gpu = False
-#use_gpu = False
+use_gpu = False
 
 __all__ = ['modelfitting']
 
