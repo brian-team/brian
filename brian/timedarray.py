@@ -173,7 +173,8 @@ class TimedArray(numpy.ndarray):
                     raise ValueError('Calling TimedArray with array valued t only supported for 1D or 2D TimedArray.')
                 if len(self.shape)==2 and len(t)!=self.shape[1]:
                     raise ValueError('Calling TimedArray with array valued t on 2D TimedArray requires len(t)=arr.shape[1]')
-                t = numpy.array((t-self._t_init)/self._dt, dtype=int)
+                #t = numpy.array((t-self._t_init)/self._dt, dtype=int)
+                t = numpy.array(numpy.rint((t-self._t_init)/self._dt), dtype=int)
                 t[t<0] = 0
                 t[t>=len(self.times)] = len(self.times)-1
                 if len(self.shape)==1:
@@ -181,13 +182,14 @@ class TimedArray(numpy.ndarray):
                 return numpy.asarray(self)[t, numpy.arange(len(t))]
             t = float(t)
             ot = t
-            t = int((t-self._t_init)/self._dt)
-            if t-tlast!=1:
-                print 'int t:', t, tlast
-                print 't:', repr(ot)
-                print 't_init:', repr(self._t_init)
-                print 't/dt:', repr((ot-self._t_init)/self._dt)
-            tlast = t
+            #t = int((t-self._t_init)/self._dt)
+            t = int(numpy.rint((t-self._t_init)/self._dt))
+#            if t-tlast!=1:
+#                print 'int t:', t, tlast
+#                print 't:', repr(ot)
+#                print 't_init:', repr(self._t_init)
+#                print 't/dt:', repr((ot-self._t_init)/self._dt)
+#            tlast = t
             if t<0: t=0
             if t>=len(self.times): t=len(self.times)-1
             return numpy.asarray(self)[t]
