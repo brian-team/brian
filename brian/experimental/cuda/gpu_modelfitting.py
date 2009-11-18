@@ -432,59 +432,9 @@ if __name__=='__main__':
         print declarations_seq
     if 1:
         # test traces
-        
-        class PreciseClock(Clock):              
-            @check_units(dt=second,t=second)
-            def __init__(self,dt=0.1*msecond,t=0*msecond,makedefaultclock=False):
-                self.__t = int(t/dt)
-                self.__dt = 1
-                self._dt = float(dt)
-                self.__end = self.__t
-                if not exists_global_preference('defaultclock') or makedefaultclock:
-                    set_global_preferences(defaultclock=self)
-            @check_units(t=second)
-            def reinit(self,t=0*msecond):
-                self.__t = int(float(t)/self._dt)
-            def tick(self):
-                self.__t += self.__dt
-            @check_units(t=second)
-            def set_t(self,t):
-                self.__t = int(float(t)/self._dt)
-                self.__end = int(float(t)/self._dt)
-            @check_units(dt=second)
-            def set_dt(self,dt):
-                self._dt = float(dt)
-            @check_units(end=second)
-            def set_end(self,end):
-                self.__end = int(float(end)/self._dt)
-            @check_units(start=second)
-            def set_start(self,start):
-                self.__start = int(float(start)/self._dt)
-            # Clock object internally stores floats, but these properties
-            # return quantities
-            _t = property(fget=lambda self:self.__t*self._dt+1e-15)
-            _end = property(fget=lambda self:self.__end*self._dt+1e-15)
-            _start = property(fget=lambda self:self.__start*self._dt)
-            if isinstance(second,Quantity):
-                t=property(fget=lambda self:Quantity.with_dimensions(self._t,second.dim),fset=set_t)
-                dt=property(fget=lambda self:Quantity.with_dimensions(self._dt,second.dim),fset=set_dt)
-                end=property(fget=lambda self:Quantity.with_dimensions(self._end,second.dim),fset=set_end)
-                start=property(fget=lambda self:Quantity.with_dimensions(self._start,second.dim),fset=set_start)
-            else:
-                t=property(fget=lambda self:self._t,fset=set_t)
-                dt=property(fget=lambda self:self._dt,fset=set_dt)
-                end=property(fget=lambda self:self._end,fset=set_end)
-                start=property(fget=lambda self:self._start,fset=set_start)
-            @check_units(duration=second)
-            def set_duration(self,duration):
-                self.__start = self.__t
-                self.__end = self.__t + int(float(duration)/self._dt)            
-            def get_duration(self):
-                return self.end-self.t
-            def still_running(self):
-                return self.__t < self.__end
-            
-        clk = PreciseClock(makedefaultclock=True)
+                    
+        #clk = RegularClock(makedefaultclock=True)
+        clk = defaultclock
         
         N = 1
         duration = 100*ms
