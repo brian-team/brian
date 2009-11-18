@@ -40,6 +40,7 @@ The :class:`Clock` class
 
 .. autoclass:: Clock
 .. autoclass:: EventClock
+.. autoclass:: RegularClock
 
 .. index::
    single: clock; default clock
