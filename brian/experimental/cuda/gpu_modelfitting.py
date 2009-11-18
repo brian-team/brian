@@ -33,6 +33,7 @@ __global__ void runsim(
                               // end each train with large negative value)
     int *spiketime_indices,   // Pointer into above array for each neuron
     int *spikedelay_arr       // Integer delay for each spike
+    %COINCIDENCE_COUNT_DECLARE_EXTRA_STATE_VARIABLES%
     )
 {
     const int neuron_index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -88,6 +89,7 @@ __global__ void runsim(
 
 coincidence_counting_algorithm_src = {
     'inclusive':{
+        '%COINCIDENCE_COUNT_DECLARE_EXTRA_STATE_VARIABLES%':'',
         '%COINCIDENCE_COUNT_INIT%':'',
         '%COINCIDENCE_COUNT_TEST%':'''
             ncoinc += has_spiked && (((last_spike_time+%DELTA%)>=Tspike) || ((next_spike_time-%DELTA%)<=Tspike));
@@ -95,16 +97,42 @@ coincidence_counting_algorithm_src = {
         '%COINCIDENCE_COUNT_NEXT%':''
         },
     'exclusive':{
+        '%COINCIDENCE_COUNT_DECLARE_EXTRA_STATE_VARIABLES%':''',
+            bool *last_spike_allowed_arr,
+            bool *next_spike_allowed_arr
+        ''',
         '%COINCIDENCE_COUNT_INIT%':'''
-            bool last_spike_allowed = true, next_spike_allowed = true;
+            bool last_spike_allowed = last_spike_allowed_arr[neuron_index];
+            bool next_spike_allowed = next_spike_allowed_arr[neuron_index];
             ''',
         '%COINCIDENCE_COUNT_TEST%':'''
-            ncoinc += has_spiked &&
+            /*ncoinc += has_spiked &&
                       ((((last_spike_time+%DELTA%)>=Tspike)&&last_spike_allowed)
                        ||
                        (((next_spike_time-%DELTA%)<=Tspike)&&next_spike_allowed));
             last_spike_allowed = !(has_spiked && ((last_spike_time+%DELTA%)>=Tspike));
-            next_spike_allowed = !(has_spiked && (((last_spike_time+%DELTA%)<Tspike) && ((next_spike_time-%DELTA%)<=Tspike)));
+            next_spike_allowed = !(has_spiked && (((last_spike_time+%DELTA%)<Tspike) && ((next_spike_time-%DELTA%)<=Tspike)));*/
+            if(has_spiked)
+            {
+                if(last_spike_allowed){
+                    if(last_spike_time+%DELTA%>=Tspike)
+                    //if(abs(last_spike_time-Tspike)<=%DELTA%)
+                    {
+                        ncoinc++;
+                        last_spike_allowed = false;
+                        //next_spike_allowed = false;
+                    }
+                } else if(next_spike_allowed)
+                {
+                    if(next_spike_time-%DELTA%<=Tspike)
+                    //if(abs(next_spike_time-Tspike)<=%DELTA%)
+                    {
+                        ncoinc++;
+                        next_spike_allowed = false;
+                        //last_spike_allowed = false;
+                    }
+                }
+            }
             ''',
         '%COINCIDENCE_COUNT_NEXT%':'''
             last_spike_allowed = next_spike_allowed;
@@ -238,6 +266,7 @@ class GPUModelFitting(object):
         self.delta = delta
         self.eqs = eqs
         self.G = G
+        self.coincidence_count_algorithm = coincidence_count_algorithm
         threshold = G._threshold
         if threshold.__class__ is Threshold:
             state = threshold.state
@@ -306,8 +335,13 @@ class GPUModelFitting(object):
         self.num_coincidences = gpuarray.to_gpu(zeros(N, dtype=int))
         self.spikecount = gpuarray.to_gpu(zeros(N, dtype=int))
         self.spikedelay_arr = gpuarray.to_gpu(array(spikedelays/self.dt, dtype=int))
+        self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
+        self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
         self.kernel_func_args = [self.state_vars[name] for name in self.declarations_seq]
         self.kernel_func_args += [self.I_offset, self.spikecount, self.num_coincidences, self.spiketimes, self.spiketime_indices, self.spikedelay_arr]
+        if self.coincidence_count_algorithm=='exclusive':
+            self.kernel_func_args += [self.last_spike_allowed_arr,
+                                      self.next_spike_allowed_arr,]
         
     def launch(self, duration, stepsize=None):
         if stepsize is None:
@@ -438,6 +472,10 @@ if __name__=='__main__':
         
         N = 1
         duration = 100*ms
+        delta = 4*ms
+        
+        randspikes = hstack(([-1*second],sort(rand(10)*duration*.9+duration*0.05),[duration+1*second]))
+        
         eqs = Equations('''
         dV/dt = (-V+I)/(10*ms) : 1
         I : 1
@@ -446,11 +484,11 @@ if __name__=='__main__':
         reset = 'V=0'
         G = NeuronGroup(N, eqs, threshold=threshold, reset=reset, method='Euler',
                         clock=clk)
-        from brian.experimental.ccodegen import *
-        su = AutoCompiledNonlinearStateUpdater(eqs, G.clock, freeze=True)
-        G._state_updater = su
+        #from brian.experimental.ccodegen import *
+        #su = AutoCompiledNonlinearStateUpdater(eqs, G.clock, freeze=True)
+        #G._state_updater = su
         #I = 1.1*ones(int(duration/defaultclock.dt))
-        I = 3.0*rand(int(duration/defaultclock.dt))
+        I = 10.0*rand(int(duration/defaultclock.dt))
         #I = hstack((zeros(100), 10*ones(int(duration/defaultclock.dt))))
         #I = hstack((zeros(100), 10*ones(100))*(int(duration/defaultclock.dt)/200))
         #I = hstack((zeros(100), 10*exp(-linspace(0,2,100)))*(int(duration/defaultclock.dt)/200))
@@ -459,11 +497,15 @@ if __name__=='__main__':
         G.I = TimedArray(I, clock=clk)
         M = StateMonitor(G, 'V', record=True, when='end', clock=clk)
         MS = SpikeMonitor(G)
+        cc_ex = CoincidenceCounterBis(source=G, data=randspikes, delta=delta,
+                                   coincidence_count_algorithm='exclusive')
+        cc_in = CoincidenceCounterBis(source=G, data=randspikes, delta=delta,
+                                   coincidence_count_algorithm='inclusive')
         run(duration)
-        delta = 4*ms
         #spiketimes = array([-1*second, duration+1*second])
         #spiketimes_offset = zeros(N, dtype=int)
-        spiketimes = [-1*second]+MS[0]+[duration+1*second]
+        #spiketimes = [-1*second]+MS[0]+[duration+1*second]
+        spiketimes = randspikes
         spiketimes_offset = zeros(N, dtype=int)
         #I = array([0]+I)
         I_offset = zeros(N, dtype=int)
@@ -475,14 +517,34 @@ if __name__=='__main__':
                              delta,
                              coincidence_count_algorithm='exclusive')
         allV = []
-        for i in xrange(int(duration/defaultclock.dt)):
-            mf.kernel_func(int32(i), int32(i+1),
-                             *mf.kernel_func_args, **mf.kernel_func_kwds)
-            autoinit.context.synchronize()
-            allV.append(mf.state_vars['V'].get())
+        oldnc = 0
+        allcoinc = []
         
-        print mf.coincidence_count    
+        if 1:
+            for i in xrange(int(duration/defaultclock.dt)):
+                mf.kernel_func(int32(i), int32(i+1),
+                                 *mf.kernel_func_args, **mf.kernel_func_kwds)
+                autoinit.context.synchronize()
+                allV.append(mf.state_vars['V'].get())
+                nc = mf.coincidence_count[0]
+                if nc>oldnc:
+                    oldnc = nc
+                    allcoinc.append(i*clk.dt)
+        else:
+            mf.launch(duration, stepsize=None)
         
-        plot(M[0])
-        plot(allV)
+        print 'Spike counts:', MS.nspikes, mf.spike_count[0]
+        
+        print 'Coincidences:'
+        print 'GPU', mf.coincidence_count
+        print 'CPU inc', cc_in.coincidences
+        print 'CPU exc', cc_ex.coincidences
+
+        for t in randspikes[1:-1]:
+            plot([t*second-delta, t*second+delta], [0, 0], lw=5, color=(.9,.9,.9))
+        plot(randspikes[1:-1], zeros(len(randspikes)-2), '+', ms=15)
+        plot(M.times, M[0])
+        if len(allV):
+            plot(M.times, allV)
+            plot(allcoinc, zeros(len(allcoinc)), 'o')
         show()
