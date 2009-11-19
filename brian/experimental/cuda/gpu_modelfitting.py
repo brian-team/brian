@@ -81,6 +81,7 @@ __global__ void runsim(
     }
     // Store variables at end
     %STORE_VARIABLES%
+    %COINCIDENCE_COUNT_STORE_VARIABLES%
     spiketime_indices[neuron_index] = spiketime_index;
     num_coincidences[neuron_index] = ncoinc;
     spikecount[neuron_index] = nspikes;
@@ -94,7 +95,8 @@ coincidence_counting_algorithm_src = {
         '%COINCIDENCE_COUNT_TEST%':'''
             ncoinc += has_spiked && (((last_spike_time+%DELTA%)>=Tspike) || ((next_spike_time-%DELTA%)<=Tspike));
             ''',
-        '%COINCIDENCE_COUNT_NEXT%':''
+        '%COINCIDENCE_COUNT_NEXT%':'',
+        '%COINCIDENCE_COUNT_STORE_VARIABLES%':'',
         },
     'exclusive':{
         '%COINCIDENCE_COUNT_DECLARE_EXTRA_STATE_VARIABLES%':''',
@@ -137,7 +139,11 @@ coincidence_counting_algorithm_src = {
         '%COINCIDENCE_COUNT_NEXT%':'''
             last_spike_allowed = next_spike_allowed;
             next_spike_allowed = true;
-            '''
+            ''',
+        '%COINCIDENCE_COUNT_STORE_VARIABLES%':'''
+            last_spike_allowed_arr[neuron_index] = last_spike_allowed;
+            next_spike_allowed_arr[neuron_index] = next_spike_allowed;
+            ''',
         },
     }
 
@@ -488,7 +494,7 @@ if __name__=='__main__':
         #su = AutoCompiledNonlinearStateUpdater(eqs, G.clock, freeze=True)
         #G._state_updater = su
         #I = 1.1*ones(int(duration/defaultclock.dt))
-        I = 10.0*rand(int(duration/defaultclock.dt))
+        I = 5.0*rand(int(duration/defaultclock.dt))
         #I = hstack((zeros(100), 10*ones(int(duration/defaultclock.dt))))
         #I = hstack((zeros(100), 10*ones(100))*(int(duration/defaultclock.dt)/200))
         #I = hstack((zeros(100), 10*exp(-linspace(0,2,100)))*(int(duration/defaultclock.dt)/200))
@@ -518,7 +524,13 @@ if __name__=='__main__':
                              coincidence_count_algorithm='exclusive')
         allV = []
         oldnc = 0
+        oldsc = 0
         allcoinc = []
+        all_pst = []
+        all_nst = []
+        allspike = []
+        all_nsa = []
+        all_lsa = []
         
         if 1:
             for i in xrange(int(duration/defaultclock.dt)):
@@ -526,10 +538,21 @@ if __name__=='__main__':
                                  *mf.kernel_func_args, **mf.kernel_func_kwds)
                 autoinit.context.synchronize()
                 allV.append(mf.state_vars['V'].get())
+                all_pst.append(mf.spiketimes.get()[mf.spiketime_indices.get()])
+                all_nst.append(mf.spiketimes.get()[mf.spiketime_indices.get()+1])
+                all_nsa.append(mf.next_spike_allowed_arr.get()[0])
+                all_lsa.append(mf.last_spike_allowed_arr.get()[0])
+#        self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
+#        self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
                 nc = mf.coincidence_count[0]
                 if nc>oldnc:
                     oldnc = nc
                     allcoinc.append(i*clk.dt)
+                sc = mf.spike_count[0]
+                if sc>oldsc:
+                    oldsc = sc
+                    allspike.append(i*clk.dt)
+                
         else:
             mf.launch(duration, stepsize=None)
         
@@ -547,4 +570,27 @@ if __name__=='__main__':
         if len(allV):
             plot(M.times, allV)
             plot(allcoinc, zeros(len(allcoinc)), 'o')
+            figure()
+            plot(M.times, array(all_pst)*clk.dt)
+            plot(M.times, array(all_nst)*clk.dt)
+            plot(randspikes[1:-1], randspikes[1:-1], 'o')
+            plot(allspike, allspike, 'x')
+            plot(allcoinc, allcoinc, '+')
+            plot(M.times, array(all_nsa)*M.times, '--')
+            plot(M.times, array(all_lsa)*M.times, '-.')
+            predicted_spikes = allspike
+            target_spikes = [t*second for t in randspikes]
+            i = 0
+            truecoinc = []
+            for pred_t in predicted_spikes:
+                 while target_spikes[i]<pred_t+delta:
+                     if abs(target_spikes[i]-pred_t)<delta:
+                         truecoinc.append((pred_t, target_spikes[i]))
+                         i += 1
+                         break
+                     i += 1
+            print 'Truecoinc:', len(truecoinc)
+            for t1, t2 in truecoinc:
+                plot([t1, t2], [t1, t2], ':', color=(0.5, 0, 0), lw=3)
         show()
+        
