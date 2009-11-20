@@ -1,9 +1,8 @@
 Installation
 ============
 
-If you already have a copy of Python 2.5, try the `Quick installation`_ below,
+If you already have a copy of Python 2.5 or 2.6, try the `Quick installation`_ below,
 otherwise take a look at `Manual installation`_.
-Note: the Windows version of Numpy is currently not compatible with Python 2.6.
 
 Quick installation
 ------------------
@@ -20,7 +19,7 @@ Manual installation
 
 Installing Brian requires the following components:
 
-#. `Python <http://www.python.org/download/>`__ version 2.5.
+#. `Python <http://www.python.org/download/>`__ version 2.5 or 2.6.
 #. `NumPy and Scipy <http://www.scipy.org/Download>`__ packages for Python:
    an efficient scientific library.
 #. `PyLab <http://matplotlib.sourceforge.net/>`__ package for Python:
@@ -50,7 +49,7 @@ Mac users: the `Scipy Superpack for Intel OS X <http://trichech.us/?page_id=5>`_
 recent versions of Numpy, Scipy, Pylab and IPython.
 
 Windows users: the `Python(x,y) <http://www.pythonxy.com/>`__ distribution includes all the packages
-(including Eclipse and IPython) above except Brian.
+(including Eclipse and IPython) above except Brian (which is available as an optional plugin).
 
 Installing Python packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,7 +101,6 @@ You can test whether Brian has installed properly by running Python and typing
 the following two lines::
 
 	from brian import *
-	run_all_tests()
+	brian_sample_run()
 
-A series of tests should run and return 'ok' for each one. If not, and all of the packages other than
-Brian work OK, please let us know.
+A sample network should run and produce a raster plot.
