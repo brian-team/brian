@@ -219,12 +219,12 @@ def test_coincidencecounter():
     duration = 500*ms
     input = 1.05 + .8 * randn(int(duration/defaultclock._dt))
     delta = 2*ms
-    n = 10
+    n = 100
 
     def get_data(n):
         # Generates data from an IF neuron
         group = NeuronGroup(N = 1, model = eqs, reset = reset, threshold = threshold,
-                            method='Euler', refractory = 2*delta)
+                            method='Euler', refractory = 3*delta)
         group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
         group.R = 1.0
         group.tau = 20*ms
@@ -251,10 +251,11 @@ def test_coincidencecounter():
                         method='Euler')
     group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
     group.R = 1.0*ones(n)
-    group.tau = 30*ms*(1+.01*(2*rand(n)-1))
+    group.tau = 30*ms*(1+.1*(2*rand(n)-1))
     
     cc1 = CoincidenceCounter(source = group, data = data, delta = delta)
-    cc2 = CoincidenceCounterBis(source = group, data = ([-1*second]+train0+[train0[-1]+1*second]), delta = delta)
+    #cc2 = CoincidenceCounterBis(source = group, data = ([-1*second]+train0+[train0[-1]+1*second]), delta = delta)
+    cc2 = CoincidenceCounterBis(source = group, data = ([-1*second]+train0+[duration+1*second]), delta = delta)
     sm = SpikeMonitor(group)
     statem = StateMonitor(group, 'V', record = True)
     net = Network(group, cc1, cc2, sm, statem)
@@ -271,7 +272,8 @@ def test_coincidencecounter():
     # Compute gamma factor with GPU
     inp = array(input)
     I_offset = zeros(n, dtype=int)
-    spiketimes = array(hstack(([-1*second],train0,[data[-1][1]+1*second])))
+    #spiketimes = array(hstack(([-1*second],train0,[data[-1][1]+1*second])))
+    spiketimes = array(hstack(([-1*second],train0,[duration+1*second])))
     spiketimes_offset = zeros(n, dtype=int)
     spikedelays = zeros(n)
     cd = CoincidenceCounter(source = group, data = data, delta = delta)
