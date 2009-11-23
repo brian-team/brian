@@ -295,7 +295,6 @@ class GPUModelFitting(object):
         self.kernel_src, self.declarations_seq = generate_modelfitting_kernel_src(eqs, threshold, reset, dt, N, delta,
                                                                                   coincidence_count_algorithm=coincidence_count_algorithm,
                                                                                   precision=precision)
-        print self.kernel_src
         self.kernel_module = SourceModule(self.kernel_src)
         self.kernel_func = self.kernel_module.get_function('runsim')
         self.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
@@ -517,7 +516,7 @@ if __name__=='__main__':
         all_nsa = []
         all_lsa = []
         
-        if 1:
+        if 0:
             for i in xrange(len(M.times)):
                 mf.kernel_func(int32(i), int32(i+1),
                                  *mf.kernel_func_args, **mf.kernel_func_kwds)
