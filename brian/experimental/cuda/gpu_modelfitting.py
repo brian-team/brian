@@ -116,18 +116,21 @@ coincidence_counting_algorithm_src = {
             next_spike_allowed = !(has_spiked && (((last_spike_time+%DELTA%)<Tspike) && ((next_spike_time-%DELTA%)<=Tspike)));*/
             if(has_spiked)
             {
+                bool spikehandled = false;
                 if(last_spike_allowed){
-                    if(last_spike_time+%DELTA%>=Tspike)
-                    //if(abs(last_spike_time-Tspike)<=%DELTA%)
+                    //if(last_spike_time+%DELTA%>=Tspike)
+                    if(abs(last_spike_time-Tspike)<=%DELTA%)
                     {
+                        spikehandled = true;
                         ncoinc++;
                         last_spike_allowed = false;
                         //next_spike_allowed = false;
                     }
-                } else if(next_spike_allowed)
+                }
+                if(next_spike_allowed && !spikehandled)
                 {
-                    if(next_spike_time-%DELTA%<=Tspike)
-                    //if(abs(next_spike_time-Tspike)<=%DELTA%)
+                    //if(next_spike_time-%DELTA%<=Tspike)
+                    if(abs(next_spike_time-Tspike)<=%DELTA%)
                     {
                         ncoinc++;
                         next_spike_allowed = false;
@@ -477,10 +480,12 @@ if __name__=='__main__':
         clk = defaultclock
         
         N = 1
-        duration = 100*ms
+        duration = 200*ms
         delta = 4*ms
+        Ntarg = 20
         
-        randspikes = hstack(([-1*second],sort(rand(10)*duration*.9+duration*0.05),[duration+1*second]))
+        randspikes = hstack(([-1*second],sort(rand(Ntarg)*duration*.9+duration*0.05),[duration+1*second]))
+        randspikes = sort(unique(array(randspikes/(2*delta), dtype=int)))*2*delta
         
         eqs = Equations('''
         dV/dt = (-V+I)/(10*ms) : 1
@@ -494,7 +499,7 @@ if __name__=='__main__':
         #su = AutoCompiledNonlinearStateUpdater(eqs, G.clock, freeze=True)
         #G._state_updater = su
         #I = 1.1*ones(int(duration/defaultclock.dt))
-        I = 5.0*rand(int(duration/defaultclock.dt))
+        I = 3.0*rand(int(duration/defaultclock.dt))
         #I = hstack((zeros(100), 10*ones(int(duration/defaultclock.dt))))
         #I = hstack((zeros(100), 10*ones(100))*(int(duration/defaultclock.dt)/200))
         #I = hstack((zeros(100), 10*exp(-linspace(0,2,100)))*(int(duration/defaultclock.dt)/200))
@@ -507,6 +512,7 @@ if __name__=='__main__':
                                    coincidence_count_algorithm='exclusive')
         cc_in = CoincidenceCounterBis(source=G, data=randspikes, delta=delta,
                                    coincidence_count_algorithm='inclusive')
+        cc2 = CoincidenceCounter(source=G, data=randspikes[1:-1], delta=delta)
         run(duration)
         #spiketimes = array([-1*second, duration+1*second])
         #spiketimes_offset = zeros(N, dtype=int)
@@ -533,7 +539,7 @@ if __name__=='__main__':
         all_lsa = []
         
         if 1:
-            for i in xrange(int(duration/defaultclock.dt)):
+            for i in xrange(len(M.times)):
                 mf.kernel_func(int32(i), int32(i+1),
                                  *mf.kernel_func_args, **mf.kernel_func_kwds)
                 autoinit.context.synchronize()
@@ -556,21 +562,23 @@ if __name__=='__main__':
         else:
             mf.launch(duration, stepsize=None)
         
-        print 'Spike counts:', MS.nspikes, mf.spike_count[0]
+        print 'Num target spikes:', len(randspikes)-2
+        print 'Predicted spike counts:', MS.nspikes, mf.spike_count[0]
         
         print 'Coincidences:'
         print 'GPU', mf.coincidence_count
-        print 'CPU inc', cc_in.coincidences
-        print 'CPU exc', cc_ex.coincidences
+#        print 'CPU bis inc', cc_in.coincidences
+        print 'CPU bis exc', cc_ex.coincidences
+        print 'CPU', cc2.coincidences
 
-        for t in randspikes[1:-1]:
-            plot([t*second-delta, t*second+delta], [0, 0], lw=5, color=(.9,.9,.9))
-        plot(randspikes[1:-1], zeros(len(randspikes)-2), '+', ms=15)
-        plot(M.times, M[0])
+#        for t in randspikes[1:-1]:
+#            plot([t*second-delta, t*second+delta], [0, 0], lw=5, color=(.9,.9,.9))
+#        plot(randspikes[1:-1], zeros(len(randspikes)-2), '+', ms=15)
+#        plot(M.times, M[0])
         if len(allV):
-            plot(M.times, allV)
-            plot(allcoinc, zeros(len(allcoinc)), 'o')
-            figure()
+#            plot(M.times, allV)
+#            plot(allcoinc, zeros(len(allcoinc)), 'o')
+#            figure()
             plot(M.times, array(all_pst)*clk.dt)
             plot(M.times, array(all_nst)*clk.dt)
             plot(randspikes[1:-1], randspikes[1:-1], 'o')
