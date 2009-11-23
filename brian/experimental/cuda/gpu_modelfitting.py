@@ -108,36 +108,14 @@ coincidence_counting_algorithm_src = {
             bool next_spike_allowed = next_spike_allowed_arr[neuron_index];
             ''',
         '%COINCIDENCE_COUNT_TEST%':'''
-            /*ncoinc += has_spiked &&
-                      ((((last_spike_time+%DELTA%)>=Tspike)&&last_spike_allowed)
-                       ||
-                       (((next_spike_time-%DELTA%)<=Tspike)&&next_spike_allowed));
-            last_spike_allowed = !(has_spiked && ((last_spike_time+%DELTA%)>=Tspike));
-            next_spike_allowed = !(has_spiked && (((last_spike_time+%DELTA%)<Tspike) && ((next_spike_time-%DELTA%)<=Tspike)));*/
-            if(has_spiked)
-            {
-                bool spikehandled = false;
-                if(last_spike_allowed){
-                    //if(last_spike_time+%DELTA%>=Tspike)
-                    if(abs(last_spike_time-Tspike)<=%DELTA%)
-                    {
-                        spikehandled = true;
-                        ncoinc++;
-                        last_spike_allowed = false;
-                        //next_spike_allowed = false;
-                    }
-                }
-                if(next_spike_allowed && !spikehandled)
-                {
-                    //if(next_spike_time-%DELTA%<=Tspike)
-                    if(abs(next_spike_time-Tspike)<=%DELTA%)
-                    {
-                        ncoinc++;
-                        next_spike_allowed = false;
-                        //last_spike_allowed = false;
-                    }
-                }
-            }
+            bool near_last_spike = last_spike_time+%DELTA%>=Tspike;
+            bool near_next_spike = next_spike_time-%DELTA%<=Tspike;
+            near_last_spike = near_last_spike && has_spiked;
+            near_next_spike = near_next_spike && has_spiked;
+            ncoinc += (near_last_spike&&last_spike_allowed) || (near_next_spike&&next_spike_allowed);
+            bool near_both_allowed = (near_last_spike&&last_spike_allowed) && (near_next_spike&&next_spike_allowed);
+            last_spike_allowed = last_spike_allowed && !near_last_spike;
+            next_spike_allowed = (next_spike_allowed && !near_next_spike) || near_both_allowed;
             ''',
         '%COINCIDENCE_COUNT_NEXT%':'''
             last_spike_allowed = next_spike_allowed;
@@ -485,7 +463,8 @@ if __name__=='__main__':
         Ntarg = 20
         
         randspikes = hstack(([-1*second],sort(rand(Ntarg)*duration*.9+duration*0.05),[duration+1*second]))
-        randspikes = sort(unique(array(randspikes/(2*delta), dtype=int)))*2*delta
+        #randspikes = sort(unique(array(randspikes/(2*delta), dtype=int)))*2*delta
+        randspikes = sort(unique(array(randspikes/clk.dt, dtype=int)))*clk.dt+1e-10
         
         eqs = Equations('''
         dV/dt = (-V+I)/(10*ms) : 1
@@ -499,7 +478,7 @@ if __name__=='__main__':
         #su = AutoCompiledNonlinearStateUpdater(eqs, G.clock, freeze=True)
         #G._state_updater = su
         #I = 1.1*ones(int(duration/defaultclock.dt))
-        I = 3.0*rand(int(duration/defaultclock.dt))
+        I = 5.0*rand(int(duration/defaultclock.dt))
         #I = hstack((zeros(100), 10*ones(int(duration/defaultclock.dt))))
         #I = hstack((zeros(100), 10*ones(100))*(int(duration/defaultclock.dt)/200))
         #I = hstack((zeros(100), 10*exp(-linspace(0,2,100)))*(int(duration/defaultclock.dt)/200))
@@ -600,5 +579,5 @@ if __name__=='__main__':
             print 'Truecoinc:', len(truecoinc)
             for t1, t2 in truecoinc:
                 plot([t1, t2], [t1, t2], ':', color=(0.5, 0, 0), lw=3)
-        show()
+#        show()
         
