@@ -148,23 +148,33 @@ def vector_strength(spikes,period):
 
 # Gamma factor
 @check_units(delta=second)
-def gamma_factor(source, target, delta, normalize = True):
+def gamma_factor(source, target, delta, normalize = True, dt = None):
     '''
     Returns the gamma precision factor between source and target trains,
     with precision delta.
+    source and target are lists of spike times.
+    If normalize is True, the function returns the normalized gamma factor 
+    (less than 1.0), otherwise it returns the number of coincidences.
+    dt is the precision of the trains, by default it is defaultclock.dt
     
     Reference:
     R. Jolivet et al., 'A benchmark test for a quantitative assessment of simple neuron models',
         Journal of Neuroscience Methods 169, no. 2 (2008): 417-424.
     '''
+    
     source = array(source)
     target = array(target)
+    target_rate = firing_rate(target)*Hz
+    
+    if dt is None:
+        delta_diff = delta
+    else:
+        source = array(rint(source/dt), dtype=int)
+        target = array(rint(target/dt), dtype=int)
+        delta_diff = int(rint(delta/dt))
     
     source_length = len(source)
     target_length = len(target)
-    target_rate = firing_rate(target)*Hz
-    
-    epsilon = 1E-9*second
     
     if (target_length == 0 or source_length == 0):
         return 0
@@ -173,10 +183,10 @@ def gamma_factor(source, target, delta, normalize = True):
         bins = .5 * (source[1:] + source[:-1])
         indices = digitize(target, bins)
         diff = abs(target - source[indices])
-        matched_spikes = (diff <= delta + epsilon)
+        matched_spikes = (diff <= delta_diff)
         coincidences = sum(matched_spikes)
     else:
-        indices = [amin(abs(source - target[i])) <= delta + epsilon for i in xrange(target_length)]
+        indices = [amin(abs(source - target[i])) <= delta_diff for i in xrange(target_length)]
         coincidences = sum(indices)
     
     # Normalization of the coincidences count

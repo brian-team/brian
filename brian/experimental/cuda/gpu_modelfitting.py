@@ -173,7 +173,7 @@ def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons,
     # Substitute number of neurons
     src = src.replace('%NUM_NEURONS%', str(num_neurons))
     # Substitute delta, the coincidence window half-width
-    src = src.replace('%DELTA%', str(int(delta/dt)))
+    src = src.replace('%DELTA%', str(int(rint(delta/dt))))
     return src, declarations_seq
 
 class GPUModelFitting(object):
@@ -316,11 +316,11 @@ class GPUModelFitting(object):
         self.I = gpuarray.to_gpu(array(I, dtype=mydtype))
         self.state_vars['I'] = self.I
         self.I_offset = gpuarray.to_gpu(array(I_offset, dtype=int))
-        self.spiketimes = gpuarray.to_gpu(array(spiketimes/self.dt, dtype=int))
+        self.spiketimes = gpuarray.to_gpu(array(rint(spiketimes/self.dt), dtype=int))
         self.spiketime_indices = gpuarray.to_gpu(array(spiketimes_offset, dtype=int))
         self.num_coincidences = gpuarray.to_gpu(zeros(N, dtype=int))
         self.spikecount = gpuarray.to_gpu(zeros(N, dtype=int))
-        self.spikedelay_arr = gpuarray.to_gpu(array(spikedelays/self.dt, dtype=int))
+        self.spikedelay_arr = gpuarray.to_gpu(array(rint(spikedelays/self.dt), dtype=int))
         self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
         self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
         self.kernel_func_args = [self.state_vars[name] for name in self.declarations_seq]

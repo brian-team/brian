@@ -217,8 +217,8 @@ def test_coincidencecounter():
     threshold = 1
     
     duration = 500*ms
-    input = 1.05 + .8 * randn(int(duration/defaultclock._dt))
-    delta = 2*ms
+    input = 1.05 + .1 * randn(int(duration/defaultclock._dt))
+    delta = 4*ms
     n = 100
 
     def get_data(n):
@@ -251,7 +251,7 @@ def test_coincidencecounter():
                         method='Euler')
     group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
     group.R = 1.0*ones(n)
-    group.tau = 30*ms*(1+.1*(2*rand(n)-1))
+    group.tau = 20*ms*(1+.1*(2*rand(n)-1))#0.0180930726377*second
     
     cc1 = CoincidenceCounter(source = group, data = data, delta = delta)
     #cc2 = CoincidenceCounterBis(source = group, data = ([-1*second]+train0+[train0[-1]+1*second]), delta = delta)
@@ -267,7 +267,7 @@ def test_coincidencecounter():
     online_coincidences1 = cc1.coincidences
     online_coincidences2 = cc2.coincidences
     cpu_spike_count = array([len(sm[i]) for i in range(n)])
-    offline_coincidences = array([gamma_factor(sm[i], train0, delta = delta, normalize = False) for i in range(n)])
+    offline_coincidences = array([gamma_factor(sm[i], train0, delta = delta, normalize = False, dt = defaultclock.dt) for i in range(n)])
 
     # Compute gamma factor with GPU
     inp = array(input)
@@ -281,46 +281,46 @@ def test_coincidencecounter():
     mf = GPUModelFitting(group, Equations(eqs),
                          inp, I_offset, spiketimes, spiketimes_offset,
                          spikedelays, delta)
-    mf.reinit_vars(inp, I_offset, spiketimes, spiketimes_offset, spikedelays)
+#    mf.reinit_vars(inp, I_offset, spiketimes, spiketimes_offset, spikedelays)
     
     
     
     
     # Normal GPU launch
-#    mf.launch(duration)
+    mf.launch(duration)
     
     # GPU record of voltage and spikes 
-    allV = []
-    oldnc = 0
-    oldsc = 0
-    allcoinc = []
-    all_pst = []
-    all_nst = []
-    allspike = []
-    all_nsa = []
-    all_lsa = []
-    
-    for i in xrange(int(duration/defaultclock.dt)):
-        mf.kernel_func(int32(i), int32(i+1),
-                         *mf.kernel_func_args, **mf.kernel_func_kwds)
-        autoinit.context.synchronize()
-        allV.append(mf.state_vars['V'].get())
-        all_pst.append(mf.spiketimes.get()[mf.spiketime_indices.get()])
-        all_nst.append(mf.spiketimes.get()[mf.spiketime_indices.get()+1])
-        all_nsa.append(mf.next_spike_allowed_arr.get()[0])
-        all_lsa.append(mf.last_spike_allowed_arr.get()[0])
-    #        self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
-    #        self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
-        nc = mf.coincidence_count[0]
-        if nc>oldnc:
-            oldnc = nc
-            allcoinc.append(i*defaultclock.dt)
-        sc = mf.spike_count[0]
-        if sc>oldsc:
-            oldsc = sc
-            allspike.append(i*defaultclock.dt)
-    
-    gpu_voltage = array(allV)
+#    allV = []
+#    oldnc = 0
+#    oldsc = 0
+#    allcoinc = []
+#    all_pst = []
+#    all_nst = []
+#    allspike = []
+#    all_nsa = []
+#    all_lsa = []
+#    
+#    for i in xrange(int(duration/defaultclock.dt)):
+#        mf.kernel_func(int32(i), int32(i+1),
+#                         *mf.kernel_func_args, **mf.kernel_func_kwds)
+#        autoinit.context.synchronize()
+#        allV.append(mf.state_vars['V'].get())
+#        all_pst.append(mf.spiketimes.get()[mf.spiketime_indices.get()])
+#        all_nst.append(mf.spiketimes.get()[mf.spiketime_indices.get()+1])
+#        all_nsa.append(mf.next_spike_allowed_arr.get()[0])
+#        all_lsa.append(mf.last_spike_allowed_arr.get()[0])
+#    #        self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
+#    #        self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
+#        nc = mf.coincidence_count[0]
+#        if nc>oldnc:
+#            oldnc = nc
+#            allcoinc.append(i*defaultclock.dt)
+#        sc = mf.spike_count[0]
+#        if sc>oldsc:
+#            oldsc = sc
+#            allspike.append(i*defaultclock.dt)
+#    
+#    gpu_voltage = array(allV)
     
     
     
@@ -351,11 +351,43 @@ def test_coincidencecounter():
     print gpu_coincidences
     print "max error : %.1f" % max(abs(gpu_coincidences-offline_coincidences))
 
-    plot(linspace(0,duration/second,len(data_voltage[0])), data_voltage[0], 'k', linewidth=.5)
-    plot(linspace(0,duration/second,len(cpu_voltage[0])), cpu_voltage[0], 'b')
-    plot(linspace(0,duration/second,len(gpu_voltage[:,0])), gpu_voltage[:,0], 'g')
-    show()
+    bad_neuron = nonzero(abs(gpu_coincidences-offline_coincidences)>0)[0]
+    if len(bad_neuron)>0:
+        print "Bad neuron", bad_neuron, group.tau[bad_neuron[0]]
 
+    return
+
+#    plot(linspace(0,duration/second,len(data_voltage[0])), data_voltage[0], 'k', linewidth=.5)
+#    plot(linspace(0,duration/second,len(cpu_voltage[0])), cpu_voltage[0], 'b')
+#    plot(linspace(0,duration/second,len(gpu_voltage[:,0])), gpu_voltage[:,0], 'g')
+#    show()
+    times = linspace(0,duration/second,len(all_pst))
+
+    figure()
+
+    plot(times, array(all_pst)*defaultclock.dt)
+    plot(times, array(all_nst)*defaultclock.dt)
+    plot(train0, train0, 'o')
+    plot(allspike, allspike, 'x')
+    plot(allcoinc, allcoinc, '+')
+    plot(times, array(all_nsa)*times, '--')
+    plot(times, array(all_lsa)*times, '-.')
+    predicted_spikes = allspike
+    target_spikes = train0+[duration+1*second]
+    i = 0
+    truecoinc = []
+    for pred_t in predicted_spikes:
+         while target_spikes[i]<=pred_t+delta-1e-10*second:
+             if abs(target_spikes[i]-pred_t)<=delta+1e-10*second:
+                 truecoinc.append((pred_t, target_spikes[i]))
+                 i += 1
+                 break
+             i += 1
+    print 'Truecoinc:', len(truecoinc)
+    for t1, t2 in truecoinc:
+        plot([t1, t2], [t1, t2], ':', color=(0.5, 0, 0), lw=3)
+
+    show()
 
 #    assert is_within_absolute_tolerance(online_gamma1,offline_gamma1)    
 #    assert is_within_absolute_tolerance(online_gamma2,offline_gamma2)   
@@ -380,5 +412,6 @@ def test_coincidencecounter():
 
 if __name__=='__main__':
 #    test_spikemonitor()
-    test_coincidencecounter()
+    for i in range(1):
+        test_coincidencecounter()
     

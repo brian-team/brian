@@ -43,7 +43,7 @@ __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMo
 
 from units import *
 from connection import Connection, SparseConnectionVector
-from numpy import array, zeros, histogram, copy, ones, exp, arange, convolve, argsort, mod, floor, asarray, maximum, Inf, amin, amax, sort, nonzero
+from numpy import array, zeros, histogram, copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, maximum, Inf, amin, amax, sort, nonzero
 from itertools import repeat, izip
 from clock import guess_clock, EventClock
 from network import NetworkOperation, network_operation
@@ -1294,8 +1294,8 @@ class CoincidenceCounterBis(SpikeMonitor):
             spikedelays = zeros(self.N)
         self.spikedelays = array(spikedelays)
         
-        self.delta = delta+1e-10*second
-        dt = source.clock.dt
+        dt = self.source.clock.dt
+        self.delta = int(rint(delta/dt))
             
         # Number of spikes for each neuron
         self.model_length = zeros(self.N, dtype = 'int')
@@ -1303,8 +1303,8 @@ class CoincidenceCounterBis(SpikeMonitor):
         
         self.coincidences = zeros(self.N, dtype = 'int')
         self.spiketime_index = self.spiketimes_offset
-        self.last_spike_time = self.data[self.spiketime_index]
-        self.next_spike_time = self.data[self.spiketime_index+1]
+        self.last_spike_time = array(rint(self.data[self.spiketime_index]/dt), dtype=int)
+        self.next_spike_time = array(rint(self.data[self.spiketime_index+1]/dt), dtype=int)
         
         # First target spikes (needed for the computation of 
         #   the target train firing rates)
@@ -1314,7 +1314,8 @@ class CoincidenceCounterBis(SpikeMonitor):
         self.next_spike_allowed = ones(self.N, dtype = 'bool')
         
     def propagate(self, spiking_neurons):
-        T = self.source.clock.t + self.spikedelays
+        dt = self.source.clock.dt
+        T = array(rint((self.source.clock.t + self.spikedelays)/dt), dtype = int)
         spiking_neurons = array(spiking_neurons)
         self.model_length[spiking_neurons] += 1
         
@@ -1356,7 +1357,7 @@ class CoincidenceCounterBis(SpikeMonitor):
         self.target_length[indices] += 1
         self.spiketime_index[indices] += 1
         self.last_spike_time[indices] = self.next_spike_time[indices]
-        self.next_spike_time[indices] = self.data[self.spiketime_index[indices]+1]
+        self.next_spike_time[indices] = array(rint(self.data[self.spiketime_index[indices]+1]/dt),dtype=int)
         
         # Records first target spikes
         indices_first = indices & (self.target_length == 1)
