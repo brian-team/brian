@@ -332,7 +332,7 @@ class GPUModelFitting(object):
             self.kernel_func_args += [self.last_spike_allowed_arr,
                                       self.next_spike_allowed_arr,]
         
-    def launch(self, duration, stepsize=None):
+    def launch(self, duration, stepsize=1*second):
         if stepsize is None:
             self.kernel_func(int32(0), int32(duration/self.dt),
                              *self.kernel_func_args, **self.kernel_func_kwds)
@@ -341,7 +341,7 @@ class GPUModelFitting(object):
             stepsize = int(stepsize/self.dt)
             duration = int(duration/self.dt)
             for Tstart in xrange(0, duration, stepsize):
-                Tend = Tstart+min(Tstart, duration-Tstart)
+                Tend = Tstart+min(stepsize, duration-Tstart)
                 self.kernel_func(int32(Tstart), int32(Tend),
                                  *self.kernel_func_args, **self.kernel_func_kwds)
                 autoinit.context.synchronize()

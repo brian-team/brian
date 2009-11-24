@@ -86,9 +86,13 @@ def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_value
        
         print 'Evaluation time :', '%.2f s' % (time2-time1)
         print 'Total elapsed time :', '%.2f s' % (clock()-time0)
-#        print 'Mean best value :', '%.5f' % fitness_gbest.mean()
-        for j in range(group_number):
-            print 'Best value %d :' % (j+1), '%.5f' % fitness_gbest[j]
+        print 'Best values'
+        print '  min  :', '%.5f' % fitness_gbest.min()
+        print '  mean :', '%.5f' % fitness_gbest.mean()
+        print '  max  :', '%.5f' % fitness_gbest.max()
+        print '  std  :', '%.5f' % fitness_gbest.std()
+#        for j in range(group_number):
+#            print '  %d :' % (j+1), '%.5f' % fitness_gbest[j]
         print
         
     return (X_gbest, fitness_gbest, clock()-time0)

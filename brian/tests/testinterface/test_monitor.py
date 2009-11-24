@@ -220,7 +220,7 @@ def test_coincidencecounter():
     input = 1.05 + .1 * randn(int(duration/defaultclock._dt))
     delta = 4*ms
     n = 100
-
+    
     def get_data(n):
         # Generates data from an IF neuron
         group = NeuronGroup(N = 1, model = eqs, reset = reset, threshold = threshold,
@@ -251,7 +251,7 @@ def test_coincidencecounter():
                         method='Euler')
     group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
     group.R = 1.0*ones(n)
-    group.tau = 20*ms*(1+.1*(2*rand(n)-1))#0.0180930726377*second
+    group.tau = 20*ms*(1+.1*(2*rand(n)-1))
     
     cc1 = CoincidenceCounter(source = group, data = data, delta = delta)
     #cc2 = CoincidenceCounterBis(source = group, data = ([-1*second]+train0+[train0[-1]+1*second]), delta = delta)
@@ -266,8 +266,11 @@ def test_coincidencecounter():
     
     online_coincidences1 = cc1.coincidences
     online_coincidences2 = cc2.coincidences
+    online_gamma1 = cc1.gamma
+    online_gamma2 = cc2.gamma
     cpu_spike_count = array([len(sm[i]) for i in range(n)])
     offline_coincidences = array([gamma_factor(sm[i], train0, delta = delta, normalize = False, dt = defaultclock.dt) for i in range(n)])
+    offline_gamma = array([gamma_factor(sm[i], train0, delta = delta, normalize = True, dt = defaultclock.dt) for i in range(n)])
 
     # Compute gamma factor with GPU
     inp = array(input)
@@ -278,13 +281,10 @@ def test_coincidencecounter():
     spikedelays = zeros(n)
     cd = CoincidenceCounter(source = group, data = data, delta = delta)
     group.V = 0.0
+    
     mf = GPUModelFitting(group, Equations(eqs),
                          inp, I_offset, spiketimes, spiketimes_offset,
                          spikedelays, delta)
-#    mf.reinit_vars(inp, I_offset, spiketimes, spiketimes_offset, spikedelays)
-    
-    
-    
     
     # Normal GPU launch
     mf.launch(duration)
@@ -323,35 +323,35 @@ def test_coincidencecounter():
 #    gpu_voltage = array(allV)
     
     
-    
     cc = mf.coincidence_count
     gpu_spike_count = mf.spike_count
-#    cd._model_length = sc
-#    cd._coincidences = cc
-#    gpu_gamma = cd.gamma
+    cd._model_length = gpu_spike_count
+    cd._coincidences = cc
+    gpu_gamma = cd.gamma
     gpu_coincidences = cc
 
     print "Spike count"
     print "Data", len(data)
-    print "CPU", cpu_spike_count
-    print "GPU", gpu_spike_count
+#    print "CPU", cpu_spike_count
+#    print "GPU", gpu_spike_count
+    print "max error : %.1f" % max(abs(cpu_spike_count-gpu_spike_count))
     print
-    print "Offline"
-    print offline_coincidences
-    print 
+#    print "Offline"
+#    print offline_coincidences
+#    print 
     print "Online"
-    print online_coincidences1
-    print "max error : %.1f" % max(abs(online_coincidences1-offline_coincidences))
+#    print online_coincidences1
+    print "max error : %.6f" % max(abs(online_gamma1-offline_gamma))
     print
     print "Online bis"
-    print online_coincidences2
-    print "max error : %.1f" % max(abs(online_coincidences2-offline_coincidences))
+#    print online_coincidences2
+    print "max error : %.6f" % max(abs(online_gamma2-offline_gamma))
     print
     print "GPU"
-    print gpu_coincidences
-    print "max error : %.1f" % max(abs(gpu_coincidences-offline_coincidences))
+#    print gpu_coincidences
+    print "max error : %.6f" % max(abs(gpu_gamma-offline_gamma))
 
-    bad_neuron = nonzero(abs(gpu_coincidences-offline_coincidences)>0)[0]
+    bad_neuron = nonzero(abs(gpu_gamma-offline_gamma)>1e-10)[0]
     if len(bad_neuron)>0:
         print "Bad neuron", bad_neuron, group.tau[bad_neuron[0]]
 

@@ -1285,6 +1285,7 @@ class CoincidenceCounterBis(SpikeMonitor):
         self.delay = 0
         self.N = len(source)
         self.coincidence_count_algorithm = coincidence_count_algorithm
+        self.target_rates = None
 
         self.data = array(data)
         if spiketimes_offset is None:
@@ -1375,17 +1376,20 @@ class CoincidenceCounterBis(SpikeMonitor):
         """
         Returns the Gamma factor.
         """
-        target_rates = (self.target_length-1)/(1.0*(self.last_spike_time - self.first_target_spike))
-        NCoincAvg = 2 * self.delta * self.target_length * target_rates
-        norm = .5*(1 - 2 * self.delta * target_rates)
+        delta = self.source.clock.dt*self.delta
+        target_rates = self.target_rates
+        if target_rates is None:
+            target_rates = (self.target_length-1)/(1.0*self.source.clock.dt*(self.last_spike_time - self.first_target_spike))        
+        NCoincAvg = 2 * delta * self.target_length * target_rates
+        norm = .5*(1 - 2 * delta * target_rates)    
+        gamma = (self.coincidences - NCoincAvg)/(norm*(self.target_length + self.model_length))
         
-#        print "online 2"
-#        print self.delta, self.target_length, target_rates
+#        print self.coincidences
+#        print target_rates
 #        print NCoincAvg
 #        print norm
-#        print
-    
-        gamma = (self.coincidences - NCoincAvg)/(norm*(self.target_length + self.model_length))
+#        print self.target_length
+#        print self.model_length
         
         return gamma
 #        return self.coincidences

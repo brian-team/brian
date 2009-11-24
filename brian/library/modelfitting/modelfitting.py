@@ -6,6 +6,7 @@ from brian.network import Network, run
 from brian.clock import reinit_default_clock
 from brian.utils.parameters import Parameters
 from brian.monitor import CoincidenceCounter, CoincidenceCounterBis
+from brian.utils.statistics import firing_rate
 from numpy import *
 from numpy.random import rand, randn
 from brian.neurongroup import VectorizedNeuronGroup
@@ -15,7 +16,7 @@ try:
     use_gpu = True
 except ImportError:
     use_gpu = False
-use_gpu = False
+#use_gpu = False
 
 __all__ = ['modelfitting']
 
@@ -173,6 +174,17 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     cd = CoincidenceCounterBis(vgroup, spiketimes, spiketimes_offset, spikedelays, delta = delta)
     
     if use_gpu:
+        
+        # compute firing rates of target trains
+        target_length = zeros(NTarget)
+        target_rates = zeros(NTarget)
+        for i in range(NTarget):
+            target_train = [t for j,t in data if j == i]
+            target_length[i] = len(target_train)
+            target_rates[i] = firing_rate(target_train)
+        target_length = target_length[array(model_target, dtype=int)]
+        target_rates = target_rates[array(model_target, dtype=int)]
+
         mf = GPUModelFitting(vgroup, model,
                              I, I_offset, spiketimes, spiketimes_offset,
                              spikedelays,
@@ -187,6 +199,8 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
             sc = mf.spike_count
             cd.model_length = sc
             cd.coincidences = cc
+            cd.target_length = target_length
+            cd.target_rates = target_rates
             gamma = cd.gamma
             return gamma
     else:
