@@ -67,6 +67,7 @@ from globalprefs import *
 from base import *
 from stdunits import ms
 from operator import isSequenceType
+from utils import sparse # Brian's version of scipy sparse matrix library
 # We should do this:
 # from network import network_operation
 # but instead we do it at the bottom of the module (see comments there for explanation)
@@ -406,7 +407,7 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
     
     def __setitem__(self, index, W):
         # Make it work for sparse matrices
-        if isinstance(W,scipy.sparse.spmatrix):
+        if isinstance(W,sparse.spmatrix):
             ndarray.__setitem__(self,index,W.todense())
         else:
             ndarray.__setitem__(self,index,W)
@@ -416,7 +417,7 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
 
 oldscipy = scipy.__version__.startswith('0.6.')
 
-class SparseMatrix(scipy.sparse.lil_matrix):
+class SparseMatrix(sparse.lil_matrix):
     '''
     Used as the base for sparse construction matrix classes, essentially just scipy's lil_matrix.
     
@@ -439,11 +440,11 @@ class SparseMatrix(scipy.sparse.lil_matrix):
 
         if isinstance(i, slice) and isinstance(j,slice) and\
            (i.step is None) and (j.step is None) and\
-           (isinstance(W,scipy.sparse.lil_matrix) or isinstance(W,numpy.ndarray)):
+           (isinstance(W,sparse.lil_matrix) or isinstance(W,numpy.ndarray)):
             rows = self.rows[i]
             datas = self.data[i]
             j0=j.start
-            if isinstance(W,scipy.sparse.lil_matrix):
+            if isinstance(W,sparse.lil_matrix):
                 for row,data,rowW,dataW in izip(rows,datas,W.rows,W.data):
                     jj=bisect.bisect(row,j0) # Find the insertion point
                     row[jj:jj]=[j0+k for k in rowW]
@@ -469,9 +470,9 @@ class SparseMatrix(scipy.sparse.lil_matrix):
             # This corrects a bug in scipy sparse matrix as of version 0.7.0, but
             # it is not efficient!
             for w, k in izip(W, xrange(*i.indices(self.shape[0]))):
-                scipy.sparse.lil_matrix.__setitem__(self, (k,j), w)
+                sparse.lil_matrix.__setitem__(self, (k,j), w)
         else:
-            scipy.sparse.lil_matrix.__setitem__(self,index,W)
+            sparse.lil_matrix.__setitem__(self,index,W)
 
 class SparseConstructionMatrix(ConstructionMatrix, SparseMatrix):
     '''
@@ -740,7 +741,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
         for c in xrange(val.shape[0]):
             # extra the row values and column indices of row c of the initialising matrix
             # this works for any of the scipy sparse matrix formats
-            if isinstance(val, scipy.sparse.lil_matrix):
+            if isinstance(val, sparse.lil_matrix):
                 r = val.rows[c]
                 d = val.data[c]
             else:
@@ -957,7 +958,7 @@ class DynamicConnectionMatrix(ConnectionMatrix):
         for c in xrange(val.shape[0]):
             # extra the row values and column indices of row c of the initialising matrix
             # this works for any of the scipy sparse matrix formats
-            if isinstance(val, scipy.sparse.lil_matrix):
+            if isinstance(val, sparse.lil_matrix):
                 r = val.rows[c]
                 d = val.data[c]
             else:
@@ -1306,7 +1307,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                 weight = 1.0
             if sparseness is None:
                 sparseness = 1
-            if isinstance(weight, scipy.sparse.spmatrix) or isinstance(weight, ndarray):
+            if isinstance(weight, sparse.spmatrix) or isinstance(weight, ndarray):
                 self.connect(W=weight)
             elif sparseness==1:
                 self.connect_full(weight=weight)
@@ -1904,7 +1905,7 @@ class DelayConnection(Connection):
             # the structure is dynamic, it will be the user's
             # responsibility to update them in sequence
             delayvec = self.delayvec
-            # The delayvec[i,:] operation for scipy.sparse.lil_matrix format
+            # The delayvec[i,:] operation for sparse.lil_matrix format
             # is VERY slow, but the CSR format is fine. 
             if isinstance(delayvec, sparse.lil_matrix):
                 delayvec = delayvec.tocsr()
