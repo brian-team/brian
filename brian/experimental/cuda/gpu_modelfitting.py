@@ -208,8 +208,11 @@ class GPUModelFitting(object):
         Reinitialises all the variables, counters, etc. The state variable values
         are copied from the NeuronGroup G again, and the variables I, I_offset, etc.
         are copied from the method arguments.
-    ``launch(duration)``
-        Runs the kernel on the GPU for simulation time duration.
+    ``launch(duration[, stepsize])``
+        Runs the kernel on the GPU for simulation time duration. If ``stepsize``
+        is given, the simulation is broken into pieces of that size. This is
+        useful on Windows because driver limitations mean that individual GPU kernel
+        launches cannot last more than a few seconds without causing a crash.
     
     Attributes:
     
