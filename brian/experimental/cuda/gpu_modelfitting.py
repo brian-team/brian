@@ -302,7 +302,7 @@ class GPUModelFitting(object):
         self.kernel_func = self.kernel_module.get_function('runsim')
         self.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
         # TODO: compute block, grid, etc. with best maximum blocksize
-        blocksize = 256
+        blocksize = 128#256
         self.block = (blocksize, 1, 1)
         self.grid = (int(ceil(float(N)/blocksize)), 1)
         self.kernel_func_kwds = {'block':self.block, 'grid':self.grid}
