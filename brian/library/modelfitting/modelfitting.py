@@ -5,7 +5,7 @@ from brian.reset import NoReset
 from brian.network import Network, run
 from brian.clock import reinit_default_clock
 from brian.utils.parameters import Parameters
-from brian.monitor import CoincidenceCounter
+from brian.monitor import CoincidenceCounter, CoincidenceCounterBis
 from numpy import *
 from numpy.random import rand, randn
 from brian.neurongroup import VectorizedNeuronGroup
@@ -42,7 +42,7 @@ def get_initial_param_values(params, N):
             raise ArgumentError, "Param values length should be 3 or 4"
     return random_param_values
 
-def get_param_values(X, param_names):
+def get_param_values(X, param_names, includedelays = False):
     """
     Converts a matrix containing param values into a dictionary
     """
@@ -50,33 +50,21 @@ def get_param_values(X, param_names):
     for i in range(len(param_names)):
         name = param_names[i]
         param_values[name] = X[i,:]
+    if includedelays:
+        # Last row in X = delays
+        param_values['delays'] = X[-1,:]
     return param_values
 
 def get_matrix(param_values, param_names):
     """
     Converts a dictionary containing param values into a matrix
     """
-    X = zeros((len(param_names), len(param_values[param_names[0]])))
+    X = zeros((len(param_names)+1, len(param_values[param_names[0]])))
     for i in range(len(param_names)):
         X[i,:] = param_values[param_names[i]]
+    # Last row in X = delays
+    X[-1,:] = param_values['delays']
     return X
-
-#def fit(fun, X0, group_size, iterations = 10, min_values = None, max_values = None):
-#    """
-#    Maximizes a function starting from initial values X0
-#    if y=fun(x), 
-#        x is a D*(group_size*Ntarget) matrix
-#        y is a group_size*Ntarget vector
-#    D is the number of parameters
-#    group_size is the number of particles per target train
-#    Ntarget is the number of target trains
-#    fit maximizes fun independently over Ntarget subgroups
-#    fit returns a D*Ntarget matrix.
-#    """
-#    X, val, T = optimize(X0, fun, iterations = iterations, pso_params = [.8, 1.8, 1.8], 
-#                         min_values = min_values, max_values = max_values, 
-#                         group_size = group_size)
-#    return X, val
 
 def set_constraints(N = None, **params):
     """
@@ -92,10 +80,15 @@ def set_constraints(N = None, **params):
         value = params[key]
         min_values.append(value[0])
         max_values.append(value[-1])
+        
+    # Boundary conditions for delays parameter
+    min_values.append(-5.0*ms)
+    max_values.append(5.0*ms)
+    
     min_values = array(min_values)
     max_values = array(max_values)
-    min_values = tile(min_values.reshape((p, 1)), (1, N))
-    max_values = tile(max_values.reshape((p, 1)), (1, N))
+    min_values = tile(min_values.reshape((p+1, 1)), (1, N))
+    max_values = tile(max_values.reshape((p+1, 1)), (1, N))
     return min_values, max_values
 
 @check_units(delta=second)
@@ -156,53 +149,60 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
                  slices = slices, overlap = overlap, init = init,
                  **initial_param_values)
     model_target = kron(arange(NTarget), ones(particles))
-    cd = CoincidenceCounter(vgroup, data, model_target = model_target, delta = delta)
+    
+    I = array(input)
+    I_offset = zeros(len(vgroup), dtype=int)
+    i, t = zip(*data)
+    i = array(i)
+    t = array(t)
+    alls = []
+    n = 0
+    pointers = []
+    for j in xrange(amax(i)+1):
+        s = sort(t[i==j])
+        s = hstack((-1*second, s, vgroup.duration+1*second))
+        alls.append(s)
+        pointers.append(n)
+        n += len(s)
+    spiketimes = hstack(alls)
+    pointers = array(pointers, dtype=int)
+    spiketimes_offset = pointers[array(model_target, dtype=int)] # [pointers[i] for i in model_target]
+    spikedelays = zeros(len(vgroup))
+    
+#    cd = CoincidenceCounter(vgroup, data, model_target = model_target, delta = delta)
+    cd = CoincidenceCounterBis(vgroup, spiketimes, spiketimes_offset, spikedelays, delta = delta)
     
     if use_gpu:
-        I = array(input)
-        I_offset = zeros(len(vgroup), dtype=int)
-        i, t = zip(*data)
-        i = array(i)
-        t = array(t)
-        alls = []
-        n = 0
-        pointers = []
-        for j in xrange(amax(i)+1):
-            s = sort(t[i==j])
-            s = hstack((-1*second, s, vgroup.duration+1*second))
-            alls.append(s)
-            pointers.append(n)
-            n += len(s)
-        spiketimes = hstack(alls)
-        pointers = array(pointers, dtype=int)
-        spiketimes_offset = pointers[array(model_target, dtype=int)] # [pointers[i] for i in model_target]
-        spikedelays = zeros(len(vgroup))
         mf = GPUModelFitting(vgroup, model,
                              I, I_offset, spiketimes, spiketimes_offset,
                              spikedelays,
                              delta)
         def fun(X):
-            param_values = get_param_values(X, param_names)
+            param_values = get_param_values(X[0:-1,:], param_names)
             vgroup.set_param_values(param_values)
+            spikedelays = X[-1,:]
             mf.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
             mf.launch(vgroup.duration, stepsize)
             cc = mf.coincidence_count
             sc = mf.spike_count
-            cd._model_length = sc
-            cd._coincidences = cc
+            cd.model_length = sc
+            cd.coincidences = cc
             gamma = cd.gamma
             return gamma
     else:
         def fun(X):
-            param_values = get_param_values(X, param_names)
-            net = Network(vgroup, cd)
+            param_values = get_param_values(X[0:-1,:], param_names)
             vgroup.set_param_values(param_values)
+            net = Network(vgroup, cd)
             reinit_default_clock()
             cd.reinit()
+            cd.spikedelays = X[-1,:]
             net.run(vgroup.duration)
             gamma = cd.gamma
             return gamma
     
+    
+    initial_param_values['delays'] = -5*ms + 10*ms*rand(N)
     X0 = get_matrix(initial_param_values, param_names)
     min_values, max_values = set_constraints(N = N, **params)
     
@@ -210,6 +210,6 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
                      min_values = min_values, max_values = max_values, 
                      group_size = particles)
     
-    best_params = get_param_values(X, param_names) 
+    best_params = get_param_values(X, param_names, True) 
     
     return Parameters(**best_params), value

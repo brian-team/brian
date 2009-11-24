@@ -1279,6 +1279,7 @@ class CoincidenceCounterBis(SpikeMonitor):
     """
     def __init__(self, source, data = None, spiketimes_offset = None, spikedelays = None, 
                  coincidence_count_algorithm = 'exclusive', delta = 4*ms):
+         
         source.set_max_delay(0)
         self.source = source
         self.delay = 0
@@ -1296,7 +1297,10 @@ class CoincidenceCounterBis(SpikeMonitor):
         
         dt = self.source.clock.dt
         self.delta = int(rint(delta/dt))
-            
+        self.reinit()
+    
+    def reinit(self):
+        dt = self.source.clock.dt
         # Number of spikes for each neuron
         self.model_length = zeros(self.N, dtype = 'int')
         self.target_length = zeros(self.N, dtype = 'int')
