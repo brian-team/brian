@@ -6,7 +6,8 @@ Neural Computation, 2006
 from brian import *
 import random
 
-defaultclock.dt = 0.5*ms
+defaultclock.dt = 1*ms
+#defaultclock.dt = 0.1*ms
 
 M = 100                # number of synapses per neuron
 D = 20*ms              # maximal conduction delay
@@ -43,12 +44,20 @@ u += d
 '''
 threshold = 30*mV
 
-G = NeuronGroup(N, eqs, threshold=threshold, reset=reset)
+G = NeuronGroup(N, eqs, threshold=threshold, reset=reset)#, method='RK')
+
+# Izhikevich's numerical integration scheme, works for dt=1ms only
+def state_updater(G):
+    G.v = G.v+0.5*ms*((0.04/ms/mV)*G.v**2+(5/ms)*G.v+140*mV/ms-G.u)
+    G.v = G.v+0.5*ms*((0.04/ms/mV)*G.v**2+(5/ms)*G.v+140*mV/ms-G.u)
+    G.u = G.u+1*ms*G.a*(b*G.v-G.u)
+G._state_updater = state_updater
+
 Ge = G.subgroup(Ne)
 Gi = G.subgroup(Ni)
 
 G.v = c
-G.u = 0.2*c
+G.u = b*c
 Ge.a = a_e
 Ge.d = d_e
 Gi.a = a_i
@@ -64,7 +73,9 @@ Ci = Connection(Gi, Ge, 'v', delay=D_i)
 for i in xrange(Ne):
     inds = random.sample(xrange(N), M)
     Ce[i, inds] = s_e*ones(len(inds))
-    Ce.delay[i, inds] = rand(len(inds))*(D-D_min)+D_min
+#    Ce.delay[i, inds] = rand(len(inds))*(D-D_min)+D_min
+    # delays must be integer multiples of 1ms in Izhikevich's scheme
+    Ce.delay[i, inds] = (randint(19, size=len(inds))+1)*ms
 for i in xrange(Ni):
     inds = random.sample(xrange(Ne), M)
     Ci[i, inds] = s_i*ones(len(inds))
@@ -75,23 +86,12 @@ for i in xrange(Ni):
 # matrix w to act on - this should be easy to add though.
 
 # Simplified version of Izhikevich's rule 
-#stdp = ExponentialSTDP(Ce, taup=20*ms, taum=20*ms, Ap=0.1*3, Am=-0.12*3,#Ap=0.1*mV/sm*9.5, Am=-0.12*mV/sm*9.5,
+#stdp = ExponentialSTDP(Ce, taup=20*ms, taum=20*ms, Ap=0.1, Am=-0.12,
 #                       wmax=sm, interactions='nearest')
-#stdp = ExponentialSTDP(Ce, taup=20*ms, taum=20*ms, Ap=0, Am=0,
-#                       wmax=sm, interactions='nearest')
-#del stdp
-#import gc
-#gc.collect()
 
 #@network_operation(clock=EventClock(dt=1*second))
 #def f():
 #    Ce.W.alldata[:] = clip(Ce.W.alldata[:]+0.01*sm, 0, sm)
-
-#M = SpikeMonitor(G)
-
-print G.period, G.period*defaultclock.dt
-print G._max_delay, G._max_delay*defaultclock.dt
-#exit()
 
 #ion()
 M1 = SpikeMonitor(G)
