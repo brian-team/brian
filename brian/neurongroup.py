@@ -652,8 +652,7 @@ class VectorizedNeuronGroup(NeuronGroup):
     - model          Model equations
     - reset          Model reset
     - threshold      Model threshold 
-    - data           A list of spike times (i,t)
-    - input_name     The parameter name of the input current in the model equations
+    - input_var      The parameter name of the input current in the model equations
     - input          The input values
     - overlap        Overlap between time slices
     - slices         Number of time slices (default 1)
