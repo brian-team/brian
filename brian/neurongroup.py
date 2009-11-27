@@ -387,6 +387,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         self._refractory_time = float(refractory)-0.5*clock._dt
         
         self._owner=self # owner (for subgroups)
+        self._subgroup_set = magic.WeakSet()
         self._origin=0 # start index from owner if subgroup
         self._next_subgroup=0 # start index of next subgroup
         
@@ -423,6 +424,11 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                                      self._max_delay,
                                      useweave=get_global_preference('useweave'),
                                      compiler=get_global_preference('weavecompiler')) # Spike storage
+            # update all subgroups if any exist
+            if hasattr(self, '_subgroup_set'): # the first time set_max_delay is called this is false
+                for G in self._subgroup_set.get():
+                    G._max_delay = self._max_delay
+                    G.LS = self.LS
 
     def rest(self):
         '''
@@ -528,8 +534,9 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         Q.N=Q._S.shape[1]
         Q._origin=self._origin+i
         Q._next_subgroup = 0
+        self._subgroup_set.add(Q)
         return Q
-    
+        
     def same(self,Q):
         '''
         Tests if the two groups (subgroups) are of the same kind,

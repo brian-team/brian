@@ -83,6 +83,7 @@ if 0:
     gc.collect()
 if 1: #TODO: WEIRD ERROR!!! Why does doing this break stuff?
     print G._max_delay*defaultclock.dt
+    G.LS.S = None
     G.set_max_delay(G._max_delay*defaultclock.dt)
 
 #@network_operation
