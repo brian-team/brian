@@ -75,32 +75,41 @@ for i in xrange(Ni):
 # matrix w to act on - this should be easy to add though.
 
 # Simplified version of Izhikevich's rule 
-if 0:
-    stdp = ExponentialSTDP(Ce, taup=20*ms, taum=20*ms, Ap=0, Am=0, #0.1*9.5, Am=-0.12*9.5,
-                           wmax=sm)#, interactions='nearest')
-    del stdp
-    import gc
-    gc.collect()
-if 1: #TODO: WEIRD ERROR!!! Why does doing this break stuff?
-    print G._max_delay*defaultclock.dt
-    G.LS.S = None
-    G.set_max_delay(G._max_delay*defaultclock.dt)
+#stdp = ExponentialSTDP(Ce, taup=20*ms, taum=20*ms, Ap=0.1*3, Am=-0.12*3,#Ap=0.1*mV/sm*9.5, Am=-0.12*mV/sm*9.5,
+#                       wmax=sm, interactions='nearest')
+#stdp = ExponentialSTDP(Ce, taup=20*ms, taum=20*ms, Ap=0, Am=0,
+#                       wmax=sm, interactions='nearest')
+#del stdp
+#import gc
+#gc.collect()
 
-#@network_operation
+#@network_operation(clock=EventClock(dt=1*second))
 #def f():
-#    Ce.W.alldata[:] += 0.01*defaultclock.dt
+#    Ce.W.alldata[:] = clip(Ce.W.alldata[:]+0.01*sm, 0, sm)
 
-M = SpikeMonitor(G)
+#M = SpikeMonitor(G)
 
-print MagicNetwork().groups
-print MagicNetwork().connections
-for f in MagicNetwork().operations:
-    print f.__name__
+print G.period, G.period*defaultclock.dt
+print G._max_delay, G._max_delay*defaultclock.dt
+#exit()
 
-run(200*msecond, report='stderr')
-subplot(211)
-raster_plot(M)
-subplot(212)
-imshow(Ce.W.todense())
-colorbar()
+#ion()
+M1 = SpikeMonitor(G)
+run(1*second, report='stderr')
+raster_plot(M1)
+#draw()
+#forget(M1)
+#run(99*second, report='stderr')
+#M2 = SpikeMonitor(G)
+#run(1*second, report='stderr')
+#figure()
+#raster_plot(M2)
+##draw()
+##forget(M2)
+##run((3600-101)*second, report='stderr')
+##M3 = SpikeMonitor(G)
+##run(1*second, report='stderr')
+#ioff()
+##figure()
+##raster_plot(M3)
 show()

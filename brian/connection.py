@@ -1661,6 +1661,7 @@ class DelayConnection(Connection):
         Connection.__init__(self, source, target, state=state, modulation=modulation,
                             structure=structure, weight=weight, sparseness=sparseness, **kwds)
         self._max_delay = int(max_delay/target.clock.dt)+1
+        source.set_max_delay(max_delay)
         # Each row of the following array stores the cumulative effect of spikes at some
         # particular time, defined by a circular indexing scheme. The _cur_delay_ind attribute
         # stores the row corresponding to the current time, so that _cur_delay_ind+1 corresponds

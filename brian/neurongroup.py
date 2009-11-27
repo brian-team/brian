@@ -415,6 +415,9 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         # consists of mappings i->i)?
 
     def set_max_delay(self, max_delay):
+        if hasattr(self, '_owner') and self._owner is not self:
+            self._owner.set_max_delay(max_delay)
+            return
         _max_delay = int(max_delay/self.clock.dt)+2 # in time bins
         if _max_delay>self._max_delay:
             self._max_delay = _max_delay
@@ -426,7 +429,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                                      compiler=get_global_preference('weavecompiler')) # Spike storage
             # update all subgroups if any exist
             if hasattr(self, '_subgroup_set'): # the first time set_max_delay is called this is false
-                for G in self._subgroup_set.get():
+                for G in self._owner._subgroup_set.get():
                     G._max_delay = self._max_delay
                     G.LS = self.LS
 
