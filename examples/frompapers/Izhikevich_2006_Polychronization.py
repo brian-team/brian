@@ -48,9 +48,9 @@ G = NeuronGroup(N, eqs, threshold=threshold, reset=reset)#, method='RK')
 
 # Izhikevich's numerical integration scheme, works for dt=1ms only
 def state_updater(G):
-    G.v = G.v+0.5*ms*((0.04/ms/mV)*G.v**2+(5/ms)*G.v+140*mV/ms-G.u)
-    G.v = G.v+0.5*ms*((0.04/ms/mV)*G.v**2+(5/ms)*G.v+140*mV/ms-G.u)
-    G.u = G.u+1*ms*G.a*(b*G.v-G.u)
+    G.v = G.v+0.5*defaultclock.dt*((0.04/ms/mV)*G.v**2+(5/ms)*G.v+140*mV/ms-G.u)
+    G.v = G.v+0.5*defaultclock.dt*((0.04/ms/mV)*G.v**2+(5/ms)*G.v+140*mV/ms-G.u)
+    G.u = G.u+defaultclock.dt*G.a*(b*G.v-G.u)
 G._state_updater = state_updater
 
 Ge = G.subgroup(Ne)
