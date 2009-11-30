@@ -190,6 +190,13 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
                              spikedelays,
                              delta)
         def fun(X):
+            
+            # bug if vgroup is not redefined at each fun call
+            vgroup = VectorizedNeuronGroup(model = model, threshold = threshold, reset = reset, 
+                 input_var = input_var, input = input,
+                 slices = slices, overlap = overlap, init = init,
+                 **initial_param_values)
+            
             param_values = get_param_values(X[0:-1,:], param_names)
             vgroup.set_param_values(param_values)
             spikedelays = X[-1,:]
@@ -205,6 +212,13 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
             return gamma
     else:
         def fun(X):
+            
+            # bug if vgroup is not redefined at each fun call
+            vgroup = VectorizedNeuronGroup(model = model, threshold = threshold, reset = reset, 
+                 input_var = input_var, input = input,
+                 slices = slices, overlap = overlap, init = init, values_number = N)
+            cd = CoincidenceCounterBis(vgroup, spiketimes, spiketimes_offset, spikedelays, delta = delta)
+            
             param_values = get_param_values(X[0:-1,:], param_names)
             vgroup.set_param_values(param_values)
             net = Network(vgroup, cd)

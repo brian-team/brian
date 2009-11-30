@@ -665,15 +665,15 @@ class VectorizedNeuronGroup(NeuronGroup):
     
     def __init__(self, model = None, reset = NoReset(), threshold = None, 
                  input_var = 'I', input = None,
-                 overlap = None, slices = 1, init = None, **param_values):
+                 overlap = None, slices = 1, init = None, values_number = None, **param_values):
         
         if (slices == 1) or (overlap is None):
             overlap = 0*msecond
-        values_number = len(param_values.values()[0]) # Number of parameter values
+        if len(param_values) > 0:
+            values_number = len(param_values.values()[0]) # Number of parameter values
         for param, value in param_values.iteritems():
             if not(len(value) == values_number):
                 raise AttributeError, 'The parameters must have the same number of values'
-        
         N = values_number * slices # Total number of neurons
         NeuronGroup.__init__(self, N = N, model = model, threshold = threshold, reset = reset)
         dt=self.clock.dt
