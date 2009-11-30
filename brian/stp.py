@@ -31,13 +31,13 @@ class STPGroup(NeuronGroup):
     '''
     Neuron group forwarding spikes with short term plasticity modulation.
     '''
-    def __init__(self,N):
+    def __init__(self,N,clock=None):
         eqs='''
         ux : 1
         x : 1
         u : 1
         '''
-        NeuronGroup.__init__(self,N,model=eqs)
+        NeuronGroup.__init__(self,N,model=eqs,clock=clock)
         
     def update(self):
         pass
@@ -131,9 +131,9 @@ class STP(NetworkOperation):
     def __init__(self,C,taud,tauf,U):
         if isinstance(C,DelayConnection):
             raise AttributeError,"STP does not handle heterogeneous connections yet."
-        NetworkOperation.__init__(self,lambda:None)
+        NetworkOperation.__init__(self,lambda:None,clock=C.source.clock)
         N=len(C.source)
-        P=STPGroup(N)
+        P=STPGroup(N,clock=C.source.clock)
         P.x=1
         P.u=U
         P.ux=U
