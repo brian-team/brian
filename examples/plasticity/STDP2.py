@@ -38,7 +38,7 @@ stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax,update='
 rate=PopulationRateMonitor(neurons)
 
 start_time=time()
-run(100*second)
+run(100*second,report='text')
 print "Simulation time:",time()-start_time
 
 subplot(311)
