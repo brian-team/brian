@@ -1542,8 +1542,10 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                 raise DimensionMismatchError("Incorrects unit for the synaptic weights.",*inst._dims)
             W=zeros((len(P),len(Q)))
             try:
-                weight(0,1.*arange(0,len(Q)))
+                x=weight(0,1.*arange(0,len(Q)))
                 failed=False
+                if array(x).size!=len(Q):
+                    failed=True
             except:
                 failed= True
             if failed: # vector-based not possible
