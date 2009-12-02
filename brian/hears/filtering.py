@@ -11,6 +11,7 @@ try:
     import pycuda
     import pycuda.autoinit as autoinit
     import pycuda.driver as drv
+    import pycuda.compiler
     from pycuda import gpuarray
     from brian.experimental.cuda.buffering import *
     import re
@@ -302,7 +303,7 @@ if use_gpu:
             code = re.sub("\\bp\\b", str(p), code)
             code = re.sub("\\bm\\b", str(m), code)
             code = re.sub("\\bn\\b", str(n), code)
-            self.gpu_mod = drv.SourceModule(code)
+            self.gpu_mod = pycuda.compiler.SourceModule(code)
             self.gpu_filt_func = self.gpu_mod.get_function("filt")
             blocksize = 512#self.maxblocksize
             if n<blocksize:
