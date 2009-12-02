@@ -120,7 +120,7 @@ def modelfitting(model = None, reset = NoReset(), threshold = None, data = None,
     - input_var     The input variable name in the equations ('I' by default) 
     - **params      Model parameters list : tau=(min,init_min,init_max,max)
     - verbose       Print iterations?
-    - particles     Number of particles in the particle swarm algorithm
+    - particles     Number of particles in the particle swarm algorithm per target train
     - slices        Number of time slices, 1 by default
     - delta         Time window
     - init          Initial values : dictionary (state variable=initial value)
