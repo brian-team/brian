@@ -3,7 +3,7 @@ from time import time,clock
 
 __all__=['particle_swarm']
 
-def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_values = None, group_size = None):
+def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_values = None, group_size = None, verbose = True):
     """
     Computes the argument of fun which maximizes it using the Particle Swarm Optimization algorithm.
     
@@ -52,7 +52,8 @@ def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_value
     
     time0 = clock()
     for k in range(iterations):
-        print 'Step %d/%d' % (k+1 , iterations)
+        if verbose:
+            print 'Step %d/%d' % (k+1 , iterations)
         R1 = rand(N,M)
         R2 = rand(N,M)
         X_gbest2 = zeros((N, M))
@@ -67,6 +68,7 @@ def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_value
         time1 = clock()
         fitness_X = fun(X)
         time2 = clock()
+#        print fitness_X
         
         # Local update
         indices_lbest = nonzero(fitness_X > fitness_lbest)[1]
@@ -84,13 +86,14 @@ def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_value
             X_gbest[:,j] = X[:,j*group_size+index_gbest]
             fitness_gbest[j] = max_fitness_X[j]
        
-        print 'Evaluation time :', '%.2f s' % (time2-time1)
-        print 'Total elapsed time :', '%.2f s' % (clock()-time0)
-        print 'Best values'
-        print '  min  :', '%.5f' % fitness_gbest.min()
-        print '  mean :', '%.5f' % fitness_gbest.mean()
-        print '  max  :', '%.5f' % fitness_gbest.max()
-        print '  std  :', '%.5f' % fitness_gbest.std()
+        if verbose:
+            print 'Evaluation time :', '%.2f s' % (time2-time1)
+            print 'Total elapsed time :', '%.2f s' % (clock()-time0)
+            print 'Best values'
+            print '  min  :', '%.5f' % fitness_gbest.min()
+            print '  mean :', '%.5f' % fitness_gbest.mean()
+            print '  max  :', '%.5f' % fitness_gbest.max()
+            print '  std  :', '%.5f' % fitness_gbest.std()
 #        for j in range(group_number):
 #            print '  %d :' % (j+1), '%.5f' % fitness_gbest[j]
         print

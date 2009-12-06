@@ -146,6 +146,13 @@ def vector_strength(spikes,period):
     '''
     return abs(mean(exp(array(spikes)*1j*2*pi/period)))
 
+# Normalize the coincidence count of two spike trains (return the gamma factor)
+def get_gamma_factor(coincidence_count, model_length, target_length, target_rates, delta):
+    NCoincAvg = 2 * delta * target_length * target_rates
+    norm = .5*(1 - 2 * delta * target_rates)    
+    gamma = (coincidence_count - NCoincAvg)/(norm*(target_length + model_length))
+    return gamma
+
 # Gamma factor
 @check_units(delta=second)
 def gamma_factor(source, target, delta, normalize = True, dt = None):
@@ -190,16 +197,12 @@ def gamma_factor(source, target, delta, normalize = True, dt = None):
         coincidences = sum(indices)
     
     # Normalization of the coincidences count
-    NCoincAvg = 2 * delta * target_length * target_rate
-    norm = .5*(1 - 2 * target_rate * delta)
+#    NCoincAvg = 2 * delta * target_length * target_rate
+#    norm = .5*(1 - 2 * target_rate * delta)
+#    gamma = (coincidences - NCoincAvg)/(norm*(source_length + target_length))
     
-#    print "offline"
-#    print delta, target_length, target_rate
-#    print NCoincAvg
-#    print norm
-#    print
-
-    gamma = (coincidences - NCoincAvg)/(norm*(source_length + target_length))   
+    # TODO: test this
+    gamma = get_gamma_factor(coincidences, source_length, target_length, target_rate, delta)
     
     if normalize:
         return gamma

@@ -52,7 +52,6 @@ from stdunits import ms, Hz
 from collections import defaultdict
 import types
 from operator import isSequenceType
-from neurongroup import VectorizedNeuronGroup
 from utils.statistics import firing_rate
 import bisect
 try:
@@ -168,15 +167,15 @@ class SpikeMonitor(Connection,Monitor):
         return self._spiketimes
     spiketimes = property(fget=getspiketimes)
 
-    def getvspikes(self):
-        if isinstance(self.source, VectorizedNeuronGroup):
-            N = self.source.neuron_number
-            overlap = self.source.overlap
-            duration = self.source.duration
-            vspikes = [(mod(i,N),(t-overlap)+i/N*(duration-overlap)*second) for (i,t) in self.spikes if t >= overlap]
-            vspikes.sort(cmp=lambda x,y:2*int(x[1]>y[1])-1)
-            return vspikes
-    concatenated_spikes = property(fget=getvspikes)
+#    def getvspikes(self):
+#        if isinstance(self.source, VectorizedNeuronGroup):
+#            N = self.source.neuron_number
+#            overlap = self.source.overlap
+#            duration = self.source.duration
+#            vspikes = [(mod(i,N),(t-overlap)+i/N*(duration-overlap)*second) for (i,t) in self.spikes if t >= overlap]
+#            vspikes.sort(cmp=lambda x,y:2*int(x[1]>y[1])-1)
+#            return vspikes
+#    concatenated_spikes = property(fget=getvspikes)
 
 class AutoCorrelogram(SpikeMonitor):
     '''
@@ -1276,13 +1275,19 @@ class CoincidenceCounterBis(SpikeMonitor):
     It is essential that each spike  train with the spiketimes array should begin with a spike at a
     large negative time (e.g. -1*second) and end with a spike that is a long time
     after the duration of the run (e.g. duration+1*second).
+    
+    onset : the algorithm only starts counting something from onset (needed for 
+    time vectorization with overlap)
     """
     def __init__(self, source, data = None, spiketimes_offset = None, spikedelays = None, 
-                 coincidence_count_algorithm = 'exclusive', delta = 4*ms):
+                 coincidence_count_algorithm = 'exclusive', onset = None, delta = 4*ms):
          
         source.set_max_delay(0)
         self.source = source
         self.delay = 0
+        if onset is None:
+            onset = 0*ms
+        self.onset = onset
         self.N = len(source)
         self.coincidence_count_algorithm = coincidence_count_algorithm
         self.target_rates = None
@@ -1322,7 +1327,8 @@ class CoincidenceCounterBis(SpikeMonitor):
         dt = self.source.clock.dt
         T = array(rint((self.source.clock.t + self.spikedelays)/dt), dtype = int)
         spiking_neurons = array(spiking_neurons)
-        self.model_length[spiking_neurons] += 1
+        if self.source.clock.t >= self.onset:
+            self.model_length[spiking_neurons] += 1
         
         # Updates coincidences count
 #        indices_coincidences = zeros(self.N, dtype = 'bool')
@@ -1338,6 +1344,12 @@ class CoincidenceCounterBis(SpikeMonitor):
         near_last_spike = near_last_spike & has_spiked
         near_next_spike = near_next_spike & has_spiked
         self.coincidences[(near_last_spike&self.last_spike_allowed)|(near_next_spike&self.next_spike_allowed)] += 1
+        
+        # DEBUG
+#        indices = nonzero((near_last_spike&self.last_spike_allowed)|(near_next_spike&self.next_spike_allowed))[0]
+#        if len(indices)>0:
+#            print self.source.clock.t, indices
+            
         if self.coincidence_count_algorithm == 'exclusive':
             near_both_allowed = (near_last_spike&self.last_spike_allowed) & (near_next_spike&self.next_spike_allowed)
             self.last_spike_allowed = self.last_spike_allowed & -near_last_spike
@@ -1372,17 +1384,17 @@ class CoincidenceCounterBis(SpikeMonitor):
             self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
             self.next_spike_allowed[indices] = True
 
-    def get_gamma(self):
-        """
-        Returns the Gamma factor.
-        """
-        delta = self.source.clock.dt*self.delta
-        target_rates = self.target_rates
-        if target_rates is None:
-            target_rates = (self.target_length-1)/(1.0*self.source.clock.dt*(self.last_spike_time - self.first_target_spike))        
-        NCoincAvg = 2 * delta * self.target_length * target_rates
-        norm = .5*(1 - 2 * delta * target_rates)    
-        gamma = (self.coincidences - NCoincAvg)/(norm*(self.target_length + self.model_length))
+#    def get_gamma(self):
+#        """
+#        Returns the Gamma factor.
+#        """
+#        delta = self.source.clock.dt*self.delta
+#        target_rates = self.target_rates
+#        if target_rates is None:
+#            target_rates = (self.target_length-1)/(1.0*self.source.clock.dt*(self.last_spike_time - self.first_target_spike))        
+#        NCoincAvg = 2 * delta * self.target_length * target_rates
+#        norm = .5*(1 - 2 * delta * target_rates)    
+#        gamma = (self.coincidences - NCoincAvg)/(norm*(self.target_length + self.model_length))
         
 #        print self.coincidences
 #        print target_rates
@@ -1391,8 +1403,8 @@ class CoincidenceCounterBis(SpikeMonitor):
 #        print self.target_length
 #        print self.model_length
         
-        return gamma
+#        return gamma
 #        return self.coincidences
     
-    gamma = property(fget=get_gamma)
+#    gamma = property(fget=get_gamma)
     
