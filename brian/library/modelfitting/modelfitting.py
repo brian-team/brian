@@ -139,12 +139,13 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
             group.state(param)[:] = value
 
     # Injects current in each sliced neuron
+    # USELESS WITH THE GPU?
     for k in range(slices):
         sliced_subgroup = group.subgroup(group_size*group_count)
         input_sliced_values = input[I_offset[group_size*group_count*k]:I_offset[group_size*group_count*k]+total_steps]
         sliced_subgroup.set_var_by_array(input_var, TimedArray(input_sliced_values, clock=defaultclock))
 
-    # Computes the firing rates of target trains
+    # Computes the firing rates of target trains (needed for the computation of the gamma factor)
     target_rates = array([firing_rate(sort(t[i==j])) for j in range(group_count)])
     target_length = array([len(t[i==j]) for j in range(group_count)])
     # Duplicates each target_length value 'group_size' times so that target_length[i]
