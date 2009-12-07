@@ -1264,60 +1264,70 @@ class CoincidenceCounterBis(SpikeMonitor):
         spiking_neurons = array(spiking_neurons)
         if self.source.clock.t >= self.onset:
             self.model_length[spiking_neurons] += 1
+
+        # Updates coincidences count
+        T_spiking = T[spiking_neurons]
+        near_last_spike = self.last_spike_time[spiking_neurons]+self.delta>=T_spiking
+        near_next_spike = self.next_spike_time[spiking_neurons]-self.delta<=T_spiking
+        last_spike_allowed = self.last_spike_allowed[spiking_neurons]
+        next_spike_allowed = self.next_spike_allowed[spiking_neurons]
+        I = (near_last_spike&last_spike_allowed)|(near_next_spike&next_spike_allowed)
+        self.coincidences[spiking_neurons[I]] += 1
+
+        if self.coincidence_count_algorithm == 'exclusive':
+            near_both_allowed = (near_last_spike&last_spike_allowed) & (near_next_spike&next_spike_allowed)
+            self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
+            self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed
+
+        # Updates last and next spikes for each neuron
+        indices, = (T >= self.next_spike_time).nonzero()
+        self.target_length[indices] += 1
+        self.spiketime_index[indices] += 1
+        self.last_spike_time[indices] = self.next_spike_time[indices]
+        self.next_spike_time[indices] = array(rint(self.data[self.spiketime_index[indices]+1]/dt), dtype=int)
+        
+#        # Records first target spikes
+#        indices_first = (self.target_length[indices] == 1)
+#        I = indices[indices_first]
+#        self.first_target_spike[I] = self.last_spike_time[I]
+        
+        if self.coincidence_count_algorithm == 'exclusive':
+            self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
+            self.next_spike_allowed[indices] = True
         
         # Updates coincidences count
-#        indices_coincidences = zeros(self.N, dtype = 'bool')
-#        indices_coincidences[spiking_neurons] = True
-#        indices_coincidences = indices_coincidences & \
-#                               ((((self.last_spike_time + self.delta) >= T) & self.last_spike_allowed) | \
-#                               (((self.next_spike_time - self.delta) <= T) & self.next_spike_allowed))
-#        self.coincidences[indices_coincidences] += 1
-        has_spiked = zeros(self.N, dtype='bool')
-        has_spiked[spiking_neurons] = True
-        near_last_spike = self.last_spike_time+self.delta>=T
-        near_next_spike = self.next_spike_time-self.delta<=T
-        near_last_spike = near_last_spike & has_spiked
-        near_next_spike = near_next_spike & has_spiked
-        self.coincidences[(near_last_spike&self.last_spike_allowed)|(near_next_spike&self.next_spike_allowed)] += 1
+#        has_spiked = zeros(self.N, dtype='bool')
+#        has_spiked[spiking_neurons] = True
+#        near_last_spike = self.last_spike_time+self.delta>=T
+#        near_next_spike = self.next_spike_time-self.delta<=T
+#        near_last_spike = near_last_spike & has_spiked
+#        near_next_spike = near_next_spike & has_spiked
+#        self.coincidences[(near_last_spike&self.last_spike_allowed)|(near_next_spike&self.next_spike_allowed)] += 1
         
         # DEBUG
 #        indices = nonzero((near_last_spike&self.last_spike_allowed)|(near_next_spike&self.next_spike_allowed))[0]
 #        if len(indices)>0:
 #            print self.source.clock.t, indices
             
-        if self.coincidence_count_algorithm == 'exclusive':
-            near_both_allowed = (near_last_spike&self.last_spike_allowed) & (near_next_spike&self.next_spike_allowed)
-            self.last_spike_allowed = self.last_spike_allowed & -near_last_spike
-            self.next_spike_allowed = (self.next_spike_allowed & -near_next_spike) | near_both_allowed
-#            bool near_last_spike = last_spike_time+%DELTA%>=Tspike;
-#            bool near_next_spike = next_spike_time-%DELTA%<=Tspike;
-#            near_last_spike = near_last_spike && has_spiked;
-#            near_next_spike = near_next_spike && has_spiked;
-#            ncoinc += (near_last_spike&&last_spike_allowed) || (near_next_spike&&next_spike_allowed);
-#            bool near_both_allowed = (near_last_spike&&last_spike_allowed) && (near_next_spike&&next_spike_allowed);
-#            last_spike_allowed = last_spike_allowed && !near_last_spike;
-#            next_spike_allowed = (next_spike_allowed && !near_next_spike) || near_both_allowed;
-        
-        # Allows no more than 1 coincident spike per target spike
 #        if self.coincidence_count_algorithm == 'exclusive':
-#            self.last_spike_allowed[indices_coincidences] = -((self.last_spike_time[indices_coincidences] + self.delta) >= T[indices_coincidences])
-#            self.next_spike_allowed[indices_coincidences] = -(((self.last_spike_time[indices_coincidences] + self.delta) <  T[indices_coincidences]) & \
-#                                        ((self.next_spike_time[indices_coincidences] - self.delta) <= T[indices_coincidences]))
-
+#            near_both_allowed = (near_last_spike&self.last_spike_allowed) & (near_next_spike&self.next_spike_allowed)
+#            self.last_spike_allowed = self.last_spike_allowed & -near_last_spike
+#            self.next_spike_allowed = (self.next_spike_allowed & -near_next_spike) | near_both_allowed
+        
         # Updates last and next spikes for each neuron
-        indices = (T >= self.next_spike_time)
-        self.target_length[indices] += 1
-        self.spiketime_index[indices] += 1
-        self.last_spike_time[indices] = self.next_spike_time[indices]
-        self.next_spike_time[indices] = array(rint(self.data[self.spiketime_index[indices]+1]/dt),dtype=int)
+#        indices = (T >= self.next_spike_time)
+#        self.target_length[indices] += 1
+#        self.spiketime_index[indices] += 1
+#        self.last_spike_time[indices] = self.next_spike_time[indices]
+#        self.next_spike_time[indices] = array(rint(self.data[self.spiketime_index[indices]+1]/dt),dtype=int)
         
-        # Records first target spikes
-        indices_first = indices & (self.target_length == 1)
-        self.first_target_spike[indices_first] = self.last_spike_time[indices_first]
-        
-        if self.coincidence_count_algorithm == 'exclusive':
-            self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
-            self.next_spike_allowed[indices] = True
+#        # Records first target spikes
+#        indices_first = indices & (self.target_length == 1)
+#        self.first_target_spike[indices_first] = self.last_spike_time[indices_first]
+#        
+#        if self.coincidence_count_algorithm == 'exclusive':
+#            self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
+#            self.next_spike_allowed[indices] = True
 
 # TODO
 #    def get_gamma(self):
