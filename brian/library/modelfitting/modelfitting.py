@@ -61,7 +61,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
     """
     
     # Use GPU ?
-    if can_use_gpu & (use_gpu is None):
+    if can_use_gpu & (use_gpu is not False):
         use_gpu = True
     else:
         use_gpu = False
@@ -154,7 +154,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
     target_rates = kron(target_rates, ones(group_size))
 
     if use_gpu:
-        mf = GPUModelFitting(group, model, I, I_offset, spiketimes, spiketimes_offset, spikedelays, delta)
+        mf = GPUModelFitting(group, model, input, I_offset, spiketimes, spiketimes_offset, spikedelays, delta)
         def fun(X):
             # Gets the parameter values contained in the matrix X, excepted spike delays values
             if includedelays:
@@ -169,7 +169,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
             if includedelays:
                 spikedelays = X[-1,:]
             # Reinitializes the simulation object
-            mf.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
+            mf.reinit_vars(input, I_offset, spiketimes, spiketimes_offset, spikedelays)
             # LAUNCHES the simulation on the GPU
             mf.launch(sliced_duration, stepsize)
             # Count the final number of coincidences and of model spikes

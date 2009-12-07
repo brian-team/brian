@@ -1319,6 +1319,7 @@ class CoincidenceCounterBis(SpikeMonitor):
             self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
             self.next_spike_allowed[indices] = True
 
+# TODO
 #    def get_gamma(self):
 #        """
 #        Returns the Gamma factor.
@@ -1330,16 +1331,16 @@ class CoincidenceCounterBis(SpikeMonitor):
 #        NCoincAvg = 2 * delta * self.target_length * target_rates
 #        norm = .5*(1 - 2 * delta * target_rates)    
 #        gamma = (self.coincidences - NCoincAvg)/(norm*(self.target_length + self.model_length))
-        
+#        
 #        print self.coincidences
 #        print target_rates
 #        print NCoincAvg
 #        print norm
 #        print self.target_length
 #        print self.model_length
-        
+#        
 #        return gamma
-#        return self.coincidences
-    
+#        return self.coincidences 
+#    
 #    gamma = property(fget=get_gamma)
     
