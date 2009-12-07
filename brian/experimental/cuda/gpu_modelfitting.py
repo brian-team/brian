@@ -32,7 +32,8 @@ __global__ void runsim(
     int *spiketimes,          // Array of all spike times as integers (begin and
                               // end each train with large negative value)
     int *spiketime_indices,   // Pointer into above array for each neuron
-    int *spikedelay_arr       // Integer delay for each spike
+    int *spikedelay_arr,      // Integer delay for each spike
+    int onset                 // Time onset (only count spikes from here onwards)
     %COINCIDENCE_COUNT_DECLARE_EXTRA_STATE_VARIABLES%
     )
 {
@@ -63,7 +64,7 @@ __global__ void runsim(
         %STATE_UPDATE%
         // Threshold
         const bool has_spiked = %THRESHOLD%;
-        nspikes += has_spiked;
+        nspikes += has_spiked*(T>=onset);
         // Reset
         if(has_spiked)
         {
@@ -243,7 +244,8 @@ class GPUModelFitting(object):
     spikes for each train. 
     '''
     def __init__(self, G, eqs, I, I_offset, spiketimes, spiketimes_offset, spikedelays,
-                       delta, coincidence_count_algorithm='exclusive',
+                       delta, onset=0*ms,
+                       coincidence_count_algorithm='exclusive',
                        precision=default_precision):
         eqs.prepare()
         self.precision = precision
@@ -254,6 +256,7 @@ class GPUModelFitting(object):
         self.N = N = len(G)
         self.dt = dt = G.clock.dt
         self.delta = delta
+        self.onset = onset
         self.eqs = eqs
         self.G = G
         self.coincidence_count_algorithm = coincidence_count_algorithm
@@ -327,7 +330,13 @@ class GPUModelFitting(object):
         self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
         self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
         self.kernel_func_args = [self.state_vars[name] for name in self.declarations_seq]
-        self.kernel_func_args += [self.I_offset, self.spikecount, self.num_coincidences, self.spiketimes, self.spiketime_indices, self.spikedelay_arr]
+        self.kernel_func_args += [self.I_offset,
+                                  self.spikecount,
+                                  self.num_coincidences,
+                                  self.spiketimes,
+                                  self.spiketime_indices,
+                                  self.spikedelay_arr,
+                                  int32(rint(self.onset/self.dt))]
         if self.coincidence_count_algorithm=='exclusive':
             self.kernel_func_args += [self.last_spike_allowed_arr,
                                       self.next_spike_allowed_arr,]
