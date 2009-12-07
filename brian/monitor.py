@@ -1260,40 +1260,61 @@ class CoincidenceCounterBis(SpikeMonitor):
         
     def propagate(self, spiking_neurons):
         dt = self.source.clock.dt
-        T = array(rint((self.source.clock.t + self.spikedelays)/dt), dtype = int)
+        #T = array(rint((self.source.clock.t + self.spikedelays)/dt), dtype = int)
         spiking_neurons = array(spiking_neurons)
-        if self.source.clock.t >= self.onset:
-            self.model_length[spiking_neurons] += 1
+        if len(spiking_neurons):
+            
+            if self.source.clock.t >= self.onset:
+                self.model_length[spiking_neurons] += 1
 
-        # Updates coincidences count
-        T_spiking = T[spiking_neurons]
-        near_last_spike = self.last_spike_time[spiking_neurons]+self.delta>=T_spiking
-        near_next_spike = self.next_spike_time[spiking_neurons]-self.delta<=T_spiking
-        last_spike_allowed = self.last_spike_allowed[spiking_neurons]
-        next_spike_allowed = self.next_spike_allowed[spiking_neurons]
-        I = (near_last_spike&last_spike_allowed)|(near_next_spike&next_spike_allowed)
-        self.coincidences[spiking_neurons[I]] += 1
+            T_spiking = array(rint((self.source.clock.t + self.spikedelays[spiking_neurons])/dt), dtype = int)
 
-        if self.coincidence_count_algorithm == 'exclusive':
-            near_both_allowed = (near_last_spike&last_spike_allowed) & (near_next_spike&next_spike_allowed)
-            self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
-            self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed
+            remaining_neurons = spiking_neurons
+            remaining_T_spiking = T_spiking
+            while True:
+                remaining_indices, = (remaining_T_spiking > self.next_spike_time[remaining_neurons]).nonzero()
+                if len(remaining_indices):
+                    indices = remaining_neurons[remaining_indices]
+                    self.target_length[indices] += 1
+                    self.spiketime_index[indices] += 1
+                    self.last_spike_time[indices] = self.next_spike_time[indices]
+                    self.next_spike_time[indices] = array(rint(self.data[self.spiketime_index[indices]+1]/dt), dtype=int)
+                    if self.coincidence_count_algorithm == 'exclusive':
+                        self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
+                        self.next_spike_allowed[indices] = True
+                    remaining_neurons = remaining_neurons[remaining_indices]
+                    remaining_T_spiking = remaining_T_spiking[remaining_indices]
+                else:
+                    break
+    
+            # Updates coincidences count
+            near_last_spike = self.last_spike_time[spiking_neurons]+self.delta>=T_spiking
+            near_next_spike = self.next_spike_time[spiking_neurons]-self.delta<=T_spiking
+            last_spike_allowed = self.last_spike_allowed[spiking_neurons]
+            next_spike_allowed = self.next_spike_allowed[spiking_neurons]
+            I = (near_last_spike&last_spike_allowed)|(near_next_spike&next_spike_allowed)
+            self.coincidences[spiking_neurons[I]] += 1
+    
+            if self.coincidence_count_algorithm == 'exclusive':
+                near_both_allowed = (near_last_spike&last_spike_allowed) & (near_next_spike&next_spike_allowed)
+                self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
+                self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed                
 
-        # Updates last and next spikes for each neuron
-        indices, = (T >= self.next_spike_time).nonzero()
-        self.target_length[indices] += 1
-        self.spiketime_index[indices] += 1
-        self.last_spike_time[indices] = self.next_spike_time[indices]
-        self.next_spike_time[indices] = array(rint(self.data[self.spiketime_index[indices]+1]/dt), dtype=int)
-        
-#        # Records first target spikes
-#        indices_first = (self.target_length[indices] == 1)
-#        I = indices[indices_first]
-#        self.first_target_spike[I] = self.last_spike_time[I]
-        
-        if self.coincidence_count_algorithm == 'exclusive':
-            self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
-            self.next_spike_allowed[indices] = True
+#        # Updates last and next spikes for each neuron
+#        indices, = (T >= self.next_spike_time).nonzero()
+#        self.target_length[indices] += 1
+#        self.spiketime_index[indices] += 1
+#        self.last_spike_time[indices] = self.next_spike_time[indices]
+#        self.next_spike_time[indices] = array(rint(self.data[self.spiketime_index[indices]+1]/dt), dtype=int)
+#        
+##        # Records first target spikes
+##        indices_first = (self.target_length[indices] == 1)
+##        I = indices[indices_first]
+##        self.first_target_spike[I] = self.last_spike_time[I]
+#        
+#        if self.coincidence_count_algorithm == 'exclusive':
+#            self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
+#            self.next_spike_allowed[indices] = True
         
         # Updates coincidences count
 #        has_spiked = zeros(self.N, dtype='bool')
