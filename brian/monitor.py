@@ -1066,9 +1066,8 @@ class CoincidenceCounter(SpikeMonitor):
         # Ensures that the precision of the data spike trains is equal to the source clock
         dt = source.clock.dt
         data = [(i, round(t/dt)*dt) for i,t in data]
-
-        # Adapts data if there are several time slices
         self.data = data
+        Nneurons = len(source)
 
         if model_target is None:
             model_target = zeros(Nneurons)

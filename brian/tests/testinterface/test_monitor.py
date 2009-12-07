@@ -221,9 +221,9 @@ def test_coincidencecounter():
     threshold = 1
     
     duration = 500*ms
-    input = 1.05 + .1 * randn(int(duration/defaultclock._dt))
+    input = 1.2 + .2 * randn(int(duration/defaultclock._dt))
     delta = 4*ms
-    n = 100
+    n = 10
     
     def get_data(n):
         # Generates data from an IF neuron
@@ -270,11 +270,11 @@ def test_coincidencecounter():
     
     online_coincidences1 = cc1.coincidences
     online_coincidences2 = cc2.coincidences
-    online_gamma1 = cc1.gamma
-    online_gamma2 = cc2.gamma
+#    online_gamma1 = cc1.gamma
+#    online_gamma2 = cc2.gamma
     cpu_spike_count = array([len(sm[i]) for i in range(n)])
     offline_coincidences = array([gamma_factor(sm[i], train0, delta = delta, normalize = False, dt = defaultclock.dt) for i in range(n)])
-    offline_gamma = array([gamma_factor(sm[i], train0, delta = delta, normalize = True, dt = defaultclock.dt) for i in range(n)])
+#    offline_gamma = array([gamma_factor(sm[i], train0, delta = delta, normalize = True, dt = defaultclock.dt) for i in range(n)])
 
     if use_gpu:
         # Compute gamma factor with GPU
@@ -332,36 +332,36 @@ def test_coincidencecounter():
         gpu_spike_count = mf.spike_count
         cd._model_length = gpu_spike_count
         cd._coincidences = cc
-        gpu_gamma = cd.gamma
         gpu_coincidences = cc
 
     print "Spike count"
     print "Data", len(data)
-#    print "CPU", cpu_spike_count
-#    print "GPU", gpu_spike_count
+    print "CPU", cpu_spike_count
+    print "GPU", gpu_spike_count
     if use_gpu:
         print "max error : %.1f" % max(abs(cpu_spike_count-gpu_spike_count))
         print
     print "Offline"
-#    print offline_gamma
+    print offline_coincidences
     print 
     print "Online"
-#    print online_gamma1
-    print "max error : %.6f" % max(abs(online_gamma1-offline_gamma))
+    print online_coincidences1
+    print "max error : %.6f" % max(abs(online_coincidences1-offline_coincidences))
     print
     print "Online bis"
-#    print online_gamma2
-    print "max error : %.6f" % max(abs(online_gamma2-offline_gamma))
+    print online_coincidences2
+    print "max error : %.6f" % max(abs(online_coincidences2-offline_coincidences))
     if use_gpu:
         print
         print "GPU"
-    #    print gpu_gamma
-        print "max error : %.6f" % max(abs(gpu_gamma-offline_gamma))
+        print gpu_coincidences
+        print "max error : %.6f" % max(abs(gpu_coincidences-offline_coincidences))
 
-        bad_neuron = nonzero(abs(gpu_gamma-offline_gamma)>1e-10)[0]
+        bad_neuron = nonzero(abs(gpu_coincidences-offline_coincidences)>1e-10)[0]
         if len(bad_neuron)>0:
             print "Bad neuron", bad_neuron, group.tau[bad_neuron[0]]
-
+    print
+    print
     return
 
 #    plot(linspace(0,duration/second,len(data_voltage[0])), data_voltage[0], 'k', linewidth=.5)
@@ -419,6 +419,5 @@ def test_coincidencecounter():
 
 if __name__=='__main__':
 #    test_spikemonitor()
-    for i in range(2):
-        test_coincidencecounter()
+    test_coincidencecounter()
     
