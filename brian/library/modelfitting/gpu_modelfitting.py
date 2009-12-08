@@ -366,24 +366,25 @@ class GPUModelFitting(object):
 if __name__=='__main__':
     import time
     from matplotlib.cm import jet
-    if 0:
+    if 1:
         N = 10000
         delta = 4*ms
         doplot = True
         eqs = Equations('''
-        dV/dt = (-V+R*I)/tau : 1
+        dV/dt = (-V+R*I)/tau : volt
+        Vt : volt
         tau : second
-        R : 1
-        I : 1
+        R : ohm
+        I : amp
         ''')
-        Vr = 0.0
-        Vt = 1.0
+        Vr = 0.0*volt
+        Vt = 1.0*volt
         I = loadtxt('../../../dev/ideas/cuda/modelfitting/current.txt')
         spiketimes = loadtxt('../../../dev/ideas/cuda/modelfitting/spikes.txt')
         spiketimes -= int(min(spiketimes))
         I_offset = zeros(N, dtype=int)
         spiketimes_offset = zeros(N, dtype=int)
-        G = NeuronGroup(N, eqs, reset='V=Vr', threshold='V>Vt')
+        G = NeuronGroup(N, eqs, reset='V=0*volt; Vt+=1*volt', threshold='V>1*volt')
         G.R = rand(N)*2e9+1e9
         G.tau = rand(N)*49*ms+1*ms
         spikedelays = rand(N)*5*ms
@@ -443,17 +444,17 @@ if __name__=='__main__':
     if 0:
         N = 10000
         eqs = Equations('''
-        dV/dt = (-V+R*I)/tau : 1
-        dVt/dt = -(V-1)/tau_t : 1
-        R : 1
+        dV/dt = (-V+R*I)/tau : volt
+        dVt/dt = -(V-1*volt)/tau_t : volt
+        R : ohm
         tau : second
         tau_t : second
-        Vt_delta : 1
-        I : 1
+        Vt_delta : volt
+        I : amp
         ''')
         threshold = 'V>Vt'
         reset = '''
-        V = 0
+        V = 0*volt
         Vt += Vt_delta
         '''
         delta = 4*ms
@@ -462,7 +463,7 @@ if __name__=='__main__':
         print src
         print
         print declarations_seq
-    if 1:
+    if 0:
         # test traces
                     
         #clk = RegularClock(makedefaultclock=True)
