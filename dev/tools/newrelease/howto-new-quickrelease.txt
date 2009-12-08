@@ -1,0 +1,16 @@
+Creating a new quick release of Brian
+=====================================
+
+The idea of a quick release is that it can be generated very quickly,
+and users experiencing bugs can download it, but that it's not as
+polished as a release with a version number. In particular, we don't
+update the docs, make sure that all the tests run, etc.
+
+Steps:
+
+* Run create_quickrelease.py
+* Test the generated files in the Brian/dist folder install and run
+  correctly.
+* If not, you may need to update setup.py
+* Upload the files to the Trac
+ 

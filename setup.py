@@ -4,7 +4,7 @@ Setup script for Brian
 
 from distutils.core import setup
 
-version = '1.1.3'
+version = '1.1.4dev'
 
 long_description='''
 Brian is a simulator for spiking neural networks available on almost all platforms.
@@ -26,6 +26,7 @@ extras_folders = ['tutorials/tutorial1_basic_concepts/*.py',
                   'examples/electrophysiology/*.py', 'examples/frompapers/*.py',
                   'examples/interface/*.*', 'examples/plasticity/*.py',
                   'examples/misc/*.py', 'examples/audition/*.py',
+                  'examples/multiprocessing/*.py',
                   'docs/*.*', 'docs/_images/*.jpg',# 'docs/api/*.*',
                   'docs/_sources/*.*', 'docs/_static/*.*' ]
 
@@ -45,6 +46,7 @@ if __name__=="__main__":
                     'brian.utils',
                         'brian.utils.ccircular',
                         'brian.utils.fastexp',
+                        'brian.utils.sparse',
                 ],
 #      package_dir={'brian.utils.ccircular':'brian/utils/ccircular',
 #                   'brian.utils.fastexp':'brian/utils/fastexp'},
@@ -53,7 +55,7 @@ if __name__=="__main__":
 #      data_files=[('brian/utils/ccircular', ['*.cxx', '*.h', '*.i', '*.cpp', '*.bat']),
 #                  ('brian.utils.fastexp', ['*.cxx', '*.h', '*.i', '*.cpp', '*.bat', '*.c'])],
       requires=['matplotlib(>=0.90.1)',
-                'numpy(>=1.1.0)',
+                'numpy(>=1.3.0)',
                 'scipy(>=0.7.0)'
                 ],
       url='http://www.briansimulator.org/',
@@ -61,7 +63,7 @@ if __name__=="__main__":
       long_description=long_description,
       author='Romain Brette, Dan Goodman',
       author_email='Romain.Brette at ens.fr',
-      download_url='https://sourceforge.net/project/showfiles.php?group_id=226798',
+      download_url='https://neuralensemble.org/trac/brian/wiki/Downloads',
       classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Science/Research',

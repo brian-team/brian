@@ -9,6 +9,7 @@ i.e.:
 '''
 
 import os, sys, brian, re
+from update_release_date import setreleasedate
 
 def setversion(version):
     docs_release = version
@@ -53,4 +54,5 @@ if __name__=='__main__':
     version = version.strip()
     print 'Changing to new version', version
     setversion(version)
+    setreleasedate()
     print 'Done'

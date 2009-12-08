@@ -165,3 +165,10 @@ to your home directory (which is not standard in Windows). Due to a
 bug in distutils, on Windows this HOME environment variable cannot have
 any spaces in it, so use the old 8.3 filename, e.g. on my laptop at
 home it is C:\DOCUME~1\DANGOO~1.
+
+Set the version to the next planned release
+-------------------------------------------
+
+Run setversion.py and enter the next planned version with 'dev' on the
+end, e.g. 1.1.4dev. This is so that weekly releases will be marked as
+dev versions for support.
