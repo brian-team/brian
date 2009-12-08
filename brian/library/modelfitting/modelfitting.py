@@ -14,7 +14,7 @@ from brian.utils.statistics import get_gamma_factor
 from fittingparameters import FittingParameters
 try:
     import pycuda
-    from brian.experimental.cuda.gpu_modelfitting import GPUModelFitting
+    from gpu_modelfitting import GPUModelFitting
     can_use_gpu = True
 except ImportError:
     can_use_gpu = False
