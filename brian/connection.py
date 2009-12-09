@@ -415,7 +415,8 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
     def todense(self):
         return asarray(self)
 
-oldscipy = scipy.__version__.startswith('0.6.')
+# set this to True using the sparse library packaged with Brian, from scipy 0.7.1
+oldscipy = True#scipy.__version__.startswith('0.6.')
 
 class SparseMatrix(sparse.lil_matrix):
     '''
