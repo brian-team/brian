@@ -68,11 +68,13 @@ from base import *
 from stdunits import ms
 from operator import isSequenceType
 
-use_sparse_matrix = 'own_scipy' # values are own, own_scipy, scipy
+use_sparse_matrix = 'scipy_patch' # values are own, own_scipy, scipy, scipy_patch
 if use_sparse_matrix=='own':
     from utils import sparse_matrix as sparse
 elif use_sparse_matrix=='own_scipy':
     from utils import sparse # Brian's version of scipy sparse matrix library
+elif use_sparse_matrix=='scipy_patch':
+    from utils import sparse_patch as sparse
 # We should do this:
 # from network import network_operation
 # but instead we do it at the bottom of the module (see comments there for explanation)
@@ -426,9 +428,8 @@ if use_sparse_matrix=='own' or use_sparse_matrix=='own_scipy':
 else:
     olscipy = scipy.__version__.startswith('0.6.') or scipy.__version__.startswith('0.7.1')
 
-if use_sparse_matrix=='own':
-    class SparseMatrix(sparse.lil_matrix):
-        pass
+if use_sparse_matrix=='own' or use_sparse_matrix=='scipy_patch':
+    SparseMatrix = sparse.lil_matrix
 else:
     class SparseMatrix(sparse.lil_matrix):
         '''
