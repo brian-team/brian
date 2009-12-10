@@ -337,8 +337,8 @@ def test_coincidencecounter():
     print "Spike count"
     print "Data", len(data)
     print "CPU", cpu_spike_count
-    print "GPU", gpu_spike_count
     if use_gpu:
+        print "GPU", gpu_spike_count
         print "max error : %.1f" % max(abs(cpu_spike_count-gpu_spike_count))
         print
     print "Offline"
