@@ -53,6 +53,7 @@ from numpy import zeros,ones
 from log import *
 from optimiser import *
 from scipy import optimize
+import copy
 try:
     import sympy
     use_sympy=True
@@ -863,6 +864,20 @@ class Equations(object):
         for var in self._eq_names:
             s+=var+' = '+self._string[var]+'\n'
         return s
+    
+    def __reduce__(self):
+        selfcopy = copy.copy(self)
+        selfcopy._function = {}
+        selfcopy.__class__ = PickledEquations
+        return (_load_Equations_from_pickle, (selfcopy,))
+
+class PickledEquations(object):
+    pass
+    
+def _load_Equations_from_pickle(eqs):
+    eqs.__class__ = Equations
+    eqs.prepare()
+    return eqs
     
 # Utilitary functions
 # -------------------

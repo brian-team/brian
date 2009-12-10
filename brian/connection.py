@@ -1321,7 +1321,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                 weight = 1.0
             if sparseness is None:
                 sparseness = 1
-            if isinstance(weight, sparse.spmatrix) or isinstance(weight, ndarray):
+            if isinstance(weight, sparse.lil_matrix) or isinstance(weight, ndarray):
                 self.connect(W=weight)
             elif sparseness==1:
                 self.connect_full(weight=weight)
