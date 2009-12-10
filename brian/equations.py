@@ -866,16 +866,27 @@ class Equations(object):
         return s
     
     def __reduce__(self):
+        # To avoid recursion, we temporarily set the class to a trivial
+        # class, this is restored at the end, and by _load_Equations_from_pickle
+        # too
+        self.__class__, cls = PickledEquations, self.__class__
         selfcopy = copy.copy(self)
+        # We need to delete __builtins__ from all the namespaces as it is
+        # not picklable, so we make copies
+        selfcopy._namespace = copy.copy(selfcopy._namespace)
+        for key in selfcopy._namespace.keys():
+            selfcopy._namespace[key] = copy.copy(selfcopy._namespace[key])
+            if '__builtins__' in selfcopy._namespace[key]:
+                del selfcopy._namespace[key]['__builtins__']
         selfcopy._function = {}
-        selfcopy.__class__ = PickledEquations
-        return (_load_Equations_from_pickle, (selfcopy,))
+        self.__class__ = cls
+        return (_load_Equations_from_pickle, (selfcopy, cls))
 
 class PickledEquations(object):
     pass
     
-def _load_Equations_from_pickle(eqs):
-    eqs.__class__ = Equations
+def _load_Equations_from_pickle(eqs, cls):
+    eqs.__class__ = cls
     eqs.prepare()
     return eqs
     
