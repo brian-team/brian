@@ -2,7 +2,7 @@ from brian.stdunits import ms
 from numpy import *
 from numpy.random import rand, randn
 
-class FittingParameters:
+class FittingParameters(object):
     def __init__(self, includedelays = True, **params):
         self.params = params
         self.param_names = sort(params.keys())

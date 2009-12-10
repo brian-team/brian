@@ -13,6 +13,7 @@ from brian.neurongroup import NeuronGroup
 from brian.utils.statistics import get_gamma_factor
 from fittingparameters import FittingParameters
 import multiprocessing
+import itertools
 try:
     import pycuda
     from brian.experimental.cuda.gpu_modelfitting import GPUModelFitting
@@ -21,6 +22,53 @@ except ImportError:
     can_use_gpu = False
 
 __all__ = ['modelfitting']
+
+def multifun_cpu((process_n, neurons, I_offset, spiketimes_offset, X,
+                  model, reset, threshold, initial_values,
+                  spiketimes, overlap, delta, includedelays, fp,
+                  total_steps, input, input_var, sliced_duration,
+                  )):
+    # PREPARE THE NEURONGROUP. We're all set to define the CoincidenceCounterBis object (CPU) or to
+    # run the simulation on the GPU (same interface with spiketimes, spiketimes_offset, I, I_offset).
+    group = NeuronGroup(neurons, model = model, reset = reset, threshold = threshold)
+    if initial_values is not None:
+        for param, value in initial_values.iteritems():
+            group.state(param)[:] = value
+
+    # INJECTS CURRENT
+    # Injects current in consecutive subgroups, where I_offset have the same value
+    # on successive intervals
+    k = -1
+    for i in hstack((nonzero(diff(I_offset))[0], len(I_offset)-1)):
+        I_offset_subgroup_value = I_offset[i]
+        I_offset_subgroup_length = i-k
+        # DEBUG
+#                print I_offset_subgroup_value, I_offset_subgroup_length
+        sliced_subgroup = group.subgroup(I_offset_subgroup_length)
+        input_sliced_values = input[I_offset_subgroup_value:I_offset_subgroup_value+total_steps]
+        sliced_subgroup.set_var_by_array(input_var, TimedArray(input_sliced_values, clock=group.clock))
+        k = i    
+    
+    cc = CoincidenceCounterBis(group, spiketimes, spiketimes_offset, onset = overlap, delta = delta)
+    # Gets the parameter values contained in the matrix X, excepted spike delays values
+    if includedelays:
+        param_values = fp.get_param_values(X[0:-1,:], includedelays = False)
+    else:
+        param_values = fp.get_param_values(X, includedelays = False)
+    # Sets the parameter values in the NeuronGroup object
+    for param, value in param_values.iteritems():
+        group.state(param)[:] = value
+    # Sets the spike delay values
+    if includedelays:
+        cc.spikedelays = X[-1,:]
+    # Reinitializes the simulation objects
+    reinit_default_clock()
+    cc.reinit()
+    net = Network(group, cc)
+    # LAUNCHES the simulation on the CPU
+    net.run(sliced_duration)
+
+    return cc.coincidences, cc.model_length
 
 @check_units(delta=second)
 def modelfitting(model = None, reset = None, threshold = None, data = None,
@@ -180,49 +228,6 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
             return gamma
     else:
 
-        def multifun((process_n, neurons, I_offset, spiketimes_offset, X)):
-            # PREPARE THE NEURONGROUP. We're all set to define the CoincidenceCounterBis object (CPU) or to
-            # run the simulation on the GPU (same interface with spiketimes, spiketimes_offset, I, I_offset).
-            group = NeuronGroup(neurons, model = model, reset = reset, threshold = threshold)
-            if initial_values is not None:
-                for param, value in initial_values.iteritems():
-                    group.state(param)[:] = value
-
-            # INJECTS CURRENT
-            # Injects current in consecutive subgroups, where I_offset have the same value
-            # on successive intervals
-            k = -1
-            for i in hstack((nonzero(diff(I_offset))[0], len(I_offset)-1)):
-                I_offset_subgroup_value = I_offset[i]
-                I_offset_subgroup_length = i-k
-                # DEBUG
-#                print I_offset_subgroup_value, I_offset_subgroup_length
-                sliced_subgroup = group.subgroup(I_offset_subgroup_length)
-                input_sliced_values = input[I_offset_subgroup_value:I_offset_subgroup_value+total_steps]
-                sliced_subgroup.set_var_by_array(input_var, TimedArray(input_sliced_values, clock=group.clock))
-                k = i
-            
-            cc = CoincidenceCounterBis(group, spiketimes, spiketimes_offset, onset = overlap, delta = delta)
-            # Gets the parameter values contained in the matrix X, excepted spike delays values
-            if includedelays:
-                param_values = fp.get_param_values(X[0:-1,:], includedelays = False)
-            else:
-                param_values = fp.get_param_values(X, includedelays = False)
-            # Sets the parameter values in the NeuronGroup object
-            for param, value in param_values.iteritems():
-                group.state(param)[:] = value
-            # Sets the spike delay values
-            if includedelays:
-                cc.spikedelays = X[-1,:]
-            # Reinitializes the simulation objects
-            reinit_default_clock()
-            cc.reinit()
-            net = Network(group, cc)
-            # LAUNCHES the simulation on the CPU
-            net.run(sliced_duration)
-
-            return coincidences, model_length
-
         def fun(X):
             numprocesses = multiprocessing.cpu_count()
             pool = multiprocessing.Pool(processes=numprocesses)
@@ -247,16 +252,25 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                 X_list.append(X[:,k:k+n])
                 k += n
 
-            args = zip(range(numprocesses), N_list, I_offset_list, spiketimes_offset_list, X_list)
-            results = pool.map(multifun, args) # launches multiple processes
+            args = zip(range(numprocesses),
+                       N_list, I_offset_list, spiketimes_offset_list, X_list,
+                       itertools.repeat(model), itertools.repeat(reset),
+                       itertools.repeat(threshold), itertools.repeat(initial_values),
+                       itertools.repeat(spiketimes), itertools.repeat(overlap),
+                       itertools.repeat(delta), itertools.repeat(includedelays),
+                       itertools.repeat(fp), itertools.repeat(total_steps),
+                       itertools.repeat(input), itertools.repeat(input_var),
+                       itertools.repeat(sliced_duration),
+                       )
+            results = pool.map(multifun_cpu, args) # launches multiple processes
             
             # Concatenates the number of coincidences and model spikes computed
             # on each core.
             coincidences = array([])
             model_length = array([])
-            for (local_coincidences, local_model_length) in results.itervalues():
-                coincidences = hstack(coincidences, local_coincidences)
-                model_length = hstack(model_length, local_model_length)
+            for (local_coincidences, local_model_length) in results:
+                coincidences = hstack((coincidences, local_coincidences))
+                model_length = hstack((model_length, local_model_length))
 
             print coincidences
             print model_length
