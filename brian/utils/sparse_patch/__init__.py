@@ -4,6 +4,7 @@ various different versions of scipy. It chooses dynamically at run time which
 version to use.
 '''
 import scipy, warnings, os, imp
+import scipy.sparse
 
 __all__ = ['lil_matrix', 'spmatrix']
 
@@ -33,7 +34,7 @@ else:
 
 module = __import__(modulename, globals(), locals(), [], -1)
 lil_matrix = module.lil_matrix
-spmatrix = scipy.spmatrix
+spmatrix = scipy.sparse.spmatrix
 
 if __name__=='__main__':
     x = lil_matrix((5, 5))
