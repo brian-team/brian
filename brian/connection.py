@@ -414,7 +414,8 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
     
     def __setitem__(self, index, W):
         # Make it work for sparse matrices
-        if isinstance(W,sparse.spmatrix):
+        #if isinstance(W,sparse.spmatrix):
+        if isinstance(W,sparse.lil_matrix):
             ndarray.__setitem__(self,index,W.todense())
         else:
             ndarray.__setitem__(self,index,W)
