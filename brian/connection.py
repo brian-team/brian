@@ -415,7 +415,7 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
     def __setitem__(self, index, W):
         # Make it work for sparse matrices
         #if isinstance(W,sparse.spmatrix):
-        if isinstance(W,sparse.lil_matrix):
+        if isinstance(W,sparse.spmatrix):
             ndarray.__setitem__(self,index,W.todense())
         else:
             ndarray.__setitem__(self,index,W)
@@ -455,7 +455,7 @@ else:
     
             if isinstance(i, slice) and isinstance(j,slice) and\
                (i.step is None) and (j.step is None) and\
-               (isinstance(W,sparse.lil_matrix) or isinstance(W,numpy.ndarray)):
+               (isinstance(W,sparse.spmatrix) or isinstance(W,numpy.ndarray)):
                 rows = self.rows[i]
                 datas = self.data[i]
                 j0=j.start

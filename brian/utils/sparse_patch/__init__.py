@@ -5,7 +5,7 @@ version to use.
 '''
 import scipy, warnings, os, imp
 
-__all__ = ['lil_matrix']
+__all__ = ['lil_matrix', 'spmatrix']
 
 default = '0_7_1'
 table = {
@@ -33,6 +33,7 @@ else:
 
 module = __import__(modulename, globals(), locals(), [], -1)
 lil_matrix = module.lil_matrix
+spmatrix = scipy.spmatrix
 
 if __name__=='__main__':
     x = lil_matrix((5, 5))
