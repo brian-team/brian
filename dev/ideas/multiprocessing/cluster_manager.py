@@ -1,6 +1,5 @@
 from numpy import *
 from multiprocessing.connection import Client
-from array import array
 
 N = 10000
 numprocesses = 6
@@ -12,7 +11,7 @@ print 'Connection acquired'
 
 x = ones(N)
 
-conn.send(x)
+conn.send(x_)
 print 'Shared data sent'
 
 results = []
