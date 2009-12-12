@@ -1,16 +1,27 @@
+from numpy import *
 from multiprocessing.connection import Client
 from array import array
 
+N = 10000
+numprocesses = 6
+complexity = 10
+
 address = ('localhost', 6000)
 conn = Client(address, authkey='secret password')
+print 'Connection acquired'
 
-print conn.recv()                 # => [2.25, None, 'junk', float]
+x = ones(N)
 
-print conn.recv_bytes()            # => 'hello'
+conn.send(x)
+print 'Shared data sent'
 
-arr = array('i', [0, 0, 0, 0, 0])
-print conn.recv_bytes_into(arr)     # => 8
-print arr                         # => array('i', [42, 1729, 0, 0, 0])
+results = []
+for a in xrange(numprocesses):
+    conn.send((a, complexity))
+    results.append(conn.recv())
+
+print results
+
+conn.send(None)
 
 conn.close()
-
