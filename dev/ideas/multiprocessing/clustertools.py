@@ -143,7 +143,7 @@ def make_numpy(common_shared_data):
 def cluster_worker(common_shared_data, conn, process_number, use_gpu,
                    work_class):
     shared_data = make_numpy(common_shared_data)
-    work_object = work_class(shared_data)
+    work_object = work_class(shared_data, use_gpu)
     if use_gpu:
         set_gpu_device(process_number)
     while True:

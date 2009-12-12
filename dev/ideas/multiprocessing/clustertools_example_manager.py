@@ -2,7 +2,7 @@ from numpy import *
 from clustertools import *
 
 class work_class(object):
-    def __init__(self, shared_data):
+    def __init__(self, shared_data, use_gpu):
         self.x = shared_data['x']
     def process(self, job):
         return sum(self.x)*job
