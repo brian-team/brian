@@ -78,7 +78,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
         data = concatenate((zeros((len(data), 1)), data.reshape((-1,1))), axis=1)
     
     if dt is None:
-        raise ArgumentError
+        raise Exception
     if slices == 1:
         overlap = 0*ms
     
