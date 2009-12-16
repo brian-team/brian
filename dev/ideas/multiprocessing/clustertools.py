@@ -52,7 +52,7 @@ class ClusterManager(object):
         if port is not None and named_pipe is None:
             machines = [(address, port) for address in machines]
         self.clients = [Client(address,
-                               family='AF_PIPE',
+#                               family='AF_PIPE',
                                authkey=authkey) for address in machines]
         # Send them each a copy of the shared data
         for client in self.clients:
