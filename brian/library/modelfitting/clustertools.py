@@ -33,9 +33,13 @@ class ClusterManager(object):
     def __init__(self, work_class, shared_data, machines=[],
                  own_max_gpu=None, own_max_cpu=None,
                  gpu_policy='prefer_gpu',
-                 port=2718, named_pipe=None,
+                 port=None, named_pipe=None,
                  authkey='brian cluster tools'):
         self.work_class = work_class
+        if port is None and named_pipe is None:
+            port = 2718
+        if named_pipe is True:
+            named_pipe = 'BrianModelFitting'
         self.port = port
         self.named_pipe = named_pipe
         self.authkey = authkey
@@ -51,8 +55,9 @@ class ClusterManager(object):
         # Generate clients
         if port is not None and named_pipe is None:
             machines = [(address, port) for address in machines]
+        elif named_pipe is not None and port is None:
+            machines = ['\\\\'+address+'\\pipe\\'+named_pipe for address in machines]
         self.clients = [Client(address,
-#                               family='AF_PIPE',
                                authkey=authkey) for address in machines]
         # Send them each a copy of the shared data
         for client in self.clients:
@@ -99,9 +104,13 @@ class ClusterManager(object):
 class ClusterMachine(object):
     def __init__(self, work_class, shared_data=None,
                  max_gpu=None, max_cpu=None,
-                 port=2718, named_pipe=None,
+                 port=None, named_pipe=None,
                  authkey='brian cluster tools'):
         self.work_class = work_class
+        if port is None and named_pipe is None:
+            port = 2718
+        if named_pipe is True:
+            named_pipe = 'BrianModelFitting'
         self.port = port
         self.named_pipe = named_pipe
         self.authkey = authkey
@@ -121,7 +130,7 @@ class ClusterMachine(object):
             if port is not None and named_pipe is None:
                 address = ('localhost', port)
             elif port is None and named_pipe is not None:
-                address = named_pipe
+                address = '\\\\.\\pipe\\'+named_pipe
             self.listener = Listener(address, authkey=authkey)
             self.conn = self.listener.accept()
             self.shared_data = self.conn.recv()
