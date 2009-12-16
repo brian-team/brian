@@ -11,7 +11,7 @@ print 'Connection acquired'
 
 x = ones(N)
 
-conn.send(x_)
+conn.send(x)
 print 'Shared data sent'
 
 results = []

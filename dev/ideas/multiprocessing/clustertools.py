@@ -1,3 +1,8 @@
+from multiprocessing import sharedctypes
+import numpy
+from numpy import ctypeslib
+import ctypes
+import gc
 import multiprocessing
 from multiprocessing.connection import Listener, Client
 try:
@@ -17,15 +22,28 @@ try:
 except ImportError:
     have_gpu = False
 
+__all__ = ['ClusterManager', 'ClusterMachine', 'cluster_worker_script']
+
+gpu_policies = {
+    'prefer_gpu':lambda ncpus, ngpus: numpy.amax(ngpus)>0,
+    'require_all':lambda ncpus, ngpus: numpy.amin(ngpus)>0,
+    }
+
 class ClusterManager(object):
     def __init__(self, work_class, shared_data, machines=[],
+                 own_max_gpu=None, own_max_cpu=None,
+                 gpu_policy='prefer_gpu',
                  port=2718, authkey='brian cluster tools'):
         self.work_class = work_class
         self.port = port
         self.authkey = authkey
+        if isinstance(gpu_policy, str):
+            gpu_policy = gpu_policies[gpu_policy]
         # The first machine is the manager computer which can do work
         self.thismachine = ClusterMachine(work_class,
                                           shared_data=shared_data,
+                                          max_gpu=own_max_gpu,
+                                          max_cpu=own_max_cpu,
                                           port=port, authkey=authkey)
         # Generate clients
         self.clients = [Client((address, port),
@@ -46,12 +64,11 @@ class ClusterManager(object):
         self.num_gpu.append(self.thismachine.num_gpu)
         # Decide whether to use GPUs or CPUs (only use CPUs if not all
         # computers have GPUs)
-        min_gpu = min(self.num_gpu)
-        if min_gpu>0:
-            use_gpu = True
+        if gpu_policy(self.num_cpu, self.num_gpu):
+            self.use_gpu = use_gpu = True
             self.num_processes = self.num_gpu
         else:
-            use_gpu = False
+            self.use_gpu = use_gpu = False
             self.num_processes = self.num_cpu
         for client in self.clients:
             client.send(use_gpu)
@@ -75,15 +92,22 @@ class ClusterManager(object):
 
 class ClusterMachine(object):
     def __init__(self, work_class, shared_data=None,
+                 max_gpu=None, max_cpu=None,
                  port=2718, authkey='brian cluster tools'):
         self.work_class = work_class
         self.port = port
         self.authkey = authkey
         if have_gpu:
-            self.num_gpu = drv.Device.count()
+            gpu_count = drv.Device.count()
+            if max_gpu is None:
+                max_gpu = gpu_count
+            self.num_gpu = min(max_gpu, gpu_count)
         else:
             self.num_gpu = 0
-        self.num_cpu = multiprocessing.cpu_count()
+        cpu_count = multiprocessing.cpu_count()
+        if max_cpu is None:
+            max_cpu = cpu_count
+        self.num_cpu = min(max_cpu, cpu_count)
         if shared_data is None:
             self.remote_machine = True
             address = ('localhost', port)
@@ -114,7 +138,11 @@ class ClusterMachine(object):
         else:
             self.num_processes = self.num_cpu
         self.pipes = [multiprocessing.Pipe() for _ in xrange(self.num_processes)]
-        self.server_conns, self.client_conns = zip(*self.pipes)
+        if len(self.pipes):
+            self.server_conns, self.client_conns = zip(*self.pipes)
+        else:
+            self.server_conns = []
+            self.client_conns = []
         self.processes = [multiprocessing.Process(
                                 target=cluster_worker,
                                 args=(self.common_shared_data, conn, n,
@@ -135,10 +163,26 @@ class ClusterMachine(object):
 # This function should turn arrays into sharedctypes ones to minimise
 # data copying, assume shared_data is a dictionary of arrays and values
 def make_common(shared_data):
-    return shared_data # for the moment we do nothing
+    data = {}
+    for k, v in shared_data.iteritems():
+        if isinstance(v, numpy.ndarray):
+            mapping = {
+                numpy.float64:ctypes.c_double,
+                numpy.int32:ctypes.c_int,
+                }
+            ctype = mapping.get(v.dtype, None)
+            if ctype is not None:
+                v = sharedctypes.Array(ctype, v, lock=False)
+        data[k] = v
+    return data
 
 def make_numpy(common_shared_data):
-    return common_shared_data
+    data = {}
+    for k, v in common_shared_data.iteritems():
+        if hasattr(v, 'as_array'):#isinstance(v, sharedctypes.Array):
+            v = ctypeslib.as_array(v)
+        data[k] = v
+    return data
 
 def cluster_worker(common_shared_data, conn, process_number, use_gpu,
                    work_class):
@@ -155,4 +199,22 @@ def cluster_worker(common_shared_data, conn, process_number, use_gpu,
             break
         conn.send(work_object.process(job))
     conn.close()
-    
+
+def cluster_worker_script(*args, **kwds):
+    try:
+        n = 0
+        while True:
+            print 'Job schedule', n, 'started.'
+            machine = ClusterMachine(*args, **kwds)
+            del machine
+            gc.collect()
+            n += 1
+    except KeyboardInterrupt:
+        try:
+            for p in machine.processes:
+                p.terminate()
+            print 'Worker processes shut down successfully.'
+        except:
+            print 'Error shutting down worker processes, kill them manually.'
+            
+        
