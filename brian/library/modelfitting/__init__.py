@@ -7,7 +7,7 @@ if __name__ == '__main__':
     tau : second
     I : 1
     """)
-    NTarget = 10
+    NTarget = 2
     #taus = .03+.03*rand(NTarget)
     taus = .01+.09*rand(NTarget)
     duration = 800*ms
@@ -22,13 +22,11 @@ if __name__ == '__main__':
     data = M.spikes
     
     # Tries to find tau
-    params = modelfitting(model = eqs, reset = 0, threshold = 1,
+    params, value = modelfitting(model = eqs, reset = 0, threshold = 1, dt=.1*ms,
                                data = data,
                                input = input,
-                               particles = 20000,
-                               iterations = 50,
-                               slices = 1,
-                               overlap = 250*ms,
+                               particles = 1000,
+                               iterations = 1,
                                tau = [10*ms, 10*ms, 100*ms, 100*ms],
                                delta = 1*ms)
     
