@@ -5,7 +5,7 @@ N = 10000
 numprocesses = 6
 complexity = 10
 
-address = ('localhost', 6000)
+address = ('localhost', 2718)
 conn = Client(address, authkey='secret password')
 print 'Connection acquired'
 

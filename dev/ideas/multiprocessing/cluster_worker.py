@@ -8,7 +8,7 @@ def f(x, a, n):
         s += sum(x)*a
     return s
 
-address = ('localhost', 6000)     # family is deduced to be 'AF_INET'
+address = ('localhost', 2718)     # family is deduced to be 'AF_INET'
 listener = Listener(address, authkey='secret password')
 print 'Listener created'
 
