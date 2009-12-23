@@ -264,21 +264,21 @@ class Network(object):
         else:
             self.set_many_clocks()
 
-#        # Gather connections with identical subgroups
-#        # 'subgroups' maps subgroups to connections (initialize with immutable object (not [])!)
-#        subgroups=dict.fromkeys([(C.source,C.delay) for C in self.connections],None)
-#        for C in self.connections:
-#            if subgroups[(C.source,C.delay)]==None:
-#                subgroups[(C.source,C.delay)]=[C]
-#            else:
-#                subgroups[(C.source,C.delay)].append(C)
-#        self.connections=subgroups.values()
-#        cons=self.connections # just for readability
-#        for i in range(len(cons)):
-#            if len(cons[i])>1: # at least 2 connections with the same subgroup
-#                cons[i]=MultiConnection(cons[i][0].source,cons[i])
-#            else:
-#                cons[i]=cons[i][0]
+        # Gather connections with identical subgroups
+        # 'subgroups' maps subgroups to connections (initialize with immutable object (not [])!)
+        subgroups=dict.fromkeys([(C.source,C.delay) for C in self.connections],None)
+        for C in self.connections:
+            if subgroups[(C.source,C.delay)]==None:
+                subgroups[(C.source,C.delay)]=[C]
+            else:
+                subgroups[(C.source,C.delay)].append(C)
+        self.connections=subgroups.values()
+        cons=self.connections # just for readability
+        for i in range(len(cons)):
+            if len(cons[i])>1: # at least 2 connections with the same subgroup
+                cons[i]=MultiConnection(cons[i][0].source,cons[i])
+            else:
+                cons[i]=cons[i][0]
 
         # Compress connections
         for C in self.connections:
