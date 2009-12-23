@@ -264,21 +264,21 @@ class Network(object):
         else:
             self.set_many_clocks()
 
-        # Gather connections with identical subgroups
-        # 'subgroups' maps subgroups to connections (initialize with immutable object (not [])!)
-        subgroups=dict.fromkeys([(C.source,C.delay) for C in self.connections],None)
-        for C in self.connections:
-            if subgroups[(C.source,C.delay)]==None:
-                subgroups[(C.source,C.delay)]=[C]
-            else:
-                subgroups[(C.source,C.delay)].append(C)
-        self.connections=subgroups.values()
-        cons=self.connections # just for readability
-        for i in range(len(cons)):
-            if len(cons[i])>1: # at least 2 connections with the same subgroup
-                cons[i]=MultiConnection(cons[i][0].source,cons[i])
-            else:
-                cons[i]=cons[i][0]
+#        # Gather connections with identical subgroups
+#        # 'subgroups' maps subgroups to connections (initialize with immutable object (not [])!)
+#        subgroups=dict.fromkeys([(C.source,C.delay) for C in self.connections],None)
+#        for C in self.connections:
+#            if subgroups[(C.source,C.delay)]==None:
+#                subgroups[(C.source,C.delay)]=[C]
+#            else:
+#                subgroups[(C.source,C.delay)].append(C)
+#        self.connections=subgroups.values()
+#        cons=self.connections # just for readability
+#        for i in range(len(cons)):
+#            if len(cons[i])>1: # at least 2 connections with the same subgroup
+#                cons[i]=MultiConnection(cons[i][0].source,cons[i])
+#            else:
+#                cons[i]=cons[i][0]
 
         # Compress connections
         for C in self.connections:
@@ -401,7 +401,11 @@ class Network(object):
                 elif item=='connections':
                     objset = self.connections
                     objfun = 'do_propagate'
-                    allclocks = True
+                    allclocks = False
+                    # Connections do not define their own clock, but they should
+                    # be updated on the schedule of their source group?
+                    for obj in objset:
+                        obj.clock = obj.source.clock
                 elif len(item)>4 and item[0:3]=='ops': # the item is of the forms 'ops when'
                     objset = self._operations_dict[item[4:]]
                     objfun = None
@@ -415,8 +419,10 @@ class Network(object):
                 else:
                     f = getattr(obj,objfun)
                 if not allclocks:
-                    clockset = [obj.clock]
-                for clock in clockset:
+                    useclockset = [obj.clock]
+                else:
+                    useclockset = clockset
+                for clock in useclockset:
                     self._update_schedule[id(clock)].append(f)
 
     def update(self):
