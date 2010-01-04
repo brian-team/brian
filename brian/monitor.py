@@ -1292,7 +1292,9 @@ class CoincidenceCounterBis(SpikeMonitor):
             last_spike_allowed = self.last_spike_allowed[spiking_neurons]
             next_spike_allowed = self.next_spike_allowed[spiking_neurons]
             I = (near_last_spike&last_spike_allowed)|(near_next_spike&next_spike_allowed)
-            self.coincidences[spiking_neurons[I]] += 1
+            
+            if self.source.clock.t >= self.onset:
+                self.coincidences[spiking_neurons[I]] += 1
     
             if self.coincidence_count_algorithm == 'exclusive':
                 near_both_allowed = (near_last_spike&last_spike_allowed) & (near_next_spike&next_spike_allowed)
