@@ -28,6 +28,7 @@ __all__ = ['ClusterManager', 'ClusterMachine', 'cluster_worker_script']
 gpu_policies = {
     'prefer_gpu':lambda ncpus, ngpus: numpy.amax(ngpus)>0,
     'require_all':lambda ncpus, ngpus: numpy.amin(ngpus)>0,
+    'no_gpu':lambda ncpus, ngpus: False,
     }
 
 class ClusterManager(object):
