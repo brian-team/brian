@@ -1,4 +1,5 @@
 from multiprocessing import sharedctypes
+from brian import Equations
 import numpy
 from numpy import ctypeslib
 import ctypes
@@ -199,7 +200,7 @@ def make_common(shared_data):
 def make_numpy(common_shared_data):
     data = {}
     for k, v in common_shared_data.iteritems():
-        if hasattr(v, 'as_array'):#isinstance(v, sharedctypes.Array):
+        if hasattr(v, 'as_array') and not isinstance(v, Equations):#isinstance(v, sharedctypes.Array):
             v = ctypeslib.as_array(v)
         data[k] = v
     return data
