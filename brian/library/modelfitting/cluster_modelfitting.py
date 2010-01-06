@@ -234,7 +234,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
         own_max_gpu = None
     else:
         own_max_gpu = 0
-    manager = ClusterManager(modelfitting_worker, shared_data, own_max_gpu=own_max_gpu, own_max_cpu=1)
+    manager = ClusterManager(modelfitting_worker, shared_data, own_max_gpu=own_max_gpu)
     num_processes = manager.num_processes[0]
 
     # Initializes the NeuronGroup objects for each worker
@@ -264,7 +264,6 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
             k += n
             
         results = manager.process_jobs(X_list)
-        manager.finished()
         
         # Concatenates the number of coincidences and model spikes computed on each worker.
         coincidences = array([])
@@ -291,7 +290,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
     X, value, T = particle_swarm(X0, fun, iterations = iterations, pso_params = [.9, 1.9, 1.9],
                      min_values = min_values, max_values = max_values,
                      group_size = group_size, verbose = verbose)
-    
+    manager.finished()
     
     best_params = fp.get_param_values(X)
 
@@ -307,12 +306,14 @@ if __name__=='__main__':
     
     input = loadtxt('current.txt')
     spikes = loadtxt('spikes.txt')
+    print len(spikes)
+    exit()
     
     params, gamma = modelfitting(model = equations, reset = 0, threshold = 1, 
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  use_gpu = False,
-                                 particles = 160000, iterations = 1, delta = 2*ms,
+                                 particles = 1, iterations = 1, delta = 2*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     
     print params
