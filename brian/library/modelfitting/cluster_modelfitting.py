@@ -123,7 +123,8 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                  input_var = 'I', input = None, dt = None,
                  verbose = True, particles = 100, slices = 1, overlap = None,
                  iterations = 10, delta = None, initial_values = None, stepsize = 100*ms,
-                 use_gpu = None, includedelays = True,
+                 use_gpu = None, max_cpu = None, max_gpu = None,
+                 includedelays = True,
                  **params):
     
     # Use GPU ?
@@ -230,12 +231,17 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
         params = params
     )
     
-    if use_gpu:
-        own_max_gpu = None
+    if use_gpu is False:
+        gpu_policy = 'no_gpu'
     else:
-        own_max_gpu = 0
-    manager = ClusterManager(modelfitting_worker, shared_data, own_max_gpu=own_max_gpu)
+        gpu_policy = None
+    manager = ClusterManager(modelfitting_worker, shared_data, gpu_policy=gpu_policy, own_max_cpu=max_cpu, own_max_gpu=max_cpu)
     num_processes = manager.num_processes[0]
+    if manager.use_gpu:
+        cores =  'GPUs'
+    else:
+        cores = 'CPUs'
+    print "Using %d %s..." % (num_processes, cores)
 
     # Initializes the NeuronGroup objects for each worker
     N_list = [N/num_processes for _ in range(num_processes)]
@@ -271,14 +277,11 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
         for (local_coincidences, local_model_length) in results:
             coincidences = hstack((coincidences, local_coincidences))
             model_length = hstack((model_length, local_model_length))
-
-#        print coincidences
-#        print model_length
-
         # Count the final number of coincidences and model spikes
         # by summing the numbers over all time slices
         coincidences = coincidences.reshape((slices,-1)).sum(axis=0)
         model_length = model_length.reshape((slices,-1)).sum(axis=0)
+        
         # Computes the gamma factor
         gamma = get_gamma_factor(coincidences, model_length, target_length, target_rates, delta)
         return gamma
@@ -306,100 +309,12 @@ if __name__=='__main__':
     
     input = loadtxt('current.txt')
     spikes = loadtxt('spikes.txt')
-    print len(spikes)
-    exit()
     
     params, gamma = modelfitting(model = equations, reset = 0, threshold = 1, 
                                  data = spikes, 
                                  input = input, dt = .1*ms,
-                                 use_gpu = False,
-                                 particles = 1, iterations = 1, delta = 2*ms,
+                                 use_gpu = False, max_cpu = None, max_gpu = None,
+                                 particles = 80000, iterations = 1, delta = 2*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     
     print params
-
-
-    
-#    def get_model():
-#        model = Equations('''
-#            dV/dt=(R*I-V)/tau : 1
-#            I : 1
-#            R : 1
-#            tau : second
-#        ''')
-#        reset = 0
-#        threshold = 1
-#        return model, reset, threshold
-#    
-#    def get_data(**params):
-#        # DATA GENERATION
-#        # at the end, data should be an (i,t) list
-#        group = NeuronGroup(N = ntrials, model = model, reset = reset, threshold = threshold)
-#        for param, value in params.iteritems():
-#            group.state(param)[:] = value
-#        group.I = TimedArray(input, start = 0*second, dt = defaultclock.dt)
-#        
-#        M = SpikeMonitor(group)
-#        StM = StateMonitor(group, 'V', record = True)
-#        net = Network(group, M, StM)
-#        
-#        reinit_default_clock()
-#        net.run(duration)
-#        
-#        data_spikes = M.spikes
-#        data_values = StM.values
-#        
-#        reinit_default_clock()
-#        return data_spikes, data_values
-#    
-#    def get_current():
-#        # CURRENT GENERATION
-#        # at the end, I should be the list of the I values
-#        # and dt the timestep
-#        dt = .1*ms
-#        n = int(duration/dt)
-#        I = .48+.8*randn(n)
-#        return I, dt
-#    
-#    slices = 1
-#    ntrials = 1
-#    duration = 500*ms
-#    overlap = 0
-#    group_size = 100 # number of neurons per target train
-#    delta = 1*ms
-#    iterations = 1
-#    
-#    tau0 = array([22*ms, 28*ms])
-#    R0 = array([2.1, 2.5])
-#    
-#    model, reset, threshold = get_model()
-#    input, dt = get_current()
-#    data_spikes, data_values = get_data(R=R0, tau=tau0)
-#    
-#    i, t = zip(*data_spikes)
-#    i = array(i)
-#    t = array(t)
-#    for j in range(ntrials):
-#        s = sort(t[i==j])
-#        print "Train %d" % j
-#        print array(1000*s, dtype=int)/1000.0
-#        print
-#    
-#    import time
-#    start = time.clock()
-#    params, gamma = modelfitting(model, reset, threshold, data_spikes, 
-#                    input = input, dt = dt,
-#                    verbose = True, particles = group_size, slices = slices, overlap = overlap,
-#                    iterations = iterations, delta = delta, 
-#                    initial_values = {'V': 0},
-#                    use_gpu = False,
-#                    includedelays = True,
-#                    R = [2.0, 2.0, 2.6, 2.6],
-#                    tau = [20*ms, 20*ms, 30*ms, 30*ms])
-#    end = time.clock()
-#    
-#    print params
-#    
-#    print 'Total time: %.3f seconds' % (end-start)
-
-
