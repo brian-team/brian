@@ -125,7 +125,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                  iterations = 10, delta = None, initial_values = None, stepsize = 100*ms,
                  use_gpu = None, max_cpu = None, max_gpu = None,
                  includedelays = True,
-                 machines = [],
+                 machines = [], named_pipe = None,
                  **params):
     
     # Use GPU ?
@@ -240,7 +240,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                              gpu_policy=gpu_policy,
                              own_max_cpu=max_cpu,
                              own_max_gpu=max_gpu,
-                             machines=machines)
+                             machines=machines, named_pipe=named_pipe)
     num_processes = manager.num_processes[0]
     if manager.use_gpu:
         cores =  'GPUs'

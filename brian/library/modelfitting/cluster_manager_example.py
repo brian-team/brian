@@ -12,8 +12,8 @@ if __name__=='__main__':
     spikes = loadtxt('spikes.txt')
     
     machines = [
-                #'Cyrille-Ulm',
-                'Astrance',
+                'Cyrille-Ulm',
+                #'Astrance',
                 ]
     
     params, gamma = modelfitting(model = equations, reset = 0, threshold = 1, 
@@ -21,6 +21,7 @@ if __name__=='__main__':
                                  input = input, dt = .1*ms,
                                  use_gpu = False, max_cpu = None, max_gpu = None,
                                  machines = machines,
+                                 named_pipe = True,
                                  particles = 80000, iterations = 1, delta = 2*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     
