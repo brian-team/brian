@@ -141,6 +141,7 @@ class ClusterMachine(object):
                     print 'Polled data'
                     self.shared_data = self.conn.recv()
                     print 'Received data'
+                    break
                 else:
                     print 'Still waiting.'
             # Send a message to the manager telling it the number of available
