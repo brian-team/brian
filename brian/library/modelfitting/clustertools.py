@@ -195,7 +195,6 @@ class ClusterMachine(object):
 # This function should turn arrays into sharedctypes ones to minimise
 # data copying, assume shared_data is a dictionary of arrays and values
 def make_common(shared_data):
-    return shared_data
     data = {}
     for k, v in shared_data.iteritems():
         if isinstance(v, numpy.ndarray):
@@ -210,7 +209,6 @@ def make_common(shared_data):
     return data
 
 def make_numpy(common_shared_data):
-    return common_shared_data
     data = {}
     for k, v in common_shared_data.iteritems():
         if hasattr(v, 'as_array') and not isinstance(v, Equations):#isinstance(v, sharedctypes.Array):
