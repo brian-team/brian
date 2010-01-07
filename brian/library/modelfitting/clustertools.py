@@ -37,6 +37,7 @@ class ClusterManager(object):
                  gpu_policy='prefer_gpu',
                  port=None, named_pipe=None,
                  authkey='brian cluster tools'):
+        
         self.work_class = work_class
         if port is None and named_pipe is None:
             port = 2718

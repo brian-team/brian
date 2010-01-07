@@ -234,8 +234,8 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
     if use_gpu is False:
         gpu_policy = 'no_gpu'
     else:
-        gpu_policy = None
-    manager = ClusterManager(modelfitting_worker, shared_data, gpu_policy=gpu_policy, own_max_cpu=max_cpu, own_max_gpu=max_cpu)
+        gpu_policy = 'prefer_gpu'
+    manager = ClusterManager(modelfitting_worker, shared_data, gpu_policy=gpu_policy, own_max_cpu=max_cpu, own_max_gpu=max_gpu)
     num_processes = manager.num_processes[0]
     if manager.use_gpu:
         cores =  'GPUs'
@@ -313,7 +313,7 @@ if __name__=='__main__':
     params, gamma = modelfitting(model = equations, reset = 0, threshold = 1, 
                                  data = spikes, 
                                  input = input, dt = .1*ms,
-                                 use_gpu = False, max_cpu = None, max_gpu = None,
+                                 use_gpu = None, max_cpu = None, max_gpu = None,
                                  particles = 80000, iterations = 1, delta = 2*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     
