@@ -38,7 +38,7 @@ class ChunkedConnection(object):
         self.BUFSIZE = 65500
     def send(self, obj):
         s = cPickle.dumps(obj, -1)
-        l = len(s)//self.BUFSIZE
+        l = 1+len(s)//self.BUFSIZE
         self.conn.send(l)
         for i in xrange(l):
             self.conn.send(s[i*self.BUFSIZE:(i+1)*self.BUFSIZE])
