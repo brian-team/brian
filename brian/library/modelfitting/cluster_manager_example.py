@@ -8,11 +8,12 @@ if __name__=='__main__':
         tau : second
     ''')
     
-    input = loadtxt('current.txt')#[:10000]
+    input = loadtxt('current.txt')
     spikes = loadtxt('spikes.txt')
     
     machines = [
                 'Cyrille-Ulm',
+                #'Romain-PC',
                 #'Astrance',
                 ]
     
@@ -22,7 +23,8 @@ if __name__=='__main__':
                                  use_gpu = True, max_cpu = None, max_gpu = None,
                                  machines = machines,
                                  named_pipe = True,
-                                 particles = 80000, iterations = 5, delta = 2*ms,
-                                 R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
+                                 particles = 800000, iterations = 3, delta = 2*ms,
+                                 R = [1.0e9, 1.0e9, 1.0e10, 1.0e10],
+                                 tau = [1*ms, 1*ms, 50*ms, 50*ms])
     
     print params

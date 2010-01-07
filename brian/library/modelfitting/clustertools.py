@@ -4,6 +4,7 @@ import numpy
 from numpy import ctypeslib
 import ctypes
 import gc
+import time
 import multiprocessing
 import cPickle
 from multiprocessing.connection import Listener, Client
@@ -50,11 +51,14 @@ class ChunkedConnection(object):
         for i in xrange(l):
             self.conn.send(s[i*self.BUFSIZE:(i+1)*self.BUFSIZE])
     def recv(self):
+        start = time.time()
         l = self.conn.recv()
         data = []
         for i in xrange(l):
             data.append(self.conn.recv())
         s = ''.join(data)
+        end = time.time()
+        print 'Recv:', end-start
         return cPickle.loads(s)
     def poll(self, *args, **kwds):
         return self.conn.poll(*args, **kwds)
@@ -90,15 +94,19 @@ class ClusterManager(object):
             machines = [(address, port) for address in machines]
         elif named_pipe is not None and port is None:
             machines = ['\\\\'+address+'\\pipe\\'+named_pipe for address in machines]
+        import time
         self.clients = [Client(address,
                                authkey=authkey) for address in machines]
         if named_pipe is not None:
             self.clients = [ChunkedConnection(client) for client in self.clients]
         # Send them each a copy of the shared data
+        start = time.time()
         for client in self.clients:
             client.send(shared_data)
         # Get info about how many processors they have
         self.clients_info = [client.recv() for client in self.clients]
+        end = time.time()
+        print 'Data transfer took:', end-start
         if len(self.clients_info):
             self.num_cpu, self.num_gpu = zip(*self.clients_info)
             self.num_cpu = list(self.num_cpu)
