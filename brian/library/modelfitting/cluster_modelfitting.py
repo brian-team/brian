@@ -241,7 +241,8 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                              own_max_cpu=max_cpu,
                              own_max_gpu=max_gpu,
                              machines=machines, named_pipe=named_pipe)
-    num_processes = manager.num_processes[0]
+    #num_processes = manager.num_processes[0]
+    num_processes = manager.total_processes
     if manager.use_gpu:
         cores =  'GPUs'
     else:

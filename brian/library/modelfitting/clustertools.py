@@ -33,6 +33,13 @@ gpu_policies = {
     }
 
 class ChunkedConnection(object):
+    '''
+    Windows named pipes are limited to 64k writes at any one time, due to
+    a bug (?) in Python's multiprocessing, this means we can only send a
+    maximum of 64k of data in any one send() or recv() operation. This
+    version of multiprocessing.Connection splits data into 64k chunks and
+    should be used only if using Windows named pipes.
+    '''
     def __init__(self, conn):
         self.conn = conn
         self.BUFSIZE = 65500
@@ -85,7 +92,8 @@ class ClusterManager(object):
             machines = ['\\\\'+address+'\\pipe\\'+named_pipe for address in machines]
         self.clients = [Client(address,
                                authkey=authkey) for address in machines]
-        self.clients = [ChunkedConnection(client) for client in self.clients]
+        if named_pipe is not None:
+            self.clients = [ChunkedConnection(client) for client in self.clients]
         # Send them each a copy of the shared data
         for client in self.clients:
             client.send(shared_data)
@@ -160,7 +168,8 @@ class ClusterMachine(object):
                 address = '\\\\.\\pipe\\'+named_pipe
             self.listener = Listener(address, authkey=authkey)
             self.conn = self.listener.accept()
-            self.conn = ChunkedConnection(self.conn)
+            if named_pipe is not None:
+                self.conn = ChunkedConnection(self.conn)
             self.shared_data = self.conn.recv()
             # Send a message to the manager telling it the number of available
             # CPUs and GPUs
