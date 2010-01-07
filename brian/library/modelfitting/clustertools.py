@@ -49,6 +49,8 @@ class ChunkedConnection(object):
             data.append(self.conn.recv())
         s = ''.join(data)
         return cPickle.loads(s)
+    def poll(self, *args, **kwds):
+        return self.conn.poll(*args, **kwds)
 
 class ClusterManager(object):
     def __init__(self, work_class, shared_data, machines=[],
@@ -81,7 +83,7 @@ class ClusterManager(object):
             machines = ['\\\\'+address+'\\pipe\\'+named_pipe for address in machines]
         self.clients = [Client(address,
                                authkey=authkey) for address in machines]
-        self.clients = [ChunkedConnection(client) for client in clients]
+        self.clients = [ChunkedConnection(client) for client in self.clients]
         # Send them each a copy of the shared data
         for client in self.clients:
             print 'Sending data'
