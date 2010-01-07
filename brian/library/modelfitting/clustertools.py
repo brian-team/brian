@@ -136,7 +136,13 @@ class ClusterMachine(object):
                 address = '\\\\.\\pipe\\'+named_pipe
             self.listener = Listener(address, authkey=authkey)
             self.conn = self.listener.accept()
-            self.shared_data = self.conn.recv()
+            while True:
+                if self.conn.poll(10):
+                    print 'Polled data'
+                    self.shared_data = self.conn.recv()
+                    print 'Received data'
+                else:
+                    print 'Still waiting.'
             # Send a message to the manager telling it the number of available
             # CPUs and GPUs
             self.conn.send((self.num_cpu, self.num_gpu))
