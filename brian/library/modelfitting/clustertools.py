@@ -5,6 +5,7 @@ from numpy import ctypeslib
 import ctypes
 import gc
 import multiprocessing
+import cPickle
 from multiprocessing.connection import Listener, Client
 try:
     import pycuda
@@ -30,6 +31,24 @@ gpu_policies = {
     'require_all':lambda ncpus, ngpus: numpy.amin(ngpus)>0,
     'no_gpu':lambda ncpus, ngpus: False,
     }
+
+class ChunkedConnection(object):
+    def __init__(self, conn):
+        self.conn = conn
+        self.BUFSIZE = 65500
+    def send(self, obj):
+        s = cPickle.dumps(obj, -1)
+        l = len(s)//self.BUFSIZE
+        self.conn.send(l)
+        for i in xrange(l):
+            self.conn.send(s[i*self.BUFSIZE:(i+1)*self.BUFSIZE])
+    def recv(self):
+        l = self.conn.recv()
+        data = []
+        for i in xrange(l):
+            data.append(self.conn.recv())
+        s = ''.join(data)
+        return cPickle.loads(s)
 
 class ClusterManager(object):
     def __init__(self, work_class, shared_data, machines=[],
@@ -62,13 +81,31 @@ class ClusterManager(object):
             machines = ['\\\\'+address+'\\pipe\\'+named_pipe for address in machines]
         self.clients = [Client(address,
                                authkey=authkey) for address in machines]
+        self.clients = [ChunkedConnection(client) for client in clients]
         # Send them each a copy of the shared data
         for client in self.clients:
             print 'Sending data'
+            import pickle
+#                    s = self._dumps(obj)
+#        self._conn.send_bytes(s)
+            s = pickle.dumps(shared_data,-1)
+            print 'Data length:', len(s)
             client.send(shared_data)
             print 'Sent data'
         # Get info about how many processors they have
-        self.clients_info = [client.recv() for client in self.clients]
+        print 'Receiving data from clients'
+        self.clients_info = []
+        for client in self.clients:
+            while True:
+                if client.poll(10):
+                    print 'Polled data'
+                    self.clients_info.append(client.recv())
+                    print 'Received data'
+                    break
+                else:
+                    print 'Still waiting on client'
+        #self.clients_info = [client.recv() for client in self.clients]
+        print 'Received clients_info'
         if len(self.clients_info):
             self.num_cpu, self.num_gpu = zip(*self.clients_info)
             self.num_cpu = list(self.num_cpu)
@@ -138,6 +175,7 @@ class ClusterMachine(object):
                 address = '\\\\.\\pipe\\'+named_pipe
             self.listener = Listener(address, authkey=authkey)
             self.conn = self.listener.accept()
+            self.conn = ChunkedConnection(self.conn)
             while True:
                 if self.conn.poll(10):
                     print 'Polled data'

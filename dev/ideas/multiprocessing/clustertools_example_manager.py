@@ -8,7 +8,7 @@ class work_class(object):
         return sum(self.x)*job
 
 if __name__=='__main__':
-    shared_data = {'x':ones(9000)}
+    shared_data = {'x':ones(8180)}
     manager = ClusterManager(work_class, shared_data,
                              machines=['Cyrille-Ulm'],
                              named_pipe=True,
