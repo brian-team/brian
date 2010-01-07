@@ -51,6 +51,8 @@ class ChunkedConnection(object):
         return cPickle.loads(s)
     def poll(self, *args, **kwds):
         return self.conn.poll(*args, **kwds)
+    def close(self):
+        return self.conn.close()
 
 class ClusterManager(object):
     def __init__(self, work_class, shared_data, machines=[],
