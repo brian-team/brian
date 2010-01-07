@@ -47,6 +47,7 @@ if __name__=="__main__":
                         'brian.utils.ccircular',
                         'brian.utils.fastexp',
                         'brian.utils.sparse',
+                        'brian.utils.sparse_patch',
                 ],
 #      package_dir={'brian.utils.ccircular':'brian/utils/ccircular',
 #                   'brian.utils.fastexp':'brian/utils/fastexp'},
