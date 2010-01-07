@@ -88,28 +88,9 @@ class ClusterManager(object):
         self.clients = [ChunkedConnection(client) for client in self.clients]
         # Send them each a copy of the shared data
         for client in self.clients:
-            print 'Sending data'
-            import pickle
-#                    s = self._dumps(obj)
-#        self._conn.send_bytes(s)
-            s = pickle.dumps(shared_data,-1)
-            print 'Data length:', len(s)
             client.send(shared_data)
-            print 'Sent data'
         # Get info about how many processors they have
-        print 'Receiving data from clients'
-        self.clients_info = []
-        for client in self.clients:
-            while True:
-                if client.poll(10):
-                    print 'Polled data'
-                    self.clients_info.append(client.recv())
-                    print 'Received data'
-                    break
-                else:
-                    print 'Still waiting on client'
-        #self.clients_info = [client.recv() for client in self.clients]
-        print 'Received clients_info'
+        self.clients_info = [client.recv() for client in self.clients]
         if len(self.clients_info):
             self.num_cpu, self.num_gpu = zip(*self.clients_info)
             self.num_cpu = list(self.num_cpu)
@@ -180,14 +161,7 @@ class ClusterMachine(object):
             self.listener = Listener(address, authkey=authkey)
             self.conn = self.listener.accept()
             self.conn = ChunkedConnection(self.conn)
-            while True:
-                if self.conn.poll(10):
-                    print 'Polled data'
-                    self.shared_data = self.conn.recv()
-                    print 'Received data'
-                    break
-                else:
-                    print 'Still waiting.'
+            self.shared_data = self.conn.recv()
             # Send a message to the manager telling it the number of available
             # CPUs and GPUs
             self.conn.send((self.num_cpu, self.num_gpu))
