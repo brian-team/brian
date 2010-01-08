@@ -3,6 +3,57 @@ from time import time,clock
 
 __all__=['particle_swarm']
 
+class RemoteParticleSwarm:
+    def __init__(self, X0, fun, pso_params, 
+                 min_values = None, max_values = None, 
+                 group_size = None, verbose = True):
+        self.X = X0
+        (self.N, self.M) = X0.shape
+        # self.X_gbest = ...
+        # self.fitness_gbest = ...
+        
+    def iterate(self, X_gbest, fitness_gbest):
+        R1 = rand(self.N, self.M)
+        R2 = rand(self.N, self.M)
+        X_gbest2 = zeros((self.N, self.M))
+        # I'm here
+        
+        
+        for j in range(group_number):
+            X_gbest2[:,j*group_size:(j+1)*group_size] = tile(X_gbest[:,j].reshape(N,1), (1, group_size))
+        V = omega*V + c1*R1*(X_lbest-X) + c2*R2*(X_gbest2-X)
+        X = X + V
+        
+        X = maximum(X, min_values)
+        X = minimum(X, max_values)
+        
+        time1 = clock()
+        self.fitness = fun(self.X)
+        time2 = clock()
+#        print fitness_X
+        
+        # Local update
+        indices_lbest = nonzero(fitness_X > fitness_lbest)[1]
+        if (len(indices_lbest)>0):
+            X_lbest[:,indices_lbest] = X[:,indices_lbest]
+            fitness_lbest[:,indices_lbest] = fitness_X[:,indices_lbest]
+        
+        # Global update
+        max_fitness_X = array([max(fitness_X[j*group_size:(j+1)*group_size]) for j in range(group_number)])
+        for j in nonzero(max_fitness_X > fitness_gbest)[0]: # groups for which a global best has been reached at this iteration
+            sub_fitness_X = fitness_X[j*group_size:(j+1)*group_size]
+            index_gbest = nonzero(sub_fitness_X == max_fitness_X[j])[0]
+            if not(isscalar(index_gbest)):
+                index_gbest = index_gbest[0]
+            X_gbest[:,j] = X[:,j*group_size+index_gbest]
+            fitness_gbest[j] = max_fitness_X[j]
+        
+        
+        
+        
+        
+        
+
 def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_values = None, group_size = None, verbose = True):
     """
     Computes the argument of fun which maximizes it using the Particle Swarm Optimization algorithm.
@@ -28,14 +79,12 @@ def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_value
         group_size = M
     group_number = M/group_size
     
+    # WARNING: now min_values and max_values should be tiled
     if (min_values is None):
-        min_values = -inf*ones(N)
+        min_values = -inf*ones((N,M))
     
     if (max_values is None):
-        max_values = inf*ones(N)
-        
-    min_values = tile(min_values.reshape((-1,1)), (1,M))
-    max_values = tile(max_values.reshape((-1,1)), (1,M))
+        max_values = inf*ones((N,M))
     
     fitness_X = -inf * ones((1,M))
     fitness_lbest = fitness_X

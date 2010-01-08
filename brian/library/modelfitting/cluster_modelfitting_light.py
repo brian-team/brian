@@ -1,7 +1,7 @@
 from brian import *
 from clustertools import *
 from fittingparameters import *
-from brian.utils.particle_swarm import *
+from cluster_particle_swarm import *
 from brian.utils.statistics import get_gamma_factor, firing_rate
 try:
     import pycuda
@@ -9,6 +9,7 @@ try:
     can_use_gpu = True
 except ImportError:
     can_use_gpu = False
+import sys
     
 class modelfitting_worker(object):
     def __init__(self, shared_data, use_gpu):
@@ -19,6 +20,7 @@ class modelfitting_worker(object):
         """
         self.prepared = False
         
+        self.total_neurons = shared_data['neurons']
         self.model = shared_data['model']
         self.threshold = shared_data['threshold']
         self.reset = shared_data['reset']
@@ -79,6 +81,9 @@ class modelfitting_worker(object):
         self.prepared = True
         return
         
+    def iterate(self, (X_gbest, fitness_gbest)):
+        pass
+    
     def process(self, X):
         """
         Process job, is run separately on each worker.
@@ -88,34 +93,38 @@ class modelfitting_worker(object):
         if not self.prepared:
             self.prepare(X)
             return
+        else:
+            return self.iterate(X)
+        
+        
         # Gets the parameter values contained in the matrix X, excepted spike delays values
-        if self.includedelays:
-            param_values = self.fp.get_param_values(X[0:-1,:], includedelays = False)
-        else:
-            param_values = self.fp.get_param_values(X, includedelays = False)
-        # Sets the parameter values in the NeuronGroup object
-        for param, value in param_values.iteritems():
-            self.group.state(param)[:] = value
-            
-        if self.use_gpu:
-            # Reinitializes the simulation object
-            self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, X[-1,:])
-            # LAUNCHES the simulation on the GPU
-            self.mf.launch(self.duration, self.stepsize)
-            # Count the final number of coincidences and of model spikes
-            # by summing the numbers over all time slices
-            return self.mf.coincidence_count, self.mf.spike_count
-        else:
-            # Sets the spike delay values
-            if self.includedelays:
-                self.cc.spikedelays = X[-1,:]
-            # Reinitializes the simulation objects
-            reinit_default_clock()
-            self.cc.reinit()
-            net = Network(self.group, self.cc)
-            # LAUNCHES the simulation on the CPU
-            net.run(self.duration)
-            return self.cc.coincidences, self.cc.model_length
+#        if self.includedelays:
+#            param_values = self.fp.get_param_values(X[0:-1,:], includedelays = False)
+#        else:
+#            param_values = self.fp.get_param_values(X, includedelays = False)
+#        # Sets the parameter values in the NeuronGroup object
+#        for param, value in param_values.iteritems():
+#            self.group.state(param)[:] = value
+#            
+#        if self.use_gpu:
+#            # Reinitializes the simulation object
+#            self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, X[-1,:])
+#            # LAUNCHES the simulation on the GPU
+#            self.mf.launch(self.duration, self.stepsize)
+#            # Count the final number of coincidences and of model spikes
+#            # by summing the numbers over all time slices
+#            return self.mf.coincidence_count, self.mf.spike_count
+#        else:
+#            # Sets the spike delay values
+#            if self.includedelays:
+#                self.cc.spikedelays = X[-1,:]
+#            # Reinitializes the simulation objects
+#            reinit_default_clock()
+#            self.cc.reinit()
+#            net = Network(self.group, self.cc)
+#            # LAUNCHES the simulation on the CPU
+#            net.run(self.duration)
+#            return self.cc.coincidences, self.cc.model_length
 
 def modelfitting(model = None, reset = None, threshold = None, data = None, 
                  input_var = 'I', input = None, dt = None,
@@ -293,7 +302,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
     X0 = fp.get_param_matrix(initial_param_values)
     min_values, max_values = fp.set_constraints(group_size*group_count)
 
-    X, value, T = particle_swarm(X0, fun, iterations = iterations, pso_params = [.9, 1.9, 1.9],
+    X, value, T = cluster_particle_swarm(X0, manager, iterations = iterations, pso_params = [.9, 1.9, 1.9],
                      min_values = min_values, max_values = max_values,
                      group_size = group_size, verbose = verbose)
     manager.finished()

@@ -62,12 +62,13 @@ class FittingParameters(object):
         min_values = array(min_values)
         max_values = array(max_values)
         
-        if includedelays & self.includedelays:
-            min_values = tile(min_values.reshape((p+1, 1)), (1, N))
-            max_values = tile(max_values.reshape((p+1, 1)), (1, N))
-        else:
-            min_values = tile(min_values.reshape((p, 1)), (1, N))
-            max_values = tile(max_values.reshape((p, 1)), (1, N))
+        # We can tile the min_values vector later (in pso code)
+#        if includedelays & self.includedelays:
+#            min_values = tile(min_values.reshape((p+1, 1)), (1, N))
+#            max_values = tile(max_values.reshape((p+1, 1)), (1, N))
+#        else:
+#            min_values = tile(min_values.reshape((p, 1)), (1, N))
+#            max_values = tile(max_values.reshape((p, 1)), (1, N))
             
         return min_values, max_values
 
