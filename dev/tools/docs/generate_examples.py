@@ -73,7 +73,11 @@ for code in examplescode:
     # next line replaces unicode characters like e-acute with standard ascii representation
     examplesdocs.append(unicodedata.normalize('NFKD',unicode(doc,'latin-1')).encode('ascii','ignore'))
     examplesafterdoccode.append(afterdoccode)
-    examplesdocumentablenames.append(set(compiler.compile(code,'','exec').co_names) & documentable_names)
+    try:
+        examplesdocumentablenames.append(set(compiler.compile(code,'','exec').co_names) & documentable_names)
+    except SyntaxError:
+        print code
+        raise
 examples = zip(examplesfnames, examplespaths, examplesbasenames, examplescode, examplesdocs, examplesafterdoccode, examplesdocumentablenames)
 os.chdir('../docs_sphinx')
 for fname, path, basename, code, docs, afterdoccode, documentables in examples:

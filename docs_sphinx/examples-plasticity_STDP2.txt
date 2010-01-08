@@ -55,7 +55,7 @@ This simulation takes a long time!
     rate=PopulationRateMonitor(neurons)
     
     start_time=time()
-    run(100*second)
+    run(100*second,report='text')
     print "Simulation time:",time()-start_time
     
     subplot(311)

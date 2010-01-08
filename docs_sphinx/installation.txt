@@ -27,10 +27,8 @@ Installing Brian requires the following components:
    (see the `detailed installation instructions <http://matplotlib.sourceforge.net/installing.html>`__).
 #. `SymPy <http://code.google.com/p/sympy/>`__ package for Python:
    a library for symbolic mathematics (not mandatory yet for Brian).
-#. `Brian <https://sourceforge.net/project/showfiles.php?group_id=226798>`__ itself (don't forget to download the extras.zip file,
+#. `Brian <http://neuralensemble.org/trac/brian/wiki/Downloads>`__ itself (don't forget to download the extras.zip file,
    which includes examples, tutorials, and a complete copy of the documentation).
-   Download the latest release: file ending ``.win32.exe`` for Windows,
-   filenames ending ``.tar.gz`` or ``.zip`` for other operating systems.
    Brian is also a Python package and can be installed as explained below.
 
 Fortunately, Python packages are very quick and easy to install, so the whole process shouldn't

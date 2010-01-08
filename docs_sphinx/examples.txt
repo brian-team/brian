@@ -24,6 +24,23 @@ plasticity
    examples-plasticity_STDP1
    examples-plasticity_STDP2
 
+multiprocessing
+---------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-multiprocessing_multiple_runs_simple
+   examples-multiprocessing_multiple_runs_with_gui
+
+modelfitting
+------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-modelfitting_modelfitting
+
 misc
 ----
 
@@ -48,6 +65,7 @@ misc
    examples-misc_I-F_curve2
    examples-misc_if
    examples-misc_leaky_if
+   examples-misc_linked_var
    examples-misc_minimalexample
    examples-misc_mirollo_strogatz
    examples-misc_multipleclocks
@@ -65,10 +83,12 @@ misc
    examples-misc_ring
    examples-misc_stim2d
    examples-misc_stopping
+   examples-misc_timed_array
    examples-misc_topographic_map
    examples-misc_topographic_map2
    examples-misc_transient_sync
    examples-misc_two_neurons
+   examples-misc_using_classes
 
 interface
 ---------
@@ -87,6 +107,7 @@ frompapers
    examples-frompapers_Brette_Gerstner_2005
    examples-frompapers_Diesmann_et_al_1999
    examples-frompapers_Diesmann_et_al_1999_longer
+   examples-frompapers_Izhikevich_2006_Polychronization
    examples-frompapers_Sturzl_et_al_2000
 
 electrophysiology

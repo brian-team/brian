@@ -178,4 +178,3 @@ if __name__=='__main__':
     results = pool.imap_unordered(how_many_spikes, args())
     ion() # this puts matplotlib into interactive mode to plot as we go
     sim_mainloop(pool, results, message_queue)
-    

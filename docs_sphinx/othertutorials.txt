@@ -7,7 +7,7 @@ Python
 ------
 
 The first thing to do in learning how to use Brian
-is to have a basic grasp of the Python_ programming language.
+is to have a basic grasp of the Python programming language.
 There are lots of good tutorials already out there. The best one is probably
 `the official Python tutorial
 <http://docs.python.org/tut/>`__. 
@@ -26,5 +26,5 @@ If you already know Matlab, you could read this tutorial:
 `NumPy for Matlab users <http://scipy.org/NumPy_for_Matlab_Users>`__
 and this list of `Matlab-Python translations <http://mathesaurus.sourceforge.net/>`__
 (`pdf version here <http://brian.di.ens.fr/matlab-python-xref.pdf>`__).
-A `tutorial <http://matplotlib.sourceforge.net/tutorial.html>`__ is also available on
+A `tutorial <http://matplotlib.sourceforge.net/users/pyplot_tutorial.html>`__ is also available on
 the web site of Pylab.

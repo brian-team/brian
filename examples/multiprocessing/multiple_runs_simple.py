@@ -45,4 +45,3 @@ if __name__=='__main__':
     results = pool.map(how_many_spikes, args) # launches multiple processes
     plot(weights, results, '.')
     show()
-    
