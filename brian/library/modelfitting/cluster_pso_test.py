@@ -3,56 +3,6 @@ from clustertools import *
 from cluster_splitting import *
 import sys
 
-#def expand(N_list, group_size):
-#    """
-#    There are N=group_size*group_count particles, regrouped into groups of size group_size.
-#    The particles must be spread among the workers, but the group structure should be kept.
-#    Therefore, expand returns a list of integers lists : result[i] is the list of subgroups
-#    for worker i. One group can be spread over several workers.
-#    """
-#    N = sum(N_list)
-#    group_list = []
-#    current_worker_size = 0
-#    current_group_size = 0
-#    previous_group_size = 0
-#    groups = []
-#    current_group = 0
-#    current_worker = 0
-#    for k in range(N):
-#        current_group_size += 1
-#        current_worker_size += 1
-#        if current_group_size >= group_size:
-#            if current_group_size - previous_group_size>0:
-#                groups.append(current_group_size - previous_group_size)
-#            previous_group_size = 0
-#            current_group_size = 0
-#            current_group += 1
-#        if current_worker_size >= N_list[current_worker]:
-#            if current_group_size - previous_group_size>0:
-#                groups.append(current_group_size - previous_group_size)
-#            group_list.append(groups)
-#            current_worker_size = 0
-#            previous_group_size = current_group_size
-#            current_worker += 1
-#            current_group = 0
-#            groups = []
-#    return group_list
-#
-#def decompress(X_list, n_list):
-#    """
-#    X is a list [(col vector1, number1), (col vector2, number2), ...]
-#    decompress(X) is a matrix [col vector1 (number1 times), ...]
-#    """
-#    result = None
-#    for vector, n in zip(X_list, n_list):
-#        tiled = tile(vector.reshape((-1,1)),(1,n))
-#        if result is None:
-#            result = tiled
-#        else:
-#            result = hstack((result, tiled))
-#    return result
-
-
 def expand_items(groups, items):
     """
     If items are column vectors, expanded_items are matrices
@@ -206,6 +156,7 @@ def optim(X0,
 def fitness_fun1(X):
     X = X**2
     return exp(-(X.sum(axis=0)))
+
 def fitness_fun2(X):
     X = X-2
     X = X**2
