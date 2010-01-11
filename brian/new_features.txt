@@ -1,17 +1,43 @@
 New features since 1.1.3
 ------------------------
 
-* Speed improvements to monitors and plotting functions
+Major features:
+
+* Model fitting toolbox (library.modelfitting)
+
+Minor features:
+
 * New real-time ``refresh=`` options added to plotting functions
 * Gamma factor in utils.statistics
-* Model fitting toolbox (library.modelfitting)
 * New RegularClock object
-* Minor bugfix to TimedArray caused by floating point comparisons
-* New multiprocessing examples
-* No warnings with Python 2.6
-* Bugfix: refractory neurons could fire in very extreme circumstances
-* Parameters now picklable
+* Added brian_sample_run function to test installation in place of nose tests
+
+Improvements:
+
+* Speed improvements to monitors and plotting functions
+* Sparse matrix support improved, should work with scipy versions up to 0.7.1
 * Various improvements to brian.hears (still experimental though)
+* Parameters now picklable
+* Made Equations picklable
+
+Bug fixes:
+
+* Fixed major bug with subgroups and connections (announced on webpage)
+* Fixed major bug with multiple clocks (announced on webpage)
+* No warnings with Python 2.6
+* Minor bugfix to TimedArray caused by floating point comparisons
+* Bugfix: refractory neurons could fire in very extreme circumstances
+* Fixed bug with DelayConnection not setting max_delay
+* Fixed bug with STP
+* Fixed bug with weight=lambda i,j:rand()
+
+New examples:
+
+* New multiprocessing examples
+* Added polychronisation example
+* Added modelfitting examples
+* Added examples of TimedArray and linked_var
+* Added examples of using derived classes with Brian
 
 New features since 1.1.2
 ------------------------

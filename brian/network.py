@@ -113,7 +113,7 @@ class Network(object):
         NeuronGroup object is only added to the network if certain
         conditions hold::
         
-            net = Network(...)
+`            net = Network(...)
             if some_condition:
                 x = net(NeuronGroup(...))
     
@@ -403,7 +403,7 @@ class Network(object):
                     objfun = 'do_propagate'
                     allclocks = False
                     # Connections do not define their own clock, but they should
-                    # be updated on the schedule of their source group?
+                    # be updated on the schedule of their source group
                     for obj in objset:
                         obj.clock = obj.source.clock
                 elif len(item)>4 and item[0:3]=='ops': # the item is of the forms 'ops when'
