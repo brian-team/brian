@@ -18,6 +18,4 @@ mymonitor=PopulationSpikeCounter(neurons)
 run(500*ms)
 plot(S.times/ms,S[0]/mV)
 plot(S.times/ms,S[1]/mV)
-save('trace.txt',(S.times/ms,S[0]/mV))
-print mymonitor.nspikes
 show()

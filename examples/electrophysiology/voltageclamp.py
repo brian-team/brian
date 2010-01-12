@@ -6,8 +6,6 @@ from brian.library.electrophysiology import *
 
 defaultclock.dt=.01*ms
 
-log_level_debug()
-
 taum=20*ms
 gl=20*nS
 Cm=taum*gl
