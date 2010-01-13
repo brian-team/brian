@@ -14,6 +14,11 @@ equations = Equations('''
 ''')
 
 input = loadtxt('current.txt')
+
+import pickle
+pickle.dump(input, open('current.pickle', 'w'))
+exit()
+
 spikes = loadtxt('spikes.txt')
 
 params, gamma = modelfitting(model = equations, reset = 0, threshold = 1, 

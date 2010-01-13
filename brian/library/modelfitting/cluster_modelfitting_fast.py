@@ -511,7 +511,7 @@ if __name__=='__main__':
     best_params, best_values = modelfitting(model = equations, reset = 0, threshold = 1, 
                                  data = spikes, 
                                  input = input, dt = .1*ms,
-                                 use_gpu = False, max_cpu = 4, max_gpu = None,
+                                 use_gpu = False, max_cpu = None, max_gpu = None,
                                  particles = 2000, iterations = 3, delta = 1*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     
