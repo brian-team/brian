@@ -20,7 +20,6 @@ elif drv.get_version()>(2,0,0):
 else:
     raise Exception,"CUDA 2.0 required"
 
-
 modelfitting_kernel_template = """
 __global__ void runsim(
     int Tstart, int Tend,     // Start, end time as integer (t=T*dt)
