@@ -1224,7 +1224,6 @@ class CoincidenceCounterBis(SpikeMonitor):
         self.onset = onset
         self.N = len(source)
         self.coincidence_count_algorithm = coincidence_count_algorithm
-        self.target_rates = None
 
         self.data = array(data)
         if spiketimes_offset is None:

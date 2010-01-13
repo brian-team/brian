@@ -17,6 +17,7 @@ class ClusterSplitting:
         self.split_groups()
         print "%d workers with sizes" % len(worker_size), worker_size
         print "%d groups with sizes" % len(group_size), group_size
+        print
         
     def split_groups(self):
         """
