@@ -56,31 +56,41 @@ class light_worker(object):
             self.use_gpu = use_gpu
         else:
             self.use_gpu = False
-        params = shared_data['params']
         # Loads parameters
-        self.fp = FittingParameters(includedelays = self.includedelays, **params)
+        self.fp = shared_data['fp']
         self.param_names = self.fp.param_names
         
         self.optim_prepared = False
         self.function_prepared = False
     
-    def optim_prepare(self, (X, pso_params, min_values, max_values, groups)):
+#    def optim_prepare(self, (D, pso_params, min_values, max_values, groups)):
+    def optim_prepare(self, (D, pso_params, groups)):
         """
         Initializes the PSO parameters before any iteration
         """
-        self.X = X
-        self.V = zeros(X.shape)
-        (self.D, self.N) = X.shape
+        
+        # Randomize initial positions
+        self.N = sum([n for (i,n) in groups])
+        self.D = D
+#        print "Number of neurons in the worker", self.N
+#        sys.stdout.flush()
+        
+        initial_param_values = self.fp.get_initial_param_values(self.N)
+        self.X = self.fp.get_param_matrix(initial_param_values)
+        self.V = zeros((self.D, self.N))
         self.pso_params = pso_params
-        self.min_values = min_values
-        self.max_values = max_values
+        min_values, max_values = self.fp.set_constraints()
+        # Tiling min_values and max_values
+        self.min_values = tile(min_values.reshape((-1,1)), (1, self.N))
+        self.max_values = tile(max_values.reshape((-1,1)), (1, self.N))
+        
         # self.groups is the list of the group sizes within the worker
         # each group is optimized separately
         self.groups = groups
         
         self.fitness_lbest = -inf*ones(self.N)
         self.fitness_gbest = -inf*ones(len(groups))
-        self.X_lbest = X
+        self.X_lbest = self.X
         self.X_gbest = [None]*len(groups)
         
         # DEBUG
@@ -237,28 +247,31 @@ class light_worker(object):
             return
         # Called by the optimization algorithm, before any iteration
         if not self.optim_prepared:
-            # Here, X_gbests contains (X, pso_params, min_values, max_values, groups)
+            # Here, X_gbests contains (D, pso_params, groups)
             self.optim_prepare(X_gbests)
             return
         # PSO iteration
         results = self.iterate(X_gbests)
         return results
 
-def optim(X0,
+def optim(#X0,
+          D,
           worker_size,
           iter, 
           manager, 
           num_processes, 
           group_size = None,
-          pso_params = None, 
-          min_values = None, 
-          max_values = None):
+          pso_params = None
+#          min_values = None, 
+#          max_values = None
+          ):
     
-    (D, N) = X0.shape
-    if (min_values is None):
-        min_values = -inf*ones(D)
-    if (max_values is None):
-        max_values = inf*ones(D)
+    N = sum(worker_size)
+    
+#    if (min_values is None):
+#        min_values = -inf*ones(D)
+#    if (max_values is None):
+#        max_values = inf*ones(D)
     if  group_size is None:
         group_size = N
     
@@ -266,25 +279,27 @@ def optim(X0,
     cs = ClusterSplitting(worker_size, [group_size]*group_count)
     
     # Initial particle positions for each worker
-    X_list = []
-    k = 0
-    for i in range(num_processes):
-        n = worker_size[i]
-        X_list.append(X0[:,k:k+n])
-        k += n
+#    X_list = []
+#    k = 0
+#    for i in range(num_processes):
+#        n = worker_size[i]
+#        X_list.append(X0[:,k:k+n])
+#        k += n
         
+    D_list = [D]*num_processes
     pso_params_list = [pso_params]*num_processes
-    min_values_list = [tile(min_values.reshape((-1, 1)), (1, n)) for n in worker_size]
-    max_values_list = [tile(max_values.reshape((-1, 1)), (1, n)) for n in worker_size]
+#    min_values_list = [tile(min_values.reshape((-1, 1)), (1, n)) for n in worker_size]
+#    max_values_list = [tile(max_values.reshape((-1, 1)), (1, n)) for n in worker_size]
     groups_by_worker = cs.groups_by_worker
     
     # Passing PSO parameters to the workers
     # Prepare the manager object for optimization
     # WARNING: MUST BE CALLED *AFTER* the preparation for the simulation
-    manager.process_jobs(zip(X_list,
+    manager.process_jobs(zip(#X_list,
+                             D_list,
                              pso_params_list, 
-                             min_values_list, 
-                             max_values_list, 
+#                             min_values_list, 
+#                             max_values_list, 
                              groups_by_worker))
 
     X_gbest_list = [[None]*len(groups_by_worker[i]) for i in range(num_processes)]    
@@ -416,7 +431,8 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
         stepsize = stepsize, 
         includedelays = includedelays,
         use_gpu = use_gpu,
-        params = params
+        params = params,
+        fp = fp
     )
     
     if use_gpu is False:
@@ -464,27 +480,29 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                              target_length_list, 
                              target_rates_list))
     
-    initial_param_values = fp.get_initial_param_values(group_size*group_count)
-    X0 = fp.get_param_matrix(initial_param_values)
-    min_values, max_values = fp.set_constraints(group_size*group_count)
+#    initial_param_values = fp.get_initial_param_values(group_size*group_count)
+#    X0 = fp.get_param_matrix(initial_param_values)
+#    min_values, max_values = fp.set_constraints()
     pso_params = [.9, .5, .9]
+    D = fp.param_count
+    if includedelays:
+        D += 1
 
-    best_items = optim( X0,
+    best_items = optim( #X0,
+                        D,
                         worker_size,
                         iterations, 
                         manager, 
                         num_processes,
                         group_size = group_size,
                         pso_params = pso_params, 
-                        min_values = min_values, 
-                        max_values = max_values)
+#                        min_values = min_values, 
+#                        max_values = max_values
+                        )
     
     manager.finished()
 
     best_values = []
-    D = fp.param_count
-    if includedelays:
-        D += 1
     X = zeros((D, group_count))
     for (i, X_group, value) in best_items:
         X[:,i] = X_group
@@ -505,11 +523,11 @@ if __name__=='__main__':
     input = loadtxt('current.txt')
     spikes0 = loadtxt('spikes.txt')
     
-    spikes = [(0, spike) for spike in spikes0]
+    spikes = [(0, spike-.003) for spike in spikes0]
     spikes.extend([(1, spike+.003) for spike in spikes0])
 
     machines = [
-                'Cyrille-Ulm',
+                #'Cyrille-Ulm',
                 #'Romain-PC',
                 #'Astrance',
                 ]
@@ -521,7 +539,7 @@ if __name__=='__main__':
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  use_gpu = True, max_cpu = None, max_gpu = None,
-                                 particles = 400000, iterations = 10, delta = 1*ms,
+                                 particles = 80000, iterations = 3, delta = 1*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     
     print "Model fitting terminated, total duration %.3f seconds" % (time.clock()-t1)

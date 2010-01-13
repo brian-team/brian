@@ -34,11 +34,12 @@ class FittingParameters(object):
             random_param_values['delays'] = -5*ms + 10*ms*rand(N)
         return random_param_values
 
-    def set_constraints(self, N, includedelays = True):
+    def set_constraints(self, includedelays = True):
         """
         Returns constraints of a given model
-        constraints is an array of length p where p is the number of parameters
-        constraints[i] is the minimum value for parameter i
+        returns min_values, max_values
+        min_values is an array of length p where p is the number of parameters
+        min_values[i] is the minimum value for parameter i
         """
         min_values = []
         max_values = []

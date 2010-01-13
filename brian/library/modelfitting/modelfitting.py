@@ -210,7 +210,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
     
     initial_param_values = fp.get_initial_param_values(group_size*group_count)
     X0 = fp.get_param_matrix(initial_param_values)
-    min_values, max_values = fp.set_constraints(group_size*group_count)
+    min_values, max_values = fp.set_constraints()
     
     X, value, T = particle_swarm(X0, fun, iterations = iterations, pso_params = [.9, 1.9, 1.9], 
                      min_values = min_values, max_values = max_values, 
