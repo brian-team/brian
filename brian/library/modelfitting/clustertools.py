@@ -7,6 +7,7 @@ import gc
 import time
 import multiprocessing
 import cPickle
+import zlib
 from multiprocessing.connection import Listener, Client
 try:
     import pycuda
@@ -46,6 +47,7 @@ class ChunkedConnection(object):
         self.BUFSIZE = 65500
     def send(self, obj):
         s = cPickle.dumps(obj, -1)
+        s = zlib.compress(s)
         l = 1+len(s)//self.BUFSIZE
         self.conn.send(l)
         for i in xrange(l):
@@ -57,6 +59,7 @@ class ChunkedConnection(object):
         for i in xrange(l):
             data.append(self.conn.recv())
         s = ''.join(data)
+        s = zlib.decompress(s)
         end = time.time()
         print 'Recv:', end-start
         return cPickle.loads(s)
