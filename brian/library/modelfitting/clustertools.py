@@ -278,7 +278,7 @@ def cluster_worker(common_shared_data, conn, process_number, use_gpu,
     shared_data = make_numpy(common_shared_data)
     work_object = work_class(shared_data, use_gpu)
     if use_gpu:
-        set_gpu_device(process_number)
+        set_gpu_device(drv.Device.count()-process_number-1)
     while True:
         try:
             job = conn.recv()
