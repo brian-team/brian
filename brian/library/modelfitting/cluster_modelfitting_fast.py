@@ -507,14 +507,21 @@ if __name__=='__main__':
     
     spikes = [(0, spike) for spike in spikes0]
     spikes.extend([(1, spike+.003) for spike in spikes0])
+
+    machines = [
+                'Cyrille-Ulm',
+                #'Romain-PC',
+                #'Astrance',
+                ]
     
     t1 = time.clock()
     best_params, best_values = modelfitting(model = equations, reset = 0, threshold = 1,
-                                 machines = machines, 
+                                 machines = machines,
+                                 named_pipe=True,
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  use_gpu = True, max_cpu = None, max_gpu = None,
-                                 particles = 20000, iterations = 3, delta = 1*ms,
+                                 particles = 400000, iterations = 10, delta = 1*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     
     print "Model fitting terminated, total duration %.3f seconds" % (time.clock()-t1)
