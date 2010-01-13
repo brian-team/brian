@@ -14,7 +14,7 @@ if __name__=='__main__':
     
     machines = [
                 'Cyrille-Ulm',
-                'Romain-PC',
+                #'Romain-PC',
                 #'Astrance',
                 ]
     

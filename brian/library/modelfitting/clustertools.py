@@ -34,32 +34,47 @@ gpu_policies = {
     'no_gpu':lambda ncpus, ngpus: False,
     }
 
-class ChunkedConnection(object):
+class ClusterConnection(object):
     '''
+    Handles chunking and compression of data.
+    
+    To minimise data transfers between machines, we can use data compression,
+    which this Connection handles automatically.
+    
     Windows named pipes are limited to 64k writes at any one time, due to
     a bug (?) in Python's multiprocessing, this means we can only send a
     maximum of 64k of data in any one send() or recv() operation. This
-    version of multiprocessing.Connection splits data into 64k chunks and
+    version of multiprocessing.Connection can split data into 64k chunks, which
     should be used only if using Windows named pipes.
     '''
-    def __init__(self, conn):
+    def __init__(self, conn, chunked=False, compressed=True):
         self.conn = conn
+        self.chunked = chunked
+        self.compressed = compressed
         self.BUFSIZE = 65500
     def send(self, obj):
         s = cPickle.dumps(obj, -1)
-        s = zlib.compress(s)
-        l = 1+len(s)//self.BUFSIZE
-        self.conn.send(l)
-        for i in xrange(l):
-            self.conn.send(s[i*self.BUFSIZE:(i+1)*self.BUFSIZE])
+        if self.compressed:
+            s = zlib.compress(s)
+        if self.chunked:
+            l = 1+len(s)//self.BUFSIZE
+            self.conn.send(l)
+            for i in xrange(l):
+                self.conn.send(s[i*self.BUFSIZE:(i+1)*self.BUFSIZE])
+        else:
+            self.conn.send(s)
     def recv(self):
         start = time.time()
-        l = self.conn.recv()
-        data = []
-        for i in xrange(l):
-            data.append(self.conn.recv())
-        s = ''.join(data)
-        s = zlib.decompress(s)
+        if self.chunked:
+            l = self.conn.recv()
+            data = []
+            for i in xrange(l):
+                data.append(self.conn.recv())
+            s = ''.join(data)
+        else:
+            s = self.conn.recv()
+        if self.compressed:
+            s = zlib.decompress(s)
         end = time.time()
         print 'Recv:', end-start
         return cPickle.loads(s)
@@ -101,7 +116,10 @@ class ClusterManager(object):
         self.clients = [Client(address,
                                authkey=authkey) for address in machines]
         if named_pipe is not None:
-            self.clients = [ChunkedConnection(client) for client in self.clients]
+            chunked = True
+        else:
+            chunked = False
+        self.clients = [ClusterConnection(client, chunked=chunked) for client in self.clients]
         # Send them each a copy of the shared data
         start = time.time()
         for client in self.clients:
@@ -180,7 +198,10 @@ class ClusterMachine(object):
             self.listener = Listener(address, authkey=authkey)
             self.conn = self.listener.accept()
             if named_pipe is not None:
-                self.conn = ChunkedConnection(self.conn)
+                chunked = True
+            else:
+                chunked = False
+            self.conn = ClusterConnection(self.conn, chunked=chunked)
             self.shared_data = self.conn.recv()
             # Send a message to the manager telling it the number of available
             # CPUs and GPUs
