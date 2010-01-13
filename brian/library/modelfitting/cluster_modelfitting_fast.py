@@ -302,14 +302,19 @@ def optim(#X0,
 #                             max_values_list, 
                              groups_by_worker))
 
-    X_gbest_list = [[None]*len(groups_by_worker[i]) for i in range(num_processes)]    
+    X_gbest_list = [[None]*len(groups_by_worker[i]) for i in range(num_processes)]
+    
+    total_time = 0.0
+    
     for i in range(iter):
         print "Iteration %d/%d..." % (i+1, iter)
         t1 = time.clock()
         # Each worker iterates and return its best results for each of its subgroups
         # results[i] is a list of triplets (group, best_item, best_value)
         results = manager.process_jobs(X_gbest_list)
-        print "    ... took %.3f seconds." % (time.clock()-t1)
+        time_iter = time.clock()-t1
+        total_time += time_iter
+        print "    ... took %.3f seconds." % time_iter
         # The results of each worker must be regrouped.
         # X_gbest_list must contain the best results for each group across workers.
         best_items = cs.combine_items(results)
@@ -318,7 +323,7 @@ def optim(#X0,
         print
         X_gbest_list = cs.split_items(best_items)
 
-    return best_items
+    return best_items, total_time/iter
 
 def modelfitting(model = None, reset = None, threshold = None, data = None, 
                  input_var = 'I', input = None, dt = None,
@@ -488,18 +493,13 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
     if includedelays:
         D += 1
 
-    best_items = optim( #X0,
-                        D,
-                        worker_size,
-                        iterations, 
-                        manager, 
-                        num_processes,
-                        group_size = group_size,
-                        pso_params = pso_params, 
-#                        min_values = min_values, 
-#                        max_values = max_values
-                        )
-    
+    best_items, mean_iter_time = optim( D,
+                                        worker_size,
+                                        iterations, 
+                                        manager, 
+                                        num_processes,
+                                        group_size = group_size,
+                                        pso_params = pso_params)
     manager.finished()
 
     best_values = []
@@ -509,7 +509,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
         best_values.append(value)
         
     best_params = Parameters(**fp.get_param_values(X))
-    return best_params, best_values
+    return best_params, best_values, mean_iter_time
 
 
 if __name__=='__main__':
@@ -533,18 +533,23 @@ if __name__=='__main__':
                 ]
     
     t1 = time.clock()
-    best_params, best_values = modelfitting(model = equations, reset = 0, threshold = 1,
+    best_params, best_values, mean_iter_time = modelfitting(model = equations, reset = 0, threshold = 1,
                                  machines = machines,
-                                 named_pipe=True,
+                                 named_pipe = True,
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  use_gpu = True, max_cpu = None, max_gpu = None,
-                                 particles = 80000, iterations = 3, delta = 1*ms,
+                                 particles = 4000000, iterations = 10, delta = 1*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
+    total_time = time.clock()-t1
     
-    print "Model fitting terminated, total duration %.3f seconds" % (time.clock()-t1)
+    print "Model fitting terminated, total duration %.3f seconds" % total_time
     print
-    
+    print "Best parameters"
     print best_params
+    print
+    print "Best values"
     print best_values
-
+    print
+    print "Mean iteration time : %.3f" % mean_iter_time
+    
