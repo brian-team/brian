@@ -155,7 +155,8 @@ class light_worker(object):
             self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, X[-1,:])
             # LAUNCHES the simulation on the GPU
             self.mf.launch(self.duration, self.stepsize)
-            return self.mf.coincidence_count, self.mf.spike_count
+            #return self.mf.coincidence_count, self.mf.spike_count
+            gamma = get_gamma_factor(self.mf.coincidence_count, self.mf.spike_count, self.target_length, self.target_rates, self.delta)
         else:
             # WARNING: need to sets the group at each iteration for some reason
             self.cc.source = self.group
@@ -168,8 +169,8 @@ class light_worker(object):
             net = Network(self.group, self.cc)
             # LAUNCHES the simulation on the CPU
             net.run(self.duration)
-        # Computes the gamma factor
-        gamma = get_gamma_factor(self.cc.coincidences, self.cc.model_length, self.target_length, self.target_rates, self.delta)
+            # Computes the gamma factor
+            gamma = get_gamma_factor(self.cc.coincidences, self.cc.model_length, self.target_length, self.target_rates, self.delta)
         return gamma
     
     def iterate(self, X_gbests):
@@ -508,11 +509,12 @@ if __name__=='__main__':
     spikes.extend([(1, spike+.003) for spike in spikes0])
     
     t1 = time.clock()
-    best_params, best_values = modelfitting(model = equations, reset = 0, threshold = 1, 
+    best_params, best_values = modelfitting(model = equations, reset = 0, threshold = 1,
+                                 machines = machines, 
                                  data = spikes, 
                                  input = input, dt = .1*ms,
-                                 use_gpu = False, max_cpu = None, max_gpu = None,
-                                 particles = 2000, iterations = 3, delta = 1*ms,
+                                 use_gpu = True, max_cpu = None, max_gpu = None,
+                                 particles = 20000, iterations = 3, delta = 1*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     
     print "Model fitting terminated, total duration %.3f seconds" % (time.clock()-t1)
