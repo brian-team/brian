@@ -1,5 +1,4 @@
-from cluster_modelfitting_fast import *
-#from cluster_modelfitting import *
+from modelfitting import *
 
 if __name__=='__main__':
     equations = Equations('''
