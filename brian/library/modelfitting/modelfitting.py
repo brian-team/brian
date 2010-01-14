@@ -329,7 +329,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
         data = concatenate((zeros((len(data), 1)), data.reshape((-1,1))), axis=1)
 
     if dt is None:
-        raise ArgumentError
+        raise Exception('dt (sampling frequency of the input) must be set')
     if slices == 1:
         overlap = 0*ms
 
@@ -519,7 +519,9 @@ if __name__=='__main__':
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  use_gpu = None, max_cpu = None, max_gpu = None,
+                                 return_time = True,
                                  particles = 4000, iterations = 1, delta = 1*ms,
+                                 
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     total_time = time.clock()-t1
     
