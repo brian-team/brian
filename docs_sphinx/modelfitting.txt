@@ -1,4 +1,6 @@
-.. currentmodule:: brian
+.. currentmodule:: brian.library.modelfitting
+
+.. _model-fitting-library:
 
 Model fitting
 =============
@@ -6,11 +8,13 @@ The modelfitting library allows to fit a neuron model to data. To import the
 library, use ::
 
   from brian.library.modelfitting import *
-  
+
+TODO: detailed description of problem, etc.
+
 Usage example
 -------------
 To fit the parameters of a neuron model with respect to some data, use the
-``modelfitting`` function ::
+:func:`modelfitting` function ::
 
   params = modelfitting(model=equations, reset=reset, threshold=threshold,
                                data=data, input=input,

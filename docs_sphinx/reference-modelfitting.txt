@@ -1,0 +1,8 @@
+.. currentmodule:: brian.library.modelfitting
+
+Model fitting toolbox
+=====================
+
+.. autofunction:: modelfitting
+.. autofunction:: modelfitting_worker
+ 

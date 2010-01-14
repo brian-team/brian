@@ -14,6 +14,9 @@ The easiest way to install Brian if you already have a version of Python 2.5 or 
 
 This will download and install Brian and all its required packages (NumPy, SciPy, etc.).
 
+Note that there are some optimisations you can make after installation, see the
+section below on `Optimisations`_.
+
 Manual installation
 -------------------
 
@@ -91,7 +94,7 @@ be installed already on most unix or linux distributions. If you are using Windo
 install `cygwin <http://www.cygwin.com/>`__ (make sure to include the ``gcc`` package). Alternatively,
 some but not all versions of Microsoft Visual C++ should be compatible, but this is untested
 so far. See the documentation for the `SciPy Weave <http://www.scipy.org/Weave>`__ package for
-more information on this.
+more information on this. See also the section on :ref:`compiled-code`.
 
 Testing
 -------
@@ -102,3 +105,14 @@ the following two lines::
 	brian_sample_run()
 
 A sample network should run and produce a raster plot.
+
+Optimisations
+-------------
+
+After a successful installation, there are some optimisations you can make to
+your Brian installation to get it running faster using compiled C code. We do
+not include these as standard because they do not work on all computers, and
+we want Brian to install without problems on all computers. Note that including
+all the optimisations can result in significant speed increases (around 30%).
+
+These optimisations are described in detail in the section on :ref:`compiled-code`.

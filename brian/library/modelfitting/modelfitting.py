@@ -312,6 +312,12 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                  machines = [], named_pipe = None, port = None, authkey='brian cluster tools',
                  return_time = None,
                  **params):
+    '''
+    Model fitting function.
+    
+    TODO: reference documentation. For the moment, see documentation in
+    :ref:`model-fitting-library`.
+    '''
     
     # Use GPU ?
     if can_use_gpu & (use_gpu is not False):
@@ -497,6 +503,9 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
 
 def modelfitting_worker(max_gpu=None, max_cpu=None, port=None, named_pipe=None,
                         authkey='brian cluster tools'):
+    '''
+    Model fitting worker script. See documentation in :ref:`model-fitting-library`.
+    '''
     cluster_worker_script(light_worker,
                           max_gpu=max_gpu, max_cpu=max_cpu, port=port,
                           named_pipe=named_pipe, authkey=authkey)

@@ -22,6 +22,7 @@ For an overview of Brian, see the :ref:`user-manual` section.
     reference-variableupdating
     reference-analysis
     reference-progressreporting
+    reference-modelfitting
     reference-magic
     reference-tests
     
