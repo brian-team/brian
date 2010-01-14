@@ -10,6 +10,7 @@ Advanced concepts
    efficient
    compiledcode
    tasks_multiplefiles
+   advanced_connection_matrices
    parameters
    tabulate
    reference-preferences

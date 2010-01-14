@@ -1,0 +1,59 @@
+.. currentmodule:: brian
+
+Connection matrices
+===================
+
+A :class:`Connection` object has an attribute ``W`` which is its connection
+matrix.
+
+Brian's system for connection matrices can be slightly confusing. The way it
+works is roughly as follows. There are two types of connection matrix data
+structures, :class:`ConstructionMatrix` and :class:`ConnectionMatrix`. The
+construction matrix types are used for building connectivity, and are optimised
+for insertion and deletion of elements, but access is slow. The connection
+matrix types are used when the simulation is running, and are optimised for
+fast access, but not for adding/removing or modifying elements. When a
+:class:`Connection` object is created, it is given a construction matrix data
+type, and when the network is run, this matrix is converted to its corresponding
+connection matrix type. As well as this construction/connection matrix type
+distinction, there is also the distinction between dense/sparse/dynamic matrices,
+each of which have their own construction and connection versions.
+
+The dense matrix structure is very simple, both the construction and connection
+types are basically just 2D numpy arrays.
+
+The sparse and dynamic matrix structures are very different for construction
+and connection. Both the sparse and dynamic construction matrices are
+essentially just the ``scipy.lil_matrix`` sparse matrix type, however we add
+some slight improvements to scipy's matrix data type to make it more efficient
+for our case.
+
+The sparse and dynamic connection matrix structures are documented in more
+detail in the reference pages for :class:`SparseConnectionMatrix` and
+:class:`DynamicConnectionMatrix`.
+
+For customised run-time modifications to sparse and dense connection matrices
+you have two options. You can modify the data structures directly using the
+information in the reference pages linked to in the paragraph above, or you can
+use the methods defined in the :class:`ConnectionMatrix` class, which work for
+dense, sparse and dynamic matrix structures, and do not depend on implementation
+specific details. These methods provide element, row and column access. The
+row and column access methods use either :class:`DenseConnectionVector`
+or :class:`SparseConnectionVector` objects. The dense connection vector is just
+a 1D numpy array of length the size of the row/column. The sparse connection
+vector is slightly more complicated (but not much), see its documentation for
+details. The idea is that in most cases, both dense and sparse connection vectors
+can be operated on without having to know how they work, so for example if ``v``
+is a :class:`ConnectionVector` then ``2*v`` is of the same type. So for a
+:class:`ConnectionMatrix` ``W``, this should work, whatever the structure of
+``W``::
+
+	W.set_row(i, 2*W.get_row(i))
+	
+Or equivalently::
+
+	W[i,:] = 2*W[i,:]
+
+The syntax ``W[i,:]``, ``W[:,i]`` and ``W[i,j]`` is supported for integers ``i``
+and ``j`` for (respectively) row, column and element access.
+ 

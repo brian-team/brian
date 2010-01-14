@@ -13,7 +13,7 @@ if __name__=='__main__':
     spikes = loadtxt('spikes.txt')
     
     machines = [
-                #'Cyrille-Ulm',
+                'Cyrille-Ulm',
                 #'Romain-PC',
                 #'Astrance',
                 ]
@@ -22,7 +22,7 @@ if __name__=='__main__':
                                  model = equations, reset = 0, threshold = 1, 
                                  data = spikes, 
                                  input = input, dt = .1*ms,
-                                 use_gpu = False, max_cpu = 4, max_gpu = 0,
+                                 use_gpu = False, max_cpu = 1, max_gpu = 0,
                                  machines = machines,
                                  named_pipe = True,
                                  return_time = True,

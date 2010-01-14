@@ -113,7 +113,7 @@ class Network(object):
         NeuronGroup object is only added to the network if certain
         conditions hold::
         
-`            net = Network(...)
+            net = Network(...)
             if some_condition:
                 x = net(NeuronGroup(...))
     
