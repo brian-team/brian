@@ -184,9 +184,10 @@ class Parameters(attribdict):
         for k,v in self.iteritems():
             if k[:9]!='computed_':
                 s += '\n    ' + k + ' = ' + str(v)
-        s += '\n_computed values:'
-        for k,v in self._computed_values.iteritems():
-            s += '\n    ' + k + ' = ' + str(v)
+        if len(self._computed_values):
+            s += '\n_computed values:'
+            for k,v in self._computed_values.iteritems():
+                s += '\n    ' + k + ' = ' + str(v)
         return s
     
     def __call__(self,**kwds):

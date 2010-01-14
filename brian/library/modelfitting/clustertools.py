@@ -76,7 +76,7 @@ class ClusterConnection(object):
         if self.compressed:
             s = zlib.decompress(s)
         end = time.time()
-        print 'Recv:', end-start
+        #print 'Recv:', end-start
         return cPickle.loads(s)
     def poll(self, *args, **kwds):
         return self.conn.poll(*args, **kwds)
@@ -84,6 +84,81 @@ class ClusterConnection(object):
         return self.conn.close()
 
 class ClusterManager(object):
+    '''
+    ClusterManager is used for managing a cluster.
+    
+    To use the clustertools module, you have to do the following:
+    
+    * Write a class work_class as described below, this is the user
+      class in charge of doing the actual task.
+    * Create shared_data that each process can read from but not write
+      to.
+    * Run worker machines using cluster_worker_script.
+    * Create a ClusterManager
+    * Submit jobs to ClusterManager
+    * Close the ClusterManager connection
+    
+    In addition, you can specify the number of GPUs and CPUs you
+    want to use on this computer with own_max_gpu and own_max_cpu.
+    You can also specify a policy of how to deal with mixed GPUs and
+    CPUs (see policies below).
+    
+    The machines argument should be a list of host/IP names (if using IP)
+    or machine names (if using Windows named pipes). If IP is being used
+    you can specify a port with the port keyword. Set named_pipe=True if
+    using named pipes, or to a string to use a particular named pipe.
+    Set authkey to a shared password for authentication. For named pipes,
+    note that the user of the manager computer has to have a logon on
+    each worker with the same ID and password.
+    
+    **work_class**
+    
+    Work class should follow the following template::
+
+        class work_class(object):
+            def __init__(self, shared_data, use_gpu):
+                ...
+            def process(self, job):
+                ...
+    
+    The __init__ method is called on creation by cluster tools with
+    the shared data specified, and whether or not to use the GPU if
+    available (following the GPU policy). The process method is called
+    with each job submitted and should return some values. Note that
+    all shared_data, job and return values from process should be
+    picklable.
+    
+    **shared_data**
+    
+    Shared data is read-only. It should be a dictionary, whose values
+    are picklable. If the values are numpy arrays, and the data is being
+    shared to processes on a given computer, the memory will not be
+    copied, but a pointer passed to the child processes, saving memory.
+    Large read-only data to be shared should be put in here.
+    
+    **GPU policies**
+    
+    The policies are 'prefer_gpu' (default) which will use only GPUs if
+    any are available on any of the computers, 'require_all' which will
+    only use GPUs if all computers have them, or 'no_gpu' which will
+    never use GPUs even if available.
+    
+    **Using the ClusterManager object**
+    
+    After the object is initialised, it has an attribute:
+    
+    ``total_processes``
+        The total number of processes on the cluster, so that you can 
+        divide work up appropriately.
+    
+    and methods:
+    
+    ``process_jobs(jobs)``
+        This will process a list of jobs, where the size of the list
+        should be ``total_processes``.
+    ``finished()``
+        Should be called after all jobs have been finished.
+    '''
     def __init__(self, work_class, shared_data, machines=[],
                  own_max_gpu=None, own_max_cpu=None,
                  gpu_policy='prefer_gpu',
@@ -127,7 +202,7 @@ class ClusterManager(object):
         # Get info about how many processors they have
         self.clients_info = [client.recv() for client in self.clients]
         end = time.time()
-        print 'Data transfer took:', end-start
+        #print 'Data transfer took:', end-start
         if len(self.clients_info):
             self.num_cpu, self.num_gpu = zip(*self.clients_info)
             self.num_cpu = list(self.num_cpu)
@@ -166,6 +241,19 @@ class ClusterManager(object):
             client.close()
 
 class ClusterMachine(object):
+    '''
+    ClusterMachine should be called on each worker machine to receive
+    jobs. After it receives the finished notification, it will shut
+    down. To repeatedly run ClusterMachine instances, use the
+    cluster_worker_script function.
+    
+    ClusterMachine has a keyword for shared_data but you should not
+    provide a value for it, this is done automatically. You should
+    provide a work_class object.
+    
+    You can also specify max_gpu, max_cpu, port, named_pipe and authkey
+    as in ClusterManager.
+    '''
     def __init__(self, work_class, shared_data=None,
                  max_gpu=None, max_cpu=None,
                  port=None, named_pipe=None,
@@ -290,6 +378,10 @@ def cluster_worker(common_shared_data, conn, process_number, use_gpu,
     conn.close()
 
 def cluster_worker_script(*args, **kwds):
+    '''
+    Call this on worker machines, the arguments and keywords are
+    passed to ClusterMachine (see there for details).
+    '''
     try:
         n = 0
         while True:

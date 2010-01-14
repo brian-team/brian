@@ -1,5 +1,5 @@
 from brian import *
-from modelfitting import *
+from brian.library.modelfitting import *
 
 if __name__=='__main__':
     equations = Equations('''
