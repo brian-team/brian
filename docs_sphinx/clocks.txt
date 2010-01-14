@@ -35,3 +35,28 @@ is simulated with dt=0.01 ms and the variable x is recorded every ms::
   
 The current time of a clock is stored in the attribute ``t`` (``simulation_clock.t``) and
 the timestep is stored in the attribute ``dt``.
+
+Other clocks
+------------
+
+Clocks use floating point values for ``t`` and ``dt`` which means that if
+multiple clocks are being used, the sequence of operations may not always be
+entirely regular or predictable (small errors accumulate). If this is an issue,
+you can use a :class:`RegularClock` which uses integer multiples of ``dt`` for ``t``.
+
+You may also want to have events that happen at regular times, but still want to
+use the default clock for almost all objects, in which case you can use the
+:class:`EventClock` for a :func:`network_operation` and it will not create any
+clock ambiguities, e.g.::
+
+	from brian import *
+	
+	...
+	
+	G = NeuronGroup(N, eqs, ...)
+	
+	...
+	
+	@network_operation(clock=EventClock(dt=1*second))
+	def infrequent_operation():
+	   ...
