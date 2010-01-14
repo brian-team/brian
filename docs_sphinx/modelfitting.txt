@@ -28,6 +28,10 @@ Each parameter of the model is defined by four values ::
 The parameters found by the optimization procedure are stored in the Parameter
 object ``params``.
 
+.. warning::
+
+	Windows users should read the section :ref:`note-for-windows-users`. 
+
 Additional parameters are :
 * ``input_var`` : The input variable name in the equations ('I' by default)
 * ``verbose`` : Set to False for not printing iterations (True by default)
@@ -37,3 +41,152 @@ Additional parameters are :
 * ``iterations`` : Number of iterations in the optimization algorithm (10 by default)
 * ``delta`` : Time window for the computation of the gamma precision factor (4*ms by default)
 * ``init`` : Initial state values, as a dictionary {state variable=initial value}
+
+.. _note-for-windows-users:
+
+Important note for Windows users
+--------------------------------
+
+The model fitting library uses the Python `multiprocessing <http://docs.python.org/library/multiprocessing.html>`__
+package to distribute fitting across processors in a single computer or across
+multiple computers. However, there is a limitation of the Windows version of
+multiprocessing which you can read about `here <http://docs.python.org/library/multiprocessing.html#windows>`__.
+The end result is that a script like this::
+
+	from brian.library.modelfitting import *
+	...
+	params = modelfitting(...)
+	
+will crash, going into an endless loop and creating hundreds of Python processes
+that have to be shut down by hand. Instead, you have to do this::
+
+	from brian.library.modelfitting import *
+	...
+	if __name__=='__main__':
+		params = modelfitting(...)
+
+Clusters
+--------
+
+The model fitting package can be used with a cluster of computers connected over
+IP or a Windows network. If your computers have an IP address and can accept
+incoming connections (i.e. they are not behind a NAT firewall) then the simplest
+way is to use IP. Otherwise, you have to use the 'Named pipes' feature of
+Windows networks.
+
+The way it works is that you have a central machine (the manager) and several
+worker machines. Each machine must have an identical copy of the code available
+on it. The central machine runs a script which defines the model to fit, and
+the workers run a much simpler script, essentially just calling the
+:func:`modelfitting_worker` function to set up the machine to listen for data
+sent over the network and then run code when it receives the data. The manager
+just calls the :func:`modelfitting` function but including an extra keyword
+``machines`` with the list of connection details to the worker machines
+(described in the next two sections).
+
+IP
+~~
+
+To connect several machines via IP, pass a list of host names or IP addresses
+as strings to the ``machines`` keyword of the :func:`modelfitting` function.
+To specify a specific port, use the ``port`` keyword. The worker machines should
+run a script like::
+
+	from brian.library.modelfitting import *
+	if __name__=='__main__': # only necessary on Windows
+		modelfitting_worker(port=...)
+		
+The ``port`` keyword is optional, and :func:`modelfitting_worker` has other
+options described below.
+
+Named pipes
+~~~~~~~~~~~
+
+Using named pipes on Windows is slightly more complicated. First of all, each
+computer has to be visible on the local Windows network. Secondly, the user of
+the manager machine has to have a log on using the same ID and password on each
+of the worker machines. With that specified, just pass a list of the computer
+names of each of the worker machines as the ``machines`` keyword of the
+:func:`modelfitting` function. You also need to specify ``named_pipes=True``.
+In fact, you can specify ``named_pipes`` as a string to use a specific name for
+the named pipe, but this is usually not necessary. The worker machines should
+run a script like::
+
+	from brian.library.modelfitting import *
+	if __name__=='__main__':
+		modelfitting_worker(named_pipes=True)
+
+If ``named_pipes`` is set to a particular name, the worker functions should be
+given the same name. The :func:`modelfitting_worker` function has some other 
+options described below.
+
+Cluster keyword arguments
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :func:`modelfitting` function has the following keyword arguments relevant
+to running over a cluster:
+
+``use_gpu=True``
+	Used to specify whether or not GPUs should be used if present.
+``machines=[]``
+	A list of worker machines, either hostname/IP addresses as strings, or
+	computer names if using Windows named pipes.
+
+The :func:`modelfitting` and :func:`modelfitting_worker` functions both have
+the following keyword arguments:
+
+``max_cpu=None``
+	If specified, ensures that this machine will use at most that number of
+	CPUs, otherwise it will use the maximum number.
+``max_gpu=None``
+	If specified, ensures that this machine will use at most that number of
+	GPUs, otherwise it will use the maximum number.
+``port=None``
+	The port number to communicate with if using IP, should be the same on
+	all machines.
+``named_pipes=None``
+	Set to ``True`` if using Windows named pipes, or a string to choose a
+	particular pipe name. Should be the same on all machines.
+``authkey='brian cluster tools'``
+	This authorisation key is used to establish secure communications. You
+	should choose your own key. Should be the same on all machines.
+
+Example
+~~~~~~~
+
+The following script could be run on the manager machine::
+
+	from brian import *
+	from brian.library.modelfitting import *
+	
+	if __name__=='__main__':
+	    equations = Equations('''
+	        dV/dt=(R*I-V)/tau : 1
+	        I : 1
+	        R : 1
+	        tau : second
+	    ''')
+	    
+	    input = loadtxt('current.txt')
+	    spikes = loadtxt('spikes.txt')
+	    
+	    machines = ['bobs-machine.university.com',
+	                'jims-machine.university.com']
+	    
+	    params, gamma = modelfitting(model=equations, reset=0, threshold=1, 
+	                                 data=spikes, input=input,
+	                                 dt = .1*ms,
+	                                 machines=machines,
+	                                 particles=400000, iterations=10,
+	                                 delta=2*ms,
+	                                 R=[1.0e9, 1.0e9, 1.0e10, 1.0e10],
+	                                 tau=[1*ms, 1*ms, 50*ms, 50*ms])
+	    
+	    print params
+
+The worker machines would run this script::
+
+	from brian.library.modelfitting import *
+	if __name__=='__main__':
+	    modelfitting_worker()
+	    

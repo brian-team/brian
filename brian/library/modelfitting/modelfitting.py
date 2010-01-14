@@ -13,6 +13,8 @@ try:
 except ImportError:
     can_use_gpu = False
 
+__all__ = ['modelfitting', 'modelfitting_worker']
+
 def expand_items(groups, items):
     """
     If items are column vectors, expanded_items are matrices
@@ -307,7 +309,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                  iterations = 10, delta = None, initial_values = None, stepsize = 100*ms,
                  use_gpu = None, max_cpu = None, max_gpu = None,
                  includedelays = True,
-                 machines = [], named_pipe = None,
+                 machines = [], named_pipe = None, port = None, authkey='brian cluster tools',
                  return_time = None,
                  **params):
     
@@ -427,7 +429,9 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                              own_max_cpu=max_cpu,
                              own_max_gpu=max_gpu,
                              machines=machines,
-                             named_pipe=named_pipe)
+                             named_pipe=named_pipe,
+                             port=port,
+                             authkey=authkey)
     num_processes = manager.total_processes
     if manager.use_gpu:
         cores =  'GPUs'
@@ -491,6 +495,11 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
     else:
         return best_params, best_values
 
+def modelfitting_worker(max_gpu=None, max_cpu=None, port=None, named_pipe=None,
+                        authkey='brian cluster tools'):
+    cluster_worker_script(light_worker,
+                          max_gpu=max_gpu, max_cpu=max_cpu, port=port,
+                          named_pipe=named_pipe, authkey=authkey)
 
 if __name__=='__main__':
     equations = Equations('''

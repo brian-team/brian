@@ -1,3 +1,4 @@
+from brian import *
 from modelfitting import *
 
 if __name__=='__main__':
@@ -21,11 +22,12 @@ if __name__=='__main__':
                                  model = equations, reset = 0, threshold = 1, 
                                  data = spikes, 
                                  input = input, dt = .1*ms,
-                                 use_gpu = False, max_cpu = 1, max_gpu = 0,
+                                 use_gpu = False, max_cpu = 4, max_gpu = 0,
                                  machines = machines,
                                  named_pipe = True,
+                                 return_time = True,
                                  stepsize = 50*ms,
-                                 particles = 2000000, iterations = 10, delta = 2*ms,
+                                 particles = 400000, iterations = 10, delta = 2*ms,
                                  R = [1.0e9, 1.0e9, 1.0e10, 1.0e10],
                                  tau = [1*ms, 1*ms, 50*ms, 50*ms])
     
