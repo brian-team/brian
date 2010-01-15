@@ -21,8 +21,8 @@ Welcome to Brian's documentation!
    experimental
    developer
 
-See also the automatically generated `API documentation <http://brian.di.ens.fr/docs/api/>`__ and
-the `reference sheet <http://brian.di.ens.fr//BrianReference.pdf>`__. You can download a PDF
+See also the `reference sheet <http://brian.di.ens.fr//BrianReference.pdf>`__.
+You can download a PDF
 version of the documentation `here <http://brian.di.ens.fr/docs/Brian.pdf>`__.
 
 .. current removed because it's not written yet
