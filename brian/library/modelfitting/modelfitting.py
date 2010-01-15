@@ -8,7 +8,7 @@ import sys
 import time
 try:
     import pycuda
-    from gpu_modelfitting import GPUModelFitting
+    from gpu_modelfitting import GPUModelFitting, default_precision
     can_use_gpu = True
 except ImportError:
     can_use_gpu = False
@@ -54,6 +54,9 @@ class light_worker(object):
         self.initial_values = shared_data['initial_values']
         self.delta = shared_data['delta']
         self.includedelays = shared_data['includedelays']
+        self.precision = shared_data['precision']
+        if self.precision is None:
+            self.precision = default_precision
         if shared_data['use_gpu'] is None or shared_data['use_gpu'] is True:
             self.use_gpu = use_gpu
         else:
@@ -131,7 +134,8 @@ class light_worker(object):
         
         if self.use_gpu:
             self.mf = GPUModelFitting(self.group, self.model, self.input, self.I_offset, 
-                                      self.spiketimes, self.spiketimes_offset, zeros(neurons), self.delta)
+                                      self.spiketimes, self.spiketimes_offset, zeros(neurons), self.delta,
+                                      precision=self.precision)
         else:
             self.cc = CoincidenceCounterBis(self.group, self.spiketimes, self.spiketimes_offset, 
                                         onset = self.onset, delta = self.delta)
@@ -327,6 +331,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                  verbose = True, particles = 100, slices = 1, overlap = None,
                  iterations = 10, delta = None, initial_values = None, stepsize = 100*ms,
                  use_gpu = None, max_cpu = None, max_gpu = None,
+                 precision=None, # set to 'float' or 'double' to specify single or double precision on the GPU
                  includedelays = True,
                  machines = [], named_pipe = None, port = None, authkey='brian cluster tools',
                  return_time = None,
@@ -441,7 +446,8 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
         includedelays = includedelays,
         use_gpu = use_gpu,
         params = params,
-        fp = fp
+        fp = fp,
+        precision = precision,
     )
     
     if use_gpu is False:
@@ -571,6 +577,7 @@ if __name__=='__main__':
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  use_gpu = None, max_cpu = None, max_gpu = None,
+                                 #precision = 'float',
                                  return_time = True,
                                  particles = 4000, iterations = iterations, delta = 1*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
