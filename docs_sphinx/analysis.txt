@@ -25,7 +25,8 @@ To display the figures on the screen, the function ``show()`` must be called onc
 last line of your script), except when using IPython with the Pylab mode (``ipython -pylab``).
 
 Brian currently defines just two plotting functions of its own,
-:func:`raster_plot` and :func:`hist_plot`.
+:func:`raster_plot` and :func:`hist_plot`. In addition, the :class:`StateMonitor`
+object has a :meth:`~StateMonitor.plot` method.
 
 Raster plots
 ------------
@@ -37,6 +38,46 @@ Spike trains recorded by a :class:`SpikeMonitor` can be displayed as raster plot
 
 Usual options of the ``plot`` command can also be passed to :func:`raster_plot`. One may also pass
 several spike monitors as arguments.
+
+State variable plots
+--------------------
+State values recorded by a :class:`StateMonitor` can also be plotted as follows::
+
+	M = StateMonitor(group, 'V', record=[0,1,2])
+	...
+	M.plot()
+
+Realtime plotting
+-----------------
+
+Both :func:`raster_plot` and :meth:`StateMonitor.plot` have real-time versions
+which update as the simulation runs, for example::
+
+	G = NeuronGroup(...)
+	spikemon = SpikeMonitor(G)
+	statemon = StateMonitor(G, 'V', record=range(5))
+	ion()
+	subplot(211)
+	raster_plot(spikemon, refresh=10*ms, showlast=200*ms)
+	subplot(212)
+	statemon.plot(refresh=10*ms, showlast=200*ms)
+	run(1*second)
+	ioff()
+	show()
+	
+The ``ion()`` and ``ioff()`` command activate and deactivate Pylab's interactive
+plotting mode. The ``refresh`` parameter specifies how often (in simulation
+time) to refresh the plot - smaller values will slow down the simulation. The
+``showlast`` option only plots the most recent values.
+
+With some IDEs, you may need to do something like the following at the
+beginning of your script to make interactive mode work::
+
+	import matplotlib
+	matplotlib.use('WXAgg')
+
+This is because the default graphical backend can sometimes interact badly with
+the IDE. Other options to try are ``GTKAgg``, ``QTAgg``, ``TkAgg``.
 
 Statistics
 ----------

@@ -120,6 +120,15 @@ def raster_plot(*monitors,**plotoptions):
         If you are using more than one realtime monitor, only one of them needs
         to issue a redraw command, therefore set this to ``False`` for all but
         one of them.
+
+    Note that with some IDEs, interactive plotting will not work with the
+    default matplotlib backend, try doing something like this at the
+    beginning of your script (before importing brian)::
+    
+        import matplotlib
+        matplotlib.use('WXAgg')
+        
+    You may need to experiment, try WXAgg, GTKAgg, QTAgg, TkAgg.
     """
     if len(monitors)==0:
         (monitors,monitornames) = magic.find_instances(SpikeMonitor)
