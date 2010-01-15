@@ -38,6 +38,7 @@ New examples:
 * Added modelfitting examples
 * Added examples of TimedArray and linked_var
 * Added examples of using derived classes with Brian
+* Realtime plotting example
 
 New features since 1.1.2
 ------------------------
