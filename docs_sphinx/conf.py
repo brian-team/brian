@@ -80,13 +80,20 @@ pygments_style = 'sphinx'
 # given in html_static_path.
 html_style = 'default.css'
 
+html_theme = "default"
+html_theme_options = {
+    'sidebarbgcolor':'#ccccff',
+    'sidebartextcolor':'#000000',
+    'sidebarlinkcolor':'#0000a8',
+    }
+
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 #html_title = None
 
 # The name of an image file (within the static path) to place at the top of
 # the sidebar.
-#html_logo = None
+html_logo = 'brian-logo.png'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -109,7 +116,7 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_additional_pages = {}
 
 # If false, no module index is generated.
-#html_use_modindex = True
+html_use_modindex = False
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
 #html_copy_source = True
