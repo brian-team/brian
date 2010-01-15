@@ -2,6 +2,11 @@
 Polychronization: Computation with Spikes
 Eugene M. Izhikevich
 Neural Computation, 2006
+
+Note that this version doesn't reproduce Izhikevich's figures from the paper,
+which is probably due to the fact that he uses a different STDP rule from the
+one below. A future version of this example will be released which reproduces
+Izhikevich's STDP rule.
 '''
 from brian import *
 import random
@@ -73,16 +78,9 @@ for i in xrange(Ne):
     inds = random.sample(xrange(N), M)
     Ce[i, inds] = s_e*ones(len(inds))
     Ce.delay[i, inds] = rand(len(inds))*(D-D_min)+D_min
-    # delays must be integer multiples of 1ms in Izhikevich's scheme
-    #Ce.delay[i, inds] = (randint(19, size=len(inds))+1)*ms
 for i in xrange(Ni):
     inds = random.sample(xrange(Ne), M)
     Ci[i, inds] = s_i*ones(len(inds))
-
-# Can't use standard STDP object as Izhikevich uses a strange rule with STDP
-# acting on the weight derivative, which is updated every second. Implementing
-# this requires a change to STDP so that you can specify an alternative weight
-# matrix w to act on - this should be easy to add though.
 
 # Simplified version of Izhikevich's rule 
 stdp = ExponentialSTDP(Ce, taup=20*ms, taum=20*ms, Ap=0.1, Am=-0.12,

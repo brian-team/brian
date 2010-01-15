@@ -45,7 +45,7 @@ entirely regular or predictable (small errors accumulate). If this is an issue,
 you can use a :class:`RegularClock` which uses integer multiples of ``dt`` for ``t``.
 
 You may also want to have events that happen at regular times, but still want to
-use the default clock for almost all objects, in which case you can use the
+use the default clock for all other objects, in which case you can use the
 :class:`EventClock` for a :func:`network_operation` and it will not create any
 clock ambiguities, e.g.::
 
@@ -58,5 +58,5 @@ clock ambiguities, e.g.::
 	...
 	
 	@network_operation(clock=EventClock(dt=1*second))
-	def infrequent_operation():
+	def do_something():
 	   ...
