@@ -27,6 +27,8 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                  verbose = True, particles = 100, slices = 1, overlap = None,
                  iterations = 10, delta = None, initial_values = None, stepsize = 100*ms,
                  use_gpu = None, includedelays = True,
+                 return_fitness_matrix = None,
+                 pso_params = None,
                  **params):
     """
     Fits a neuron model to data.
@@ -67,6 +69,8 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
         use_gpu = False
     if use_gpu:
         slices = 1
+    if pso_params is None:
+        pso_params = [.9, 1.9, 1.9]
     
     # Loads parameters
     fp = FittingParameters(includedelays = includedelays, **params)
@@ -212,13 +216,18 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
     X0 = fp.get_param_matrix(initial_param_values)
     min_values, max_values = fp.set_constraints()
     
-    X, value, T = particle_swarm(X0, fun, iterations = iterations, pso_params = [.9, 1.9, 1.9], 
+    if return_fitness_matrix:
+        X, value, T, fitness_matrix = particle_swarm(X0, fun, iterations = iterations, pso_params = pso_params, 
                      min_values = min_values, max_values = max_values, 
-                     group_size = group_size, verbose = verbose)
+                     group_size = group_size, verbose = verbose, return_matrix = True)
+        return Parameters(**fp.get_param_values(X)), value, fitness_matrix
+    else:
+        X, value, T = particle_swarm(X0, fun, iterations = iterations, pso_params = pso_params, 
+                     min_values = min_values, max_values = max_values, 
+                     group_size = group_size, verbose = verbose, return_matrix = False)
+        return Parameters(**fp.get_param_values(X)), value
     
-    best_params = fp.get_param_values(X) 
-    
-    return Parameters(**best_params), value
+
 
 if __name__ == '__main__':
     from brian import Equations

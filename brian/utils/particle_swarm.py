@@ -3,7 +3,7 @@ from time import time,clock
 
 __all__=['particle_swarm']
 
-def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_values = None, group_size = None, verbose = True):
+def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_values = None, group_size = None, verbose = True, return_matrix = None):
     """
     Computes the argument of fun which maximizes it using the Particle Swarm Optimization algorithm.
     
@@ -53,6 +53,9 @@ def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_value
     X_lbest = X
     X_gbest = X[:,arange(0,M,group_size)] # N*group_number matrix
     
+    if return_matrix:
+        fitness_X_matrix = zeros((M, iterations))
+    
     time0 = clock()
     for k in range(iterations):
         if verbose:
@@ -71,7 +74,8 @@ def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_value
         time1 = clock()
         fitness_X = fun(X)
         time2 = clock()
-#        print fitness_X
+        if return_matrix:
+            fitness_X_matrix[:,k] = fitness_X
         
         # Local update
         indices_lbest = nonzero(fitness_X > fitness_lbest)[1]
@@ -92,16 +96,20 @@ def particle_swarm(X0, fun, iterations, pso_params, min_values = None, max_value
         if verbose:
             print 'Evaluation time :', '%.2f s' % (time2-time1)
             print 'Total elapsed time :', '%.2f s' % (clock()-time0)
-            print 'Best values'
-            print '  min  :', '%.5f' % fitness_gbest.min()
-            print '  mean :', '%.5f' % fitness_gbest.mean()
-            print '  max  :', '%.5f' % fitness_gbest.max()
-            print '  std  :', '%.5f' % fitness_gbest.std()
+            print 'Fitness: mean = %.3f, max = %.3f, std = %.3f' % (mean(fitness_X), max(fitness_X), std(fitness_X))
+#            print '  min  :', '%.5f' % fitness_gbest.min()
+#            print '  mean :', '%.5f' % fitness_gbest.mean()
+#            print '  max  :', '%.5f' % fitness_gbest.max()
+#            print '  std  :', '%.5f' % fitness_gbest.std()
 #        for j in range(group_number):
 #            print '  %d :' % (j+1), '%.5f' % fitness_gbest[j]
         print
         
-    return (X_gbest, fitness_gbest, clock()-time0)
+    if return_matrix:
+        return(X_gbest, fitness_gbest, clock()-time0, fitness_X_matrix)
+    else:
+        return (X_gbest, fitness_gbest, clock()-time0)
+ 
 
 
 if __name__ == "__main__":

@@ -93,6 +93,7 @@ class light_worker(object):
         self.X_gbest = [None]*len(groups)
         
         self.optim_prepared = True
+        self.fitness_matrix = []
     
     def function_prepare(self, (neurons, I_offset, spiketimes_offset, target_length, target_rates)):
         """
@@ -200,6 +201,7 @@ class light_worker(object):
         
         # Simulation runs
         fitness = self.simulate(self.X)
+        self.fitness_matrix.append(fitness)
 #        print "    Fitness: mean %.3f, max %.3f, std %.3f" % (fitness.mean(), fitness.max(), fitness.std())
         
         # Local update
@@ -234,6 +236,10 @@ class light_worker(object):
         return result
         
     def process(self, X_gbests):
+        # Returns the fitness matrix at the end of the optimization
+        # 1 col = 1 iteration, 1 line = all the fitness values at the current iteration
+        if X_gbests == 'give_me_the_matrix':
+            return array(self.fitness_matrix).transpose()
         # Preparation for the simulation, called before the preparation for the optimization
         if not self.function_prepared:
             # Here, X_gbests contains (neurons, I_offset, spiketimes_offset)
@@ -255,7 +261,10 @@ def optim(#X0,
           manager, 
           num_processes, 
           group_size = None,
-          pso_params = None
+          pso_params = None,
+          return_matrix = None # TODO: pass this argument in shared_data instead, so that 
+                               # the iterate function knows whether it has to record all 
+                               # the fitness values at each iteration.
           ):
     
     N = sum(worker_size)
@@ -301,7 +310,17 @@ def optim(#X0,
         print
         X_gbest_list = cs.split_items(best_items)
 
-    return best_items, total_time/iter
+    if return_matrix:
+        fitness_matrix = zeros((0, iter))
+        fitness_matrices = manager.process_jobs(['give_me_the_matrix']*num_processes)
+        for fitness_m in fitness_matrices:
+            print fitness_m.shape
+            print fitness_matrix.shape
+            print
+            fitness_matrix = vstack((fitness_matrix, fitness_m))
+        return best_items, total_time/iter, fitness_matrix
+    else:
+        return best_items, total_time/iter
 
 def modelfitting(model = None, reset = None, threshold = None, data = None, 
                  input_var = 'I', input = None, dt = None,
@@ -311,6 +330,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                  includedelays = True,
                  machines = [], named_pipe = None, port = None, authkey='brian cluster tools',
                  return_time = None,
+                 return_matrix = None,
                  **params):
     '''
     Model fitting function.
@@ -479,13 +499,24 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
     if includedelays:
         D += 1
 
-    best_items, mean_iter_time = optim( D,
-                                        worker_size,
-                                        iterations, 
-                                        manager, 
-                                        num_processes,
-                                        group_size = group_size,
-                                        pso_params = pso_params)
+    if return_matrix:
+        best_items, mean_iter_time, fitness_matrix = optim( D,
+                                                            worker_size,
+                                                            iterations, 
+                                                            manager, 
+                                                            num_processes,
+                                                            group_size = group_size,
+                                                            pso_params = pso_params,
+                                                            return_matrix = True)
+    else:
+        best_items, mean_iter_time = optim( D,
+                                            worker_size,
+                                            iterations, 
+                                            manager, 
+                                            num_processes,
+                                            group_size = group_size,
+                                            pso_params = pso_params,
+                                            return_matrix = False)
     manager.finished()
 
     best_values = []
@@ -496,10 +527,12 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
         
     best_params = Parameters(**fp.get_param_values(X))
     
+    to_return = [best_params, best_values]
     if return_time:
-        return best_params, best_values, mean_iter_time
-    else:
-        return best_params, best_values
+        to_return.append(mean_iter_time)
+    if return_matrix:
+        to_return.append(fitness_matrix)
+    return to_return
 
 def modelfitting_worker(max_gpu=None, max_cpu=None, port=None, named_pipe=None,
                         authkey='brian cluster tools'):
@@ -520,6 +553,7 @@ if __name__=='__main__':
     
     input = loadtxt('current.txt')
     spikes0 = loadtxt('spikes.txt')
+    iterations = 10
     
     spikes = [(0, spike-.003) for spike in spikes0]
     spikes.extend([(1, spike+.003) for spike in spikes0])
@@ -538,8 +572,7 @@ if __name__=='__main__':
                                  input = input, dt = .1*ms,
                                  use_gpu = None, max_cpu = None, max_gpu = None,
                                  return_time = True,
-                                 particles = 4000, iterations = 1, delta = 1*ms,
-                                 
+                                 particles = 4000, iterations = iterations, delta = 1*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     total_time = time.clock()-t1
     
