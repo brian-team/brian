@@ -309,8 +309,12 @@ def optim(#X0,
         # The results of each worker must be regrouped.
         # X_gbest_list must contain the best results for each group across workers.
         best_items = cs.combine_items(results)
+        mean_value = 0
         for (group, X, value) in best_items:
-            print "Group %d : best value = %.3f" % (group+1, value)
+#            print "Group %d : best value = %.3f" % (group+1, value)
+            mean_value += value
+        mean_value /= len(best_items)
+        print "Mean best value = %.3f" % mean_value
         print
         X_gbest_list = cs.split_items(best_items)
 
@@ -318,9 +322,6 @@ def optim(#X0,
         fitness_matrix = zeros((0, iter))
         fitness_matrices = manager.process_jobs(['give_me_the_matrix']*num_processes)
         for fitness_m in fitness_matrices:
-            print fitness_m.shape
-            print fitness_matrix.shape
-            print
             fitness_matrix = vstack((fitness_matrix, fitness_m))
         return best_items, total_time/iter, fitness_matrix
     else:
@@ -333,6 +334,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
                  use_gpu = None, max_cpu = None, max_gpu = None,
                  precision=None, # set to 'float' or 'double' to specify single or double precision on the GPU
                  includedelays = True,
+                 pso_params = None,
                  machines = [], named_pipe = None, port = None, authkey='brian cluster tools',
                  return_time = None,
                  return_matrix = None,
@@ -500,7 +502,8 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
 #    initial_param_values = fp.get_initial_param_values(group_size*group_count)
 #    X0 = fp.get_param_matrix(initial_param_values)
 #    min_values, max_values = fp.set_constraints()
-    pso_params = [.9, .5, .9]
+    if pso_params is None:
+        pso_params = [.9, .5, 1.5]
     D = fp.param_count
     if includedelays:
         D += 1
