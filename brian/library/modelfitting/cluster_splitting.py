@@ -1,6 +1,33 @@
 from numpy import *
 
 class ClusterSplitting:
+    """Internal class used to split a multiprocessing optimization of several groups
+    in parallel across different workers with minimum data transfer.
+    
+    Initialized with arguments:
+    
+    ``worker_size``
+        A list containing the number of particles running over each worker.
+    ``group_size``
+        A list containing the number of particles in each group.
+        
+    **Methods**
+    
+    .. method:: split_groups()
+    
+        Creates a property self.groups_by_worker containing the list of groups
+        on each worker with the number of particles inside them.
+    
+    .. method:: combine_items(items)
+    
+        Finds the best items within each group from their fitness values
+        spread among the workers.
+    
+    .. method:: split_items(items)
+    
+        Sends the best items to the workers from the best items computed with
+        :func:`combine_items`.
+    """
     def __init__(self, worker_size, group_size):
         if sum(array(worker_size)) <> sum(array(group_size)):
             raise Exception('The total number of particles should be the same in worker_size and group_size')
@@ -91,24 +118,6 @@ class ClusterSplitting:
                 worker_items.append(items[group][1])
             splitted_items.append(worker_items)
         return splitted_items
-
-#    def expand_items(self, worker, items):
-#        """
-#        If items are column vectors, expanded_items are matrices
-#        tiled n times along the x-axis, where n is the size of the 
-#        subgroup.
-#        """
-#        result = None
-#        # subgroups and their capacity in current worker
-#        groups, n_list = zip(*self.groups_by_worker[worker])
-#        
-#        for n, item in zip(n_list, items):
-#            tiled = tile(item.reshape((-1,1)),(1,n))
-#            if result is None:
-#                result = tiled
-#            else:
-#                result = hstack((result, tiled))
-#        return result
 
 if __name__ == '__main__':
     from numpy.random import *

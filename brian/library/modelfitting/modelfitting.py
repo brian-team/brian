@@ -36,6 +36,12 @@ def expand_items(groups, items):
     return result
 
 class light_worker(object):
+    """
+    Worker handling both simulations and optimization in a distributed fashion.
+    Currently, the optimization algorithm is a simple version of the PSO algorithm.
+    Each worker only needs to know the best positions reached by particles in other workers
+    at each iteration.
+    """
     def __init__(self, shared_data, use_gpu):
         self.groups = None
         
@@ -70,7 +76,7 @@ class light_worker(object):
     
     def optim_prepare(self, (D, pso_params, groups)):
         """
-        Initializes the PSO parameters before any iteration
+        Initializes the PSO parameters before any iteration.
         """
         
         # Randomize initial positions
@@ -144,6 +150,10 @@ class light_worker(object):
         return
     
     def simulate(self, X):
+        """
+        Simulates the network with parameters given in matrix X.
+        Returns the list of the gamma factors for each set of parameters (each column of X).
+        """
         # Gets the parameter values contained in the matrix X, excepted spike delays values
         if self.includedelays:
             param_values = self.fp.get_param_values(X[0:-1,:], includedelays = False)
@@ -183,6 +193,12 @@ class light_worker(object):
         return gamma
     
     def iterate(self, X_gbests):
+        """
+        Iterates the PSO algorithm.
+        ``X_gbests`` is the list of the best positions reached by the particles
+        for each group running at least partially on the worker.
+        Returns the best positions found by each group in the worker.
+        """
         # This section is executed starting from the second iteration
         # X is not updated at the very first iteration
         if X_gbests[0] is not None:
@@ -240,6 +256,11 @@ class light_worker(object):
         return result
         
     def process(self, X_gbests):
+        """
+        The server sends jobs to the workers through this function.
+        This function basically decides what job to do given the arguments
+        sent by the server and given the current state of the worker. 
+        """
         # Returns the fitness matrix at the end of the optimization
         # 1 col = 1 iteration, 1 line = all the fitness values at the current iteration
         if X_gbests == 'give_me_the_matrix':
@@ -258,8 +279,7 @@ class light_worker(object):
         results = self.iterate(X_gbests)
         return results
 
-def optim(#X0,
-          D,
+def optim(D,
           worker_size,
           iter, 
           manager, 
@@ -270,7 +290,9 @@ def optim(#X0,
                                # the iterate function knows whether it has to record all 
                                # the fitness values at each iteration.
           ):
-    
+    """
+    Runs the optimization procedure.
+    """
     N = sum(worker_size)
     
     if  group_size is None:
@@ -327,23 +349,99 @@ def optim(#X0,
     else:
         return best_items, total_time/iter
 
-def modelfitting(model = None, reset = None, threshold = None, data = None, 
+def modelfitting(model = None, reset = None, threshold = None,
+                 data = None, 
                  input_var = 'I', input = None, dt = None,
-                 verbose = True, particles = 100, slices = 1, overlap = None,
-                 iterations = 10, delta = None, initial_values = None, stepsize = 100*ms,
+                 particles = 1000, iterations = 10, pso_params = None,
+                 delta = 2*ms, includedelays = True,
+                 slices = 1, overlap = None,
+                 initial_values = None,
+                 verbose = True, stepsize = 100*ms,
                  use_gpu = None, max_cpu = None, max_gpu = None,
                  precision=None, # set to 'float' or 'double' to specify single or double precision on the GPU
-                 includedelays = True,
-                 pso_params = None,
                  machines = [], named_pipe = None, port = None, authkey='brian cluster tools',
-                 return_time = None,
+#                 return_time = None,
                  return_matrix = None,
                  **params):
     '''
     Model fitting function.
     
-    TODO: reference documentation. For the moment, see documentation in
-    :ref:`model-fitting-library`.
+    Fits a spiking neuron model to electrophysiological data (injected current and spikes).
+    
+    See also documentation in :ref:`model-fitting-library`.
+    
+    **Arguments**
+    
+    ``model``
+        An :class:`Equations` object containing the equations defining the model.
+    ``reset``
+        A reset value for the membrane potential, or a string containing the reset
+        equations.
+    ``threshold``
+        A threshold value for the membrane potential, or a string containing the threshold
+        equations.
+    ``data``
+        A list of spike times, or a set of several spike trains as a list of pairs (index, spike time)
+        if the fit must be performed in parallel over several target spike trains. In this case,
+        the modelfitting function returns as many parameters sets as target spike trains.
+    ``input_var='I'``
+        The variable name used in the equations for the input current.
+    ``input``
+        A vector of values containing the time-varying signal the neuron responds to (generally
+        an injected current).
+    ``dt``
+        The time step of the input (the inverse of the sampling frequency).
+    ``**params``
+        The list of parameters to fit the model with. Each parameter must be set as follows:
+        ``param_name=[bound_min, min, max, bound_max]``
+        where ``bound_min`` and ``bound_max`` are the boundaries, and ``min`` and ``max``
+        specify the interval from which the parameter values are uniformly sampled at
+        the beginning of the optimization algorithm.
+        If not using boundaries, set ``param_name=[min, max]``.
+    ``particles``
+        Number of particles per target train used by the particle swarm optimization algorithm.
+    ``iterations``
+        Number of iterations in the particle swarm optimization algorithm.
+    ``pso_params``
+        Parameters of the PSO algorithm. It is a list with three scalar values (omega, c_l, c_g).
+    ``delta=2*ms``
+        The precision factor delta (a scalar value in second).
+    ``includedelays=True``
+        A boolean indicating whether optimizing the spike delay or not.
+    ``initial_values``
+        A dictionary containing the initial values for the state variables.
+    ``verbose=True``
+        A boolean value indicating whether printing the progress of the optimization algorithm or not.
+    ``use_gpu``
+        A boolean value indicating whether using the GPU or not. This value is not taken into account
+        if no GPU is present on the computer.
+    ``max_cpu``
+        The maximum number of CPUs to use in parallel. It is set to the number of CPUs in the machine by default.
+    ``max_gpu``
+        The maximum number of GPUs to use in parallel. It is set to the number of GPUs in the machine by default.
+    ``precision``
+        A string set to either ``float`` or ``double`` to specify the single or double precision on the GPU.
+    ``machines=[]``
+        A list of machine names to use in parallel.
+    ``named_pipe``
+        A boolean value indicating whether using the named pipe on Windows or not.
+    ``port``
+        TODO
+    
+        Set it to ``True`` to return the matrix of the fitness values for all particles and all iterations.
+    
+    **Return values**
+    
+    ``best_params``
+        A ``Parameters`` object containing the best parameter values for each target spike train
+        found by the optimization algorithm. ``best_params[param_name]`` is a vector containing
+        the parameter values for each target.
+    ``best_values``
+        A vector containing the best gamma factor values for each target.
+    ``fitness_matrix``
+        If ``return_matrix`` is set to ``True``, ``fitness_matrix`` is a (N*iterations) matrix
+        containing the fitness values of each particle at each iteration of the optimization
+        algorithm.
     '''
     
     # Use GPU ?

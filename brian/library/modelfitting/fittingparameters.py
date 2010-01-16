@@ -3,6 +3,37 @@ from numpy import *
 from numpy.random import rand, randn
 
 class FittingParameters(object):
+    """Internal class used to manipulate model fitting parameters.
+    It basically handles conversion between parameter dictionaries and arrays.
+    
+    Initialized with arguments:
+    
+    ``includedelays=True``
+        A boolean indicating if spike delays are being optimized.
+    ``**params``
+        Parameters list ``param_name=[bound_min, min_ max, bound_max]``
+        
+    **Methods**
+    
+    .. method:: get_initial_param_values(N, includedelays=True)
+    
+        Returns initial parameter values sampled uniformly within the parameter 
+        interval given in the constructor of the class. ``N`` is the number of neurons.
+        The result is a dictionary ``{param_name=values}`` where values is a vector of values.
+    
+    .. method:: set_constraints(includedelays=True)
+    
+        Returns the constraints for each parameter. The result is (min_values, max_values)
+        where each variable is a vector containing the minimum and maximum values for each parameter.
+    
+    .. method:: get_param_values(X, includedelays=True)
+    
+        Converts an array containing parameter values into a dictionary.
+    
+    .. method:: get_param_matrix(param_values, includedelays=True)
+    
+        Converts a dictionary containing parameter values into an array.
+    """
     def __init__(self, includedelays = True, **params):
         self.params = params
         self.param_names = sort(params.keys())
