@@ -30,3 +30,4 @@ decorator.
 .. autoclass:: FileSpikeMonitor
 .. autoclass:: ISIHistogramMonitor
 .. autoclass:: PopulationRateMonitor
+.. autoclass:: CoincidenceCounter
