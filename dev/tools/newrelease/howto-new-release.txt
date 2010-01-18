@@ -5,8 +5,7 @@ At the moment, these instructions are for Windows computers only.
 
 You need the following packages installed:
 
-* Sphinx version 0.5+
-* epydoc 3.0+ (if building API documentation for website only)
+* Sphinx version 0.6+
 * latex (if building PDF documentation)
   
 Regression testing
@@ -51,16 +50,10 @@ Secondly, build the PDF version of the documentation by running
 dev/tools/docs/build_latex.py. Copy the file
 docs_sphinx/_latexbuild/Brian.pdf to docs.
 
-Thirdly, if doing the web release, build the API documentation.
-You do this by running the dev/tools/docs/generate_api.py file. Note that
-if you want to exclude certain files from the API documentation,
-you should edit the generate_api.py file to add the names
-of the modules which should be excluded.
-
 Finally, if necessary make a new BrianReference.pdf from the doc file on
 the "More Brian" SVN.
 
-The docs folder and docs/api folder should be copied to the website.
+The docs folder should be copied to the website.
 
 Update setup.py
 ---------------
@@ -131,22 +124,10 @@ site-packages directory, not the SVN location).
 Once you've verified that it all works, you can uninstall the installed
 version of Brian (which is used in preference to the SVN version).
 
-Upload to sourceforge
----------------------
+Upload to Trac
+--------------
 
-Create a new release and upload all the files to the sourceforge
-site. To do this, you need to first of all create a new release (the
-name is just the version number), then
-upload the data files. The easiest way is the Web upload:
-
-https://frs.sourceforge.net/webupload
-
-Now fill in the data for the release (including filling out the
-changes and release notes), include the files and set their
-properties (platform, source distribution, etc.).
-
-You could also add an accouncement of the new version too (maybe
-just for major and minor but not patch releases).
+Create a new release and upload all the files (TODO: how to do this).
 
 Upload to PyPI
 --------------

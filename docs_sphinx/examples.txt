@@ -39,6 +39,8 @@ modelfitting
 .. toctree::
    :maxdepth: 1
 
+   examples-modelfitting_clusterexample_manager
+   examples-modelfitting_clusterexample_worker
    examples-modelfitting_modelfitting
 
 misc
@@ -79,6 +81,7 @@ misc
    examples-misc_poissongroup
    examples-misc_pulsepacket
    examples-misc_rate_model
+   examples-misc_realtime_plotting
    examples-misc_reliability
    examples-misc_ring
    examples-misc_stim2d

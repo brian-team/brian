@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.1.4dev
+Version: 1.2.0
 Authors:
 	Romain Brette
 		http://audition.ens.fr/brette/
@@ -11,7 +11,7 @@ Authors:
 
 ==== Installation ==========================================================
 
-Requirements: Python (version 2.5), the following modules:
+Requirements: Python (version 2.5 or 2.6), the following modules:
 
 * numpy
 * scipy (preferably 0.7 or later)
@@ -42,6 +42,47 @@ See the documentation in the extras download, or online:
 	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.1.3 to 1.2.0:
+
+Major features:
+
+* Model fitting toolbox (library.modelfitting)
+
+Minor features:
+
+* New real-time ``refresh=`` options added to plotting functions
+* Gamma factor in utils.statistics
+* New RegularClock object
+* Added brian_sample_run function to test installation in place of nose tests
+
+Improvements:
+
+* Speed improvements to monitors and plotting functions
+* Sparse matrix support improved, should work with scipy versions up to 0.7.1
+* Various improvements to brian.hears (still experimental though)
+* Parameters now picklable
+* Made Equations picklable
+
+Bug fixes:
+
+* Fixed major bug with subgroups and connections (announced on webpage)
+* Fixed major bug with multiple clocks (announced on webpage)
+* No warnings with Python 2.6
+* Minor bugfix to TimedArray caused by floating point comparisons
+* Bugfix: refractory neurons could fire in very extreme circumstances
+* Fixed bug with DelayConnection not setting max_delay
+* Fixed bug with STP
+* Fixed bug with weight=lambda i,j:rand()
+
+New examples:
+
+* New multiprocessing examples
+* Added polychronisation example
+* Added modelfitting examples
+* Added examples of TimedArray and linked_var
+* Added examples of using derived classes with Brian
+* Realtime plotting example
 
 Version 1.1.2 to 1.1.3:
 

@@ -4,7 +4,6 @@
 
 .. index::
    pair: example usage; run
-   pair: example usage; log_level_debug
    pair: example usage; NeuronGroup
    pair: example usage; Equations
    pair: example usage; StateMonitor
@@ -20,8 +19,6 @@ Voltage-clamp experiment
     from brian.library.electrophysiology import *
     
     defaultclock.dt=.01*ms
-    
-    log_level_debug()
     
     taum=20*ms
     gl=20*nS

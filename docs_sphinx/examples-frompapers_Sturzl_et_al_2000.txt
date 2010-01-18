@@ -61,7 +61,7 @@ Romain Brette
     dv/dt=(1+rates(t-d)-v)/tau_legs+sigma*(2./tau_legs)**.5*xi:1
     d : second
     """
-    legs=NeuronGroup(8,model=eqs_legs,threshold=1,reset=0,refractory=1*ms,check_units=False)
+    legs=NeuronGroup(8,model=eqs_legs,threshold=1,reset=0,refractory=1*ms)
     legs.d=delay
     spikes_legs=SpikeCounter(legs)
     

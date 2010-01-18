@@ -1,7 +1,7 @@
-This is c:\Program Files\MiKTeX 2.7\miktex\bin\makeindex.exe, version 2.14 [02-Oct-2002] (kpathsea + Thai support).
-Scanning style file python.ist......done (6 attributes redefined, 0 ignored).
-Scanning input file Brian.idx....done (319 entries accepted, 0 rejected).
-Sorting entries.....done (2805 comparisons).
-Generating output file Brian.ind....done (402 lines written, 0 warnings).
+This is makeindex, version 2.14 [02-Oct-2002] (kpathsea + Thai support).
+Scanning style file D:/Dan Goodman/Documents/Python/Brian/docs_sphinx/_latexbuild/python.ist......done (6 attributes redefined, 0 ignored).
+Scanning input file Brian.idx.....done (1021 entries accepted, 0 rejected).
+Sorting entries...........done (11494 comparisons).
+Generating output file Brian.ind....done (601 lines written, 0 warnings).
 Output written in Brian.ind.
 Transcript written in Brian.ilg.

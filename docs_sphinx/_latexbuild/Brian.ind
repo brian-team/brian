@@ -2,19 +2,21 @@
 \def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
 
   \bigletter A
-  \item ACF() (in module brian), \hyperpage{104}
-  \item ACVF() (in module brian), \hyperpage{104}
+  \item ACF() (in module brian), \hyperpage{172}
+  \item ACVF() (in module brian), \hyperpage{172}
   \item alias
-    \subitem equations, \hyperpage{32}
+    \subitem equations, \hyperpage{88}
   \item analysis
-    \subitem numpy, \hyperpage{29}, \hyperpage{75}
-    \subitem scipy, \hyperpage{29}, \hyperpage{75}
+    \subitem numpy, \hyperpage{85}, \hyperpage{137}
+    \subitem scipy, \hyperpage{85}, \hyperpage{137}
   \item applying
-    \subitem equations, \hyperpage{52}
+    \subitem equations, \hyperpage{110}
+  \item arctan
+    \subitem example usage, \hyperpage{75}
   \item array
-    \subitem quantity, \hyperpage{76}
-    \subitem units, \hyperpage{76}
-  \item autocorrelogram() (in module brian), \hyperpage{104}
+    \subitem quantity, \hyperpage{139}
+    \subitem units, \hyperpage{139}
+  \item autocorrelogram() (in module brian), \hyperpage{172}
 
   \indexspace
   \bigletter B
@@ -22,381 +24,578 @@
 
   \indexspace
   \bigletter C
-  \item CCF() (in module brian), \hyperpage{104}
-  \item CCVF() (in module brian), \hyperpage{104}
-  \item check\_units() (in module brian), \hyperpage{75}
-  \item clear() (in module brian), \hyperpage{98}
-  \item clock, \hyperpage{46}, \hyperpage{76}
-    \subitem default clock, \hyperpage{77, 78}
-    \subitem multiple clocks, \hyperpage{77}
-  \item Clock (class in brian), \hyperpage{77}
-  \item clusters, \hyperpage{65}
+  \item CCF() (in module brian), \hyperpage{172}
+  \item CCVF() (in module brian), \hyperpage{172}
+  \item check\_units() (in module brian), \hyperpage{138}
+  \item clear() (in module brian), \hyperpage{162}
+  \item Clock
+    \subitem example usage, \hyperpage{52}, \hyperpage{57}, \hyperpage{62}, \hyperpage{77}
+  \item clock, \hyperpage{104}, \hyperpage{139}
+    \subitem default clock, \hyperpage{139, 140}
+    \subitem multiple clocks, \hyperpage{139}
+  \item Clock (class in brian), \hyperpage{139}
+  \item clusters, \hyperpage{125}
+  \item CoincidenceCounter (class in brian), \hyperpage{168}
   \item combining
-    \subitem equations, \hyperpage{49}
+    \subitem equations, \hyperpage{108}
+  \item Compartments
+    \subitem example usage, \hyperpage{37}
   \item compilation
-    \subitem differential equations, \hyperpage{52}
-    \subitem equations, \hyperpage{52}
+    \subitem differential equations, \hyperpage{110}
+    \subitem equations, \hyperpage{110}
+  \item Connection
+    \subitem example usage, \hyperpage{28--30}, \hyperpage{36--39}, \hyperpage{41}, \hyperpage{43}, 
+		\hyperpage{45}, \hyperpage{47}, \hyperpage{50--54}, \hyperpage{57--59}, 
+		\hyperpage{61, 62}, \hyperpage{64--66}, \hyperpage{69}, \hyperpage{74, 75}, 
+		\hyperpage{81, 82}
   \item connection
-    \subitem matrix, \hyperpage{91}
-  \item Connection (class in brian), \hyperpage{88}
-  \item connection matrix, \hyperpage{91}
-  \item ConnectionMatrix (class in brian), \hyperpage{91}
-  \item ConnectionVector (class in brian), \hyperpage{93}
-  \item ConstructionMatrix (class in brian), \hyperpage{93}
+    \subitem matrix, \hyperpage{154}
+  \item Connection (class in brian), \hyperpage{151}
+  \item connection matrix, \hyperpage{154}
+  \item ConnectionMatrix (class in brian), \hyperpage{154}
+  \item ConnectionVector (class in brian), \hyperpage{156}
+  \item ConstructionMatrix (class in brian), \hyperpage{156}
   \item contained objects protocol
-    \subitem extending brian, \hyperpage{70}, \hyperpage{108}
+    \subitem extending brian, \hyperpage{130}, \hyperpage{178}
   \item control
-    \subitem simulation, \hyperpage{47}
-  \item correlogram() (in module brian), \hyperpage{104}
-  \item CustomRefractoriness (class in brian), \hyperpage{83}
-  \item CV() (in module brian), \hyperpage{104}
+    \subitem simulation, \hyperpage{105}
+  \item correlogram() (in module brian), \hyperpage{172}
+  \item cos
+    \subitem example usage, \hyperpage{75}
+  \item Current
+    \subitem example usage, \hyperpage{37}, \hyperpage{45}, \hyperpage{48}
+  \item CustomRefractoriness (class in brian), \hyperpage{146}
+  \item CV
+    \subitem example usage, \hyperpage{51}
+  \item CV() (in module brian), \hyperpage{172}
 
   \indexspace
   \bigletter D
-  \item default clock, \hyperpage{77, 78}
-  \item defaultclock (in module brian), \hyperpage{78}
-  \item define\_default\_clock() (in module brian), \hyperpage{78}
-  \item delay (brian.DelayConnection attribute), \hyperpage{90}
-  \item DelayConnection (class in brian), \hyperpage{90}
-  \item DenseConnectionMatrix (class in brian), \hyperpage{92}
-  \item DenseConnectionVector (class in brian), \hyperpage{93}
-  \item DenseConstructionMatrix (class in brian), \hyperpage{93}
+  \item default clock, \hyperpage{139, 140}
+  \item defaultclock (in module brian), \hyperpage{140}
+  \item define\_default\_clock() (in module brian), \hyperpage{140}
+  \item delay (brian.DelayConnection attribute), \hyperpage{153}
+  \item DelayConnection (class in brian), \hyperpage{153}
+  \item DenseConnectionMatrix (class in brian), \hyperpage{155}
+  \item DenseConnectionVector (class in brian), \hyperpage{156}
+  \item DenseConstructionMatrix (class in brian), \hyperpage{156}
   \item derived classes
-    \subitem extending brian, \hyperpage{69}, \hyperpage{108}
-    \subitem multiple files, \hyperpage{69}, \hyperpage{108}
+    \subitem extending brian, \hyperpage{129}, \hyperpage{178}
+    \subitem multiple files, \hyperpage{129}, \hyperpage{178}
   \item differential
-    \subitem equations, \hyperpage{32}
+    \subitem equations, \hyperpage{88}
   \item differential equations
-    \subitem compilation, \hyperpage{52}
-    \subitem freezing, \hyperpage{51}
-    \subitem non-autonomous, \hyperpage{51}
-    \subitem stochastic, \hyperpage{51}
-    \subitem time-dependent, \hyperpage{51}
-  \item DimensionMismatchError, \hyperpage{75}
+    \subitem compilation, \hyperpage{110}
+    \subitem freezing, \hyperpage{110}
+    \subitem non-autonomous, \hyperpage{110}
+    \subitem stochastic, \hyperpage{109}
+    \subitem time-dependent, \hyperpage{110}
+  \item DimensionMismatchError, \hyperpage{137}
   \item dimensions
-    \subitem inconsistent, \hyperpage{75}
-    \subitem units, \hyperpage{75}
+    \subitem inconsistent, \hyperpage{137}
+    \subitem units, \hyperpage{137}
   \item direct control
-    \subitem spikes, \hyperpage{87}
-  \item dt (brian.Clock attribute), \hyperpage{77}
-  \item DynamicConnectionMatrix (class in brian), \hyperpage{92}
-  \item DynamicConstructionMatrix (class in brian), \hyperpage{93}
+    \subitem spikes, \hyperpage{150}
+  \item dt (brian.Clock attribute), \hyperpage{139}
+  \item DynamicConnectionMatrix (class in brian), \hyperpage{155}
+  \item DynamicConstructionMatrix (class in brian), \hyperpage{156}
 
   \indexspace
   \bigletter E
-  \item efficient code, \hyperpage{65}
-    \subitem vectorisation, \hyperpage{66}
+  \item efficient code, \hyperpage{125}
+    \subitem vectorisation, \hyperpage{126}
   \item empirical
-    \subitem threshold, \hyperpage{84}
-  \item EmpiricalThreshold (class in brian), \hyperpage{84}
-  \item end (brian.Clock attribute), \hyperpage{77}
-  \item equation, \hyperpage{32}
-    \subitem equations, \hyperpage{32}
-  \item equations, \hyperpage{48}, \hyperpage{78}
-    \subitem alias, \hyperpage{32}
-    \subitem applying, \hyperpage{52}
-    \subitem combining, \hyperpage{49}
-    \subitem compilation, \hyperpage{52}
-    \subitem differential, \hyperpage{32}
-    \subitem equation, \hyperpage{32}
-    \subitem external variables, \hyperpage{49}
-    \subitem fixed points, \hyperpage{52}
-    \subitem freezing, \hyperpage{51}
-    \subitem linear, \hyperpage{50}
-    \subitem membrane potential, \hyperpage{50}
-    \subitem model, \hyperpage{78}
-    \subitem namespaces, \hyperpage{49}
-    \subitem neuron, \hyperpage{78}
-    \subitem non-autonomous, \hyperpage{51}
-    \subitem numerical integration, \hyperpage{50}
-    \subitem parameter, \hyperpage{32}
-    \subitem stochastic, \hyperpage{51}
-    \subitem time-dependent, \hyperpage{51}
-  \item Equations (class in brian), \hyperpage{78}
+    \subitem threshold, \hyperpage{147}
+  \item EmpiricalThreshold
+    \subitem example usage, \hyperpage{39}, \hyperpage{41}
+  \item EmpiricalThreshold (class in brian), \hyperpage{147}
+  \item end (brian.Clock attribute), \hyperpage{139}
+  \item equal\_subtask() (brian.ProgressReporter method), \hyperpage{173}
+  \item equation, \hyperpage{88}
+    \subitem equations, \hyperpage{88}
+  \item Equations
+    \subitem example usage, \hyperpage{35, 36}, \hyperpage{38, 39}, \hyperpage{41}, 
+		\hyperpage{43, 44}, \hyperpage{69}, \hyperpage{74}, \hyperpage{77--80}
+  \item equations, \hyperpage{107}, \hyperpage{141}
+    \subitem alias, \hyperpage{88}
+    \subitem applying, \hyperpage{110}
+    \subitem combining, \hyperpage{108}
+    \subitem compilation, \hyperpage{110}
+    \subitem differential, \hyperpage{88}
+    \subitem equation, \hyperpage{88}
+    \subitem example usage, \hyperpage{35, 36}
+    \subitem external variables, \hyperpage{107}
+    \subitem fixed points, \hyperpage{111}
+    \subitem freezing, \hyperpage{110}
+    \subitem linear, \hyperpage{109}
+    \subitem membrane potential, \hyperpage{108}
+    \subitem model, \hyperpage{141}
+    \subitem namespaces, \hyperpage{107}
+    \subitem neuron, \hyperpage{141}
+    \subitem non-autonomous, \hyperpage{110}
+    \subitem numerical integration, \hyperpage{108}
+    \subitem parameter, \hyperpage{88}
+    \subitem stochastic, \hyperpage{109}
+    \subitem time-dependent, \hyperpage{110}
+  \item Equations (class in brian), \hyperpage{141}
   \item Euler
-    \subitem numerical integration, \hyperpage{51}
+    \subitem numerical integration, \hyperpage{109}
+  \item EventClock
+    \subitem example usage, \hyperpage{74}
+  \item EventClock (class in brian), \hyperpage{140}
   \item exact
-    \subitem numerical integration, \hyperpage{50}
+    \subitem numerical integration, \hyperpage{109}
+  \item example usage
+    \subitem arctan, \hyperpage{75}
+    \subitem Clock, \hyperpage{52}, \hyperpage{57}, \hyperpage{62}, \hyperpage{77}
+    \subitem Compartments, \hyperpage{37}
+    \subitem Connection, \hyperpage{28--30}, \hyperpage{36--39}, \hyperpage{41}, \hyperpage{43}, 
+		\hyperpage{45}, \hyperpage{47}, \hyperpage{50--54}, \hyperpage{57--59}, 
+		\hyperpage{61, 62}, \hyperpage{64--66}, \hyperpage{69}, \hyperpage{74, 75}, 
+		\hyperpage{81, 82}
+    \subitem cos, \hyperpage{75}
+    \subitem Current, \hyperpage{37}, \hyperpage{45}, \hyperpage{48}
+    \subitem CV, \hyperpage{51}
+    \subitem EmpiricalThreshold, \hyperpage{39}, \hyperpage{41}
+    \subitem Equations, \hyperpage{35, 36}, \hyperpage{38, 39}, \hyperpage{41}, \hyperpage{43, 44}, 
+		\hyperpage{69}, \hyperpage{74}, \hyperpage{77--80}
+    \subitem equations, \hyperpage{35, 36}
+    \subitem EventClock, \hyperpage{74}
+    \subitem exp, \hyperpage{75}, \hyperpage{82}
+    \subitem ExponentialSTDP, \hyperpage{30}, \hyperpage{74}
+    \subitem firing\_rate, \hyperpage{51}
+    \subitem group, \hyperpage{46}, \hyperpage{48, 49}, \hyperpage{52}, \hyperpage{54}, 
+		\hyperpage{59}, \hyperpage{65}
+    \subitem IdentityConnection, \hyperpage{45}, \hyperpage{48}, \hyperpage{75}
+    \subitem linked\_var, \hyperpage{50}
+    \subitem log, \hyperpage{82}
+    \subitem MembraneEquation, \hyperpage{37}, \hyperpage{48}
+    \subitem Model, \hyperpage{70}
+    \subitem MultipleSpikeGeneratorGroup, \hyperpage{50}
+    \subitem MultiStateMonitor, \hyperpage{50}, \hyperpage{63}
+    \subitem Network, \hyperpage{57}, \hyperpage{70}
+    \subitem network\_operation, \hyperpage{46}, \hyperpage{52}, \hyperpage{60}, \hyperpage{62}, 
+		\hyperpage{74}
+    \subitem NeuronGroup, \hyperpage{28--30}, \hyperpage{36--39}, \hyperpage{41}, 
+		\hyperpage{43--54}, \hyperpage{56--66}, \hyperpage{68, 69}, \hyperpage{74, 75}, 
+		\hyperpage{77--82}
+    \subitem Parameters, \hyperpage{70}
+    \subitem PoissonGroup, \hyperpage{29, 30}, \hyperpage{36, 37}, \hyperpage{45}, 
+		\hyperpage{57, 58}, \hyperpage{61, 62}, \hyperpage{64}
+    \subitem PoissonThreshold, \hyperpage{59}, \hyperpage{81}
+    \subitem PopulationRateMonitor, \hyperpage{28--30}, \hyperpage{43}, \hyperpage{46}, 
+		\hyperpage{58, 59}, \hyperpage{62}, \hyperpage{65}
+    \subitem PopulationSpikeCounter, \hyperpage{38, 39}, \hyperpage{43}, \hyperpage{66}
+    \subitem ppfunction, \hyperpage{54}
+    \subitem PulsePacket, \hyperpage{58}, \hyperpage{69}
+    \subitem raster\_plot, \hyperpage{28}, \hyperpage{43}, \hyperpage{45, 46}, \hyperpage{51--54}, 
+		\hyperpage{56--61}, \hyperpage{64--66}, \hyperpage{69}, \hyperpage{74}, 
+		\hyperpage{81, 82}
+    \subitem RecentStateMonitor, \hyperpage{59}
+    \subitem Refractoriness, \hyperpage{53}
+    \subitem reset, \hyperpage{37}, \hyperpage{74}
+    \subitem run, \hyperpage{28--30}, \hyperpage{36--39}, \hyperpage{41}, \hyperpage{43--54}, 
+		\hyperpage{56--66}, \hyperpage{68, 69}, \hyperpage{74, 75}, \hyperpage{77--82}
+    \subitem sin, \hyperpage{63}
+    \subitem SpikeCounter, \hyperpage{49}, \hyperpage{75}, \hyperpage{81}
+    \subitem SpikeGeneratorGroup, \hyperpage{50}, \hyperpage{58}
+    \subitem SpikeMonitor, \hyperpage{28}, \hyperpage{36}, \hyperpage{43}, \hyperpage{45, 46}, 
+		\hyperpage{51--54}, \hyperpage{56--61}, \hyperpage{64--66}, \hyperpage{68, 69}, 
+		\hyperpage{74}, \hyperpage{81, 82}
+    \subitem StateMonitor, \hyperpage{28}, \hyperpage{36, 37}, \hyperpage{39}, \hyperpage{41}, 
+		\hyperpage{43, 44}, \hyperpage{46--48}, \hyperpage{50}, \hyperpage{52}, 
+		\hyperpage{54}, \hyperpage{56}, \hyperpage{58}, \hyperpage{60}, \hyperpage{66}, 
+		\hyperpage{68}, \hyperpage{77--82}
+    \subitem STDP, \hyperpage{29}
+    \subitem stdp, \hyperpage{29, 30}, \hyperpage{74}
+    \subitem STP, \hyperpage{28}
+    \subitem stp, \hyperpage{28}
+    \subitem threshold, \hyperpage{74}
+    \subitem TimedArray, \hyperpage{63}, \hyperpage{81}
+  \item exp
+    \subitem example usage, \hyperpage{75}, \hyperpage{82}
   \item exponential Euler
-    \subitem numerical integration, \hyperpage{51}
-  \item ExponentialSTDP (class in brian), \hyperpage{94}
+    \subitem numerical integration, \hyperpage{109}
+  \item ExponentialSTDP
+    \subitem example usage, \hyperpage{30}, \hyperpage{74}
+  \item ExponentialSTDP (class in brian), \hyperpage{158}
   \item extending brian
-    \subitem contained objects protocol, \hyperpage{70}, \hyperpage{108}
-    \subitem derived classes, \hyperpage{69}, \hyperpage{108}
-    \subitem magic functions, \hyperpage{69}, \hyperpage{107}
-    \subitem magic\_register, \hyperpage{69}, \hyperpage{107}
-    \subitem magic\_return, \hyperpage{69}, \hyperpage{107}
+    \subitem contained objects protocol, \hyperpage{130}, \hyperpage{178}
+    \subitem derived classes, \hyperpage{129}, \hyperpage{178}
+    \subitem magic functions, \hyperpage{129}, \hyperpage{177}
+    \subitem magic\_register, \hyperpage{129}, \hyperpage{177}
+    \subitem magic\_return, \hyperpage{129}, \hyperpage{177}
   \item external variables
-    \subitem equations, \hyperpage{49}
+    \subitem equations, \hyperpage{107}
 
   \indexspace
   \bigletter F
-  \item FileSpikeMonitor (class in brian), \hyperpage{102}
-  \item firing\_rate() (in module brian), \hyperpage{104}
+  \item FileSpikeMonitor (class in brian), \hyperpage{167}
+  \item finish() (brian.ProgressReporter method), \hyperpage{173}
+  \item firing\_rate
+    \subitem example usage, \hyperpage{51}
+  \item firing\_rate() (in module brian), \hyperpage{172}
   \item fixed points
-    \subitem equations, \hyperpage{52}
+    \subitem equations, \hyperpage{111}
+  \item forget() (in module brian), \hyperpage{162}
   \item freezing
-    \subitem differential equations, \hyperpage{51}
-    \subitem equations, \hyperpage{51}
-  \item FunReset (class in brian), \hyperpage{83}
-  \item FunThreshold (class in brian), \hyperpage{85}
+    \subitem differential equations, \hyperpage{110}
+    \subitem equations, \hyperpage{110}
+  \item FunReset (class in brian), \hyperpage{146}
+  \item FunThreshold (class in brian), \hyperpage{148}
 
   \indexspace
   \bigletter G
-  \item gaussian noise, \hyperpage{79}
-  \item generate() (brian.PulsePacket method), \hyperpage{87}
-  \item get\_default\_clock() (in module brian), \hyperpage{78}
-  \item get\_duration() (brian.Clock method), \hyperpage{77}
-  \item get\_global\_preference() (in module brian), \hyperpage{71}
+  \item gaussian noise, \hyperpage{142}
+  \item generate() (brian.PulsePacket method), \hyperpage{150}
+  \item get\_default\_clock() (in module brian), \hyperpage{140}
+  \item get\_duration() (brian.Clock method), \hyperpage{140}
+  \item get\_global\_preference() (in module brian), \hyperpage{132}
   \item group
-    \subitem neuron, \hyperpage{78}
-    \subitem poisson, \hyperpage{86}
+    \subitem example usage, \hyperpage{46}, \hyperpage{48, 49}, \hyperpage{52}, \hyperpage{54}, 
+		\hyperpage{59}, \hyperpage{65}
+    \subitem neuron, \hyperpage{141}
+    \subitem poisson, \hyperpage{149}
 
   \indexspace
   \bigletter H
-  \item have\_same\_dimensions() (in module brian), \hyperpage{75}
-  \item hist\_plot() (in module brian), \hyperpage{103}
+  \item have\_same\_dimensions() (in module brian), \hyperpage{137}
+  \item hist\_plot() (in module brian), \hyperpage{170}
   \item histogram
-    \subitem plotting, \hyperpage{103}
+    \subitem plotting, \hyperpage{170}
   \item Hodgin-Huxley type equations
-    \subitem numerical integration, \hyperpage{51}
+    \subitem numerical integration, \hyperpage{109}
   \item hodgkin-huxley
-    \subitem threshold, \hyperpage{84}
+    \subitem threshold, \hyperpage{147}
 
   \indexspace
   \bigletter I
-  \item IdentityConnection (class in brian), \hyperpage{91}
+  \item IdentityConnection
+    \subitem example usage, \hyperpage{45}, \hyperpage{48}, \hyperpage{75}
+  \item IdentityConnection (class in brian), \hyperpage{154}
   \item input
-    \subitem poisson, \hyperpage{86}
-    \subitem pulse packet, \hyperpage{87}
+    \subitem poisson, \hyperpage{149}
+    \subitem pulse packet, \hyperpage{149}
   \item integration
-    \subitem linear, \hyperpage{86}
-    \subitem methods, \hyperpage{85}
-  \item is\_dimensionless() (in module brian), \hyperpage{75}
-  \item ISIHistogramMonitor (class in brian), \hyperpage{102}
+    \subitem linear, \hyperpage{148}
+    \subitem methods, \hyperpage{148}
+  \item is\_dimensionless() (in module brian), \hyperpage{137}
+  \item ISIHistogramMonitor (class in brian), \hyperpage{167}
 
   \indexspace
   \bigletter L
-  \item LazyStateUpdater (class in brian), \hyperpage{86}
+  \item LazyStateUpdater (class in brian), \hyperpage{149}
   \item linear
-    \subitem equations, \hyperpage{50}
-    \subitem integration, \hyperpage{86}
-    \subitem threshold, \hyperpage{84}
-  \item LinearStateUpdater (class in brian), \hyperpage{86}
-  \item log, \hyperpage{72}
-  \item log\_level\_debug() (in module brian), \hyperpage{72}
-  \item log\_level\_error() (in module brian), \hyperpage{72}
-  \item log\_level\_info() (in module brian), \hyperpage{72}
-  \item log\_level\_warn() (in module brian), \hyperpage{72}
-  \item logging, \hyperpage{72}
+    \subitem equations, \hyperpage{109}
+    \subitem integration, \hyperpage{148}
+    \subitem threshold, \hyperpage{146}
+  \item LinearStateUpdater (class in brian), \hyperpage{148}
+  \item linked\_var
+    \subitem example usage, \hyperpage{50}
+  \item linked\_var() (in module brian), \hyperpage{171}
+  \item log, \hyperpage{133}
+    \subitem example usage, \hyperpage{82}
+  \item log\_level\_debug() (in module brian), \hyperpage{133}
+  \item log\_level\_error() (in module brian), \hyperpage{133}
+  \item log\_level\_info() (in module brian), \hyperpage{133}
+  \item log\_level\_warn() (in module brian), \hyperpage{133}
+  \item logging, \hyperpage{133}
 
   \indexspace
   \bigletter M
-  \item magic, \hyperpage{105}
+  \item magic, \hyperpage{175}
   \item magic functions
-    \subitem extending brian, \hyperpage{69}, \hyperpage{107}
-    \subitem multiple files, \hyperpage{68}, \hyperpage{107}
+    \subitem extending brian, \hyperpage{129}, \hyperpage{177}
+    \subitem multiple files, \hyperpage{128}, \hyperpage{177}
   \item magic\_register
-    \subitem extending brian, \hyperpage{69}, \hyperpage{107}
-    \subitem multiple files, \hyperpage{69}, \hyperpage{107}
-  \item magic\_register() (in module brian), \hyperpage{105}
+    \subitem extending brian, \hyperpage{129}, \hyperpage{177}
+    \subitem multiple files, \hyperpage{129}, \hyperpage{177}
+  \item magic\_register() (in module brian), \hyperpage{176}
   \item magic\_return
-    \subitem extending brian, \hyperpage{69}, \hyperpage{107}
-    \subitem multiple files, \hyperpage{69}, \hyperpage{107}
-  \item magic\_return() (in module brian), \hyperpage{105}
-  \item MagicNetwork (class in brian), \hyperpage{98}
+    \subitem extending brian, \hyperpage{129}, \hyperpage{177}
+    \subitem multiple files, \hyperpage{129}, \hyperpage{177}
+  \item magic\_return() (in module brian), \hyperpage{175}
+  \item MagicNetwork (class in brian), \hyperpage{162}
   \item matrix
-    \subitem connection, \hyperpage{91}
+    \subitem connection, \hyperpage{154}
   \item membrane potential
-    \subitem equations, \hyperpage{50}
+    \subitem equations, \hyperpage{108}
+  \item MembraneEquation
+    \subitem example usage, \hyperpage{37}, \hyperpage{48}
   \item methods
-    \subitem integration, \hyperpage{85}
-  \item model, \hyperpage{81}
-    \subitem equations, \hyperpage{78}
-    \subitem neuron, \hyperpage{78}
-  \item Model (class in brian), \hyperpage{81}
+    \subitem integration, \hyperpage{148}
+  \item Model
+    \subitem example usage, \hyperpage{70}
+  \item model, \hyperpage{143}
+    \subitem equations, \hyperpage{141}
+    \subitem neuron, \hyperpage{141}
+  \item Model (class in brian), \hyperpage{143}
+  \item modelfitting() (in module brian.library.modelfitting), \hyperpage{173}
+  \item modelfitting\_worker() (in module brian.library.modelfitting), \hyperpage{175}
   \item MultiLinearNeuronGroup (class in brian.experimental.multilinearstateupdater), 
-		\hyperpage{111}
-  \item multiple clocks, \hyperpage{77}
-  \item multiple files, \hyperpage{68}, \hyperpage{107}
-    \subitem derived classes, \hyperpage{69}, \hyperpage{108}
-    \subitem magic functions, \hyperpage{68}, \hyperpage{107}
-    \subitem magic\_register, \hyperpage{69}, \hyperpage{107}
-    \subitem magic\_return, \hyperpage{69}, \hyperpage{107}
-    \subitem network, \hyperpage{68}, \hyperpage{107}
-  \item MultipleSpikeGeneratorGroup (class in brian), \hyperpage{88}
-  \item MultiStateMonitor (class in brian), \hyperpage{101}
+		\hyperpage{179}
+  \item multiple clocks, \hyperpage{139}
+  \item multiple files, \hyperpage{128}, \hyperpage{177}
+    \subitem derived classes, \hyperpage{129}, \hyperpage{178}
+    \subitem magic functions, \hyperpage{128}, \hyperpage{177}
+    \subitem magic\_register, \hyperpage{129}, \hyperpage{177}
+    \subitem magic\_return, \hyperpage{129}, \hyperpage{177}
+    \subitem network, \hyperpage{128}, \hyperpage{177}
+  \item MultipleSpikeGeneratorGroup
+    \subitem example usage, \hyperpage{50}
+  \item MultipleSpikeGeneratorGroup (class in brian), \hyperpage{151}
+  \item MultiStateMonitor
+    \subitem example usage, \hyperpage{50}, \hyperpage{63}
+  \item MultiStateMonitor (class in brian), \hyperpage{166}
 
   \indexspace
   \bigletter N
   \item namespaces
-    \subitem equations, \hyperpage{49}
+    \subitem equations, \hyperpage{107}
+  \item Network
+    \subitem example usage, \hyperpage{57}, \hyperpage{70}
   \item network
-    \subitem multiple files, \hyperpage{68}, \hyperpage{107}
-  \item Network (class in brian), \hyperpage{95}
-  \item network\_operation() (in module brian), \hyperpage{97}
-  \item NetworkOperation (class in brian), \hyperpage{97}
+    \subitem multiple files, \hyperpage{128}, \hyperpage{177}
+  \item Network (class in brian), \hyperpage{159}
+  \item network\_operation
+    \subitem example usage, \hyperpage{46}, \hyperpage{52}, \hyperpage{60}, \hyperpage{62}, 
+		\hyperpage{74}
+  \item network\_operation() (in module brian), \hyperpage{161}
+  \item NetworkOperation (class in brian), \hyperpage{161}
   \item neuron
-    \subitem equations, \hyperpage{78}
-    \subitem group, \hyperpage{78}
-    \subitem model, \hyperpage{78}
-  \item NeuronGroup (class in brian), \hyperpage{79}
-  \item noise, \hyperpage{79}
-    \subitem gaussian, \hyperpage{79}
-    \subitem white, \hyperpage{79}
-    \subitem xi, \hyperpage{79}
+    \subitem equations, \hyperpage{141}
+    \subitem group, \hyperpage{141}
+    \subitem model, \hyperpage{141}
+  \item NeuronGroup
+    \subitem example usage, \hyperpage{28--30}, \hyperpage{36--39}, \hyperpage{41}, 
+		\hyperpage{43--54}, \hyperpage{56--66}, \hyperpage{68, 69}, \hyperpage{74, 75}, 
+		\hyperpage{77--82}
+  \item NeuronGroup (class in brian), \hyperpage{142}
+  \item noise, \hyperpage{142}
+    \subitem gaussian, \hyperpage{142}
+    \subitem white, \hyperpage{142}
+    \subitem xi, \hyperpage{142}
   \item non-autonomous
-    \subitem differential equations, \hyperpage{51}
-    \subitem equations, \hyperpage{51}
-  \item NoReset (class in brian), \hyperpage{83}
-  \item NoThreshold (class in brian), \hyperpage{85}
-  \item nspikes (brian.StateSpikeMonitor attribute), \hyperpage{100}
+    \subitem differential equations, \hyperpage{110}
+    \subitem equations, \hyperpage{110}
+  \item NoReset (class in brian), \hyperpage{146}
+  \item NoThreshold (class in brian), \hyperpage{148}
+  \item nspikes (brian.StateSpikeMonitor attribute), \hyperpage{165}
   \item numerical computation
-    \subitem numpy, \hyperpage{29}, \hyperpage{75}
+    \subitem numpy, \hyperpage{85}, \hyperpage{137}
   \item numerical integration
-    \subitem equations, \hyperpage{50}
-    \subitem Euler, \hyperpage{51}
-    \subitem exact, \hyperpage{50}
-    \subitem exponential Euler, \hyperpage{51}
-    \subitem Hodgin-Huxley type equations, \hyperpage{51}
-    \subitem semi-exact, \hyperpage{50}
+    \subitem equations, \hyperpage{108}
+    \subitem Euler, \hyperpage{109}
+    \subitem exact, \hyperpage{109}
+    \subitem exponential Euler, \hyperpage{109}
+    \subitem Hodgin-Huxley type equations, \hyperpage{109}
+    \subitem semi-exact, \hyperpage{109}
   \item numpy
-    \subitem analysis, \hyperpage{29}, \hyperpage{75}
-    \subitem numerical computation, \hyperpage{29}, \hyperpage{75}
+    \subitem analysis, \hyperpage{85}, \hyperpage{137}
+    \subitem numerical computation, \hyperpage{85}, \hyperpage{137}
 
   \indexspace
   \bigletter P
-  \item parallel python, \hyperpage{65}
+  \item parallel python, \hyperpage{125}
   \item parameter
-    \subitem equations, \hyperpage{32}
-  \item Parameters (class in brian), \hyperpage{70}
-  \item plot() (brian.StateMonitor method), \hyperpage{101}
-  \item plotting, \hyperpage{45}, \hyperpage{103}
-    \subitem histogram, \hyperpage{103}
-    \subitem pylab, \hyperpage{29}, \hyperpage{45}, \hyperpage{75}, \hyperpage{103}
-    \subitem raster, \hyperpage{103}
+    \subitem equations, \hyperpage{88}
+  \item Parameters
+    \subitem example usage, \hyperpage{70}
+  \item Parameters (class in brian), \hyperpage{131}
+  \item plot() (brian.StateMonitor method), \hyperpage{166}
+  \item plotting, \hyperpage{102}, \hyperpage{169}
+    \subitem histogram, \hyperpage{170}
+    \subitem pylab, \hyperpage{85}, \hyperpage{103}, \hyperpage{137}, \hyperpage{169}
+    \subitem raster, \hyperpage{169}
   \item poisson
-    \subitem group, \hyperpage{86}
-    \subitem input, \hyperpage{86}
-  \item PoissonGroup (class in brian), \hyperpage{86}
-  \item PopulationRateMonitor (class in brian), \hyperpage{102}
-  \item PopulationSpikeCounter (class in brian), \hyperpage{100}
-  \item ppfunction() (in module brian), \hyperpage{65}
-  \item preferences, \hyperpage{71}
-  \item pulse packet, \hyperpage{87}
-  \item PulsePacket (class in brian), \hyperpage{87}
+    \subitem group, \hyperpage{149}
+    \subitem input, \hyperpage{149}
+  \item PoissonGroup
+    \subitem example usage, \hyperpage{29, 30}, \hyperpage{36, 37}, \hyperpage{45}, 
+		\hyperpage{57, 58}, \hyperpage{61, 62}, \hyperpage{64}
+  \item PoissonGroup (class in brian), \hyperpage{149}
+  \item PoissonThreshold
+    \subitem example usage, \hyperpage{59}, \hyperpage{81}
+  \item PopulationRateMonitor
+    \subitem example usage, \hyperpage{28--30}, \hyperpage{43}, \hyperpage{46}, \hyperpage{58, 59}, 
+		\hyperpage{62}, \hyperpage{65}
+  \item PopulationRateMonitor (class in brian), \hyperpage{168}
+  \item PopulationSpikeCounter
+    \subitem example usage, \hyperpage{38, 39}, \hyperpage{43}, \hyperpage{66}
+  \item PopulationSpikeCounter (class in brian), \hyperpage{164}
+  \item ppfunction
+    \subitem example usage, \hyperpage{54}
+  \item ppfunction() (in module brian), \hyperpage{125}
+  \item preferences, \hyperpage{132}
+  \item progress
+    \subitem reporting, \hyperpage{173}
+  \item ProgressReporter (class in brian.utils.progressreporting), \hyperpage{173}
+  \item pulse packet, \hyperpage{149}
+  \item PulsePacket
+    \subitem example usage, \hyperpage{58}, \hyperpage{69}
+  \item PulsePacket (class in brian), \hyperpage{149}
   \item pylab
-    \subitem plotting, \hyperpage{29}, \hyperpage{45}, \hyperpage{75}, \hyperpage{103}
+    \subitem plotting, \hyperpage{85}, \hyperpage{103}, \hyperpage{137}, \hyperpage{169}
 
   \indexspace
   \bigletter Q
-  \item quantity, \hyperpage{75}
-    \subitem array, \hyperpage{76}
-  \item Quantity (class in brian), \hyperpage{76}
+  \item quantity, \hyperpage{137}
+    \subitem array, \hyperpage{139}
+  \item Quantity (class in brian), \hyperpage{138}
 
   \indexspace
   \bigletter R
   \item raster
-    \subitem plotting, \hyperpage{103}
-  \item raster\_plot() (in module brian), \hyperpage{103}
-  \item Refractoriness (class in brian), \hyperpage{82}
-  \item refractory, \hyperpage{82}
-  \item reinit() (brian.Clock method), \hyperpage{77}
-  \item reinit() (in module brian), \hyperpage{98}
-  \item reinit\_default\_clock() (in module brian), \hyperpage{78}
-  \item reset, \hyperpage{82}
-    \subitem variable, \hyperpage{82}
-  \item Reset (class in brian), \hyperpage{82}
-  \item rest() (brian.NeuronGroup method), \hyperpage{80}
-  \item run() (in module brian), \hyperpage{97}
-  \item run\_all\_tests() (in module brian), \hyperpage{106}
+    \subitem plotting, \hyperpage{169}
+  \item raster\_plot
+    \subitem example usage, \hyperpage{28}, \hyperpage{43}, \hyperpage{45, 46}, \hyperpage{51--54}, 
+		\hyperpage{56--61}, \hyperpage{64--66}, \hyperpage{69}, \hyperpage{74}, 
+		\hyperpage{81, 82}
+  \item raster\_plot() (in module brian), \hyperpage{169}
+  \item recall() (in module brian), \hyperpage{162}
+  \item RecentStateMonitor
+    \subitem example usage, \hyperpage{59}
+  \item RecentStateMonitor (class in brian), \hyperpage{167}
+  \item Refractoriness
+    \subitem example usage, \hyperpage{53}
+  \item Refractoriness (class in brian), \hyperpage{145}
+  \item refractory, \hyperpage{145}
+  \item RegularClock (class in brian), \hyperpage{140}
+  \item reinit() (brian.Clock method), \hyperpage{139}
+  \item reinit() (in module brian), \hyperpage{162}
+  \item reinit\_default\_clock() (in module brian), \hyperpage{140}
+  \item reporting
+    \subitem progress, \hyperpage{173}
+  \item reset, \hyperpage{144}
+    \subitem example usage, \hyperpage{37}, \hyperpage{74}
+    \subitem variable, \hyperpage{145}
+  \item Reset (class in brian), \hyperpage{144}
+  \item rest() (brian.NeuronGroup method), \hyperpage{143}
+  \item run
+    \subitem example usage, \hyperpage{28--30}, \hyperpage{36--39}, \hyperpage{41}, 
+		\hyperpage{43--54}, \hyperpage{56--66}, \hyperpage{68, 69}, \hyperpage{74, 75}, 
+		\hyperpage{77--82}
+  \item run() (in module brian), \hyperpage{161}
+  \item run\_all\_tests() (in module brian), \hyperpage{176}
 
   \indexspace
   \bigletter S
   \item scipy
-    \subitem analysis, \hyperpage{29}, \hyperpage{75}
+    \subitem analysis, \hyperpage{85}, \hyperpage{137}
   \item semi-exact
-    \subitem numerical integration, \hyperpage{50}
-  \item set\_dt() (brian.Clock method), \hyperpage{77}
-  \item set\_duration() (brian.Clock method), \hyperpage{77}
-  \item set\_end() (brian.Clock method), \hyperpage{77}
-  \item set\_global\_preferences() (in module brian), \hyperpage{71}
-  \item set\_t() (brian.Clock method), \hyperpage{77}
-  \item SimpleCustomRefractoriness (class in brian), \hyperpage{82}
-  \item SimpleFunThreshold (class in brian), \hyperpage{85}
+    \subitem numerical integration, \hyperpage{109}
+  \item set\_dt() (brian.Clock method), \hyperpage{139}
+  \item set\_duration() (brian.Clock method), \hyperpage{140}
+  \item set\_end() (brian.Clock method), \hyperpage{139}
+  \item set\_global\_preferences() (in module brian), \hyperpage{132}
+  \item set\_group\_var\_by\_array() (in module brian), \hyperpage{171}
+  \item set\_t() (brian.Clock method), \hyperpage{139}
+  \item SimpleCustomRefractoriness (class in brian), \hyperpage{145}
+  \item SimpleFunThreshold (class in brian), \hyperpage{148}
   \item simulation
-    \subitem control, \hyperpage{47}
-    \subitem update schedule, \hyperpage{47}
-  \item SparseConnectionMatrix (class in brian), \hyperpage{92}
-  \item SparseConnectionVector (class in brian), \hyperpage{93}
-  \item SparseConstructionMatrix (class in brian), \hyperpage{93}
+    \subitem control, \hyperpage{105}
+    \subitem update schedule, \hyperpage{106}
+  \item sin
+    \subitem example usage, \hyperpage{63}
+  \item SparseConnectionMatrix (class in brian), \hyperpage{155}
+  \item SparseConnectionVector (class in brian), \hyperpage{156}
+  \item SparseConstructionMatrix (class in brian), \hyperpage{156}
   \item speed
-    \subitem vectorisation, \hyperpage{66}
-  \item SpikeCounter (class in brian), \hyperpage{99}
-  \item SpikeGeneratorGroup (class in brian), \hyperpage{87}
-  \item SpikeMonitor (class in brian), \hyperpage{99}
+    \subitem vectorisation, \hyperpage{126}
+  \item SpikeCounter
+    \subitem example usage, \hyperpage{49}, \hyperpage{75}, \hyperpage{81}
+  \item SpikeCounter (class in brian), \hyperpage{164}
+  \item SpikeGeneratorGroup
+    \subitem example usage, \hyperpage{50}, \hyperpage{58}
+  \item SpikeGeneratorGroup (class in brian), \hyperpage{150}
+  \item SpikeMonitor
+    \subitem example usage, \hyperpage{28}, \hyperpage{36}, \hyperpage{43}, \hyperpage{45, 46}, 
+		\hyperpage{51--54}, \hyperpage{56--61}, \hyperpage{64--66}, \hyperpage{68, 69}, 
+		\hyperpage{74}, \hyperpage{81, 82}
+  \item SpikeMonitor (class in brian), \hyperpage{163}
   \item spikes
-    \subitem direct control, \hyperpage{87}
-  \item spikes (brian.StateSpikeMonitor attribute), \hyperpage{100}
-  \item state() (brian.NeuronGroup method), \hyperpage{80}
-  \item StateMonitor (class in brian), \hyperpage{100}
-  \item StateSpikeMonitor (class in brian), \hyperpage{100}
-  \item STDP (class in brian), \hyperpage{93}
-  \item still\_running() (brian.Clock method), \hyperpage{77}
+    \subitem direct control, \hyperpage{150}
+  \item spikes (brian.StateSpikeMonitor attribute), \hyperpage{165}
+  \item start() (brian.ProgressReporter method), \hyperpage{173}
+  \item state() (brian.NeuronGroup method), \hyperpage{143}
+  \item StateMonitor
+    \subitem example usage, \hyperpage{28}, \hyperpage{36, 37}, \hyperpage{39}, \hyperpage{41}, 
+		\hyperpage{43, 44}, \hyperpage{46--48}, \hyperpage{50}, \hyperpage{52}, 
+		\hyperpage{54}, \hyperpage{56}, \hyperpage{58}, \hyperpage{60}, \hyperpage{66}, 
+		\hyperpage{68}, \hyperpage{77--82}
+  \item StateMonitor (class in brian), \hyperpage{165}
+  \item StateSpikeMonitor (class in brian), \hyperpage{164}
+  \item STDP
+    \subitem example usage, \hyperpage{29}
+  \item stdp
+    \subitem example usage, \hyperpage{29, 30}, \hyperpage{74}
+  \item STDP (class in brian), \hyperpage{157}
+  \item still\_running() (brian.Clock method), \hyperpage{140}
   \item stochastic
-    \subitem differential equations, \hyperpage{51}
-  \item stop() (in module brian), \hyperpage{98}
-  \item STP (class in brian), \hyperpage{94}
-  \item StringReset (class in brian), \hyperpage{82}
-  \item StringThreshold (class in brian), \hyperpage{84}
-  \item subgroup() (brian.NeuronGroup method), \hyperpage{80}
+    \subitem differential equations, \hyperpage{109}
+  \item stop() (in module brian), \hyperpage{162}
+  \item STP
+    \subitem example usage, \hyperpage{28}
+  \item stp
+    \subitem example usage, \hyperpage{28}
+  \item STP (class in brian), \hyperpage{158}
+  \item StringReset (class in brian), \hyperpage{145}
+  \item StringThreshold (class in brian), \hyperpage{147}
+  \item subgroup() (brian.NeuronGroup method), \hyperpage{143}
+  \item subtask() (brian.ProgressReporter method), \hyperpage{173}
 
   \indexspace
   \bigletter T
-  \item t (brian.Clock attribute), \hyperpage{77}
-  \item Tabulate (class in brian), \hyperpage{71}
-  \item TabulateInterp (class in brian), \hyperpage{71}
-  \item tests, \hyperpage{106}
-  \item threshold, \hyperpage{83}
-    \subitem empirical, \hyperpage{84}
-    \subitem functional, \hyperpage{85}
-    \subitem hodgkin-huxley, \hyperpage{84}
-    \subitem linear, \hyperpage{84}
-    \subitem variable, \hyperpage{84}
-  \item Threshold (class in brian), \hyperpage{84}
-  \item tick() (brian.Clock method), \hyperpage{77}
+  \item t (brian.Clock attribute), \hyperpage{139}
+  \item Tabulate (class in brian), \hyperpage{132}
+  \item TabulateInterp (class in brian), \hyperpage{132}
+  \item tests, \hyperpage{176}
+  \item threshold, \hyperpage{146}
+    \subitem empirical, \hyperpage{147}
+    \subitem example usage, \hyperpage{74}
+    \subitem functional, \hyperpage{148}
+    \subitem hodgkin-huxley, \hyperpage{147}
+    \subitem linear, \hyperpage{146}
+    \subitem variable, \hyperpage{147}
+  \item Threshold (class in brian), \hyperpage{146}
+  \item tick() (brian.Clock method), \hyperpage{139}
   \item time-dependent
-    \subitem differential equations, \hyperpage{51}
-    \subitem equations, \hyperpage{51}
-  \item times() (brian.StateSpikeMonitor method), \hyperpage{100}
-  \item total\_correlation() (in module brian), \hyperpage{104}
+    \subitem differential equations, \hyperpage{110}
+    \subitem equations, \hyperpage{110}
+  \item TimedArray
+    \subitem example usage, \hyperpage{63}, \hyperpage{81}
+  \item TimedArray (class in brian), \hyperpage{170}
+  \item TimedArraySetter (class in brian), \hyperpage{171}
+  \item times() (brian.StateSpikeMonitor method), \hyperpage{165}
+  \item total\_correlation() (in module brian), \hyperpage{172}
 
   \indexspace
   \bigletter U
-  \item Unit (class in brian), \hyperpage{76}
-  \item unit tests, \hyperpage{106}
-  \item units, \hyperpage{75}
-    \subitem array, \hyperpage{76}
-    \subitem inconsistent, \hyperpage{75}
+  \item Unit (class in brian), \hyperpage{138}
+  \item unit tests, \hyperpage{176}
+  \item units, \hyperpage{137}
+    \subitem array, \hyperpage{139}
+    \subitem inconsistent, \hyperpage{137}
+  \item update() (brian.ProgressReporter method), \hyperpage{173}
 
   \indexspace
   \bigletter V
-  \item values() (brian.StateSpikeMonitor method), \hyperpage{100}
+  \item values() (brian.StateSpikeMonitor method), \hyperpage{165}
   \item variable
-    \subitem reset, \hyperpage{82}
-    \subitem threshold, \hyperpage{84}
-  \item VariableReset (class in brian), \hyperpage{82}
-  \item VariableThreshold (class in brian), \hyperpage{84}
-  \item vectorisation, \hyperpage{66}
-    \subitem efficient code, \hyperpage{66}
+    \subitem reset, \hyperpage{145}
+    \subitem threshold, \hyperpage{147}
+  \item VariableReset (class in brian), \hyperpage{145}
+  \item VariableThreshold (class in brian), \hyperpage{147}
+  \item vectorisation, \hyperpage{126}
+    \subitem efficient code, \hyperpage{126}
 
   \indexspace
   \bigletter W
-  \item white noise, \hyperpage{79}
+  \item white noise, \hyperpage{142}
 
   \indexspace
   \bigletter X
-  \item xi, \hyperpage{79}
-    \subitem noise, \hyperpage{79}
+  \item xi, \hyperpage{142}
+    \subitem noise, \hyperpage{142}
 
 \end{theindex}

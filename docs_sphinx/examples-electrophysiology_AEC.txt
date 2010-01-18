@@ -68,7 +68,6 @@ AEC experiment (current-clamp)
     plot(soma.times/ms,soma[0]/mV,'r')
     figure()
     plot(board.Ke)
-    save('Ke.txt',board.Ke)
     show()
     
 

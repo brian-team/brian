@@ -1,66 +1,70 @@
-\BOOKMARK [0][-]{chapter.1}{Introduction}{}
-\BOOKMARK [0][-]{chapter.2}{Installation}{}
-\BOOKMARK [1][-]{section.2.1}{Quick installation}{chapter.2}
-\BOOKMARK [1][-]{section.2.2}{Manual installation}{chapter.2}
-\BOOKMARK [1][-]{section.2.3}{Testing}{chapter.2}
-\BOOKMARK [0][-]{chapter.3}{Getting started}{}
-\BOOKMARK [1][-]{section.3.1}{Tutorials}{chapter.3}
-\BOOKMARK [1][-]{section.3.2}{Examples}{chapter.3}
-\BOOKMARK [0][-]{chapter.4}{User manual}{}
-\BOOKMARK [1][-]{section.4.1}{Units}{chapter.4}
-\BOOKMARK [1][-]{section.4.2}{Models and neuron groups}{chapter.4}
-\BOOKMARK [1][-]{section.4.3}{Connections}{chapter.4}
-\BOOKMARK [1][-]{section.4.4}{Spike-timing-dependent plasticity}{chapter.4}
-\BOOKMARK [1][-]{section.4.5}{Short-term plasticity}{chapter.4}
-\BOOKMARK [1][-]{section.4.6}{Recording}{chapter.4}
-\BOOKMARK [1][-]{section.4.7}{Inputs}{chapter.4}
-\BOOKMARK [1][-]{section.4.8}{User-defined operations}{chapter.4}
-\BOOKMARK [1][-]{section.4.9}{Analysis and plotting}{chapter.4}
-\BOOKMARK [1][-]{section.4.10}{Clocks}{chapter.4}
-\BOOKMARK [1][-]{section.4.11}{Simulation control}{chapter.4}
-\BOOKMARK [1][-]{section.4.12}{More on equations}{chapter.4}
-\BOOKMARK [0][-]{chapter.5}{The library}{}
-\BOOKMARK [1][-]{section.5.1}{Library models}{chapter.5}
-\BOOKMARK [1][-]{section.5.2}{Random processes}{chapter.5}
-\BOOKMARK [1][-]{section.5.3}{Electrophysiology}{chapter.5}
-\BOOKMARK [1][-]{section.5.4}{Extending the library}{chapter.5}
-\BOOKMARK [0][-]{chapter.6}{Advanced concepts}{}
-\BOOKMARK [1][-]{section.6.1}{Parallel computing}{chapter.6}
-\BOOKMARK [1][-]{section.6.2}{How to write efficient Brian code}{chapter.6}
-\BOOKMARK [1][-]{section.6.3}{Compiled code}{chapter.6}
-\BOOKMARK [1][-]{section.6.4}{Projects with multiple files or functions}{chapter.6}
-\BOOKMARK [1][-]{section.6.5}{Parameters}{chapter.6}
-\BOOKMARK [1][-]{section.6.6}{Precalculated tables}{chapter.6}
-\BOOKMARK [1][-]{section.6.7}{Preferences}{chapter.6}
-\BOOKMARK [1][-]{section.6.8}{Logging}{chapter.6}
-\BOOKMARK [0][-]{chapter.7}{Extending Brian}{}
-\BOOKMARK [0][-]{chapter.8}{Reference}{}
-\BOOKMARK [1][-]{section.8.1}{SciPy, NumPy and PyLab}{chapter.8}
-\BOOKMARK [1][-]{section.8.2}{Units system}{chapter.8}
-\BOOKMARK [1][-]{section.8.3}{Clocks}{chapter.8}
-\BOOKMARK [1][-]{section.8.4}{Neuron models and groups}{chapter.8}
-\BOOKMARK [1][-]{section.8.5}{Integration}{chapter.8}
-\BOOKMARK [1][-]{section.8.6}{Standard Groups}{chapter.8}
-\BOOKMARK [1][-]{section.8.7}{Connections}{chapter.8}
-\BOOKMARK [1][-]{section.8.8}{Plasticity}{chapter.8}
-\BOOKMARK [1][-]{section.8.9}{Network}{chapter.8}
-\BOOKMARK [1][-]{section.8.10}{Monitors}{chapter.8}
-\BOOKMARK [1][-]{section.8.11}{Plotting}{chapter.8}
-\BOOKMARK [1][-]{section.8.12}{Variable updating}{chapter.8}
-\BOOKMARK [1][-]{section.8.13}{Analysis}{chapter.8}
-\BOOKMARK [1][-]{section.8.14}{Progress reporting}{chapter.8}
-\BOOKMARK [1][-]{section.8.15}{Magic in Brian}{chapter.8}
-\BOOKMARK [1][-]{section.8.16}{Tests}{chapter.8}
-\BOOKMARK [0][-]{chapter.9}{Typical Tasks}{}
-\BOOKMARK [1][-]{section.9.1}{Projects with multiple files or functions}{chapter.9}
-\BOOKMARK [0][-]{chapter.10}{Experimental features}{}
-\BOOKMARK [1][-]{section.10.1}{Automatic C code generation for nonlinear state updaters}{chapter.10}
-\BOOKMARK [1][-]{section.10.2}{Multilinear state updater}{chapter.10}
-\BOOKMARK [0][-]{chapter.11}{Developer's guide}{}
-\BOOKMARK [1][-]{section.11.1}{Guidelines}{chapter.11}
-\BOOKMARK [1][-]{section.11.2}{Simulation principles}{chapter.11}
-\BOOKMARK [1][-]{section.11.3}{Main code structure}{chapter.11}
-\BOOKMARK [1][-]{section.11.4}{Brian package structure}{chapter.11}
-\BOOKMARK [1][-]{section.11.5}{Repository structure}{chapter.11}
-\BOOKMARK [0][-]{section*.153}{Module Index}{}
-\BOOKMARK [0][-]{section*.154}{Index}{}
+\BOOKMARK [0][-]{chapter.1}{Introduction}{}% 1
+\BOOKMARK [0][-]{chapter.2}{Installation}{}% 2
+\BOOKMARK [1][-]{section.2.1}{Quick installation}{chapter.2}% 3
+\BOOKMARK [1][-]{section.2.2}{Manual installation}{chapter.2}% 4
+\BOOKMARK [1][-]{section.2.3}{Testing}{chapter.2}% 5
+\BOOKMARK [1][-]{section.2.4}{Optimisations}{chapter.2}% 6
+\BOOKMARK [0][-]{chapter.3}{Getting started}{}% 7
+\BOOKMARK [1][-]{section.3.1}{Tutorials}{chapter.3}% 8
+\BOOKMARK [1][-]{section.3.2}{Examples}{chapter.3}% 9
+\BOOKMARK [0][-]{chapter.4}{User manual}{}% 10
+\BOOKMARK [1][-]{section.4.1}{Units}{chapter.4}% 11
+\BOOKMARK [1][-]{section.4.2}{Models and neuron groups}{chapter.4}% 12
+\BOOKMARK [1][-]{section.4.3}{Connections}{chapter.4}% 13
+\BOOKMARK [1][-]{section.4.4}{Spike-timing-dependent plasticity}{chapter.4}% 14
+\BOOKMARK [1][-]{section.4.5}{Short-term plasticity}{chapter.4}% 15
+\BOOKMARK [1][-]{section.4.6}{Recording}{chapter.4}% 16
+\BOOKMARK [1][-]{section.4.7}{Inputs}{chapter.4}% 17
+\BOOKMARK [1][-]{section.4.8}{User-defined operations}{chapter.4}% 18
+\BOOKMARK [1][-]{section.4.9}{Analysis and plotting}{chapter.4}% 19
+\BOOKMARK [1][-]{section.4.10}{Clocks}{chapter.4}% 20
+\BOOKMARK [1][-]{section.4.11}{Simulation control}{chapter.4}% 21
+\BOOKMARK [1][-]{section.4.12}{More on equations}{chapter.4}% 22
+\BOOKMARK [0][-]{chapter.5}{The library}{}% 23
+\BOOKMARK [1][-]{section.5.1}{Library models}{chapter.5}% 24
+\BOOKMARK [1][-]{section.5.2}{Random processes}{chapter.5}% 25
+\BOOKMARK [1][-]{section.5.3}{Electrophysiology}{chapter.5}% 26
+\BOOKMARK [1][-]{section.5.4}{Model fitting}{chapter.5}% 27
+\BOOKMARK [0][-]{chapter.6}{Advanced concepts}{}% 28
+\BOOKMARK [1][-]{section.6.1}{Parallel computing}{chapter.6}% 29
+\BOOKMARK [1][-]{section.6.2}{How to write efficient Brian code}{chapter.6}% 30
+\BOOKMARK [1][-]{section.6.3}{Compiled code}{chapter.6}% 31
+\BOOKMARK [1][-]{section.6.4}{Projects with multiple files or functions}{chapter.6}% 32
+\BOOKMARK [1][-]{section.6.5}{Connection matrices}{chapter.6}% 33
+\BOOKMARK [1][-]{section.6.6}{Parameters}{chapter.6}% 34
+\BOOKMARK [1][-]{section.6.7}{Precalculated tables}{chapter.6}% 35
+\BOOKMARK [1][-]{section.6.8}{Preferences}{chapter.6}% 36
+\BOOKMARK [1][-]{section.6.9}{Logging}{chapter.6}% 37
+\BOOKMARK [0][-]{chapter.7}{Extending Brian}{}% 38
+\BOOKMARK [0][-]{chapter.8}{Reference}{}% 39
+\BOOKMARK [1][-]{section.8.1}{SciPy, NumPy and PyLab}{chapter.8}% 40
+\BOOKMARK [1][-]{section.8.2}{Units system}{chapter.8}% 41
+\BOOKMARK [1][-]{section.8.3}{Clocks}{chapter.8}% 42
+\BOOKMARK [1][-]{section.8.4}{Neuron models and groups}{chapter.8}% 43
+\BOOKMARK [1][-]{section.8.5}{Integration}{chapter.8}% 44
+\BOOKMARK [1][-]{section.8.6}{Standard Groups}{chapter.8}% 45
+\BOOKMARK [1][-]{section.8.7}{Connections}{chapter.8}% 46
+\BOOKMARK [1][-]{section.8.8}{Plasticity}{chapter.8}% 47
+\BOOKMARK [1][-]{section.8.9}{Network}{chapter.8}% 48
+\BOOKMARK [1][-]{section.8.10}{Monitors}{chapter.8}% 49
+\BOOKMARK [1][-]{section.8.11}{Plotting}{chapter.8}% 50
+\BOOKMARK [1][-]{section.8.12}{Variable updating}{chapter.8}% 51
+\BOOKMARK [1][-]{section.8.13}{Analysis}{chapter.8}% 52
+\BOOKMARK [1][-]{section.8.14}{Progress reporting}{chapter.8}% 53
+\BOOKMARK [1][-]{section.8.15}{Model fitting toolbox}{chapter.8}% 54
+\BOOKMARK [1][-]{section.8.16}{Magic in Brian}{chapter.8}% 55
+\BOOKMARK [1][-]{section.8.17}{Tests}{chapter.8}% 56
+\BOOKMARK [0][-]{chapter.9}{Typical Tasks}{}% 57
+\BOOKMARK [1][-]{section.9.1}{Projects with multiple files or functions}{chapter.9}% 58
+\BOOKMARK [0][-]{chapter.10}{Experimental features}{}% 59
+\BOOKMARK [1][-]{section.10.1}{Automatic C code generation for nonlinear state updaters}{chapter.10}% 60
+\BOOKMARK [1][-]{section.10.2}{Multilinear state updater}{chapter.10}% 61
+\BOOKMARK [0][-]{chapter.11}{Developer's guide}{}% 62
+\BOOKMARK [1][-]{section.11.1}{Guidelines}{chapter.11}% 63
+\BOOKMARK [1][-]{section.11.2}{Simulation principles}{chapter.11}% 64
+\BOOKMARK [1][-]{section.11.3}{Main code structure}{chapter.11}% 65
+\BOOKMARK [1][-]{section.11.4}{Equations}{chapter.11}% 66
+\BOOKMARK [1][-]{section.11.5}{Brian package structure}{chapter.11}% 67
+\BOOKMARK [1][-]{section.11.6}{Repository structure}{chapter.11}% 68
+\BOOKMARK [0][-]{section*.179}{Module Index}{}% 69
+\BOOKMARK [0][-]{section*.180}{Index}{}% 70
