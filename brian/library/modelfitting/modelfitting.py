@@ -386,12 +386,12 @@ def modelfitting(model = None, reset = None, threshold = None,
     
     Fits a spiking neuron model to electrophysiological data (injected current and spikes).
     
-    See also documentation in :ref:`model-fitting-library`.
+    See also the section :ref:`model-fitting-library` in the user manual.
     
     **Arguments**
     
     ``model``
-        An :class:`Equations` object containing the equations defining the model.
+        An :class:`~brian.Equations` object containing the equations defining the model.
     ``reset``
         A reset value for the membrane potential, or a string containing the reset
         equations.
@@ -399,7 +399,7 @@ def modelfitting(model = None, reset = None, threshold = None,
         A threshold value for the membrane potential, or a string containing the threshold
         equations.
     ``data``
-        A list of spike times, or a set of several spike trains as a list of pairs (index, spike time)
+        A list of spike times, or a list of several spike trains as a list of pairs (index, spike time)
         if the fit must be performed in parallel over several target spike trains. In this case,
         the modelfitting function returns as many parameters sets as target spike trains.
     ``input_var='I'``
@@ -422,6 +422,14 @@ def modelfitting(model = None, reset = None, threshold = None,
         Number of iterations in the particle swarm optimization algorithm.
     ``pso_params``
         Parameters of the PSO algorithm. It is a list with three scalar values (omega, c_l, c_g).
+        The parameter ``omega`` is the "inertial constant", ``c_l`` is the "local best"
+        constant affecting how much the particle's personl best influences its movement, and
+        ``c_g`` is the "global best" constant affecting how much the global best
+        position influences each particle's movement. See the
+        `wikipedia entry on PSO <http://en.wikipedia.org/wiki/Particle_swarm_optimization>`__
+        for more details (note that they use ``c_1`` and ``c_2`` instead of ``c_l``
+        and ``c_g``). Reasonable values are (.9, .5, 1.5), but experimentation
+        with other values is a good idea.
     ``delta=2*ms``
         The precision factor delta (a scalar value in second).
     ``includedelays=True``
@@ -438,24 +446,31 @@ def modelfitting(model = None, reset = None, threshold = None,
     ``max_gpu``
         The maximum number of GPUs to use in parallel. It is set to the number of GPUs in the machine by default.
     ``precision``
-        A string set to either ``float`` or ``double`` to specify the single or double precision on the GPU.
+        A string set to either ``float`` or ``double`` to specify whether to use
+        single or double precision on the GPU. If it is not specified, it will
+        use the best precision available.
     ``machines=[]``
-        A list of machine names to use in parallel.
+        A list of machine names to use in parallel. See :ref:`modelfitting-clusters`.
     ``named_pipe``
-        A boolean value indicating whether using the named pipe on Windows or not.
+        Set to ``True`` to use Windows named pipes for networking, or a string
+        to use a particular name for the pipe. See :ref:`modelfitting-clusters`.
     ``port``
-        TODO
-    
+        The port number for IP networking, you only need to specify this if the
+        default value of 2718 is blocked. See :ref:`modelfitting-clusters`.
+    ``return_matrix``
         Set it to ``True`` to return the matrix of the fitness values for all particles and all iterations.
     
     **Return values**
     
     ``best_params``
-        A ``Parameters`` object containing the best parameter values for each target spike train
+        A :class:`~brian.Parameters` object containing the best parameter values for each target spike train
         found by the optimization algorithm. ``best_params[param_name]`` is a vector containing
         the parameter values for each target.
     ``best_values``
         A vector containing the best gamma factor values for each target.
+        For more details on the gamma factor, see
+        `Jolivet et al. 2008, "A benchmark test for a quantitative assessment of simple neuron models", J. Neurosci. Methods <http://www.ncbi.nlm.nih.gov/pubmed/18160135>`__ (available in PDF
+        `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
     ``fitness_matrices``
         If ``return_matrix`` is set to ``True``, ``fitness_matrices[i]`` is a (N*iterations) matrix
         containing the histogram of the fitness values among particle within each group at each 

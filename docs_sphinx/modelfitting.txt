@@ -4,11 +4,11 @@
 
 Model fitting
 =============
-The modelfitting library allows to fit a neuron model to data. 
+The modelfitting library is used for fitting a neuron model to data. 
 
 The library provides a single function :func:`modelfitting`, which accepts the model
 and the data as arguments and returns the model parameters that fit best the data.
-The model is a spiking neuron model, whereas the data consists in both an input
+The model is a spiking neuron model, whereas the data consists of both an input
 (time-varying signal, for example an injected current) and a set of spike trains.
 Only spikes are considered for the fitness. Several target spike trains can be
 specified in order to fit independently several data sets. In this case,
@@ -29,23 +29,25 @@ This function is defined as the gamma factor, which is based on
 the number of coincidences between the model spikes and the experimentally-recorded spikes, defined
 as the number of spikes in the experimental train such that there is at least one spike
 in the model train within plus or minus ``delta``, where ``delta`` is the size of the temporal window
-(typically a few milliseconds).
+(typically a few milliseconds). For more details on the gamma factor, see
+`Jolivet et al. 2008, "A benchmark test for a quantitative assessment of simple neuron models", J. Neurosci. Methods <http://www.ncbi.nlm.nih.gov/pubmed/18160135>`__ (available in PDF
+`here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
 
-The optimization procedure is performed by the particle swarm optimization algorithm.
+The optimization procedure is performed by the
+`particle swarm optimization algorithm <http://en.wikipedia.org/wiki/Particle_swarm_optimization>`__.
 This algorithm requires the evaluation of the fitness function for a large number of parameter
 sets. Each iteration of the algorithm
-involves the simulation of a lot of neurons (one neuron corresponding to one parameter set) 
+involves the simulation of a large number of neurons (one neuron corresponding to one parameter set) 
 as well as the computation of the gamma factor for each neuron. 
 The quality of the result depends
 on the number of neurons used, which is specified in the :func:`modelfitting` function. 
-These computations are independent
-so that this problem can be parallelized without much effort.
-Therefore, the library supports processors with multiple cores as well 
+The library supports processors with multiple cores as well 
 as the use of graphical processing
 units (GPUs) in order to accelerate the speed of convergence of the algorithm.
 If multiple cores are detected, the library will use all of them by default.
 Also, if a CUDA-enabled GPU is present on the system, and if PyCUDA is installed,
-the library will use automatically the GPU by default. 
+the library will automatically use the GPU by default. In addition, several computers
+can be networked either on a Windows network or over IP, see :ref:`modelfitting-clusters`. 
 
 Usage example
 -------------
@@ -63,7 +65,11 @@ To fit the parameters of a neuron model with respect to some data, use the
                                           particles = 1000, iterations = 10, 
                                           R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
 
-The model is defined by ``equations`` (an ``Equations`` object), 
+.. warning::
+
+	Windows users should read the section :ref:`note-for-windows-users`. 
+
+The model is defined by ``equations`` (an :class:`~brian.Equations` object), 
 ``reset`` (a scalar value or a set of equations as a string) and 
 ``threshold`` (a scalar value or a set of equations as a string).
 
@@ -97,15 +103,9 @@ during the optimization.
 The complete list of arguments can be found in the reference
 section of the :func:`modelfitting` function.
 
-The best parameters found by the optimization procedure are returned in the :class:`Parameter`
+The best parameters found by the optimization procedure are returned in the :class:`~brian.Parameters`
 object ``best_params``, and the corresponding best fitness values are returned in the
 ``best_values`` vector, containing as many values as there are data spike trains.
-
-
-
-.. warning::
-
-	Windows users should read the section :ref:`note-for-windows-users`. 
 
 .. _note-for-windows-users:
 
@@ -129,6 +129,8 @@ that have to be shut down by hand. Instead, you have to do this::
 	...
 	if __name__=='__main__':
 		params = modelfitting(...)
+
+.. _modelfitting-clusters:
 
 Clusters
 --------
