@@ -39,7 +39,7 @@ if properly coded.
 '''
 
 __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMonitor','StateMonitor','ISIHistogramMonitor','Monitor',
-           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter', 'CoincidenceCounterBis']
+           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter']
 
 from units import *
 from connection import Connection, SparseConnectionVector
