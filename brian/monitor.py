@@ -1013,25 +1013,65 @@ class MultiStateMonitor(NetworkOperation):
     
 class CoincidenceCounter(SpikeMonitor):
     """
-    Another coincidence counter algorithm, based on the GPU version.
-    Simpler, but may be slower (check) ?
-    Additional features wrt CoincidenceCounter :
-    * Spike delays
-    * Exclusive or inclusive algorithms
+    Coincidence counter class.
     
-    Parameters:
-    data : 
-    The experimentally recorded spike times are passed in the following way. Define a single 1D
-    array data which contains all the target spike times one after the
-    other. Now define an array spiketimes_offset of integers so that neuron i should 
-    be linked to target train : data[spiketimes_offset[i]], data[spiketimes_offset[i]+1], etc.
+    Counts the number of coincidences between the spikes of the neurons in the network (model spikes),
+    and some user-specified data spike trains (target spikes). This number is defined as the number of 
+    target spikes such that there is at least one model spike within +- ``delta``, where ``delta``
+    is the half-width of the time window.
     
-    It is essential that each spike  train with the spiketimes array should begin with a spike at a
-    large negative time (e.g. -1*second) and end with a spike that is a long time
-    after the duration of the run (e.g. duration+1*second).
+    Initialised as::
     
-    onset : the algorithm only starts counting something from onset (needed for 
-    time vectorization with overlap)
+        cc = CoincidenceCounter(source, data, delta = 4*ms)
+    
+    with the following arguments:
+    
+    ``source``
+        A :class:`NeuronGroup` object which neurons are being monitored.
+    
+    ``data``
+        The list of spike times. Several spike trains can be passed in the following way.
+        Define a single 1D array ``data`` which contains all the target spike times one after the
+        other. Now define an array ``spiketimes_offset`` of integers so that neuron ``i`` should 
+        be linked to target train : ``data[spiketimes_offset[i]], data[spiketimes_offset[i]+1]``, etc.
+        
+        It is essential that each spike train with the spiketimes array should begin with a spike at a
+        large negative time (e.g. -1*second) and end with a spike that is a long time
+        after the duration of the run (e.g. duration+1*second).
+    
+    ``delta=4*ms``
+        The half-width of the time window for the coincidence counting algorithm.
+    
+    ``spiketimes_offset``
+        A 1D array, ``spiketimes_offset[i]`` is the index of the first spike of 
+        the target train associated to neuron i.
+        
+    ``spikedelays``
+        A 1D array with spike delays for each neuron. All spikes from the target 
+        train associated to neuron i are shifted by ``spikedelays[i]``.
+        
+    ``coincidence_count_algorithm``
+        If set to ``'exclusive'``, the algorithm cannot count more than one
+        coincidence for each model spike.
+        If set to ``'inclusive'``, the algorithm can count several coincidences
+        for a single model spike.
+    
+    ``onset``
+        A scalar value in seconds giving the start of the counting : no
+        coincidences are counted before ``onset``.
+    
+    A ``CoincidenceCounter`` object has three properties :
+    
+    ``coincidences``
+        The number of coincidences for each neuron of the :class:`NeuronGroup`.
+        ``coincidences[i]`` is the number of coincidences for neuron i.
+        
+    ``model_length``
+        The number of spikes for each neuron. ``model_length[i]`` is the spike
+        count for neuron i.
+        
+    ``target_length``
+        The number of spikes in the target spike train associated to each neuron.
     """
     def __init__(self, source, data = None, spiketimes_offset = None, spikedelays = None, 
                  coincidence_count_algorithm = 'exclusive', onset = None, delta = 4*ms):
