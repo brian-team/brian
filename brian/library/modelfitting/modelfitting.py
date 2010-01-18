@@ -98,12 +98,12 @@ class light_worker(object):
         self.groups = groups
         
         self.fitness_lbest = -inf*ones(self.N)
-        self.fitness_gbest = -inf*ones(len(groups))
+        self.fitness_gbest = -inf*ones(len(self.groups))
         self.X_lbest = self.X
         self.X_gbest = [None]*len(groups)
         
         self.optim_prepared = True
-        self.fitness_matrix = []
+        self.fitness_matrices = [[] for i in range(len(self.groups))]
     
     def function_prepare(self, (neurons, I_offset, spiketimes_offset, target_length, target_rates)):
         """
@@ -222,7 +222,14 @@ class light_worker(object):
         
         # Simulation runs
         fitness = self.simulate(self.X)
-        self.fitness_matrix.append(fitness)
+        
+        # Record histogram at each iteration, for each group within the worker
+        k = 0
+        for i in range(len(self.groups)):
+            n = self.groups[i][1]
+            (hist, bin_edges) = histogram(fitness[k:k+n], 100, range=(0.0,1.0))
+            self.fitness_matrices[i].append(list(hist))
+            k += n
 #        print "    Fitness: mean %.3f, max %.3f, std %.3f" % (fitness.mean(), fitness.max(), fitness.std())
         
         # Local update
@@ -265,7 +272,9 @@ class light_worker(object):
         # Returns the fitness matrix at the end of the optimization
         # 1 col = 1 iteration, 1 line = all the fitness values at the current iteration
         if X_gbests == 'give_me_the_matrix':
-            return array(self.fitness_matrix).transpose()
+            for i in range(len(self.groups)):
+                self.fitness_matrices[i] = array(self.fitness_matrices[i]).transpose()
+            return self.fitness_matrices
         # Preparation for the simulation, called before the preparation for the optimization
         if not self.function_prepared:
             # Here, X_gbests contains (neurons, I_offset, spiketimes_offset)
@@ -343,10 +352,18 @@ def optim(D,
 
     if return_matrix:
         fitness_matrix = zeros((0, iter))
+        # fitness_matrices[i] is a list of matrices containing the histograms
+        # for all iterations and each subgroup within worker i
         fitness_matrices = manager.process_jobs(['give_me_the_matrix']*num_processes)
-        for fitness_m in fitness_matrices:
-            fitness_matrix = vstack((fitness_matrix, fitness_m))
-        return best_items, total_time/iter, fitness_matrix
+        # Here we have to combine the matrices corresponding to one group
+        # but were splitted among several workers
+        fitness_matrices2 = [zeros((100, iter)) for i in range(group_count)]
+        for worker in range(len(worker_size)):
+            k = 0
+            for group, n in groups_by_worker[worker]:
+                fitness_matrices2[group] += fitness_matrices[worker][k]
+                k += 1
+        return best_items, total_time/iter, fitness_matrices2
     else:
         return best_items, total_time/iter
 
@@ -439,10 +456,10 @@ def modelfitting(model = None, reset = None, threshold = None,
         the parameter values for each target.
     ``best_values``
         A vector containing the best gamma factor values for each target.
-    ``fitness_matrix``
-        If ``return_matrix`` is set to ``True``, ``fitness_matrix`` is a (N*iterations) matrix
-        containing the fitness values of each particle at each iteration of the optimization
-        algorithm.
+    ``fitness_matrices``
+        If ``return_matrix`` is set to ``True``, ``fitness_matrices[i]`` is a (N*iterations) matrix
+        containing the histogram of the fitness values among particle within each group at each 
+        iteration of the optimization algorithm.
     '''
     
     # Use GPU ?
@@ -608,7 +625,7 @@ def modelfitting(model = None, reset = None, threshold = None,
         D += 1
 
     if return_matrix:
-        best_items, mean_iter_time, fitness_matrix = optim( D,
+        best_items, mean_iter_time, fitness_matrices = optim( D,
                                                             worker_size,
                                                             iterations, 
                                                             manager, 
@@ -639,7 +656,7 @@ def modelfitting(model = None, reset = None, threshold = None,
     if return_time:
         to_return.append(mean_iter_time)
     if return_matrix:
-        to_return.append(fitness_matrix)
+        to_return.append(fitness_matrices)
     return to_return
 
 def modelfitting_worker(max_gpu=None, max_cpu=None, port=None, named_pipe=None,

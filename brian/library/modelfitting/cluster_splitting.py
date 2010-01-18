@@ -128,5 +128,3 @@ if __name__ == '__main__':
     print items
     print combined_items
     print splitted_items
-    print cs.expand_items(0, [item for group, item, value in combined_items])
-    
