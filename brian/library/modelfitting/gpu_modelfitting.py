@@ -499,11 +499,11 @@ if __name__=='__main__':
         G.I = TimedArray(I, clock=clk)
         M = StateMonitor(G, 'V', record=True, when='end', clock=clk)
         MS = SpikeMonitor(G)
-        cc_ex = CoincidenceCounterBis(source=G, data=randspikes, delta=delta,
+        cc_ex = CoincidenceCounter(source=G, data=randspikes, delta=delta,
                                    coincidence_count_algorithm='exclusive')
-        cc_in = CoincidenceCounterBis(source=G, data=randspikes, delta=delta,
+        cc_in = CoincidenceCounter(source=G, data=randspikes, delta=delta,
                                    coincidence_count_algorithm='inclusive')
-        cc2 = CoincidenceCounter(source=G, data=randspikes[1:-1], delta=delta)
+#        cc2 = CoincidenceCounter(source=G, data=randspikes[1:-1], delta=delta)
         run(duration)
         #spiketimes = array([-1*second, duration+1*second])
         #spiketimes_offset = zeros(N, dtype=int)
@@ -560,7 +560,7 @@ if __name__=='__main__':
         print 'GPU', mf.coincidence_count
 #        print 'CPU bis inc', cc_in.coincidences
         print 'CPU bis exc', cc_ex.coincidences
-        print 'CPU', cc2.coincidences
+#        print 'CPU', cc2.coincidences
 
 #        for t in randspikes[1:-1]:
 #            plot([t*second-delta, t*second+delta], [0, 0], lw=5, color=(.9,.9,.9))

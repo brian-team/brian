@@ -5,7 +5,7 @@ from brian.timedarray import TimedArray
 from brian.network import Network, run
 from brian.clock import reinit_default_clock, defaultclock
 from brian.utils.parameters import Parameters
-from brian.monitor import CoincidenceCounter, CoincidenceCounterBis
+from brian.monitor import CoincidenceCounter
 from brian.utils.statistics import firing_rate
 from numpy import *
 from numpy.random import rand, randn
@@ -185,7 +185,7 @@ def modelfitting(model = None, reset = None, threshold = None, data = None,
             return gamma
     else:
         def fun(X):
-            cc = CoincidenceCounterBis(group, spiketimes, spiketimes_offset, spikedelays, onset = overlap, delta = delta)
+            cc = CoincidenceCounter(group, spiketimes, spiketimes_offset, spikedelays, onset = overlap, delta = delta)
             # Gets the parameter values contained in the matrix X, excepted spike delays values
             if includedelays:
                 param_values = fp.get_param_values(X[0:-1,:], includedelays = False)

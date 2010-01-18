@@ -144,7 +144,7 @@ class light_worker(object):
                                       self.spiketimes, self.spiketimes_offset, zeros(neurons), self.delta,
                                       precision=self.precision)
         else:
-            self.cc = CoincidenceCounterBis(self.group, self.spiketimes, self.spiketimes_offset, 
+            self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset, 
                                         onset = self.onset, delta = self.delta)
         
         self.function_prepared = True
