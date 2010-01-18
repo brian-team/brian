@@ -4,47 +4,108 @@
 
 Model fitting
 =============
-The modelfitting library allows to fit a neuron model to data. To import the
-library, use ::
+The modelfitting library allows to fit a neuron model to data. 
 
-  from brian.library.modelfitting import *
+The library provides a single function :func:`modelfitting`, which accepts the model
+and the data as arguments and returns the model parameters that fit best the data.
+The model is a spiking neuron model, whereas the data consists in both an input
+(time-varying signal, for example an injected current) and a set of spike trains.
+Only spikes are considered for the fitness. Several target spike trains can be
+specified in order to fit independently several data sets. In this case,
+the :func:`modelfitting` function returns as many parameters sets as there are target spike trains.
 
-TODO: detailed description of problem, etc.
+The model is defined as any spiking neuron model in Brian, by giving the equations
+as mathematical equations, and the reset and threshold values. The free parameters
+of the model that shall be fitted by the library are also specified. The data is
+specified by the input (a vector containing the time-varying injected current),
+the timestep of the input, and the data as a list of spike times.
+
+How it works
+------------
+
+Fitting a spiking neuron model to electrophysiological data is performed by maximizing
+a fitness function measuring the adequacy of the model to the data.
+This function is defined as the gamma factor, which is based on
+the number of coincidences between the model spikes and the experimentally-recorded spikes, defined
+as the number of spikes in the experimental train such that there is at least one spike
+in the model train within plus or minus ``delta``, where ``delta`` is the size of the temporal window
+(typically a few milliseconds).
+
+The optimization procedure is performed by the particle swarm optimization algorithm.
+This algorithm requires the evaluation of the fitness function for a large number of parameter
+sets. Each iteration of the algorithm
+involves the simulation of a lot of neurons (one neuron corresponding to one parameter set) 
+as well as the computation of the gamma factor for each neuron. 
+The quality of the result depends
+on the number of neurons used, which is specified in the :func:`modelfitting` function. 
+These computations are independent
+so that this problem can be parallelized without much effort.
+Therefore, the library supports processors with multiple cores as well 
+as the use of graphical processing
+units (GPUs) in order to accelerate the speed of convergence of the algorithm.
+If multiple cores are detected, the library will use all of them by default.
+Also, if a CUDA-enabled GPU is present on the system, and if PyCUDA is installed,
+the library will use automatically the GPU by default. 
 
 Usage example
 -------------
+
+To import the library, use ::
+
+  from brian.library.modelfitting import *
+
 To fit the parameters of a neuron model with respect to some data, use the
 :func:`modelfitting` function ::
+                        
+  best_params, best_values = modelfitting(model = equations, reset = 0, threshold = 1,
+                                          data = spikes, 
+                                          input = input, dt = .1*ms,
+                                          particles = 1000, iterations = 10, 
+                                          R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
 
-  params = modelfitting(model=equations, reset=reset, threshold=threshold,
-                               data=data, input=input,
-                               tau=[-inf, 30*ms, 60*ms, +inf])
+The model is defined by ``equations`` (an ``Equations`` object), 
+``reset`` (a scalar value or a set of equations as a string) and 
+``threshold`` (a scalar value or a set of equations as a string).
 
-The model is defined by ``equations``, ``reset`` and ``threshold``. The data
-is defined by ``data`` (a list of pairs (neuron index, spike time)), and the input
-is a list of current values. The input variable should be ``I`` in the equations.
-Each parameter of the model is defined by four values ::
+The target spike trains are defined by ``data`` (a list of pairs ``(neuron index, spike time)``
+or a list of spike times if there is only one target spike train).
+
+The input is specified with ``input`` (a vector containing the time-varying signal)
+and ``dt`` (the time step of the signal).
+The input variable should be ``I`` in the equations, although the input variable name
+can be specified with ``input_var``.
+
+The number of particles per target train used in the optimization algorithm is
+specified with ``particles``. The total number of neurons is  ``particles`` multiplied
+by the number of target spike trains.
+The number of iterations in the algorithm is specified with ``iterations``.
+
+Each free parameter of the model that shall be fitted is defined by two values ::
   
-  param_name = [min, init_min, init_max, max]
+  param_name = [min, max]
 
-``min`` and ``max`` are constraints on the parameter. ``init_min`` and
-``init_max`` define the initial interval of the parameter.
-The parameters found by the optimization procedure are stored in the Parameter
-object ``params``.
+``param_name`` should correspond to the parameter name in the model equations.
+``min`` and ``max`` specify the initial interval from which the parameter values
+will be uniformly sampled at the beginning of the optimization algorithm.
+A boundary interval can also be specified by giving four values ::
+
+  param_name = [bound_min, min, max, bound_max]
+
+The parameter values will be forced to stay inside the interval [bound_min, bound_max]
+during the optimization.
+
+The complete list of arguments can be found in the reference
+section of the :func:`modelfitting` function.
+
+The best parameters found by the optimization procedure are returned in the :class:`Parameter`
+object ``best_params``, and the corresponding best fitness values are returned in the
+``best_values`` vector, containing as many values as there are data spike trains.
+
+
 
 .. warning::
 
 	Windows users should read the section :ref:`note-for-windows-users`. 
-
-Additional parameters are :
-* ``input_var`` : The input variable name in the equations ('I' by default)
-* ``verbose`` : Set to False for not printing iterations (True by default)
-* ``particles`` : Number of particles in the particle swarm algorithm
-* ``slices`` : Number of time slices (1 by default)
-* ``overlap`` : Overlap in second between time slices (0*ms by default)
-* ``iterations`` : Number of iterations in the optimization algorithm (10 by default)
-* ``delta`` : Time window for the computation of the gamma precision factor (4*ms by default)
-* ``init`` : Initial state values, as a dictionary {state variable=initial value}
 
 .. _note-for-windows-users:
 

@@ -12,6 +12,7 @@ try:
     can_use_gpu = True
 except ImportError:
     can_use_gpu = False
+    default_precision = None
 
 __all__ = ['modelfitting', 'modelfitting_worker']
 
@@ -360,7 +361,7 @@ def modelfitting(model = None, reset = None, threshold = None,
                  use_gpu = None, max_cpu = None, max_gpu = None,
                  precision=None, # set to 'float' or 'double' to specify single or double precision on the GPU
                  machines = [], named_pipe = None, port = None, authkey='brian cluster tools',
-#                 return_time = None,
+                 return_time = None,
                  return_matrix = None,
                  **params):
     '''
