@@ -1033,7 +1033,7 @@ class CoincidenceCounter(SpikeMonitor):
         The list of spike times. Several spike trains can be passed in the following way.
         Define a single 1D array ``data`` which contains all the target spike times one after the
         other. Now define an array ``spiketimes_offset`` of integers so that neuron ``i`` should 
-        be linked to target train : ``data[spiketimes_offset[i]], data[spiketimes_offset[i]+1]``, etc.
+        be linked to target train: ``data[spiketimes_offset[i]], data[spiketimes_offset[i]+1]``, etc.
         
         It is essential that each spike train with the spiketimes array should begin with a spike at a
         large negative time (e.g. -1*second) and end with a spike that is a long time
@@ -1057,10 +1057,10 @@ class CoincidenceCounter(SpikeMonitor):
         for a single model spike.
     
     ``onset``
-        A scalar value in seconds giving the start of the counting : no
+        A scalar value in seconds giving the start of the counting: no
         coincidences are counted before ``onset``.
     
-    A ``CoincidenceCounter`` object has three properties :
+    Has three attributes:
     
     ``coincidences``
         The number of coincidences for each neuron of the :class:`NeuronGroup`.
