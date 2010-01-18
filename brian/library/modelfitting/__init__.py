@@ -1,3 +1,3 @@
 from modelfitting import *
 
-__all__ = ['modelfitting', 'modelfitting_singleprocessing']
+__all__ = ['modelfitting']

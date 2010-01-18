@@ -42,8 +42,8 @@ class ClusterSplitting:
         # Total number of particles
         self.particles = sum(worker_size)
         self.split_groups()
-        print "%d workers with sizes" % len(worker_size), worker_size
-        print "%d groups with sizes" % len(group_size), group_size
+        print "%d worker(s) with sizes" % len(worker_size), worker_size
+        print "%d group(s) with sizes" % len(group_size), group_size
         print
         
     def split_groups(self):
