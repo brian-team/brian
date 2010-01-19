@@ -4,7 +4,7 @@ Setup script for Brian
 
 from distutils.core import setup
 
-version = '1.2.0'
+version = '1.2.1dev'
 
 long_description='''
 Brian is a simulator for spiking neural networks available on almost all platforms.

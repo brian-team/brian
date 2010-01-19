@@ -78,8 +78,8 @@ from stp import *
 from timedarray import *
 from tests.simpletest import *
 
-__version__ = '1.2.0'
-__release_date__ = '2010-01-18'
+__version__ = '1.2.1dev'
+__release_date__ = '2010-01-19'
 
 #import unitsafefunctions as _usf
 #import numpy as _numpy
