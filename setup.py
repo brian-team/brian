@@ -27,6 +27,7 @@ extras_folders = ['tutorials/tutorial1_basic_concepts/*.py',
                   'examples/interface/*.*', 'examples/plasticity/*.py',
                   'examples/misc/*.py', 'examples/audition/*.py',
                   'examples/multiprocessing/*.py',
+                  'examples/modelfitting/*.py', 'examples/modelfitting/*.txt',  
                   'docs/*.*', 'docs/_images/*.jpg',# 'docs/api/*.*',
                   'docs/_sources/*.*', 'docs/_static/*.*' ]
 
@@ -46,15 +47,10 @@ if __name__=="__main__":
                     'brian.utils',
                         'brian.utils.ccircular',
                         'brian.utils.fastexp',
-                        'brian.utils.sparse',
                         'brian.utils.sparse_patch',
                 ],
-#      package_dir={'brian.utils.ccircular':'brian/utils/ccircular',
-#                   'brian.utils.fastexp':'brian/utils/fastexp'},
       package_data={'brian.utils.ccircular':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat'],
                     'brian.utils.fastexp':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat', '*.c']},
-#      data_files=[('brian/utils/ccircular', ['*.cxx', '*.h', '*.i', '*.cpp', '*.bat']),
-#                  ('brian.utils.fastexp', ['*.cxx', '*.h', '*.i', '*.cpp', '*.bat', '*.c'])],
       requires=['matplotlib(>=0.90.1)',
                 'numpy(>=1.3.0)',
                 'scipy(>=0.7.0)'

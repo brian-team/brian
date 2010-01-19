@@ -257,24 +257,18 @@ def test_coincidencecounter():
     group.R = 1.0*ones(n)
     group.tau = 20*ms*(1+.1*(2*rand(n)-1))
     
-    cc1 = CoincidenceCounter(source = group, data = data, delta = delta)
-    #cc2 = CoincidenceCounterBis(source = group, data = ([-1*second]+train0+[train0[-1]+1*second]), delta = delta)
-    cc2 = CoincidenceCounterBis(source = group, data = ([-1*second]+train0+[duration+1*second]), delta = delta)
+    cc = CoincidenceCounter(source = group, data = ([-1*second]+train0+[duration+1*second]), delta = delta)
     sm = SpikeMonitor(group)
     statem = StateMonitor(group, 'V', record = True)
-    net = Network(group, cc1, cc2, sm, statem)
+    net = Network(group, cc, sm, statem)
     net.run(duration)
     reinit_default_clock()
     
     cpu_voltage = statem.values
     
-    online_coincidences1 = cc1.coincidences
-    online_coincidences2 = cc2.coincidences
-#    online_gamma1 = cc1.gamma
-#    online_gamma2 = cc2.gamma
+    online_coincidences = cc.coincidences
     cpu_spike_count = array([len(sm[i]) for i in range(n)])
     offline_coincidences = array([gamma_factor(sm[i], train0, delta = delta, normalize = False, dt = defaultclock.dt) for i in range(n)])
-#    offline_gamma = array([gamma_factor(sm[i], train0, delta = delta, normalize = True, dt = defaultclock.dt) for i in range(n)])
 
     if use_gpu:
         # Compute gamma factor with GPU
@@ -345,12 +339,8 @@ def test_coincidencecounter():
     print offline_coincidences
     print 
     print "Online"
-    print online_coincidences1
-    print "max error : %.6f" % max(abs(online_coincidences1-offline_coincidences))
-    print
-    print "Online bis"
-    print online_coincidences2
-    print "max error : %.6f" % max(abs(online_coincidences2-offline_coincidences))
+    print online_coincidences
+    print "max error : %.6f" % max(abs(online_coincidences-offline_coincidences))
     if use_gpu:
         print
         print "GPU"
