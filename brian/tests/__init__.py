@@ -1,4 +1,5 @@
 from brian import *
+import brian
 import os
 
 def go():
@@ -6,6 +7,7 @@ def go():
         import nose
     except ImportError:
         print "Brian testing framework uses the 'nose' package."
+    print 'Brian running from file:', brian.__file__
     # For running tests from an IPython shell, use magic_useframes=True, but we
     # restore the state after running 
     magic_useframes = get_global_preference('magic_useframes')
