@@ -62,6 +62,7 @@ class light_worker(object):
         self.delta = shared_data['delta']
         self.includedelays = shared_data['includedelays']
         self.precision = shared_data['precision']
+        self.return_matrix = shared_data['return_matrix']
         if self.precision is None:
             self.precision = default_precision
         if shared_data['use_gpu'] is None or shared_data['use_gpu'] is True:
@@ -103,7 +104,9 @@ class light_worker(object):
         self.X_gbest = [None]*len(groups)
         
         self.optim_prepared = True
-        self.fitness_matrices = [[] for i in range(len(self.groups))]
+        
+        if self.return_matrix:
+            self.fitness_matrices = [[] for i in range(len(self.groups))]
     
     def function_prepare(self, (neurons, I_offset, spiketimes_offset, target_length, target_rates)):
         """
@@ -223,13 +226,15 @@ class light_worker(object):
         # Simulation runs
         fitness = self.simulate(self.X)
         
-        # Record histogram at each iteration, for each group within the worker
-        k = 0
-        for i in range(len(self.groups)):
-            n = self.groups[i][1]
-            (hist, bin_edges) = histogram(fitness[k:k+n], 100, range=(0.0,1.0))
-            self.fitness_matrices[i].append(list(hist))
-            k += n
+        if self.return_matrix:
+            # Record histogram at each iteration, for each group within the worker
+            k = 0
+            for i in range(len(self.groups)):
+                n = self.groups[i][1]
+                (hist, bin_edges) = histogram(fitness[k:k+n], 100, range=(0.0,1.0))
+                self.fitness_matrices[i].append(list(hist))
+                k += n
+                
 #        print "    Fitness: mean %.3f, max %.3f, std %.3f" % (fitness.mean(), fitness.max(), fitness.std())
         
         # Local update
@@ -356,7 +361,7 @@ def optim(D,
         # for all iterations and each subgroup within worker i
         fitness_matrices = manager.process_jobs(['give_me_the_matrix']*num_processes)
         # Here we have to combine the matrices corresponding to one group
-        # but were splitted among several workers
+        # but that were splitted among several workers
         fitness_matrices2 = [zeros((100, iter)) for i in range(group_count)]
         for worker in range(len(worker_size)):
             k = 0
@@ -581,6 +586,7 @@ def modelfitting(model = None, reset = None, threshold = None,
         params = params,
         fp = fp,
         precision = precision,
+        return_matrix = return_matrix
     )
     
     if use_gpu is False:
@@ -682,48 +688,3 @@ def modelfitting_worker(max_gpu=None, max_cpu=None, port=None, named_pipe=None,
     cluster_worker_script(light_worker,
                           max_gpu=max_gpu, max_cpu=max_cpu, port=port,
                           named_pipe=named_pipe, authkey=authkey)
-
-if __name__=='__main__':
-    equations = Equations('''
-        dV/dt=(R*I-V)/tau : 1
-        I : 1
-        R : 1
-        tau : second
-    ''')
-    
-    input = loadtxt('current.txt')
-    spikes0 = loadtxt('spikes.txt')
-    iterations = 10
-    
-    spikes = [(0, spike-.003) for spike in spikes0]
-    spikes.extend([(1, spike+.003) for spike in spikes0])
-
-    machines = [
-                #'Cyrille-Ulm',
-                #'Romain-PC',
-                #'Astrance',
-                ]
-    
-    t1 = time.clock()
-    best_params, best_values, mean_iter_time = modelfitting(model = equations, reset = 0, threshold = 1,
-                                 machines = machines,
-                                 named_pipe = True,
-                                 data = spikes, 
-                                 input = input, dt = .1*ms,
-                                 use_gpu = None, max_cpu = None, max_gpu = None,
-                                 #precision = 'float',
-                                 return_time = True,
-                                 particles = 4000, iterations = iterations, delta = 1*ms,
-                                 R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
-    total_time = time.clock()-t1
-    
-    print "Model fitting terminated, total duration %.3f seconds" % total_time
-    print
-    print "Best parameters"
-    print best_params
-    print
-    print "Best values"
-    print best_values
-    print
-    print "Mean iteration time : %.3f seconds" % mean_iter_time
-    
