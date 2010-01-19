@@ -27,7 +27,7 @@ if __name__=='__main__':
                                  named_pipe = True,
                                  return_time = True,
                                  stepsize = 50*ms,
-                                 particles = 400000, iterations = 10, delta = 2*ms,
+                                 particles = 20000, iterations = 3, delta = 2*ms,
                                  R = [1.0e9, 1.0e9, 1.0e10, 1.0e10],
                                  tau = [1*ms, 1*ms, 50*ms, 50*ms])
     
