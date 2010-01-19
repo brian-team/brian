@@ -127,7 +127,15 @@ version of Brian (which is used in preference to the SVN version).
 Upload to Trac
 --------------
 
-Create a new release and upload all the files (TODO: how to do this).
+Go to our Trac page:
+
+	https://neuralensemble.org/trac/brian/wiki
+	
+Login, go to Admin, click on Downloader. Create a new release under
+Official Releases with the version number as the name of the release.
+Make sure the order is right (I guess it does this automatically). Select
+the release and upload each file as in the examples already there. Make sure
+to edit the Download page on the Trac Wiki to point to the new release.
 
 Upload to PyPI
 --------------
