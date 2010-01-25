@@ -656,8 +656,8 @@ class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
     :class:`DenseConnectionVector`` objects.
     '''
     def __new__(subtype, data, **kwds):
-        #if 'copy' not in kwds:
-        #    kwds['copy'] = False
+        if 'copy' not in kwds:
+            kwds['copy'] = False
         return numpy.array(data, **kwds).view(subtype)
 
     def __init__(self, val, **kwds):
