@@ -15,7 +15,7 @@ try:
 except ImportError:
     have_scikits_samplerate = False
 
-__all__ = ['Sound', 'play_stereo_sound',
+__all__ = ['Sound', 'play_stereo_sound', 'play_sound',
            'whitenoise', 'tone', 'click', 'silent', 'sequence','mix_sounds']
 
 class Sound(numpy.ndarray):
