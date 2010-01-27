@@ -622,6 +622,9 @@ class Equations(object):
                 self.apply(var,self._units)+(self._units[var]/second) # Check that the two terms have the same dimension
         except DimensionMismatchError,inst:
             raise DimensionMismatchError("The differential equation of "+var+" is not homogeneous",*inst._dims)
+        except:
+            warnings.warn("Unexpected exception in checking units of "+var)
+            raise
 
     def compile_functions(self,freeze=False):
         """
