@@ -105,9 +105,12 @@ class STDP(NetworkOperation):
     ``post``
         Python code for postsynaptic spikes, use the reserved symbol ``w`` to
         refer to the synaptic weight.
+    ``wmin``
+        Minimum weight (default 0), weights are restricted to be within this
+        value and wmax.
     ``wmax``
         Maximum weight (default unlimited), weights are restricted to be within
-        0 and this value.
+        wmin and this value.
     ``delay_pre``
         Presynaptic delay
     ``delay_post``
@@ -155,7 +158,7 @@ class STDP(NetworkOperation):
     '''
     #TODO: use equations instead of linearupdater (-> nonlinear equations possible)
     #TODO: allow pre and postsynaptic group variables
-    def __init__(self,C,eqs,pre,post,wmax=Inf,level=0,clock=None,delay_pre=None,delay_post=None):
+    def __init__(self,C,eqs,pre,post,wmin=0,wmax=Inf,level=0,clock=None,delay_pre=None,delay_post=None):
         '''
         C: connection object
         eqs: differential equations (with units)
@@ -257,7 +260,7 @@ class STDP(NetworkOperation):
                     else:
                         outcode_immediate += '    '+line+'\n'
                 outcode_delayed = re.sub(r'\bw\b', wreplacement, outcode_delayed)
-                outcode_delayed += '\n    %(w)s = clip(%(w)s, 0, %(max)f)' % {'max':wmax, 'w':wreplacement}
+                outcode_delayed += '\n    %(w)s = clip(%(w)s, %(min)f, %(max)f)' % {'min':wmin, 'max':wmax, 'w':wreplacement}
                 return (outcode_immediate, outcode_delayed)
 
             
@@ -330,8 +333,8 @@ class STDP(NetworkOperation):
             
             # Bounds: add one line to pre/post code (clip(w,min,max,w))
             # or actual code? (rather than compiled string)
-            pre+='\n    w[_i,:]=clip(w[_i,:],0,%(max)f)' % {'max':wmax}
-            post+='\n    w[:,_i]=clip(w[:,_i],0,%(max)f)' % {'max':wmax}
+            pre+='\n    w[_i,:]=clip(w[_i,:],%(min)f,%(max)f)' % {'min':wmin, 'max':wmax}
+            post+='\n    w[:,_i]=clip(w[:,_i],%(min)f,%(max)f)' % {'min':wmin, 'max':wmax}
             pre_namespace['clip']=clip
             post_namespace['clip']=clip
             
@@ -443,7 +446,10 @@ class ExponentialSTDP(STDP):
       * 'nearest': only nearest-neighbour pairs are considered
       * 'nearest_pre': nearest presynaptic spike, all postsynaptic spikes
       * 'nearest_post': nearest postsynaptic spike, all presynaptic spikes
-          
+    
+    ``wmin=0``
+        minimum synaptic weight
+        
     ``wmax``
         maximum synaptic weight
         
@@ -456,7 +462,7 @@ class ExponentialSTDP(STDP):
     
     See documentation for :class:`STDP` for more details.
     '''
-    def __init__(self,C,taup,taum,Ap,Am,interactions='all',wmax=None,
+    def __init__(self,C,taup,taum,Ap,Am,interactions='all',wmin=0,wmax=None,
                  update='additive',delay_pre=None,delay_post=None,clock=None):
         if wmax is None:
             raise AttributeError,"You must specify the maximum synaptic weight"
@@ -510,7 +516,7 @@ class ExponentialSTDP(STDP):
                     raise AttributeError,"There is no potentiation in STDP rule"
         else:
             raise AttributeError,"Unknown update type "+update
-        STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,wmax=wmax,delay_pre=delay_pre,delay_post=delay_post,clock=clock)
+        STDP.__init__(self,C,eqs=eqs,pre=pre,post=post,wmin=wmin,wmax=wmax,delay_pre=delay_pre,delay_post=delay_post,clock=clock)
 
 # TODO: insert it in Equations, as a method returning an Equations object
 # for a given list of variables, with dependent variables

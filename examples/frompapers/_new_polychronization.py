@@ -2,12 +2,8 @@
 Polychronization: Computation with Spikes
 Eugene M. Izhikevich
 Neural Computation, 2006
-
-Note that this version doesn't reproduce Izhikevich's figures from the paper,
-which is probably due to the fact that he uses a different STDP rule from the
-one below. A future version of this example will be released which reproduces
-Izhikevich's STDP rule.
 '''
+import brian_no_units_no_warnings
 from brian import *
 import random
 
@@ -51,12 +47,17 @@ threshold = 30*mV
 
 G = NeuronGroup(N, eqs, threshold=threshold, reset=reset)
 
-# Izhikevich's numerical integration scheme
-def Izhikevich_scheme(G):
-    G.v += 0.5*dt*((0.04/ms/mV)*G.v**2+(5/ms)*G.v+140*mV/ms-G.u+G.I)
-    G.v += 0.5*dt*((0.04/ms/mV)*G.v**2+(5/ms)*G.v+140*mV/ms-G.u+G.I)
-    G.u += dt*G.a*(b*G.v-G.u)
-G._state_updater = Izhikevich_scheme
+def make_Izhikevich_scheme():
+    c1 = 0.04/ms/mV
+    c2 = 5/ms
+    c3 = 140*mV/ms
+    # Izhikevich's numerical integration scheme
+    def Izhikevich_scheme(G):
+        G.v += (0.5*dt)*(c1*G.v**2+c2*G.v+c3-G.u+G.I)
+        G.v += (0.5*dt)*(c1*G.v**2+c2*G.v+c3-G.u+G.I)
+        G.u += dt*G.a*(b*G.v-G.u)
+    return Izhikevich_scheme
+G._state_updater = make_Izhikevich_scheme()
 
 Ge = G.subgroup(Ne)
 Gi = G.subgroup(Ni)
@@ -71,7 +72,7 @@ Gi.d = d_i
 thalamic_clock = defaultclock#EventClock(dt=1*ms)
 @network_operation(clock=thalamic_clock, when='before_connections')
 def thalamic_input():
-    G.I = 0*mV/ms
+    G.I = 0#*mV/ms
     G.I[randint(N)] = float(thalamic_input_weight)
 
 Ce = Connection(Ge, G, 'I', delay=True, max_delay=D)
@@ -85,17 +86,30 @@ for i in xrange(Ni):
     inds = random.sample(xrange(Ne), M)
     Ci[i, inds] = s_i*ones(len(inds))
 
-# Simplified version of Izhikevich's rule 
-#stdp = ExponentialSTDP(Ce, taup=20*ms, taum=20*ms, Ap=0.1, Am=-0.12,
-#                       wmax=sm, interactions='nearest')
+Ce_deriv = Connection(Ge, G, 'I', delay=True, max_delay=D)
+for i in xrange(Ne):
+    Ce_deriv[i, :] = Ce[i, :]
+    Ce_deriv.delay[i, :] = Ce.delay[i, :]
+forget(Ce_deriv)
 
-# TODO: something like this might better model the rate of STDP in Izhikevich
-# Ap and Am should be *9.5 ?
-stdp = ExponentialSTDP(Ce, taup=20*ms, taum=20*ms, Ap=(0.1*mV/ms/sm), Am=(-0.12*mV/ms/sm),
-                       wmax=sm, interactions='nearest')
+artifical_wmax = 1e10*mV/ms
+stdp = ExponentialSTDP(Ce_deriv,
+                       taup=20*ms, taum=20*ms,
+                       Ap=(0.1*mV/ms/artificial_wmax),
+                       Am=(-0.12*mV/ms/artificial_wmax),
+                       wmin=-artificial_wmax,
+                       wmax=artificial_wmax,
+                       interactions='nearest'
+                       )
+
+Ce_deriv.compress()
+Ce_deriv.W.alldata[:] = 0
+weight_derivative_const = 0.01*mV/ms
 @network_operation(clock=EventClock(dt=1*second))
-def f():
-    Ce.W.alldata[:] = clip(Ce.W.alldata[:]+0.01*mV/ms, 0, sm)
+def update_weights_from_derivative():
+    Ce.W.alldata[:] = clip(Ce.W.alldata+weight_derivative_const+Ce_deriv.W.alldata,
+                           0, sm)
+    Ce_deriv.W.alldata[:] *= 0.9
 
 M = SpikeMonitor(G)
 
