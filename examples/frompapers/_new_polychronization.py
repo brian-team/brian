@@ -90,6 +90,7 @@ for i in xrange(Ni):
 #                       wmax=sm, interactions='nearest')
 
 # TODO: something like this might better model the rate of STDP in Izhikevich
+# Ap and Am should be *9.5 ?
 stdp = ExponentialSTDP(Ce, taup=20*ms, taum=20*ms, Ap=(0.1*mV/ms/sm), Am=(-0.12*mV/ms/sm),
                        wmax=sm, interactions='nearest')
 @network_operation(clock=EventClock(dt=1*second))
