@@ -2,6 +2,15 @@
 Polychronization: Computation with Spikes
 Eugene M. Izhikevich
 Neural Computation, 2006
+
+See Izhikevich_2006_Polychronization.py for an explanation of this code.
+
+In this version, we use various tricks to make the simulation much faster,
+including inline C++ code. We also save the progress as the simulation runs,
+and analyse it at the end for polychronous groups.
+
+Note that you will need to create two folders data and imgs to run this
+script.
 '''
 import brian_no_units_no_warnings
 from brian import *
@@ -177,7 +186,7 @@ def plot_recent_output():
     M.reinit()
     print 'Plotted up to time', s
 
-@network_operation(clock=EventClock(dt=10*second, t=defaultclock.t+10*second))
+@network_operation(clock=EventClock(dt=100*second, t=defaultclock.t+100*second))
 def save_progress():
     s = str(int((defaultclock.t+.5*ms)/second))
     imported_data['G._S'] = G._S
