@@ -10,7 +10,7 @@ from scipy import weave
 import cPickle as pickle
 
 try:
-    imported_data = pickle.load(open('izhikevich.pickle', 'rb'))
+    imported_data = pickle.load(open('data/izhikevich.pickle', 'rb'))
     defaultclock.t = imported_data['t']
     print 'Starting from saved progress at time', defaultclock.t
 except IOError:
@@ -173,6 +173,7 @@ def plot_recent_output():
     emin = min((edges>1./100).nonzero()[0])
     plot(1/edges[emin:], ac[emin:])    
     gcf().savefig('imgs/iz'+s+'.png')
+    pickle.dump(M.spikes, open('data/iz_spikes'+s+'.pickle', 'wb'), -1)
     M.reinit()
     print 'Plotted up to time', s
 
@@ -181,7 +182,6 @@ def save_progress():
     s = str(int((defaultclock.t+.5*ms)/second))
     imported_data['G._S'] = G._S
     imported_data['t'] = defaultclock.t
-    imported_data['spikes'] = M.spikes
     exc_inds = [Ce.W[i, :].ind for i in range(Ne)]
     exc_weights = [asarray(Ce.W[i, :]) for i in range(Ne)]
     exc_delays = [asarray(Ce.delay[i, :]) for i in range(Ne)]
@@ -192,7 +192,7 @@ def save_progress():
     imported_data['exc_delays'] = exc_delays
     imported_data['inh_inds'] = inh_inds
     imported_data['inh_weights'] = inh_weights
-    pickle.dump(imported_data, open('izhikevich.pickle', 'wb'), -1)
+    pickle.dump(imported_data, open('data/izhikevich.pickle', 'wb'), -1)
     print 'Saved progress up to time', s
 
 run(3600*second-defaultclock.t, report='stderr')
