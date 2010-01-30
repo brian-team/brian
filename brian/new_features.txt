@@ -2,6 +2,7 @@ New features since 1.2.0
 ------------------------
 
 * Added 'wmin' to STDP
+* Bugfix: sparse matrices with some versions of scipy
 
 New features since 1.1.3
 ------------------------
