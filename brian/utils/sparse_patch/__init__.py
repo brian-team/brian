@@ -24,7 +24,7 @@ if scipy.__version__ in table:
     modulename = table[scipy.__version__]
 else:
     for i in xrange(1, len(scipy.__version__)):
-        v = scipy.__version__[:-k]
+        v = scipy.__version__[:-i]
         if v in table:
             modulename = table[v]
             break
