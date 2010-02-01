@@ -20,6 +20,7 @@ from itertools import izip
 from numpy import arange, floor
 from clock import Clock
 from units import second
+from utils.separate_equations import separate_equations
 
 __all__=['STDP','ExponentialSTDP']
 
@@ -135,8 +136,8 @@ class STDP(NetworkOperation):
     There is one restriction on the equations that can be implemented in this
     system, they need to be separable into independent pre- and post-synaptic
     systems (this is done automatically). In this way, synaptic variables and
-    updates can be stored per neuron rather than per synapse. 
-    
+    updates can be stored per neuron rather than per synapse.
+        
     **Example**
     
     ::
@@ -147,6 +148,28 @@ class STDP(NetworkOperation):
         """
         stdp = STDP(synapses, eqs=eqs_stdp, pre='A_pre+=delta_A_pre; w+=A_post',
                     post='A_post+=delta_A_post; w+=A_pre', wmax=gmax)
+
+    **STDP variables**
+    
+    You can access the pre- and post-synaptic variables as follows::
+    
+        stdp = STDP(...)
+        print stdp.A_pre
+    
+    Alternatively, you can access the group of pre/post-synaptic variables
+    as::
+    
+        stdp.pre_group
+        stdp.post_group
+    
+    These latter attributes can be passed to a :class:`StateMonitor` to
+    record their activity, for example. However, note that in the case of
+    STDP acting on a connection with heterogeneous delays, the recent values
+    of these variables are automatically monitored and these can be
+    accesses as follows::
+    
+        stdp.G_pre_monitors['A_pre']
+        stdp.G_post_monitors['A_post']
     
     **Technical details**
     
@@ -195,8 +218,8 @@ class STDP(NetworkOperation):
         eqs_obj.compile_functions()
         eqs_obj.check_units()
         # Check that equations are linear
-        if not eqs_obj.is_linear():
-            raise Exception,"Only linear differential equations are handled"
+#        if not eqs_obj.is_linear():
+#            raise Exception,"Only linear differential equations are handled"
         # Get variable names
         vars=eqs_obj._diffeq_names
         # Find which ones are directly modified (e.g. regular expression matching; careful with comments)
@@ -206,20 +229,31 @@ class STDP(NetworkOperation):
         # Additional check TODO: modification of presynaptic variables should not depend on postsynaptic
         #   variables
         
-        # Get the matrix of the differential system
-        M,_=get_linear_equations(eqs_obj)
-        D=dependency_matrix(M)
+#        # Get the matrix of the differential system
+        #M,_=get_linear_equations(eqs_obj)
+#        D=dependency_matrix(M)
+#        
+#        # Collect dependent variables
+#        dependent_pre=zeros(M.shape[0])
+#        dependent_post=zeros(M.shape[0])
+#        for i,var in enumerate(vars):
+#            if var in vars_pre:
+#                dependent_pre+=D[i,:]
+#            elif var in vars_post:
+#                dependent_post+=D[i,:]
+#        index_pre=(dependent_pre>0).nonzero()[0]
+#        index_post=(dependent_post>0).nonzero()[0]
+        separated_equations = separate_equations(eqs_obj)
+        if not len(separated_equations)==2:
+            raise ValueError('Equations should separate into pre and postsynaptic variables.')
+        sep_pre, sep_post = separated_equations
+        for v in vars_pre:
+            if v in sep_post._diffeq_names:
+                sep_pre, sep_post = sep_post, sep_pre
+                break
+        index_pre = [i for i in range(len(vars)) if vars[i] in vars_pre or vars[i] in sep_pre._diffeq_names]
+        index_post = [i for i in range(len(vars)) if vars[i] in vars_post or vars[i] in sep_post._diffeq_names]
         
-        # Collect dependent variables
-        dependent_pre=zeros(M.shape[0])
-        dependent_post=zeros(M.shape[0])
-        for i,var in enumerate(vars):
-            if var in vars_pre:
-                dependent_pre+=D[i,:]
-            elif var in vars_post:
-                dependent_post+=D[i,:]
-        index_pre=(dependent_pre>0).nonzero()[0]
-        index_post=(dependent_post>0).nonzero()[0]
         vars_pre=array(vars)[index_pre]
         vars_post=array(vars)[index_post]
         
@@ -229,8 +263,8 @@ class STDP(NetworkOperation):
             raise Exception,str(list(shared_vars))+" are both presynaptic and postsynaptic!"
         
         # Split the matrix M
-        M_pre=M[index_pre,:][:,index_pre]
-        M_post=M[index_post,:][:,index_post]
+        #M_pre=M[index_pre,:][:,index_pre]
+        #M_post=M[index_post,:][:,index_post]
         
         # Create namespaces for pre and post codes
         pre_namespace=namespace(pre,level=level+1)
@@ -398,10 +432,20 @@ class STDP(NetworkOperation):
             self.contained_objects += [pre_updater, post_updater]
         
         # Neuron groups
-        G_pre=NeuronGroup(len(C.source),model=LinearStateUpdater(M_pre,clock=self.clock),clock=self.clock)
-        G_post=NeuronGroup(len(C.target),model=LinearStateUpdater(M_post,clock=self.clock),clock=self.clock)
+#        G_pre=NeuronGroup(len(C.source),model=LinearStateUpdater(M_pre,clock=self.clock),clock=self.clock)
+#        G_post=NeuronGroup(len(C.target),model=LinearStateUpdater(M_post,clock=self.clock),clock=self.clock)
+        G_pre=NeuronGroup(len(C.source),model=sep_pre,clock=self.clock)
+        G_post=NeuronGroup(len(C.target),model=sep_post,clock=self.clock)
         G_pre._S[:]=0
         G_post._S[:]=0
+        self.pre_group = G_pre
+        self.post_group = G_post
+        var_group = {}
+        for i, v in enumerate(vars_pre):
+            var_group[v] = G_pre
+        for i, v in enumerate(vars_post):
+            var_group[v] = G_post
+        self.var_group = var_group
         
         # Put variables in namespaces
         vars_pre_ind = {}
@@ -428,6 +472,24 @@ class STDP(NetworkOperation):
     
     def __call__(self):
         pass
+    
+    def __getattr__(self, name):
+        if name=='var_group':
+            # this seems mad - the reason is that getattr is only called if the thing hasn't
+            # been found using the standard methods of finding attributes, which for var_index
+            # should have worked, this is important because the next line looks for var_index
+            # and if we haven't got a var_index we don't want to get stuck in an infinite
+            # loop
+            raise AttributeError  
+        if not hasattr(self, 'var_group'):
+            # only provide lookup of variable names if we have some variable names, i.e.
+            # if the var_index attribute exists
+            raise AttributeError
+        G = self.var_group[name]
+        return G.state_(name)
+        #i = self.var_index[name]
+        #return G.state_(i)
+        
 
 class ExponentialSTDP(STDP):
     '''

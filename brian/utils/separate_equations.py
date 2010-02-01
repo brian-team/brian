@@ -13,9 +13,15 @@ subgraphs which are allowed to have incoming edges but no outgoing edges,
 construct solvers for them, and then construct a compound solver for the rest.
 '''
 
-from brian import *
-from brian.inspection import *
+if __name__=='__main__':
+    from brian.equations import *
+    from brian.inspection import *
+else:
+    from ..equations import *
+    from ..inspection import *
 from collections import defaultdict
+
+__all__ = ['separate_equations']
 
 def next_independent_subgraph(G):
     '''
@@ -118,6 +124,7 @@ def separate_equations(eqs):
     return ind_eqs
 
 if __name__=='__main__':
+    from brian import *
 #    T = second
 #    eqs = Equations('''
 #    da/dt = y/T : 1

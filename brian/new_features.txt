@@ -3,6 +3,9 @@ New features since 1.2.0
 
 * Added 'wmin' to STDP
 * Bugfix: sparse matrices with some versions of scipy
+* You can now access STDP internal variables, e.g. stdp.A_pre, and monitor
+  them by doing e.g. StateMonitor(stdp.pre_group, 'A_pre')
+* STDP now supports nonlinear equations and parameters
 
 New features since 1.1.3
 ------------------------
