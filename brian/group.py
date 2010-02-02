@@ -84,9 +84,6 @@ class Group(object):
             origname = name[:-1]
         if not hasattr(self,'var_index') or (name not in self.var_index and origname not in self.var_index):
             object.__setattr__(self, name, val)
-            if not hasattr(self, '_setattrcount'):
-                object.__setattr__(self, '_setattrcount',0)
-            object.__setattr__(self, '_setattrcount', self._setattrcount+1)
         else:
             if name in self.var_index:
                 self.state(name)[:]=val
@@ -140,9 +137,6 @@ class MultiGroup(object):
             origname = name[:-1]
         if not hasattr(self,'var_index') or (name not in self.var_index and origname not in self.var_index):
             object.__setattr__(self, name, val)
-            if not hasattr(self, '_setattrcount'):
-                object.__setattr__(self, '_setattrcount',0)
-            object.__setattr__(self, '_setattrcount', self._setattrcount+1)
         else:
             if name in self.var_index:
                 self.state(name)[:] = val

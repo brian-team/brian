@@ -487,8 +487,13 @@ class STDP(NetworkOperation):
             raise AttributeError
         G = self.var_group[name]
         return G.state_(name)
-        #i = self.var_index[name]
-        #return G.state_(i)
+
+    def __setattr__(self, name, val):
+        if not hasattr(self, 'var_group') or name not in self.var_group:
+            object.__setattr__(self, name, val)
+        else:
+            G = self.var_group[name]
+            G.state_(name)[:] = val
         
 
 class ExponentialSTDP(STDP):
