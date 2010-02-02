@@ -82,7 +82,7 @@ def select_threshold(expr, eqs, level=0):
     expr = expr.strip()
     eqs.prepare()
     ns = namespace(expr, level=level+1)
-    s = re.search(r'\s*(\w+)\s*>=?(.+)', expr)
+    s = re.search(r'^\s*(\w+)\s*>=?(.+)', expr)
     if not s:
         return StringThreshold(expr, level=level+1)
     A = s.group(1)
