@@ -1,0 +1,48 @@
+class manager
+    workers.init()
+    for :
+        local_states = workers.iterate(global_state) # global_state = None at first
+        global_state = combine_local_states(local_states)
+    workers.terminate()
+    return global_state, terminated
+
+class worker
+    init(base_info, optim_info, sim_info)
+        optim_init()
+        sim_init()
+        optim_prepare()
+        sim_prepare()
+        
+    iterate(global_state)
+        local_state = optim.iterate(global_state)
+        return local_state
+        
+    terminate()
+
+class optim
+    init(optim_info) # optim_info['fun'] = sim.run()
+    
+    optim_prepare()
+    
+    iterate(global_state)
+        ...
+        fitness = self.fun(sim_params) # sim_params : DxN matrix
+        ...
+        return local_state
+        
+    terminate()
+
+class sim
+    init(sim_info)
+    
+    sim_prepare()
+    
+    sim_run(sim_params)
+        return sim_results
+        
+    terminate()
+
+
+optimization-specific:
+    * optim class
+    * combine_local_states() function
