@@ -2,13 +2,13 @@ Brianhears
 ===========
 Brianhears is an auditory library for Brian.
 
-Example
-=======
+Example 1
+=========
 sound = Sound('filename.wav')
 defaultclock.dt = 1/sound.samplerate 
-#fb = GammatoneFilterbank(erbspace(20*Hz, 20*kHz, 3000), samplerate=sound.samplerate, order=4, ...)
+fb = GammatoneFilterbank(erbspace(20*Hz, 20*kHz, 3000), samplerate=sound.samplerate, order=4, ...)
 #G = FilterbankGroup(fb,sound)
-G = GammatoneGroup(erbspace(20*Hz, 20*kHz, 3000), sound=sound, order=4, ...)
+#G = GammatoneGroup(erbspace(20*Hz, 20*kHz, 3000), sound=sound, order=4, ...)
 
 neurons=NeuronGroup(len(G),model='''dv/dt=(I-v)/(5*ms):1
                                     I:1''',...)
@@ -18,6 +18,27 @@ run(1*second)
 G.load_sound(sound2) # G.load(sound2) ?
 # G.input=sound2 ?
 run(1*second)
+
+Example 2
+=========
+sound = Sound('filename.wav')
+defaultclock.dt = 1/sound.samplerate 
+# Middle ear filtering (maybe on CPU; GPU: FFT-based?)
+filtered1 = Filter(sound)
+filtered2 = Filter(filtered1)
+# Filter banks
+fb = GammatoneFilterbank(erbspace(20*Hz, 20*kHz, 3000), samplerate=sound.samplerate, order=4, sound=filtered2)
+fb2 = SomeOtherFilterbank(erbspace(20*Hz, 20*kHz, 3000), samplerate=sound.samplerate, order=4, sound=fb)
+# Second pathway
+fb3 = GammatoneFilterbank(erbspace(20*Hz, 20*kHz, 3000), samplerate=sound.samplerate, order=4, sound=filtered2)
+fb4 = Compression(N=3000,args=...,sound=fb3)
+# Addition
+output = Addition(fb2,fb4) # fb2+fb4
+G = FilterbankGroup(output, sound) # gathers all code
+
+soundproducer = SoundProducer(sound)
+gammatone = Gammatone(soundproducer)
+spikes = Spikes(gammatone)
 
 Linked variables
 ----------------
