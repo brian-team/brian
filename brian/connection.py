@@ -1373,9 +1373,9 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                                 {
                                     PyObject* _rowind = rowinds[j];
                                     PyArrayObject* _row = convert_to_numpy(_rowind, "row");
-                                    conversion_numpy_check_type(_row, PyArray_INT, "row");
+                                    conversion_numpy_check_type(_row, PyArray_LONG, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
-                                    blitz::Array<int,1> row = convert_to_blitz<int,1>(_row,"row");
+                                    blitz::Array<long,1> row = convert_to_blitz<long,1>(_row,"row");
                                     PyObject* _datasj = datas[j];
                                     PyArrayObject* _data = convert_to_numpy(_datasj, "data");
                                     conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
@@ -1403,9 +1403,9 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                                 {
                                     PyObject* _rowind = rowinds[j];
                                     PyArrayObject* _row = convert_to_numpy(_rowind, "row");
-                                    conversion_numpy_check_type(_row, PyArray_INT, "row");
+                                    conversion_numpy_check_type(_row, PyArray_LONG, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
-                                    blitz::Array<int,1> row = convert_to_blitz<int,1>(_row,"row");
+                                    blitz::Array<long,1> row = convert_to_blitz<long,1>(_row,"row");
                                     PyObject* _datasj = datas[j];
                                     PyArrayObject* _data = convert_to_numpy(_datasj, "data");
                                     conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
@@ -1769,9 +1769,9 @@ class DelayConnection(Connection):
                                 {
                                     PyObject* _rowind = rowinds[j];
                                     PyArrayObject* _row = convert_to_numpy(_rowind, "row");
-                                    conversion_numpy_check_type(_row, PyArray_INT, "row");
+                                    conversion_numpy_check_type(_row, PyArray_LONG, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
-                                    blitz::Array<int,1> row = convert_to_blitz<int,1>(_row,"row");
+                                    blitz::Array<long,1> row = convert_to_blitz<long,1>(_row,"row");
                                     PyObject* _datasj = datas[j];
                                     PyArrayObject* _data = convert_to_numpy(_datasj, "data");
                                     conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
@@ -1785,7 +1785,7 @@ class DelayConnection(Connection):
                                     int m = row.numElements();
                                     for(int k=0;k<m;k++)
                                     {
-                                        dr((cdi+(int)(idt*dvecrow(k)))%md, row(k)) += data(k);
+                                        dr((cdi+(int)(idt*dvecrow(k)))%md, (int)row(k)) += data(k);
                                     }
                                     Py_DECREF(_rowind);
                                     Py_DECREF(_datasj);
@@ -1809,9 +1809,9 @@ class DelayConnection(Connection):
                                 {
                                     PyObject* _rowind = rowinds[j];
                                     PyArrayObject* _row = convert_to_numpy(_rowind, "row");
-                                    conversion_numpy_check_type(_row, PyArray_INT, "row");
+                                    conversion_numpy_check_type(_row, PyArray_LONG, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
-                                    blitz::Array<int,1> row = convert_to_blitz<int,1>(_row,"row");
+                                    blitz::Array<long,1> row = convert_to_blitz<long,1>(_row,"row");
                                     PyObject* _datasj = datas[j];
                                     PyArrayObject* _data = convert_to_numpy(_datasj, "data");
                                     conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
@@ -1826,7 +1826,7 @@ class DelayConnection(Connection):
                                     double mod = sv_pre(spikes(j));
                                     for(int k=0;k<m;k++)
                                     {
-                                        dr((cdi+(int)(idt*dvecrow(k)))%md, row(k)) += data(k)*mod;
+                                        dr((cdi+(int)(idt*dvecrow(k)))%md, (int)row(k)) += data(k)*mod;
                                     }
                                     Py_DECREF(_rowind);
                                     Py_DECREF(_datasj);
