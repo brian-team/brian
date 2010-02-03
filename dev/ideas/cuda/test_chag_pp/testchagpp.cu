@@ -1,5 +1,8 @@
-#include "testchagpp.h"
 #include <chag/pp/compact.cuh>
+
+extern "C" {
+
+#include "testchagpp.h"
 namespace pp = chag::pp;
 
 struct Predicate
@@ -24,4 +27,6 @@ void find_positive(
 	    (size_t *)count_start,            /* Storage for valid element count */
 	    Predicate()             /* Predicate */
 	    );
+}
+
 }

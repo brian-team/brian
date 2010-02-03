@@ -11,7 +11,7 @@ numpy_include_dir = os.path.join(numpy_base_dir, 'core/include')
 
 testchagpp_module = Extension('_testchagpp',
                            sources=['testchagpp_wrap.cxx',
-                                    'testchagpp.cpp',
+                                    'testchagpp.cu',
                                     ],
                            include_dirs=[numpy_include_dir],
                            extra_compile_args=['-O3']

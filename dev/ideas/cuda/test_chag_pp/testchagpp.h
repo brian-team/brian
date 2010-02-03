@@ -1,6 +1,7 @@
 #ifndef _TEST_CHAG_PP
 #define _TEST_CHAG_PP
 
+__declspec(dllexport)
 void find_positive(
 		int x_gpu_start,
 		int x_gpu_end,

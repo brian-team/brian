@@ -1,0 +1,16 @@
+Some bookmarks:
+
+http://courses.ece.illinois.edu/ece498/al/textbook/Chapter5-CudaPerformance.pdf
+http://www.google.fr/search?q=gpu+gather+scatter&btnG=Search&hl=en&client=firefox-a&rls=org.mozilla%3Aen-GB%3Aofficial&sa=2
+http://delivery.acm.org/10.1145/1570000/1564500/a1_4-cederman.pdf?key1=1564500&key2=3041514521&coll=ACM&dl=ACM&CFID=15151515&CFTOKEN=6184618
+http://www.control.isy.liu.se/~fredrik/reports/07eusipcoGPU.pdf
+http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter36.html
+http://gpgpu.org/tag/parallel-algorithms
+http://mgarland.org/files/papers/nvr-2008-003.pdf
+http://graphics.idav.ucdavis.edu/publications/print_pub?pub_id=894
+http://gpgpu.org/developer/cudpp
+http://en.wikipedia.org/wiki/Prefix_sum
+http://developer.download.nvidia.com/compute/cuda/sdk/website/projects/scan/doc/scan.pdf
+http://graphics.idav.ucdavis.edu/publications/print_pub?pub_id=915
+http://www.cse.chalmers.se/~uffe/streamcompaction.pdf
+http://www.cse.chalmers.se/~billeter/pub/pp/
