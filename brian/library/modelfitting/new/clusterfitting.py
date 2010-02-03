@@ -5,6 +5,22 @@ from brian.library.modelfitting.clustertools import *
 from brian.library.modelfitting.cluster_splitting import *
 from brian.library.modelfitting.fittingparameters import *
 
+class VPObject:
+    """
+    Allows to call an attribute with obj.attr instead of obj.data['attr']
+    """
+    def __init__(self, attributes):
+        self._attributes = attributes
+    
+    def add_attributes(self, attributes):
+        self._attributes.update(attributes)
+    
+    def __getattr__(self, item):
+        try:
+            return self._attributes[item]
+        except KeyError:
+            raise AttributeError(item)
+
 class FittingManager:
     def __init__(self, fitting_info, optim_info, sim_info):
         #workers.init(base_info, optim_info, sim_info)
@@ -19,8 +35,6 @@ class FittingManager:
         
         optim_info = 
             pso_params
-            fittingparameters   # needed for optimization (convert matrix of values 
-                                # to dictionary of parameter values)
         
         sim_info = 
             model
@@ -37,6 +51,8 @@ class FittingManager:
             delta
             includedelays
             precision
+            fittingparameters   # needed for optimization (convert matrix of values 
+                                # to dictionary of parameter values)
         
         
         
@@ -48,8 +64,8 @@ class FittingManager:
                                   of particles in the subgroup 'group'
         
         sim_info =
-            neurons # number of neurons within the worker
-            I_offset # may be constructed by the worker (time slicing only within workers?)
+            neurons             # number of neurons within the worker
+            I_offset            # may be constructed by the worker (time slicing only within workers?)
             spiketimes_offset
             target_length
             target_rates
@@ -59,7 +75,7 @@ class FittingManager:
         NOT SHARED, NOT PERMANENT
         
         sim_info =
-            param_values # dictionnary with parameter values to use for the current optim iteration
+            param_values        # dictionary with parameter values to use for the current optim iteration
         
         '''
 
@@ -94,7 +110,7 @@ class FittingManager:
         workers.terminate()
         return global_state, terminated
 
-class FittingWorker:
+class FittingWorker(VPObject):
     def __init__(self, shared_data, use_gpu):
         self.prepared = False
         pass
