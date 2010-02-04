@@ -14,11 +14,11 @@ construct solvers for them, and then construct a compound solver for the rest.
 '''
 
 if __name__=='__main__':
-    from brian.equations import *
-    from brian.inspection import *
+    from brian.equations import Equations 
+    from brian.inspection import get_identifiers
 else:
-    from ..equations import *
-    from ..inspection import *
+    from ..equations import Equations
+    from ..inspection import get_identifiers
 from collections import defaultdict
 
 __all__ = ['separate_equations']
