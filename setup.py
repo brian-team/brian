@@ -20,15 +20,15 @@ support and extension packages.
 
 # the create_extras.py script will automatically generate an extras files
 # containing the following files
-extras_folders = ['tutorials/tutorial1_basic_concepts/*.py',
-                  'tutorials/tutorial2_connections/*.py',
+extras_folders = ['tutorials/tutorial1_basic_concepts/*.py', 'tutorials/tutorial1_basic_concepts/*.txt',
+                  'tutorials/tutorial2_connections/*.py', 'tutorials/tutorial2_connections/*.txt',
                   'examples/*.py', 'examples/*.txt', 'examples/audition/*.py',
                   'examples/electrophysiology/*.py', 'examples/frompapers/*.py',
                   'examples/interface/*.*', 'examples/plasticity/*.py',
-                  'examples/misc/*.py', 'examples/audition/*.py',
+                  'examples/misc/*.py',
                   'examples/multiprocessing/*.py',
                   'examples/modelfitting/*.py', 'examples/modelfitting/*.txt',  
-                  'docs/*.*', 'docs/_images/*.jpg',# 'docs/api/*.*',
+                  'docs/*.*', 'docs/_images/*.jpg',
                   'docs/_sources/*.*', 'docs/_static/*.*' ]
 
 if __name__=="__main__":
@@ -46,6 +46,7 @@ if __name__=="__main__":
                         'brian.tests.testcorrectness',
                         'brian.tests.testinterface',
                         'brian.tests.testutils',
+                        'brian.tests.testfeatures',
                     'brian.utils',
                         'brian.utils.ccircular',
                         'brian.utils.fastexp',

@@ -1,0 +1,17 @@
+# Each line is of the form include pattern or exclude pattern where pattern is
+# a regular expression, include adds files from the list of all files, and
+# exclude removes them, the includes should probably all go before the excludes
+
+include ^[^/]*\.
+include ^brian/
+exclude \.svn
+exclude \.pyc
+exclude \.o
+exclude \.obj
+exclude \.def
+exclude \.lib
+exclude build/
+exclude \.pyd
+exclude ^\.project
+exclude ^\.settings/
+exclude ^brian/unused/

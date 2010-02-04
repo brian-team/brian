@@ -83,6 +83,12 @@ classifiers:
 	Most likely these won't change either, there are standard names for
 	these which you can look up on the PyPI site. 
 
+You can use the track_files.py script to help with this. It tracks all the
+files in the Brian distribution and asks you whether or not you want to
+include them in the release or extras files. See the docstring for more info.
+If there are files which should be included but aren't, you need to change
+the setup.py file.
+
 Create the distribution files
 -----------------------------
 

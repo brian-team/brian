@@ -1,15 +1,20 @@
 New features since 1.2.0
 ------------------------
 
+Improvements
+
 * Added 'wmin' to STDP
-* Bugfix: sparse matrices with some versions of scipy
 * You can now access STDP internal variables, e.g. stdp.A_pre, and monitor
   them by doing e.g. StateMonitor(stdp.pre_group, 'A_pre')
 * STDP now supports nonlinear equations and parameters
+
+Bug fixes
+
+* Sparse matrices with some versions of scipy
 * Weave now works on 64 bit platforms with 64 bit Python
 * Fixed bug introduced in 1.2.0 where dense DelayConnection structures would
   not propagate any spikes
-
+  
 New features since 1.1.3
 ------------------------
 

@@ -8,6 +8,7 @@ update the docs, make sure that all the tests run, etc.
 
 Steps:
 
+* Check files with track_files.py
 * Run create_quickrelease.py
 * Test the generated files in the Brian/dist folder install and run
   correctly.
