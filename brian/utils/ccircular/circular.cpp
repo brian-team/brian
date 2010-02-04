@@ -4,8 +4,8 @@
 CircularVector::CircularVector(int n)
 {
 	this->n = n;
-	this->X = new int[n]; // we don't worry about memory errors for the moment...
-	this->retarray = new int[n];
+	this->X = new long[n]; // we don't worry about memory errors for the moment...
+	this->retarray = new long[n];
 	this->reinit();
 }
 
@@ -54,7 +54,7 @@ void CircularVector::__setitem__(int i, int x)
 	this->X[this->index(i)] = x;
 }
 
-void CircularVector::__getslice__(int **ret, int *ret_n, int i, int j)
+void CircularVector::__getslice__(long **ret, int *ret_n, int i, int j)
 {
 	int i0 = this->index(i);
 	int j0 = this->index(j);
@@ -66,7 +66,7 @@ void CircularVector::__getslice__(int **ret, int *ret_n, int i, int j)
 }
 
 // This can potentially be sped up substantially using a bisection algorithm
-/*void CircularVector::get_conditional(int **ret, int *ret_n, int i, int j, int min, int max, int offset)
+/*void CircularVector::get_conditional(long **ret, long *ret_n, int i, int j, int min, int max, int offset)
 {
 	int i0 = this->index(i);
 	int j0 = this->index(j);
@@ -80,7 +80,7 @@ void CircularVector::__getslice__(int **ret, int *ret_n, int i, int j)
 	*ret = this->retarray;
 	*ret_n = n;
 }*/
-void CircularVector::get_conditional(int **ret, int *ret_n, int i, int j, int min, int max, int offset)
+void CircularVector::get_conditional(long **ret, int *ret_n, int i, int j, int min, int max, int offset)
 {
 	int i0, j0;
 	int lo, mid, hi;
@@ -127,7 +127,7 @@ void CircularVector::get_conditional(int **ret, int *ret_n, int i, int j, int mi
 	*ret_n = n;
 }
 
-void CircularVector::__setslice__(int i, int j, int *x, int n)
+void CircularVector::__setslice__(int i, int j, long *x, int n)
 {
 	if(j>i)
 	{
@@ -175,7 +175,7 @@ void SpikeContainer::reinit()
 	this->ind->reinit();
 }
 
-void SpikeContainer::push(int *y, int n)
+void SpikeContainer::push(long *y, int n)
 {
 	this->S->__setslice__(0, n, y, n);
 	this->S->advance(n);
@@ -183,18 +183,18 @@ void SpikeContainer::push(int *y, int n)
 	this->ind->__setitem__(0, this->S->cursor);
 }
 
-void SpikeContainer::lastspikes(int **ret, int *ret_n)
+void SpikeContainer::lastspikes(long **ret, int *ret_n)
 {
 	this->S->__getslice__(ret, ret_n, this->ind->__getitem__(-1)-this->S->cursor, this->S->n);
 }
 
-void SpikeContainer::__getitem__(int **ret, int *ret_n, int i)
+void SpikeContainer::__getitem__(long **ret, int *ret_n, int i)
 {
 	this->S->__getslice__(ret, ret_n, this->ind->__getitem__(-i-1)-this->S->cursor,
 								 this->ind->__getitem__(-i)-this->S->cursor+this->S->n);
 }
 
-void SpikeContainer::get_spikes(int **ret, int *ret_n, int delay, int origin, int N)
+void SpikeContainer::get_spikes(long **ret, int *ret_n, int delay, int origin, int N)
 {
 	return this->S->get_conditional(ret, ret_n,
 			this->ind->__getitem__(-delay-1)-this->S->cursor,
@@ -202,7 +202,7 @@ void SpikeContainer::get_spikes(int **ret, int *ret_n, int delay, int origin, in
 			origin, origin+N, origin);
 }
 
-void SpikeContainer::__getslice__(int **ret, int *ret_n, int i, int j)
+void SpikeContainer::__getslice__(long **ret, int *ret_n, int i, int j)
 {
 	return this->S->__getslice__(ret, ret_n,
 			this->ind->__getitem__(-j)-this->S->cursor,

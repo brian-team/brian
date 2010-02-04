@@ -14,8 +14,8 @@ private:
 	inline int index(int i);
 	inline int getitem(int i);
 public:
-	int *X, cursor, n;
-	int *retarray;
+	long *X, cursor, n;
+	long *retarray;
 	CircularVector(int n);
 	~CircularVector();
 	void reinit();
@@ -23,9 +23,9 @@ public:
 	int __len__();
 	int __getitem__(int i);
 	void __setitem__(int i, int x);
-	void __getslice__(int **ret, int *ret_n, int i, int j);
-	void get_conditional(int **ret, int *ret_n, int i, int j, int min, int max, int offset=0);
-	void __setslice__(int i, int j, int *x, int n);
+	void __getslice__(long **ret, int *ret_n, int i, int j);
+	void get_conditional(long **ret, int *ret_n, int i, int j, int min, int max, int offset=0);
+	void __setslice__(int i, int j, long *x, int n);
 	string __repr__();
 	string __str__();
 };
@@ -37,11 +37,11 @@ public:
 	SpikeContainer(int n, int m);
 	~SpikeContainer();
 	void reinit();
-	void push(int *x, int n);
-	void lastspikes(int **ret, int *ret_n);
-	void __getitem__(int **ret, int *ret_n, int i);
-	void get_spikes(int **ret, int *ret_n, int delay, int origin, int N);
-	void __getslice__(int **ret, int *ret_n, int i, int j);
+	void push(long *x, int n);
+	void lastspikes(long **ret, int *ret_n);
+	void __getitem__(long **ret, int *ret_n, int i);
+	void get_spikes(long **ret, int *ret_n, int delay, int origin, int N);
+	void __getslice__(long **ret, int *ret_n, int i, int j);
 	string __repr__();
 	string __str__();
 };
