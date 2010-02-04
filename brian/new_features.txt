@@ -7,6 +7,8 @@ New features since 1.2.0
   them by doing e.g. StateMonitor(stdp.pre_group, 'A_pre')
 * STDP now supports nonlinear equations and parameters
 * Weave now works on 64 bit platforms with 64 bit Python
+* Fixed bug introduced in 1.2.0 where dense DelayConnection structures would
+  not propagate any spikes
 
 New features since 1.1.3
 ------------------------

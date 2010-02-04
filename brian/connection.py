@@ -408,7 +408,8 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
     def __init__(self, val, **kwds):
         self.init_kwds = kwds
     
-    def connection_matrix(self):
+    def connection_matrix(self, **additional_kwds):
+        self.init_kwds.update(additional_kwds)
         kwds = self.init_kwds
         return DenseConnectionMatrix(self, **kwds)
     
@@ -497,7 +498,8 @@ class SparseConstructionMatrix(ConstructionMatrix, SparseMatrix):
         SparseMatrix.__init__(self, arg)
         self.init_kwds = kwds
         
-    def connection_matrix(self):
+    def connection_matrix(self, **additional_kwds):
+        self.init_kwds.update(additional_kwds)
         return SparseConnectionMatrix(self, **self.init_kwds)
             
 class DynamicConstructionMatrix(ConstructionMatrix, SparseMatrix):
@@ -508,7 +510,8 @@ class DynamicConstructionMatrix(ConstructionMatrix, SparseMatrix):
         SparseMatrix.__init__(self, arg)
         self.init_kwds = kwds
         
-    def connection_matrix(self):
+    def connection_matrix(self, **additional_kwds):
+        self.init_kwds.update(additional_kwds)
         return DynamicConnectionMatrix(self, **self.init_kwds)
 
 # this is used to look up str->class conversions for structure=... keyword
@@ -657,6 +660,7 @@ class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
     '''
     def __new__(subtype, data, **kwds):
         if 'copy' not in kwds:
+            kwds = dict(kwds.iteritems())
             kwds['copy'] = False
         return numpy.array(data, **kwds).view(subtype)
 
@@ -738,7 +742,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
     the memory requirements to 20 bytes per entry (4 extra bytes for the
     row indices and 4 extra bytes for the data indices).
     '''
-    def __init__(self, val, column_access=True):
+    def __init__(self, val, column_access=True, **kwds):
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
         self.nnz = nnz = val.getnnz()# nnz stands for number of nonzero entries
@@ -991,7 +995,10 @@ class DynamicConnectionMatrix(ConnectionMatrix):
         self.coli = []
         self.coldataind = []
         # counts the number of nonzero elements in each column
-        counts = numpy.histogram(allj, numpy.arange(val.shape[1]+1, dtype=int), new=True)[0]
+        if numpy.__version__>='1.3.0':
+            counts = numpy.histogram(allj, numpy.arange(val.shape[1]+1, dtype=int))[0]
+        else:
+            counts = numpy.histogram(allj, numpy.arange(val.shape[1]+1, dtype=int), new=True)[0]
         # now we have to go through one by one unfortunately, and so we keep curcdi, the
         # current column data index for each column
         curcdi = numpy.zeros(val.shape[1], dtype=int)
@@ -1927,7 +1934,7 @@ class DelayConnection(Connection):
             # is VERY slow, but the CSR format is fine. 
             if isinstance(delayvec, sparse.lil_matrix):
                 delayvec = delayvec.tocsr()
-            self.delayvec = self.W.connection_matrix()
+            self.delayvec = self.W.connection_matrix(copy=True)
             for i in xrange(self.W.shape[0]):
                 self.delayvec.set_row(i, array(todense(delayvec[i,:]), copy=False).flatten())    
             Connection.compress(self)

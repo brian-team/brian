@@ -11,6 +11,13 @@ C.delay[0, :] = linspace(0*ms, 10*ms, N)
 sp = SpikeMonitor(G)
 Mv = StateMonitor(G, 'V', record=True)
 
+#run(5*ms)
+#
+#imshow(C._delayedreaction, origin='lower left', interpolation='nearest')
+#axhline(C._cur_delay_ind)
+#show()
+#exit()
+
 run(15*ms)
 
 subplot(211)
