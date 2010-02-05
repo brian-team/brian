@@ -111,8 +111,9 @@ class HomogeneousCorrelatedSpikeTrains(NeuronGroup):
         sigmar=(c*r/(2.*tauc))**.5
         mu,sigma=inv_rectified_gaussian(r,sigmar)
         eq=Equations('drate/dt=(mu-rate)/tauc + sigma*xi/tauc**.5 : Hz',mu=mu,tauc=tauc,sigma=sigma)
-        NeuronGroup.__init__(self,1,model=eq,threshold=HomogeneousPoissonThreshold(),\
+        NeuronGroup.__init__(self,1,model=eq,threshold=HomogeneousPoissonThreshold(),
                              clock=clock)
+        self._use_next_allowed_spiketime_refractoriness = False
         self.rate=mu
         self.LS=SpikeContainer(N,1) # Spike storage
         

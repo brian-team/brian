@@ -385,6 +385,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         
         self._next_allowed_spiketime = -ones(N)
         self._refractory_time = float(refractory)-0.5*clock._dt
+        self._use_next_allowed_spiketime_refractoriness = True
         
         self._owner=self # owner (for subgroups)
         self._subgroup_set = magic.WeakSet()
@@ -461,8 +462,9 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             spikes=self._threshold(self) # get spikes
             if not isinstance(spikes, numpy.ndarray):
                 spikes = array(spikes, dtype=int)
-            spikes = spikes[self._next_allowed_spiketime[spikes]<=self.clock._t]
-            self._next_allowed_spiketime[spikes] = self.clock._t+self._refractory_time
+            if self._use_next_allowed_spiketime_refractoriness:
+                spikes = spikes[self._next_allowed_spiketime[spikes]<=self.clock._t]
+                self._next_allowed_spiketime[spikes] = self.clock._t+self._refractory_time
             self.LS.push(spikes) # Store spikes
         
     def get_spikes(self,delay=0):
