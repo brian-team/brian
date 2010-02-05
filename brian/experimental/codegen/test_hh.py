@@ -1,14 +1,10 @@
 from brian import *
 from brian.library.ionic_currents import *
-from codegen import *
-from integration_schemes import *
-from codegen_python import *
-from codegen_c import *
-from codegen_gpu import *
+from brian.experimental.codegen import *
 import time
 from scipy import weave
 
-N = 10000
+N = 100
 record_and_plot = N==1
 
 El=10.6*mV

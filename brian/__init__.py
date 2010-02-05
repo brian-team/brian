@@ -127,6 +127,15 @@ define_global_preference('weavecompiler','gcc',desc='''
         ''')
 set_global_preferences(weavecompiler='gcc')
 
+define_global_preference('usecodegen','False',desc='''
+        Whether or not to use experimental code generation support.
+        ''')
+set_global_preferences(usecodegen=False)
+define_global_preference('usecodegenweave','False',desc='''
+        Whether or not to use C with experimental code generation support.
+        ''')
+set_global_preferences(usecodegenweave=False)
+
 # check if we were run from a file or some other source, and set the default
 # behaviour for magic functions accordingly
 import inspect as _inspect

@@ -58,6 +58,8 @@ from units import Quantity
 import warnings
 from log import *
 from globalprefs import *
+from experimental.codegen import *
+CStateUpdater = PythonStateUpdater = None
 
 def magic_state_updater(model,clock=None,order=1,implicit=False,compile=False,freeze=False,\
                         method=None,check_units=True):
@@ -75,6 +77,7 @@ def magic_state_updater(model,clock=None,order=1,implicit=False,compile=False,fr
     * exponential_Euler
     * nonlinear: automatic selection, but not linear
     '''
+    global CStateUpdater, PythonStateUpdater
     if method=='exponential_Euler':
         implicit=True
         order=1
@@ -106,6 +109,11 @@ def magic_state_updater(model,clock=None,order=1,implicit=False,compile=False,fr
             f.func_globals['xi']=0*second**-.5
         # better: remove in string
     
+    use_codegen = get_global_preference('usecodegen')
+    use_weave = get_global_preference('useweave') and get_global_preference('usecodegenweave')
+    if CStateUpdater is None:
+        from experimental.codegen.stateupdaters import CStateUpdater, PythonStateUpdater
+    
     # Linearity test
     # insert this in equations
     allow_linear=(method is None) or (method=='linear')
@@ -117,14 +125,35 @@ def magic_state_updater(model,clock=None,order=1,implicit=False,compile=False,fr
         if implicit: # implicit integration schemes
             if model.is_conditionally_linear():
                 log_info('brian.stateupdater', "Using exponential Euler")
-                stateupdaterobj=ExponentialEulerStateUpdater(model,clock=clock,compile=compile,freeze=freeze)
+                if not use_codegen:
+                    stateupdaterobj=ExponentialEulerStateUpdater(model,clock=clock,compile=compile,freeze=freeze)
+                elif use_weave:
+                    stateupdaterobj = CStateUpdater(model, exp_euler_scheme, clock=clock, freeze=freeze)
+                    log_warn('brian.stateupdater', 'Using codegen CStateUpdater')
+                else:
+                    stateupdaterobj = PythonStateUpdater(model, exp_euler_scheme, clock=clock, freeze=freeze)
+                    log_warn('brian.stateupdater', 'Using codegen PythonStateUpdater')
             else:
                 raise TypeError,"General implicit methods are not implemented yet."
         else: # explicit method
             if order==1:
-                stateupdaterobj=NonlinearStateUpdater(model,clock=clock,compile=compile,freeze=freeze)
+                if not use_codegen:
+                    stateupdaterobj = NonlinearStateUpdater(model, clock=clock, compile=compile, freeze=freeze)
+                elif use_weave:
+                    stateupdaterobj = CStateUpdater(model, euler_scheme, clock=clock, freeze=freeze)
+                    log_warn('brian.stateupdater', 'Using codegen CStateUpdater')
+                else:
+                    stateupdaterobj = PythonStateUpdater(model, euler_scheme, clock=clock, freeze=freeze)
+                    log_warn('brian.stateupdater', 'Using codegen PythonStateUpdater')
             elif order==2:
-                stateupdaterobj=RK2StateUpdater(model,clock=clock,compile=compile,freeze=freeze)
+                if not use_codegen:
+                    stateupdaterobj = RK2StateUpdater(model, clock=clock, compile=compile, freeze=freeze)
+                elif use_weave:
+                    stateupdaterobj = CStateUpdater(model, rk2_scheme, clock=clock, freeze=freeze)
+                    log_warn('brian.stateupdater', 'Using codegen CStateUpdater')
+                else:
+                    stateupdaterobj = PythonStateUpdater(model, rk2_scheme, clock=clock, freeze=freeze)
+                    log_warn('brian.stateupdater', 'Using codegen PythonStateUpdater')
             else:
                 raise TypeError,"Methods with order greater than 2 are not implemented yet."
 

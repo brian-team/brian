@@ -10,6 +10,15 @@
 + brian/equations.py
 + brian/experimental/__init__.py
 + brian/experimental/ccodegen.py
++ brian/experimental/codegen/__init__.py
++ brian/experimental/codegen/codegen.py
++ brian/experimental/codegen/codegen_c.py
++ brian/experimental/codegen/codegen_gpu.py
++ brian/experimental/codegen/codegen_python.py
++ brian/experimental/codegen/integration_schemes.py
++ brian/experimental/codegen/rewriting.py
++ brian/experimental/codegen/stateupdaters.py
++ brian/experimental/codegen/test_hh.py
 + brian/experimental/coincidence_detection.py
 + brian/experimental/cuda/__init__.py
 + brian/experimental/cuda/buffering.py

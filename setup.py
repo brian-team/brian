@@ -39,6 +39,7 @@ if __name__=="__main__":
                     'brian.deprecated',
                     'brian.experimental',
                         'brian.experimental.cuda',
+                        'brian.experimental.codegen',
                     'brian.hears',
                     'brian.library',
                         'brian.library.modelfitting',

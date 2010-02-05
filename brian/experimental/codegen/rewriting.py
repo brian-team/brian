@@ -1,7 +1,5 @@
-from brian import *
 import sympy
-from brian.optimiser import *
-from brian.inspection import *
+from ...optimiser import symbolic_eval
 
 __all__ = ['rewrite_to_c_expression', 'sympy_rewrite', 'rewrite_pow', 'floatify_numbers']
 
@@ -57,6 +55,7 @@ def generate_c_expressions(eqs):
     return cexprs
 
 if __name__=='__main__':
+    from brian import *
     if True:
         s = '-V**2/(10*0.001)'
         print sympy_rewrite(s)

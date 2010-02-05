@@ -1,4 +1,6 @@
-from brian import *
+from ...stateupdater import StateUpdater
+from ...globalprefs import get_global_preference
+from ...clock import guess_clock
 from codegen_c import *
 from codegen_python import *
 from integration_schemes import *
@@ -6,17 +8,20 @@ import time
 from scipy import weave
 import numpy, scipy
 
+__all__ = ['CStateUpdater', 'PythonStateUpdater']
+
 class CStateUpdater(StateUpdater):
     def __init__(self, eqs, scheme, clock=None, freeze=False):
         self.clock = guess_clock(clock)
         self.code_c = CCodeGenerator().generate(eqs, scheme)
+        self._weave_compiler = get_global_preference('weavecompiler')
     def __call__(self, P):
         dt = P.clock._dt
         t = P.clock._t
         num_neurons = len(P)
         _S = P._S
         weave.inline(self.code_c, ['_S', 'num_neurons', 'dt', 't'],
-                     compiler='gcc',
+                     compiler=self._weave_compiler,
                      extra_compile_args=['-O3'])
 
 class PythonStateUpdater(StateUpdater):
@@ -37,6 +42,7 @@ class PythonStateUpdater(StateUpdater):
         self.state_update_func(P._S, P.clock._dt, P.clock._t, len(P))
        
 if __name__=='__main__':
+    from brian import *
     
     duration = 1*second
     N = 10000

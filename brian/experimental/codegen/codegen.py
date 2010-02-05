@@ -1,5 +1,4 @@
-from brian import *
-import brian.optimiser as optimiser
+from ...optimiser import freeze
 from string import Template
 import re
 from rewriting import *
@@ -168,7 +167,7 @@ class CodeGenerator(object):
                         vars = eqs._diffeq_names
                         line = origline
                         namespace = eqs._namespace[var]
-                        var_expr = optimiser.freeze(eqs._string[var], all_variables, namespace)
+                        var_expr = freeze(eqs._string[var], all_variables, namespace)
                         while 1:
                             m = re.search(r'\@(\w+)\(', line)
                             if not m:

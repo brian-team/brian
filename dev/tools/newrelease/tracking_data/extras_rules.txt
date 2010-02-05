@@ -15,3 +15,5 @@ exclude build/
 exclude \.pyd
 exclude ^\.buildinfo
 exclude ^docs/\.doctrees/
+exclude ^examples/frompapers/data/
+exclude ^examples/frompapers/imgs/
