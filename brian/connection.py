@@ -406,6 +406,7 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
     a sparse matrix.
     '''
     def __init__(self, val, **kwds):
+        self[:] = 0
         self.init_kwds = kwds
     
     def connection_matrix(self, **additional_kwds):
@@ -1939,7 +1940,7 @@ class DelayConnection(Connection):
                 self.delayvec.set_row(i, array(todense(delayvec[i,:]), copy=False).flatten())    
             Connection.compress(self)
     
-    def set_delays(self, delay):
+    def set_delays(self, source=None, target=None, delay=None):
         '''
         Set the delays corresponding to the weight matrix
         
@@ -1957,60 +1958,69 @@ class DelayConnection(Connection):
         if delay is None:
             return
         W = self.W
+        P = source or self.source
+        Q = target or self.target
+        i0, j0 = self.origin(P, Q)
+        i1 = i0+len(P)
+        j1 = j0+len(Q)
         if isinstance(W, sparse.lil_matrix):
             def getrow(i):
-                return array(W.rows[i], dtype=int), W.data[i]
+                inds = array(W.rows[i], dtype=int)
+                inds = inds[logical_and(inds>=j0, inds<j1)]
+                return inds, len(inds)
         else:
             def getrow(i):
-                return slice(None), W[i,:]
-        if isinstance(delay, float):
-            for i in xrange(self.W.shape[0]):
-                inds, data = getrow(i)
+                inds = (W[i, j0:j1]!=0).nonzero()[0]+j0
+                return inds, len(inds)
+                #return slice(j0, j1), j1-j0
+        if isinstance(delay, (float, int)):
+            for i in xrange(i0, i1):
+                inds, L = getrow(i)
                 self.delayvec[i, inds] = delay
         elif isinstance(delay, (tuple, list)) and len(delay)==2:
             delaymin, delaymax = delay
-            for i in xrange(self.W.shape[0]):
-                inds, data = getrow(i)
-                rowdelay = rand(len(data))*(delaymax-delaymin)+delaymin
+            for i in xrange(i0, i1):
+                inds, L = getrow(i)
+                rowdelay = rand(L)*(delaymax-delaymin)+delaymin
                 self.delayvec[i, inds] = rowdelay
         elif callable(delay) and delay.func_code.co_argcount==0:
-            for i in xrange(self.W.shape[0]):
-                inds, data = getrow(i)
-                rowdelay = [delay() for _ in xrange(len(data))]
+            for i in xrange(i0, i1):
+                inds, L = getrow(i)
+                rowdelay = [delay() for _ in xrange(L)]
                 self.delayvec[i, inds] = rowdelay
         elif callable(delay) and delay.func_code.co_argcount==2:
-            for i in xrange(self.W.shape[0]):
-                inds, data = getrow(i)
-                if isinstance(inds, slice) and inds==slice(None):
-                    inds = numpy.arange(len(data))
-                self.delayvec[i, inds] = delay(i, inds)
+            for i in xrange(i0, i1):
+                inds, L = getrow(i)
+                if isinstance(inds, slice):
+                    inds = numpy.arange(inds.start, inds.stop)
+                self.delayvec[i, inds] = delay(i-i0, inds-j0)
         else:
             #raise TypeError('delays must be float, pair or function of 0 or 2 arguments')
-            self.delayvec[:,:] = delay # probably won't work, but then it will raise an error
+            self.delayvec[i0:i1, j0:j1] = delay # probably won't work, but then it will raise an error
 
-    def connect(self, *args, **kwds):
-        delay = kwds.pop('delay', None)
-        Connection.connect(self, *args, **kwds)
+    def connect(self, source=None, target=None, W=None, delay=None):
+        Connection.connect(self, source=source, target=target, W=W)
         if delay is not None:
-            self.set_delays(delay)
+            self.set_delays(source, target, delay)
 
-    def connect_random(self, *args, **kwds):
-        delay = kwds.pop('delay', None)
-        Connection.connect_random(self, *args, **kwds)
+    def connect_random(self, source=None, target=None, p=1.0, weight=1.0,
+                       fixed=False, seed=None, sparseness=None, delay=None):
+        Connection.connect_random(self, source=source, target=target, p=p,
+                                  weight=weight, fixed=fixed, seed=seed,
+                                  sparseness=sparseness)
         if delay is not None:
-            self.set_delays(delay)
+            self.set_delays(source, target, delay)
     
-    def connect_full(self, *args, **kwds):
-        delay = kwds.pop('delay', None)
-        Connection.connect_full(self, *args, **kwds)
+    def connect_full(self, source=None, target=None, weight=1.0, delay=None):
+        Connection.connect_full(self, source=source, target=target, weight=weight)
         if delay is not None:
-            self.set_delays(delay)
+            self.set_delays(source, target, delay)
 
-    def connect_one_to_one(self, *args, **kwds):
-        delay = kwds.pop('delay', None)
-        Connection.connect_one_to_one(self, *args, **kwds)
+    def connect_one_to_one(self, source=None, target=None, weight=1.0, delay=None):
+        Connection.connect_one_to_one(self, source=source, target=target,
+                                      weight=weight)
         if delay is not None:
-            self.set_delays(delay)
+            self.set_delays(source, target, delay)
 
 class IdentityConnection(Connection):
     '''

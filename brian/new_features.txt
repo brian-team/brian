@@ -14,6 +14,8 @@ Bug fixes
 * Weave now works on 64 bit platforms with 64 bit Python
 * Fixed bug introduced in 1.2.0 where dense DelayConnection structures would
   not propagate any spikes
+* Fixed bug where connect* functions on DelayConnection didn't work with
+  subgroups but only with the whole group.
   
 New features since 1.1.3
 ------------------------
