@@ -69,6 +69,7 @@
 + brian/tests/testcorrectness/test_exponential_current.py
 + brian/tests/testcorrectness/test_from_tutorial1c.py
 + brian/tests/testfeatures/__init__.py
++ brian/tests/testfeatures/test_connect.py
 + brian/tests/testfeatures/test_propagation.py
 + brian/tests/testinterface/__init__.py
 + brian/tests/testinterface/test_clock.py

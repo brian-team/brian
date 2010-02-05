@@ -333,7 +333,6 @@
 + examples/misc/cable.py
 + examples/misc/coba.py
 + examples/misc/cobahh.py
-+ examples/misc/cobahh_simplified.py
 + examples/misc/correlated_inputs.py
 + examples/misc/cuba.py
 + examples/misc/current_clamp.py
@@ -357,8 +356,6 @@
 + examples/misc/parallelpython.py
 + examples/misc/parallelpython_howmanyspikes_parallelpythonised.py
 + examples/misc/phase_locking.py
-+ examples/misc/pickle_loadnet.py
-+ examples/misc/pickle_savenet.py
 + examples/misc/poisson.py
 + examples/misc/poissongroup.py
 + examples/misc/pulsepacket.py
