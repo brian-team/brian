@@ -139,10 +139,11 @@ define_global_preference('usecodegenstateupdate','True',desc='''
         Whether or not to use experimental code generation support on state updaters.
         ''')
 set_global_preferences(usecodegenstateupdate=True)
-define_global_preference('usecodegenreset','True',desc='''
+define_global_preference('usecodegenreset','False',desc='''
         Whether or not to use experimental code generation support on resets.
+        Typically slower due to weave overheads, so usually leave this off.
         ''')
-set_global_preferences(usecodegenreset=True)
+set_global_preferences(usecodegenreset=False)
 
 # check if we were run from a file or some other source, and set the default
 # behaviour for magic functions accordingly
