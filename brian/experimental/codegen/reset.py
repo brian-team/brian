@@ -5,21 +5,11 @@ from ...optimiser import freeze
 from ...reset import Reset
 from ...equations import Equations
 from ...globalprefs import get_global_preference
+from expressions import *
 from scipy import weave
 
-def single_expr(expr):
-    return expr.strip()
-
-def single_statement(expr, single_expr=single_expr):
-    m = re.search(r'[^><=]=', expr)
-    if m:
-        return expr[:m.end()]+' '+single_expr(expr[m.end():])
-    return expr
-
-def c_single_expr(expr):
-    return rewrite_to_c_expression(single_expr(expr.strip())).strip()
-def c_single_statement(expr):
-    return single_statement(expr, single_expr=c_single_expr)+';'
+__all__ = ['generate_c_reset', 'generate_python_reset',
+           'CReset', 'PythonReset']
 
 def generate_c_reset(eqs, inputcode, vartype='double', level=0, ns=None):
     if ns is None:
@@ -52,7 +42,7 @@ def generate_python_reset(eqs, inputcode, level=0, ns=None):
         line = line.strip()
         if line:
             line = freeze(line, all_variables, ns)
-            line = single_statement(line)
+            line = python_single_statement(line)
             code += line+'\n'
     return code
 

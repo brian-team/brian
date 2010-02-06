@@ -57,6 +57,7 @@ import inspect
 from inspection import *
 import re
 import numpy
+CThreshold = PythonThreshold = None
 
 def select_threshold(expr, eqs, level=0):
     '''
@@ -68,6 +69,18 @@ def select_threshold(expr, eqs, level=0):
     var_name > or >= var_name : VariableThreshold
     others : StringThreshold
     '''
+    global CThreshold, PythonThreshold
+    use_codegen = get_global_preference('usecodegen') and get_global_preference('usecodegenthreshold')
+    use_weave = get_global_preference('useweave') and get_global_preference('usecodegenweave')
+    if use_codegen:
+        if CThreshold is None:
+            from experimental.codegen.threshold import CThreshold, PythonThreshold
+        if use_weave:
+            log_warn('brian.threshold', 'Using codegen CThreshold')
+            return CThreshold(expr, level=level+1)
+        else:
+            log_warn('brian.threshold', 'Using codegen PythonThreshold')
+            return PythonThreshold(expr, level=level+1)
     # plan:
     # - see if it matches A > B or A >= B, if not select StringThreshold
     # - check if A, B both match diffeq variable names, and if so

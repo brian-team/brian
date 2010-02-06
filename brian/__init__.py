@@ -144,6 +144,10 @@ define_global_preference('usecodegenreset','False',desc='''
         Typically slower due to weave overheads, so usually leave this off.
         ''')
 set_global_preferences(usecodegenreset=False)
+define_global_preference('usecodegenthreshold','True',desc='''
+        Whether or not to use experimental code generation support on thresholds.
+        ''')
+set_global_preferences(usecodegenthreshold=True)
 
 # check if we were run from a file or some other source, and set the default
 # behaviour for magic functions accordingly
