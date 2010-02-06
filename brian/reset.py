@@ -48,6 +48,9 @@ import re
 import numpy
 from inspection import *
 from utils.documentation import flattened_docstring    
+from globalprefs import *
+from log import *
+CReset = PythonReset = None
 
 def select_reset(expr, eqs, level=0):
     '''
@@ -71,6 +74,18 @@ def select_reset(expr, eqs, level=0):
     # This misses the case of e.g. V=10*mV*exp(1) because exp will be
     # callable, but in general a callable means that it could be
     # non-constant.
+    global CReset, PythonReset
+    use_codegen = get_global_preference('usecodegen') and get_global_preference('usecodegenreset')
+    use_weave = get_global_preference('useweave') and get_global_preference('usecodegenweave')
+    if use_codegen:
+        if CReset is None:
+            from experimental.codegen.reset import CReset, PythonReset
+        if use_weave:
+            log_warn('brian.reset', 'Using codegen CReset')
+            return CReset(expr, level=level+1)
+        else:
+            log_warn('brian.reset', 'Using codegen PythonReset')
+            return PythonReset(expr, level=level+1)
     expr = expr.strip()
     if '\n' in expr:
         return StringReset(expr, level=level+1)

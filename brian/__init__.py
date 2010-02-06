@@ -135,6 +135,14 @@ define_global_preference('usecodegenweave','False',desc='''
         Whether or not to use C with experimental code generation support.
         ''')
 set_global_preferences(usecodegenweave=False)
+define_global_preference('usecodegenstateupdate','True',desc='''
+        Whether or not to use experimental code generation support on state updaters.
+        ''')
+set_global_preferences(usecodegenstateupdate=True)
+define_global_preference('usecodegenreset','True',desc='''
+        Whether or not to use experimental code generation support on resets.
+        ''')
+set_global_preferences(usecodegenreset=True)
 
 # check if we were run from a file or some other source, and set the default
 # behaviour for magic functions accordingly

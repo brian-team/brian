@@ -289,6 +289,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         if isinstance(model,StateUpdater):
             self._state_updater=model # Update mechanism
         elif isinstance(model,Equations):
+            self._eqs = model
             if (init==None) and (model._units=={}):
                 raise AttributeError,"The group must be initialized."
             self._state_updater,var_names=magic_state_updater(model,clock=clock,order=order,check_units=check_units,implicit=implicit,compile=compile,freeze=freeze,method=method)

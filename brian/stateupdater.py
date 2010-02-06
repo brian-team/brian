@@ -109,7 +109,7 @@ def magic_state_updater(model,clock=None,order=1,implicit=False,compile=False,fr
             f.func_globals['xi']=0*second**-.5
         # better: remove in string
     
-    use_codegen = get_global_preference('usecodegen')
+    use_codegen = get_global_preference('usecodegen') and get_global_preference('usecodegenstateupdate')
     use_weave = get_global_preference('useweave') and get_global_preference('usecodegenweave')
     if CStateUpdater is None:
         from experimental.codegen.stateupdaters import CStateUpdater, PythonStateUpdater
