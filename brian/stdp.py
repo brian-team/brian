@@ -349,6 +349,13 @@ class STDP(NetworkOperation):
             pre_code_immediate = compile(pre_immediate, "Presynaptic code immediate", "exec")
             pre_code_delayed = compile(pre_delayed, "Presynaptic code delayed", "exec")
             post_code = compile(post_immediate+post_delayed, "Postsynaptic code", "exec")
+            print '****** PRE_IMMEDIATE **********'
+            print pre_immediate
+            print '****** PRE_DELAYED **********'
+            print pre_delayed
+            print '****** POST *********'
+            print post_immediate+post_delayed
+            
         else:
             # Indent and loop
             pre=re.compile('^',re.M).sub('    ',pre)
@@ -375,7 +382,7 @@ class STDP(NetworkOperation):
             # Compile code
             pre_code=compile(pre,"Presynaptic code","exec")
             post_code=compile(post,"Postsynaptic code","exec")
-        
+                
         # Report
 #        print pre_namespace
 #        print pre
