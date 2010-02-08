@@ -7,7 +7,7 @@ from numpy import *
 from brian.units import check_units,second
 from brian.stdunits import ms,Hz
 
-__all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF',
+__all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF', 'group_correlations', 'sortspikes',
          'total_correlation','vector_strength','gamma_factor']
 
 # First-order statistics
@@ -138,6 +138,59 @@ def total_correlation(T1,T2,width=20*ms,T=None):
             j+=1
         x+=sum(1./(T-abs(T2[i:j]-t))) # counts coincidences with windowing (probabilities)
     return float(x/firing_rate(T1))-float(firing_rate(T2)*2*width)
+
+def sortspikes(spikes):
+    """
+    Sorts spikes stored in a (i,t) list.
+    """
+    def cmp(x,y):
+        d = x[1]-y[1]
+        if d>0:
+            return 1
+        elif d == 0:
+            return 0
+        else:
+            return -1
+    spikes.sort(cmp=cmp)
+    return spikes
+
+def group_correlations(spikes, delta = None):
+    """
+    Computes the pairwise correlation strength and timescale of the given pool of spike trains.
+    spikes is a (i,t) list and must be sorted.
+    delta is the length of the time window, 10*ms by default.
+    """
+    aspikes = array(spikes)
+    N = aspikes[:,0].max()+1 # neuron count
+    T = aspikes[:,1].max() # total duration
+    spikecount = zeros(N)
+    tauc = zeros((N,N))
+    S = zeros((N,N))
+    if delta is None:
+        delta = 10*ms # size of the window
+    windows = -2*delta*ones(N) # windows[i] is the end of the window for neuron i = lastspike[i}+delta
+    for i,t in spikes:
+        sources = (t <= windows) # neurons such that (i,t) is a target spike for them
+        if sum(sources)>0:
+            indices = nonzero(sources)[0]
+            S[indices, i] += 1
+            delays = t - windows[indices] + delta
+#            print i, t, indices, delays
+            tauc[indices, i] += delays
+        spikecount[i] += 1
+        windows[i] = t + delta # window update
+    
+    tauc /= S
+    
+    S = S/tile(spikecount.reshape((-1,1)),(1,N)) # normalize S
+    rates =  spikecount/T
+    S = S - tile(rates.reshape((1,-1)), (N,1)) * delta
+    
+    S[isnan(S)] = 0.0
+    tauc[isnan(tauc)] = 0.0
+    
+    return S, tauc
+
 
 # Phase-locking properties
 def vector_strength(spikes,period):
