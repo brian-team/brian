@@ -16,6 +16,7 @@ Bug fixes
   not propagate any spikes
 * Fixed bug where connect* functions on DelayConnection didn't work with
   subgroups but only with the whole group.
+* Fixed bug with linked_var from subgroups not working
   
 New features since 1.1.3
 ------------------------

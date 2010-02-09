@@ -596,7 +596,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             @network.network_operation(when=when, clock=clock)
             def update_link_var():
                 selfarr[:] = func(sourcearr)
-        self.contained_objects.append(update_link_var)
+        self._owner.contained_objects.append(update_link_var)
 
     def set_var_by_array(self, var, arr, times=None, clock=None, start=None, dt=None):
         # ugly hack, have to import this here because otherwise the order of imports
