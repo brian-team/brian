@@ -32,7 +32,7 @@ def update_on_pre_spikes_delayed(spikes):
             C.W[i, :] = clip(C.W[i, :]+A_post_delayed, 0, wmax)
 def update_on_post_spikes(spikes):
     if len(spikes):
-        G_post.A_post += delta_A_post
+        G_post.A_post[spikes] += delta_A_post
         times_seq = C.delayvec.get_cols(spikes)
         A_pre_delayed_seq = A_pre_recent.get_past_values_sequence(times_seq)
         for i, A_pre_delayed in zip(spikes, A_pre_delayed_seq):

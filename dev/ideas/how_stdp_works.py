@@ -22,7 +22,7 @@ def update_on_pre_spikes(spikes):
             C.W[i, :] = clip(C.W[i, :]+G_post.A_post, 0, wmax)
 def update_on_post_spikes(spikes):
     if len(spikes):
-        G_post.A_post += delta_A_post
+        G_post.A_post[spikes] += delta_A_post
         for i in spikes:
             C.W[:, i] = clip(C.W[:, i]+G_pre.A_pre, 0, wmax)
 M_pre = SpikeMonitor(G, function=update_on_pre_spikes)
