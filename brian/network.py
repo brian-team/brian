@@ -53,6 +53,7 @@ from base import *
 from units import second
 import time
 from utils.progressreporting import *
+from globalprefs import *
 
 globally_stopped = False
 
@@ -283,6 +284,12 @@ class Network(object):
         # Compress connections
         for C in self.connections:
             C.compress()
+        
+        # Experimental support for new propagation code
+        if get_global_preference('usenewpropagate') and get_global_preference('useweave'):
+            from experimental.new_c_propagate import make_new_connection
+            for C in self.connections:
+                make_new_connection(C)
 
         # build operations list for each clock
         self._build_update_schedule()

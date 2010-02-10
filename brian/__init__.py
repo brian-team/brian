@@ -149,6 +149,11 @@ define_global_preference('usecodegenthreshold','True',desc='''
         ''')
 set_global_preferences(usecodegenthreshold=True)
 
+define_global_preference('usenewpropagate','False',desc='''
+        Whether or not to use experimental new C propagation functions.
+        ''')
+set_global_preferences(usenewpropagate=False)
+
 # check if we were run from a file or some other source, and set the default
 # behaviour for magic functions accordingly
 import inspect as _inspect
