@@ -1,3 +1,82 @@
+''' 
+NOTES:
+
+General scheme for propagation code is something like:
+
+Iterate over spikes (spike index i):
+    Set source neuron index j=spikes[i]
+    
+    Load required source neuron variables for neuron index j
+    
+    Iterate over row j of W:
+        Set target neuron index k
+        Load weight variable
+        
+        Load required target neuron variables for neuron index k
+        
+        Execute propagation code
+
+Functionally:
+
+iterate_over_spikes('j', 'spikes',
+    (load_required_variables('j', {'modulation':modulation_var}),
+     iterate_over_row('k', 'w', W, 'j',
+         (load_required_variables('k', {'V':V}),
+          transform_code('V += w*modulation')
+          )
+         )
+     )
+    )
+
+With some options like:
+
+* load_required_variables('j', {})
+* iterate_over_row('k', 'w', W, 'j', delayvec=delayvec, delayvar='delay', ...)
+* load_required_variables_delayedreaction('k', {'V':{'dr':dr, 'cdi':cdi, 'idt':idt, 'md':md}}) 
+
+We could also have:
+
+* iterate_over_col('k', 'w', W, 'j', ...)
+
+And STDP could be implemented as follows, for pre spikes:
+
+iterate_over_spikes('j', 'spikes',
+    (load_required_variables('j', {'A_pre':A_pre}),
+     """
+     A_pre += dA_pre
+     """,
+     iterate_over_row('k', 'w', W, 'j',
+         (load_required_variables('k', {'A_post':A_post}),
+          transform_code('w += A_post')
+          )
+         )
+     )
+    )
+
+And for post spikes:
+
+iterate_over_spikes('j', 'spikes',
+    (load_required_variables('j', {'A_post':A_post}),
+     transform_code('A_post += dA_post'),
+     iterate_over_col('k', 'w', W, 'j',
+         (load_required_variables('k', {'A_pre':A_pre}),
+          transform_code('w += A_pre')
+          )
+         )
+     )
+    )
+
+To do STDP with delays, we need also:
+
+* load_required_variables_pastvalue('k', {'A_post':A_post_monitor})
+
+Maybe for future-proofing STDP against having multiple per-synapse variables in
+the future, and generally having per-synapse dynamics and linked matrices which
+we want to jointly iterate over, could improve iterate_over_row/col to iterate
+over several synaptic variables with the same underlying matrix structure as the
+main weight matrix. Then, instead of having delayvec=delayvec, delayvar='delay'
+as a special case, we'd have a list of additional linked matrices.
+'''
 if __name__=='__main__':
     from brian import *
 else:
@@ -8,6 +87,58 @@ from scipy import weave
 import new
 
 __all__ = ['make_new_connection']
+
+class Code(object):
+    def __init__(self, codestr, vars=None):
+        if vars is None:
+            vars = {}
+        self.vars = vars
+        self.codestr = codestr
+
+def expand_code(code):
+    if isinstance(code, Code):
+        return code
+    elif isinstance(code, (tuple, list)):
+        codestr = '\n'.join([expand_code(c).codestr for c in code])
+        vars = {}
+        for c in code:
+            vars.update(c.vars)
+        return Code(codestr, vars)
+    else:
+        raise TypeError('Code should be string or tuple')
+
+def transform_code(codestr):
+    # TODO: replace with something more sophisticated than this
+    return Code('\n'.join(line+';' for line in code.split('\n') if line.strip()))
+
+def iterate_over_spikes(neuron_index, spikes, code):
+    outcode = '''
+    for(int _spike_index=0; _spike_index<%SPIKES_LEN%; _spike_index++)
+    {
+        %NEURON_INDEX% = %SPIKES%[_spike_index];
+        %CODE%
+    }
+    '''
+    code = expand_code(code)
+    outcode = outcode.replace('%SPIKES%', spikes)
+    outcode = outcode.replace('%SPIKES_LEN%', spikes+'_len')
+    outcode = outcode.replace('%NEURON_INDEX%', neuron_index)
+    outcode = outcode.replace('%CODE%', code.codestr)
+    return Code(outcode, code.vars)
+
+def load_required_variables(neuron_index, neuron_vars):
+    vars = {}
+    codestr = ''
+    for k, v in neuron_vars.iteritems():
+        vars[k+'__array'] = v
+        codestr += 'double &'+k+' = '+k+'__array['+neuron_index+'];\n'
+    return Code(codestr, vars)
+
+# TODO:
+# * iterate_over_row
+# * iterate_over_col
+# * load_required_variables_delayedreaction
+# * load_required_variables_pastvalue
 
 def generate_connection_code(C):
     modulation = C._nstate_mod is not None

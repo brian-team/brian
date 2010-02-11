@@ -36,7 +36,6 @@ def update_on_post_spikes(spikes):
         times_seq = C.delayvec.get_cols(spikes)
         A_pre_delayed_seq = A_pre_recent.get_past_values_sequence(times_seq)
         for i, A_pre_delayed in zip(spikes, A_pre_delayed_seq):
-            times = C.W[:, i]
             C.W[:, i] = clip(C.W[:, i]+A_pre_delayed, 0, wmax)
 M_pre_immediate = SpikeMonitor(G, function=update_on_pre_spikes_immediate)
 M_pre_delayed = SpikeMonitor(G, function=update_on_pre_spikes_delayed, delay=max_delay)

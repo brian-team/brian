@@ -28,7 +28,7 @@ dge/dt=-ge/taue : 1
 
 input=PoissonGroup(N,rates=F)
 neurons=NeuronGroup(1,model=eqs_neurons,threshold=vt,reset=vr)
-synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax,delay=True)
+synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax)
 neurons.v=vr
 
 #stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax)

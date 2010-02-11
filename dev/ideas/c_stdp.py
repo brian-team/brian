@@ -95,3 +95,123 @@ have at the moment.
 from brian import *
 from scipy import weave
 
+
+#def update_on_post_spikes(spikes):
+#    if len(spikes):
+#        G_post.A_post[spikes] += dA_post
+#        for i in spikes:
+#            synapses.W[:, i] = clip(synapses.W[:, i]+G_pre.A_pre, 0, gmax)
+
+def make_update_on_pre(G_pre, dA_pre, synapses, gmax):
+    vars = {'A_pre__array':G_pre.A_pre,
+            'A_post__array':G_post.A_post,
+            'dA_pre':dA_pre,
+            'gmax':gmax,
+            '_spikes':None,
+            '_nspikes':None,
+            }
+    vars['_rowind'] = synapses.W.rowind
+    vars['_allj'] = synapses.W.allj
+    vars['_alldata'] = synapses.W.alldata
+    code = '''
+    for(int _spike_index=0; _spike_index<_nspikes; _spike_index++)
+    {
+        int _source_neuron_index = _spikes[_spike_index];
+        double &A_pre = A_pre__array[_source_neuron_index];
+        
+        A_pre += dA_pre;
+        
+        for(int _p=_rowind[_source_neuron_index]; _p<_rowind[_source_neuron_index+1]; _p++)
+        {
+            int _target_neuron_index = _allj[_p];
+            double &_weight = _alldata[_p];
+            double &A_post = A_post__array[_target_neuron_index];
+            
+            _weight += A_post;
+            
+            if(_weight<0) _weight=0;
+            if(_weight>gmax) _weight=gmax;
+        }
+    }
+    '''
+    vars_list = vars.keys()
+    def f(_spikes):
+        if len(_spikes):
+            if not isinstance(_spikes, ndarray):
+                _spikes = array(_spikes, dtype=int)
+            vars['_spikes'] = _spikes
+            vars['_nspikes'] = len(_spikes)
+            weave.inline(code, vars_list,
+                         local_dict=vars,
+                         compiler='gcc',
+                         extra_compile_args=['-O3'])
+    return f
+    
+if __name__=='__main__':
+    from time import time
+    
+    N=1000
+    taum=10*ms
+    tau_pre=20*ms
+    tau_post=tau_pre
+    Ee=0*mV
+    vt=-54*mV
+    vr=-60*mV
+    El=-74*mV
+    taue=5*ms
+    F=15*Hz
+    gmax=.01
+    dA_pre=.01
+    dA_post=-dA_pre*tau_pre/tau_post*1.05
+    
+    eqs_neurons='''
+    dv/dt=(ge*(Ee-vr)+El-v)/taum : volt   # the synaptic current is linearized
+    dge/dt=-ge/taue : 1
+    '''
+    
+    input=PoissonGroup(N,rates=F)
+    neurons=NeuronGroup(1,model=eqs_neurons,threshold=vt,reset=vr)
+    synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax)
+    neurons.v=vr
+    
+    #stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax)
+    ## Explicit STDP rule
+    eqs_stdp='''
+    dA_pre/dt=-A_pre/tau_pre : 1
+    dA_post/dt=-A_post/tau_post : 1
+    '''
+    dA_post*=gmax
+    dA_pre*=gmax
+#    stdp=STDP(synapses,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
+#              post='A_post+=dA_post;w+=A_pre',wmax=gmax)
+    G_pre = NeuronGroup(N, 'dA_pre/dt=-A_pre/tau_pre:1')
+    G_post = NeuronGroup(1, 'dA_post/dt=-A_post/tau_post:1')
+#    def update_on_pre_spikes(spikes):
+#        if len(spikes):
+#            G_pre.A_pre[spikes] += dA_pre
+#            for i in spikes:
+#                synapses.W[i, :] = clip(synapses.W[i, :]+G_post.A_post, 0, gmax)
+    def update_on_post_spikes(spikes):
+        if len(spikes):
+            G_post.A_post[spikes] += dA_post
+            for i in spikes:
+                synapses.W[:, i] = clip(synapses.W[:, i]+G_pre.A_pre, 0, gmax)
+    
+    synapses.compress()
+    
+    M_pre = SpikeMonitor(input, function=make_update_on_pre(G_pre, dA_pre, synapses, gmax))
+    M_post = SpikeMonitor(neurons, function=update_on_post_spikes)
+    
+    rate=PopulationRateMonitor(neurons)
+    
+    start_time=time()
+    run(100*second,report='text')
+    print "Simulation time:",time()-start_time
+    
+    subplot(311)
+    plot(rate.times/second,rate.smooth_rate(100*ms))
+    subplot(312)
+    plot(synapses.W.todense()/gmax,'.')
+    subplot(313)
+    hist(synapses.W.todense()/gmax,20)
+    show()
