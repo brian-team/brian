@@ -749,7 +749,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
         self.nnz = nnz = val.getnnz()# nnz stands for number of nonzero entries
         alldata = numpy.zeros(nnz)
         if column_access:
-            alli = numpy.zeros(nnz, dtype=int)
+            colind = numpy.zeros(val.shape[1]+1, dtype=int)
         allj = numpy.zeros(nnz, dtype=int)
         rowind = numpy.zeros(val.shape[0]+1, dtype=int)
         rowdata = []
@@ -774,8 +774,6 @@ class SparseConnectionMatrix(ConnectionMatrix):
             rowind[c] = i
             alldata[i:i+len(d)] = d
             allj[i:i+len(r)] = r
-            if column_access:
-                alli[i:i+len(r)] = c
             rowdata.append(alldata[i:i+len(d)])
             rowj.append(allj[i:i+len(r)])
             i = i+len(r)
@@ -797,24 +795,32 @@ class SparseConnectionMatrix(ConnectionMatrix):
                 # curcdi[i] is the current offset into each block. s is
                 # therefore just the cumulative sum of counts.
                 curcdi = numpy.zeros(val.shape[1], dtype=int)
-                alldi = numpy.zeros(sum(counts), dtype=int)
-                s = numpy.hstack(([0], cumsum(counts)))
+                allcoldataindices = numpy.zeros(nnz, dtype=int)
+                colind[:] = numpy.hstack(([0], cumsum(counts)))
+                colalli = numpy.zeros(nnz, dtype=int)
+                numrows = val.shape[0]
                 code = '''
-                for(int i=0;i<nnz;i++)
+                int i = 0;
+                for(int k=0;k<nnz;k++)
                 {
-                    int j = allj[i];
-                    alldi[s[j]+curcdi[j]] = i;
+                    while(k>=rowind[i+1]) i++;
+                    int j = allj[k];
+                    allcoldataindices[colind[j]+curcdi[j]] = k;
+                    colalli[colind[j]+curcdi[j]] = i;
                     curcdi[j]++;
                 }
                 '''
-                weave.inline(code, ['nnz', 'allj', 'alldi', 'curcdi', 's'],
+                weave.inline(code, ['nnz', 'allj', 'allcoldataindices',
+                                    'rowind', 'numrows',
+                                    'curcdi', 'colind', 'colalli'],
                              compiler=self._cpp_compiler,
                              extra_compile_args=['-O3'])
-                # now store the blocks of alldi in coldataindices and update coli too
-                for i in xrange(len(s)-1):
-                    I = alldi[s[i]:s[i+1]]
-                    coldataindices.append(I)
-                    coli.append(alli[I])
+                # now store the blocks of allcoldataindices in coldataindices and update coli too
+                for i in xrange(len(colind)-1):
+                    D = allcoldataindices[colind[i]:colind[i+1]]
+                    I = colalli[colind[i]:colind[i+1]]
+                    coldataindices.append(D)
+                    coli.append(I)
             else:
                 # now allj[a] will be the columns in order, so that
                 # the first counts[0] elements of allj[a] will be 0,
@@ -822,31 +828,23 @@ class SparseConnectionMatrix(ConnectionMatrix):
                 # will be the data indices of the elements (i,j) with j==0
                 # mergesort is necessary because we want the relative ordering
                 # of the elements of a within a block to be maintained
-                self.allj_sorted_indices = a = argsort(allj, kind='mergesort')
-                # this defines s so that a[s[i]:s[i+1]] are the data
+                allcoldataindices = a = argsort(allj, kind='mergesort')
+                # this defines colind so that a[colind[i]:colind[i+1]] are the data
                 # indices where j==i
-                s = numpy.hstack(([0], cumsum(counts)))
+                colind[:] = numpy.hstack(([0], cumsum(counts)))
                 # in this loop, I are the data indices where j==i
                 # and alli[I} are the corresponding i coordinates
-                for i in xrange(len(s)-1):
-                    I = a[s[i]:s[i+1]]
-                    coldataindices.append(I)
-                    coli.append(alli[I])
+                if len(a):
+                    colalli = digitize(a, rowind)
+                    colalli -= 1
+                else:
+                    colalli = numpy.zeros(nnz, dtype=int)
+                for i in xrange(len(colind)-1):
+                    D = a[colind[i]:colind[i+1]]
+                    I = colalli[colind[i]:colind[i+1]]
+                    coldataindices.append(D)
+                    coli.append(I)
 
-            # Pure Python version (slow in practice although O(nnz) in principle)
-#            # now we have to go through one by one unfortunately, and so we keep curcdi, the
-#            # current column data index for each column
-#            curcdi = numpy.zeros(val.shape[1], dtype=int)
-#            # initialise the memory for the column data indices
-#            for j in xrange(val.shape[1]):
-#                coldataindices.append(numpy.zeros(counts[j], dtype=int))
-#            # one by one for every element, update the dataindices and curcdi data pointers
-#            for i, j in enumerate(allj):
-#                coldataindices[j][curcdi[j]] = i
-#                curcdi[j]+=1
-#            for j in xrange(val.shape[1]):
-#                coli.append(alli[coldataindices[j]])
-            
         self.alldata = alldata
         self.rowdata = rowdata
         self.allj = allj
@@ -855,8 +853,11 @@ class SparseConnectionMatrix(ConnectionMatrix):
         self.shape = val.shape
         self.column_access = column_access
         if column_access:
+            self.colalli = colalli
             self.coli = coli
             self.coldataindices = coldataindices
+            self.allcoldataindices = allcoldataindices
+            self.colind = colind
         self.rows = [SparseConnectionVector(self.shape[1], self.rowj[i], self.rowdata[i]) for i in xrange(self.shape[0])]
     
     def getnnz(self):
