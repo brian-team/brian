@@ -80,8 +80,11 @@ as a special case, we'd have a list of additional linked matrices.
 if __name__=='__main__':
     from brian import *
 else:
-    from ..connection import Connection, DelayConnection, DenseConnectionMatrix, SparseConnectionMatrix, DenseConstructionMatrix, SparseConstructionMatrix, MultiConnection
-    from ..log import log_warn, log_info
+    from ..connection import Connection, DelayConnection, MultiConnection,\
+                DenseConnectionMatrix, DenseConstructionMatrix,\
+                SparseConnectionMatrix, SparseConstructionMatrix,\
+                DynamicConnectionMatrix, DynamicConstructionMatrix
+    from ..log import log_debug, log_warn, log_info
 import numpy
 from scipy import weave
 import new
@@ -109,13 +112,13 @@ def expand_code(code):
 
 def transform_code(codestr):
     # TODO: replace with something more sophisticated than this
-    return Code('\n'.join(line+';' for line in code.split('\n') if line.strip()))
+    return Code('\n'.join(line+';' for line in codestr.split('\n') if line.strip()))
 
 def iterate_over_spikes(neuron_index, spikes, code):
     outcode = '''
     for(int _spike_index=0; _spike_index<%SPIKES_LEN%; _spike_index++)
     {
-        %NEURON_INDEX% = %SPIKES%[_spike_index];
+        int %NEURON_INDEX% = %SPIKES%[_spike_index];
         %CODE%
     }
     '''
@@ -134,91 +137,118 @@ def load_required_variables(neuron_index, neuron_vars):
         codestr += 'double &'+k+' = '+k+'__array['+neuron_index+'];\n'
     return Code(codestr, vars)
 
+def load_required_variables_delayedreaction(neuron_index, delay, delay_index, neuron_var, C):
+    vars = {}
+    codestr = 'double &%Z% = _dr[((%CDI%+(int)(_idt*%D%))%_md)*%N%+%I%];'
+    codestr = codestr.replace('%CDI%', delay_index)
+    codestr = codestr.replace('%Z%', neuron_var)
+    codestr = codestr.replace('%D%', delay)
+    codestr = codestr.replace('%N%', '_num_target_neurons')
+    codestr = codestr.replace('%I%', neuron_index)
+    vars['_num_target_neurons'] = len(C.target)
+    vars['_dr'] = C._delayedreaction
+    vars[delay_index] = None # filled in by propagation function
+    vars['_idt'] = C._invtargetdt
+    vars['_md'] = C._max_delay
+    return Code(codestr, vars)
+
+def iterate_over_row(target_index, weight_variable, weight_matrix, source_index,
+                     code, extravars={}):
+    code = expand_code(code)
+    vars = {}
+    vars.update(code.vars)
+    if isinstance(weight_matrix, DenseConnectionMatrix):
+        outcode = '''
+        for(int %TARGETINDEX%=0; %TARGETINDEX%<_num_target_neurons; %TARGETINDEX%++)
+        {
+            double &%WEIGHT% = _weight_arr[%TARGETINDEX%+%SOURCEINDEX%*_num_target_neurons];
+            %EXTRAVARS%
+            %CODE%
+        }
+        '''
+        extravarscode = ''
+        for k, v in extravars.iteritems():
+            extracodetmp = 'double &%V% = %V%__array[%TARGETINDEX%+%SOURCEINDEX%*_num_target_neurons];'
+            extracodetmp = extracodetmp.replace('%V%', k)
+            extracodetmp = extracodetmp.replace('%TARGETINDEX%', target_index)
+            extracodetmp = extracodetmp.replace('%SOURCEINDEX%', source_index)
+            vars[k+'__array'] = numpy.asarray(v)
+            extravarscode += extracodetmp
+        outcode = outcode.replace('%EXTRAVARS%', extravarscode)
+        vars['_weight_arr'] = numpy.asarray(weight_matrix)
+        vars['_num_target_neurons'] = weight_matrix.shape[1]
+    elif isinstance(weight_matrix, SparseConnectionMatrix):
+        outcode = '''
+        for(int _p=_rowind[%SOURCEINDEX%]; _p<_rowind[%SOURCEINDEX%+1]; _p++)
+        {
+            int %TARGETINDEX% = _allj[_p];
+            double %WEIGHT% = _alldata[_p];
+            %EXTRAVARS%
+            %CODE%
+        }
+        '''
+        extravarscode = ''
+        for k, v in extravars.iteritems():
+            extracodetmp = 'double &%V% = %V%__alldata[_p];'
+            extracodetmp = extracodetmp.replace('%V%', k)
+            vars[k+'__alldata'] = v.alldata
+            extravarscode += extracodetmp
+        outcode = outcode.replace('%EXTRAVARS%', extravarscode)
+        vars['_rowind'] = weight_matrix.rowind
+        vars['_allj'] = weight_matrix.allj
+        vars['_alldata'] = weight_matrix.alldata
+    elif isinstance(weight_matrix, DynamicConnectionMatrix):
+        # TODO: support dynamic matrix structure
+        # the best way to support dynamic matrix type would be to
+        # reorganise dynamic matrix data structure. Ideally, it should consist
+        # of numpy arrays only. Maybe some sort of linked list structure?
+        # Otherwise, we can use code that accesses the Python lists, but it's
+        # probably less efficient (maybe this is anyway not a big issue with
+        # the dynamic matrix type?)
+        raise TypeError('Dynamic matrix not supported.')
+    else:
+        raise TypeError('Must be dense/sparse/dynamic matrix.')
+    outcode = outcode.replace('%TARGETINDEX%', target_index)
+    outcode = outcode.replace('%SOURCEINDEX%', source_index)
+    outcode = outcode.replace('%WEIGHT%', weight_variable)
+    outcode = outcode.replace('%CODE%', code.codestr)
+    return Code(outcode, vars)
+
 # TODO:
-# * iterate_over_row
 # * iterate_over_col
-# * load_required_variables_delayedreaction
 # * load_required_variables_pastvalue
 
 def generate_connection_code(C):
     modulation = C._nstate_mod is not None
     delay = isinstance(C, DelayConnection)
-    vars = {
-        '_spikes':None,
-        '_nspikes':None,
-        '_num_source_neurons':len(C.source),
-        '_num_target_neurons':len(C.target),
-        }
-    if delay:
-        vars['_dr'] = C._delayedreaction
-        vars['_cdi'] = None # filled in by propagation function
-        vars['_idt'] = C._invtargetdt
-        vars['_md'] = C._max_delay
-    else:
-        vars['_target_array'] = C.target._S[C.nstate]
-    code = '''
-    for(int _spike_index=0; _spike_index<_nspikes; _spike_index++)
-    {
-        int _source_neuron_index = _spikes[_spike_index];
-    '''
-    if modulation:
-        vars['_modulation_array'] = C.source._S[C._nstate_mod]
-        code += '''
-        double _modulation = _modulation_array[_source_neuron_index];
-        '''
-    if isinstance(C.W, DenseConnectionMatrix):
-        vars['_weight_array'] = numpy.asarray(C.W)
-        code += '''
-        for(int _target_neuron_index=0; _target_neuron_index<_num_target_neurons; _target_neuron_index++)
-        {
-            double &_weight = _weight_array[_target_neuron_index+_source_neuron_index*_num_target_neurons];
-        '''
-        if delay:
-            vars['_delay_array'] = numpy.asarray(C.delayvec)
-            code += '''
-            double _delay = _delay_array[_target_neuron_index+_source_neuron_index*_num_target_neurons];
-            '''
-    elif isinstance(C.W, SparseConnectionMatrix):
-        vars['_rowind'] = C.W.rowind
-        vars['_allj'] = C.W.allj
-        vars['_alldata'] = C.W.alldata
-        code += '''
-        for(int _p=_rowind[_source_neuron_index]; _p<_rowind[_source_neuron_index+1]; _p++)
-        {
-            int _target_neuron_index = _allj[_p];
-            double &_weight = _alldata[_p];
-        '''
-        if delay:
-            vars['_alldata_delay'] = C.delayvec.alldata
-            code += '''
-            double _delay = _alldata_delay[_p];
-            '''
+    vars = {'_spikes':None, '_spikes_len':None}
+    if not modulation and not delay:
+        code = iterate_over_spikes('_j', '_spikes',
+                     iterate_over_row('_k', 'w', C.W, '_j',
+                         (load_required_variables('_k', {'V':C.target.state(C.nstate)}),
+                          transform_code('V += w'))))
+    elif modulation and not delay:
+        code = iterate_over_spikes('_j', '_spikes',
+                     (load_required_variables('_j', {'modulation':C.source.state(C._nstate_mod)}),
+                      iterate_over_row('_k', 'w', C.W, '_j',
+                         (load_required_variables('_k', {'V':C.target.state(C.nstate)}),
+                          transform_code('V += w*modulation')))))
+    elif not modulation and delay:
+        code = iterate_over_spikes('_j', '_spikes',
+                     iterate_over_row('_k', 'w', C.W, '_j', extravars={'_delay':C.delayvec},
+                         code=(load_required_variables_delayedreaction('_k', '_delay', '_cdi', 'V', C),
+                               transform_code('V += w'))))
+    elif modulation and delay:
+        code = iterate_over_spikes('_j', '_spikes',
+                     (load_required_variables('_j', {'modulation':C.source.state(C._nstate_mod)}),
+                      iterate_over_row('_k', 'w', C.W, '_j', extravars={'_delay':C.delayvec},
+                         code=(load_required_variables_delayedreaction('_k', '_delay', '_cdi', 'V', C),
+                               transform_code('V += w*modulation')))))
     else:
         raise TypeError('Not supported.')
-    if delay:
-        code += '''
-            double &_target_var = _dr[((_cdi+(int)(_idt*_delay))%_md)*_num_target_neurons+_target_neuron_index];
-        '''
-    else:
-        code += '''
-            double &_target_var = _target_array[_target_neuron_index];
-        '''
-    if modulation:
-        code += '''
-            _target_var += _weight*_modulation;
-        '''
-    else:
-        code += '''
-            _target_var += _weight;
-        '''
-    code += '''
-        }
-    '''
-    code += '''
-    }
-    '''
-    code = '\n'.join(line for line in code.split('\n') if line.strip())
-    return vars, code
+    codestr = '\n'.join(line for line in code.codestr.split('\n') if line.strip())
+    vars.update(code.vars)
+    return vars, codestr
 
 def new_propagate(self, _spikes):
     if not self.iscompressed:
@@ -227,12 +257,12 @@ def new_propagate(self, _spikes):
         self._vars, self._code = generate_connection_code(self)
         self._vars_list = self._vars.keys()
         log_warn('brian.experimental.new_c_propagate', 'Using new C based propagation function.')
-        log_info('brian.experimental.new_c_propagate', 'C based propagation function code:\n'+self._code)
+        log_debug('brian.experimental.new_c_propagate', 'C based propagation function code:\n'+self._code)
     if len(_spikes):
         if not isinstance(_spikes, numpy.ndarray):
             _spikes = array(_spikes, dtype=int)
         self._vars['_spikes'] = _spikes
-        self._vars['_nspikes'] = len(_spikes)
+        self._vars['_spikes_len'] = len(_spikes)
         if isinstance(self, DelayConnection):
             self._vars['_cdi'] = self._cur_delay_ind
         weave.inline(self._code, self._vars_list,
@@ -252,14 +282,22 @@ def make_new_connection(C):
             C.propagate = new.instancemethod(new_propagate, C, C.__class__)
 
 if __name__=='__main__':
+
+    log_level_debug()
     
-    structure = 'sparse'
-    delay = False
+    structure = 'dense'
+    delay = True#0*ms or True
+    modulation = False
     
-    G = NeuronGroup(1, 'V:1', reset=0, threshold=1)
+    G = NeuronGroup(1, 'V:1\nmod:1', reset=0, threshold=1)
     G.V = 2
+    G.mod = 5
     H = NeuronGroup(10, 'V:1')
-    C = Connection(G, H, 'V', structure=structure, delay=delay)
+    if modulation:
+        modulation = 'mod'
+    else:
+        modulation = None
+    C = Connection(G, H, 'V', structure=structure, delay=delay, modulation=modulation)
     C[0, :] = linspace(0, 1, 10)
     if delay:
         C.delay[0, :] = linspace(0, 1, 10)*ms
