@@ -94,61 +94,68 @@ have at the moment.
 
 from brian import *
 from scipy import weave
+from brian.experimental.new_c_propagate import *
 
-
-#def update_on_post_spikes(spikes):
-#    if len(spikes):
-#        G_post.A_post[spikes] += dA_post
-#        for i in spikes:
-#            synapses.W[:, i] = clip(synapses.W[:, i]+G_pre.A_pre, 0, gmax)
-
-def make_update_on_pre(G_pre, dA_pre, synapses, gmax):
-    vars = {'A_pre__array':G_pre.A_pre,
-            'A_post__array':G_post.A_post,
-            'dA_pre':dA_pre,
-            'gmax':gmax,
-            '_spikes':None,
-            '_nspikes':None,
-            }
-    vars['_rowind'] = synapses.W.rowind
-    vars['_allj'] = synapses.W.allj
-    vars['_alldata'] = synapses.W.alldata
-    code = '''
-    for(int _spike_index=0; _spike_index<_nspikes; _spike_index++)
-    {
-        int _source_neuron_index = _spikes[_spike_index];
-        double &A_pre = A_pre__array[_source_neuron_index];
-        
-        A_pre += dA_pre;
-        
-        for(int _p=_rowind[_source_neuron_index]; _p<_rowind[_source_neuron_index+1]; _p++)
-        {
-            int _target_neuron_index = _allj[_p];
-            double &_weight = _alldata[_p];
-            double &A_post = A_post__array[_target_neuron_index];
-            
-            _weight += A_post;
-            
-            if(_weight<0) _weight=0;
-            if(_weight>gmax) _weight=gmax;
-        }
-    }
-    '''
+def make_update_on_pre(G_pre, G_post, dA_pre, synapses, gmax):
+    code = iterate_over_spikes('_j', '_spikes',
+                (load_required_variables('_j', {'A_pre':G_pre.A_pre}),
+                 transform_code('A_pre += dA_pre', vars={'dA_pre':float(dA_pre)}),
+                 iterate_over_row('_k', 'w', synapses.W, '_j',
+                    (load_required_variables('_k', {'A_post':G_post.A_post}),
+                     transform_code('w += A_post'),
+                     ConnectionCode('''
+                         if(w<0) w=0;
+                         if(w>gmax) w=gmax;
+                         ''', vars={'gmax':gmax})))))
+    code, vars = code.codestr, code.vars
+    vars['_spikes'] = None
+    vars['_spikes_len'] = None
     vars_list = vars.keys()
+    print code
     def f(_spikes):
         if len(_spikes):
             if not isinstance(_spikes, ndarray):
                 _spikes = array(_spikes, dtype=int)
             vars['_spikes'] = _spikes
-            vars['_nspikes'] = len(_spikes)
+            vars['_spikes_len'] = len(_spikes)
             weave.inline(code, vars_list,
                          local_dict=vars,
                          compiler='gcc',
                          extra_compile_args=['-O3'])
     return f
-    
+
+def make_update_on_post(G_pre, G_post, dA_post, synapses, gmax):
+    code = iterate_over_spikes('_j', '_spikes',
+                (load_required_variables('_j', {'A_post':G_post.A_post}),
+                 transform_code('A_post += dA_post', vars={'dA_post':float(dA_post)}),
+                 iterate_over_col('_i', 'w', synapses.W, '_j',
+                    (load_required_variables('_i', {'A_pre':G_pre.A_pre}),
+                     transform_code('w += A_pre'),
+                     ConnectionCode('''
+                         if(w<0) w=0;
+                         if(w>gmax) w=gmax;
+                         ''', vars={'gmax':gmax})))))
+    code, vars = code.codestr, code.vars
+    vars['_spikes'] = None
+    vars['_spikes_len'] = None
+    vars_list = vars.keys()
+    print code
+    def f(_spikes):
+        if len(_spikes):
+            if not isinstance(_spikes, ndarray):
+                _spikes = array(_spikes, dtype=int)
+            vars['_spikes'] = _spikes
+            vars['_spikes_len'] = len(_spikes)
+            weave.inline(code, vars_list,
+                         local_dict=vars,
+                         compiler='gcc',
+                         extra_compile_args=['-O3'])
+    return f
+
 if __name__=='__main__':
     from time import time
+    
+    structure = 'sparse'
     
     N=1000
     taum=10*ms
@@ -171,7 +178,7 @@ if __name__=='__main__':
     
     input=PoissonGroup(N,rates=F)
     neurons=NeuronGroup(1,model=eqs_neurons,threshold=vt,reset=vr)
-    synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax)
+    synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax, structure=structure)
     neurons.v=vr
     
     #stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax)
@@ -186,20 +193,13 @@ if __name__=='__main__':
 #              post='A_post+=dA_post;w+=A_pre',wmax=gmax)
     G_pre = NeuronGroup(N, 'dA_pre/dt=-A_pre/tau_pre:1')
     G_post = NeuronGroup(1, 'dA_post/dt=-A_post/tau_post:1')
-#    def update_on_pre_spikes(spikes):
-#        if len(spikes):
-#            G_pre.A_pre[spikes] += dA_pre
-#            for i in spikes:
-#                synapses.W[i, :] = clip(synapses.W[i, :]+G_post.A_post, 0, gmax)
-    def update_on_post_spikes(spikes):
-        if len(spikes):
-            G_post.A_post[spikes] += dA_post
-            for i in spikes:
-                synapses.W[:, i] = clip(synapses.W[:, i]+G_pre.A_pre, 0, gmax)
     
     synapses.compress()
     
-    M_pre = SpikeMonitor(input, function=make_update_on_pre(G_pre, dA_pre, synapses, gmax))
+    update_on_pre_spikes = make_update_on_pre(G_pre, G_post, dA_pre, synapses, gmax)
+    update_on_post_spikes = make_update_on_post(G_pre, G_post, dA_post, synapses, gmax)
+    
+    M_pre = SpikeMonitor(input, function=update_on_pre_spikes)
     M_post = SpikeMonitor(neurons, function=update_on_post_spikes)
     
     rate=PopulationRateMonitor(neurons)

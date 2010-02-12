@@ -89,9 +89,17 @@ import numpy
 from scipy import weave
 import new
 
-__all__ = ['make_new_connection']
+__all__ = ['make_new_connection',
+           'expand_code', 'transform_code',
+           'iterate_over_spikes',
+           'load_required_variables',
+           'load_required_variables_delayedreaction',
+           'iterate_over_row',
+           'iterate_over_col',
+           'ConnectionCode',
+           ]
 
-class Code(object):
+class ConnectionCode(object):
     def __init__(self, codestr, vars=None):
         if vars is None:
             vars = {}
@@ -99,20 +107,20 @@ class Code(object):
         self.codestr = codestr
 
 def expand_code(code):
-    if isinstance(code, Code):
+    if isinstance(code, ConnectionCode):
         return code
     elif isinstance(code, (tuple, list)):
         codestr = '\n'.join([expand_code(c).codestr for c in code])
         vars = {}
         for c in code:
             vars.update(c.vars)
-        return Code(codestr, vars)
+        return ConnectionCode(codestr, vars)
     else:
-        raise TypeError('Code should be string or tuple')
+        raise TypeError('ConnectionCode should be string or tuple')
 
-def transform_code(codestr):
+def transform_code(codestr, vars=None):
     # TODO: replace with something more sophisticated than this
-    return Code('\n'.join(line+';' for line in codestr.split('\n') if line.strip()))
+    return ConnectionCode('\n'.join(line+';' for line in codestr.split('\n') if line.strip()), vars)
 
 def iterate_over_spikes(neuron_index, spikes, code):
     outcode = '''
@@ -127,7 +135,7 @@ def iterate_over_spikes(neuron_index, spikes, code):
     outcode = outcode.replace('%SPIKES_LEN%', spikes+'_len')
     outcode = outcode.replace('%NEURON_INDEX%', neuron_index)
     outcode = outcode.replace('%CODE%', code.codestr)
-    return Code(outcode, code.vars)
+    return ConnectionCode(outcode, code.vars)
 
 def load_required_variables(neuron_index, neuron_vars):
     vars = {}
@@ -135,7 +143,7 @@ def load_required_variables(neuron_index, neuron_vars):
     for k, v in neuron_vars.iteritems():
         vars[k+'__array'] = v
         codestr += 'double &'+k+' = '+k+'__array['+neuron_index+'];\n'
-    return Code(codestr, vars)
+    return ConnectionCode(codestr, vars)
 
 def load_required_variables_delayedreaction(neuron_index, delay, delay_index, neuron_var, C):
     vars = {}
@@ -150,7 +158,7 @@ def load_required_variables_delayedreaction(neuron_index, delay, delay_index, ne
     vars[delay_index] = None # filled in by propagation function
     vars['_idt'] = C._invtargetdt
     vars['_md'] = C._max_delay
-    return Code(codestr, vars)
+    return ConnectionCode(codestr, vars)
 
 def iterate_over_row(target_index, weight_variable, weight_matrix, source_index,
                      code, extravars={}):
@@ -182,7 +190,7 @@ def iterate_over_row(target_index, weight_variable, weight_matrix, source_index,
         for(int _p=_rowind[%SOURCEINDEX%]; _p<_rowind[%SOURCEINDEX%+1]; _p++)
         {
             int %TARGETINDEX% = _allj[_p];
-            double %WEIGHT% = _alldata[_p];
+            double &%WEIGHT% = _alldata[_p];
             %EXTRAVARS%
             %CODE%
         }
@@ -212,10 +220,75 @@ def iterate_over_row(target_index, weight_variable, weight_matrix, source_index,
     outcode = outcode.replace('%SOURCEINDEX%', source_index)
     outcode = outcode.replace('%WEIGHT%', weight_variable)
     outcode = outcode.replace('%CODE%', code.codestr)
-    return Code(outcode, vars)
+    return ConnectionCode(outcode, vars)
+
+def iterate_over_col(source_index, weight_variable, weight_matrix, target_index,
+                     code, extravars={}):
+    code = expand_code(code)
+    vars = {}
+    vars.update(code.vars)
+    if isinstance(weight_matrix, DenseConnectionMatrix):
+        outcode = '''
+        for(int %SOURCEINDEX%=0; %SOURCEINDEX%<_num_source_neurons; %SOURCEINDEX%++)
+        {
+            double &%WEIGHT% = _weight_arr[%SOURCEINDEX%+%TARGETINDEX%*_num_target_neurons];
+            %EXTRAVARS%
+            %CODE%
+        }
+        '''
+        extravarscode = ''
+        for k, v in extravars.iteritems():
+            extracodetmp = 'double &%V% = %V%__array[%SOURCEINDEX%+%TARGETINDEX%*_num_target_neurons];'
+            extracodetmp = extracodetmp.replace('%V%', k)
+            extracodetmp = extracodetmp.replace('%SOURCEINDEX%', source_index)
+            extracodetmp = extracodetmp.replace('%TARGETINDEX%', target_index)
+            vars[k+'__array'] = numpy.asarray(v)
+            extravarscode += extracodetmp
+        outcode = outcode.replace('%EXTRAVARS%', extravarscode)
+        vars['_weight_arr'] = numpy.asarray(weight_matrix)
+        vars['_num_source_neurons'] = weight_matrix.shape[0]
+        vars['_num_target_neurons'] = weight_matrix.shape[1]
+    elif isinstance(weight_matrix, SparseConnectionMatrix):
+        outcode = '''
+        for(int _q=_colind[%TARGETINDEX%]; _q<_colind[%TARGETINDEX%+1]; _q++)
+        {
+            int _p = _allcoldataindices[_q];
+            int %SOURCEINDEX% = _colalli[_q];
+            double &%WEIGHT% = _alldata[_p];
+            %EXTRAVARS%
+            %CODE%
+        }
+        '''
+        extravarscode = ''
+        for k, v in extravars.iteritems():
+            extracodetmp = 'double &%V% = %V%__alldata[_p];'
+            extracodetmp = extracodetmp.replace('%V%', k)
+            vars[k+'__alldata'] = v.alldata
+            extravarscode += extracodetmp
+        outcode = outcode.replace('%EXTRAVARS%', extravarscode)
+        vars['_colind'] = weight_matrix.colind
+        vars['_colalli'] = weight_matrix.colalli
+        vars['_allcoldataindices'] = weight_matrix.allcoldataindices
+        vars['_alldata'] = weight_matrix.alldata
+    elif isinstance(weight_matrix, DynamicConnectionMatrix):
+        # TODO: support dynamic matrix structure
+        # the best way to support dynamic matrix type would be to
+        # reorganise dynamic matrix data structure. Ideally, it should consist
+        # of numpy arrays only. Maybe some sort of linked list structure?
+        # Otherwise, we can use code that accesses the Python lists, but it's
+        # probably less efficient (maybe this is anyway not a big issue with
+        # the dynamic matrix type?)
+        raise TypeError('Dynamic matrix not supported.')
+    else:
+        raise TypeError('Must be dense/sparse/dynamic matrix.')
+    outcode = outcode.replace('%SOURCEINDEX%', source_index)
+    outcode = outcode.replace('%TARGETINDEX%', target_index)
+    outcode = outcode.replace('%WEIGHT%', weight_variable)
+    outcode = outcode.replace('%CODE%', code.codestr)
+    return ConnectionCode(outcode, vars)
 
 # TODO:
-# * iterate_over_col
+# * TEST iterate_over_col
 # * load_required_variables_pastvalue
 
 def generate_connection_code(C):
