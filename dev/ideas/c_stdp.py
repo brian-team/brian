@@ -196,7 +196,6 @@ def make_update_on_pre_delayed(G_pre, G_post, M_pre, M_post, dA_pre, dA_post, sy
             vars['_spikes'] = _spikes
             vars['_spikes_len'] = len(_spikes)
             vars['A_post__cti'] = M_post.current_time_index
-            vars['_cdi'] = synapses._cur_delay_ind
             weave.inline(code, vars_list,
                          local_dict=vars,
                          compiler='gcc',
@@ -209,9 +208,8 @@ def make_update_on_post_delayver(G_pre, G_post, M_pre, M_post, dA_pre, dA_post, 
                  transform_code('A_post += dA_post', vars={'dA_post':float(dA_post)}),
                  iterate_over_col('_i', 'w', synapses.W, '_j', extravars={'_delay':synapses.delayvec},
                     code=(
-                     ConnectionCode('double _t_past = _max_delay-_delay;', vars={'_max_delay':float(max_delay)}),
-                     load_required_variables_pastvalue('_i', '_t_past', {'A_pre':M_pre}),
-                     transform_code('w += A_post'),
+                     load_required_variables_pastvalue('_i', '_delay', {'A_pre':M_pre}),
+                     transform_code('w += A_pre'),
                      ConnectionCode('''
                          if(w<0) w=0;
                          if(w>gmax) w=gmax;
@@ -228,7 +226,6 @@ def make_update_on_post_delayver(G_pre, G_post, M_pre, M_post, dA_pre, dA_post, 
             vars['_spikes'] = _spikes
             vars['_spikes_len'] = len(_spikes)
             vars['A_pre__cti'] = M_pre.current_time_index
-            vars['_cdi'] = synapses._cur_delay_ind
             weave.inline(code, vars_list,
                          local_dict=vars,
                          compiler='gcc',

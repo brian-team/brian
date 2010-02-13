@@ -177,7 +177,7 @@ def load_required_variables_pastvalue(neuron_index, time, neuron_vars):
         vars[k+'__cti'] = None # current_time_index filled in by propagation function
         vars[k+'__idt'] = M._invtargetdt
         vars[k+'__nd'] = M.num_duration
-        newcodestr = 'double &%var% = %var%__values[((%var%__cti-1-(int)(%var%__idt*%time%))%%var%__nd)*%var%__arraylen+%i%];\n'
+        newcodestr = 'double &%var% = %var%__values[((%var%__nd+%var%__cti-1-(int)(%var%__idt*%time%))%%var%__nd)*%var%__arraylen+%i%];\n'
         newcodestr = newcodestr.replace('%var%', k)
         newcodestr = newcodestr.replace('%time%', time)
         newcodestr = newcodestr.replace('%i%', neuron_index)
