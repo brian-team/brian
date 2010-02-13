@@ -240,7 +240,7 @@ if __name__=='__main__':
     from time import time
     
     structure = 'sparse'
-    delay = True
+    delay = True # TODO: doesn't work yet with delays!
     
     if not delay:
         delay = None
