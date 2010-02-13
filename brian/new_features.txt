@@ -17,6 +17,8 @@ Bug fixes
 * Fixed bug where connect* functions on DelayConnection didn't work with
   subgroups but only with the whole group.
 * Fixed bug with linked_var from subgroups not working
+* Fixed bug with adding Equations objects together using a shared base equation
+  (ticket #9 on the trac)
   
 New features since 1.1.3
 ------------------------

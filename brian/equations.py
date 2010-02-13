@@ -254,6 +254,13 @@ class Equations(object):
         self._alias=disjoint_dict_union(self._alias,other._alias)
         self._string=disjoint_dict_union(self._string,other._string)
         self._namespace=disjoint_dict_union(self._namespace,other._namespace)
+        # We do this to fix a bug where if you add two Equations together and
+        # then create groups from them, the add_prefix_namespace step creates
+        # names which can't be correctly resolved in the second NeuronGroup
+        # created. This happens because although self._namespace is a new object,
+        # self._namespace[var] is shared between the two objects.
+        for var in self._namespace.keys():
+            self._namespace[var] = copy.copy(self._namespace[var])
         try:
             self._units=disjoint_dict_union(self._units,other._units)
         except AttributeError:
