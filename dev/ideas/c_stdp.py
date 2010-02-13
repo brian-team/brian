@@ -152,11 +152,100 @@ def make_update_on_post(G_pre, G_post, dA_post, synapses, gmax):
                          extra_compile_args=['-O3'])
     return f
 
+def make_update_on_pre_immediate(G_pre, G_post, M_pre, M_post, dA_pre, dA_post, synapses, gmax, max_delay):
+    code = iterate_over_spikes('_j', '_spikes',
+                (load_required_variables('_j', {'A_pre':G_pre.A_pre}),
+                 transform_code('A_pre += dA_pre', vars={'dA_pre':float(dA_pre)})))
+    code, vars = code.codestr, code.vars
+    vars['_spikes'] = None
+    vars['_spikes_len'] = None
+    vars_list = vars.keys()
+    print code
+    def f(_spikes):
+        if len(_spikes):
+            if not isinstance(_spikes, ndarray):
+                _spikes = array(_spikes, dtype=int)
+            vars['_spikes'] = _spikes
+            vars['_spikes_len'] = len(_spikes)
+            weave.inline(code, vars_list,
+                         local_dict=vars,
+                         compiler='gcc',
+                         extra_compile_args=['-O3'])
+    return f
+
+def make_update_on_pre_delayed(G_pre, G_post, M_pre, M_post, dA_pre, dA_post, synapses, gmax, max_delay):
+    code = iterate_over_spikes('_j', '_spikes',
+                 iterate_over_row('_k', 'w', synapses.W, '_j', extravars={'_delay':synapses.delayvec},
+                    code=(
+                     ConnectionCode('double _t_past = _max_delay-_delay;', vars={'_max_delay':float(max_delay)}),
+                     load_required_variables_pastvalue('_k', '_t_past', {'A_post':M_post}),
+                     transform_code('w += A_post'),
+                     ConnectionCode('''
+                         if(w<0) w=0;
+                         if(w>gmax) w=gmax;
+                         ''', vars={'gmax':gmax}))))
+    code, vars = code.codestr, code.vars
+    vars['_spikes'] = None
+    vars['_spikes_len'] = None
+    vars_list = vars.keys()
+    print code
+    def f(_spikes):
+        if len(_spikes):
+            if not isinstance(_spikes, ndarray):
+                _spikes = array(_spikes, dtype=int)
+            vars['_spikes'] = _spikes
+            vars['_spikes_len'] = len(_spikes)
+            vars['A_post__cti'] = M_post.current_time_index
+            vars['_cdi'] = synapses._cur_delay_ind
+            weave.inline(code, vars_list,
+                         local_dict=vars,
+                         compiler='gcc',
+                         extra_compile_args=['-O3'])
+    return f
+
+def make_update_on_post_delayver(G_pre, G_post, M_pre, M_post, dA_pre, dA_post, synapses, gmax, max_delay):
+    code = iterate_over_spikes('_j', '_spikes',
+                (load_required_variables('_j', {'A_post':G_post.A_post}),
+                 transform_code('A_post += dA_post', vars={'dA_post':float(dA_post)}),
+                 iterate_over_col('_i', 'w', synapses.W, '_j', extravars={'_delay':synapses.delayvec},
+                    code=(
+                     ConnectionCode('double _t_past = _max_delay-_delay;', vars={'_max_delay':float(max_delay)}),
+                     load_required_variables_pastvalue('_i', '_t_past', {'A_pre':M_pre}),
+                     transform_code('w += A_post'),
+                     ConnectionCode('''
+                         if(w<0) w=0;
+                         if(w>gmax) w=gmax;
+                         ''', vars={'gmax':gmax})))))
+    code, vars = code.codestr, code.vars
+    vars['_spikes'] = None
+    vars['_spikes_len'] = None
+    vars_list = vars.keys()
+    print code
+    def f(_spikes):
+        if len(_spikes):
+            if not isinstance(_spikes, ndarray):
+                _spikes = array(_spikes, dtype=int)
+            vars['_spikes'] = _spikes
+            vars['_spikes_len'] = len(_spikes)
+            vars['A_pre__cti'] = M_pre.current_time_index
+            vars['_cdi'] = synapses._cur_delay_ind
+            weave.inline(code, vars_list,
+                         local_dict=vars,
+                         compiler='gcc',
+                         extra_compile_args=['-O3'])
+    return f
+
+
 if __name__=='__main__':
     from time import time
     
     structure = 'sparse'
+    delay = True
     
+    if not delay:
+        delay = None
+    
+    max_delay = 5*ms
     N=1000
     taum=10*ms
     tau_pre=20*ms
@@ -178,7 +267,8 @@ if __name__=='__main__':
     
     input=PoissonGroup(N,rates=F)
     neurons=NeuronGroup(1,model=eqs_neurons,threshold=vt,reset=vr)
-    synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax, structure=structure)
+    synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax,
+                        structure=structure, delay=delay)
     neurons.v=vr
     
     #stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax)
@@ -193,14 +283,25 @@ if __name__=='__main__':
 #              post='A_post+=dA_post;w+=A_pre',wmax=gmax)
     G_pre = NeuronGroup(N, 'dA_pre/dt=-A_pre/tau_pre:1')
     G_post = NeuronGroup(1, 'dA_post/dt=-A_post/tau_post:1')
+
+    if delay:
+        M_pre = RecentStateMonitor(G_pre, 'A_pre', duration=max_delay)
+        M_post = RecentStateMonitor(G_post, 'A_post', duration=max_delay)
     
     synapses.compress()
     
-    update_on_pre_spikes = make_update_on_pre(G_pre, G_post, dA_pre, synapses, gmax)
-    update_on_post_spikes = make_update_on_post(G_pre, G_post, dA_post, synapses, gmax)
-    
-    M_pre = SpikeMonitor(input, function=update_on_pre_spikes)
-    M_post = SpikeMonitor(neurons, function=update_on_post_spikes)
+    if delay:
+        update_on_pre_spikes_immediate = make_update_on_pre_immediate(G_pre, G_post, M_pre, M_post, dA_pre, dA_post, synapses, gmax, max_delay)
+        update_on_pre_spikes_delayed = make_update_on_pre_delayed(G_pre, G_post, M_pre, M_post, dA_pre, dA_post, synapses, gmax, max_delay)
+        update_on_post_spikes = make_update_on_post_delayver(G_pre, G_post, M_pre, M_post, dA_pre, dA_post, synapses, gmax, max_delay)
+        M_pre_immediate = SpikeMonitor(input, function=update_on_pre_spikes_immediate)
+        M_pre_delayed = SpikeMonitor(input, function=update_on_pre_spikes_delayed, delay=max_delay)
+        M_post = SpikeMonitor(neurons, function=update_on_post_spikes)
+    else:
+        update_on_pre_spikes = make_update_on_pre(G_pre, G_post, dA_pre, synapses, gmax)
+        update_on_post_spikes = make_update_on_post(G_pre, G_post, dA_post, synapses, gmax)    
+        M_pre = SpikeMonitor(input, function=update_on_pre_spikes)
+        M_post = SpikeMonitor(neurons, function=update_on_post_spikes)
     
     rate=PopulationRateMonitor(neurons)
     

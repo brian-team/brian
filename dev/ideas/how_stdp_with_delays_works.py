@@ -24,7 +24,6 @@ def update_on_pre_spikes_immediate(spikes):
         G_pre.A_pre[spikes] += delta_A_pre
 def update_on_pre_spikes_delayed(spikes):
     if len(spikes):
-        G_pre.A_pre[spikes] += delta_A_pre
         times_seq = C.delayvec.get_rows(spikes)
         times_seq = [max_delay-times for times in times_seq]
         A_post_delayed_seq = A_post_recent.get_past_values_sequence(times_seq)

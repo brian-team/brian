@@ -76,7 +76,14 @@ we want to jointly iterate over, could improve iterate_over_row/col to iterate
 over several synaptic variables with the same underlying matrix structure as the
 main weight matrix. Then, instead of having delayvec=delayvec, delayvar='delay'
 as a special case, we'd have a list of additional linked matrices.
+
+TODO:
+
+* Have ConnectionCode object feature a C and Python code and namespace to
+  be executed. The Python namespace can be used for grabbing some parameters
+  such as the _cdi variables that currently have to be set in by hand.
 '''
+
 if __name__=='__main__':
     from brian import *
 else:
@@ -94,6 +101,7 @@ __all__ = ['make_new_connection',
            'iterate_over_spikes',
            'load_required_variables',
            'load_required_variables_delayedreaction',
+           'load_required_variables_pastvalue',
            'iterate_over_row',
            'iterate_over_col',
            'ConnectionCode',
@@ -158,6 +166,22 @@ def load_required_variables_delayedreaction(neuron_index, delay, delay_index, ne
     vars[delay_index] = None # filled in by propagation function
     vars['_idt'] = C._invtargetdt
     vars['_md'] = C._max_delay
+    return ConnectionCode(codestr, vars)
+
+def load_required_variables_pastvalue(neuron_index, time, neuron_vars):
+    vars = {}
+    codestr = ''
+    for k, M in neuron_vars.iteritems():
+        vars[k+'__values'] = M._values
+        vars[k+'__arraylen'] = M._values.shape[1]
+        vars[k+'__cti'] = None # current_time_index filled in by propagation function
+        vars[k+'__idt'] = M._invtargetdt
+        vars[k+'__nd'] = M.num_duration
+        newcodestr = 'double &%var% = %var%__values[((%var%__cti-1-(int)(%var%__idt*%time%))%%var%__nd)*%var%__arraylen+%i%];\n'
+        newcodestr = newcodestr.replace('%var%', k)
+        newcodestr = newcodestr.replace('%time%', time)
+        newcodestr = newcodestr.replace('%i%', neuron_index)
+        codestr += newcodestr;
     return ConnectionCode(codestr, vars)
 
 def iterate_over_row(target_index, weight_variable, weight_matrix, source_index,
@@ -289,7 +313,7 @@ def iterate_over_col(source_index, weight_variable, weight_matrix, target_index,
 
 # TODO:
 # * TEST iterate_over_col
-# * load_required_variables_pastvalue
+# * TEST load_required_variables_pastvalue
 
 def generate_connection_code(C):
     modulation = C._nstate_mod is not None
