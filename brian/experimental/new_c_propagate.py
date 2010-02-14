@@ -86,12 +86,14 @@ TODO:
 
 if __name__=='__main__':
     from brian import *
+    from brian.utils.documentation import *
 else:
     from ..connection import Connection, DelayConnection, MultiConnection,\
                 DenseConnectionMatrix, DenseConstructionMatrix,\
                 SparseConnectionMatrix, SparseConstructionMatrix,\
                 DynamicConnectionMatrix, DynamicConstructionMatrix
     from ..log import log_debug, log_warn, log_info
+    from ..utils.documentation import flattened_docstring
 import numpy
 from scipy import weave
 import new
@@ -108,11 +110,59 @@ __all__ = ['make_new_connection',
            ]
 
 class ConnectionCode(object):
-    def __init__(self, codestr, vars=None):
+    def __init__(self, codestr, vars=None, pycodestr=None, pyvars=None):
+        if pyvars is None:
+            pyvars = {}
+        if pycodestr is None:
+            pycodestr = ''
         if vars is None:
             vars = {}
         self.vars = vars
         self.codestr = codestr
+        if len([line for line in pycodestr.split('\n') if line])>1:
+            pycodestr = flattened_docstring(pycodestr)
+        else:
+            pycodestr = pycodestr.strip()
+        self.pycodestr = pycodestr
+        self.pyvars = pyvars
+        self.prepared = False
+    def prepare(self):
+        self.pyvars['vars'] = self.vars
+        self.vars['_spikes'] = None
+        self.vars['_spikes_len'] = None
+        self.vars_list = self.vars.keys()
+        if len(self.pycodestr):
+            self.compiled_pycode = compile(self.pycodestr, 'ConnectionCode', 'exec')
+        else:
+            self.compiled_pycode = None
+        self.prepared = True
+    def __call__(self, _spikes):
+        if not self.prepared:
+            self.prepare()
+        if len(_spikes):
+            if not isinstance(_spikes, numpy.ndarray):
+                _spikes = array(_spikes, dtype=int)
+            vars = self.vars
+            vars['_spikes'] = _spikes
+            vars['_spikes_len'] = len(_spikes)
+            if self.compiled_pycode is not None:
+                exec self.compiled_pycode in self.pyvars
+            weave.inline(self.codestr, self.vars_list,
+                         local_dict=self.vars,
+                         compiler='gcc',
+                         extra_compile_args=['-O3'])
+    def __str__(self):
+        s = 'C code:\n'
+        spaces = 0
+        for line in self.codestr.split('\n'):
+            if line.strip():
+                if '}' in line: spaces -= 4
+                s += ' '*spaces+line.strip()+'\n'
+                if '{' in line: spaces += 4
+        s += 'Python code:\n'
+        s += self.pycodestr
+        return s
+    __repr__ = __str__
 
 def expand_code(code):
     if isinstance(code, ConnectionCode):
@@ -120,9 +170,12 @@ def expand_code(code):
     elif isinstance(code, (tuple, list)):
         codestr = '\n'.join([expand_code(c).codestr for c in code])
         vars = {}
+        pyvars = {}
         for c in code:
             vars.update(c.vars)
-        return ConnectionCode(codestr, vars)
+            pyvars.update(c.pyvars)
+        pycodestr = '\n'.join([expand_code(c).pycodestr for c in code])
+        return ConnectionCode(codestr, vars, pycodestr, pyvars)
     else:
         raise TypeError('ConnectionCode should be string or tuple')
 
@@ -143,7 +196,7 @@ def iterate_over_spikes(neuron_index, spikes, code):
     outcode = outcode.replace('%SPIKES_LEN%', spikes+'_len')
     outcode = outcode.replace('%NEURON_INDEX%', neuron_index)
     outcode = outcode.replace('%CODE%', code.codestr)
-    return ConnectionCode(outcode, code.vars)
+    return ConnectionCode(outcode, code.vars, code.pycodestr, code.pyvars)
 
 def load_required_variables(neuron_index, neuron_vars):
     vars = {}
@@ -163,13 +216,17 @@ def load_required_variables_delayedreaction(neuron_index, delay, delay_index, ne
     codestr = codestr.replace('%I%', neuron_index)
     vars['_num_target_neurons'] = len(C.target)
     vars['_dr'] = C._delayedreaction
-    vars[delay_index] = None # filled in by propagation function
+    vars[delay_index] = None # filled in by Python code (below)
     vars['_idt'] = C._invtargetdt
     vars['_md'] = C._max_delay
-    return ConnectionCode(codestr, vars)
+    pyvars = {'conn':C}
+    pycodestr = "vars['_cdi'] = conn._cur_delay_ind"
+    return ConnectionCode(codestr, vars, pycodestr, pyvars)
 
 def load_required_variables_pastvalue(neuron_index, time, neuron_vars):
     vars = {}
+    pyvars = {}
+    pycodestr = ''
     codestr = ''
     for k, M in neuron_vars.iteritems():
         vars[k+'__values'] = M._values
@@ -177,12 +234,14 @@ def load_required_variables_pastvalue(neuron_index, time, neuron_vars):
         vars[k+'__cti'] = None # current_time_index filled in by propagation function
         vars[k+'__idt'] = M._invtargetdt
         vars[k+'__nd'] = M.num_duration
+        pyvars[k+'__RecentStateMonitor'] = M
+        pycodestr += "vars['%k%__cti'] = %k%__RecentStateMonitor.current_time_index\n" .replace('%k%', k)
         newcodestr = 'double &%var% = %var%__values[((%var%__nd+%var%__cti-1-(int)(%var%__idt*%time%))%%var%__nd)*%var%__arraylen+%i%];\n'
         newcodestr = newcodestr.replace('%var%', k)
         newcodestr = newcodestr.replace('%time%', time)
         newcodestr = newcodestr.replace('%i%', neuron_index)
         codestr += newcodestr;
-    return ConnectionCode(codestr, vars)
+    return ConnectionCode(codestr, vars, pycodestr, pyvars)
 
 def iterate_over_row(target_index, weight_variable, weight_matrix, source_index,
                      code, extravars={}):
@@ -244,7 +303,7 @@ def iterate_over_row(target_index, weight_variable, weight_matrix, source_index,
     outcode = outcode.replace('%SOURCEINDEX%', source_index)
     outcode = outcode.replace('%WEIGHT%', weight_variable)
     outcode = outcode.replace('%CODE%', code.codestr)
-    return ConnectionCode(outcode, vars)
+    return ConnectionCode(outcode, vars, code.pycodestr, code.pyvars)
 
 def iterate_over_col(source_index, weight_variable, weight_matrix, target_index,
                      code, extravars={}):
@@ -309,7 +368,7 @@ def iterate_over_col(source_index, weight_variable, weight_matrix, target_index,
     outcode = outcode.replace('%TARGETINDEX%', target_index)
     outcode = outcode.replace('%WEIGHT%', weight_variable)
     outcode = outcode.replace('%CODE%', code.codestr)
-    return ConnectionCode(outcode, vars)
+    return ConnectionCode(outcode, vars, code.pycodestr, code.pyvars)
 
 # TODO:
 # * TEST iterate_over_col
@@ -318,7 +377,6 @@ def iterate_over_col(source_index, weight_variable, weight_matrix, target_index,
 def generate_connection_code(C):
     modulation = C._nstate_mod is not None
     delay = isinstance(C, DelayConnection)
-    vars = {'_spikes':None, '_spikes_len':None}
     if not modulation and not delay:
         code = iterate_over_spikes('_j', '_spikes',
                      iterate_over_row('_k', 'w', C.W, '_j',
@@ -343,29 +401,17 @@ def generate_connection_code(C):
                                transform_code('V += w*modulation')))))
     else:
         raise TypeError('Not supported.')
-    codestr = '\n'.join(line for line in code.codestr.split('\n') if line.strip())
-    vars.update(code.vars)
-    return vars, codestr
+    return code
 
 def new_propagate(self, _spikes):
     if not self.iscompressed:
         self.compress()
-    if not hasattr(self, '_vars'):
-        self._vars, self._code = generate_connection_code(self)
-        self._vars_list = self._vars.keys()
+    if not hasattr(self, '_connection_code'):
+        self._connection_code = generate_connection_code(self)
         log_warn('brian.experimental.new_c_propagate', 'Using new C based propagation function.')
-        log_debug('brian.experimental.new_c_propagate', 'C based propagation function code:\n'+self._code)
+        log_debug('brian.experimental.new_c_propagate', 'C based propagation code:\n'+str(self._connection_code))
     if len(_spikes):
-        if not isinstance(_spikes, numpy.ndarray):
-            _spikes = array(_spikes, dtype=int)
-        self._vars['_spikes'] = _spikes
-        self._vars['_spikes_len'] = len(_spikes)
-        if isinstance(self, DelayConnection):
-            self._vars['_cdi'] = self._cur_delay_ind
-        weave.inline(self._code, self._vars_list,
-                     local_dict=self._vars,
-                     compiler='gcc',
-                     extra_compile_args=['-O3'])
+        self._connection_code(_spikes)
 
 def make_new_connection(C):
     if C.__class__ is MultiConnection:

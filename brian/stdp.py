@@ -21,6 +21,8 @@ from numpy import arange, floor
 from clock import Clock
 from units import second
 from utils.separate_equations import separate_equations
+from log import *
+from globalprefs import *
 
 __all__=['STDP','ExponentialSTDP']
 
@@ -191,6 +193,14 @@ class STDP(NetworkOperation):
         delay_pre: presynaptic delay
         delay_post: postsynaptic delay (backward propagating spike)
         '''
+        if get_global_preference('usecstdp') and get_global_preference('useweave'):
+            from experimental.c_stdp import CSTDP
+            log_warn('brian.stdp', 'Using experimental C STDP class.')
+            self.__class__ = CSTDP
+            CSTDP.__init__(self, C, eqs, pre, post, wmin=wmin, wmax=wmax,
+                           level=level+1, clock=clock, delay_pre=delay_pre,
+                           delay_post=delay_post)
+            return
         if isinstance(C,DelayConnection):
             #raise AttributeError,"STDP does not handle heterogeneous connections yet."
             warnings.warn("STDP with heterogeneous delays is experimental!")

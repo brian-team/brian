@@ -154,6 +154,11 @@ define_global_preference('usenewpropagate','False',desc='''
         ''')
 set_global_preferences(usenewpropagate=False)
 
+define_global_preference('usecstdp','False',desc='''
+        Whether or not to use experimental new C STDP.
+        ''')
+set_global_preferences(usecstdp=False)
+
 # check if we were run from a file or some other source, and set the default
 # behaviour for magic functions accordingly
 import inspect as _inspect
