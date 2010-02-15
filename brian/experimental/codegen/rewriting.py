@@ -1,5 +1,19 @@
+from sympy.printing.ccode import CCodePrinter
+from sympy.printing.precedence import precedence
 import sympy
 from ...optimiser import symbolic_eval
+
+def boolean_printer(origop, newop, start=''):
+    def f(self, expr):
+        PREC = precedence(expr)
+        return start+newop.join(self.parenthesize(a, PREC) for a in expr.args)
+    f.__name__ = '_print_'+origop
+    return f
+        
+class NewCCodePrinter(CCodePrinter):
+    _print_And = boolean_printer('And', '&&')
+    _print_Or = boolean_printer('Or', '||')
+    _print_Not = boolean_printer('Not', '', '!')
 
 __all__ = ['rewrite_to_c_expression', 'sympy_rewrite', 'rewrite_pow', 'floatify_numbers']
 
@@ -43,9 +57,7 @@ def sympy_rewrite(s, rewriters=None):
 
 def rewrite_to_c_expression(s):
     e = symbolic_eval(s)
-    if not hasattr(e, 'args'):
-        return str(e)
-    return str(rewrite_pow(e))
+    return NewCCodePrinter().doprint(e)
 
 def generate_c_expressions(eqs):
     exprs = make_sympy_expressions(eqs)
