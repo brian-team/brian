@@ -6,7 +6,9 @@ V : volt
 Vt : volt
 ''')
 
-threshold = 'V>Vt'
+threshold = '''
+    (V>Vt)&(V>Vt)
+'''
 
 print '**** C CODE *****'
 print generate_c_threshold(eqs, threshold)

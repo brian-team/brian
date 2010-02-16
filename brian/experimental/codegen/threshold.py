@@ -12,6 +12,7 @@ __all__ = ['generate_c_threshold', 'generate_python_threshold',
            'CThreshold', 'PythonThreshold']
 
 def generate_c_threshold(eqs, inputcode, vartype='double', level=0, ns=None):
+    inputcode = inputcode.strip()
     if ns is None:
         ns, unknowns = namespace(inputcode, level=level+1, return_unknowns=True)
     all_variables = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
@@ -30,6 +31,7 @@ def generate_c_threshold(eqs, inputcode, vartype='double', level=0, ns=None):
     return code
 
 def generate_python_threshold(eqs, inputcode, level=0, ns=None):
+    inputcode = inputcode.strip()
     if ns is None:
         ns, unknowns = namespace(inputcode, level=level+1, return_unknowns=True)
     all_variables = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
@@ -40,6 +42,7 @@ def generate_python_threshold(eqs, inputcode, level=0, ns=None):
 
 class PythonThreshold(Threshold):
     def __init__(self, inputcode, level=0):
+        inputcode = inputcode.strip()
         self._ns, unknowns = namespace(inputcode, level=level+1, return_unknowns=True)
         self._inputcode = inputcode
         self._prepared = False
@@ -57,6 +60,7 @@ class PythonThreshold(Threshold):
 
 class CThreshold(Threshold):
     def __init__(self, inputcode, level=0):
+        inputcode = inputcode.strip()
         self._ns, unknowns = namespace(inputcode, level=level+1, return_unknowns=True)
         self._inputcode = inputcode
         self._prepared = False
