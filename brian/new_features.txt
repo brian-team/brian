@@ -19,6 +19,7 @@ Bug fixes
 * Fixed bug with linked_var from subgroups not working
 * Fixed bug with adding Equations objects together using a shared base equation
   (ticket #9 on the trac)
+* unit_checking=False now works (didn't do anything before)
   
 New features since 1.1.3
 ------------------------

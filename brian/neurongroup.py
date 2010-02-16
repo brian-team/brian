@@ -292,7 +292,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             self._eqs = model
             if (init==None) and (model._units=={}):
                 raise AttributeError,"The group must be initialized."
-            self._state_updater,var_names=magic_state_updater(model,clock=clock,order=order,check_units=check_units,implicit=implicit,compile=compile,freeze=freeze,method=method)
+            self._state_updater,var_names=magic_state_updater(model,clock=clock,order=order,check_units=unit_checking,implicit=implicit,compile=compile,freeze=freeze,method=method)
             Group.__init__(self, model, N)
             # Converts S0 from dictionary to tuple
             if self._S0==None: # No initialization: 0 with units
