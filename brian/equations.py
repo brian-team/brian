@@ -175,6 +175,7 @@ class Equations(object):
         self._useweave=get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._frozen=False # True if all units and parameters are gone
+        self._prepared = False
         
         if not isinstance(expr,str): # assume it is a sequence of Equations objects
             for eqs in expr:
@@ -389,6 +390,8 @@ class Equations(object):
         '''
         Do a number of checks (units) and preparation of the object.
         '''
+        if self._prepared:
+            return
         # Let Vm be the first differential equation
         vm_name=self.get_Vm()
         if vm_name:
@@ -415,6 +418,8 @@ class Equations(object):
         free_vars=self.free_variables()
         if free_vars!=[]:
             log_info('brian.equations', 'Free variables: '+str(free_vars))
+        
+        self._prepared = True
 
     def is_linear(self):
         '''
