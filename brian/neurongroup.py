@@ -61,7 +61,6 @@ import numpy
 from base import *
 from group import *
 from threshold import select_threshold
-from deprecated.neuronmodel import Model
 
 timedarray = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
 network = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
@@ -255,19 +254,8 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         if bup.use_units: # one additional frame level induced by the decorator
             level+=1
 
-        # Check if model is specified as a Model and load its variables if it is
-        if isinstance(model,Model):
-            kwds = model.kwds
-            for k, v in kwds.items():
-                exec k+'=v'
-
         # If it is a string, convert to Equations object
         if isinstance(model,(str,list,tuple)):
-            # level=4 looks pretty strange, but the point is to grab the appropriate namespace from the
-            # frame where the string is defined, rather than from the current frame which is what
-            # Equations will do by default. The level has to be 4 because it is 1+3, where the 1 is
-            # the frame that called the NeuronGroup init, and the 3 is the 3 decorators added to the
-            # beginning of the __init__ method.
             model = Equations(model, level=level+1)        
 
         if isinstance(threshold,str):

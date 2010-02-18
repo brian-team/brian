@@ -24,6 +24,10 @@ Bug fixes
 * unit_checking=False now works (didn't do anything before)
 * Fixed bug with using Equations object twice (for two different NeuronGroups)
 * Fixed unit checking bug and ZeroDivisionError (ticket #38)
+
+Removed features
+
+* Model has now been removed from Brian (it was deprecated in 1.1).
   
 New features since 1.1.3
 ------------------------

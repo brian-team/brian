@@ -65,7 +65,6 @@ from quantityarray import *
 from globalprefs import *
 from unitsafefunctions import *
 from stdunits import *
-from deprecated.neuronmodel import *
 from utils.parameters import *
 from membrane_equations import *
 from compartments import *
