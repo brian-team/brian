@@ -1,4 +1,4 @@
-''' 
+'''
 NOTES:
 
 General scheme for propagation code is something like:

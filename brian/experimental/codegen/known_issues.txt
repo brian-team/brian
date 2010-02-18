@@ -1,0 +1,6 @@
+KNOWN ISSUES (roughly in order of importance):
+
+TODO: sometimes name is changed e.g. sin to x_sin for variable x, then name is unknown
+TODO: clip, inf unknown in C++
+TODO: should fall back to Python on fail to compile
+TODO: Python functions can't be used in Equations (allow for specification of C code somehow? workaround with network operation?)

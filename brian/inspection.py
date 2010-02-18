@@ -391,7 +391,7 @@ def depends_on(f,x,x0):
     nargs=f.func_code.co_argcount
     try:
         f(*x0)
-    except e:
+    except:
         result=True       
     
 #    if oldx==None:

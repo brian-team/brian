@@ -7,6 +7,8 @@ Improvements
 * You can now access STDP internal variables, e.g. stdp.A_pre, and monitor
   them by doing e.g. StateMonitor(stdp.pre_group, 'A_pre')
 * STDP now supports nonlinear equations and parameters
+* refractory can now be a vector (see docstring for NeuronGroup) for constant
+  resets.
 
 Bug fixes
 

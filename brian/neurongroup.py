@@ -157,9 +157,13 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         ``reset=`Vt+=5*mV; V=Vt'``. Statements involving ``if`` constructions
         will often not work because the code is automatically vectorised.
         For such constructions, use a function instead of a string.
-    ``refractory=0*ms``
+    ``refractory=0*ms``, ``min_refractory``, ``max_refractory``
         A refractory period, used in combination with the ``reset`` value
-        if it is a scalar.
+        if it is a scalar. For constant resets only, you can specify refractory
+        as an array of length the number of elements in the group, or as a
+        string, giving the name of a state variable in the group. In the case
+        of these variable refractory periods, you should specify
+        ``min_refractory`` (optional) and ``max_refractory`` (required).
     ``clock``
         A clock to use for scheduling this :class:`NeuronGroup`, if omitted the
         default clock will be used.
@@ -236,11 +240,12 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     wanting to write extensions?
     """
     
-    @check_units(refractory=second,max_delay=second)
+    @check_units(max_delay=second)
     def __init__(self, N, model=None, threshold=None, reset=NoReset(),
                  init=None, refractory=0*msecond, level=0,
                  clock=None, order=1, implicit=False,unit_checking=True,
                  max_delay=0*msecond, compile=False, freeze=False, method=None,
+                 min_refractory=None, max_refractory=None,
                  ):#**args): # any reason why **args was included here?
         '''
         Initializes the group.
@@ -341,6 +346,8 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                 self._S[i,:]=self._S0[i]
                 
         # Reset and refractory period
+        self._variable_refractory_time = False
+        period_max = 0
         if is_scalar_type(reset) or reset.__class__ is Reset:
             if reset.__class__ is Reset:
                 if isinstance(reset.state, str):
@@ -356,13 +363,31 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                     reset+self._S0[numstate]
                 except DimensionMismatchError,inst:
                     raise DimensionMismatchError("The reset does not have correct units.",*inst._dims)
+            if isinstance(refractory, float):
+                max_refractory = min_refractory = refractory
+            else:
+                if isinstance(refractory, str):
+                    if max_refractory is None:
+                        raise ValueError('Must specify max_refractory if using variable refractoriness (and specifying min_refractory is good too).')
+                    if min_refractory is None:
+                        min_refractory = 0*second
+                    self._refractory_variable = refractory
+                    self._refractory_array = None
+                else:
+                    min_refractory = amin(refractory)*second
+                    max_refractory = amax(refractory)*second
+                    self._refractory_variable = None
+                    self._refractory_array = refractory
+                self._variable_refractory_time = True
             # What is this 0.9 ?!! Answer: it's just to check that the refractory period is at least clock.dt otherwise don't bother
-            if refractory>0.9*clock.dt: # Refractory period - unit checking is done here
-                self._resetfun=Refractoriness(period=refractory,resetvalue=reset,state=numstate)
-                period=int(refractory/clock.dt)+1
+            if max_refractory>0.9*clock.dt: # Refractory period - unit checking is done here
+                self._resetfun=Refractoriness(period=min_refractory,resetvalue=reset,state=numstate,period_limits=(min_refractory, max_refractory))
+                period=int(min_refractory/clock.dt)+1
+                period_max = int(max_refractory/clock.dt)+1
             else: # Simple reset
                 self._resetfun=Reset(reset,state=numstate)
                 period=1
+                period_max = 1
         elif type(reset)==types.FunctionType:
             self._resetfun=FunReset(reset)
             if refractory>0.9*clock.dt:
@@ -378,14 +403,16 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         else: # No reset?
             self._resetfun=reset
             period=1
-        if max_delay<period*clock.dt:
-            max_delay=period*clock.dt
+        if max_refractory is None:
+            max_refractory = refractory
+        if max_delay<max(period, period_max)*clock.dt:
+            max_delay=max(period, period_max)*clock.dt
         self._max_delay = 0
         self.period = period
         self.set_max_delay(max_delay)
         
         self._next_allowed_spiketime = -ones(N)
-        self._refractory_time = float(refractory)-0.5*clock._dt
+        self._refractory_time = float(max_refractory)-0.5*clock._dt
         self._use_next_allowed_spiketime_refractoriness = True
         
         self._owner=self # owner (for subgroups)
@@ -465,7 +492,14 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                 spikes = array(spikes, dtype=int)
             if self._use_next_allowed_spiketime_refractoriness:
                 spikes = spikes[self._next_allowed_spiketime[spikes]<=self.clock._t]
-                self._next_allowed_spiketime[spikes] = self.clock._t+self._refractory_time
+                if self._variable_refractory_time:
+                    if self._refractory_variable is not None:
+                        refractime = self.state_(self._refractory_variable)
+                    else:
+                        refractime = self._refractory_array
+                    self._next_allowed_spiketime[spikes] = self.clock._t+refractime[spikes]
+                else:
+                    self._next_allowed_spiketime[spikes] = self.clock._t+self._refractory_time
             self.LS.push(spikes) # Store spikes
         
     def get_spikes(self,delay=0):

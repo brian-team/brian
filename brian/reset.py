@@ -275,11 +275,7 @@ class Refractoriness(Reset):
     '''
     Holds the state variable at the reset value for a fixed time after a spike.
 
-    **Initialised as:** ::
-    
-        Refractoriness([resetvalue=0*mV[,period=5*ms[,state=0]]])
-    
-    with arguments:
+    Initialised with arguments:
     
     ``resetvalue``
         The value to reset and hold to.
@@ -287,11 +283,18 @@ class Refractoriness(Reset):
         The length of time to hold at the reset value.
     ``state``
         The name or number of the state variable to reset and hold.
+    ``period_limits``
+        If specified, a minimum and maximum refractoriness time, overrides the
+        value provided in period. This is used for variable refractoriness.
     '''
     @check_units(period=second)
-    def __init__(self,resetvalue=0*mvolt,period=5*msecond,state=0):
+    def __init__(self,resetvalue=0*mvolt,period=5*msecond,state=0,period_limits=None):
         #self.period=int(period/guess_clock(clock).dt)
-        self.period = period
+        if period_limits is None:
+            self.period = period
+        else:
+            self.period_min, self.period_max = period_limits
+            self.period = self.period_min
         self.resetvalue = resetvalue
         self.state = state
         self._periods = {} # a dictionary mapping group IDs to periods
@@ -306,13 +309,20 @@ class Refractoriness(Reset):
         if id(P) in self._periods:
             period = self._periods[id(P)]
         else:
-            period = int(self.period/P.clock.dt)+1
+            if hasattr(self, 'period_max'):
+                period = int(self.period_max/P.clock.dt)+1
+            else:
+                period = int(self.period/P.clock.dt)+1
             self._periods[id(P)] = period
         V = self.statevectors.get(id(P),None)
         if V is None:
             V = P.state_(self.state)
             self.statevectors[id(P)] = V
-        V[P.LS[0:period]] = self.resetvalue
+        neuronindices = P.LS[0:period]
+        if P._variable_refractory_time:
+            neuronindices = neuronindices[P._next_allowed_spiketime[neuronindices]>(P.clock._t-P.clock._dt*0.25)]
+            #print P.clock._t, neuronindices
+        V[neuronindices] = self.resetvalue
         
     def __repr__(self):
         return 'Refractory period, '+str(self.period)
