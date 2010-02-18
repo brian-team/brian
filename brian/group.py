@@ -14,10 +14,10 @@ class Group(object):
     length ``N`` in the attribute ``_S`` of the object. Unit consistency
     checking is performed.
     '''
-    def __init__(self, equations, N, level=0):
+    def __init__(self, equations, N, level=0, unit_checking=True):
         if isinstance(equations, str):
             equations = Equations(equations, level=level+1)
-        equations.prepare()
+        equations.prepare(check_units=unit_checking)
         var_names = equations._diffeq_names
         M = len(var_names)
         self._S = zeros((M, N))

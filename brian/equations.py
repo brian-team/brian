@@ -628,10 +628,20 @@ class Equations(object):
         # Better: replace xi in the string, or in the namespace
         try:
             for var in self._eq_names:
-                self.apply(var,self._units)+self._units[var] # Check that the two terms have the same dimension
+                f = self._function[var]
+                old_func_globals = copy.copy(f.func_globals)
+                f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
+                units = namespace_replace_quantity_with_pure(self._units)
+                self.apply(var, units)+self._units[var] # Check that the two terms have the same dimension
+                f.func_globals.update(old_func_globals)
             for var in self._diffeq_names:
-                self._function[var].func_globals['xi']=0*second**-.5 # Noise
-                self.apply(var,self._units)+(self._units[var]/second) # Check that the two terms have the same dimension
+                f = self._function[var]
+                old_func_globals = copy.copy(f.func_globals)
+                f.func_globals['xi']=0*second**-.5 # Noise
+                f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
+                units = namespace_replace_quantity_with_pure(self._units)
+                self.apply(var, units)+(self._units[var]/second) # Check that the two terms have the same dimension
+                f.func_globals.update(old_func_globals)
         except DimensionMismatchError,inst:
             raise DimensionMismatchError("The differential equation of "+var+" is not homogeneous",*inst._dims)
         except:

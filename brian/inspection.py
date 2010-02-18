@@ -39,15 +39,89 @@ and models defined by differential equations.
 TODO: some of the module is obsolete
 '''
 
-__all__=['is_affine','depends_on','Term','get_global_term',\
-         'get_var_names','check_equations_units','fill_vars','AffineFunction',\
-         'get_identifiers','modified_variables','namespace','clean_text']
+__all__=['is_affine','depends_on','Term','get_global_term',
+         'get_var_names','check_equations_units','fill_vars','AffineFunction',
+         'get_identifiers','modified_variables','namespace','clean_text',
+         'namespace_replace_quantity_with_pure', 'list_replace_quantity_with_pure']
 
+import numpy
 from numpy import array
 from units import *
 import parser
 import re
 import inspect
+from copy import copy
+
+class PureQuantityBase(Quantity):
+    def __init__(self, value):
+        self.dim = value.dim
+    def __div__(self, other):
+        if not isinstance(other, Quantity) and not is_scalar_type(other):
+            return NotImplemented
+        try:
+            return Quantity.__div__(self, other)
+        except ZeroDivisionError:
+            try:
+                odim = other.dim
+            except AttributeError:
+                odim = Dimension()
+            return Quantity.with_dimensions(0, self.dim/odim)
+    __truediv__ = __div__
+    def __rdiv__(self, other):
+        if not isinstance(other, Quantity) and not is_scalar_type(other):
+            return NotImplemented
+        try:
+            return Quantity.__rdiv__(self, other)
+        except ZeroDivisionError:
+            try:
+                odim = other.dim
+            except AttributeError:
+                odim = Dimension()
+            return Quantity.with_dimensions(0, odim/self.dim)
+    __rtruediv__ = __rdiv__
+    def __mod__(self, other):
+        if not isinstance(other, Quantity) and not is_scalar_type(other):
+            return NotImplemented
+        try:
+            return Quantity.__mod__(self, other)
+        except ZeroDivisionError:
+            return Quantity.with_dimensions(0, self.dim)
+
+def returnpure(meth):
+    def f(*args, **kwds):
+        x = meth(*args, **kwds)
+        if isinstance(x, Quantity):
+            return PureQuantity(x)
+        else:
+            return x
+    return f
+
+class PureQuantity(PureQuantityBase):
+    for methname in dir(PureQuantityBase):
+        meth = getattr(PureQuantityBase, methname)
+        try:
+            meth2 = getattr(numpy.float64, methname)
+        except AttributeError:
+            meth2 = meth
+        if callable(meth) and meth is not meth2:
+            exec methname+'=returnpure(PureQuantityBase.'+methname+')'
+    del meth, meth2, methname
+
+def namespace_replace_quantity_with_pure(ns):
+    newns = {}
+    for k, v in ns.iteritems():
+        if isinstance(v, Quantity):
+            v = PureQuantity(v)
+        newns[k] = v
+    return newns
+
+def list_replace_quantity_with_pure(L):
+    newL = []
+    for v in L:
+        if isinstance(v, Quantity):
+            v = PureQuantity(v)
+        newL.append(v)
+    return newL
 
 def namespace(expr,level=0,return_unknowns=False):
     '''
@@ -302,23 +376,30 @@ def depends_on(f,x,x0):
     Other idea: use 'xi' in f.func_code.co_names (but not working for nested functions)
     '''
     #return x in f.func_code.co_names
-    if x in f.func_globals:
-        oldx=f.func_globals[x]
-    else:
-        oldx=None
+#    if x in f.func_globals:
+#        oldx=f.func_globals[x]
+#    else:
+#        oldx=None
+
+    old_func_globals = copy(f.func_globals)
+
+    x0 = list_replace_quantity_with_pure(x0)
+    f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
         
     result=False
     f.func_globals[x]=None
     nargs=f.func_code.co_argcount
     try:
         f(*x0)
-    except:
+    except e:
         result=True       
     
-    if oldx==None:
-        del f.func_globals[x] # x was not defined
-    else:
-        f.func_globals[x]=oldx # previous value
+#    if oldx==None:
+#        del f.func_globals[x] # x was not defined
+#    else:
+#        f.func_globals[x]=oldx # previous value
+
+    f.func_globals.update(old_func_globals)
     
     return result
 
@@ -330,17 +411,15 @@ def get_global_term(f,x,x0):
     Example:
     getterm(lambda x:2*x+5*y,'y',(0,0))) --> 5
     '''
-    if x in f.func_globals:
-        oldx=f.func_globals[x]
-    else:
-        oldx=None
-        
+    old_func_globals = copy(f.func_globals)
+
+    x0 = list_replace_quantity_with_pure(x0)
+    f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
+    
     f.func_globals[x]=Term()
+
     result=f(*x0).x
 
-    if oldx==None:
-        del f.func_globals[x] # x was not defined
-    else:
-        f.func_globals[x]=oldx # previous value
+    f.func_globals.update(old_func_globals)
     
     return result
