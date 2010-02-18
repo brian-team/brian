@@ -21,6 +21,7 @@ Bug fixes
   (ticket #9 on the trac)
 * unit_checking=False now works (didn't do anything before)
 * Fixed bug with using Equations object twice (for two different NeuronGroups)
+* Fixed unit checking bug and ZeroDivisionError (ticket #38)
   
 New features since 1.1.3
 ------------------------
