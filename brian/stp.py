@@ -22,7 +22,7 @@ Synaptic weights are modulated by the product u*x (in 0..1) (before update).
 from network import NetworkOperation
 from neurongroup import NeuronGroup
 from monitor import SpikeMonitor
-from scipy import zeros,exp
+from scipy import zeros,exp,isscalar
 from connection import DelayConnection
 
 __all__=['STP']
@@ -68,6 +68,21 @@ class STPUpdater(SpikeMonitor):
         self.ux[spikes]=self.u[spikes]*self.x[spikes]
         self.x[spikes]*=tmp
         self.u[spikes]+=self.U*tmp
+        self.lastt[spikes]=self.clock.t
+        self.P.LS.push(spikes)
+
+class STPUpdater2(STPUpdater):
+    '''
+    STP Updater where U, taud and tauf are vectors
+    '''
+    def propagate(self,spikes):
+        interval=self.clock.t-self.lastt[spikes]
+        self.u[spikes]=self.U[spikes]+(self.u[spikes]-self.U[spikes])*exp(interval*self.minvtauf[spikes])
+        tmp=1-self.u[spikes]
+        self.x[spikes]=1+(self.x[spikes]-1)*exp(interval*self.minvtaud[spikes])
+        self.ux[spikes]=self.u[spikes]*self.x[spikes]
+        self.x[spikes]*=tmp
+        self.u[spikes]+=self.U[spikes]*tmp
         self.lastt[spikes]=self.clock.t
         self.P.LS.push(spikes)
 
@@ -137,7 +152,10 @@ class STP(NetworkOperation):
         P.x=1
         P.u=U
         P.ux=U
-        updater=STPUpdater(C.source,P,taud,tauf,U,delay=C.delay*C.source.clock.dt)
+        if (isscalar(taud) & isscalar(tauf) & isscalar(U)):
+            updater=STPUpdater(C.source,P,taud,tauf,U,delay=C.delay*C.source.clock.dt)
+        else:
+            updater=STPUpdater2(C.source,P,taud,tauf,U,delay=C.delay*C.source.clock.dt)
         self.contained_objects=[updater]
         C.source=P
         C.delay=0
