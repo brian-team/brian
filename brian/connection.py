@@ -1646,7 +1646,7 @@ class DelayConnection(Connection):
 
     Finally, there is a method:
     
-    ``set_delays(delay)``
+    ``set_delays(source, target, delay)``
         Where ``delay`` must be of one of the types above.
     
     **Notes**
@@ -1718,7 +1718,7 @@ class DelayConnection(Connection):
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
         if delay is not None:
-            self.set_delays(delay)
+            self.set_delays(delay=delay)
         
     def propagate(self, spikes):
         if not self.iscompressed:
