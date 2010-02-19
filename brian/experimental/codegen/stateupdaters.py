@@ -1,6 +1,7 @@
 from ...stateupdater import StateUpdater
 from ...globalprefs import get_global_preference
 from ...clock import guess_clock
+from ...log import log_debug
 from codegen_c import *
 from codegen_python import *
 from integration_schemes import *
@@ -14,6 +15,7 @@ class CStateUpdater(StateUpdater):
     def __init__(self, eqs, scheme, clock=None, freeze=False):
         self.clock = guess_clock(clock)
         self.code_c = CCodeGenerator().generate(eqs, scheme)
+        log_debug('brian.experimental.codegen.stateupdaters', 'C state updater code:\n'+self.code_c)
         self._weave_compiler = get_global_preference('weavecompiler')
     def __call__(self, P):
         dt = P.clock._dt
@@ -36,6 +38,7 @@ class PythonStateUpdater(StateUpdater):
             if varname not in eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t', 'dt', '_S', 'num_neurons']:
                 if hasattr(numpy, varname):
                     self.namespace[varname] = getattr(numpy, varname)
+        log_debug('brian.experimental.codegen.stateupdaters', 'Python state updater code:\n'+self.code_python)
         exec self.code_python in self.namespace
         self.state_update_func = self.namespace['_stateupdate']
     def __call__(self, P):

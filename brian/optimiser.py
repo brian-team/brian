@@ -67,7 +67,7 @@ def freeze(expr,vars,namespace={},safe=False):
         else:
             log_warn('brian.optimizer.freeze', "Freezing impossible because the value of "+id+" is missing")
             return None
-        if not isinstance(value[id],float): # or unit?
+        if not isinstance(value[id],(int, float)): # or unit?
             if safe:
                 log_warn('brian.optimizer.freeze', "Freezing impossible because "+id+" is not a number")
                 return None
