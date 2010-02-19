@@ -22,6 +22,7 @@ else:
     from ..utils.separate_equations import separate_equations
 from scipy import weave
 import re
+from codegen.c_support_code import *
 
 __all__ = ['CSTDP']
 

@@ -7,6 +7,7 @@ from ...equations import Equations
 from ...globalprefs import get_global_preference
 from expressions import *
 from scipy import weave
+from c_support_code import *
 
 __all__ = ['generate_c_reset', 'generate_python_reset',
            'CReset', 'PythonReset']
@@ -84,5 +85,6 @@ class CReset(Reset):
         _S = P._S
         _num_neurons = len(P)
         weave.inline(self._outputcode, ['_S', '_nspikes', 'dt', 't', '_spikes', '_num_neurons'],
+                     c_support_code=c_support_code,
                      compiler=self._weave_compiler,
                      extra_compile_args=['-O3'])

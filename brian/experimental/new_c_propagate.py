@@ -94,6 +94,7 @@ else:
                 DynamicConnectionMatrix, DynamicConstructionMatrix
     from ..log import log_debug, log_warn, log_info
     from ..utils.documentation import flattened_docstring
+from codegen.c_support_code import *
 import numpy
 from scipy import weave
 import new
@@ -149,6 +150,7 @@ class ConnectionCode(object):
                 exec self.compiled_pycode in self.pyvars
             weave.inline(self.codestr, self.vars_list,
                          local_dict=self.vars,
+                         support_code=c_support_code,
                          compiler='gcc',
                          extra_compile_args=['-O3'])
     def __str__(self):

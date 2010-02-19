@@ -8,6 +8,7 @@ from integration_schemes import *
 import time
 from scipy import weave
 import numpy, scipy
+from c_support_code import *
 
 __all__ = ['CStateUpdater', 'PythonStateUpdater']
 
@@ -23,6 +24,7 @@ class CStateUpdater(StateUpdater):
         num_neurons = len(P)
         _S = P._S
         weave.inline(self.code_c, ['_S', 'num_neurons', 'dt', 't'],
+                     support_code=c_support_code,
                      compiler=self._weave_compiler,
                      extra_compile_args=['-O3'])
 

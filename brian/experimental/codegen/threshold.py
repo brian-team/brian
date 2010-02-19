@@ -7,6 +7,7 @@ from ...equations import Equations
 from ...globalprefs import get_global_preference
 from expressions import *
 from scipy import weave
+from c_support_code import *
 
 __all__ = ['generate_c_threshold', 'generate_python_threshold',
            'CThreshold', 'PythonThreshold']
@@ -76,6 +77,7 @@ class CThreshold(Threshold):
         _num_neurons = len(P)
         _numspikes = weave.inline(self._outputcode,
                                   ['_S', 't', '_spikes', '_num_neurons'],
+                                  support_code=c_support_code,
                                   compiler=self._weave_compiler,
                                   extra_compile_args=['-O3'])
         return _spikes[0:_numspikes]

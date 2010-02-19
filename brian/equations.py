@@ -49,10 +49,12 @@ import inspect
 import optimiser
 import warnings
 import uuid
+import numpy
 from numpy import zeros,ones
 from log import *
 from optimiser import *
 from scipy import optimize
+import unitsafefunctions
 import copy
 try:
     import sympy
@@ -749,9 +751,19 @@ class Equations(object):
         specific to that variable by inserting the prefix name_.
         """
         vars=self._namespace[name].keys()
-        #print vars
+        untransformed_funcs = set(getattr(unitsafefunctions, v) for v in unitsafefunctions.quantity_versions)
+        untransformed_funcs.update(set([numpy.clip]))
         for var in vars:
-            if not(var=='exp'): # quick fix: exp is in the global namespace
+            v = self._namespace[name][var]
+            addprefix = True
+            if isinstance(v, numpy.ufunc):
+                addprefix = False
+            try:
+                if v in untransformed_funcs:
+                    addprefix = False
+            except TypeError: #unhashable types
+                pass
+            if addprefix:
                 # String
                 self._string[name]=re.sub("\\b"+var+"\\b",name+'_'+var,self._string[name])
                 # Namespace
