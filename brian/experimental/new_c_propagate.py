@@ -87,6 +87,7 @@ TODO:
 if __name__=='__main__':
     from brian import *
     from brian.utils.documentation import *
+    from brian.experimental.codegen.c_support_code import *
 else:
     from ..connection import Connection, DelayConnection, MultiConnection,\
                 DenseConnectionMatrix, DenseConstructionMatrix,\
@@ -95,7 +96,7 @@ else:
     from ..log import log_debug, log_warn, log_info
     from ..utils.documentation import flattened_docstring
     from ..globalprefs import get_global_preference
-from codegen.c_support_code import *
+    from codegen.c_support_code import *
 import numpy
 from scipy import weave
 import new
@@ -435,8 +436,8 @@ if __name__=='__main__':
 
     log_level_debug()
     
-    structure = 'dense'
-    delay = True#0*ms or True
+    structure = 'sparse'
+    delay = 0*ms#0*ms or True
     modulation = False
     
     G = NeuronGroup(1, 'V:1\nmod:1', reset=0, threshold=1)
