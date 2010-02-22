@@ -53,6 +53,9 @@ def parallel_lfilter_step(b, a, x, zi):
 if get_global_preference('useweave'):
     # TODO: accelerate this even more using SWIG instead of weave
     _cpp_compiler = get_global_preference('weavecompiler')
+    _extra_compile_args = ['-O3']
+    if _cpp_compiler=='gcc':
+        _extra_compile_args += ['-march-native']
     _old_parallel_lfilter_step = parallel_lfilter_step
     def parallel_lfilter_step(b, a, x, zi):
         if zi.shape[2]>1:
@@ -88,7 +91,7 @@ if get_global_preference('useweave'):
         weave.inline(code,['b', 'a', 'x', 'zi', 'y', 'n', 'm', 'p'],
                      compiler=_cpp_compiler,
                      type_converters=weave.converters.blitz,
-                     extra_compile_args=['-O2'])
+                     extra_compile_args=_extra_compile_args)
         return y
     parallel_lfilter_step.__doc__ = _old_parallel_lfilter_step.__doc__
        

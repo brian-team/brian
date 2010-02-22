@@ -94,6 +94,7 @@ else:
                 DynamicConnectionMatrix, DynamicConstructionMatrix
     from ..log import log_debug, log_warn, log_info
     from ..utils.documentation import flattened_docstring
+    from ..globalprefs import get_global_preference
 from codegen.c_support_code import *
 import numpy
 from scipy import weave
@@ -127,6 +128,10 @@ class ConnectionCode(object):
         self.pycodestr = pycodestr
         self.pyvars = pyvars
         self.prepared = False
+        self._weave_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._weave_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
     def prepare(self):
         self.pyvars['vars'] = self.vars
         self.vars['_spikes'] = None
@@ -151,8 +156,8 @@ class ConnectionCode(object):
             weave.inline(self.codestr, self.vars_list,
                          local_dict=self.vars,
                          support_code=c_support_code,
-                         compiler='gcc',
-                         extra_compile_args=['-O3'])
+                         compiler=self._weave_compiler,
+                         extra_compile_args=self._extra_compile_args)
     def __str__(self):
         s = 'C code:\n'
         spaces = 0

@@ -18,6 +18,9 @@ class CStateUpdater(StateUpdater):
         self.code_c = CCodeGenerator().generate(eqs, scheme)
         log_debug('brian.experimental.codegen.stateupdaters', 'C state updater code:\n'+self.code_c)
         self._weave_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._weave_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
     def __call__(self, P):
         dt = P.clock._dt
         t = P.clock._t
@@ -26,7 +29,7 @@ class CStateUpdater(StateUpdater):
         weave.inline(self.code_c, ['_S', 'num_neurons', 'dt', 't'],
                      support_code=c_support_code,
                      compiler=self._weave_compiler,
-                     extra_compile_args=['-O3'])
+                     extra_compile_args=self._extra_compile_args)
 
 class PythonStateUpdater(StateUpdater):
     def __init__(self, eqs, scheme, clock=None, freeze=False):

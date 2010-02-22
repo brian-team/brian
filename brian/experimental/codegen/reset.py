@@ -73,6 +73,9 @@ class CReset(Reset):
         self._inputcode = inputcode
         self._prepared = False
         self._weave_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._weave_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
     def __call__(self, P):
         if not self._prepared:
             vars = [var for var in P.var_index if isinstance(var, str)]
@@ -87,4 +90,4 @@ class CReset(Reset):
         weave.inline(self._outputcode, ['_S', '_nspikes', 'dt', 't', '_spikes', '_num_neurons'],
                      c_support_code=c_support_code,
                      compiler=self._weave_compiler,
-                     extra_compile_args=['-O3'])
+                     extra_compile_args=self._extra_compile_args)

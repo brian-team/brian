@@ -145,6 +145,9 @@ class Threshold(object):
         self.state = state
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._cpp_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
 
     def __call__(self,P):
         '''
@@ -169,9 +172,10 @@ class Threshold(object):
             # in it, say set USER=DanGoodman if your username is Dan Goodman, this is
             # because weave uses this to create file names, but doesn't correctly send these
             # values to the compiler, causing problems.
-            numspikes = weave.inline(code,['spikes','V','Vt','N'],\
+            numspikes = weave.inline(code,['spikes','V','Vt','N'],
                                      compiler=self._cpp_compiler,
-                                     type_converters=weave.converters.blitz)
+                                     type_converters=weave.converters.blitz,
+                                     extra_compile_args=self._extra_compile_args)
             # WEAVE NOTE: setting verbose=True in the weave.inline function may help in
             # finding errors.
             return spikes[0:numspikes]
@@ -334,6 +338,9 @@ class VariableThreshold(Threshold):
         self.state = state
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._cpp_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
 
     def __call__(self,P):
         '''
@@ -354,7 +361,8 @@ class VariableThreshold(Threshold):
                     """
             numspikes = weave.inline(code,['spikes','V','Vt','N'],\
                                      compiler=self._cpp_compiler,
-                                     type_converters=weave.converters.blitz)
+                                     type_converters=weave.converters.blitz,
+                                     extra_compile_args=self._extra_compile_args)
             return spikes[0:numspikes]
         else:
             return ((P.state_(self.state)>P.state_(self.threshold_state)).nonzero())[0]

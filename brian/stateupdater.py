@@ -345,6 +345,9 @@ class LinearStateUpdater(StateUpdater):
         '''
         self._useaccel = get_global_preference('useweave_linear_diffeq')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._cpp_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
         self._useB=False
         if clock==None:
             clock = guess_clock()
@@ -423,7 +426,7 @@ class LinearStateUpdater(StateUpdater):
                 weave.inline(code,['n','m','S','A','c'],
                              compiler=self._cpp_compiler,
                              type_converters=weave.converters.blitz,
-                             extra_compile_args=['-O2'])#O2 seems to be faster than O3 here
+                             extra_compile_args=self._extra_compile_args)
         else:
             if not self._useaccel:
                 P._S[:]=dot(self.A,P._S)
@@ -449,7 +452,7 @@ class LinearStateUpdater(StateUpdater):
                 weave.inline(code,['n','m','S','A'],
                              compiler=self._cpp_compiler,
                              type_converters=weave.converters.blitz,
-                             extra_compile_args=['-O2'])#O2 seems to be faster than O3 here
+                             extra_compile_args=self._extra_compile_args)
         
     def __repr__(self):
         return 'Linear StateUpdater with '+str(len(self))+' state variables'

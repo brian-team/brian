@@ -117,6 +117,9 @@ class MultiLinearStateUpdater(StateUpdater):
         self.B = B
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._cpp_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
     def __call__(self, P):
         if self._useaccel:
             n = len(P)
@@ -141,7 +144,7 @@ class MultiLinearStateUpdater(StateUpdater):
             weave.inline(code,['n','m','S','A','B'],
                          compiler=self._cpp_compiler,
                          type_converters=weave.converters.blitz,
-                         extra_compile_args=['-O3'])
+                         extra_compile_args=self._extra_compile_args)
         else:
             if self.A.shape[2]<self.A.shape[1]:
                 for i in xrange(self.A.shape[2]):

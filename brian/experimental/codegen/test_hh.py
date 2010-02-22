@@ -58,7 +58,7 @@ for T in xrange(int(100*ms/defaultclock.dt)):
     weave.inline(ccode, ['_S', 'num_neurons', 'dt', 't'],
                  compiler='gcc',
                  #type_converters=weave.converters.blitz,
-                 extra_compile_args=['-O3'])#O2 seems to be faster than O3 here
+                 extra_compile_args=['-O3', '-march=native'])#O2 seems to be faster than O3 here
     if record_and_plot:
         hand_trace_c.append(copy(_S[0]))
 print 'Codegen C:', time.time()-start

@@ -746,6 +746,9 @@ class SparseConnectionMatrix(ConnectionMatrix):
     def __init__(self, val, column_access=True, **kwds):
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._cpp_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
         self.nnz = nnz = val.getnnz()# nnz stands for number of nonzero entries
         alldata = numpy.zeros(nnz)
         if column_access:
@@ -814,7 +817,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
                                     'rowind', 'numrows',
                                     'curcdi', 'colind', 'colalli'],
                              compiler=self._cpp_compiler,
-                             extra_compile_args=['-O3'])
+                             extra_compile_args=self._extra_compile_args)
                 # now store the blocks of allcoldataindices in coldataindices and update coli too
                 for i in xrange(len(colind)-1):
                     D = allcoldataindices[colind[i]:colind[i+1]]
@@ -1320,6 +1323,9 @@ class Connection(magic.InstanceTracker, ObjectContainer):
             self.delay = int(delay/source.clock.dt) # Synaptic delay in time bins
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._cpp_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
         self._keyword_based_init(weight=weight, sparseness=sparseness)
         
     def _keyword_based_init(self, weight=None, sparseness=None, **kwds):
@@ -1402,7 +1408,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                         weave.inline(code,['sv','rowinds','datas','spikes','nspikes'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
-                                     extra_compile_args=['-O3'])
+                                     extra_compile_args=self._extra_compile_args)
                     else:
                         nspikes = len(spikes)
                         rowinds = [r.ind for r in rows]
@@ -1433,7 +1439,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                         weave.inline(code,['sv','sv_pre','rowinds','datas','spikes','nspikes'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
-                                     extra_compile_args=['-O3'])
+                                     extra_compile_args=self._extra_compile_args)
                 else:
                     if self._nstate_mod is None:
                         if not isinstance(spikes, numpy.ndarray):
@@ -1456,7 +1462,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                         weave.inline(code,['sv','spikes','nspikes','N', 'rows'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
-                                     extra_compile_args=['-O3'])
+                                     extra_compile_args=self._extra_compile_args)
                     else:
                         if not isinstance(spikes, numpy.ndarray):
                             spikes = array(spikes, dtype=int)
@@ -1479,7 +1485,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                         weave.inline(code,['sv','sv_pre','spikes','nspikes','N', 'rows'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
-                                     extra_compile_args=['-O3'])
+                                     extra_compile_args=self._extra_compile_args)
                     
     def compress(self):
         if not self.iscompressed:
@@ -1717,6 +1723,9 @@ class DelayConnection(Connection):
         self._invtargetdt = 1/self.target.clock._dt
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._cpp_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
         if delay is not None:
             self.set_delays(delay=delay)
         
@@ -1805,7 +1814,7 @@ class DelayConnection(Connection):
                                            'dvecrows', 'dr', 'cdi', 'idt', 'md'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
-                                     extra_compile_args=['-O3'])
+                                     extra_compile_args=self._extra_compile_args)
                     else:
                         nspikes = len(spikes)
                         rowinds = [r.ind for r in rows]
@@ -1846,7 +1855,7 @@ class DelayConnection(Connection):
                                            'dvecrows', 'dr', 'cdi', 'idt', 'md'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
-                                     extra_compile_args=['-O3'])
+                                     extra_compile_args=self._extra_compile_args)
                 else:
                     if self._nstate_mod is None:
                         if not isinstance(spikes, numpy.ndarray):
@@ -1879,7 +1888,7 @@ class DelayConnection(Connection):
                                            'dr','cdi','idt','md','dvecrows'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
-                                     extra_compile_args=['-O3'])
+                                     extra_compile_args=self._extra_compile_args)
                     else:
                         if not isinstance(spikes, numpy.ndarray):
                             spikes = array(spikes, dtype=int)
@@ -1912,7 +1921,7 @@ class DelayConnection(Connection):
                                            'dr','cdi','idt','md','dvecrows'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
-                                     extra_compile_args=['-O3'])
+                                     extra_compile_args=self._extra_compile_args)
 
     def do_propagate(self):
         self.propagate(self.source.get_spikes(0))

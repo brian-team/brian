@@ -38,7 +38,7 @@ class AutoCompiledNonlinearStateUpdater(NonlinearStateUpdater):
         weave.inline(self.code_c, ['S', 'n', 'dt', 't'],
                      compiler='gcc',
                      #type_converters=weave.converters.blitz,
-                     extra_compile_args=['-O3'])#O2 seems to be faster than O3 here
+                     extra_compile_args=['-O3', '-march=native'])
 
 if __name__=='__main__':
     

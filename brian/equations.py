@@ -176,6 +176,9 @@ class Equations(object):
         self._dependencies={} # dictionary of dependencies (on static equations)
         self._useweave=get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._cpp_compiler=='gcc':
+            self._extra_compile_args += ['-march-native']
         self._frozen=False # True if all units and parameters are gone
         self._prepared = False
         
@@ -578,7 +581,8 @@ class Equations(object):
                 """
                 weave.inline(code,['n','Bx','Sx','Ax','dt'],\
                              compiler=self._cpp_compiler,
-                             type_converters=weave.converters.blitz)
+                             type_converters=weave.converters.blitz,
+                             extra_compile_args=self._extra_compile_args)
             else:
                 #S[varname][:]=-B[varname]+(S[varname]+B[varname])*exp(A[varname]*dt)
                 # A little faster:

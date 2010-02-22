@@ -64,6 +64,9 @@ class CircularVector(object):
         if useweave:
             self._optimisedreturnarray=zeros(n,dtype=dtype)
             self._cpp_compiler = compiler
+            self._extra_compile_args = ['-O3']
+            if self._cpp_compiler=='gcc':
+                self._extra_compile_args += ['-march-native']
     
     def reinit(self):
         self.X[:]=zeros(self.n,self.dtype)
@@ -124,9 +127,10 @@ class CircularVector(object):
                     }
                     return_val = numgot;
                     """
-            numgot = weave.inline(code,['n','i0','j0','X','ret','offset','min','max'],\
+            numgot = weave.inline(code,['n','i0','j0','X','ret','offset','min','max'],
                                      compiler=self._cpp_compiler,
-                                     type_converters=weave.converters.blitz)
+                                     type_converters=weave.converters.blitz,
+                                     extra_compile_args=self._extra_compile_args)
             return ret[0:numgot]
         else:
             spikes = self[i:j]
