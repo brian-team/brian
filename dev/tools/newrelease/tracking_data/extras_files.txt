@@ -93,7 +93,6 @@
 + docs/_sources/experimental-multilinearstateupdater.txt
 + docs/_sources/experimental.txt
 + docs/_sources/extending.txt
-+ docs/_sources/extendinglibrary.txt
 + docs/_sources/index.txt
 + docs/_sources/inputs.txt
 + docs/_sources/installation.txt
@@ -248,7 +247,6 @@
 + docs/experimental-multilinearstateupdater.html
 + docs/experimental.html
 + docs/extending.html
-+ docs/extendinglibrary.html
 + docs/genindex.html
 + docs/index.html
 + docs/inputs.html
@@ -258,7 +256,6 @@
 + docs/librarymodels.html
 + docs/modelfitting.html
 + docs/models.html
-+ docs/modindex.html
 + docs/objects.inv
 + docs/operations.html
 + docs/othertutorials.html

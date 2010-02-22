@@ -78,7 +78,7 @@ from timedarray import *
 from tests.simpletest import *
 
 __version__ = '1.2.1dev'
-__release_date__ = '2010-02-18'
+__release_date__ = '2010-02-22'
 
 #import unitsafefunctions as _usf
 #import numpy as _numpy

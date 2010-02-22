@@ -5,13 +5,13 @@
 + brian/connection.py
 + brian/correlatedspikes.py
 + brian/deprecated/__init__.py
-+ brian/deprecated/neuronmodel.py
 + brian/directcontrol.py
 + brian/equations.py
 + brian/experimental/__init__.py
 + brian/experimental/c_stdp.py
 + brian/experimental/ccodegen.py
 + brian/experimental/codegen/__init__.py
++ brian/experimental/codegen/c_support_code.py
 + brian/experimental/codegen/codegen.py
 + brian/experimental/codegen/codegen_c.py
 + brian/experimental/codegen/codegen_gpu.py
@@ -19,6 +19,7 @@
 + brian/experimental/codegen/demo.py
 + brian/experimental/codegen/expressions.py
 + brian/experimental/codegen/integration_schemes.py
+- brian/experimental/codegen/known_issues.txt
 + brian/experimental/codegen/reset.py
 + brian/experimental/codegen/rewriting.py
 + brian/experimental/codegen/stateupdaters.py

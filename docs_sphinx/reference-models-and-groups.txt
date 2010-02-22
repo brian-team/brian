@@ -28,8 +28,6 @@ The :class:`NeuronGroup` object
 .. index::
 	single: model
 
-.. autoclass:: Model
-
 .. index:: reset
 
 Resets
