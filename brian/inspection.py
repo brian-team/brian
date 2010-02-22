@@ -97,6 +97,28 @@ def returnpure(meth):
     return f
 
 class PureQuantity(PureQuantityBase):
+    '''
+    Use this class for unit checking.
+    
+    The idea is that operations should always work if they are
+    dimensionally consistent regardless of the values. The key one is that
+    division by zero does not raise an error but returns a value with the
+    correct dimensions (in fact, it returns 0 with the correct dimensions).
+    This is important for Brian because we do unit checking by substituting
+    zeros into the equations, which sometimes gives a divide by zero error.
+    
+    The way it works is that it derives from Quantity, but for division it
+    wraps a try: except ZeroDivisionError: around the operation, and returns
+    a zero with the correct units if it encounters it. In addition to that,
+    it wraps every method of Quantity so that they return PureQuantity objects
+    instead of Quantity objects (otherwise e.g. a*b would be a Quantity not
+    a PureQuantity even if a, b were PureQuantity).
+    
+    Finally, the *_replace_quantity_with_pure functions are just designed to
+    scan through a dict or list of variables and replace Quantity objects
+    by PureQuantity objects. You need to do this when evaluating some code
+    in a user namespace, for example.
+    '''
     for methname in dir(PureQuantityBase):
         meth = getattr(PureQuantityBase, methname)
         try:
