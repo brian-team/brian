@@ -85,7 +85,7 @@ def make_Izhikevich_scheme():
     weave_compiler = get_global_preference('weavecompiler')
     extra_compile_args = ['-O3']
     if weave_compiler=='gcc':
-        extra_compile_args += ['-march-native']
+        extra_compile_args += ['-march=native']
     def weave_Izhikevich_scheme(G):
         a, v, u, I, c1, c2, c3 = weave_vars
         weave.inline(weave_code, ['a', 'v', 'u', 'I', 'c1', 'c2', 'c3', 'b', 'dt', 'N'],

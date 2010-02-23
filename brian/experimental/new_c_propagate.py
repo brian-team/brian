@@ -132,7 +132,7 @@ class ConnectionCode(object):
         self._weave_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._weave_compiler=='gcc':
-            self._extra_compile_args += ['-march-native']
+            self._extra_compile_args += ['-march=native']
     def prepare(self):
         self.pyvars['vars'] = self.vars
         self.vars['_spikes'] = None

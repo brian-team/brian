@@ -75,7 +75,7 @@ class CReset(Reset):
         self._weave_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._weave_compiler=='gcc':
-            self._extra_compile_args += ['-march-native']
+            self._extra_compile_args += ['-march=native']
     def __call__(self, P):
         if not self._prepared:
             vars = [var for var in P.var_index if isinstance(var, str)]

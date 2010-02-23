@@ -147,7 +147,7 @@ class Threshold(object):
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += ['-march-native']
+            self._extra_compile_args += ['-march=native']
 
     def __call__(self,P):
         '''
@@ -340,7 +340,7 @@ class VariableThreshold(Threshold):
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += ['-march-native']
+            self._extra_compile_args += ['-march=native']
 
     def __call__(self,P):
         '''

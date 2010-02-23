@@ -20,7 +20,7 @@ class CStateUpdater(StateUpdater):
         self._weave_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._weave_compiler=='gcc':
-            self._extra_compile_args += ['-march-native']
+            self._extra_compile_args += ['-march=native']
     def __call__(self, P):
         dt = P.clock._dt
         t = P.clock._t

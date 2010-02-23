@@ -6,6 +6,7 @@ if __name__=='__main__':
     from brian.inspection import modified_variables, namespace
     from brian.optimiser import freeze
     from brian.utils.separate_equations import separate_equations
+    from brian.experimental.codegen.c_support_code import *
 else:
     from ..utils.documentation import flattened_docstring
     from ..stdunits import ms
@@ -20,9 +21,9 @@ else:
     from codegen.expressions import *
     from ..optimiser import freeze
     from ..utils.separate_equations import separate_equations
+    from codegen.c_support_code import *
 from scipy import weave
 import re
-from codegen.c_support_code import *
 
 __all__ = ['CSTDP']
 
@@ -245,8 +246,8 @@ if __name__=='__main__':
     from time import time
     log_level_debug()
     
-    structure = 'sparse'
-    delay = True
+    structure = 'dense'
+    delay = False
     
     if not delay:
         delay = 0*ms
