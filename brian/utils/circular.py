@@ -236,7 +236,46 @@ class SpikeContainer(object):
     def __print__(self):
         return self.__repr__()
 
-#if True and os.path.exists(os.path.join(os.path.split(__file__)[0], 'ccircular/_ccircular.pyd')):
+if False:
+    # New version of SpikeContainer that double the array size when it fills up,
+    # and ignores the maximum number of spikes stored option entirely. In most
+    # cases this will significantly reduce the amount of space required at
+    # small computational cost - but this needs to be checked...
+    class SpikeContainer(SpikeContainer):
+        def __init__(self,n,m,useweave=False,compiler=None):
+            '''
+            n = maximum number of spikes stored
+            m = maximum number of bins stored
+            '''
+            if m<2: m = 2
+            self.S=CircularVector(2,dtype=int,useweave=useweave,compiler=compiler)
+            self.ind=CircularVector(m+1,dtype=int,useweave=useweave,compiler=compiler) # indexes of bins
+            self.remaining_space = 1
+            self._useweave = useweave
+        
+        def push(self,spikes):
+            '''
+            Stores spikes in the array at time dt.
+            '''
+            ns = len(spikes)
+            self.remaining_space += (self.ind[2]-self.ind[1])%self.S.n
+            while ns>=self.remaining_space:
+                # double size of array
+                S = self.S
+                newS = CircularVector(2*S.n, dtype=int, useweave=S._useweave, compiler=S._cpp_compiler)
+                newS.X[:S.n-S.cursor] = S.X[S.cursor:]
+                newS.X[S.n-S.cursor:S.n] = S.X[:S.cursor]
+                newS.cursor = S.n
+                self.S = newS
+                self.ind.X = (self.ind.X-S.cursor)%S.n
+                self.ind.X[self.ind.X==0] = S.n
+                self.remaining_space += S.n
+            self.S[0:ns]=spikes
+            self.S.advance(ns)
+            self.ind.advance(1)
+            self.ind[0]=self.S.cursor
+            self.remaining_space -= ns            
+
 try:
     import ccircular.ccircular as _ccircular
     class SpikeContainer(_ccircular.SpikeContainer):

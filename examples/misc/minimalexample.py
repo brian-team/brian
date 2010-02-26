@@ -22,7 +22,7 @@ M=SpikeMonitor(P)
 
 run(1*second)
 i=0
-while len(M[i])==0:
+while len(M[i])<=1:
     i+=1
 print "The firing rate of neuron",i,"is",firing_rate(M[i])*Hz
 print "The coefficient of variation neuron",i,"is",CV(M[i])
