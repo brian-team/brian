@@ -1,4 +1,13 @@
 %module ccircular
+%include "exception.i"
+
+%exception {
+	try {
+		$action
+	} catch( std::exception &e ) {
+		SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+	}
+}
 
 %{
 #define SWIG_FILE_WITH_INIT

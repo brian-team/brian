@@ -28,12 +28,16 @@ public:
 	void __setslice__(int i, int j, long *x, int n);
 	string __repr__();
 	string __str__();
+	void expand(long n);
 };
 
 class SpikeContainer
 {
 public:
 	CircularVector *S, *ind;
+#ifdef USE_EXPANDING_SPIKECONTAINER
+	int remaining_space;
+#endif
 	SpikeContainer(int n, int m);
 	~SpikeContainer();
 	void reinit();

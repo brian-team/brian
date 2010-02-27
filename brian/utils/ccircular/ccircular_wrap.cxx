@@ -2680,6 +2680,9 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 
 
 
+  #define SWIG_exception(code, msg) do { SWIG_Error(code, msg); SWIG_fail;; } while(0) 
+
+
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define SWIGTYPE_p_CircularVector swig_types[0]
@@ -3552,7 +3555,15 @@ SWIGINTERN PyObject *_wrap_new_CircularVector(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_CircularVector" "', argument " "1"" of type '" "int""'");
   } 
   arg1 = static_cast< int >(val1);
-  result = (CircularVector *)new CircularVector(arg1);
+  {
+    try {
+      result = (CircularVector *)new CircularVector(arg1);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CircularVector, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
@@ -3573,7 +3584,15 @@ SWIGINTERN PyObject *_wrap_delete_CircularVector(PyObject *SWIGUNUSEDPARM(self),
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CircularVector" "', argument " "1"" of type '" "CircularVector *""'"); 
   }
   arg1 = reinterpret_cast< CircularVector * >(argp1);
-  delete arg1;
+  {
+    try {
+      delete arg1;
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -3594,7 +3613,15 @@ SWIGINTERN PyObject *_wrap_CircularVector_reinit(PyObject *SWIGUNUSEDPARM(self),
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector_reinit" "', argument " "1"" of type '" "CircularVector *""'"); 
   }
   arg1 = reinterpret_cast< CircularVector * >(argp1);
-  (arg1)->reinit();
+  {
+    try {
+      (arg1)->reinit();
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -3624,7 +3651,15 @@ SWIGINTERN PyObject *_wrap_CircularVector_advance(PyObject *SWIGUNUSEDPARM(self)
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector_advance" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
-  (arg1)->advance(arg2);
+  {
+    try {
+      (arg1)->advance(arg2);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -3646,7 +3681,15 @@ SWIGINTERN PyObject *_wrap_CircularVector___len__(PyObject *SWIGUNUSEDPARM(self)
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___len__" "', argument " "1"" of type '" "CircularVector *""'"); 
   }
   arg1 = reinterpret_cast< CircularVector * >(argp1);
-  result = (int)(arg1)->__len__();
+  {
+    try {
+      result = (int)(arg1)->__len__();
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
@@ -3677,7 +3720,15 @@ SWIGINTERN PyObject *_wrap_CircularVector___getitem__(PyObject *SWIGUNUSEDPARM(s
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "CircularVector___getitem__" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
-  result = (int)(arg1)->__getitem__(arg2);
+  {
+    try {
+      result = (int)(arg1)->__getitem__(arg2);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
@@ -3716,7 +3767,15 @@ SWIGINTERN PyObject *_wrap_CircularVector___setitem__(PyObject *SWIGUNUSEDPARM(s
     SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "CircularVector___setitem__" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
-  (arg1)->__setitem__(arg2,arg3);
+  {
+    try {
+      (arg1)->__setitem__(arg2,arg3);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -3763,7 +3822,15 @@ SWIGINTERN PyObject *_wrap_CircularVector___getslice__(PyObject *SWIGUNUSEDPARM(
     SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "CircularVector___getslice__" "', argument " "5"" of type '" "int""'");
   } 
   arg5 = static_cast< int >(val5);
-  (arg1)->__getslice__(arg2,arg3,arg4,arg5);
+  {
+    try {
+      (arg1)->__getslice__(arg2,arg3,arg4,arg5);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     npy_intp dims[1] = {
@@ -3845,7 +3912,15 @@ SWIGINTERN PyObject *_wrap_CircularVector_get_conditional__SWIG_0(PyObject *SWIG
     SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "CircularVector_get_conditional" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
-  (arg1)->get_conditional(arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+  {
+    try {
+      (arg1)->get_conditional(arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     npy_intp dims[1] = {
@@ -3918,7 +3993,15 @@ SWIGINTERN PyObject *_wrap_CircularVector_get_conditional__SWIG_1(PyObject *SWIG
     SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "CircularVector_get_conditional" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
-  (arg1)->get_conditional(arg2,arg3,arg4,arg5,arg6,arg7);
+  {
+    try {
+      (arg1)->get_conditional(arg2,arg3,arg4,arg5,arg6,arg7);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     npy_intp dims[1] = {
@@ -4070,7 +4153,15 @@ SWIGINTERN PyObject *_wrap_CircularVector___setslice__(PyObject *SWIGUNUSEDPARM(
     arg5 = 1;
     for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
   }
-  (arg1)->__setslice__(arg2,arg3,arg4,arg5);
+  {
+    try {
+      (arg1)->__setslice__(arg2,arg3,arg4,arg5);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -4092,7 +4183,15 @@ SWIGINTERN PyObject *_wrap_CircularVector___repr__(PyObject *SWIGUNUSEDPARM(self
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___repr__" "', argument " "1"" of type '" "CircularVector *""'"); 
   }
   arg1 = reinterpret_cast< CircularVector * >(argp1);
-  result = (arg1)->__repr__();
+  {
+    try {
+      result = (arg1)->__repr__();
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_NewPointerObj((new string(static_cast< const string& >(result))), SWIGTYPE_p_string, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
@@ -4114,7 +4213,15 @@ SWIGINTERN PyObject *_wrap_CircularVector___str__(PyObject *SWIGUNUSEDPARM(self)
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CircularVector___str__" "', argument " "1"" of type '" "CircularVector *""'"); 
   }
   arg1 = reinterpret_cast< CircularVector * >(argp1);
-  result = (arg1)->__str__();
+  {
+    try {
+      result = (arg1)->__str__();
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_NewPointerObj((new string(static_cast< const string& >(result))), SWIGTYPE_p_string, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
@@ -4256,7 +4363,15 @@ SWIGINTERN PyObject *_wrap_new_SpikeContainer(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_SpikeContainer" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
-  result = (SpikeContainer *)new SpikeContainer(arg1,arg2);
+  {
+    try {
+      result = (SpikeContainer *)new SpikeContainer(arg1,arg2);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_SpikeContainer, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
@@ -4277,7 +4392,15 @@ SWIGINTERN PyObject *_wrap_delete_SpikeContainer(PyObject *SWIGUNUSEDPARM(self),
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_SpikeContainer" "', argument " "1"" of type '" "SpikeContainer *""'"); 
   }
   arg1 = reinterpret_cast< SpikeContainer * >(argp1);
-  delete arg1;
+  {
+    try {
+      delete arg1;
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -4298,7 +4421,15 @@ SWIGINTERN PyObject *_wrap_SpikeContainer_reinit(PyObject *SWIGUNUSEDPARM(self),
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_reinit" "', argument " "1"" of type '" "SpikeContainer *""'"); 
   }
   arg1 = reinterpret_cast< SpikeContainer * >(argp1);
-  (arg1)->reinit();
+  {
+    try {
+      (arg1)->reinit();
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -4332,7 +4463,15 @@ SWIGINTERN PyObject *_wrap_SpikeContainer_push(PyObject *SWIGUNUSEDPARM(self), P
     arg3 = 1;
     for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
   }
-  (arg1)->push(arg2,arg3);
+  {
+    try {
+      (arg1)->push(arg2,arg3);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -4361,7 +4500,15 @@ SWIGINTERN PyObject *_wrap_SpikeContainer_lastspikes(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer_lastspikes" "', argument " "1"" of type '" "SpikeContainer *""'"); 
   }
   arg1 = reinterpret_cast< SpikeContainer * >(argp1);
-  (arg1)->lastspikes(arg2,arg3);
+  {
+    try {
+      (arg1)->lastspikes(arg2,arg3);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     npy_intp dims[1] = {
@@ -4407,7 +4554,15 @@ SWIGINTERN PyObject *_wrap_SpikeContainer___getitem__(PyObject *SWIGUNUSEDPARM(s
     SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "SpikeContainer___getitem__" "', argument " "4"" of type '" "int""'");
   } 
   arg4 = static_cast< int >(val4);
-  (arg1)->__getitem__(arg2,arg3,arg4);
+  {
+    try {
+      (arg1)->__getitem__(arg2,arg3,arg4);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     npy_intp dims[1] = {
@@ -4471,7 +4626,15 @@ SWIGINTERN PyObject *_wrap_SpikeContainer_get_spikes(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "SpikeContainer_get_spikes" "', argument " "6"" of type '" "int""'");
   } 
   arg6 = static_cast< int >(val6);
-  (arg1)->get_spikes(arg2,arg3,arg4,arg5,arg6);
+  {
+    try {
+      (arg1)->get_spikes(arg2,arg3,arg4,arg5,arg6);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     npy_intp dims[1] = {
@@ -4526,7 +4689,15 @@ SWIGINTERN PyObject *_wrap_SpikeContainer___getslice__(PyObject *SWIGUNUSEDPARM(
     SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "SpikeContainer___getslice__" "', argument " "5"" of type '" "int""'");
   } 
   arg5 = static_cast< int >(val5);
-  (arg1)->__getslice__(arg2,arg3,arg4,arg5);
+  {
+    try {
+      (arg1)->__getslice__(arg2,arg3,arg4,arg5);
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     npy_intp dims[1] = {
@@ -4556,7 +4727,15 @@ SWIGINTERN PyObject *_wrap_SpikeContainer___repr__(PyObject *SWIGUNUSEDPARM(self
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer___repr__" "', argument " "1"" of type '" "SpikeContainer *""'"); 
   }
   arg1 = reinterpret_cast< SpikeContainer * >(argp1);
-  result = (arg1)->__repr__();
+  {
+    try {
+      result = (arg1)->__repr__();
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_NewPointerObj((new string(static_cast< const string& >(result))), SWIGTYPE_p_string, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
@@ -4578,7 +4757,15 @@ SWIGINTERN PyObject *_wrap_SpikeContainer___str__(PyObject *SWIGUNUSEDPARM(self)
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "SpikeContainer___str__" "', argument " "1"" of type '" "SpikeContainer *""'"); 
   }
   arg1 = reinterpret_cast< SpikeContainer * >(argp1);
-  result = (arg1)->__str__();
+  {
+    try {
+      result = (arg1)->__str__();
+    } catch( std::exception &e ) {
+      //PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+      //return NULL;
+      SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+    }
+  }
   resultobj = SWIG_NewPointerObj((new string(static_cast< const string& >(result))), SWIGTYPE_p_string, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:

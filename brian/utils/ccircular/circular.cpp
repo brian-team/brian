@@ -6,6 +6,17 @@ CircularVector::CircularVector(int n)
 	this->n = n;
 	this->X = new long[n]; // we don't worry about memory errors for the moment...
 	this->retarray = new long[n];
+	if(!this->X || !this->retarray){
+		if(this->X) {
+			delete [] this->X;
+			this->X = 0;
+		}
+		if(this->retarray) {
+			delete [] this->retarray;
+			this->retarray = 0;
+		}
+		throw std::exception("Not enough memory in creating CircularVector.");
+	}
 	this->reinit();
 }
 
@@ -15,6 +26,29 @@ CircularVector::~CircularVector()
 	if(this->retarray) delete [] this->retarray;
 	this->X = NULL;
 	this->retarray = NULL;
+}
+
+void CircularVector::expand(long n)
+{
+	long orig_n = this->n;
+	this->n += n;
+	n = this->n;
+	long *new_X = new long[n];
+	long *new_retarray = new long[n];
+	if(!new_X || !new_retarray){
+		if(new_X) delete [] new_X;
+		if(new_retarray) delete [] new_retarray;
+		throw std::exception("Not enough memory in expanding CircularVector.");
+	}
+	// newS.X[:S.n-S.cursor] = S.X[S.cursor:]
+	memcpy((void *)new_X, (void *)(this->X+this->cursor), sizeof(long)*(orig_n-this->cursor));
+	// newS.X[S.n-S.cursor:S.n] = S.X[:S.cursor]
+	memcpy((void *)(new_X+orig_n-this->cursor), (void *)(this->X), sizeof(long)*this->cursor);
+	this->cursor = orig_n;
+	delete [] this->X;
+	this->X = new_X;
+	delete [] this->retarray;
+	this->retarray = new_retarray;
 }
 
 void CircularVector::reinit()
@@ -65,21 +99,6 @@ void CircularVector::__getslice__(long **ret, int *ret_n, int i, int j)
 	*ret_n = n;
 }
 
-// This can potentially be sped up substantially using a bisection algorithm
-/*void CircularVector::get_conditional(long **ret, long *ret_n, int i, int j, int min, int max, int offset)
-{
-	int i0 = this->index(i);
-	int j0 = this->index(j);
-	int n = 0;
-	for(int k=i0;k!=j0;k=(k+1)%this->n)
-	{
-		int Xk = this->X[k];
-		if(Xk>=min && Xk<max)
-			this->retarray[n++] = Xk-offset;
-	}
-	*ret = this->retarray;
-	*ret_n = n;
-}*/
 void CircularVector::get_conditional(long **ret, int *ret_n, int i, int j, int min, int max, int offset)
 {
 	int i0, j0;
@@ -159,8 +178,26 @@ string CircularVector::__str__()
 
 SpikeContainer::SpikeContainer(int n, int m)
 {
-	this->S = new CircularVector(n+1);
-	this->ind = new CircularVector(m+1);
+	try{
+#ifdef USE_EXPANDING_SPIKECONTAINER
+		this->S = new CircularVector(2);
+		this->remaining_space = 1;
+		if(m<2) m=2;
+#else
+		this->S = new CircularVector(n+1);
+#endif
+		this->ind = new CircularVector(m+1);
+	} catch(std::exception &e) {
+		if(this->S){
+			delete this->S;
+			this->S = 0;
+		}
+		if(this->ind){
+			delete this->ind;
+			this->ind = 0;
+		}
+		throw;
+	}
 }
 
 SpikeContainer::~SpikeContainer()
@@ -175,6 +212,30 @@ void SpikeContainer::reinit()
 	this->ind->reinit();
 }
 
+#ifdef USE_EXPANDING_SPIKECONTAINER
+void SpikeContainer::push(long *y, int n)
+{
+	long freed_space = (this->ind->__getitem__(2)-this->ind->__getitem__(1))%this->S->n;
+	if(freed_space<0) freed_space += this->S->n;
+	this->remaining_space += freed_space;
+	while(n>=this->remaining_space){
+		long orig_cursor = this->S->cursor;
+		long orig_n = this->S->n;
+		this->S->expand(this->S->n); // double size of S
+		for(long i=0; i<this->ind->n; i++){
+			this->ind->X[i] = (this->ind->X[i]-orig_cursor)%orig_n;
+			if(this->ind->X[i]<0) this->ind->X[i] += orig_n;
+			if(this->ind->X[i]==0) this->ind->X[i] = orig_n;
+		}
+		this->remaining_space += orig_n;
+	}
+	this->S->__setslice__(0, n, y, n);
+	this->S->advance(n);
+	this->ind->advance(1);
+	this->ind->__setitem__(0, this->S->cursor);
+	this->remaining_space -= n;
+}
+#else
 void SpikeContainer::push(long *y, int n)
 {
 	this->S->__setslice__(0, n, y, n);
@@ -182,6 +243,7 @@ void SpikeContainer::push(long *y, int n)
 	this->ind->advance(1);
 	this->ind->__setitem__(0, this->S->cursor);
 }
+#endif
 
 void SpikeContainer::lastspikes(long **ret, int *ret_n)
 {

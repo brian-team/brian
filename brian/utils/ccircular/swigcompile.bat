@@ -1,3 +1,5 @@
 @echo off
 swig -python -c++ ccircular.i
-setup.py build_ext --inplace -c mingw32
+rem call swigcompile.bat with arguments -D USE_EXPANDING_SPIKECONTAINER
+rem to use the new dynamic array based SpikeContainer object
+setup.py build_ext --inplace %*
