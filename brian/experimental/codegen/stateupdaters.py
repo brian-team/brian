@@ -1,7 +1,7 @@
 from ...stateupdater import StateUpdater
 from ...globalprefs import get_global_preference
 from ...clock import guess_clock
-from ...log import log_debug
+from ...log import log_debug, log_warn
 from codegen_c import *
 from codegen_python import *
 from integration_schemes import *
@@ -15,6 +15,9 @@ __all__ = ['CStateUpdater', 'PythonStateUpdater']
 class CStateUpdater(StateUpdater):
     def __init__(self, eqs, scheme, clock=None, freeze=False):
         self.clock = guess_clock(clock)
+        self.eqs = eqs
+        self.scheme = scheme
+        self.freeze = freeze
         self.code_c = CCodeGenerator().generate(eqs, scheme)
         log_debug('brian.experimental.codegen.stateupdaters', 'C state updater code:\n'+self.code_c)
         self._weave_compiler = get_global_preference('weavecompiler')
@@ -26,10 +29,17 @@ class CStateUpdater(StateUpdater):
         t = P.clock._t
         num_neurons = len(P)
         _S = P._S
-        weave.inline(self.code_c, ['_S', 'num_neurons', 'dt', 't'],
-                     support_code=c_support_code,
-                     compiler=self._weave_compiler,
-                     extra_compile_args=self._extra_compile_args)
+        try:
+            weave.inline(self.code_c, ['_S', 'num_neurons', 'dt', 't'],
+                         support_code=c_support_code,
+                         compiler=self._weave_compiler,
+                         extra_compile_args=self._extra_compile_args)
+        except:
+            log_warn('brian.experimental.codegen.stateupdaters',
+                     'C compilation failed, falling back on Python.')
+            self.__class__ = PythonStateUpdater
+            self.__init__(self.eqs, self.scheme, self.clock, self.freeze)
+            self.__call__(P)
 
 class PythonStateUpdater(StateUpdater):
     def __init__(self, eqs, scheme, clock=None, freeze=False):
@@ -41,8 +51,15 @@ class PythonStateUpdater(StateUpdater):
         self.namespace = {}
         for varname in self.compiled_code.co_names:
             if varname not in eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t', 'dt', '_S', 'num_neurons']:
-                if hasattr(numpy, varname):
-                    self.namespace[varname] = getattr(numpy, varname)
+                # this is kind of a hack, but since we're going to be writing a new
+                # and more sensible Equations module anyway, it can stand
+                for name in eqs._namespace:
+                    if varname in eqs._namespace[name]:
+                        self.namespace[varname] = eqs._namespace[name][varname]
+                        break
+                if varname not in self.namespace:
+                    if hasattr(numpy, varname):
+                        self.namespace[varname] = getattr(numpy, varname)
         log_debug('brian.experimental.codegen.stateupdaters', 'Python state updater code:\n'+self.code_python)
         exec self.code_python in self.namespace
         self.state_update_func = self.namespace['_stateupdate']
