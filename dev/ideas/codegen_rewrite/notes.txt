@@ -45,5 +45,11 @@ Brief notes
   for example? Or should we have strings mixed in with the Python code? Maybe
   a mix?
 
+* Make use of:
+  + Theano?
+  + numexpr for Python code if package is installed?
+    - Seems to make some improvement for large N but actually slows it down for
+      small N (see test code in PythonStateUpdater).
+
 Plan
 ====

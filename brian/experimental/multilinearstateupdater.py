@@ -119,7 +119,7 @@ class MultiLinearStateUpdater(StateUpdater):
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += ['-march=native']
+            self._extra_compile_args += ['-march=native', '-ffast-math']
     def __call__(self, P):
         if self._useaccel:
             n = len(P)

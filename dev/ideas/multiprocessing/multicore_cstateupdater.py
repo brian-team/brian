@@ -27,7 +27,7 @@ class MulticoreCStateUpdater(StateUpdater):
         self._weave_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._weave_compiler=='gcc':
-            self._extra_compile_args += ['-march=native']
+            self._extra_compile_args += ['-march=native', '-ffast-math']
         self._prepared = False
     def __call__(self, P):
         if not self._prepared:

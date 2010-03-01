@@ -71,7 +71,7 @@ def f(N, repeats, force):
     start = time.time()
     weave.inline(code, ['x', 'y', 'N', 'repeats'], compiler='gcc',
                  extra_compile_args=[
-                    '-march=native',
+                    '-march=native', '-ffast-math',
                     '-O3',
                     ],
                  support_code=supp,

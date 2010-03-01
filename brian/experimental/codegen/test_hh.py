@@ -4,7 +4,7 @@ from brian.experimental.codegen import *
 import time
 from scipy import weave
 
-N = 100
+N = 1000
 record_and_plot = N==1
 
 El=10.6*mV
@@ -58,7 +58,7 @@ for T in xrange(int(100*ms/defaultclock.dt)):
     weave.inline(ccode, ['_S', 'num_neurons', 'dt', 't'],
                  compiler='gcc',
                  #type_converters=weave.converters.blitz,
-                 extra_compile_args=['-O3', '-march=native'])#O2 seems to be faster than O3 here
+                 extra_compile_args=['-O3', '-march=native', '-ffast-math'])#O2 seems to be faster than O3 here
     if record_and_plot:
         hand_trace_c.append(copy(_S[0]))
 print 'Codegen C:', time.time()-start

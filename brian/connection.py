@@ -748,7 +748,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += ['-march=native']
+            self._extra_compile_args += ['-march=native', '-ffast-math']
         self.nnz = nnz = val.getnnz()# nnz stands for number of nonzero entries
         alldata = numpy.zeros(nnz)
         if column_access:
@@ -1325,7 +1325,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += ['-march=native']
+            self._extra_compile_args += ['-march=native', '-ffast-math']
         self._keyword_based_init(weight=weight, sparseness=sparseness)
         
     def _keyword_based_init(self, weight=None, sparseness=None, **kwds):
@@ -1725,7 +1725,7 @@ class DelayConnection(Connection):
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += ['-march=native']
+            self._extra_compile_args += ['-march=native', '-ffast-math']
         if delay is not None:
             self.set_delays(delay=delay)
         

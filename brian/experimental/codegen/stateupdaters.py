@@ -8,7 +8,12 @@ from integration_schemes import *
 import time
 from scipy import weave
 import numpy, scipy
+import re
 from c_support_code import *
+try:
+    import numexpr as numexpr
+except ImportError:
+    numexpr = None
 
 __all__ = ['CStateUpdater', 'PythonStateUpdater']
 
@@ -23,7 +28,7 @@ class CStateUpdater(StateUpdater):
         self._weave_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._weave_compiler=='gcc':
-            self._extra_compile_args += ['-march=native']
+            self._extra_compile_args += ['-march=native', '-ffast-math']
     def __call__(self, P):
         dt = P.clock._dt
         t = P.clock._t
@@ -47,8 +52,21 @@ class PythonStateUpdater(StateUpdater):
         self.clock = guess_clock(clock)
         self.code_python = PythonCodeGenerator().generate(eqs, scheme)
         self.compiled_code = compile(self.code_python, 'StateUpdater code', 'exec')
+        if False and numexpr is not None:
+            # This only improves things for large N, in which case Python speed
+            # is close to C speed anyway, so less valuable
+            newcode = ''
+            for line in self.code_python.split('\n'):
+                m = re.search(r'(\b\w*\b\s*[^><=]?=\s*)(.*)', line) # lines of the form w = ..., w *= ..., etc.
+                if m:
+                    if '*' in m.group(2) or '+' in m.group(2) or '/' in m.group(2) or \
+                       '-' in m.group(2) or '**' in m.group(2) or '(' in m.group(2):
+                        if '[' not in m.group(2):
+                            line = m.group(1)+"_numexpr.evaluate('"+m.group(2)+"')"
+                newcode += line+'\n'
+            self.code_python = newcode
         self.code_python = 'def _stateupdate(_S, dt, t, num_neurons):\n' + '\n'.join(['    '+line for line in self.code_python.split('\n')]) + '\n'
-        self.namespace = {}
+        self.namespace = {'_numexpr':numexpr}
         for varname in self.compiled_code.co_names:
             if varname not in eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t', 'dt', '_S', 'num_neurons']:
                 # this is kind of a hack, but since we're going to be writing a new

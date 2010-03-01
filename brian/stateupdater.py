@@ -347,7 +347,7 @@ class LinearStateUpdater(StateUpdater):
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += ['-march=native']
+            self._extra_compile_args += ['-march=native', '-ffast-math']
         self._useB=False
         if clock==None:
             clock = guess_clock()
