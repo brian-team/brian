@@ -1,0 +1,49 @@
+This folder is for work on stage 1 of the code generation rewrite project
+detailed in:
+
+http://groups.google.com/group/brian-development/browse_thread/thread/e51958b7785e48ef
+
+In brief, stage 1 of the project involves:
+
+* Write symbolic analysis package using Sympy
+* Rewrite Equations using this
+* Rewrite code generation to use this framework
+
+Brief notes
+===========
+
+* Would like to be flexible enough to add support for things like differential
+  equations specified as tau dV/dt = f(V,t) instead of just dV/dt = f(V, T).
+  Could also leave space for more implicitly defined equations generally.
+  Should also make a syntax like d2V/dt2 or (d/dt)**2 V or something like
+  that possible in the future. Also, we should have syntax for stochastic
+  differential equations.
+  Basically, it should look as much like ordinary maths as possible.
+  + Can we assume that equations can be reduced to dx/dt=f(x,t) after some
+    transformations or not?
+  + Do we want to leave space open for defining things like cable equations
+    in a more sophisticated way? Any ideas on how to do this?
+
+* For code generation, it might be useful to have a generated code base class
+  that would handle variable initialisations, calling weave, maybe falling back
+  on Python, etc. Something like the ConnectionCode class in new_c_propagate.
+  The way this works is that each Code object would maintain a copy of its
+  runtime code (either C or Python), its initialisation code (Python probably,
+  but C also possible I guess), and its namespace. Combining code by nesting
+  or concatenation would be possible, and would have to take into account the
+  namespaces, initialisation code and runtime code. (See new_c_propagate for
+  an example of how this works in practice.)
+
+* We need a way of allowing objects to define a code generation equivalent.
+  For example, TimedArray has a __call__ mechanism, but if you use a TimedArray
+  in generated C code you will get an error. So TimedArray should be able to
+  specify a C version of itself to be used with code generation. We might use
+  weave's typemap system to do this (it maps Python objects to C objects). At
+  the moment though it's undocumented.
+  
+* How to organise files? Should we have separate C files with template arguments
+  for example? Or should we have strings mixed in with the Python code? Maybe
+  a mix?
+
+Plan
+====
