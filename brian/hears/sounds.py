@@ -260,13 +260,15 @@ class Sound(numpy.ndarray):
         x = hstack(sounds)
         return Sound(x, rate)
     
-    def save(self, filename, normalise=False, sampwidth=1):
+    def save(self, filename, normalise=False, sampwidth=1, stereo=None):
         '''
         Save the sound as a WAV file.
         
         If the normalise keyword is set to True, the amplitude of the sound will be
         normalised to 1. The sampwidth keyword can be 1 or 2 to save the data as
-        8 or 16 bit samples.
+        8 or 16 bit samples. If the stereo keyword is set, it should be the
+        right hand channel (and the original instance should be the left hand
+        channel).
         '''
         if sampwidth!=1 and sampwidth!=2:
             raise ValueError('Sample width must be 1 or 2 bytes.')
@@ -275,17 +277,34 @@ class Sound(numpy.ndarray):
         meanval = {2:0, 1:1}[sampwidth]
         dtype = {2:int16, 1:uint8}[sampwidth]
         w = wave.open(filename, 'wb')
-        w.setnchannels(1)
+        if stereo is None:
+            w.setnchannels(1)
+        else:
+            w.setnchannels(2)
         w.setsampwidth(sampwidth)
         w.setframerate(int(self.rate))
-        w.setnframes(len(self))
         x = asarray(self)
-        if normalise:
+        if normalise and stereo is None:
             x /= amax(x)
-        x = (x+meanval)*scale
-        data = array(x, dtype=dtype)
-        data = pyarray.array(typecode, data)
-        w.writeframes(data)
+        if stereo is not None:
+            y = asarray(stereo)
+            if normalise:
+                am = max(amax(x), amax(y))
+                x /= am
+                y /= am
+            x = (x+meanval)*scale
+            y = (y+meanval)*scale
+            z = zeros(len(x)+len(y), dtype=x.dtype)
+            z[0::2] = x
+            z[1::2] = y
+            data = array(z, dtype=dtype)
+            data = pyarray.array(typecode, data)
+            w.writeframes(data.tostring())
+        else:
+            x = (x+meanval)*scale
+            data = array(x, dtype=dtype)
+            data = pyarray.array(typecode, data)
+            w.writeframes(data.tostring())
         w.close()
 
     def __reduce__(self):
