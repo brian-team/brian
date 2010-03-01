@@ -5,6 +5,7 @@ from ...optimiser import freeze
 from ...reset import Reset
 from ...equations import Equations
 from ...globalprefs import get_global_preference
+from ...log import log_warn
 from expressions import *
 from scipy import weave
 from c_support_code import *
@@ -87,7 +88,14 @@ class CReset(Reset):
         _nspikes = len(_spikes)
         _S = P._S
         _num_neurons = len(P)
-        weave.inline(self._outputcode, ['_S', '_nspikes', 'dt', 't', '_spikes', '_num_neurons'],
-                     c_support_code=c_support_code,
-                     compiler=self._weave_compiler,
-                     extra_compile_args=self._extra_compile_args)
+        try:
+            weave.inline(self._outputcode, ['_S', '_nspikes', 'dt', 't', '_spikes', '_num_neurons'],
+                         c_support_code=c_support_code,
+                         compiler=self._weave_compiler,
+                         extra_compile_args=self._extra_compile_args)
+        except:
+            log_warn('brian.experimental.codegen.reset',
+                     'C compilation failed, falling back on Python.')
+            self.__class__ = PythonReset
+            self._prepared = False
+            return self.__call__(P)       

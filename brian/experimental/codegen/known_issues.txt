@@ -1,5 +1,4 @@
 KNOWN ISSUES (roughly in order of importance):
 
-TODO: should fall back to Python on fail to compile [done for StateUpdater]
 TODO: Python functions can't be used in Equations (allow for specification
       of C code somehow? workaround with network operation?)
