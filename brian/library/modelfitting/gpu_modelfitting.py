@@ -367,6 +367,7 @@ if __name__=='__main__':
     import time
     from matplotlib.cm import jet
     if 1:
+        set_global_preferences(usecodegenthreshold=False)
         N = 10000
         delta = 4*ms
         doplot = True

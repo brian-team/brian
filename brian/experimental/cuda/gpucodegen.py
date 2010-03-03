@@ -4,6 +4,7 @@ from scipy import weave
 import pycuda
 import pycuda.autoinit as autoinit
 import pycuda.driver as drv
+import pycuda.compiler as compiler
 from pycuda import gpuarray
 from buffering import *
 import time
@@ -49,7 +50,7 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
             clines += '    S[_index_'+name+'] = '+name+'+'+str(self.clock_dt)+'*'+name+'__tmp;\n'
         clines += '}\n'
         clines = clines.replace('SCALAR', self.precision)
-        self.gpu_mod = drv.SourceModule(clines)
+        self.gpu_mod = compiler.SourceModule(clines)
         self.gpu_func = self.gpu_mod.get_function("stateupdate")
         return clines
     
@@ -165,6 +166,7 @@ class GPUNeuronGroup(NeuronGroup):
 if __name__=='__main__':
 
     from brian.experimental.ccodegen import AutoCompiledNonlinearStateUpdater
+    set_global_preferences(usecodegen=False)
     
     #duration = 10*second
     #N = 1000
