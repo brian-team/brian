@@ -12,7 +12,7 @@ euler_scheme = [
     ]
 
 rk2_scheme = [
-    (('foreachvar', 'nonzero'),
+    (('foreachvar', 'all'),
         '''
         $vartype ${var}__buf = $var_expr
         $vartype ${var}__half = (.5*dt)*${var}__buf
