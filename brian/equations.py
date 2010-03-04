@@ -204,105 +204,255 @@ class Equations(object):
             else:
                 self.parse_string_equations(expr,namespace=param_dict,level=level+1)
     
-    def __getattr__(self,name):
-        '''
-        Returns the corresponding function.
-        '''
-        return lambda **kwd:self.apply(name,kwd)
+    """
+    -----------------------------------------------------------------------
+    PARSING AND BUILDING NAMESPACES
+    -----------------------------------------------------------------------
+    """
     
-    def fixed_point(self,**kwd):
+    def parse_string_equations(self,eqns,level=1,namespace=None):
+        """
+        Parses a string defining equations and builds an Equations object.
+        Uses the namespace in the given level of the stack.
+        """
+        diffeq_pattern=re.compile('\s*d(\w+)\s*/\s*dt\s*=\s*(.+?)\s*:\s*(.*)')
+        eq_pattern=re.compile('\s*(\w+)\s*=\s*(.+?)\s*:\s*(.*)')
+        alias_pattern=re.compile('\s*(\w+)\s*=\s*(\w+)\s*$')
+        param_pattern=re.compile('\s*(\w+)\s*:\s*(.*)')
+        empty_pattern=re.compile('\s*$')
+        patterns=[diffeq_pattern,eq_pattern,alias_pattern,param_pattern,empty_pattern]
+        # Merge multi-line statements
+        eqns=re.sub('\\\s*?\n',' ',eqns)
+        
+        # Namespace of the functions
+        ns_global,ns_local=namespace,namespace
+        if namespace is None:
+            frame=inspect.stack()[level+1][0]
+            ns_global,ns_local=frame.f_globals,frame.f_locals
+            #print frame.f_code.co_filename #useful for debugging which file the namespace came from
+        
+        for line in eqns.splitlines():
+            line=re.sub('#.*','',line) # remove comments
+            result=None
+            for pattern in patterns:
+                result=pattern.match(line)
+                if result:
+                    break
+            if result==None:
+                raise TypeError,"Invalid equation string: "+line
+            if pattern==eq_pattern:
+                name,eq,unit=result.groups()
+                self.add_eq(name,eq,unit,ns_global,ns_local)
+            elif pattern==diffeq_pattern:
+                name,eq,unit=result.groups()
+                self.add_diffeq(name,eq,unit,ns_global,ns_local)
+            elif pattern==alias_pattern:
+                name1,name2=result.groups()
+                self.add_alias(name1,name2)
+            elif pattern==param_pattern:
+                name,unit=result.groups()
+                self.add_param(name,unit,ns_global,ns_local)
+
+    def add_eq(self,name,eq,unit,global_namespace={},local_namespace={}):
+        """
+        Inserts an equation.
+        name = variable name
+        eq = string definition
+        unit = unit of the variable (possibly a string)
+        *_namespace = namespaces associated to the string
+        """
+        # Find external objects
+        vars=list(get_identifiers(eq))
+        if type(unit)==types.StringType:
+            vars.extend(list(get_identifiers(unit)))
+        self._namespace[name]={}
+        for var in vars:
+            if var in local_namespace: #local
+                self._namespace[name][var]=local_namespace[var]
+            elif var in global_namespace: #global
+                self._namespace[name][var]=global_namespace[var]
+            elif var in globals(): # typically units
+                self._namespace[name][var]=globals()[var]
+        
+        self._eq_names.append(name)
+        if type(unit)==types.StringType:
+            self._units[name]=eval(unit,self._namespace[name]) # warning: here the namespace changes
+        else:
+            self._units[name]=unit
+        self._string[name]=eq
+
+    def add_diffeq(self,name,eq,unit,global_namespace={},local_namespace={},nonzero=True):
+        """
+        Inserts a differential equation.
+        name = variable name
+        eq = string definition
+        unit = unit of the variable (possibly a string)
+        *_namespace = namespaces associated to the string
+        nonzero = False if dx/dt=0 (parameter)
+        """
+        # Find external objects
+        vars=list(get_identifiers(eq))
+        if type(unit)==types.StringType:
+            vars.extend(list(get_identifiers(unit)))
+        self._namespace[name]={}
+        for var in vars:
+            if var in local_namespace: #local
+                self._namespace[name][var]=local_namespace[var]
+            elif var in global_namespace: #global
+                self._namespace[name][var]=global_namespace[var]
+            elif var in globals(): # typically units
+                self._namespace[name][var]=globals()[var]
+        
+        self._diffeq_names.append(name)
+        if type(unit)==types.StringType:
+            self._units[name]=eval(unit,self._namespace[name]) # warning: here the namespace changes
+        else:
+            self._units[name]=unit
+        self._string[name]=eq
+        if nonzero:
+            self._diffeq_names_nonzero.append(name)
+
+    def add_alias(self,name1,name2):
+        """
+        Inserts an alias.
+        name1 = new name
+        name2 = old name
+        """
+        self._alias[name1]=name2
+        # TODO: what if name2 is not defined yet?
+        self.add_eq(name1,name2,self._units[name2])
+
+    def add_param(self,name,unit,global_namespace={},local_namespace={}):
+        """
+        Inserts a parameter.
+        name = variable name
+        eq = string definition
+        unit = unit of the variable (possibly a string)
+        *_namespace = namespaces associated to the string
+        """
+        if isinstance(unit,Quantity):
+            unit=scalar_representation(unit)
+        self.add_diffeq(name,'0*'+unit+'/second',unit,global_namespace,local_namespace,nonzero=False)
+
+    """
+    -----------------------------------------------------------------------
+    FINALISATION
+    -----------------------------------------------------------------------
+    """
+
+    def prepare(self,check_units=True):
         '''
-        Returns a fixed point of the differential equations
-        as a dictionary. The keyword arguments give the (optional)
-        initial point (default = 0).
+        Do a number of checks (units) and preparation of the object.
         '''
-        values={}
-        for name,value in self._units.iteritems():
-            values[name]=0*value
-        values.update(kwd)
-        # Initial vector
-        x0=[values[name] for name in self._diffeq_names_nonzero]
-        # Vector function
-        def f(x):
-            # Put the units back
-            x=[xi*get_unit(x0i) for xi,x0i in zip(x,x0)]            
-            values.update(zip(self._diffeq_names_nonzero,x))
-            return [self.apply(name,values) for name in self._diffeq_names_nonzero]
-        xf,_,ier,_=optimize.fsolve(f,x0,full_output=True)
-        if ier:
-            # Put the units back
-            xf=[xfi*get_unit(x0i) for xfi,x0i in zip(xf,x0)]
-            # Return a dictionary
-            return dict(zip(self._diffeq_names_nonzero,xf))
-        else: # Not found
-            warnings.warn('Could not find a fixed point of the equations')
-            return kwd
+        if self._prepared:
+            return
+        # Let Vm be the first differential equation
+        vm_name=self.get_Vm()
+        if vm_name:
+            # TODO: INFO logging
+            i=self._diffeq_names.index(vm_name)
+            self._diffeq_names[0],self._diffeq_names[i]=self._diffeq_names[i],self._diffeq_names[0]
+        else:
+            pass
+            # TODO: WARNING log that a potential problem has occurred here?
     
-    def __add__(self,other):
+        # Clean namespace (avoids conflicts between variables and external variables)
+        self.clean_namespace()        
+        # Compile strings to functions
+        self.compile_functions()
+        # Check units
+        if check_units: self.check_units()
+        # Set the update order of (static) variables
+        self.set_eq_order()
+        # Replace static variables by their value in differential equations
+        self.substitute_eq()
+        self.compile_functions()
+        
+        # Check free variables
+        free_vars=self.free_variables()
+        if free_vars!=[]:
+            log_info('brian.equations', 'Free variables: '+str(free_vars))
+        
+        self._prepared = True
+
+    def get_Vm(self):
         '''
-        Union of two sets of equations
+        Finds the variable that is most likely to be the
+        membrane potential.
         '''
-        if not isinstance(other,Equations):
-            other = Equations(other,level=1)
-        result=self.__class__()
-        result+=self
-        result+=other
-        return result
-    __radd__ = __add__
-    
-    def __iadd__(self,other):
-        if not isinstance(other,Equations):
-            other = Equations(other,level=1)
-        self._eq_names=list(set(self._eq_names+other._eq_names)) # what to do if same variables?
-        self._diffeq_names=list(set(self._diffeq_names+other._diffeq_names))
-        self._diffeq_names_nonzero=list(set(self._diffeq_names_nonzero+other._diffeq_names_nonzero))
-        self._function=disjoint_dict_union(self._function,other._function)
-        self._alias=disjoint_dict_union(self._alias,other._alias)
-        self._string=disjoint_dict_union(self._string,other._string)
-        self._namespace=disjoint_dict_union(self._namespace,other._namespace)
-        # We do this to fix a bug where if you add two Equations together and
-        # then create groups from them, the add_prefix_namespace step creates
-        # names which can't be correctly resolved in the second NeuronGroup
-        # created. This happens because although self._namespace is a new object,
-        # self._namespace[var] is shared between the two objects.
-        for var in self._namespace.keys():
-            self._namespace[var] = copy.copy(self._namespace[var])
+        if self._Vm:
+            return self._Vm
+        vm_names=['v','V','vm','Vm']
+        guesses=[var for var in self._diffeq_names if var in vm_names]
+        if len(guesses)==1: # Unambiguous
+            return guesses[0]
+        else: # Ambiguous or not found
+            return None
+
+    def clean_namespace(self):
+        '''
+        Removes all variable names from namespaces
+        '''
+        all_variables=self._eq_names+self._diffeq_names+self._alias.keys()+['t']
+        for name in self._namespace:
+            for var in all_variables:
+                if var in self._namespace[name]:
+                    log_warn('brian.equations','Equation variable '+var+' also exists in the namespace')
+                    del self._namespace[name][var]
+
+    def compile_functions(self,freeze=False):
+        """
+        Compile all functions defined as strings.
+        If freeze is True, all external parameters and units are replaced by their value.
+        ALL FUNCTIONS MUST HAVE STRINGS.
+        """
+        all_variables=self._eq_names+self._diffeq_names+self._alias.keys()+['t']
+        # Check if freezable
+        freeze=freeze and all([optimiser.freeze(expr,all_variables,self._namespace[name])\
+                               for name,expr in self._string.iteritems()])
+        self._frozen=freeze
+       
+        # Compile strings to functions
+        for name,expr in self._string.iteritems():
+            namespace=self._namespace[name] # name space of the function
+            # Find variables
+            vars=[var for var in get_identifiers(expr) if var in all_variables]
+            if freeze:
+                expr=optimiser.freeze(expr,all_variables,namespace)
+                #self._string[name]=expr # should we?
+                #namespace={}
+            s="lambda "+','.join(vars)+":"+expr
+            self._function[name]=eval(s,namespace)
+
+    def check_units(self):
+        '''
+        Checks the units of the differential equations, using
+        the units of x.
+        dx_i/dt must have units of x_i / time.
+        '''
+        self.set_eq_order()
+        # Better: replace xi in the string, or in the namespace
         try:
-            self._units=disjoint_dict_union(self._units,other._units)
-        except AttributeError:
-            raise DimensionMismatchError("The two sets of equations do not have compatible units")
-        return self
-
-    # TODO: change this (maybe remove)
-    def optimize(self,n):
-        '''
-        Optimizes the equations using blitz.
-        n = vector size (for arguments)
-        '''
-        pass
-        #for var in self._diffeq_names+self._eq_names:
-        #    self._function[var]=optimize_lambda(self._function[var],n)
-
-    def is_stochastic(self,var=None):
-        '''
-        Returns True if the equation for var is stochastic,
-        or if all equations are stochastic (var=None).
-        '''
-        if var:
-            return 'xi' in get_identifiers(self._string[var])
-        else:
-            return any([self.is_stochastic(name) for name in self._diffeq_names_nonzero])
-
-    def is_time_dependent(self,var=None):
-        '''
-        Returns True if the equation for var is time dependent,
-        or if all equations are time dependent (var=None).
-        '''
-        if var:
-            return 't' in get_identifiers(self._string[var])
-        else:
-            return any([self.is_time_dependent(name) for name in self._diffeq_names_nonzero])
-#            return any([self.is_time_dependent(name) for name in self._diffeq_names_nonzero+self._eq_names])
+            for var in self._eq_names:
+                f = self._function[var]
+                old_func_globals = copy.copy(f.func_globals)
+                f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
+                units = namespace_replace_quantity_with_pure(self._units)
+                self.apply(var, units)+self._units[var] # Check that the two terms have the same dimension
+                f.func_globals.update(old_func_globals)
+            for var in self._diffeq_names:
+                f = self._function[var]
+                old_func_globals = copy.copy(f.func_globals)
+                f.func_globals['xi']=0*second**-.5 # Noise
+                f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
+                units = namespace_replace_quantity_with_pure(self._units)
+                self.apply(var, units)+(self._units[var]/second) # Check that the two terms have the same dimension
+                f.func_globals.update(old_func_globals)
+        except DimensionMismatchError,inst:
+            raise DimensionMismatchError("The differential equation of "+var+" is not homogeneous",*inst._dims)
+        except:
+            warnings.warn("Unexpected exception in checking units of "+var)
+            raise
 
     def set_eq_order(self):
         '''
@@ -358,26 +508,65 @@ class Equations(object):
         # Update _eq
         self._eq_names=staticvars_list
 
-    def __len__(self):
-        '''
-        Number of differential equations
-        '''
-        return len(self._diffeq_names)
-    
-    def get_Vm(self):
-        '''
-        Finds the variable that is most likely to be the
-        membrane potential.
-        '''
-        if self._Vm:
-            return self._Vm
-        vm_names=['v','V','vm','Vm']
-        guesses=[var for var in self._diffeq_names if var in vm_names]
-        if len(guesses)==1: # Unambiguous
-            return guesses[0]
-        else: # Ambiguous or not found
-            return None
+    def substitute_eq(self,name=None):
+        """
+        Replaces the static variable 'name' by its value in differential
+        equations.
+        If None: substitute all static variables.
+        """
+        if name is None:
+            for var in self._eq_names[-1::-1]: # reverse order
+                self.substitute_eq(var)
+        else:
+            self.add_prefix_namespace(name)
+            #print name
+            for var in self._diffeq_names_nonzero:
+                # String
+                self._string[var]=re.sub("\\b"+name+"\\b",'('+self._string[name]+')',self._string[var])
+                # Namespace
+                self._namespace[var].update(self._namespace[name])
+            #print self
 
+    def add_prefix_namespace(self,name):
+        """
+        Make the variables in the namespace associated to variable name
+        specific to that variable by inserting the prefix name_.
+        """
+        vars=self._namespace[name].keys()
+        untransformed_funcs = set(getattr(unitsafefunctions, v) for v in unitsafefunctions.quantity_versions)
+        untransformed_funcs.update(set([numpy.clip]))
+        for var in vars:
+            v = self._namespace[name][var]
+            addprefix = True
+            if isinstance(v, numpy.ufunc):
+                addprefix = False
+            try:
+                if v in untransformed_funcs:
+                    addprefix = False
+            except TypeError: #unhashable types
+                pass
+            if addprefix:
+                # String
+                self._string[name]=re.sub("\\b"+var+"\\b",name+'_'+var,self._string[name])
+                # Namespace
+                self._namespace[name][name+'_'+var]=self._namespace[name][var]
+                del self._namespace[name][var]
+
+    def free_variables(self):
+        """
+        Returns the list of free variables.
+        """
+        all_variables=self._eq_names+self._diffeq_names+self._alias.keys()+['t']
+        free_vars=[]
+        for expr in self._string.itervalues():
+            free_vars+=[name for name in get_identifiers(expr) if name not in all_variables]
+        return list(set(free_vars))
+
+    """
+    -----------------------------------------------------------------------
+    CALCULATING RHS OF DIFF EQUATIONS
+    -----------------------------------------------------------------------
+    """
     def apply(self,state,vardict):
         '''
         Calculates self._function[state] with arguments in vardict and
@@ -391,41 +580,32 @@ class Equations(object):
             vardict[var]=call_with_dict(self._function[var],vardict)
         return f(*[vardict[var] for var in f.func_code.co_varnames])
 
-    def prepare(self,check_units=True):
+    """
+    -----------------------------------------------------------------------
+    EQUATION INSPECTION
+    -----------------------------------------------------------------------
+    """
+    def is_stochastic(self,var=None):
         '''
-        Do a number of checks (units) and preparation of the object.
+        Returns True if the equation for var is stochastic,
+        or if all equations are stochastic (var=None).
         '''
-        if self._prepared:
-            return
-        # Let Vm be the first differential equation
-        vm_name=self.get_Vm()
-        if vm_name:
-            # TODO: INFO logging
-            i=self._diffeq_names.index(vm_name)
-            self._diffeq_names[0],self._diffeq_names[i]=self._diffeq_names[i],self._diffeq_names[0]
+        if var:
+            return 'xi' in get_identifiers(self._string[var])
         else:
-            pass
-            # TODO: WARNING log that a potential problem has occurred here?
-    
-        # Clean namespace (avoids conflicts between variables and external variables)
-        self.clean_namespace()        
-        # Compile strings to functions
-        self.compile_functions()
-        # Check units
-        if check_units: self.check_units()
-        # Set the update order of (static) variables
-        self.set_eq_order()
-        # Replace static variables by their value in differential equations
-        self.substitute_eq()
-        self.compile_functions()
-        
-        # Check free variables
-        free_vars=self.free_variables()
-        if free_vars!=[]:
-            log_info('brian.equations', 'Free variables: '+str(free_vars))
-        
-        self._prepared = True
+            return any([self.is_stochastic(name) for name in self._diffeq_names_nonzero])
 
+    def is_time_dependent(self,var=None):
+        '''
+        Returns True if the equation for var is time dependent,
+        or if all equations are time dependent (var=None).
+        '''
+        if var:
+            return 't' in get_identifiers(self._string[var])
+        else:
+            return any([self.is_time_dependent(name) for name in self._diffeq_names_nonzero])
+#            return any([self.is_time_dependent(name) for name in self._diffeq_names_nonzero+self._eq_names])
+    
     def is_linear(self):
         '''
         Returns True if all equations are linear.
@@ -437,7 +617,7 @@ class Equations(object):
         
         for f in self._namespace.iterkeys():
             if any([type(key)==types.FunctionType for key in self._namespace[f].itervalues()]):
-                   return False
+                return False
         return all([is_affine(f) for f in self._function.itervalues()])
     
     def is_conditionally_linear(self):
@@ -453,6 +633,12 @@ class Equations(object):
             except:
                 return False
         return True
+    
+    """
+    -----------------------------------------------------------------------
+    NUMERICAL INTEGRATION (to be replaced by code generation)
+    -----------------------------------------------------------------------
+    """
     
     def forward_euler(self,S,dt):
         '''
@@ -624,73 +810,83 @@ class Equations(object):
         #print lines
         return compile(lines,'Exponential Euler update code','exec')
     
-    def check_units(self):
+    """
+    -------------------
+    COMBINING EQUATIONS
+    -------------------
+    """
+    def __add__(self,other):
         '''
-        Checks the units of the differential equations, using
-        the units of x.
-        dx_i/dt must have units of x_i / time.
+        Union of two sets of equations
         '''
-        self.set_eq_order()
-        # Better: replace xi in the string, or in the namespace
+        if not isinstance(other,Equations):
+            other = Equations(other,level=1)
+        result=self.__class__()
+        result+=self
+        result+=other
+        return result
+    __radd__ = __add__
+    
+    def __iadd__(self,other):
+        if not isinstance(other,Equations):
+            other = Equations(other,level=1)
+        self._eq_names=list(set(self._eq_names+other._eq_names)) # what to do if same variables?
+        self._diffeq_names=list(set(self._diffeq_names+other._diffeq_names))
+        self._diffeq_names_nonzero=list(set(self._diffeq_names_nonzero+other._diffeq_names_nonzero))
+        self._function=disjoint_dict_union(self._function,other._function)
+        self._alias=disjoint_dict_union(self._alias,other._alias)
+        self._string=disjoint_dict_union(self._string,other._string)
+        self._namespace=disjoint_dict_union(self._namespace,other._namespace)
+        # We do this to fix a bug where if you add two Equations together and
+        # then create groups from them, the add_prefix_namespace step creates
+        # names which can't be correctly resolved in the second NeuronGroup
+        # created. This happens because although self._namespace is a new object,
+        # self._namespace[var] is shared between the two objects.
+        for var in self._namespace.keys():
+            self._namespace[var] = copy.copy(self._namespace[var])
         try:
-            for var in self._eq_names:
-                f = self._function[var]
-                old_func_globals = copy.copy(f.func_globals)
-                f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
-                units = namespace_replace_quantity_with_pure(self._units)
-                self.apply(var, units)+self._units[var] # Check that the two terms have the same dimension
-                f.func_globals.update(old_func_globals)
-            for var in self._diffeq_names:
-                f = self._function[var]
-                old_func_globals = copy.copy(f.func_globals)
-                f.func_globals['xi']=0*second**-.5 # Noise
-                f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
-                units = namespace_replace_quantity_with_pure(self._units)
-                self.apply(var, units)+(self._units[var]/second) # Check that the two terms have the same dimension
-                f.func_globals.update(old_func_globals)
-        except DimensionMismatchError,inst:
-            raise DimensionMismatchError("The differential equation of "+var+" is not homogeneous",*inst._dims)
-        except:
-            warnings.warn("Unexpected exception in checking units of "+var)
-            raise
-
-    def compile_functions(self,freeze=False):
-        """
-        Compile all functions defined as strings.
-        If freeze is True, all external parameters and units are replaced by their value.
-        ALL FUNCTIONS MUST HAVE STRINGS.
-        """
-        all_variables=self._eq_names+self._diffeq_names+self._alias.keys()+['t']
-        # Check if freezable
-        freeze=freeze and all([optimiser.freeze(expr,all_variables,self._namespace[name])\
-                               for name,expr in self._string.iteritems()])
-        self._frozen=freeze
-       
-        # Compile strings to functions
-        for name,expr in self._string.iteritems():
-            namespace=self._namespace[name] # name space of the function
-            # Find variables
-            vars=[var for var in get_identifiers(expr) if var in all_variables]
-            if freeze:
-                expr=optimiser.freeze(expr,all_variables,namespace)
-                #self._string[name]=expr # should we?
-                #namespace={}
-            s="lambda "+','.join(vars)+":"+expr
-            self._function[name]=eval(s,namespace)
-
-    def free_variables(self):
-        """
-        Returns the list of free variables.
-        """
-        all_variables=self._eq_names+self._diffeq_names+self._alias.keys()+['t']
-        free_vars=[]
-        for expr in self._string.itervalues():
-            free_vars+=[name for name in get_identifiers(expr) if name not in all_variables]
-        return list(set(free_vars))
-
+            self._units=disjoint_dict_union(self._units,other._units)
+        except AttributeError:
+            raise DimensionMismatchError("The two sets of equations do not have compatible units")
+        return self
+    
+    """
+    ---------------------------------
+    OTHER METHODS (CALLED EXTERNALLY)
+    ---------------------------------
+    """
+    def fixed_point(self,**kwd):
+        '''
+        Returns a fixed point of the differential equations
+        as a dictionary. The keyword arguments give the (optional)
+        initial point (default = 0).
+        '''
+        values={}
+        for name,value in self._units.iteritems():
+            values[name]=0*value
+        values.update(kwd)
+        # Initial vector
+        x0=[values[name] for name in self._diffeq_names_nonzero]
+        # Vector function
+        def f(x):
+            # Put the units back
+            x=[xi*get_unit(x0i) for xi,x0i in zip(x,x0)]            
+            values.update(zip(self._diffeq_names_nonzero,x))
+            return [self.apply(name,values) for name in self._diffeq_names_nonzero]
+        xf,_,ier,_=optimize.fsolve(f,x0,full_output=True)
+        if ier:
+            # Put the units back
+            xf=[xfi*get_unit(x0i) for xfi,x0i in zip(xf,x0)]
+            # Return a dictionary
+            return dict(zip(self._diffeq_names_nonzero,xf))
+        else: # Not found
+            warnings.warn('Could not find a fixed point of the equations')
+            return kwd
+    
     def substitute(self,name1,name2):
         """
         Changes name1 to name2 (variable names).
+        Note: I don't where this is called!
         """
         # Aliases
         if name1 in self._alias:
@@ -719,184 +915,21 @@ class Equations(object):
             self._namespace[name2]=self._namespace[name1]
             del self._namespace[name1]
 
-    def substitute_eq(self,name=None):
-        """
-        Replaces the static variable 'name' by its value in differential
-        equations.
-        If None: substitute all static variables.
-        """
-        if name is None:
-            for var in self._eq_names[-1::-1]: # reverse order
-                self.substitute_eq(var)
-        else:
-            self.add_prefix_namespace(name)
-            #print name
-            for var in self._diffeq_names_nonzero:
-                # String
-                self._string[var]=re.sub("\\b"+name+"\\b",'('+self._string[name]+')',self._string[var])
-                # Namespace
-                self._namespace[var].update(self._namespace[name])
-            #print self
-
-    def clean_namespace(self):
+    def __getattr__(self,name):
         '''
-        Removes all variable names from namespaces
+        Returns the corresponding function.
+        
+        Note: is this still used?
         '''
-        all_variables=self._eq_names+self._diffeq_names+self._alias.keys()+['t']
-        for name in self._namespace:
-            for var in all_variables:
-                if var in self._namespace[name]:
-                    log_warn('brian.equations','Equation variable '+var+' also exists in the namespace')
-                    del self._namespace[name][var]
+        return lambda **kwd:self.apply(name,kwd)
 
-    def add_prefix_namespace(self,name):
-        """
-        Make the variables in the namespace associated to variable name
-        specific to that variable by inserting the prefix name_.
-        """
-        vars=self._namespace[name].keys()
-        untransformed_funcs = set(getattr(unitsafefunctions, v) for v in unitsafefunctions.quantity_versions)
-        untransformed_funcs.update(set([numpy.clip]))
-        for var in vars:
-            v = self._namespace[name][var]
-            addprefix = True
-            if isinstance(v, numpy.ufunc):
-                addprefix = False
-            try:
-                if v in untransformed_funcs:
-                    addprefix = False
-            except TypeError: #unhashable types
-                pass
-            if addprefix:
-                # String
-                self._string[name]=re.sub("\\b"+var+"\\b",name+'_'+var,self._string[name])
-                # Namespace
-                self._namespace[name][name+'_'+var]=self._namespace[name][var]
-                del self._namespace[name][var]
+    def __len__(self):
+        '''
+        Number of differential equations
 
-    def add_eq(self,name,eq,unit,global_namespace={},local_namespace={}):
-        """
-        Inserts an equation.
-        name = variable name
-        eq = string definition
-        unit = unit of the variable (possibly a string)
-        *_namespace = namespaces associated to the string
-        """
-        # Find external objects
-        vars=list(get_identifiers(eq))
-        if type(unit)==types.StringType:
-            vars.extend(list(get_identifiers(unit)))
-        self._namespace[name]={}
-        for var in vars:
-            if var in local_namespace: #local
-                self._namespace[name][var]=local_namespace[var]
-            elif var in global_namespace: #global
-                self._namespace[name][var]=global_namespace[var]
-            elif var in globals(): # typically units
-                self._namespace[name][var]=globals()[var]
-        
-        self._eq_names.append(name)
-        if type(unit)==types.StringType:
-            self._units[name]=eval(unit,self._namespace[name]) # warning: here the namespace changes
-        else:
-            self._units[name]=unit
-        self._string[name]=eq
-
-    def add_diffeq(self,name,eq,unit,global_namespace={},local_namespace={},nonzero=True):
-        """
-        Inserts a differential equation.
-        name = variable name
-        eq = string definition
-        unit = unit of the variable (possibly a string)
-        *_namespace = namespaces associated to the string
-        nonzero = False if dx/dt=0 (parameter)
-        """
-        # Find external objects
-        vars=list(get_identifiers(eq))
-        if type(unit)==types.StringType:
-            vars.extend(list(get_identifiers(unit)))
-        self._namespace[name]={}
-        for var in vars:
-            if var in local_namespace: #local
-                self._namespace[name][var]=local_namespace[var]
-            elif var in global_namespace: #global
-                self._namespace[name][var]=global_namespace[var]
-            elif var in globals(): # typically units
-                self._namespace[name][var]=globals()[var]
-        
-        self._diffeq_names.append(name)
-        if type(unit)==types.StringType:
-            self._units[name]=eval(unit,self._namespace[name]) # warning: here the namespace changes
-        else:
-            self._units[name]=unit
-        self._string[name]=eq
-        if nonzero:
-            self._diffeq_names_nonzero.append(name)
-
-    def add_alias(self,name1,name2):
-        """
-        Inserts an alias.
-        name1 = new name
-        name2 = old name
-        """
-        self._alias[name1]=name2
-        # TODO: what if name2 is not defined yet?
-        self.add_eq(name1,name2,self._units[name2])
-
-    def add_param(self,name,unit,global_namespace={},local_namespace={}):
-        """
-        Inserts a parameter.
-        name = variable name
-        eq = string definition
-        unit = unit of the variable (possibly a string)
-        *_namespace = namespaces associated to the string
-        """
-        if isinstance(unit,Quantity):
-            unit=scalar_representation(unit)
-        self.add_diffeq(name,'0*'+unit+'/second',unit,global_namespace,local_namespace,nonzero=False)
-
-    def parse_string_equations(self,eqns,level=1,namespace=None):
-        """
-        Parses a string defining equations and builds an Equations object.
-        Uses the namespace in the given level of the stack.
-        """
-        diffeq_pattern=re.compile('\s*d(\w+)\s*/\s*dt\s*=\s*(.+?)\s*:\s*(.*)')
-        eq_pattern=re.compile('\s*(\w+)\s*=\s*(.+?)\s*:\s*(.*)')
-        alias_pattern=re.compile('\s*(\w+)\s*=\s*(\w+)\s*$')
-        param_pattern=re.compile('\s*(\w+)\s*:\s*(.*)')
-        empty_pattern=re.compile('\s*$')
-        patterns=[diffeq_pattern,eq_pattern,alias_pattern,param_pattern,empty_pattern]
-        # Merge multi-line statements
-        eqns=re.sub('\\\s*?\n',' ',eqns)
-        
-        # Namespace of the functions
-        ns_global,ns_local=namespace,namespace
-        if namespace is None:
-            frame=inspect.stack()[level+1][0]
-            ns_global,ns_local=frame.f_globals,frame.f_locals
-            #print frame.f_code.co_filename #useful for debugging which file the namespace came from
-        
-        for line in eqns.splitlines():
-            line=re.sub('#.*','',line) # remove comments
-            result=None
-            for pattern in patterns:
-                result=pattern.match(line)
-                if result:
-                    break
-            if result==None:
-                raise TypeError,"Invalid equation string: "+line
-            if pattern==eq_pattern:
-                name,eq,unit=result.groups()
-                self.add_eq(name,eq,unit,ns_global,ns_local)
-            elif pattern==diffeq_pattern:
-                name,eq,unit=result.groups()
-                self.add_diffeq(name,eq,unit,ns_global,ns_local)
-            elif pattern==alias_pattern:
-                name1,name2=result.groups()
-                self.add_alias(name1,name2)
-            elif pattern==param_pattern:
-                name,unit=result.groups()
-                self.add_param(name,unit,ns_global,ns_local)
+        Note: is this still used?
+        '''
+        return len(self._diffeq_names)
 
     def __repr__(self):
         s=''
