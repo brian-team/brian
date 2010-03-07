@@ -1,0 +1,100 @@
+\documentclass[a4paper]{article}
+\usepackage{amsmath}
+
+\title{Linear state updater}
+\author{}
+
+\newcommand{\dt}{\mathrm{d}t}
+\newcommand{\dx}{\mathrm{d}x}
+\newcommand{\normeuc}[1]{\left\| #1 \right\|_2}
+\newcommand{\normF}[1]{\left\| #1 \right\|_F}
+\newcommand{\norminf}[1]{\left\| #1 \right\|_\infty}
+\newcommand{\eps}{\varepsilon}
+
+\begin{document}
+\maketitle
+
+We give a method for integrating numerically a linear differential system
+with arbitrary precision. Let $\dot X = AX+b$ be a system of linear differential
+equations, with $A$ an $D \times D$ matrix and $b$ an $D$-long vector.
+We want to integrate the system over $[0,\dt]$ with $X(0) = X_0$ and precision
+$\eps$, that is, such that $\norminf{\widetilde X(\dt)-X(\dt)} \leq \eps$ where
+$X(t)$ is the exact solution, and $\widetilde X(t)$ is the numerical solution.
+$\dt$ is supposed to be small, typically $\dt = 10^{-4}$.
+
+We now find the matrix $\widetilde A$ and the vector $\widetilde b$ such that :
+\begin{equation}
+X(\dt) = \widetilde A X_0 + \widetilde b
+\end{equation}
+
+We get:
+\begin{align}
+\widetilde A &= \exp(A \,\dt)\\
+\widetilde b &= \exp(A \,\dt) \cdot \int_0^{\dt} \exp(-A u) \cdot b \, \mathrm{d}u
+\end{align}
+
+We can calculate $\exp(A \, \dt)$ with high accuracy in the scipy library. 
+The integral is more difficult to calculate with high precision. We propose
+to use the Simpson integration scheme with $n$ steps within $[0,\dt]$.
+
+The Simpson method consists in using the following expression for calculating
+the integral of a function $f$ between $a$ and $b$ with $n$ subintervals ($n$ is even):
+\begin{equation}
+\int_a^b f(x) \, \dx\approx 
+\left(\frac{h}{3}\right) \bigg[f(a)+2\sum_{j=1}^{n/2-1}f(a+2jh)+
+4\sum_{j=1}^{n/2}f(a+(2j-1)h)+f(b)
+\bigg]
+\end{equation}
+
+Here, we use the Simpson method with the vector-valued function $f(x) = \exp(-A x) \cdot b$.
+This requires to calculate the matrix $\exp(-A x)$ for $n$ values of $x$ between $0$ and $\dt$.
+
+The question is now: how to chose $n$ such that the precision of $\widetilde X(\dt)$ is 
+$\eps$ ?
+We now answer to this question.
+
+In general, the Simpson method yields an absolute error with respect to the exact integral 
+given by:
+\begin{equation}
+\left| \int_a^b f(x) \, \dx - I_{\textrm{simpson}} \right| \leq
+\frac{(b-a)^5}{180 n^4} \, \max_{[a,b]} |f^{(4)}(x)|
+\end{equation}
+
+Here, we have:
+\begin{equation}
+\frac{\mathrm{d}}{\dt} \exp(-A u) \mathrm{d} u = -A \exp(-A u)
+\end{equation}
+
+hence:
+\begin{equation}
+\frac{\mathrm{d}^4}{\dt^4} \exp(-A u) \mathrm{d} u = A^4 \exp(-A u)
+\end{equation}
+
+Therefore, we find that:
+\begin{align}
+\normeuc{\widetilde X(\dt) - X(\dt)} &= \normeuc{\widetilde b-b}\\
+&\leq \normeuc{\exp(A \, \dt)} \cdot \normeuc{I_{\textrm{simpson}} - \int_0^{\dt} \exp(-A u) \mathrm{d}u}\\
+&\leq \normeuc{\exp(A \, \dt)} \cdot \frac{\dt^5}{180n^4} \cdot \sqrt{D} \cdot \max_{[0,\dt]} \norminf{A^4 \cdot \exp(-A u) \cdot b}\\
+&\leq \normeuc{\exp(A \, \dt)} \cdot \frac{\dt^5}{180n^4} \cdot \sqrt{D} \cdot \normeuc{A}^4 \cdot \normeuc{b} \cdot e^{\normeuc{A}\dt}\\
+&\leq \frac{\dt^5}{180n^4} \cdot \sqrt{D} \normeuc{A}^4 e^{2\normeuc{A}\dt} \normeuc{b}
+\end{align}
+
+Finally, we find that:
+
+\begin{equation}
+\norminf{\widetilde X(\dt) - X(\dt)} \leq \frac{\dt^5}{180n^4} \sqrt{D} \normF{A}^4 e^{2\normF{A}\dt} \normeuc{b}
+\end{equation}
+
+where $\normF{A}$ is the Frobenius norm of $A$ (the euclidean norm of $A$ seen as a $D^2$-long vector),
+which is simpler to compute than $\normeuc{A}$.
+
+In order to have $\norminf{\widetilde X(\dt) - X(\dt)} \leq \eps$, one must choose $n$ such that:
+
+\begin{equation}
+n \geq \left(\frac{\dt^5}{180 \eps} \sqrt{D} \normeuc{A}^4 e^{2\normeuc{A}\dt} \normeuc{b}\right)^{1/4}
+\end{equation}
+
+With this formula, we find that $n = 100$ is sufficient to achieve machine precision for $\widetilde b$ with
+$\dt = 10^{-4}$, $D = 10$, and $\normF{A}, \normeuc{b} \leq 10^3$.
+
+\end{document}
