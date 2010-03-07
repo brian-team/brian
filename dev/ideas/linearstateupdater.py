@@ -10,24 +10,48 @@ def trapezoidal_integration(f, a, b, n):
     """
     I = f(a) + f(b)
     dt = (b-a)*1.0/n
-    t = dt*arange(1,n)
+    t = a+dt*arange(1,n)
     I += 2*sum(f(t), axis=0)
     I *= dt/2
     return I
 
-def test_trapezoidal_integration():
-    f = lambda x:x**2+3*x+4
-    a = 0
-    b = 1
-    I = trapezoidal_integration(f, a, b, 1000)
-    print I, 1./3+3./2+4
+def simpson_integration(f, a, b, n):
+    """
+    Computes numerically the integral of the function f between a and b
+    with a step dt, using the Simpson method.
+    f(t) must accept vectors of t, and returns a D*n matrix, D is the dimension
+    of the output space of f, n is the length of t.
+    """
+    n = 2*int(n/2)
+    I = f(a) + f(b)
+    dt = (b-a)*1.0/n
+    te = a+dt*arange(2,n,2)
+    to = a+dt*arange(1,n,2)
+    I += 2*sum(f(te), axis=0)
+    I += 4*sum(f(to), axis=0)
+    I *= dt/3
+    return I
+
+def test_integration():
+    a = randn(1)
+    b = randn(1)
+    c = randn(1)
+    A = randn(1)
+    B = A+randn(1)**2
+    f = lambda x:a*exp(x)+b*x+c
+    Itrap = trapezoidal_integration(f, A, B, 100)
+    Isimp = simpson_integration(f, A, B, 100)
+    Itrue = a*(exp(B)-exp(A))+b*(B**2/2-A**2/2)+c*(B-A)
+    print abs(Itrap-Itrue), abs(Isimp-Itrue)
 
 def compute_exact(X0, b, t):
-    a = array([[X0[0]+b[1], b[0]-X0[1]],[X0[1]-b[0], b[1]+X0[0]]])
-    c = array([[cos(t)],[sin(t)]])
-    b2 = array([[-b[1]],[b[0]]])
-    X = dot(a,c)+b2
-    return X.transpose()[0]
+#    a = array([[X0[0]+b[1], b[0]-X0[1]],[X0[1]-b[0], b[1]+X0[0]]])
+#    c = array([[cos(t)],[sin(t)]])
+#    b2 = array([[-b[1]],[b[0]]])
+#    X = dot(a,c)+b2
+#    return X.transpose()[0]
+    X = array([(X0+b)*exp(t)-b])
+    return X
 
 def compute_exp(X0, b, t, dt):
     eAt = expm(A*t)
@@ -65,15 +89,34 @@ def compute_exactstep(X0, b, t, n, nint):
         X[:,i+1] = dot(eAt, X[:,i]) + eAtint
     return X
 
+def test():
+    X0 = randn(1)
+    b = randn(1)
+    T = 10.0
+    dt = .0001 # stepsize of the network simulation
+    n = int(T/dt)+1
+    nint = 100
+    
+    def f(u):
+        if isscalar(u):
+            return exp(-u)*b
+        return reshape(exp(-u)*b, (len(u),1))
+    I = simpson_integration(f, 0, dt, nint)
+    print abs(I-b*(1-exp(-dt)))
+
 if __name__ == '__main__':
     """
     Simulation of the system X' = AX+b, X(0) = X0, between 0 and T, with
-    various integration schemes.
+    different integration schemes.
     """
     
-    X0 = randn(2)
-    b = randn(2)
-    A = array([[0,-1],[1,0]])
+#    A = array([[0,-1],[1,0]])
+    
+    A = array([[1]])
+    
+    D = len(A)
+    X0 = randn(D)
+    b = randn(D)
     T = 10.0
     dt = .0001 # stepsize of the network simulation
     n = int(T/dt)+1
@@ -84,18 +127,23 @@ if __name__ == '__main__':
 #    X_exp = compute_exp(X0, b, T, dt)
 #    print "expm ", X_exp
 
-    X_exact = zeros((2,n))
+    X_exact = zeros((D,n))
     for i in xrange(0,n):
         X_exact[:,i] = compute_exact(X0, b, i*dt)
     print "exact", X_exact[:,-1]
     
-    for nint in [1,10,100,1000]:
+    nints = linspace(1, 1001, 20)
+    errors = zeros(len(nints))
+    for i in xrange(len(nints)):
+        nint = int(nints[i])
         X_exactstep = compute_exactstep(X0, b, T, n, nint)
-        print "exexp", X_exactstep[:,-1]
-        
-        error = sum((X_exact - X_exactstep)**2, axis=0)
+#        print "exexp", X_exactstep[:,-1]
+
+        error = sqrt(sum((X_exact - X_exactstep)**2, axis=0))
         print nint, "error:", max(error)
-#        print error.shape
-#        plot(error)
-#    show()
+        
+        errors[i] = max(error)
+        
+    plot(nints, errors)
+    show()
     
