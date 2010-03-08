@@ -21,7 +21,7 @@ class ClusterSplitting:
     .. method:: combine_items(items)
     
         Finds the best items within each group from their fitness values
-        spread among the workers.
+        splitted among the workers.
     
     .. method:: split_items(items)
     
@@ -54,8 +54,11 @@ class ClusterSplitting:
         a list of pairs (i, n)
         where i is the group index and n the number of particles in
         the subgroup.
+        workers_by_group[group] is the list of the workers over which
+        the group is splitted.
         """
-        self.groups_by_worker = [[] for i in range(self.worker_number)]
+        self.groups_by_worker = [dict() for i in range(self.worker_number)]
+        self.workers_by_group = [[] for i in range(self.group_number)]
         
         def fun(n, group, group_size, worker, worker_size):
             if n > min(group_size, worker_size):
@@ -66,7 +69,8 @@ class ClusterSplitting:
                 group, group_size, worker, worker_size = fun(n1, group, group_size, worker, worker_size)
                 group, group_size, worker, worker_size = fun(n2, group, group_size, worker, worker_size)
             else:
-                self.groups_by_worker[worker].append((group, n))
+                self.groups_by_worker[worker][group] = n
+                self.workers_by_group[group].append(worker)
                 if n == group_size:
                     group += 1
                     if group < len(self.group_size):
@@ -83,48 +87,50 @@ class ClusterSplitting:
         
         fun(self.particles, 0, self.group_size[0], 0, self.worker_size[0])
 
-    def combine_items(self, items):
-        """
-        Returns the best items from their fitness over the workers.
-        items[i] is a list of triplets (group, item, value) where value is the
-        fitness of item in the given group, for worker i.
-        best_items is a list of triplets (worker, best_item, best_value)
-        """
-        all_items = []
-        [all_items.extend(tuples) for tuples in items]
-        
-        best_items = []    
-        for i in range(self.group_number):
-            items, values = zip(*[(item, value) for (j, item, value) in all_items if j==i])
-            items = array(items)
-            values = array(values)
-            best = nonzero(values == max(values))[0][0]
-            item, value = items[best], values[best]
-            best_items.append((i, item, value))
-        return best_items
-
-    def split_items(self, items):
-        """
-        Splits items over workers.
-        items is a list of triplets (group, item, value)
-        splitted_items is the list of best items, 
-        splitted_items[worker] is a list of best items for each subgroup within the worker
-        """
-        splitted_items = []
-        for i in range(self.worker_number):
-            worker_items = []
-            for (group, n) in self.groups_by_worker[i]:
-                # Appends item when items[group] = group, item, value
-                worker_items.append(items[group][1])
-            splitted_items.append(worker_items)
-        return splitted_items
+#    def combine_items(self, items):
+#        """
+#        Returns the best items from their fitness over the workers.
+#        items[i] is a list of triplets (group, item, value) where value is the
+#        fitness of item in the given group, for worker i.
+#        best_items is a list of triplets (worker, best_item, best_value)
+#        """
+#        all_items = []
+#        [all_items.extend(tuples) for tuples in items]
+#        
+#        best_items = []    
+#        for i in range(self.group_number):
+#            items, values = zip(*[(item, value) for (j, item, value) in all_items if j==i])
+#            items = array(items)
+#            values = array(values)
+#            best = nonzero(values == max(values))[0][0]
+#            item, value = items[best], values[best]
+#            best_items.append((i, item, value))
+#        return best_items
+#
+#    def split_items(self, items):
+#        """
+#        Splits items over workers.
+#        items is a list of triplets (group, item, value)
+#        splitted_items is the list of best items, 
+#        splitted_items[worker] is a list of best items for each subgroup within the worker
+#        """
+#        splitted_items = []
+#        for i in range(self.worker_number):
+#            worker_items = []
+#            for (group, n) in self.groups_by_worker[i]:
+#                # Appends item when items[group] = group, item, value
+#                worker_items.append(items[group][1])
+#            splitted_items.append(worker_items)
+#        return splitted_items
 
 if __name__ == '__main__':
     from numpy.random import *
     cs = ClusterSplitting([10, 10], [7, 7, 6])
-    items = [[(0,rand(3,1),10),(1,rand(3,1),20)],[(1,rand(3,1),30),(2,rand(3,1),40)]]
-    combined_items = cs.combine_items(items)
-    splitted_items = cs.split_items(combined_items)
-    print items
-    print combined_items
-    print splitted_items
+    print "groups by worker", cs.groups_by_worker
+    print "workers by group", cs.workers_by_group
+#    items = [[(0,rand(3,1),10),(1,rand(3,1),20)],[(1,rand(3,1),30),(2,rand(3,1),40)]]
+#    combined_items = cs.combine_items(items)
+#    splitted_items = cs.split_items(combined_items)
+#    print items
+#    print combined_items
+#    print splitted_items
