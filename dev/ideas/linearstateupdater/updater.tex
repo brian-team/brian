@@ -46,7 +46,7 @@ the integral of a function $f$ between $a$ and $b$ with $n$ subintervals ($n$ is
 \bigg]
 \end{equation}
 
-Here, we use the Simpson method with the vector-valued function $f(x) = \exp(-A x) \cdot b$.
+\noindent where $h = (b-a)/n$. Here, we use the Simpson method with the vector-valued function $f(x) = \exp(-A x) \cdot b$.
 This requires to calculate the matrix $\exp(-A x)$ for $n$ values of $x$ between $0$ and $\dt$.
 
 The question is now: how to chose $n$ such that the precision of $\widetilde X(\dt)$ is 
@@ -65,7 +65,7 @@ Here, we have:
 \frac{\mathrm{d}}{\dt} \exp(-A u) \mathrm{d} u = -A \exp(-A u)
 \end{equation}
 
-hence:
+\noindent hence:
 \begin{equation}
 \frac{\mathrm{d}^4}{\dt^4} \exp(-A u) \mathrm{d} u = A^4 \exp(-A u)
 \end{equation}
@@ -85,7 +85,7 @@ Finally, we find that:
 \norminf{\widetilde X(\dt) - X(\dt)} \leq \frac{\dt^5}{180n^4} \sqrt{D} \normF{A}^4 e^{2\normF{A}\dt} \normeuc{b}
 \end{equation}
 
-where $\normF{A}$ is the Frobenius norm of $A$ (the euclidean norm of $A$ seen as a $D^2$-long vector),
+\noindent where $\normF{A}$ is the Frobenius norm of $A$ (the euclidean norm of $A$ seen as a $D^2$-long vector),
 which is simpler to compute than $\normeuc{A}$.
 
 In order to have $\norminf{\widetilde X(\dt) - X(\dt)} \leq \eps$, one must choose $n$ such that:
