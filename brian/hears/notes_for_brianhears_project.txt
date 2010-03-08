@@ -52,8 +52,7 @@ http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/index.html
 http://cobweb.ecn.purdue.edu/~malcolm/interval/1998-010/
 http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm
 http://www.urmc.rochester.edu/labs/Carney-Lab/publications/auditory-models.cfm
-http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/index.html
-
+http://www.pdn.cam.ac.uk/groups/cnbh/aim2006/
 
 References
 ==========
