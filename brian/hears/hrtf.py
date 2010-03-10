@@ -319,6 +319,7 @@ class IRCAM_LISTEN(HRTFDatabase):
 if __name__=='__main__':
     ircam_locations = [
         r'D:\HRTF\IRCAM',
+        r'/home/bertrand/Data/Measurements/HRTF/IRCAM',
         r'C:\Documents and Settings\dan\My Documents\Programming\IRCAM'
         ]
     for path in ircam_locations:
