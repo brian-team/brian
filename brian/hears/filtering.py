@@ -22,7 +22,7 @@ try:
     use_gpu = True
 except ImportError:
     use_gpu = False
-#use_gpu = False
+use_gpu = False
 
 __all__ = ['Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step',
@@ -249,6 +249,9 @@ if use_gpu:
             self.pagelocked_mem = pagelocked_mem
             self.fs = samplerate
             self.N = b.shape[0]
+            #print a,b
+            self.filt_bCPU = b
+            self.filt_aCPU = a
             n, m, p = b.shape
             filt_b = array(b, dtype=self.precision_dtype)
             filt_a = array(a, dtype=self.precision_dtype)
@@ -303,9 +306,10 @@ if use_gpu:
             }
             '''
             code = code.replace('SCALAR', self.precision)
-            code = re.sub("\\bp\\b", str(p), code)
+            code = re.sub("\\bp\\b", str(p), code) #replace the variable by their values
             code = re.sub("\\bm\\b", str(m), code)
             code = re.sub("\\bn\\b", str(n), code)
+            print code
             self.gpu_mod = pycuda.compiler.SourceModule(code)
             self.gpu_filt_func = self.gpu_mod.get_function("filt")
             blocksize = 512#self.maxblocksize
@@ -742,8 +746,10 @@ def make_butterworth_filterbank(samplerate, N, ord, Wn, btype='low'):
 if __name__=='__main__':
     from sounds import *
     from erb import *
+     
     sound = whitenoise(100*ms).ramp()
     defaultclock.dt = 1/sound.rate 
+    print sound.rate, erbspace(100*Hz, 5*kHz, 4)
     fb = GammatoneFilterbank(sound.rate, erbspace(100*Hz, 5*kHz, 4))
     G = FilterbankGroup(fb, sound)
     neurons=NeuronGroup(len(G),model='''dv/dt=(I-v)/(5*ms):1

@@ -48,7 +48,7 @@ __all__ = [
     # Base classes
     'HRTF', 'HRTFSet', 'HRTFDatabase',
     # Coordinate systems
-    'CartesianCoordinates', 'SphericalCoordinates', 'AzimElev', 'AzimElevDegrees',
+    'CartesianCoordinates', 'SphericalCoordinates', 'AzimElev', 'AzimElevDegrees','AzimElevDistDegrees',
     # IRCAM LISTEN database
     'IRCAM_HRTFSet', 'IRCAM_LISTEN',
     ]
@@ -132,7 +132,9 @@ class HRTFSet(object):
             r = Sound(self.data[1, i, :], rate=self.samplerate)
             self.hrtf.append(HRTF(l, r))
     def subset(self, cond):
+        
         ns = dict((name, self.coordinates[name]) for name in cond.func_code.co_varnames)
+        print cond(1,1)
         I = cond(**ns)
         hrtf = [self.hrtf[i] for i in I]
         coords = self.coordinates[I]
@@ -190,7 +192,7 @@ class Coordinates(ndarray):
     def system(self):
         return self.__class__
     @classmethod
-    def make(cls, shape):
+    def make(cls, shape): #initialize a ndarray
         x = cls(shape=shape, dtype=cls.construct_dtype())
         return x
     @classmethod
@@ -268,6 +270,29 @@ class AzimElevDegrees(Coordinates):
             inter = AzimElev.convert_from(source)
             return inter.convert_to(AzimElevDegrees)
 
+class AzimElevDistDegrees(Coordinates):
+    names = ('azim', 'elev','dist')
+    def convert_to(self, target):
+        if target is self.system:
+            return self
+        elif target is AzimElev:
+            out = target.make(self.shape)
+            out['azim'] = self['azim']*pi/180
+            out['elev'] = self['elev']*pi/180
+            out['dist'] = self['dist']*pi/180
+            return out
+        else:
+            inter = self.convert_to(AzimElev)
+            return inter.convert_to(target)
+    @staticmethod
+    def convert_from(source):
+        if isinstance(source, AzimElevDegrees):
+            return source
+        elif isinstance(source, CartesianCoordinates):
+            inter = AzimElev.convert_from(source)
+            return inter.convert_to(AzimElevDegrees)
+
+
 ############# IRCAM HRTF DATABASE ##############################################
 
 class IRCAM_HRTFSet(HRTFSet):
@@ -303,6 +328,7 @@ class IRCAM_LISTEN(HRTFDatabase):
         self.compensated = compensated
         names = glob(os.path.join(basedir, 'IRC_*'))
         splitnames = [os.path.split(name) for name in names]
+  
         self.subjects = [int(name[4:]) for base, name in splitnames]
         self.samplerate = samplerate
     def subject_name(self, subject):
@@ -329,20 +355,21 @@ if __name__=='__main__':
         raise IOError('Cannot find IRCAM HRTF location, add to ircam_locations')
     ircam = IRCAM_LISTEN(path)
     h = ircam.load_subject(1002)
-    h = h.subset(lambda azim:azim<90)
+    #h = h.subset(lambda azim,elev:azim==90 and elev==90)
+    h = h.subset(lambda azim,elev:azim==90 and elev==90 )
     subplot(211)
-    plot(h.hrtf[100].left)
-    plot(h.hrtf[100].right)
-    subplot(212)
-    #c = h.coordinates.convert_to(AzimElev)
-    #plot(h.coordinates['azim'], h.coordinates['elev'], 'o')
-#    from enthought.mayavi import mlab
-#    c = h.coordinates.convert_to(CartesianCoordinates)
-#    mlab.points3d(c['x'], c['y'], c['z'])
-#    mlab.show()
-    c = h.coordinates
-    c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
-    print amax(c['elev']-c2['elev'])
-    plot(c['azim'], c['elev'], 'o')
+    plot(h.hrtf[0].left)
+    plot(h.hrtf[0].right)
+#    subplot(212)
+##    c = h.coordinates.convert_to(AzimElev)
+##    plot(h.coordinates['azim'], h.coordinates['elev'], 'o')
+##    from enthought.mayavi import mlab
+##    c = h.coordinates.convert_to(CartesianCoordinates)
+##    mlab.points3d(c['x'], c['y'], c['z'])
+##    mlab.show()
+#    c = h.coordinates
+#    c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
+#    print amax(c['elev']-c2['elev'])
+#    plot(c['azim'], c['elev'], 'o')
     show()
     
