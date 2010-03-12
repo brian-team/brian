@@ -2,8 +2,8 @@ from brian import *
 from brian.utils.particle_swarm import *
 from brian.utils.statistics import get_gamma_factor, firing_rate
 from brian.library.modelfitting.clustertools import *
-from brian.library.modelfitting.cluster_splitting import *
-from brian.library.modelfitting.fittingparameters import *
+from clustersplitting import *
+from fittingparameters import *
 from fittingsimulation import FittingSimulation
 from fittingoptimization import FittingOptimization
 import sys
@@ -43,11 +43,12 @@ class FittingManager:
         local_data_splitted = self.split_data(local_data)
         
         # Sends local data to each worker
-        calls = ['prepare' for i in xrange(self.numprocesses)]
+        calls = ['prepare' for _ in xrange(self.numprocesses)]
         self.manager.process_jobs(zip(calls, local_data_splitted))
 
     def run(self):
-        global_states = [None for _ in xrange(self.group_count)]
+        # global_states[group] is the global state for the given group
+        global_states = dict([(group, None) for group in xrange(self.group_count)])
         
         # Main loop : calls iterate() for each worker 
         calls = ['iterate' for i in xrange(self.numprocesses)]
@@ -57,8 +58,12 @@ class FittingManager:
             # global_states[i] is the global state of group i
             # Here, we send the global states of all the groups inside each worker,
             # so that each worker only gets the global state of the groups inside it.
+            
+            # splitted_global_states[i] is a dictionary (group, global_states[group])
+            # for the groups inside worker i.
+            splitted_global_states = []
             for i in xrange(self.numprocesses):
-                splitted_global_states[i] = [global_states[j] for j in cs.groups_by_worker[i]]
+                splitted_global_states.append(dict([(group, global_states[group]) for group,n in self.cs.groups_by_worker[i].iteritems()]))
             # splitted_local_states[i] is a list [(group, local_state)..]
             # with one entry per subgroup within the worker
             splitted_local_states = self.manager.process_jobs(zip(calls, splitted_global_states))
@@ -67,18 +72,18 @@ class FittingManager:
             # on each worker. For example, local states may contain the global position
             # found by each worker, and the new global state is simply the best
             # position among them.
-            for i in xrange(self.group_count):
+            for group in xrange(self.group_count):
                 # Lists the local states of the group splitted among several workers
-                local_states = [splitted_local_states[w][i] for w in self.cs.workers_by_group[i]]
+                local_states = [splitted_local_states[w][group] for w,n in self.cs.workers_by_group[group].iteritems()]
                 global_states[i] = combine_local_states(local_states)
         
         # Gets the return information if requested
         if self.shared_data['returninfo']:
             calls = ['terminate' for i in xrange(self.numprocesses)]
             fitinfo = self.manager.process_jobs(zip(calls, [None for i in xrange(self.numprocesses)]))
-            returned = global_state, fitinfo
+            returned = global_states, fitinfo
         else:
-            returned = global_state
+            returned = global_states
         
         self.manager.finished()
         
@@ -125,7 +130,7 @@ class FittingManager:
             local['target_rates'] = local_data['target_rates'][k:k+n]
             local['neurons'] = n
             local['worker_index'] = i
-            local['groups'] = self.cs.groups_by_worker[i]
+            local['groups'] = self.cs.groups_by_worker[i] # a dictionary (group, n)
             k += n
             local_data_splitted.append(local)
 
@@ -164,6 +169,7 @@ class FittingWorker():
         """
         self.local_data = local_data
         self.worker_index = local_data['worker_index']
+        self.groups = self.local_data['groups']
 
         self.sim = FittingSimulation(self.worker_index,
                                      self.shared_data['model'],
@@ -188,27 +194,49 @@ class FittingWorker():
                                      self.local_data['target_length'],
                                      self.local_data['target_rates'])
         
-        self.opt = FittingOptimization(self.worker_index,
-                                       self.local_data['groups'],   # groups repartition within the worker : 
-                                                                    # a list of pairs (group, n) where n is the number 
-                                                                    # of particles in the subgroup 'group'
-                                       self.local_data['neurons'],
-                                       self.sim.sim_run,
-                                       self.shared_data['pso_params'],
-                                       self.shared_data['returninfo'])
-        self.ngroups = len(self.local_data['groups'])
+        """
+        There is one optimization object per group within each worker. The 
+        FittingWorker object should take care
+        of calling once the FittingSimulation object to compute the fitness
+        values of every particle within the worker. Then, in each group, 
+        the optimization update iteration is executed, one after the other.
+        """
+        # Generates the initial state matrix
+        self.fp = FittingParameters(self.shared_data['fitparams'])
+        initial_param_values = self.fp.get_initial_param_values(self.local_data['neurons'])
+        X0 = self.fp.get_param_matrix(initial_param_values)
+        Xmin, Xmax = self.fp.set_constraints()
         
-    def iterate(self, global_state):
+        # Initializes the FittingOptimization objects (once per group)
+        self.opts = dict([(group, FittingOptimization(
+                                       X0, Xmin, Xmax,
+                                       self.shared_data['optparams'],
+                                       self.shared_data['returninfo'])) for group in self.groups])
+        
+    def iterate(self, global_states):
         """
-        Optimization iteration. The global state is passed and the function returns
-        the new local state. The new global state, used at the next iteration,
+        Optimization iteration. The global states of the groups are passed and the function returns
+        the new local states. The new global state, used at the next iteration,
         is computed by the manager from the local states of every worker.
-        global_state is the list of the global states for each group inside the worker.
+        global_states is a dictionary containing the global states for each group inside the worker.
         """
-        # fitness[i] is the vector of the fitness values for subgroup i inside the worker
-        # TODO HERE
-        local_state = [self.opt.iterate(fitness[i], global_state[i]) for i in xrange(self.ngroups)]
-        return local_state
+        local_states = dict([])
+        
+        # Compute the fitness values for all the particles inside the worker.
+        X = hstack([self.opts[group].X for group in self.groups.keys()])
+        param_values = self.fp.get_param_values(X)
+        fitness = self.sim.sim_run(param_values)
+        
+        # Splits the fitness values according to groups
+        k = 0
+        for group, global_state in global_states:
+            n = self.groups[group] # Number of particles in the group
+            # Iterates each group in series
+            local_states[group] = self.opts[group].iterate(fitness[k:k+n], global_state)
+            k += n
+        
+        # Returns a dictionary (group, local state)
+        return local_states
         
     def terminate(self):
         """
@@ -216,7 +244,8 @@ class FittingWorker():
         """
         if self.shared_data['returninfo']:
             fitinfo['sim'] = self.sim.terminate()
-            fitinfo['opt'] = self.opt.terminate()
+            for group in self.groups.keys():
+                fitinfo['opt'] = dict([(group, self.opts[group].terminate()) for group in self.groups])
             return fitinfo
         else:
             return false
@@ -241,7 +270,7 @@ if __name__ == '__main__':
                        precision=None,
                        fitparams=None,
                        returninfo=None,
-                       pso_params=None)
+                       optparams=None)
     
     local_data = dict(spiketimes_offset=ones(n),
                       target_length=ones(n),
