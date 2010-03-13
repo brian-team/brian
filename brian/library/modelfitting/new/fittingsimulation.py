@@ -26,15 +26,20 @@ class FittingSimulation:
                        target_length,
                        target_rates):
         self.worker_index = worker_index
+        self.neurons = neurons
         # TODO: preparation
         print "sim initialization", self.worker_index
         
         # TODO: time slicing (create I_offset)
     
     def sim_run(self, sim_params):
+        """
+        use fitparams['_delays'] to take delays into account
+        """
         # TODO: simulation
-        print "sim run", sim_params, self.worker_index
-        #return sim_results
+        sim_results = exp(-sim_params['a']**2)
+        
+        return sim_results
         
     def terminate(self):
         # TODO: termination

@@ -51,7 +51,7 @@ class FittingManager:
         global_states = dict([(group, None) for group in xrange(self.group_count)])
         
         # Main loop : calls iterate() for each worker 
-        calls = ['iterate' for i in xrange(self.numprocesses)]
+        calls = ['iterate' for _ in xrange(self.numprocesses)]
         for iter in xrange(self.iterations):
             # The global state is sent to each worker, it should be as light
             # as possible to avoid transmission delays
@@ -75,19 +75,36 @@ class FittingManager:
             for group in xrange(self.group_count):
                 # Lists the local states of the group splitted among several workers
                 local_states = [splitted_local_states[w][group] for w,n in self.cs.workers_by_group[group].iteritems()]
-                global_states[i] = combine_local_states(local_states)
+                global_states[group] = FittingOptimization.combine_local_states(local_states)
         
-        # Gets the return information if requested
-        if self.shared_data['returninfo']:
-            calls = ['terminate' for i in xrange(self.numprocesses)]
-            fitinfo = self.manager.process_jobs(zip(calls, [None for i in xrange(self.numprocesses)]))
-            returned = global_states, fitinfo
-        else:
-            returned = global_states
-        
+        # Terminates the optimization
+        calls = ['terminate' for _ in xrange(self.numprocesses)]
+        results = self.manager.process_jobs(zip(calls, [None for _ in xrange(self.numprocesses)]))
         self.manager.finished()
         
-        return returned
+        # Returns the final results : a dictionary (group, (best_particle, best_fitness, info))
+        final_results = dict([])
+        for group in xrange(self.group_count):
+            results_group = [results[w][0][group] for w,n in self.cs.workers_by_group[group].iteritems()]
+            
+            # results_group is a list of pairs (X, fitness) (since the group can be split among several workers)
+            # here we find the best X
+            X_best = None
+            fitness_best = -inf
+            for X, fitness in results_group:
+                if fitness > fitness_best:
+                    X_best = X
+                    fitness_best = fitness
+            final_results[group] = (X_best, fitness_best)
+        
+        # Returns the information about the simulation and optimization for each worker
+        if self.shared_data['returninfo']:
+            final_info = dict([])
+            for w in xrange(self.numprocesses):
+                final_info[w] = results[w][1]
+            return final_results, final_info
+        else:
+            return final_results
 
     def split_data(self, local_data):
         """
@@ -170,6 +187,7 @@ class FittingWorker():
         self.local_data = local_data
         self.worker_index = local_data['worker_index']
         self.groups = self.local_data['groups']
+        self.returninfo = self.shared_data['returninfo']
 
         self.sim = FittingSimulation(self.worker_index,
                                      self.shared_data['model'],
@@ -202,16 +220,22 @@ class FittingWorker():
         the optimization update iteration is executed, one after the other.
         """
         # Generates the initial state matrix
-        self.fp = FittingParameters(self.shared_data['fitparams'])
+        self.fp = FittingParameters(**self.shared_data['fitparams'])
         initial_param_values = self.fp.get_initial_param_values(self.local_data['neurons'])
         X0 = self.fp.get_param_matrix(initial_param_values)
         Xmin, Xmax = self.fp.set_constraints()
         
         # Initializes the FittingOptimization objects (once per group)
-        self.opts = dict([(group, FittingOptimization(
-                                       X0, Xmin, Xmax,
+        self.opts = dict([])
+        k = 0
+        for group in self.groups.keys():
+            n = self.groups[group]
+            self.opts[group] = FittingOptimization(
+                                       self.worker_index,
+                                       X0[:,k:k+n], Xmin, Xmax,
                                        self.shared_data['optparams'],
-                                       self.shared_data['returninfo'])) for group in self.groups])
+                                       self.shared_data['returninfo'])
+            k += n
         
     def iterate(self, global_states):
         """
@@ -229,7 +253,7 @@ class FittingWorker():
         
         # Splits the fitness values according to groups
         k = 0
-        for group, global_state in global_states:
+        for group, global_state in global_states.iteritems():
             n = self.groups[group] # Number of particles in the group
             # Iterates each group in series
             local_states[group] = self.opts[group].iterate(fitness[k:k+n], global_state)
@@ -242,16 +266,14 @@ class FittingWorker():
         """
         Returns fitting info at the end
         """
-        if self.shared_data['returninfo']:
-            fitinfo['sim'] = self.sim.terminate()
-            for group in self.groups.keys():
-                fitinfo['opt'] = dict([(group, self.opts[group].terminate()) for group in self.groups])
-            return fitinfo
-        else:
-            return false
+        results = dict([(group, self.opts[group].return_result()) for group in self.groups.keys()])
+        fitinfo = dict([])
+        fitinfo['sim'] = self.sim.terminate()
+        fitinfo['opt'] = dict([(group, self.opts[group].terminate()) for group in self.groups.keys()])
+        return results, fitinfo
 
 if __name__ == '__main__':
-    n = 16
+    n = 8
     shared_data = dict(model=None,
                        threshold=None,
                        reset=None,
@@ -263,22 +285,22 @@ if __name__ == '__main__':
                        stepsize=None,
                        spiketimes=None,
                        group_size=n,
-                       group_count=2,
+                       group_count=4,
                        initial_values=None,
                        delta=None,
                        includedelays=None,
                        precision=None,
-                       fitparams=None,
+                       fitparams={'a': [-1.0, -1.0, 1.0, 1.0]},
                        returninfo=None,
-                       optparams=None)
+                       optparams=[.9,1.0,1.0])
     
     local_data = dict(spiketimes_offset=ones(n),
                       target_length=ones(n),
                       target_rates=ones(n))
 
-    iterations = 1
+    iterations = 2
     cluster_info = dict(gpu_policy = 'prefer_gpu',
-                        max_cpu = 4,
+                        max_cpu = 2,
                         max_gpu = 0,
                         machines = [],
                         named_pipe = None,
@@ -286,5 +308,6 @@ if __name__ == '__main__':
                         authkey = 'brian cluster tools')
     
     fm = FittingManager(shared_data, local_data, iterations, cluster_info)
-    fm.run()
+    result = fm.run()
+    print result
     

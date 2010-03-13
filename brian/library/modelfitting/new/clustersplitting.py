@@ -1,34 +1,34 @@
 from numpy import *
 
 class ClusterSplitting:
-    """Internal class used to split a multiprocessing optimization of several groups
-    in parallel across different workers with minimum data transfer.
-    
-    Initialized with arguments:
-    
-    ``worker_size``
-        A list containing the number of particles running over each worker.
-    ``group_size``
-        A list containing the number of particles in each group.
-        
-    **Methods**
-    
-    .. method:: split_groups()
-    
-        Creates a property self.groups_by_worker containing the list of groups
-        on each worker with the number of particles inside them.
-    
-    .. method:: combine_items(items)
-    
-        Finds the best items within each group from their fitness values
-        splitted among the workers.
-    
-    .. method:: split_items(items)
-    
-        Sends the best items to the workers from the best items computed with
-        :func:`combine_items`.
-    """
     def __init__(self, worker_size, group_size):
+        """Internal class used to split a multiprocessing optimization of several groups
+        in parallel across different workers with minimum data transfer.
+        
+        Initialized with arguments:
+        
+        ``worker_size``
+            A list containing the number of particles running over each worker.
+        ``group_size``
+            A list containing the number of particles in each group.
+            
+        **Methods**
+        
+        .. method:: split_groups()
+        
+            Creates a property self.groups_by_worker containing the list of groups
+            on each worker with the number of particles inside them.
+        
+        .. method:: combine_items(items)
+        
+            Finds the best items within each group from their fitness values
+            splitted among the workers.
+        
+        .. method:: split_items(items)
+        
+            Sends the best items to the workers from the best items computed with
+            :func:`combine_items`.
+        """
         if sum(array(worker_size)) <> sum(array(group_size)):
             raise Exception('The total number of particles should be the same in worker_size and group_size')
         # Number of particles by worker (list)
