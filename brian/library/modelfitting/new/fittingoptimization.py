@@ -180,7 +180,7 @@ class FittingOptimization:
             (hist, bin_edges) = histogram(fitness, 100, range=(0.0,1.0))
             self.info["fitness_matrix"].append(list(hist))
                 
-        print "new iteration", self.worker_index
+#        print "new iteration", self.worker_index
 #        print "    Fitness: mean %.3f, max %.3f, std %.3f" % (fitness.mean(), fitness.max(), fitness.std())
         
         return local_state

@@ -90,6 +90,8 @@ class FittingParameters(object):
         Converts a matrix containing param values into a dictionary
         """
         param_values = {}
+        if X.ndim == 1:
+            X = X.reshape((-1,1))
         for i in range(len(self.param_names)):
             param_values[self.param_names[i]] = X[i,:]
         return param_values
