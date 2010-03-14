@@ -1,0 +1,24 @@
+Some ideas for mini-projects which can be done semi-independently
+=================================================================
+
+Degeneracy
+----------
+
+Handle degeneracy correctly in LinearStateUpdater
+
+Reducing systems of equations to standard form
+----------------------------------------------
+
+Given a system of equations of a form like the following:
+
+  a * d2x/dt2 + b * d2y/dt2 = c
+  d * d2x/dt2 + e * d2y/dt2 = f
+  
+Write a module using Sympy to simplify to a system of first order ODEs. Note
+that Sympy doesn't support the d2x/dt2 syntax, for example, so you would
+need to do some pattern matching and replacement preprocessing beforehand,
+e.g. replace 'dNX/dtN' with a fixed symbol, say _diff_N_X and have a lookup
+table that matches symbols _diff_N_X to the original pattern 'dNX/dtN' and to
+the pair (N, X) identifying the equation and order of the differential. With
+these symbols, the equations could be solved using Sympy, and then reduced by
+introducing auxiliary variables.
