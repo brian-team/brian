@@ -19,7 +19,15 @@ class DistributedWorker:
         return result
 
 class DistributedFunction():
-    def __init__(self, fun = None, endaftercall = True, machines = []):
+    def __init__(self, fun = None, endaftercall = True, 
+                    machines = [],
+                    gpu_policy = 'prefer_gpu',
+                    own_max_cpu = None,
+                    own_max_gpu = None,
+                    named_pipe = None,
+                    port = None,
+                    authkey = None):
+        
         if fun is None:
             raise ValueError('The function must be provided')
         
@@ -27,7 +35,13 @@ class DistributedFunction():
             
         self.manager = ClusterManager(DistributedWorker, 
                                       shared_data = dict(fun = fun),
-                                      machines = machines)
+                                      machines = machines,
+                                      gpu_policy = gpu_policy,
+                                      own_max_cpu = own_max_cpu,
+                                      own_max_gpu = own_max_gpu,
+                                      named_pipe = named_pipe,
+                                      port = port,
+                                      authkey = authkey)
         self.numprocesses = self.manager.total_processes
         
         # Displays the number of cores used
@@ -95,7 +109,21 @@ class DistributedFunction():
     def end(self):
         self.manager.finished()
 
-def distribute(fun, machines = []):
-    dfun = DistributedFunction(fun, machines = machines)
+def distribute(fun, endaftercall = True, 
+                    machines = [],
+                    gpu_policy = 'prefer_gpu',
+                    own_max_cpu = None,
+                    own_max_gpu = None,
+                    named_pipe = None,
+                    port = None,
+                    authkey = None):
+    dfun = DistributedFunction(fun,
+                                machines = [],
+                                gpu_policy = gpu_policy,
+                                own_max_cpu = own_max_cpu,
+                                own_max_gpu = own_max_gpu,
+                                named_pipe = named_pipe,
+                                port = port,
+                                authkey = authkey)
     return dfun
 
