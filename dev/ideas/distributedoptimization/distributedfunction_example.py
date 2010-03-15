@@ -1,4 +1,3 @@
-from numpy import *
 from distributedfunction import *
 
 def square(x):

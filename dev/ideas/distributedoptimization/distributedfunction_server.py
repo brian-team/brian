@@ -1,3 +1,4 @@
+from numpy import *
 from distributedfunction import *
 
 def square(x):
@@ -7,7 +8,7 @@ def square(x):
     return x**2
 
 if __name__ == '__main__':
-    dsquare = distribute(square, machines = ['localhost'], named_pipe=True)
-    x = [1,2,3,4]
+    dsquare = distribute(square, machines = [], named_pipe=True)
+    x = arange(1,6)
     y = dsquare(x)
     print y
