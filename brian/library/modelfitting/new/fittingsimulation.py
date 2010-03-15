@@ -1,5 +1,10 @@
 from brian import *
 from brian.utils.statistics import get_gamma_factor, firing_rate
+try:
+    import pycuda
+    from brian.library.modelfitting.gpu_modelfitting import GPUModelFitting, default_precision
+except ImportError:
+    default_precision = None
 
 class FittingSimulation:
     def __init__(self, local_data, shared_data):

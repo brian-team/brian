@@ -35,10 +35,11 @@
 '''
 Neuron groups
 '''
-__all__ = ['NeuronGroup', 'PoissonGroup', 'linked_var']
+__all__ = ['NeuronGroup', 'PoissonGroup', 'OfflinePoissonGroup', 'linked_var']
 
 from numpy import *
 from scipy import rand,linalg,random
+from numpy.random import exponential, randint
 import copy
 from units import *
 from threshold import *
@@ -668,7 +669,22 @@ class PoissonGroup(NeuronGroup):
         if self._variable_rate:
             self._S[0,:]=self.rates(self.clock.t)
         NeuronGroup.update(self)
-        
+    
+class OfflinePoissonGroup:
+    def __init__(self, N, rates, T):
+        """
+        Generates a Poisson group with N spike trains and given rates over the
+        time window [0,T].
+        """
+        if isscalar(rates):
+            rates = rates*ones(N)
+        totalrate = sum(rates)
+        isi = exponential(1/totalrate, T*totalrate*2)
+        spikes = cumsum(isi)
+        spikes = spikes[spikes<=T]
+        neurons = randint(0,N,len(spikes))
+        self.spiketimes = zip(neurons, spikes)
+    
 #class VectorizedNeuronGroup(NeuronGroup):
 #    """
 #    Neuron group defining a single model with different 

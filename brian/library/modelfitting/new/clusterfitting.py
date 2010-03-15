@@ -1,6 +1,7 @@
 from brian import *
 from brian.utils.particle_swarm import *
 from brian.utils.statistics import get_gamma_factor, firing_rate
+from brian.units import _get_best_unit 
 from brian.library.modelfitting.clustertools import *
 from clustersplitting import *
 from fittingparameters import *
@@ -46,7 +47,7 @@ class FittingManager:
         
         self.paramunits = dict(fitness=1.0)
         for param, value in self.shared_data['fitparams'].iteritems():
-            self.paramunits[param] = value[1]/float(value[1])
+            self.paramunits[param] = get_unit(value[1])
         
         # Splits local data
         local_data_splitted = self.split_data(local_data)
@@ -179,13 +180,41 @@ class FittingManager:
             self.get_results()
         print
         print "RESULTS:"
+        
+        def print_quantity(x):
+            if is_dimensionless(x):
+                u = _get_best_unit(x*second)
+                s = "%3.3f" % float(x/u)
+                scale = int(round(log(float(u))/log(10)))
+                if scale is not 0:
+                    u = "e"+str(scale)
+                else:
+                    u = ''
+            else:
+                u = _get_best_unit(x)
+                s = "%3.3f " % float(x/u)
+            return s+str(u) 
+        
+        width = 16
+        print ' '*width,
+        for i in xrange(self.group_count):
+            s = 'Group %d' % i
+            spaces = ' '*(width-len(s))
+            print s+spaces,
+        print
         for name, values in self.final_results.iteritems():
-            print name
+            spaces = ' '*(width-len(name))
+            print name+spaces,
             unit = self.paramunits[name]
             for value in values:
-                print "    ", (value * unit),
+                s = print_quantity(value*unit)
+                spaces = ' '*(width-len(s))
+                print s+spaces,
             print
-            print
+            
+            
+            
+            
         return self.final_results
 
 class FittingWorker():

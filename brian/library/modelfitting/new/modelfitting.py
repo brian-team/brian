@@ -19,7 +19,7 @@ def modelfitting(model = None, reset = None, threshold = None,
                  initial_values = None,
                  verbose = True, stepsize = 100*ms,
                  use_gpu = None, max_cpu = None, max_gpu = None,
-                 precision=None, # set to 'float' or 'double' to specify single or double precision on the GPU
+                 precision = 'double', # set to 'float' or 'double' to specify single or double precision on the GPU
                  machines = [], named_pipe = None, port = None, authkey='brian cluster tools',
                  returninfo = False,
                  **params):
@@ -196,6 +196,8 @@ def modelfitting(model = None, reset = None, threshold = None,
                        slices = slices,
                        overlap = overlap,
                        returninfo = returninfo,
+                       precision = precision,
+                       stepsize = stepsize,
                        initial_values = initial_values,
                        onset = 0*ms,
                        fitparams = params,
@@ -244,16 +246,16 @@ if __name__ == '__main__':
     
     input = loadtxt('current.txt')
     spikes0 = loadtxt('spikes.txt')
-    spikes = spikes0
-#    spikes = [(0, spike*second) for spike in spikes0]
-#    spikes.extend([(1, spike*second+5*ms) for spike in spikes0])
+    spikes = []
+    for i in xrange(3):
+        spikes.extend([(i, spike*second+5*i*ms) for spike in spikes0])
     
     results = modelfitting(model = model, reset = reset, threshold = threshold, 
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  max_cpu = 4,
-                                 particles = 4000, iterations = 3, delta = 2*ms,
+                                 particles = 10000, iterations = 3, delta = 2*ms,
                                  R = [1.0e9, 1.0e10],
                                  tau = [1*ms, 50*ms],
-                                 _delays = [-10*ms, 10*ms])
+                                 _delays = [-30*ms, 30*ms])
 
