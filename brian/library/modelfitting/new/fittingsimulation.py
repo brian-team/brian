@@ -6,6 +6,8 @@ try:
 except ImportError:
     default_precision = None
 
+__all__ = ['FittingSimulation']
+
 class FittingSimulation:
     def __init__(self, local_data, shared_data):
         # Gets the key,value pairs in shared_data

@@ -1,6 +1,7 @@
 from brian import *
 from brian.utils.statistics import firing_rate
-from clusterfitting import *
+from fittingmanager import *
+from fittingworker import *
 from brian.library.modelfitting.clustertools import *
 try:
     import pycuda
@@ -254,7 +255,7 @@ if __name__ == '__main__':
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  max_cpu = 4,
-                                 particles = 10000, iterations = 3, delta = 2*ms,
+                                 particles = 1000, iterations = 3, delta = 2*ms,
                                  R = [1.0e9, 1.0e10],
                                  tau = [1*ms, 50*ms],
                                  _delays = [-30*ms, 30*ms])

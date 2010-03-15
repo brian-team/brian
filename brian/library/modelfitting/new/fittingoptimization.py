@@ -1,5 +1,7 @@
 from brian import *
 
+__all__ = ['FittingOptimization']
+
 class FittingOptimization:
     def __init__(self, worker_index,
                        X0,

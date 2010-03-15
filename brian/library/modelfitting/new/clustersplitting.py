@@ -1,5 +1,7 @@
 from numpy import *
 
+__all__ = ['ClusterSplitting']
+
 class ClusterSplitting:
     def __init__(self, worker_size, group_size):
         """Internal class used to split a multiprocessing optimization of several groups

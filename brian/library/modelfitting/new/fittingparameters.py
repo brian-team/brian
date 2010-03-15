@@ -2,6 +2,8 @@ from brian.stdunits import ms
 from numpy import *
 from numpy.random import rand, randn
 
+__all__ = ['FittingParameters']
+
 class FittingParameters(object):
     """Internal class used to manipulate model fitting parameters.
     It basically handles conversion between parameter dictionaries and arrays.
