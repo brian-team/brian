@@ -35,10 +35,18 @@ class FittingManager:
                 
         # Displays the number of cores used
         if self.manager.use_gpu:
-            cores =  'GPUs'
+            cores =  'GPU'
         else:
-            cores = 'CPUs'
-        print "Using %d %s..." % (self.numprocesses, cores)
+            cores = 'CPU'
+        if self.numprocesses > 1:
+            b = 's'
+        else:
+            b = ''
+        print "Using %d %s%s..." % (self.numprocesses, cores, b)
+        
+        self.paramunits = dict(fitness=1.0)
+        for param, value in self.shared_data['fitparams'].iteritems():
+            self.paramunits[param] = value[1]/float(value[1])
         
         # Splits local data
         local_data_splitted = self.split_data(local_data)
@@ -162,17 +170,21 @@ class FittingManager:
             final_info = dict([])
             for w in xrange(self.numprocesses):
                 final_info[w] = self.results[w][1]
-            return final_results, final_info
         else:
-            return final_results
+            final_info = None
+        return final_results, final_info
 
     def print_results(self):
         if self.final_results is None:
             self.get_results()
-        print "Results:"
+        print
+        print "RESULTS:"
         for name, values in self.final_results.iteritems():
             print name
-            print values
+            unit = self.paramunits[name]
+            for value in values:
+                print "    ", (value * unit),
+            print
             print
         return self.final_results
 
@@ -253,6 +265,10 @@ class FittingWorker():
         param_values = self.fp.get_param_values(X)
         fitness = self.sim.sim_run(param_values)
         
+#        print
+#        print param_values
+#        print fitness
+        
         # Splits the fitness values according to groups
         k = 0
         for group, global_state in global_states.iteritems():
@@ -274,66 +290,4 @@ class FittingWorker():
         fitinfo['opt'] = dict([(group, self.opts[group].terminate()) for group in self.groups.keys()])
         return results, fitinfo
 
-if __name__ == '__main__':
-    model = Equations('''
-        dV/dt=(R*I-V)/tau : 1
-        I : 1
-        R : 1
-        tau : second
-    ''')
-    threshold = 1
-    reset = 0
-    fitparams = dict(R = [1.0e9, 1.0e10],
-                     tau = [1*ms, 50*ms],
-                     _delays = [-100*ms, 100*ms])
-    
-    input = loadtxt('current.txt')
-    spikes = loadtxt('spikes.txt')
-    nspikes = len(spikes)
-    spikes = hstack((-1*second,spikes,2*second, -1*second,spikes+50*ms,2*second))
-    
-    dt = .1*ms
-    group_size = 500
-    group_count = 2
-    iterations = 3
-    delta = 4*ms
-    duration = len(input)*dt
-    
-    spiketimes_offset = hstack((zeros(group_size, dtype=int), (nspikes+2)*ones(group_size, dtype=int)))
-    target_length = len(spikes)*ones(group_count*group_size)
-    target_rates = len(spikes)*Hz*ones(group_count*group_size)
-    
-    shared_data = dict(model=model,
-                       threshold=threshold,
-                       reset=reset,
-                       input_var='I',
-                       input=input,
-                       dt=dt,
-                       duration=duration,
-                       spiketimes=spikes,
-                       group_size=group_size,
-                       group_count=group_count,
-                       delta=delta,
-                       returninfo=False,
-                       initial_values=None,
-                       onset=0*ms,
-                       fitparams=fitparams,
-                       optparams=[.9,1.0,1.0])
-    
-    local_data = dict(spiketimes_offset=spiketimes_offset,
-                      target_length=target_length,
-                      target_rates=target_rates)
-
-    cluster_info = dict(gpu_policy = 'prefer_gpu',
-                        max_cpu = 4,
-                        max_gpu = 0,
-                        machines = [],
-                        named_pipe = None,
-                        port = None,
-                        authkey = 'brian cluster tools')
-    
-    fm = FittingManager(shared_data, local_data, iterations, cluster_info)
-    fm.run()
-    fm.print_results()
-    
     

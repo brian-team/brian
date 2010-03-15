@@ -7,6 +7,12 @@ class FittingSimulation:
         for key, val in shared_data.iteritems():
             setattr(self, key, val)
         
+        # shared_data['model'] is a string
+        self.model = Equations(self.model)
+        
+#        print shared_data
+#        print local_data
+        
         self.total_steps = int(self.duration/self.dt)
         self.use_gpu = local_data['use_gpu']
         
