@@ -193,6 +193,8 @@ def modelfitting(model = None, reset = None, threshold = None,
                        group_size = group_size,
                        group_count = group_count,
                        delta = delta,
+                       slices = slices,
+                       overlap = overlap,
                        returninfo = returninfo,
                        initial_values = initial_values,
                        onset = 0*ms,
@@ -241,7 +243,8 @@ if __name__ == '__main__':
     reset = 0
     
     input = loadtxt('current.txt')
-    spikes = loadtxt('spikes.txt')
+    spikes0 = loadtxt('spikes.txt')
+    spikes = spikes0
 #    spikes = [(0, spike*second) for spike in spikes0]
 #    spikes.extend([(1, spike*second+5*ms) for spike in spikes0])
     
@@ -249,7 +252,7 @@ if __name__ == '__main__':
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  max_cpu = 4,
-                                 particles = 1000, iterations = 3, delta = 2*ms,
+                                 particles = 4000, iterations = 3, delta = 2*ms,
                                  R = [1.0e9, 1.0e10],
                                  tau = [1*ms, 50*ms],
                                  _delays = [-10*ms, 10*ms])

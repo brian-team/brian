@@ -110,7 +110,7 @@ class FittingManager:
         # Main loop : calls iterate() for each worker 
         calls = ['iterate' for _ in xrange(self.numprocesses)]
         for iter in xrange(self.iterations):
-            print "Iteration", iter
+            print "Iteration %d/%d" % (iter+1, self.iterations)
             
             # The global state is sent to each worker, it should be as light
             # as possible to avoid transmission delays
