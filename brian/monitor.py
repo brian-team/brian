@@ -312,7 +312,7 @@ class StateSpikeMonitor(SpikeMonitor):
     '''
     def __init__(self, source, var):
         SpikeMonitor.__init__(self, source)
-        if not isSequenceType(var):
+        if isinstance(var, (str, int)) or not isSequenceType(var):
             var = (var,)
         self._varnames = var
         self._vars = [source.state_(v) for v in var]
