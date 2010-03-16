@@ -1,10 +1,7 @@
-from numpy import *
-from numpy.random import *
-from nose import *
+from numpy import split, concatenate, ndarray, cumsum, ndim, isscalar
 from clustertools import *
 import sys
-import logging
-import weakref
+#import logging
 
 all = ['DistributedWorker', 'DistributedFunction', 'distribute']
 
@@ -94,10 +91,18 @@ class DistributedFunction():
 
     def __call__(self, x = None):
         jobs = self.prepare_jobs(x)
-        
         results = self.manager.process_jobs(jobs)
+        
         if isinstance(x, ndarray):
             results = concatenate(results, axis=-1)
+        elif isinstance(x, list):
+            results2 = []
+            for r in results:
+                if isscalar(r):
+                    results2.append(r)
+                else:
+                    results2.extend(r)
+            results = results2
         
         if self.endaftercall:
             self.end()
@@ -112,16 +117,16 @@ class DistributedFunction():
 def distribute(fun, endaftercall = True, 
                     machines = [],
                     gpu_policy = 'prefer_gpu',
-                    own_max_cpu = None,
-                    own_max_gpu = None,
+                    max_cpu = None,
+                    max_gpu = None,
                     named_pipe = None,
                     port = None,
                     authkey = 'distributedfunction'):
     dfun = DistributedFunction(fun,
                                 machines = machines,
                                 gpu_policy = gpu_policy,
-                                own_max_cpu = own_max_cpu,
-                                own_max_gpu = own_max_gpu,
+                                own_max_cpu = max_cpu,
+                                own_max_gpu = max_gpu,
                                 named_pipe = named_pipe,
                                 port = port,
                                 authkey = authkey)
