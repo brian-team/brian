@@ -64,7 +64,6 @@ class DistributedFunction():
                         max_gpu = None,
                         named_pipe = None,
                         port = None,
-                        authkey = 'distributedfunction',
                         accept_lists = False, # Set to True if the provided function handles a list as a parameter
                         **shared_data):
         
@@ -83,7 +82,7 @@ class DistributedFunction():
                                       own_max_gpu = max_gpu,
                                       named_pipe = named_pipe,
                                       port = port,
-                                      authkey = authkey) 
+                                      authkey = 'distopt') 
         self.numprocesses = self.manager.total_processes
         self.accept_lists = accept_lists
         
@@ -181,7 +180,7 @@ class DistributedFunction():
         self.manager.finished()
 
 def distributedslave(max_cpu = None, max_gpu = None, port = None,
-                      named_pipe = None, authkey = 'distributedfunction'):
+                      named_pipe = None):
     cluster_worker_script(DistributedWorker,
                           max_gpu=max_gpu, max_cpu=max_cpu, port=port,
-                          named_pipe=named_pipe, authkey=authkey)
+                          named_pipe=named_pipe, authkey='distopt')

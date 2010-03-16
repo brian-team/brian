@@ -67,7 +67,7 @@ if __name__ == '__main__':
     threshold = 1
     duration = 1*second
     
-    sigmas = [.3, .4, .5, .6]
+    sigmas = list(np.linspace(.3, .6, 8))
     
     t = time.clock()
     for s in sigmas:

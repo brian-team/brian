@@ -8,7 +8,7 @@ def square(x):
     return x**2
 
 if __name__ == '__main__':
-    dsquare = DistributedFunction(square, machines = ['Astrance'], named_pipe=True)
+    dsquare = DistributedFunction(square, machines = [], named_pipe=True)
     x = arange(1,16)
     y = dsquare(x)
     print y
