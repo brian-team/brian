@@ -44,7 +44,7 @@ if __name__ == '__main__':
     The list of arguments we want to evaluate 'square' with. It can be
     a vector of any size here.
     """
-    x = np.arange(12)
+    x = [1,2,3,4,5,6,7,8]
     
     """
     We evaluate the function over our parameters in parallel in a transparent way.

@@ -59,7 +59,7 @@ class DistributedFunction():
     def __init__(self,  fun = None,
                         endaftercall = True,
                         machines = [],
-                        gpu_policy = 'prefer_gpu',
+                        gpu_policy = 'no_gpu',
                         max_cpu = None,
                         max_gpu = None,
                         named_pipe = None,
@@ -114,8 +114,8 @@ class DistributedFunction():
             jobs = [None for _ in xrange(self.numprocesses)]
         elif isinstance(x, list):
             n = len(x)
-            # Nothing to do if x has the same size as numprocesses
-            if n == self.numprocesses:
+            # Nothing to do if x is smaller than numprocesses
+            if n <= self.numprocesses:
                 jobs = x
             else:
                 # If the function handles lists, then divide the list into sublists

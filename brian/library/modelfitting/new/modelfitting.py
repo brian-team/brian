@@ -122,10 +122,8 @@ def modelfitting(model = None, reset = None, threshold = None,
 
     # Use GPU ?
     if can_use_gpu & (use_gpu is not False):
-        use_gpu = True
         gpu_policy = 'prefer_gpu'
     else:
-        use_gpu = False
         gpu_policy = 'no_gpu'
 
     # TODO: no time slicing yet
