@@ -42,7 +42,7 @@ if __name__ == '__main__':
     
     """
     The list of arguments we want to evaluate 'square' with. It can be
-    a vector of any size here.
+    a vector of any size here, or a list (less efficient).
     """
     x = [1,2,3,4,5,6,7,8]
     

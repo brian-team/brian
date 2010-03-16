@@ -64,7 +64,7 @@ class DistributedFunction():
                         max_gpu = None,
                         named_pipe = None,
                         port = None,
-                        authkey = None,
+                        authkey = 'distributedfunction',
                         accept_lists = False, # Set to True if the provided function handles a list as a parameter
                         **shared_data):
         
