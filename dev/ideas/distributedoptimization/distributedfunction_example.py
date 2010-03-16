@@ -10,6 +10,19 @@ def square(x):
     
     Here, the 'square' function accepts a number or an array as an argument,
     and puts to square all its elements (element-wise operation).
+    
+    If x is not a matrix, then x may be a list if the function has to be
+    evaluated over several arguments (only if the total number of arguments > numprocesses)
+    You should do type checking : x must be an object of whatever type you want, but
+    if it is a list, you have two options :
+        - by default, the library will take care of calling
+        the function once for each object, so you have nothing to do.
+        - if you want to handle sublists, pass the keyword accept_lists = True
+        in the DistributedFunction object, and here, put :
+            if type(x) == list:
+                # handles lists
+            else:
+                # default process
     """
     return x**2
 
@@ -25,7 +38,7 @@ if __name__ == '__main__':
     """
     A distributed function 'dsquare' is created from the function 'square'.
     """
-    dsquare = df.distribute(square)
+    dsquare = df.DistributedFunction(square)
     
     """
     The list of arguments we want to evaluate 'square' with. It can be

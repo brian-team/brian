@@ -308,6 +308,7 @@ class ClusterMachine(object):
                 if jobs is None:
                     break
                 self.conn.send(self.process_jobs(jobs))
+                
     def prepare_workers(self, use_gpu):
         self.use_gpu = use_gpu
         if use_gpu:
@@ -327,10 +328,12 @@ class ClusterMachine(object):
                                 ) for n, conn in enumerate(self.client_conns)]
         for p in self.processes:
             p.start()
+            
     def process_jobs(self, jobs):
         for conn, job in zip(self.server_conns, jobs):
             conn.send(job)
-        return [conn.recv() for conn in self.server_conns]
+        return [conn.recv() for conn, job in zip(self.server_conns, jobs)]
+    
     def finished(self):
         for conn in self.server_conns:
             conn.send(None)
