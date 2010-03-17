@@ -102,6 +102,14 @@ class OptAlg_PSO:
         """
         self.worker_index = worker_index
         self.optinfo = optinfo
+        
+        if not 'omega' in self.optinfo.keys():
+            self.optinfo['omega'] = .9
+        if not 'cl' in self.optinfo.keys():
+            self.optinfo['cl'] = 1.2
+        if not 'cg' in self.optinfo.keys():
+            self.optinfo['cg'] = 1.8
+        
         self.returninfo = returninfo
         if not(self.returninfo):
             self.info = None # contains the information about the run
@@ -147,12 +155,6 @@ class OptAlg_PSO:
         if global_state is not None:
             self.X_gbest, self.fitness_gbest = global_state
             
-        if self.optinfo is None or len(self.optinfo) == 0:
-            self.optinfo = [.9, 1.0, 1.0]    
-        
-        print self.optinfo
-        # Problem : there's iterations in optinfo...
-        omega, cl, cg = self.optinfo
         
         # Local update
         indices_lbest = nonzero(fitness > self.fitness_lbest)[0]
@@ -176,7 +178,7 @@ class OptAlg_PSO:
         rl = rand(self.D, self.N)
         rg = rand(self.D, self.N)
         X_gbest_expanded = tile(self.X_gbest.reshape((-1,1)), (1, self.N))
-        self.V = omega*self.V + cl*rl*(self.X_lbest-self.X) + cg*rg*(X_gbest_expanded-self.X)
+        self.V = self.optinfo['omega']*self.V + self.optinfo['cl']*rl*(self.X_lbest-self.X) + self.optinfo['cg']*rg*(X_gbest_expanded-self.X)
         self.X = self.X + self.V
         
         # Boundary checking
@@ -206,6 +208,10 @@ class OptAlg_PSO:
                 X_gbest_global = X_gbest
                 fitness_gbest_global = fitness_gbest
         return (X_gbest_global, fitness_gbest_global)
+     
+    @staticmethod
+    def get_best_fitness((X_gbest_global, fitness_gbest_global)):
+        return fitness_gbest_global
      
     def terminate(self):
         """

@@ -3,7 +3,7 @@ from numpy import *
 __all__ = ['OptSplit']
 
 class OptSplit:
-    def __init__(self, worker_size, group_size):
+    def __init__(self, worker_size, group_size, verbose = False):
         """Internal class used to split a multiprocessing optimization of several groups
         in parallel across different workers with minimum data transfer.
         
@@ -50,9 +50,10 @@ class OptSplit:
         bgroups = ''
         if len(group_size)>1:
             bgroups = 's'
-        print "%d worker%s with size%s" % (len(worker_size), bworkers, bworkers), worker_size
-        print "%d group%s with size%s" % (len(group_size), bgroups, bgroups), group_size
-        print
+        if verbose:
+            print "%d worker%s with size%s" % (len(worker_size), bworkers, bworkers), worker_size
+            print "%d group%s with size%s" % (len(group_size), bgroups, bgroups), group_size
+            print
         
     def split_groups(self):
         """
@@ -97,50 +98,7 @@ class OptSplit:
         
         fun(self.particles, 0, self.group_size[0], 0, self.worker_size[0])
 
-#    def combine_items(self, items):
-#        """
-#        Returns the best items from their fitness over the workers.
-#        items[i] is a list of triplets (group, item, value) where value is the
-#        fitness of item in the given group, for worker i.
-#        best_items is a list of triplets (worker, best_item, best_value)
-#        """
-#        all_items = []
-#        [all_items.extend(tuples) for tuples in items]
-#        
-#        best_items = []    
-#        for i in range(self.group_number):
-#            items, values = zip(*[(item, value) for (j, item, value) in all_items if j==i])
-#            items = array(items)
-#            values = array(values)
-#            best = nonzero(values == max(values))[0][0]
-#            item, value = items[best], values[best]
-#            best_items.append((i, item, value))
-#        return best_items
-#
-#    def split_items(self, items):
-#        """
-#        Splits items over workers.
-#        items is a list of triplets (group, item, value)
-#        splitted_items is the list of best items, 
-#        splitted_items[worker] is a list of best items for each subgroup within the worker
-#        """
-#        splitted_items = []
-#        for i in range(self.worker_number):
-#            worker_items = []
-#            for (group, n) in self.groups_by_worker[i]:
-#                # Appends item when items[group] = group, item, value
-#                worker_items.append(items[group][1])
-#            splitted_items.append(worker_items)
-#        return splitted_items
-
 if __name__ == '__main__':
-    from numpy.random import *
-    cs = ClusterSplitting([10, 10], [7, 7, 6])
+    cs = OptSplit([10, 10], [7, 7, 6])
     print "groups by worker", cs.groups_by_worker
     print "workers by group", cs.workers_by_group
-#    items = [[(0,rand(3,1),10),(1,rand(3,1),20)],[(1,rand(3,1),30),(2,rand(3,1),40)]]
-#    combined_items = cs.combine_items(items)
-#    splitted_items = cs.split_items(combined_items)
-#    print items
-#    print combined_items
-#    print splitted_items

@@ -1,8 +1,10 @@
+from numpy import zeros, inf, kron, ones
 from clustertools import ClusterManager
 from optsplit import OptSplit
 from optparams import OptParams
 from optworker import OptWorker
-from optalg_pso import OptAlg_PSO as OptAlg # TODO: better way of changing opt alg 
+from optalg_pso import OptAlg_PSO as OptAlg # TODO: better way of changing opt alg
+import time
 
 __all__ = ['OptManager']
 
@@ -19,6 +21,22 @@ class OptManager:
         local_data contains data that is specific to each worker.
         cluster_info is a dictionary containing information about the cluster.
         """
+        # Default cluster info
+        if clusterinfo is None:
+            clusterinfo = dict([])
+        if not 'gpu_policy' in clusterinfo.keys():
+            clusterinfo['gpu_policy'] = 'no_gpu'
+        if not 'machines' in clusterinfo.keys():
+            clusterinfo['machines'] = []
+        if not 'max_cpu' in clusterinfo.keys():
+            clusterinfo['max_cpu'] = None
+        if not 'max_gpu' in clusterinfo.keys():
+            clusterinfo['max_gpu'] = None
+        if not 'named_pipe' in clusterinfo.keys():
+            clusterinfo['named_pipe'] = None
+        if not 'port' in clusterinfo.keys():
+            clusterinfo['port'] = None
+        
         # Initializes the manager object
         self.manager = ClusterManager(OptWorker,
                                      shared_data,
@@ -39,15 +57,16 @@ class OptManager:
         self.final_results = None
                 
         # Displays the number of cores used
-        if self.manager.use_gpu:
-            cores =  'GPU'
-        else:
-            cores = 'CPU'
-        if self.numprocesses > 1:
-            b = 's'
-        else:
-            b = ''
-        print "Using %d %s%s..." % (self.numprocesses, cores, b)
+        if self.shared_data['verbose']:
+            if self.manager.use_gpu:
+                cores =  'GPU'
+            else:
+                cores = 'CPU'
+            if self.numprocesses > 1:
+                b = 's'
+            else:
+                b = ''
+            print "Using %d %s%s..." % (self.numprocesses, cores, b)
         
         # Splits local data
         local_data_splitted = self.split_data(local_data)
@@ -82,7 +101,8 @@ class OptManager:
         worker_size[-1] = int(N-sum(worker_size[:-1]))
         
         # Keeps the groups structure within the workers
-        self.cs = OptSplit(worker_size, [group_size for _ in xrange(group_count)])
+        self.cs = OptSplit(worker_size, [group_size for _ in xrange(group_count)], 
+                           verbose = self.shared_data['verbose'])
         
         k = 0
         for i in xrange(self.numprocesses):
@@ -90,7 +110,8 @@ class OptManager:
             local = dict()
             if local_data is not None:
                 for key,val in local_data.iteritems():
-                    local[key] = val[k:k+n]
+                    kronval = kron(val, ones(group_size))
+                    local[key] = kronval[k:k+n]
             local['worker_size'] = n
             local['worker_index'] = i
             local['groups'] = self.cs.groups_by_worker[i] # a dictionary (group, n)
@@ -104,10 +125,13 @@ class OptManager:
         # global_states[group] is the global state for the given group
         global_states = dict([(group, None) for group in xrange(self.group_count)])
         
+        t0 = time.clock()
+        
         # Main loop : calls iterate() for each worker 
         calls = ['iterate' for _ in xrange(self.numprocesses)]
         for iter in xrange(self.optinfo['iterations']):
-            print "Iteration %d/%d" % (iter+1, self.optinfo['iterations'])
+            if self.shared_data['verbose']:
+                print "Iteration %d/%d" % (iter+1, self.optinfo['iterations'])
             
             # The global state is sent to each worker, it should be as light
             # as possible to avoid transmission delays
@@ -132,6 +156,18 @@ class OptManager:
                 # Lists the local states of the group splitted among several workers
                 local_states = [splitted_local_states[w][group] for w,n in self.cs.workers_by_group[group].iteritems()]
                 global_states[group] = OptAlg.combine_local_states(local_states)
+                if self.shared_data['verbose']:
+                    best_fitness = OptAlg.get_best_fitness(global_states[group])
+                    if self.group_count > 1:
+                        sgroup = " for group %d" % group
+                    else:
+                        sgroup = ""
+                    print "    Current best fitness%s: %.4f" % (sgroup, best_fitness)
+        
+        
+        if self.shared_data['verbose']:
+            print "Optimization terminated in %.3f seconds." % (time.clock()-t0)
+            print
         
         # Terminates the optimization
         calls = ['terminate' for _ in xrange(self.numprocesses)]

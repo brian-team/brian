@@ -87,6 +87,7 @@ class OptWorker():
             fitness, self.siminfo = self.fun(param_values)
         else:
             fitness = self.fun(param_values)
+            self.siminfo = None
         
         # Splits the fitness values according to groups
         k = 0

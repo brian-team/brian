@@ -1,5 +1,5 @@
 from numpy import *
-from distributedfunction import *
+from distfun import DistributedFunction
 
 def square(x):
     """

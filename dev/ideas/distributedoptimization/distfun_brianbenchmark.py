@@ -56,7 +56,7 @@ def fun(sigma, **args):
     return r
 
 if __name__ == '__main__':
-    import distributedfunction as df
+    from distfun import DistributedFunction
     import numpy as np
     import time
     
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     print "Serial time = %.3f s" % (time.clock()-t)
     print
     
-    dfun = df.DistributedFunction(fun, N=N,
+    dfun = DistributedFunction(fun, N=N,
                                        tau=tau,
                                        model=model,
                                        reset=reset,

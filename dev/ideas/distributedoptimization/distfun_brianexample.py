@@ -56,7 +56,7 @@ def fun(sigma, **args):
     return r
 
 if __name__ == '__main__':
-    import distributedfunction as df
+    from distfun import DistributedFunction
     
     N = 2000
     tau = 10*ms
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     duration = 1*second
     sigmas = [.3, .4, .5, .6]
     
-    dfun = df.DistributedFunction(fun, N=N, tau=tau, duration=duration,
+    dfun = DistributedFunction(fun, N=N, tau=tau, duration=duration,
                                        model=model, reset=reset, threshold=threshold)
     
     rates = dfun(sigmas)

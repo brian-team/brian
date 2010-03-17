@@ -32,13 +32,13 @@ The code *must* be placed after "if __name__ == '__main__':"
 to avoid infinite loops which would make the computer crash.
 """
 if __name__ == '__main__':
-    import distributedfunction as df
+    from distfun import DistributedFunction
     import numpy as np
     
     """
     A distributed function 'dsquare' is created from the function 'square'.
     """
-    dsquare = df.DistributedFunction(square)
+    dsquare = DistributedFunction(square)
     
     """
     The list of arguments we want to evaluate 'square' with. It can be
