@@ -44,7 +44,7 @@ class OptWorker():
 #        local['worker_size'] 
 #        local['worker_index']
         
-        self.fun = lambda args: self.shared_data['fun'](args, self.shared_data, self.local_data, self.local_data['use_gpu'])
+        self.fun = lambda args: self.shared_data['_fun'](args, self.shared_data, self.local_data, self.local_data['use_gpu'])
         
         """
         There is one optimization object per group within each worker. The 
@@ -54,7 +54,7 @@ class OptWorker():
         the optimization update iteration is executed, one after the other.
         """
         # Generates the initial state matrix
-        self.fp = OptParams(**self.shared_data['optparams'])
+        self.fp = OptParams(**self.shared_data['_optparams'])
         initial_param_values = self.fp.get_initial_param_values(self.local_data['worker_size'])
         X0 = self.fp.get_param_matrix(initial_param_values)
         Xmin, Xmax = self.fp.set_constraints()
@@ -66,8 +66,8 @@ class OptWorker():
             n = self.groups[group]
             self.opts[group] = OptAlg(self.local_data['worker_index'],
                                       X0[:,k:k+n], Xmin, Xmax,
-                                      self.shared_data['optinfo'],
-                                      self.shared_data['returninfo'])
+                                      self.shared_data['_optinfo'],
+                                      self.shared_data['_returninfo'])
             k += n
         
     def iterate(self, global_states):
@@ -83,7 +83,7 @@ class OptWorker():
         X = hstack([self.opts[group].X for group in self.groups.keys()])
         param_values = self.fp.get_param_values(X)
         
-        if self.shared_data['returninfo']:
+        if self.shared_data['_returninfo']:
             fitness, self.siminfo = self.fun(param_values)
         else:
             fitness = self.fun(param_values)

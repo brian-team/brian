@@ -8,6 +8,7 @@ def fun(args, shared_data, local_data, use_gpu):
 if __name__ == '__main__':
     from distopt import *
     optparams = dict(x = [-10.,10.], y = [-10.,10.])
-    results = optimize(fun, optparams, max_cpu=4)
+    results = optimize(fun, optparams, max_cpu=4,
+                       named_pipe=None, machines=['localhost'])
     print_results(results)
     

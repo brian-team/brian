@@ -164,6 +164,7 @@ class DistributedFunction():
                 worker_size, bins = self.divide(n)
                 bins = bins[1:-1]
                 jobs = split(x, bins, axis=-1)
+                jobs = [job for job in jobs if len(job)>0]
         elif isinstance(x, dict):
             jobs = [dict([]) for _ in xrange(self.numprocesses)]
             for param, value in x.iteritems():
@@ -188,13 +189,13 @@ class DistributedFunction():
             self.end()
         return results
     
-    def __del__(self):
-        self.end()
+#    def __del__(self):
+#        self.end()
         
     def end(self):
         self.manager.finished()
 
-def distributed_worker(max_cpu = None, max_gpu = None, port = None,
+def distworker(max_cpu = None, max_gpu = None, port = None,
                       named_pipe = None):
     cluster_worker_script(DistributedWorker,
                           max_gpu=max_gpu, max_cpu=max_cpu, port=port,

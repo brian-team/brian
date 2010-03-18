@@ -1,8 +1,9 @@
 from clustertools import *
 from optmanager import *
+from optworker import *
 from numpy import exp, ndarray, floor, log10
 
-__all__ = ['optimize', 'print_results']
+__all__ = ['optimize', 'print_results', 'optworker']
 
 def optimize(   fun, 
                 optparams,
@@ -50,13 +51,13 @@ def optimize(   fun,
         if optparams is None:
             raise Exception('optparams must be specified.')
             
-        shared_data['fun'] = fun
-        shared_data['group_size'] = group_size
-        shared_data['group_count'] = group_count
-        shared_data['returninfo'] = returninfo
-        shared_data['optparams'] = optparams
-        shared_data['optinfo'] = optinfo
-        shared_data['verbose'] = verbose
+        shared_data['_fun'] = fun
+        shared_data['_group_size'] = group_size
+        shared_data['_group_count'] = group_count
+        shared_data['_returninfo'] = returninfo
+        shared_data['_optparams'] = optparams
+        shared_data['_optinfo'] = optinfo
+        shared_data['_verbose'] = verbose
         
         # Adds iterations to optinfo
         optinfo['iterations'] = iterations
@@ -78,7 +79,13 @@ def optimize(   fun,
         else:
             results = fm.get_results()
             return results
-     
+
+def optworker(max_cpu = None, max_gpu = None, port = None,
+                      named_pipe = None):
+    cluster_worker_script(OptWorker,
+                          max_gpu=max_gpu, max_cpu=max_cpu, port=port,
+                          named_pipe=named_pipe, authkey='distopt')
+
 def print_quantity(x, precision=4):
     if x == 0.0:
         u = 0

@@ -18,7 +18,8 @@ if __name__ == '__main__':
     group_size = 2000
     local_data = dict(a0 = [1.0, 2.0], b0 = [3.0, 4.0])
     results = optimize(fun, optparams, shared_data, local_data,
-                       group_size = 37, group_count = 2,
+                       max_cpu = 4,
+                       group_size = 100, group_count = 2,
                        iterations = 10, verbose = True)
     print_results(results)
     
