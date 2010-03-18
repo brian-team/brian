@@ -1,7 +1,5 @@
 from numpy import split, concatenate, ndarray, cumsum, ndim, isscalar
 from clustertools import *
-import sys
-#import logging
 
 all = ['DistributedFunction', 'distributed_worker']
 
@@ -68,61 +66,23 @@ class DistributedFunction():
         Defines a distributed function from any function, allowing to execute it 
         transparently in parallel over several workers (multiple CPUs on a single machine
         or several machines connected in a network). 
+
+        **Arguments**
         
-        Usage examples
-        ==============
-        
-        Simple example 1
-        ----------------
-        
-        The simplest way of using ``DistributedFunction`` is by defining a function which
-        accepts a single object (a number, a Numpy array or any other object) as an argument 
-        and returns a result. Using ``DistributedFunction`` allows to call this function in 
-        parallel over multiple CPUs/machines with several objects as arguments, and retrieving 
-        the result for each argument. By default, ``DistributedFunction`` uses all available CPUs
-        in the system.
-        
-        In the following example which computes the inverse of two matrices, we assume that there 
-        are at least two CPUs in the system. Each CPU computes the inverse of a single matrix::
-            
-            # For Windows users, it is required that any code using this library is placed after
-            # this line, otherwise the system will crash!
-            if __name__ == '__main__':
-                
-                from numpy import dot
-                from numpy.random import rand
-                from numpy.linalg import inv
-                
-                # Import the library to have access to the ``DistributedFunction`` class
-                from distfun import *
-                
-                # We define the two matrices that are going to be inversed in parallel.
-                A = rand(4,4)
-                B = rand(4,4)
-                
-                # The first argument of ``DistributedFunction`` is the name of the function
-                # that is being parallelized. It must accept a single argument and returns a
-                # single object. The optional argument ``max_cpu`` allows to limit the number
-                # of CPUs that are going to be used by the parallelized function. Of course,
-                # it has no effect if there are less CPUs available in the system.
-                distinv = DistributedFunction(inv, max_cpu=2)
-                
-                # ``distinv`` is the parallelized version of ``inv`` : it is called by passing
-                # a list of arguments. The list can be of any size. If there are more arguments
-                # than workers, then each worker will process several arguments in series.
-                # Here, if there are two available CPUs in the system, the first CPU inverses
-                # A, the second inverses B. ``invA`` and ``invB`` contain the inverses of A and B.
-                invA, invB = distinv([A,B])
-                
-        Simple example 2
-        ----------------
-        
-        If ``fun(x)`` is a Python function that accepts a Numpy array as argument ``x``,
-        assuming that it
-        
-        from distfun import *
-        dfun = DistributedFunction(fun)
-        
+        ``fun``
+            The Python function to parallelize. There are two different ways of 
+            parallelizing a function.
+            * If ``fun`` accepts a single argument and returns a single object,
+              then the distributed function can be called with a list of arguments
+              that are transparently spread among the workers.
+            * If ``fun`` accepts any D*N matrix and returns a N-long vector,
+              in such a way that the computation is performed column-wise
+              (that is, there exists a function f : R^d -> R such that
+              ``fun(x)[i] == f(x[:,i])``), then the distributed function can be 
+              called exactly like the original function ``fun`` : each worker 
+              will call ``fun`` with a view on ``x``. The results are then 
+              automatically concatenated, so that using the distributed
+              function is strictly equivalent to using the original function.
         """
         if fun is None:
             raise Exception('The function must be provided')
@@ -222,13 +182,8 @@ class DistributedFunction():
             results = []
             for subjobs in jobs:
                 results.extend(self.manager.process_jobs(subjobs))
-        """
-        Detects that at least one worker couldn't call the function.
-        In this case, the library must call each worker several times.
-        """
         if isinstance(x, ndarray):
             results = concatenate(results, axis=-1)
-        
         if self.endaftercall:
             self.end()
         return results
