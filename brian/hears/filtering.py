@@ -22,7 +22,7 @@ try:
     use_gpu = True
 except ImportError:
     use_gpu = False
-use_gpu = False
+#use_gpu = False
 
 __all__ = ['Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step',
@@ -309,7 +309,7 @@ if use_gpu:
             code = re.sub("\\bp\\b", str(p), code) #replace the variable by their values
             code = re.sub("\\bm\\b", str(m), code)
             code = re.sub("\\bn\\b", str(n), code)
-            print code
+            #print code
             self.gpu_mod = pycuda.compiler.SourceModule(code)
             self.gpu_filt_func = self.gpu_mod.get_function("filt")
             blocksize = 512#self.maxblocksize
