@@ -35,7 +35,7 @@ rlist = dfun(xlist)
 That's it!
 """
 
-def fun(sigma, **args):
+def fun(sigma, args):
     """
     This function computes the mean firing rate of a LIF neuron with
     white noise input current (OU process with threshold).
@@ -56,7 +56,7 @@ def fun(sigma, **args):
     return r
 
 if __name__ == '__main__':
-    from distfun import DistributedFunction
+    from distfun import *
     
     N = 2000
     tau = 10*ms
@@ -66,8 +66,8 @@ if __name__ == '__main__':
     duration = 1*second
     sigmas = [.3, .4, .5, .6]
     
-    dfun = DistributedFunction(fun, N=N, tau=tau, duration=duration,
-                                       model=model, reset=reset, threshold=threshold)
+    dfun = DistributedFunction(fun, dict(N=N, tau=tau, duration=duration,
+                                       model=model, reset=reset, threshold=threshold))
     
     rates = dfun(sigmas)
     print rates

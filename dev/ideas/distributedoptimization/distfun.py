@@ -3,18 +3,17 @@ from clustertools import *
 import sys
 #import logging
 
-all = ['DistributedFunction', 'distributedslave', 'InvalidArgument']
+all = ['DistributedFunction', 'distributed_worker']
 
-class InvalidArgument(Exception):
-    def __init__(self):
-        pass
-    
 def zip2(list, hole = None):
     """
-    l is a list of lists of different sizes.
-    zip2(l) returns a list of tuples, with 'hole' values
+    Zips several lists into a list of tuples, extending each tuple
+    to the maximum size of the sub-lists.
+    
+    ``l`` is a list of lists of different sizes.
+    ``zip2(l)`` returns a list of tuples, with ``hole`` values
     when there are holes.
-    Like zip but doesn't truncate to the shortest sublist
+    Like ``zip`` but doesn't truncate to the shortest sublist.
     """
     z = []
     k = 0
@@ -34,29 +33,27 @@ def zip2(list, hole = None):
     return z
 
 class DistributedWorker:
+    """
+    Worker class for the ClusterManager object.
+    
+    Simply calls the function stored in ``shared_data['_fun']``
+    with the arguments stored in ``job``.
+    """
     def __init__(self, shared_data, use_gpu):
         self.shared_data = shared_data
     
     def process(self, job):
-        if type(job) == InvalidArgument:
-            return None
-        try:
-            if len(self.shared_data)>1:
-                result = self.shared_data['_fun'](job, **self.shared_data)
-            else:
-                result = self.shared_data['_fun'](job)
-        except InvalidArgument:
-            """
-            This happens when the function expects an object but gets
-            a list of objects because of a different number of workers
-            and parameters. If the function cannot handle a list of objects,
-            then the library calls the function in series for each object.
-            """
-            result = None
+        # if shared_data only contains _fun, it means that the function
+        # doesn't use shared_data.
+        if len(self.shared_data)>1:
+            result = self.shared_data['_fun'](job, self.shared_data)
+        else:
+            result = self.shared_data['_fun'](job)
         return result
 
 class DistributedFunction():
     def __init__(self,  fun = None,
+                        shared_data = None,
                         endaftercall = True,
                         machines = [],
                         gpu_policy = 'no_gpu',
@@ -64,15 +61,77 @@ class DistributedFunction():
                         max_gpu = None,
                         named_pipe = None,
                         port = None,
-                        accept_lists = False, # Set to True if the provided function handles a list as a parameter
-                        **shared_data):
+                        accept_lists = False,# Set to True if the provided function handles a list as a parameter
+                        verbose = False,
+                        ):
+        """
+        Defines a distributed function from any function, allowing to execute it 
+        transparently in parallel over several workers (multiple CPUs on a single machine
+        or several machines connected in a network). 
         
+        Usage examples
+        ==============
+        
+        Simple example 1
+        ----------------
+        
+        The simplest way of using ``DistributedFunction`` is by defining a function which
+        accepts a single object (a number, a Numpy array or any other object) as an argument 
+        and returns a result. Using ``DistributedFunction`` allows to call this function in 
+        parallel over multiple CPUs/machines with several objects as arguments, and retrieving 
+        the result for each argument. By default, ``DistributedFunction`` uses all available CPUs
+        in the system.
+        
+        In the following example which computes the inverse of two matrices, we assume that there 
+        are at least two CPUs in the system. Each CPU computes the inverse of a single matrix::
+            
+            # For Windows users, it is required that any code using this library is placed after
+            # this line, otherwise the system will crash!
+            if __name__ == '__main__':
+                
+                from numpy import dot
+                from numpy.random import rand
+                from numpy.linalg import inv
+                
+                # Import the library to have access to the ``DistributedFunction`` class
+                from distfun import *
+                
+                # We define the two matrices that are going to be inversed in parallel.
+                A = rand(4,4)
+                B = rand(4,4)
+                
+                # The first argument of ``DistributedFunction`` is the name of the function
+                # that is being parallelized. It must accept a single argument and returns a
+                # single object. The optional argument ``max_cpu`` allows to limit the number
+                # of CPUs that are going to be used by the parallelized function. Of course,
+                # it has no effect if there are less CPUs available in the system.
+                distinv = DistributedFunction(inv, max_cpu=2)
+                
+                # ``distinv`` is the parallelized version of ``inv`` : it is called by passing
+                # a list of arguments. The list can be of any size. If there are more arguments
+                # than workers, then each worker will process several arguments in series.
+                # Here, if there are two available CPUs in the system, the first CPU inverses
+                # A, the second inverses B. ``invA`` and ``invB`` contain the inverses of A and B.
+                invA, invB = distinv([A,B])
+                
+        Simple example 2
+        ----------------
+        
+        If ``fun(x)`` is a Python function that accepts a Numpy array as argument ``x``,
+        assuming that it
+        
+        from distfun import *
+        dfun = DistributedFunction(fun)
+        
+        """
         if fun is None:
-            raise ValueError('The function must be provided')
+            raise Exception('The function must be provided')
         
-        self.endaftercall = endaftercall
         if shared_data is None:
             shared_data = dict([])
+        
+        self.endaftercall = endaftercall
+        self.verbose = verbose
         shared_data['_fun'] = fun
         self.manager = ClusterManager(DistributedWorker, 
                                       shared_data = shared_data,
@@ -86,17 +145,17 @@ class DistributedFunction():
         self.numprocesses = self.manager.total_processes
         self.accept_lists = accept_lists
         
-        # Displays the number of cores used
-        if self.manager.use_gpu:
-            cores =  'GPU'
-        else:
-            cores = 'CPU'
-        if self.numprocesses > 1:
-            b = 's'
-        else:
-            b = ''
-        print "Using %d %s%s..." % (self.numprocesses, cores, b)
-#        logging.info("Using %d %s%s..." % (self.numprocesses, cores, b))
+        if verbose:
+            # Displays the number of cores used
+            if self.manager.use_gpu:
+                cores =  'GPU'
+            else:
+                cores = 'CPU'
+            if self.numprocesses > 1:
+                b = 's'
+            else:
+                b = ''
+            print "Using %d %s%s..." % (self.numprocesses, cores, b)
 
     def divide(self, n):
         worker_size = [n/self.numprocesses for _ in xrange(self.numprocesses)]
@@ -158,7 +217,8 @@ class DistributedFunction():
         if ncalls == 1:
             results = self.manager.process_jobs(jobs)
         else:
-            print "Using %d successive function calls on each worker..." % ncalls
+            if self.verbose:
+                print "Using %d successive function calls on each worker..." % ncalls
             results = []
             for subjobs in jobs:
                 results.extend(self.manager.process_jobs(subjobs))
@@ -179,8 +239,9 @@ class DistributedFunction():
     def end(self):
         self.manager.finished()
 
-def distributedslave(max_cpu = None, max_gpu = None, port = None,
+def distributed_worker(max_cpu = None, max_gpu = None, port = None,
                       named_pipe = None):
     cluster_worker_script(DistributedWorker,
                           max_gpu=max_gpu, max_cpu=max_cpu, port=port,
                           named_pipe=named_pipe, authkey='distopt')
+
