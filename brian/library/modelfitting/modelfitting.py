@@ -17,7 +17,8 @@ class ModelFitting(object):
             setattr(self, key, val)
         
         # shared_data['model'] is a string
-        self.model = Equations(self.model)
+        if type(self.model) is str:
+            self.model = Equations(self.model)
         
         self.total_steps = int(self.duration/self.dt)
         self.use_gpu = use_gpu
@@ -25,9 +26,6 @@ class ModelFitting(object):
         self.worker_index = local_data['_worker_index']
         self.neurons = local_data['_worker_size']
         self.groups = local_data['_groups']
-#        self.spiketimes_offset = local_data['spiketimes_offset']
-#        self.target_length = local_data['target_length']
-#        self.target_rates = local_data['target_rates']
         
         # Time slicing
         self.input = self.input[0:self.slices*(len(self.input)/self.slices)] # makes sure that len(input) is a multiple of slices
@@ -118,10 +116,6 @@ class ModelFitting(object):
             group_index += 1
         pointers = array(pointers, dtype=int)
         model_target = array(hstack(model_target), dtype=int)
-         # model_target[i] is the index of the first spike targetted by neuron i
-#        for sl in xrange(self.slices):
-#            for tar in range(self.group_count):
-#                model_target.append(list((sl+tar*self.slices)*ones(self.group_size)))
         
         self.spiketimes = hstack(alls)
         self.spiketimes_offset = pointers[model_target] # [pointers[i] for i in model_target]
@@ -130,12 +124,6 @@ class ModelFitting(object):
         # is the length of the train targeted by neuron i
         self.target_length = array(target_length, dtype=int)
         self.target_rates = array(target_rates)
-        
-#        print self.worker_index, self.I_offset
-#        print self.worker_index, self.spiketimes
-#        print self.worker_index, self.spiketimes_offset
-#        print self.worker_index, self.target_length
-#        print self.worker_index, self.target_rates 
 
     def __call__(self, param_values):
         """
@@ -182,9 +170,6 @@ class ModelFitting(object):
             net.run(self.duration)
             coincidence_count = self.cc.coincidences
             spike_count = self.cc.model_length
-
-#        print self.worker_index, coincidence_count 
-#        print self.worker_index, spike_count 
         
         coincidence_count = sum(reshape(coincidence_count, (self.slices, -1)), axis=0)
         spike_count = sum(reshape(spike_count, (self.slices, -1)), axis=0)
@@ -212,9 +197,6 @@ def modelfitting(model = None, reset = None, threshold = None,
     else:
         gpu_policy = 'no_gpu'
 
-    # TODO: no time slicing yet
-#    slices = 1
-
     # Make sure that 'data' is a N*2-array
     data = array(data)
     if data.ndim == 1:
@@ -240,10 +222,7 @@ def modelfitting(model = None, reset = None, threshold = None,
         optinfo = [.9, 0.1, 1.5]
     optinfo = dict(omega=optinfo[0], cl=optinfo[1], cg=optinfo[2])
 
-    # TODO: convert an Expression to the original string
-#    if isinstance(model, Equations):
-#        model = model.expr
-    shared_data = dict(model = model, # MUST be a string
+    shared_data = dict(model = model,
                        threshold = threshold,
                        reset = reset,
                        input_var = input_var,
@@ -261,10 +240,6 @@ def modelfitting(model = None, reset = None, threshold = None,
                        stepsize = stepsize,
                        initial_values = initial_values,
                        onset = 0*ms)
-    
-#    local_data = dict(spiketimes_offset = spiketimes_offset,
-#                      target_length = target_length,
-#                      target_rates = target_rates)
     
     r = maximize(   ModelFitting, 
                     params,

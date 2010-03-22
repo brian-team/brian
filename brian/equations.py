@@ -921,6 +921,9 @@ class Equations(object):
         
         Note: is this still used?
         '''
+        # bug with clustertools
+        if name == 'as_array':
+            raise Exception()
         return lambda **kwd:self.apply(name,kwd)
 
     def __len__(self):
