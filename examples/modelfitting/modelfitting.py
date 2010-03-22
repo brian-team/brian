@@ -7,13 +7,14 @@ from brian import *
 from brian.library.modelfitting import *
 
 if __name__ == '__main__':
-        
-    equations = Equations('''
+    
+    # equations must be a string (cannot pickle equations)
+    equations = '''
         dV/dt=(R*I-V)/tau : 1
         I : 1
         R : 1
         tau : second
-    ''')
+    '''
     
     input = loadtxt('current.txt')
     spikes = loadtxt('spikes.txt')

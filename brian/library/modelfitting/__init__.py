@@ -1,3 +1,3 @@
 from modelfitting import *
 
-__all__ = ['modelfitting', 'modelfitting_worker']
+__all__ = ['modelfitting', 'optworker', 'print_results']
