@@ -1,5 +1,6 @@
 from brian import *
 from brian.utils.statistics import firing_rate, get_gamma_factor
+from brian.library.modelfitting.gpu_modelfitting import GPUModelFitting
 from playdoh import maximize, print_results
 try:
     import pycuda
@@ -23,9 +24,10 @@ class ModelFitting(object):
         
         self.worker_index = local_data['_worker_index']
         self.neurons = local_data['_worker_size']
-        self.spiketimes_offset = local_data['spiketimes_offset']
-        self.target_length = local_data['target_length']
-        self.target_rates = local_data['target_rates']
+        self.groups = local_data['_groups']
+#        self.spiketimes_offset = local_data['spiketimes_offset']
+#        self.target_length = local_data['target_length']
+#        self.target_rates = local_data['target_rates']
         
         # Time slicing
         self.input = self.input[0:self.slices*(len(self.input)/self.slices)] # makes sure that len(input) is a multiple of slices
@@ -36,20 +38,10 @@ class ModelFitting(object):
         self.sliced_duration = self.overlap + self.duration/self.slices # duration of the vectorized simulation
         self.N = self.neurons*self.slices # TOTAL number of neurons in this worker
     
-        """
-        The neurons are first grouped by time slice : there are group_size*group_count
-        per group/time slice
-        Within each time slice, the neurons are grouped by target train : there are
-        group_size neurons per group/target train
-        """
-    
-        # Slices current : returns I_offset
         self.input = hstack((zeros(self.overlap_steps), self.input)) # add zeros at the beginning because there is no overlap from the previous slice
-        self.I_offset = zeros(self.N, dtype=int)
-        for slice in range(self.slices):
-            self.I_offset[self.neurons*slice:self.neurons*(slice+1)] = self.sliced_steps*slice
-    
-        self.spiketimes, self.spiketimes_offset = self.slice_data(self.spiketimes, self.spiketimes_offset, self.target_length)
+
+        # Prepares data (generates I_offset, spiketimes, spiketimes_offset)
+        self.prepare_data()
 
         self.group = NeuronGroup(self.N, model = self.model, 
                                  reset = self.reset, threshold = self.threshold)
@@ -76,65 +68,94 @@ class ModelFitting(object):
             self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset, 
                                         onset = self.onset, delta = self.delta)
 
-    def slice_data(self, spiketimes, spiketimes_offset, target_length):
+    def prepare_data(self):
         """
-        Slices the data : returns spiketimes, spiketimes_offset,
-        """
-        # TODO
-        spiketimes_sliced = spiketimes
-        spiketimes_offset_sliced = array(spiketimes_offset, dtype=int)
+        Generates I_offset, spiketimes, spiketimes_offset from data,
+        and also target_length and target_rates.
         
-#            i, t = zip(*data)
-#            i = array(i)
-#            t = array(t)
-#            alls = []
-#            n = 0
-#            pointers = []
-#            for j in range(group_count):
-#                s = sort(t[i==j])
-#                
-#                last = first + target_length[j*group_size]+2
-#                
-#                target_length[j] = len(s)
-#                target_rates[j] = firing_rate(s)
-#                for k in range(slices):
-#                # first sliced group : 0...0, second_train...second_train, ...
-#                # second sliced group : first_train_second_slice...first_train_second_slice, second_train_second_slice...
-#                    spikeindices = (s>=k*sliced_steps*dt) & (s<(k+1)*sliced_steps*dt) # spikes targeted by sliced neuron number k, for target j
-#                    targeted_spikes = s[spikeindices]-k*sliced_steps*dt+overlap_steps*dt # targeted spikes in the "local clock" for sliced neuron k
-#                    targeted_spikes = hstack((-1*second, targeted_spikes, sliced_duration+1*second))
-#                    alls.append(targeted_spikes)
-#                    pointers.append(n)
-#                    n += len(targeted_spikes)
-#                    
-#            spiketimes = hstack(alls)
-#            pointers = array(pointers, dtype=int)
-#            model_target = [] # model_target[i] is the index of the first spike targetted by neuron i
-#            for sl in range(slices):
-#                for tar in range(group_count):
-#                    model_target.append(list((sl+tar*slices)*ones(group_size)))
-#            model_target = array(hstack(model_target), dtype=int)
-#            spiketimes_offset = pointers[model_target] # [pointers[i] for i in model_target]
-#            spikedelays = zeros(N)
-        return spiketimes_sliced, spiketimes_offset_sliced
-    
+        The neurons are first grouped by time slice : there are group_size*group_count
+        per group/time slice
+        Within each time slice, the neurons are grouped by target train : there are
+        group_size neurons per group/target train
+        """
+        # Generates I_offset
+        self.I_offset = zeros(self.N, dtype=int)
+        for slice in range(self.slices):
+            self.I_offset[self.neurons*slice:self.neurons*(slice+1)] = self.sliced_steps*slice
+        
+        # Generates spiketimes, spiketimes_offset, target_length, target_rates
+        i, t = zip(*self.data)
+        i = array(i)
+        t = array(t)
+        alls = []
+        n = 0
+        pointers = []
+        dt = self.dt
+        
+        target_length = []
+        target_rates = []
+        model_target = []
+        group_index = 0
+        
+        inner_groups = self.groups.keys()
+        inner_groups.sort()
+        for j in inner_groups:
+            neurons_in_group = self.groups[j] # number of neurons in the current group and current worker
+            s = sort(t[i==j])
+            target_length.extend([len(s)]*neurons_in_group)
+            target_rates.extend([firing_rate(s)]*neurons_in_group)
+            
+            for k in xrange(self.slices):
+            # first sliced group : 0...0, second_train...second_train, ...
+            # second sliced group : first_train_second_slice...first_train_second_slice, second_train_second_slice...
+                spikeindices = (s>=k*self.sliced_steps*dt) & (s<(k+1)*self.sliced_steps*dt) # spikes targeted by sliced neuron number k, for target j
+                targeted_spikes = s[spikeindices]-k*self.sliced_steps*dt+self.overlap_steps*dt # targeted spikes in the "local clock" for sliced neuron k
+                targeted_spikes = hstack((-1*second, targeted_spikes, self.sliced_duration+1*second))
+                model_target.extend([k+group_index*self.slices]*neurons_in_group)
+                alls.append(targeted_spikes)
+                pointers.append(n)
+                n += len(targeted_spikes)
+            group_index += 1
+        pointers = array(pointers, dtype=int)
+        model_target = array(hstack(model_target), dtype=int)
+         # model_target[i] is the index of the first spike targetted by neuron i
+#        for sl in xrange(self.slices):
+#            for tar in range(self.group_count):
+#                model_target.append(list((sl+tar*self.slices)*ones(self.group_size)))
+        
+        self.spiketimes = hstack(alls)
+        self.spiketimes_offset = pointers[model_target] # [pointers[i] for i in model_target]
+
+        # Duplicates each target_length value 'group_size' times so that target_length[i]
+        # is the length of the train targeted by neuron i
+        self.target_length = array(target_length, dtype=int)
+        self.target_rates = array(target_rates)
+        
+#        print self.worker_index, self.I_offset
+#        print self.worker_index, self.spiketimes
+#        print self.worker_index, self.spiketimes_offset
+#        print self.worker_index, self.target_length
+#        print self.worker_index, self.target_rates 
+
     def __call__(self, param_values):
         """
         Use fitparams['_delays'] to take delays into account
         """
         if '_delays' in param_values.keys():
             delays = param_values['_delays']
+            del param_values['_delays']
         else:
             delays = zeros(self.neurons)
-        
-        # TODO: kron param_values if slicing
+            
+        # kron spike delays
+        delays = kron(delays, ones(self.slices))
         
         # Sets the parameter values in the NeuronGroup object
         self.group.reinit()
         for param, value in param_values.iteritems():
-            if param == '_delays':
-                continue
-            self.group.state(param)[:] = value
+#            if param == '_delays':
+#                continue
+            self.group.state(param)[:] = kron(value, ones(self.slices)) # kron param_values if slicing
         
         # Reinitializes the model variables
         if self.initial_values is not None:
@@ -146,8 +167,8 @@ class ModelFitting(object):
             self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, delays)
             # LAUNCHES the simulation on the GPU
             self.mf.launch(self.duration, self.stepsize)
-            #return self.mf.coincidence_count, self.mf.spike_count
-            gamma = get_gamma_factor(self.mf.coincidence_count, self.mf.spike_count, self.target_length, self.target_rates, self.delta)
+            coincidence_count = self.mf.coincidence_count
+            spike_count = self.mf.spike_count
         else:
             # WARNING: need to sets the group at each iteration for some reason
             self.cc.source = self.group
@@ -159,11 +180,16 @@ class ModelFitting(object):
             net = Network(self.group, self.cc)
             # LAUNCHES the simulation on the CPU
             net.run(self.duration)
-            # Computes the gamma factor
-            gamma = get_gamma_factor(self.cc.coincidences, self.cc.model_length, self.target_length, self.target_rates, self.delta)
+            coincidence_count = self.cc.coincidences
+            spike_count = self.cc.model_length
+
+#        print self.worker_index, coincidence_count 
+#        print self.worker_index, spike_count 
         
-        # TODO: concatenates gamma
+        coincidence_count = sum(reshape(coincidence_count, (self.slices, -1)), axis=0)
+        spike_count = sum(reshape(spike_count, (self.slices, -1)), axis=0)
         
+        gamma = get_gamma_factor(coincidence_count, spike_count, self.target_length, self.target_rates, self.delta)
         return gamma
 
 def modelfitting(model = None, reset = None, threshold = None,
@@ -171,7 +197,7 @@ def modelfitting(model = None, reset = None, threshold = None,
                  input_var = 'I', input = None, dt = None,
                  particles = 1000, iterations = 10, pso_params = None,
                  delta = 2*ms, includedelays = True,
-                 slices = 1, overlap = None,
+                 slices = 1, overlap = 0*second,
                  initial_values = None,
                  verbose = True, stepsize = 100*ms,
                  use_gpu = None, max_cpu = None, max_gpu = None,
@@ -187,7 +213,7 @@ def modelfitting(model = None, reset = None, threshold = None,
         gpu_policy = 'no_gpu'
 
     # TODO: no time slicing yet
-    slices = 1
+#    slices = 1
 
     # Make sure that 'data' is a N*2-array
     data = array(data)
@@ -206,33 +232,7 @@ def modelfitting(model = None, reset = None, threshold = None,
     group_size = particles # Number of particles per target train
     group_count = int(array(data)[:,0].max()+1) # number of target trains
     N = group_size*group_count # number of neurons
-    duration = len(input)*dt # duration of the input
-
-    # Prepares the data
-    i, t = zip(*data)
-    i = array(i)
-    t = array(t)
-    alls = []
-    n = 0
-    pointers = []
-    target_length = zeros(group_count)
-    target_rates = zeros(group_count)
-    for j in range(group_count):
-        s = sort(t[i==j])
-        target_length[j] = len(s)
-        target_rates[j] = firing_rate(s)
-        s = hstack((-1*second, s, duration+1*second))
-        alls.append(s)
-        pointers.append(n)
-        n += len(s)
-    spiketimes = hstack(alls)
-    pointers = array(pointers, dtype=int)
-    model_target = array(arange(group_count), dtype=int)
-#    model_target = array(kron(arange(group_count), ones(group_size)), dtype=int)
-    spiketimes_offset = pointers[model_target]
-    spikedelays = zeros(N)
-#    target_length = kron(target_length, ones(group_size))
-#    target_rates = kron(target_rates, ones(group_size))
+    duration = len(input)*dt # duration of the input    
 
     # WARNING: PSO-specific
     optinfo = pso_params 
@@ -250,7 +250,7 @@ def modelfitting(model = None, reset = None, threshold = None,
                        input = input,
                        dt = dt,
                        duration = duration,
-                       spiketimes = spiketimes,
+                       data = data,
                        group_size = group_size,
                        group_count = group_count,
                        delta = delta,
@@ -262,14 +262,14 @@ def modelfitting(model = None, reset = None, threshold = None,
                        initial_values = initial_values,
                        onset = 0*ms)
     
-    local_data = dict(spiketimes_offset = spiketimes_offset,
-                      target_length = target_length,
-                      target_rates = target_rates)
+#    local_data = dict(spiketimes_offset = spiketimes_offset,
+#                      target_length = target_length,
+#                      target_rates = target_rates)
     
     r = maximize(   ModelFitting, 
                     params,
                     shared_data = shared_data,
-                    local_data = local_data,
+                    local_data = None,
                     group_size = group_size,
                     group_count = group_count,
                     iterations = iterations,

@@ -18,10 +18,10 @@ if __name__ == '__main__':
     input = loadtxt('current.txt')
     spikes = loadtxt('spikes.txt')
     
-    params, gamma = modelfitting(model = equations, reset = 0, threshold = 1, 
+    results = modelfitting(model = equations, reset = 0, threshold = 1, 
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  particles = 1000, iterations = 3, delta = 2*ms,
                                  R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
     
-    print params
+    print_results(results)

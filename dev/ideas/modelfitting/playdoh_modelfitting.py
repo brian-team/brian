@@ -21,9 +21,9 @@ if __name__ == '__main__':
                             data = spikes, 
                             input = input, dt = .1*ms,
                             max_cpu = 4,
-                            particles = 6000, iterations = 3, delta = 2*ms,
+                            particles = 1000, iterations = 3, delta = 2*ms,
                             R = [1.0e9, 8.0e9],
                             tau = [10*ms, 40*ms],
-                            _delays = [-20*ms, 20*ms])
+                            _delays = [-10*ms, 10*ms])
     print_results(results)
 
