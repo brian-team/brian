@@ -8,7 +8,7 @@ try:
 except ImportError:
     can_use_gpu = False
 
-__all__ = ['modelfitting', 'print_results', 'optworker']
+__all__ = ['modelfitting', 'print_results', 'optworker', 'get_spikes', 'predict']
 
 class ModelFitting(object):
     def __init__(self, shared_data, local_data, use_gpu):
@@ -182,7 +182,7 @@ def modelfitting(model = None, reset = None, threshold = None,
                  data = None, 
                  input_var = 'I', input = None, dt = None,
                  particles = 1000, iterations = 10, pso_params = None,
-                 delta = 2*ms, includedelays = True,
+                 delta = 4*ms, includedelays = True,
                  slices = 1, overlap = 0*second,
                  initial_values = None,
                  verbose = True, stepsize = 100*ms,
@@ -262,3 +262,43 @@ def modelfitting(model = None, reset = None, threshold = None,
     # r is (results, fitinfo) or (results)
     return r
 
+def get_spikes( model = None, reset = None, threshold = None,
+                input = None, input_var = 'I', dt = None,
+                **params):
+    
+    duration = len(input)*dt
+    ngroups = len(params[params.keys()[0]])
+    group = NeuronGroup(N = ngroups, model = model, reset=reset, threshold=threshold, 
+                        clock=Clock(dt=dt))
+    group.set_var_by_array(input_var, TimedArray(input, clock=group.clock))
+    for param, values in params.iteritems():
+        if (param == '_delays') | (param == 'fitness'):
+            continue
+        group.state(param)[:] = values
+        
+    M = SpikeMonitor(group)
+    net = Network(group, M)
+    net.run(duration)
+    
+    return M.spikes
+
+def predict(model = None, reset = None, threshold = None,
+            data = None, delta = 4*ms,
+            input = None, input_var = 'I', dt = None,
+            **params):
+    
+    spikes = get_spikes(model = model, reset = reset, threshold = threshold,
+                        input = input, input_var = input_var, dt = dt,
+                        **params)
+    
+    ngroups = len(params[params.keys()[0]])
+    gamma = zeros(ngroups)
+    for i in xrange(ngroups):
+        spk = [t for j,t in spikes if j==i]
+        gamma[i] = gamma_factor(spk, data, delta, normalize = True, dt = dt)
+    if len(gamma) == 1:
+        return gamma[0]
+    else:
+        return gamma
+    
+    
