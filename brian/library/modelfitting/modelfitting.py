@@ -42,7 +42,8 @@ class ModelFitting(object):
         self.prepare_data()
 
         self.group = NeuronGroup(self.N, model = self.model, 
-                                 reset = self.reset, threshold = self.threshold)
+                                 reset = self.reset, threshold = self.threshold,
+                                 clock = Clock(dt=self.dt))
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
                 self.group.state(param)[:] = value
