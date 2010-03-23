@@ -1,9 +1,9 @@
 from brian import *
 from brian.utils.statistics import firing_rate, get_gamma_factor
-from brian.library.modelfitting.gpu_modelfitting import GPUModelFitting
 from playdoh import maximize, print_results, optworker
 try:
     import pycuda
+    from brian.library.modelfitting.gpu_modelfitting import GPUModelFitting
     can_use_gpu = True
 except ImportError:
     can_use_gpu = False
