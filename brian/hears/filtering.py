@@ -7,22 +7,22 @@ See docstrings for details. The faster gammatone filter is the GammatoneFB.
 from brian import *
 from scipy import signal
 from scipy import weave
-try:
-    import pycuda
-    import pycuda.autoinit as autoinit
-    import pycuda.driver as drv
-    import pycuda.compiler
-    from pycuda import gpuarray
-    from brian.experimental.cuda.buffering import *
-    import re
-    def set_gpu_device(n):
-        global _gpu_context
-        autoinit.context.pop()
-        _gpu_context = drv.Device(n).make_context()
-    use_gpu = True
-except ImportError:
-    use_gpu = False
-#use_gpu = False
+#try:
+#    import pycuda
+#    import pycuda.autoinit as autoinit
+#    import pycuda.driver as drv
+#    import pycuda.compiler
+#    from pycuda import gpuarray
+#    from brian.experimental.cuda.buffering import *
+#    import re
+#    def set_gpu_device(n):
+#        global _gpu_context
+#        autoinit.context.pop()
+#        _gpu_context = drv.Device(n).make_context()
+#    use_gpu = True
+#except ImportError:
+#    use_gpu = False
+use_gpu = False
 
 __all__ = ['Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step',
@@ -616,6 +616,85 @@ class MeddisGammatoneFilterbank(ParallelLinearFilterbank):
         self.order = order
         
         ParallelLinearFilterbank.__init__(self, b, a, fs*Hz)    
+
+
+class GammachirpFilterbank_IIR(ParallelLinearFilterbank):
+     '''
+Implemtentaion of the gammachirp filter as the cascade of 4 second order IIR gammatone filters 
+and 4 second orders asymmetric compensation filters
+ From Unoki et al. 2001 
+ 
+ comment: no GPU implementation so far...
+ 
+ '''
+    def __init__(self, fs, fr):
+        fr = array(fr)
+        self.fr = fr
+        self.fs = fs
+        
+        
+        GT= GammatoneFilterbank(fs,fr)
+        fs = float(fs)
+        order=GT.order
+        
+#        if use_gpu:
+#            B=GT.filt_bCPU 
+#            A=GT.filt_aCPU 
+#        else:
+        B=GT.filt_b
+        A=GT.filt_a
+
+        
+        
+        #print B.reshape(len(fs),2*order+1,4)
+        ERBw = 24.7*(4.37e-3*fr+1.)
+        N=4
+        b=1.019*ones((fr.shape))
+        c=2*ones((fr.shape))
+
+
+        p0=2
+        p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
+        p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
+        p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
+        p4=1.0724
+        
+        Btemp=zeros((len(fr),2*order+1,4))
+        Atemp=zeros((len(fr),2*order+1,4))
+        
+        for k in arange(N):
+            
+            r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/fs) #k instead of k-1 because range 0 N-1
+            
+            Dfr=(p0*p4)**(k)*p2*c*b*ERBw
+         
+            phi=2*pi*maximum((fr+Dfr),0)/fs
+            psy=2*pi*maximum((fr-Dfr),0)/fs
+            
+            ap = vstack((ones(r.shape), -2*r*cos(phi),  r**2)).T
+            bz= vstack((ones(r.shape), -2*r*cos(psy),  r**2)).T
+            
+            fn = fr #+ N* p3 *c *b *ERBw/4;
+            
+            vwr = exp(1j*2*pi*fn/fs)
+            vwrs= vstack((ones(vwr.shape), vwr,  vwr**2)).T
+            
+            ##normilization stuff
+            nrm = abs( sum(vwrs*ap,1) / sum(vwrs*bz,1))
+            temp=ones((bz.shape))
+            for i in range((len(nrm))):
+                temp[i,:]=nrm[i]
+            bz =bz*temp
+            
+            Btemp[:,:,k]=bz
+            Atemp[:,:,k]=ap
+        print B.shape,A.shape,Btemp.shape,Atemp.shape    
+        #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
+        filt_b=concatenate([B, Btemp],axis=2)
+        filt_a=concatenate([A, Atemp],axis=2)
+        
+        ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
+
 
 class IIRFilterbank(Filterbank):
     @check_units(samplerate=Hz)
