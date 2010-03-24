@@ -356,7 +356,7 @@ if __name__=='__main__':
     ircam = IRCAM_LISTEN(path)
     h = ircam.load_subject(1002)
     #h = h.subset(lambda azim,elev:azim==90 and elev==90)
-    h = h.subset(lambda azim,elev:azim==90 and elev==90 )
+    h = h.subset(lambda azim,elev:(azim==90) & (elev==90) )
     subplot(211)
     plot(h.hrtf[0].left)
     plot(h.hrtf[0].right)
