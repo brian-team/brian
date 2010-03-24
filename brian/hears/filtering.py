@@ -619,14 +619,14 @@ class MeddisGammatoneFilterbank(ParallelLinearFilterbank):
 
 
 class GammachirpFilterbank_IIR(ParallelLinearFilterbank):
+    '''
+    Implemtentaion of the gammachirp filter as the cascade of 4 second order IIR gammatone filters 
+    and 4 second orders asymmetric compensation filters
+     From Unoki et al. 2001 
+     
+     comment: no GPU implementation so far...
+     
      '''
-Implemtentaion of the gammachirp filter as the cascade of 4 second order IIR gammatone filters 
-and 4 second orders asymmetric compensation filters
- From Unoki et al. 2001 
- 
- comment: no GPU implementation so far...
- 
- '''
     def __init__(self, fs, fr):
         fr = array(fr)
         self.fr = fr
