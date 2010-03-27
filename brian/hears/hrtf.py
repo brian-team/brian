@@ -33,7 +33,10 @@ HRTFSet
 * Maybe interpolation (I would say: interpolate in the Fourier domain, then convert to time domain)
 * Artificial HRTFs (sphere etc?)
 * Simultaneous calculations (all directions): ITD, etc
+* Calculated HRTFs with reflections and varying distance
 '''
+
+# TODO: add some docstrings!
 
 from brian import *
 from filtering import *
@@ -343,8 +346,6 @@ class IRCAM_LISTEN(HRTFDatabase):
             fname = os.path.join(fname, 'RAW/MAT/HRIR/IRC_'+subject+'_R_HRIR.mat')
         return IRCAM_HRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
 
-
-
 ### room database from  Barbara Shinn-Cunningham:
 class IN_ROOM__HRTFSet(HRTFSet):
     def load(self, filename, samplerate=None, coordsys=None, name=None):
@@ -353,27 +354,18 @@ class IN_ROOM__HRTFSet(HRTFSet):
             _, name = os.path.split(filename)
         self.name = name
         m = loadmat(filename, struct_as_record=True)
-        
-        
         affix = 'fimp_'
-
-            
         l, r = m[affix+'l'], m[affix+'r']
         l=mean(l,axis=1)
         r=mean(r,axis=1)
-        
         l=reshape(l,(-1,21)).T
         r=reshape(r,(-1,21)).T
         
         print l.shape, r.shape
         
-        self.azim = tile(linspace(0,90,7),3) #tile because 3x7 -> 1:7|1:7|1:7
-        
+        self.azim = tile(linspace(0,90,7),3) #tile because 3x7 -> 1:7|1:7|1:7    
         self.elev = zeros((21))
         self.dist = repeat(array([0.15, 0.40, 1]),7) #repeat because with reshape 3x7
-                       
-        
-        
         coords = AzimElevDistDegrees.make(len(self.azim))
         coords['azim'] = self.azim
         coords['elev'] = self.elev
@@ -388,29 +380,23 @@ class IN_ROOM__HRTFSet(HRTFSet):
         print self.data.shape
         #self.data = vstack((reshape(l, (1,)+l.shape), reshape(r, (1,)+r.shape)))
         self.samplerate = 44.1*kHz
-        
-        
+
+# TODO: change the name (LISTEN is the name of the IRCAM project)
 class IN_ROOM_LISTEN(HRTFDatabase):
     def __init__(self, basedir,samplerate=None):
         self.basedir = basedir
-        
-        names = glob(os.path.join(basedir, '*Rev*'))
-       
+        names = glob(os.path.join(basedir, '*Rev*'))       
         splitnames = [os.path.split(name) for name in names]
-        
         self.subjects = [name.rstrip('Rev.mat') for base, name in splitnames]
-        
         self.samplerate = samplerate
+        
     def subject_name(self, subject):
         return str(subject)+'Rev'
+    
     def load_subject(self, subject):
         subject = str(subject)
         fname = os.path.join(self.basedir,subject+'Rev')
         return IN_ROOM__HRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
-    
-
-
-
 
 if __name__=='__main__':
     ircam_locations = [
