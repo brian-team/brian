@@ -19,7 +19,7 @@ The main interest of this class is that one can use it to build models by adding
 equation. The :class:`Current` class is a subclass of :class:`Equations` which defines a current to be added
 to a membrane equation. For example::
 
-  eqs=MembraneEquation(200*pF)+Current(I='(V0-vm)/R : amp',current_name='I')
+  eqs=MembraneEquation(200*pF)+Current('I=(V0-vm)/R : amp',current_name='I')
 
 defines the same equation as::
 
@@ -33,7 +33,7 @@ or only one variable with amp units. As for standard equations, :class:`Current`
 a multiline string (several equations). By default, the convention for the current direction is the one for injected
 current. For the ionic current convention, use the :class:`IonicCurrent` class::
 
-  eqs=MembraneEquation(200*pF)+IonicCurrent(I='(vm-V0)/R : amp')
+  eqs=MembraneEquation(200*pF)+IonicCurrent('I=(vm-V0)/R : amp')
 
 Compartmental modelling
 ^^^^^^^^^^^^^^^^^^^^^^^
