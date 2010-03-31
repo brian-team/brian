@@ -86,6 +86,12 @@ with no argument, as in the following example::
   myconnection.connect_random(group1,group2,0.1,weight=lambda:rand()*nS)
 
 Here each synaptic weight is random (between 0 and 1 nS).
+Alternatively, the connection probability can also be a function, e.g.:
+
+  myconnection.connect_random(group1,group2,0.1,weight=1*nS,sparseness=exp(-abs(i-j)*.1))
+
+Currently, either the weight or the connection probability must be fixed.
+The sparseness function may also have no argument.
 
 Delays
 ------
