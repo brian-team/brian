@@ -2167,6 +2167,7 @@ def random_matrix_fixed_column(n,m,p,value=1.):
 
 # Generation of matrices row by row
 # TODO: vectorise
+# This one seems obsolete!
 def random_matrix_row_by_row(n,m,p,value=1.):
     '''
     Generates a sparse random matrix with size (n,m).
@@ -2186,7 +2187,7 @@ def random_matrix_row_by_row(n,m,p,value=1.):
                 k=random.binomial(m,p,1)[0]
                 row = sample(xrange(m),k)
                 row.sort()
-                yield row, [value(i,j) for j in W.rows[i]]
+                yield row, [value(i,j) for j in row]
         else:
             raise AttributeError,"Bad number of arguments in value function (should be 0 or 2)"
     else:
