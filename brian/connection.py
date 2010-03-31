@@ -2134,7 +2134,7 @@ def random_matrix(n,m,p,value=1.):
             if failed: # vector-based not possible
                 log_debug('connections','Cannot build the connection matrix by rows')
                 for i in xrange(n):
-                    W.rows[i]=[j for j in range(m) if rand(m)<p(i,j)]
+                    W.rows[i]=[j for j in range(m) if rand()<p(i,j)]
                     W.data[i]=[value]*len(W.rows[i])
             else: # vector-based possible
                 for i in xrange(n):
