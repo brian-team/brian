@@ -4,6 +4,7 @@ TODO:
 * Coordinates and conversions
 * Sampling and resampling
 * Loaders for CIPIC, MIT-KEMAR databases
+* Calculated HRTFs with reflections and varying distance
 
 ROMAIN'S NOTES:
 
@@ -33,7 +34,6 @@ HRTFSet
 * Maybe interpolation (I would say: interpolate in the Fourier domain, then convert to time domain)
 * Artificial HRTFs (sphere etc?)
 * Simultaneous calculations (all directions): ITD, etc
-* Calculated HRTFs with reflections and varying distance
 '''
 
 # TODO: add some docstrings!
