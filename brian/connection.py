@@ -2121,9 +2121,27 @@ def random_matrix(n,m,p,value=1.):
                 k=random.binomial(m,p,1)[0]
                 W.rows[i]=sample(xrange(m),k)
                 W.rows[i].sort()
-                W.data[i]=[value(i,j) for j in W.rows[i]]            
+                W.data[i]=[value(i,j) for j in W.rows[i]] # hey shouldn't j be a vector?            
         else:
             raise AttributeError,"Bad number of arguments in value function (should be 0 or 2)"
+    elif callable(p):
+        if p.func_code.co_argcount==2:
+            # Check if p(i,j) is vectorisable
+            try:
+                failed=(array(p(0,arange(m))).size!=m)
+            except:
+                failed= True
+            if failed: # vector-based not possible
+                log_debug('connections','Cannot build the connection matrix by rows')
+                for i in xrange(n):
+                    W.rows[i]=[j for j in range(m) if rand(m)<p(i,j)]
+                    W.data[i]=[value]*len(W.rows[i])
+            else: # vector-based possible
+                for i in xrange(n):
+                    W.rows[i]=list((rand(m)<p(i,arange(m))).nonzero()[0])
+                    W.data[i]=[value]*len(W.rows[i])
+        else:
+            raise AttributeError,"Bad number of arguments in p function (should be 2)"
     else:
         for i in xrange(n):
             k=random.binomial(m,p,1)[0]
