@@ -2109,7 +2109,9 @@ def random_matrix(n,m,p,value=1.):
     non zero element as value() or value(i,j).
     '''
     W=sparse.lil_matrix((n,m))
-    if callable(value):
+    if callable(value) and callable(p):
+        raise AttributeError,"Arguments value and p cannot both be functions (yet)"
+    elif callable(value):
         if value.func_code.co_argcount==0: # TODO: should work with partial objects
             for i in xrange(n):
                 k=random.binomial(m,p,1)[0]
@@ -2140,6 +2142,10 @@ def random_matrix(n,m,p,value=1.):
                 for i in xrange(n):
                     W.rows[i]=list((rand(m)<p(i,arange(m))).nonzero()[0])
                     W.data[i]=[value]*len(W.rows[i])
+        elif p.func_code.co_argcount==0:
+            for i in xrange(n):
+                W.rows[i]=[j for j in range(m) if rand()<p()]
+                W.data[i]=[value]*len(W.rows[i])
         else:
             raise AttributeError,"Bad number of arguments in p function (should be 2)"
     else:
