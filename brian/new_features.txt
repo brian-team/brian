@@ -3,6 +3,7 @@ New features since 1.2.0
 
 Improvements
 
+* The sparseness keyword in connect_random can be a function
 * Added 'wmin' to STDP
 * You can now access STDP internal variables, e.g. stdp.A_pre, and monitor
   them by doing e.g. StateMonitor(stdp.pre_group, 'A_pre')

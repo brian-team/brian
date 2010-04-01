@@ -2134,7 +2134,7 @@ def random_matrix(n,m,p,value=1.):
                     k=random.binomial(m,p,1)[0]
                     W.rows[i]=sample(xrange(m),k)
                     W.rows[i].sort()
-                    W.data[i]=[value(i,array(W.rows[i]))]
+                    W.data[i]=list(value(i,array(W.rows[i])))
         else:
             raise AttributeError,"Bad number of arguments in value function (should be 0 or 2)"
     elif callable(p):
