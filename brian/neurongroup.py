@@ -549,7 +549,10 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     state = state_
     
     def __getitem__(self,i):
-        return self[i:i+1]
+        if i==-1:
+            return self[-1:]
+        else:
+            return self[i:i+1]
     
     def __getslice__(self,i,j):
         '''
