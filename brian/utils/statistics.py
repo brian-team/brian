@@ -6,6 +6,7 @@ In all functions below, spikes is a sorted list of spike times
 from numpy import *
 from brian.units import check_units,second
 from brian.stdunits import ms,Hz
+from operator import itemgetter
 
 __all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF', 'group_correlations', 'sortspikes',
          'total_correlation','vector_strength','gamma_factor']
@@ -143,15 +144,16 @@ def sortspikes(spikes):
     """
     Sorts spikes stored in a (i,t) list.
     """
-    def cmp(x,y):
-        d = x[1]-y[1]
-        if d>0:
-            return 1
-        elif d == 0:
-            return 0
-        else:
-            return -1
-    spikes.sort(cmp=cmp)
+#    def cmp(x,y):
+#        d = x[1]-y[1]
+#        if d>0:
+#            return 1
+#        elif d == 0:
+#            return 0
+#        else:
+#            return -1
+#    spikes.sort(cmp=cmp)
+    spikes = sorted(spikes,key=itemgetter(1))
     return spikes
 
 def group_correlations(spikes, delta = None):
