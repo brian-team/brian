@@ -550,7 +550,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     
     def __getitem__(self,i):
         if i==-1:
-            return self[-1:]
+            return self[self._S.shape[1]-1:]
         else:
             return self[i:i+1]
     
