@@ -2100,7 +2100,6 @@ class MultiConnection(Connection):
             self.iscompressed=True
 
 # Generation of matrices
-# TODO: vectorise
 def random_matrix(n,m,p,value=1.):
     '''
     Generates a sparse random matrix with size (n,m).
@@ -2119,11 +2118,23 @@ def random_matrix(n,m,p,value=1.):
                 W.rows[i].sort()
                 W.data[i]=[value() for _ in xrange(k)]
         elif value.func_code.co_argcount==2:
-            for i in xrange(n):
-                k=random.binomial(m,p,1)[0]
-                W.rows[i]=sample(xrange(m),k)
-                W.rows[i].sort()
-                W.data[i]=[value(i,j) for j in W.rows[i]] # hey shouldn't j be a vector?            
+            try:
+                failed=(array(value(0,arange(m))).size!=m)
+            except:
+                failed= True
+            if failed: # vector-based not possible
+                log_debug('connections','Cannot build the connection matrix by rows')
+                for i in xrange(n):
+                    k=random.binomial(m,p,1)[0]
+                    W.rows[i]=sample(xrange(m),k)
+                    W.rows[i].sort()
+                    W.data[i]=[value(i,j) for j in W.rows[i]]     
+            else:       
+                for i in xrange(n):
+                    k=random.binomial(m,p,1)[0]
+                    W.rows[i]=sample(xrange(m),k)
+                    W.rows[i].sort()
+                    W.data[i]=[value(i,array(W.rows[i]))]
         else:
             raise AttributeError,"Bad number of arguments in value function (should be 0 or 2)"
     elif callable(p):
