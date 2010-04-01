@@ -90,8 +90,7 @@ Alternatively, the connection probability can also be a function, e.g.:
 
   myconnection.connect_random(group1,group2,0.1,weight=1*nS,sparseness=exp(-abs(i-j)*.1))
 
-Currently, either the weight or the connection probability must be fixed.
-The sparseness function may also have no argument.
+The weight or the connection probability may both be functions (with 0 or 2 arguments).
 
 Delays
 ------
