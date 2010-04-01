@@ -8,6 +8,9 @@ Using Brian with Picloud
   command :
   	easy_install cloud-1.9-py2.6.egg
 
+* Launch a Python console and run the following command :
+	import cloud
+
 * Go to 'C:\Users\<USERNAME>\AppData\Roaming\picloud' and edit the file 'cloudconf.py'.
   Replace lines 9 and 12 with
   
