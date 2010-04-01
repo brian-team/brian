@@ -371,8 +371,10 @@
 + examples/misc/using_classes.py
 + examples/modelfitting/clusterexample_manager.py
 + examples/modelfitting/clusterexample_worker.py
++ examples/modelfitting/current.pickle
 + examples/modelfitting/current.txt
 + examples/modelfitting/modelfitting.py
++ examples/modelfitting/modelfitting2.py
 + examples/modelfitting/spikes.txt
 + examples/multiprocessing/multiple_runs_simple.py
 + examples/multiprocessing/multiple_runs_with_gui.py
