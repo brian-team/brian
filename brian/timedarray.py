@@ -3,11 +3,11 @@ from network import *
 import neurongroup
 from units import second
 import numpy
+import warnings
 try:
     import pylab
 except:
-    _warnings.warn("Couldn't import pylab.")
-import warnings
+    warnings.warn("Couldn't import pylab.")
 
 __all__ = ['TimedArray', 'TimedArraySetter', 'set_group_var_by_array']
 
