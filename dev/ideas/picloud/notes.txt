@@ -8,15 +8,5 @@ Using Brian with Picloud
   command :
   	easy_install cloud-1.9-py2.6.egg
 
-* Launch a Python console and run the following command :
-	import cloud
-
-* Go to 'C:\Users\<USERNAME>\AppData\Roaming\picloud' and edit the file 'cloudconf.py'.
-  Replace lines 9 and 12 with
-  
-	api_key = '1307'
-	
-	api_secretkey = '9106bed9b15b00197df2734102a66a9ce5698f1d'
-	
-* Run the script 'briantest.py' and wait about 2 minutes 30 !
+* Run the script 'briantest2.py' and wait about 3 minutes for the 32 jobs to be finished !
 
