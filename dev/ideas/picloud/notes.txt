@@ -1,0 +1,19 @@
+Using Brian with Picloud
+========================
+
+* Download the following file :
+	https://media.picloud.com/downloads/cloud/1.9/cloud-1.9-py2.6.egg
+
+* Open a console in the same folder where the file was downloaded, and run the
+  command :
+  	easy_install cloud-1.9-py2.6.egg
+
+* Go to 'C:\Users\<USERNAME>\AppData\Roaming\picloud' and edit the file 'cloudconf.py'.
+  Replace lines 9 and 12 with
+  
+	api_key = '1307'
+	
+	api_secretkey = '9106bed9b15b00197df2734102a66a9ce5698f1d'
+	
+* Run the script 'briantest.py' and wait about 2 minutes 30 !
+
