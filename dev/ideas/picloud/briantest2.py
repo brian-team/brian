@@ -40,16 +40,17 @@ def stdp_example(N = 1000):
     
     rate=PopulationRateMonitor(neurons)
     
-    run(10*second,report='text')
+    run(30*second,report='text')
     
     return mean(rate.rate)
 
 ilist = [1000 for _ in xrange(64)]
 t1 = time.clock()
-jids = multimap(stdp_example, ilist)
-results = retrieve(jids)
-t = time.clock()-t1
+stdp_example()
+#jids = multimap(stdp_example, ilist)
+#results = retrieve(jids)
+t=time.clock()-t1
 
 print "All jobs done in %.1f seconds, results :" % t
-print results
+#print results
 
