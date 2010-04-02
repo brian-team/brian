@@ -25,9 +25,10 @@ Using Picloud
   first write your function with a single argument (you can have global variables defined
   in the script that are used in the function) :
     
-        def fun(x):
-            # do something
-            return y
+    from multimap import *
+    def fun(x):
+        # do something
+        return y
             
   Your function can do network simulations with Brian, but you can't use any plotting functions.
             
