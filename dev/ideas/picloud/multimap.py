@@ -2,11 +2,15 @@ import cloud
 
 __all__ = ['multimap', 'retrieve']
 
-api_keys = ['1307',
-            '1308']
+api_keys = ['1307',# Cyrille
+            '1308',
+            '1360',# Romain
+            '1366']
 
 api_secretkeys = ['9106bed9b15b00197df2734102a66a9ce5698f1d',
-                  '69d0919b47fab35e959bd7762c163bd4826a393c']
+                  '69d0919b47fab35e959bd7762c163bd4826a393c',
+                  '6400d6d25914f3bd01580ab44c7f7ea06bb77908',
+                  '7996f5335cf66e54f56a7c5000c28e1c96bdd001']
 
 def multimap(fun, args):
     n = len(args)/len(api_keys)

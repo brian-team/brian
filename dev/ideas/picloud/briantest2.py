@@ -44,11 +44,11 @@ def stdp_example(N = 1000):
     
     return mean(rate.rate)
 
-ilist = [1000 for _ in xrange(32)]
+ilist = [1000 for _ in xrange(64)]
 t1 = time.clock()
 jids = multimap(stdp_example, ilist)
-t = time.clock()-t1
 results = retrieve(jids)
+t = time.clock()-t1
 
 print "All jobs done in %.1f seconds, results :" % t
 print results
