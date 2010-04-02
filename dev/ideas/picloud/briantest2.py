@@ -1,42 +1,7 @@
 import cloud
 import time
 from brian import *
-
-api_keys = ['1307',
-            '1308']
-
-api_secretkeys = ['9106bed9b15b00197df2734102a66a9ce5698f1d',
-                  '69d0919b47fab35e959bd7762c163bd4826a393c']
-
-n = 16 # number of parallel machines for each account
-
-def multimap(fun, args):
-    # jids[i] contains the job indices for account i
-    jids = [None for _ in xrange(len(api_keys))]
-    
-    # Launches the jobs
-    k = 0
-    for i in xrange(len(api_keys)):
-        api_key = api_keys[i]
-        api_secretkey = api_secretkeys[i]
-        
-        args_tmp = args[k:k+n]
-        if len(args_tmp)>0:
-            print "Launching %d jobs with account %d..." % (len(args_tmp), i+1)
-            cloud.setkey(api_key=api_key, api_secretkey=api_secretkey)
-            jids[i] = cloud.map(fun, args_tmp)
-            k += n
-
-    results = []
-    # Retrieves the results
-    for i in xrange(len(api_keys)):
-        api_key = api_keys[i]
-        api_secretkey = api_secretkeys[i]
-        cloud.setkey(api_key=api_key, api_secretkey=api_secretkey)
-        print "Retrieving results for account %d..." % (i+1)
-        results.extend(cloud.result(jids[i]))
-        
-    return results
+from multimap import *
 
 def stdp_example(N = 1000):
     taum=10*ms
@@ -79,10 +44,12 @@ def stdp_example(N = 1000):
     
     return mean(rate.rate)
 
-
-t1 = time.clock()
 ilist = [1000 for _ in xrange(32)]
-results = multimap(stdp_example, ilist)
+t1 = time.clock()
+jids = multimap(stdp_example, ilist)
+t = time.clock()-t1
+results = retrieve(jids)
 
-print "All jobs done in %.1f seconds, results :" % (time.clock()-t1)
+print "All jobs done in %.1f seconds, results :" % t
 print results
+

@@ -1,6 +1,9 @@
 Using Brian with Picloud
 ========================
 
+Install the Picloud client
+--------------------------
+
 * Download the following file :
 	https://media.picloud.com/downloads/cloud/1.9/cloud-1.9-py2.6.egg
 
@@ -8,5 +11,41 @@ Using Brian with Picloud
   command :
   	easy_install cloud-1.9-py2.6.egg
 
+Test Brian Script
+-----------------
+
 * Run the script 'briantest2.py' and wait about 3 minutes for the 32 jobs to be finished !
 
+Using Picloud
+-------------
+
+* Copy 'multimap.py' into your working directory.
+
+* To use Picloud by calling a single function with multiple arguments in parallel,
+  first write your function with a single argument (you can have global variables defined
+  in the script that are used in the function) :
+    
+        def fun(x):
+            # do something
+            return y
+            
+  Your function can do network simulations with Brian, but you can't use any plotting functions.
+            
+* Define the list of arguments :
+
+    args = [arg1, arg2, arg3, ...]
+
+* Launch the jobs in the cloud with the 'multimap' function :
+
+    jids = multimap(fun, args)
+    
+* After a few seconds, jids contains the list of the job indices (one job = one argument). The machines in the cloud
+  are now running your functions, so this may take a while. You can shutdown your computer, the jobs will still be running.
+
+* To retrieve the results, call the 'retrieve' function :
+
+    results = retrieve(jids)
+
+  This line will complete only when all jobs have completed. Finally, 'results' is the list of the results
+  for all the arguments.
+  
