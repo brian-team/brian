@@ -75,6 +75,13 @@ class Current(Equations):
             current_name=self._prefix+name
             self.add_eq(current_name,name,self._units[name]) # not an alias because read-only
 
+    def __iadd__(self,other):
+        # Adding a MembraneEquation
+        if isinstance(other,MembraneEquation):
+            return other.__iadd__(self)
+        else:
+            return Equations.__iadd__(self,other)
+
 class IonicCurrent(Current):
     '''
     A ionic current; current direction is defined from intracellular
