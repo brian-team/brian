@@ -199,7 +199,7 @@ class Equations(object):
                 else:
                     param_dict[name]=value
 
-            if kwds=={}:
+            if kwds=={}: # weird: changed from param_dict on 18/06/08
                 self.parse_string_equations(expr,level=level+1)
             else:
                 self.parse_string_equations(expr,namespace=param_dict,level=level+1)
@@ -276,7 +276,7 @@ class Equations(object):
         
         self._eq_names.append(name)
         if type(unit)==types.StringType:
-            self._units[name]=eval(unit,self._namespace[name]) # warning: here the namespace changes
+            self._units[name]=eval(unit,self._namespace[name].copy())
         else:
             self._units[name]=unit
         self._string[name]=eq
@@ -305,7 +305,7 @@ class Equations(object):
         
         self._diffeq_names.append(name)
         if type(unit)==types.StringType:
-            self._units[name]=eval(unit,self._namespace[name]) # warning: here the namespace changes
+            self._units[name]=eval(unit,self._namespace[name].copy())
         else:
             self._units[name]=unit
         self._string[name]=eq
