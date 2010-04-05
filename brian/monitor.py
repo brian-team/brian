@@ -39,13 +39,13 @@ if properly coded.
 '''
 
 __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMonitor','StateMonitor','ISIHistogramMonitor','Monitor',
-           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter']
+           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter', 'StateHistogramMonitor']
 
 from units import *
 from connection import Connection, SparseConnectionVector
-from numpy import array, zeros, histogram, copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, maximum, Inf, amin, amax, sort, nonzero
+from numpy import array, zeros, mean, histogram, linspace, tile, digitize, copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, maximum, Inf, amin, amax, sort, nonzero
 from itertools import repeat, izip
-from clock import guess_clock, EventClock
+from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
 from quantityarray import *
 from stdunits import ms, Hz
@@ -1159,3 +1159,80 @@ class CoincidenceCounter(SpikeMonitor):
                 near_both_allowed = (near_last_spike&last_spike_allowed) & (near_next_spike&next_spike_allowed)
                 self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
                 self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed                
+
+class StateHistogramMonitor(NetworkOperation, Monitor):
+    '''
+    Records the histogram of a state variable from a :class:`NeuronGroup`.
+
+    Initialise as::
+    
+        StateHistogramMonitor(P,varname,range(,period=1*ms)(,nbins=20))
+    
+    Where:
+    
+    ``P``
+        The group to be recorded from
+    ``varname``
+        The state variable name or number to be recorded
+    ``range``
+        The minimum and maximum values for the state variable. A 2-tuple of floats.
+    ``period``
+        When to record.
+    ``nbins``
+        Number of bins for the histogram.
+
+    The :class:`StateHistogramMonitor` object has the following properties:
+
+    ``mean``
+        The mean value of the state variable for every neuron in the
+        group
+    ``var``
+        The unbiased estimate of the variances, as in ``mean``
+    ``std``
+        The square root of ``var``, as in ``mean``
+    ``hist``
+        A 2D array of the histogram values of all the neurons, each row is a
+        single neuron's histogram.
+    ``bins``
+        A 1D array of the bin centers used to compute the histogram
+    ``bin_edges``
+        A 1D array of the bin edges used to compute the histogram
+        
+    In addition, if :class:`M`` is a :class:`StateHistogramMonitor` object, you write::
+    
+        M[i]
+    
+    for the histogram of neuron ``i``.
+    '''
+    def __init__(self, group, varname, range, period = 1*ms, nbins = 20):
+        self.clock = Clock(period)
+        NetworkOperation.__init__(self,None,clock=self.clock)
+        self.group = group
+        self.len = len(group)
+        self.varname = varname
+        self.nbins = nbins
+        self.n = 0
+        self.bin_edges = linspace(range[0], range[1], self.nbins+1)
+        self._hist = zeros((self.len, self.nbins+2))
+        self.sum = zeros(self.len)
+        self.sum2 = zeros(self.len)
+        
+    def __call__(self):
+        x = self.group.state_(self.varname)
+        self.sum += x
+        self.sum2 += x**2
+        inds = digitize(x, self.bin_edges)
+        for i in xrange(self.len):
+            self._hist[i,inds[i]] += 1
+        self.n += 1
+    
+    def __getitem__(self, i):
+        return self.hist[i,:]
+    
+    hist = property(fget=lambda self:self._hist[:,1:-1]/self.n)
+    bins = property(fget = lambda self:(self.bin_edges[:-1]+self.bin_edges[1:])/2)
+    
+    mean = property(fget=lambda self:self.sum/self.n)
+    var = property(fget=lambda self:(self.sum2/self.n-self.mean**2))
+    std = property(fget=lambda self:self.var**.5)
+    
