@@ -7,6 +7,6 @@ recording over one second.
 This script is the 'worker' script and should be run on each worker machine
 before the manager script is run.
 '''
-from brian.library.modelfitting import *
+from brian.library.modelfitting import worker
 if __name__=='__main__':
-    modelfitting_worker(max_cpu=2)
+    worker(max_cpu=2)
