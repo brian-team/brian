@@ -19,6 +19,7 @@ if __name__ == '__main__':
     spikes = loadtxt('spikes.txt')
     
     results = modelfitting(model = equations, reset = 0, threshold = 1, 
+                                 refractory = 5*ms,
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  particles = 1000, iterations = 3, delta = 2*ms,

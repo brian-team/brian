@@ -43,6 +43,7 @@ class ModelFitting(object):
 
         self.group = NeuronGroup(self.N, model = self.model, 
                                  reset = self.reset, threshold = self.threshold,
+                                 refractory = self.refractory, # NEW
                                  clock = Clock(dt=self.dt))
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
@@ -179,6 +180,7 @@ class ModelFitting(object):
         return gamma
 
 def modelfitting(model = None, reset = None, threshold = None,
+                 refractory = None,
                  data = None, 
                  input_var = 'I', input = None, dt = None,
                  particles = 1000, iterations = 10, pso_params = None,
@@ -226,6 +228,7 @@ def modelfitting(model = None, reset = None, threshold = None,
     shared_data = dict(model = model,
                        threshold = threshold,
                        reset = reset,
+                       refractory = refractory,
                        input_var = input_var,
                        input = input,
                        dt = dt,
