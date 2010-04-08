@@ -180,7 +180,7 @@ class ModelFitting(object):
         return gamma
 
 def modelfitting(model = None, reset = None, threshold = None,
-                 refractory = None,
+                 refractory = 0*ms,
                  data = None, 
                  input_var = 'I', input = None, dt = None,
                  particles = 1000, iterations = 10, pso_params = None,
