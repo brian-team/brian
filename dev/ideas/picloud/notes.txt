@@ -11,15 +11,20 @@ Install the Picloud client
   command :
   	easy_install cloud-1.9-py2.6.egg
 
+Test Script
+-----------
+
+* Run the script 'test.py' and wait a few seconds for the jobs to be finished !
+
 Test Brian Script
 -----------------
 
-* Run the script 'briantest2.py' and wait about 3 minutes for the 32 jobs to be finished !
+* Run the script 'briantest.py' and wait about 3 minutes for the 32 jobs to be finished !
 
 Using Picloud
 -------------
 
-* Copy 'multimap.py' into your working directory.
+* Copy 'multimap.py' and 'keys.py' into your working directory.
 
 * To use Picloud by calling a single function with multiple arguments in parallel,
   first write your function with a single argument (you can have global variables defined
