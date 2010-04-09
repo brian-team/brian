@@ -1,24 +1,23 @@
 import cloud
-from keys import *
-from numpy import array, cumsum, nonzero
 
-__all__ = ['multimap', 'retrieve', 'status']
+__all__ = ['multimap', 'retrieve']
+
+api_keys = ['1307',# Cyrille
+            '1308',
+            '1360',# Romain
+            '1366']
+
+api_secretkeys = ['9106bed9b15b00197df2734102a66a9ce5698f1d',
+                  '69d0919b47fab35e959bd7762c163bd4826a393c',
+                  '6400d6d25914f3bd01580ab44c7f7ea06bb77908',
+                  '7996f5335cf66e54f56a7c5000c28e1c96bdd001']
 
 def multimap(fun, args, naccounts = None):
+    
     if naccounts is None:
         naccounts = len(api_keys)
-        
-    max_parallel = sum(array(parallelism[:naccounts]))
-    if len(args) <= max_parallel:
-        naccounts = nonzero(cumsum(parallelism)-len(args)>=0)[0][0]+1
-        size = parallelism[:naccounts]
-    else:
-        size = [len(args)/naccounts for _ in xrange(naccounts)]
-    if naccounts>1:
-        size[-1] = len(args)-sum(array(size[:-1]))
-    else:
-        size[0] = len(args)
-    print size
+    
+    n = len(args)/naccounts
     
     # jids[i] contains the job indices for account i
     jids = [None for _ in xrange(naccounts)]
@@ -28,7 +27,6 @@ def multimap(fun, args, naccounts = None):
     for i in xrange(naccounts):
         api_key = api_keys[i]
         api_secretkey = api_secretkeys[i]
-        n = size[i]
         
         args_tmp = args[k:k+n]
         if len(args_tmp)>0:
@@ -52,15 +50,3 @@ def retrieve(jids):
         
     return results
 
-def status(jids):
-    naccounts = len(jids)
-    status = []
-    # Retrieves the results
-    for i in xrange(naccounts):
-        api_key = api_keys[i]
-        api_secretkey = api_secretkeys[i]
-        cloud.setkey(api_key=api_key, api_secretkey=api_secretkey)
-        print "Retrieving status for account %d..." % (i+1)
-        status.extend(cloud.status(jids[i]))
-        
-    return status

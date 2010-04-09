@@ -127,7 +127,7 @@ class ModelFitting(object):
         self.target_length = array(target_length, dtype=int)
         self.target_rates = array(target_rates)
 
-    def __call__(self, param_values):
+    def __call__(self, **param_values):
         """
         Use fitparams['_delays'] to take delays into account
         """
