@@ -246,21 +246,21 @@ def modelfitting(model = None, reset = None, threshold = None,
                        onset = 0*ms)
     
     r = maximize(   ModelFitting, 
-                    params,
-                    shared_data = shared_data,
-                    local_data = None,
-                    group_size = group_size,
-                    group_count = group_count,
-                    iterations = iterations,
-                    optinfo = optinfo,
-                    machines = machines,
-                    gpu_policy = gpu_policy,
-                    max_cpu = max_cpu,
-                    max_gpu = max_gpu,
-                    named_pipe = named_pipe,
-                    port = port,
-                    returninfo = returninfo,
-                    verbose = verbose)
+                    _shared_data = shared_data,
+                    _local_data = None,
+                    _group_size = group_size,
+                    _group_count = group_count,
+                    _iterations = iterations,
+                    _optinfo = optinfo,
+                    _machines = machines,
+                    _gpu_policy = gpu_policy,
+                    _max_cpu = max_cpu,
+                    _max_gpu = max_gpu,
+                    _named_pipe = named_pipe,
+                    _port = port,
+                    _returninfo = returninfo,
+                    _verbose = verbose,
+                    **params)
     
     # r is (results, fitinfo) or (results)
     return r
