@@ -21,8 +21,12 @@ def doit(x):
     f = mod.get_function('test')
     x = gpuarray.to_gpu(ones(100))
     f(x, int32(100), block=(100,1,1))
-    print x.get()
+    return x.get()
 
-pool = multiprocessing.Pool(1)
-result = pool.map(doit, [0])
-print result
+if __name__=='__main__':
+
+#    doit(1)
+
+    pool = multiprocessing.Pool(1)
+    result = pool.map(doit, [0])
+    print result
