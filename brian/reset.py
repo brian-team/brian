@@ -280,21 +280,14 @@ class Refractoriness(Reset):
     ``resetvalue``
         The value to reset and hold to.
     ``period``
-        The length of time to hold at the reset value.
+        The length of time to hold at the reset value. If using variable
+        refractoriness, this is the maximum period.
     ``state``
         The name or number of the state variable to reset and hold.
-    ``period_limits``
-        If specified, a minimum and maximum refractoriness time, overrides the
-        value provided in period. This is used for variable refractoriness.
     '''
     @check_units(period=second)
-    def __init__(self,resetvalue=0*mvolt,period=5*msecond,state=0,period_limits=None):
-        #self.period=int(period/guess_clock(clock).dt)
-        if period_limits is None:
-            self.period = period
-        else:
-            self.period_min, self.period_max = period_limits
-            self.period = self.period_min
+    def __init__(self, resetvalue=0*mvolt, period=5*msecond, state=0):
+        self.period = period
         self.resetvalue = resetvalue
         self.state = state
         self._periods = {} # a dictionary mapping group IDs to periods
@@ -309,19 +302,15 @@ class Refractoriness(Reset):
         if id(P) in self._periods:
             period = self._periods[id(P)]
         else:
-            if hasattr(self, 'period_max'):
-                period = int(self.period_max/P.clock.dt)+1
-            else:
-                period = int(self.period/P.clock.dt)+1
+            period = int(self.period/P.clock.dt)+1
             self._periods[id(P)] = period
-        V = self.statevectors.get(id(P),None)
+        V = self.statevectors.get(id(P), None)
         if V is None:
             V = P.state_(self.state)
             self.statevectors[id(P)] = V
         neuronindices = P.LS[0:period]
         if P._variable_refractory_time:
             neuronindices = neuronindices[P._next_allowed_spiketime[neuronindices]>(P.clock._t-P.clock._dt*0.25)]
-            #print P.clock._t, neuronindices
         V[neuronindices] = self.resetvalue
         
     def __repr__(self):

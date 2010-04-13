@@ -245,15 +245,15 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                  init=None, refractory=0*msecond, level=0,
                  clock=None, order=1, implicit=False,unit_checking=True,
                  max_delay=0*msecond, compile=False, freeze=False, method=None,
-                 min_refractory=None, max_refractory=None,
+                 max_refractory=None,
                  ):#**args): # any reason why **args was included here?
         '''
         Initializes the group.
         '''
 
-        self._spiking=True # by default, produces spikes
+        self._spiking = True # by default, produces spikes
         if bup.use_units: # one additional frame level induced by the decorator
-            level+=1
+            level += 1
 
         # If it is a string, convert to Equations object
         if isinstance(model,(str,list,tuple)):
@@ -281,25 +281,28 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
 
         # StateUpdater
         if isinstance(model,StateUpdater):
-            self._state_updater=model # Update mechanism
+            self._state_updater = model # Update mechanism
         elif isinstance(model,Equations):
             self._eqs = model
             if (init==None) and (model._units=={}):
                 raise AttributeError,"The group must be initialized."
-            self._state_updater,var_names=magic_state_updater(model,clock=clock,order=order,check_units=unit_checking,implicit=implicit,compile=compile,freeze=freeze,method=method)
+            self._state_updater, var_names = magic_state_updater(model, clock=clock, order=order,
+                                                                 check_units=unit_checking, implicit=implicit,
+                                                                 compile=compile, freeze=freeze,
+                                                                 method=method)
             Group.__init__(self, model, N, unit_checking=unit_checking)
             # Converts S0 from dictionary to tuple
             if self._S0==None: # No initialization: 0 with units
-                S0={}
+                S0 = {}
             else:
-                S0=self._S0.copy()
+                S0 = self._S0.copy()
             # Fill missing units
-            for key,value in model._units.iteritems():
-                if not(key in S0):
-                    S0[key]=0*value
-            self._S0=[0]*len(var_names)
-            for var,i in zip(var_names,count()):
-                self._S0[i]=S0[var]
+            for key, value in model._units.iteritems():
+                if not key in S0:
+                    S0[key] = 0*value
+            self._S0 = [0]*len(var_names)
+            for var, i in zip(var_names, count()):
+                self._S0[i] = S0[var]
         else:
             raise TypeError,"StateUpdater must be specified at initialization."        
         # TODO: remove temporary unit hack, this makes all state variables dimensionless if no units are specified
@@ -308,31 +311,31 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             self._S0 = dict((i,1.) for i in range(len(self._state_updater)))
                  
         # Threshold
-        if isinstance(threshold,Threshold):
-            self._threshold=threshold
+        if isinstance(threshold, Threshold):
+            self._threshold = threshold
         elif type(threshold)==types.FunctionType:
             if threshold.func_code.co_argcount==1:
-                self._threshold=SimpleFunThreshold(threshold)
+                self._threshold = SimpleFunThreshold(threshold)
             else:
-                self._threshold=FunThreshold(threshold)
+                self._threshold = FunThreshold(threshold)
         elif is_scalar_type(threshold):
             # Check unit
             if self._S0!=None:
                 try:
                     threshold+self._S0[0]
-                except DimensionMismatchError,inst:
-                    raise DimensionMismatchError("The threshold does not have correct units.",*inst._dims)
-            self._threshold=Threshold(threshold=threshold)
+                except DimensionMismatchError, inst:
+                    raise DimensionMismatchError("The threshold does not have correct units.", *inst._dims)
+            self._threshold = Threshold(threshold=threshold)
         else: # maybe raise an error?
-            self._threshold=NoThreshold()
-            self._spiking=False
+            self._threshold = NoThreshold()
+            self._spiking = False
         
         # Initialization of the state matrix
         if not hasattr(self, '_S'):
             self._S = zeros((len(self._state_updater),N))
         if self._S0!=None:
             for i in range(len(self._state_updater)):
-                self._S[i,:]=self._S0[i]
+                self._S[i,:] = self._S0[i]
                 
         # Reset and refractory period
         self._variable_refractory_time = False
@@ -353,61 +356,51 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                 except DimensionMismatchError,inst:
                     raise DimensionMismatchError("The reset does not have correct units.",*inst._dims)
             if isinstance(refractory, float):
-                max_refractory = min_refractory = refractory
+                max_refractory = refractory
             else:
                 if isinstance(refractory, str):
                     if max_refractory is None:
-                        raise ValueError('Must specify max_refractory if using variable refractoriness (and specifying min_refractory is good too).')
-                    if min_refractory is None:
-                        min_refractory = 0*second
+                        raise ValueError('Must specify max_refractory if using variable refractoriness.')
                     self._refractory_variable = refractory
                     self._refractory_array = None
                 else:
-                    min_refractory = amin(refractory)*second
                     max_refractory = amax(refractory)*second
                     self._refractory_variable = None
                     self._refractory_array = refractory
                 self._variable_refractory_time = True
             # What is this 0.9 ?!! Answer: it's just to check that the refractory period is at least clock.dt otherwise don't bother
             if max_refractory>0.9*clock.dt: # Refractory period - unit checking is done here
-                self._resetfun=Refractoriness(period=min_refractory,resetvalue=reset,state=numstate,period_limits=(min_refractory, max_refractory))
-                period=int(min_refractory/clock.dt)+1
+                self._resetfun = Refractoriness(period=max_refractory, resetvalue=reset, state=numstate)
                 period_max = int(max_refractory/clock.dt)+1
             else: # Simple reset
-                self._resetfun=Reset(reset,state=numstate)
-                period=1
-                period_max = 1
+                self._resetfun = Reset(reset,state=numstate)
         elif type(reset)==types.FunctionType:
-            self._resetfun=FunReset(reset)
+            self._resetfun = FunReset(reset)
             if refractory>0.9*clock.dt:
                 raise ValueError('Refractoriness for custom reset functions not yet implemented, see http://groups.google.fr/group/briansupport/browse_thread/thread/182aaf1af3499a63?hl=en for some options.')
-            period=1
-        elif hasattr(reset,'period'): # A reset with refractoriness
+        elif hasattr(reset, 'period'): # A reset with refractoriness
             # TODO: check unit (in Reset())
-            self._resetfun=reset # reset function
-            period=int(reset.period/clock.dt)+1
-        elif hasattr(threshold,'refractory'): # A threshold with refractoriness
-            self._resetfun=reset
-            period=threshold.refractory+1 # unit checking done here
+            self._resetfun = reset # reset function
+            period_max = int(reset.period/clock.dt)+1
         else: # No reset?
-            self._resetfun=reset
-            period=1
+            self._resetfun = reset
+        if hasattr(threshold, 'refractory'): # A threshold with refractoriness
+            period_max = max(period_max, threshold.refractory+1)
         if max_refractory is None:
             max_refractory = refractory
-        if max_delay<max(period, period_max)*clock.dt:
-            max_delay=max(period, period_max)*clock.dt
+        if max_delay<period_max*clock.dt:
+            max_delay = period_max*clock.dt
         self._max_delay = 0
-        self.period = period
         self.set_max_delay(max_delay)
         
         self._next_allowed_spiketime = -ones(N)
         self._refractory_time = float(max_refractory)-0.5*clock._dt
         self._use_next_allowed_spiketime_refractoriness = True
         
-        self._owner=self # owner (for subgroups)
+        self._owner = self # owner (for subgroups)
         self._subgroup_set = magic.WeakSet()
-        self._origin=0 # start index from owner if subgroup
-        self._next_subgroup=0 # start index of next subgroup
+        self._origin = 0 # start index from owner if subgroup
+        self._next_subgroup = 0 # start index of next subgroup
         
         # ensure that var_index has all the 0,...,N-1 integers as names
         if not hasattr(self,'var_index'):
@@ -439,8 +432,6 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         _max_delay = int(max_delay/self.clock.dt)+2 # in time bins
         if _max_delay>self._max_delay:
             self._max_delay = _max_delay
-            mp = self.period-2
-            if mp<1: mp=1
             self.LS = SpikeContainer(self._max_delay,
                                      useweave=get_global_preference('useweave'),
                                      compiler=get_global_preference('weavecompiler')) # Spike storage

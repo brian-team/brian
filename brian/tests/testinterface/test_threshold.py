@@ -146,7 +146,7 @@ def test():
     net.run(1.6*msecond)
     i, t = zip(*sorted(M.spikes,key=itemgetter(1)))
     assert (i==(0,0,0,0))
-    for i, s in enumerate(t): assert (is_approx_equal(s,i*0.5*msecond))
+    for i, s in enumerate(t): assert (is_approx_equal(s, i*0.5*msecond))
     
     # test that PoissonThreshold works
     init = float(1./get_default_clock().dt) # should cause spiking at every time interval
