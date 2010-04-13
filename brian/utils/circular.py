@@ -164,45 +164,44 @@ class SpikeContainer(object):
     S[0] is an array of the last spikes (neuron indexes).
     S[1] is an array with the spikes at time t-dt, etc.
     S[0:50] contains all spikes in last 50 bins.
-    TODO: inline operations
     '''
-    def __init__(self,n,m,useweave=False,compiler=None):
+    def __init__(self, m, useweave=False, compiler=None):
         '''
         n = maximum number of spikes stored
         m = maximum number of bins stored
         '''
-        self.S=CircularVector(n+1,dtype=int,useweave=useweave,compiler=compiler) # indexes of spikes
-        self.ind=CircularVector(m+1,dtype=int,useweave=useweave,compiler=compiler) # indexes of bins
+        if m<2: m = 2
+        self.S = CircularVector(2, dtype=int, useweave=useweave, compiler=compiler)
+        self.ind = CircularVector(m+1, dtype=int, useweave=useweave, compiler=compiler) # indexes of bins
+        self.remaining_space = 1
         self._useweave = useweave
     
     def reinit(self):
         self.S.reinit()
         self.ind.reinit()
     
-    def push(self,spikes):
+    def push(self, spikes):
         '''
         Stores spikes in the array at time dt.
         '''
-        ns=len(spikes)
+        ns = len(spikes)
+        self.remaining_space += (self.ind[2]-self.ind[1])%self.S.n
+        while ns>=self.remaining_space:
+            # double size of array
+            S = self.S
+            newS = CircularVector(2*S.n, dtype=int, useweave=S._useweave, compiler=S._cpp_compiler)
+            newS.X[:S.n-S.cursor] = S.X[S.cursor:]
+            newS.X[S.n-S.cursor:S.n] = S.X[:S.cursor]
+            newS.cursor = S.n
+            self.S = newS
+            self.ind.X = (self.ind.X-S.cursor)%S.n
+            self.ind.X[self.ind.X==0] = S.n
+            self.remaining_space += S.n
         self.S[0:ns]=spikes
         self.S.advance(ns)
         self.ind.advance(1)
         self.ind[0]=self.S.cursor
-        # Inlined version:
-        # (not significantly faster)
-#        if ns>0:
-#            S=self.S
-#            n=S.n
-#            i0=S.cursor
-#            j0=(i0+ns)%n
-#            if j0>i0:
-#                S.X[i0:j0]=spikes
-#            else:
-#                S.X[i0:]=spikes[0:n-i0]
-#                S.X[0:j0]=spikes[n-i0:n-i0+j0]
-#            S.cursor=(i0+ns)%n
-#        self.ind.cursor=(self.ind.cursor+1)%self.ind.n
-#        self.ind.X[self.ind.cursor]=self.S.cursor
+        self.remaining_space -= ns            
         
     def lastspikes(self):
         '''
@@ -236,51 +235,11 @@ class SpikeContainer(object):
     def __print__(self):
         return self.__repr__()
 
-if False:
-    # New version of SpikeContainer that double the array size when it fills up,
-    # and ignores the maximum number of spikes stored option entirely. In most
-    # cases this will significantly reduce the amount of space required at
-    # small computational cost - but this needs to be checked...
-    class SpikeContainer(SpikeContainer):
-        def __init__(self,n,m,useweave=False,compiler=None):
-            '''
-            n = maximum number of spikes stored
-            m = maximum number of bins stored
-            '''
-            if m<2: m = 2
-            self.S=CircularVector(2,dtype=int,useweave=useweave,compiler=compiler)
-            self.ind=CircularVector(m+1,dtype=int,useweave=useweave,compiler=compiler) # indexes of bins
-            self.remaining_space = 1
-            self._useweave = useweave
-        
-        def push(self,spikes):
-            '''
-            Stores spikes in the array at time dt.
-            '''
-            ns = len(spikes)
-            self.remaining_space += (self.ind[2]-self.ind[1])%self.S.n
-            while ns>=self.remaining_space:
-                # double size of array
-                S = self.S
-                newS = CircularVector(2*S.n, dtype=int, useweave=S._useweave, compiler=S._cpp_compiler)
-                newS.X[:S.n-S.cursor] = S.X[S.cursor:]
-                newS.X[S.n-S.cursor:S.n] = S.X[:S.cursor]
-                newS.cursor = S.n
-                self.S = newS
-                self.ind.X = (self.ind.X-S.cursor)%S.n
-                self.ind.X[self.ind.X==0] = S.n
-                self.remaining_space += S.n
-            self.S[0:ns]=spikes
-            self.S.advance(ns)
-            self.ind.advance(1)
-            self.ind[0]=self.S.cursor
-            self.remaining_space -= ns            
-
 try:
     import ccircular.ccircular as _ccircular
     class SpikeContainer(_ccircular.SpikeContainer):
-        def __init__(self,n,m,useweave=False,compiler=None):
-            _ccircular.SpikeContainer.__init__(self, n, m)
+        def __init__(self, m, useweave=False, compiler=None):
+            _ccircular.SpikeContainer.__init__(self, m)
     #warnings.warn('Using C++ SpikeContainer')
 except ImportError:
     pass

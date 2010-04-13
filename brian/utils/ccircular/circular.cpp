@@ -176,16 +176,12 @@ string CircularVector::__str__()
 	return this->__repr__();
 }
 
-SpikeContainer::SpikeContainer(int n, int m)
+SpikeContainer::SpikeContainer(int m)
 {
 	try{
-#ifdef USE_EXPANDING_SPIKECONTAINER
 		this->S = new CircularVector(2);
 		this->remaining_space = 1;
 		if(m<2) m=2;
-#else
-		this->S = new CircularVector(n+1);
-#endif
 		this->ind = new CircularVector(m+1);
 	} catch(std::exception &e) {
 		if(this->S){
@@ -212,7 +208,6 @@ void SpikeContainer::reinit()
 	this->ind->reinit();
 }
 
-#ifdef USE_EXPANDING_SPIKECONTAINER
 void SpikeContainer::push(long *y, int n)
 {
 	long freed_space = (this->ind->__getitem__(2)-this->ind->__getitem__(1))%this->S->n;
@@ -235,15 +230,6 @@ void SpikeContainer::push(long *y, int n)
 	this->ind->__setitem__(0, this->S->cursor);
 	this->remaining_space -= n;
 }
-#else
-void SpikeContainer::push(long *y, int n)
-{
-	this->S->__setslice__(0, n, y, n);
-	this->S->advance(n);
-	this->ind->advance(1);
-	this->ind->__setitem__(0, this->S->cursor);
-}
-#endif
 
 void SpikeContainer::lastspikes(long **ret, int *ret_n)
 {

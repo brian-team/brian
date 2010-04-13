@@ -99,6 +99,7 @@ class CircularVector(_object):
     def __setslice__(self, *args): return _ccircular.CircularVector___setslice__(self, *args)
     def __repr__(self): return _ccircular.CircularVector___repr__(self)
     def __str__(self): return _ccircular.CircularVector___str__(self)
+    def expand(self, *args): return _ccircular.CircularVector_expand(self, *args)
 CircularVector_swigregister = _ccircular.CircularVector_swigregister
 CircularVector_swigregister(CircularVector)
 
@@ -113,6 +114,9 @@ class SpikeContainer(_object):
     __swig_setmethods__["ind"] = _ccircular.SpikeContainer_ind_set
     __swig_getmethods__["ind"] = _ccircular.SpikeContainer_ind_get
     if _newclass:ind = _swig_property(_ccircular.SpikeContainer_ind_get, _ccircular.SpikeContainer_ind_set)
+    __swig_setmethods__["remaining_space"] = _ccircular.SpikeContainer_remaining_space_set
+    __swig_getmethods__["remaining_space"] = _ccircular.SpikeContainer_remaining_space_get
+    if _newclass:remaining_space = _swig_property(_ccircular.SpikeContainer_remaining_space_get, _ccircular.SpikeContainer_remaining_space_set)
     def __init__(self, *args): 
         this = _ccircular.new_SpikeContainer(*args)
         try: self.this.append(this)

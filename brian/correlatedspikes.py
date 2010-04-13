@@ -115,7 +115,7 @@ class HomogeneousCorrelatedSpikeTrains(NeuronGroup):
                              clock=clock)
         self._use_next_allowed_spiketime_refractoriness = False
         self.rate=mu
-        self.LS=SpikeContainer(N,1) # Spike storage
+        self.LS=SpikeContainer(1) # Spike storage
         
     def __len__(self):
         # We need to redefine this because it is not the size of the state matrix

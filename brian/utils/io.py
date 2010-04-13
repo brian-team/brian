@@ -3,6 +3,8 @@ Input/output utility functions
 '''
 import numpy as np
 
+__all__ = ['read_neuron_dat']
+
 def read_neuron_dat(name):
     '''
     Reads a Neuron vector file (.dat).

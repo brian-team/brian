@@ -35,10 +35,8 @@ class SpikeContainer
 {
 public:
 	CircularVector *S, *ind;
-#ifdef USE_EXPANDING_SPIKECONTAINER
 	int remaining_space;
-#endif
-	SpikeContainer(int n, int m);
+	SpikeContainer(int m);
 	~SpikeContainer();
 	void reinit();
 	void push(long *x, int n);

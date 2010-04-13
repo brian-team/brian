@@ -441,8 +441,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             self._max_delay = _max_delay
             mp = self.period-2
             if mp<1: mp=1
-            self.LS = SpikeContainer(int((len(self)*self._max_delay)/mp)+1,
-                                     self._max_delay,
+            self.LS = SpikeContainer(self._max_delay,
                                      useweave=get_global_preference('useweave'),
                                      compiler=get_global_preference('weavecompiler')) # Spike storage
             # update all subgroups if any exist
