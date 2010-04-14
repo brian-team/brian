@@ -480,7 +480,10 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                 else:
                     self._next_allowed_spiketime[spikes] = self.clock._t+self._refractory_time
             self.LS.push(spikes) # Store spikes
-        
+    
+    def get_refractory_indices(self):
+        return (self._next_allowed_spiketime>self.clock._t).nonzero()[0]
+    
     def get_spikes(self,delay=0):
         '''
         Returns indexes of neurons that spiked at time t-delay*dt.
