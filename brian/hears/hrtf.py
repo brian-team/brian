@@ -139,7 +139,10 @@ class HRTFSet(object):
         ns = dict((name, self.coordinates[name]) for name in cond.func_code.co_varnames)
 
         I = cond(**ns)
- 
+        if type(I)==type(True): # vector-based calculation doesn't work
+            n=len(ns[cond.func_code.co_varnames[0]])
+            I = [cond(**dict((name,ns[name][j]) for name in cond.func_code.co_varnames)) for j in range(n)]
+
         hrtf = [self.hrtf[i] for i in I]
         coords = self.coordinates[I]
         data = self.data[:, I, :]
