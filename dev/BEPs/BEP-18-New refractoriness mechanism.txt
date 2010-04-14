@@ -1,0 +1,136 @@
+BEP-18: New refractoriness mechanism
+
+Introduction
+------------
+It seems to me that the current mechanisms for resets and refractoriness is a
+bit ad-hoc - and only really works nicely for the simple case of a fixed
+refractory period for all neurons, with relatively simple (not custom) resets.
+
+Background
+----------
+The original mechanism worked by replacing the Reset class with a
+Refractoriness class that instead of using the list of neurons that had just
+spiked, uses the list of neurons that have spiked in the last T time steps. This
+has two problems, first of all it was still just a reset, so because
+thresholding and propagation happen before resetting, strong inputs could cause
+a spike during the refractory period (and this did happen). We fixed this by
+adding an additional mechanism that, after thresholding, checks if a neuron is
+in its refractory period, and removes it from the list of spikes if it is. This
+solves the problem, but is a little ad hoc. The second problem with the original
+mechanism is that it doesn't work well for custom resets. This meant we had to
+write several additional custom refractoriness classes. These are
+SimpleCustomRefractoriness and CustomRefractoriness. The first of these takes a
+Python function, a refractory period, and a state variable as arguments. When
+the neuron spikes, it saves the value of the specified state variable after the
+Python function is called, and then holds it at that value for the refractory
+period. The second, CustomRefractoriness, takes two functions, a reset function
+and a refractory function, and a refractory period. Initially the reset function
+is called, and then for the duration of the refractory period, the refractory
+function is called on the list of indices of neurons that are in their
+refractory states.
+
+This system is now reasonably general, but it misses several features. First of
+all, it doesn't play nicely with things like string resets because it requires
+you specify a Python function. Secondly, there was no support for variable
+refractoriness until recently, and there's only a rather simple form of support
+for it even now (only with a simple reset).
+
+Proposal
+--------
+First of all, we do away with having refractoriness be a special case of
+resetting. We'll now have separate reset and refractoriness classes that
+function in different ways. What happens is that each time step, the reset
+class is called on the list of neurons that have just spiked. If the
+refractoriness class has a 'start' method (for example), it also gets called
+with this list. Finally, the NeuronGroup object handles variable refractoriness,
+and has a new method get_refractory_indices() as well as the older get_spikes(),
+and the refractoriness classes will use this method.
+
+The most important refractoriness class, possibly the base class for the others,
+would just hold a set of variables at their values after the reset, so you might
+specify reset='V=Vr; Vt+=deltaVt' and refractory=Clamp('V', 5*ms). (See below
+for some ideas on syntax.)
+
+In the scheme I'm proposing then, the absolute refractoriness is handled in a
+special case way by NeuronGroup itself, and the clamping of variables is handled
+separately by refractoriness classes. Another possibility would be to have the
+absolute refractoriness handled by the refractoriness class, we could have a
+base class that just handles this, as well as base class that handles clamping,
+and these could be combined into a class that derives from both of them to get
+both behaviours (for example). That's conceptually nice from a programming point
+of view, but maybe not so nice for the user?
+
+Variable refractoriness
+-----------------------
+Another matter that requires some thought is how variable refractoriness should
+work. At the moment, in the simplest case of a simple reset, you can have fixed
+refractoriness, a fixed refractoriness array, or specify a variable of the
+equations that gives the refractory time. In this latter case, you also have to
+provide a max_refractory argument (but this wouldn't be necessary if we used the
+mechanism I described above because you don't need to remember spike times).
+
+Technical note: the way NeuronGroup handles refractoriness at the moment is to
+store an array _next_allowed_spiketime of length the number of neurons in the
+group, which tells it the next time that the neurons are allowed to fire a
+spike. After a spike, this array is incremented for each spiking neuron by its
+refractory period. To get the list of indices of neurons that are currently
+refractory then you just have to do _next_allowed_spiketime>t.
+
+Syntax
+------
+There's also the syntax to be considered, and it's a slightly tricky problem. At
+the moment, the user writes things like reset=-60*mV and refractory=5*ms, and
+that works OK, but if they want more complicated things they have to specify a
+refractoriness class for the reset.
+
+Here's a possibility. We always use variable refractoriness, and we introduce a
+forced state variable 'refractory' to give the refractory periods. If the user
+specifies refractory in their equations, then we do nothing, otherwise we add it
+to their equations as a parameter. So if they wanted, they could have a
+differential equation governing refractoriness.
+
+Simple cases:
+
+reset=value (implied variable V, v, Vm, vm)
+  refractory=value or array
+     clamps the implied variable to its value after reset
+reset='var=val'
+  as above, but use the reset state variable instead of implied var
+reset=string, function, class
+  refractory=value or array
+     clamps the implied variable V, v, Vm, vm at given period
+
+In more complex cases, you need to specify two bits of information for the
+refractoriness, the variables/code for the refractoriness, and the refractory
+period. In fact, the latter is sort of optional, because you can specify the
+periods afterwards by changing the 'refractory' state variable. I would suggest
+we introduce a new keyword for this case. The 'refractory' keyword has always
+referred to a length of time in the past, and I think logically it's nice to
+keep it that way rather than have it mean several different things. The new
+keyword could be something like 'refractoriness' or 'refractorycode' or
+'refractorytype'. Depending on its type, it would mean one of:
+
+state variable or tuple of state variables: clamp
+string, function, class: custom code
+
+Some examples with this syntax:
+
+G = NeuronGroup(N, eqs, reset=Vr, refractory=5*ms)
+G = NeuronGroup(N, eqs, reset=Vr, refractory=5*ms*rand(N))
+G = NeuronGroup(N, eqs, reset='x=x0', refractory=5*ms)
+G = NeuronGroup(N, eqs, reset='V=Vr; Vt+=deltaVt', refractory=5*ms)
+G = NeuronGroup(N, eqs, reset='x=x0; y+=deltay', refractory=5*ms, refractoriness='x')
+G = NeuronGroup(N, eqs, reset='x=x0; y+=deltay', refractory=5*ms, refractoriness='x=x0')
+
+The 'refractory' keyword would be strictly optional, as you could always do
+something like this afterwards anyway:
+
+G.refractory = 5*ms
+G.refractory = 5*ms*rand(N)
+
+Well, that's one proposal for the syntax, I can think of several others. For
+example, you could keep only a 'refractory' keyword, but allow tuples like 
+refractory=('x', 5*ms) to mean clamp variable 'x' for 5*ms, or
+refractory=('x', 'y', 5*ms*rand(N)) to mean clamp variables 'x' and 'y' for
+5*ms*rand(N), or refractory=('x=x0', 5*ms). My feeling is that this probably
+ends up being more confusing in the long run though. 
