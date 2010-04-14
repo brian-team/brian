@@ -138,10 +138,13 @@ class HRTFSet(object):
         
         ns = dict((name, self.coordinates[name]) for name in cond.func_code.co_varnames)
 
-        I = cond(**ns)
+        try:
+            I = cond(**ns)
+        except:
+            I = False
         if type(I)==type(True): # vector-based calculation doesn't work
             n=len(ns[cond.func_code.co_varnames[0]])
-            I = [cond(**dict((name,ns[name][j]) for name in cond.func_code.co_varnames)) for j in range(n)]
+            I = array([cond(**dict((name,ns[name][j]) for name in cond.func_code.co_varnames)) for j in range(n)])
 
         hrtf = [self.hrtf[i] for i in I]
         coords = self.coordinates[I]
@@ -415,7 +418,8 @@ if __name__=='__main__':
     ircam = IRCAM_LISTEN(path)
     h = ircam.load_subject(1002)
     #h = h.subset(lambda azim,elev:azim==90 and elev==90)
-    h = h.subset(lambda azim,elev:(azim==90) & (elev==90) )
+    #h = h.subset(lambda azim,elev:(azim==90) & (elev==90) )
+    h = h.subset(lambda azim,elev:((azim,elev) in [(60,45),(90,0)]))
     subplot(211)
     plot(h.hrtf[0].left)
     plot(h.hrtf[0].right)
