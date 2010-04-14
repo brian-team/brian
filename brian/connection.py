@@ -448,7 +448,6 @@ else:
             """
             Speed-up if x is a sparse matrix.
             TODO: checks (first remove the data).
-            TODO: once we've got this working in all cases, should we submit to scipy?
             """
             try:
                 i, j = index
