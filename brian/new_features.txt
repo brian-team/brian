@@ -1,6 +1,17 @@
 New features since 1.2.0
 ------------------------
 
+Major features:
+
+* New remote controlling of running Brian scripts via RemoteControlServer
+  and RemoteControlClient.
+  
+Minor features:
+
+* New module utils.io
+* weight and sparseness can now both be functions in connect_random
+* New StateHistogramMonitor object
+
 Improvements
 
 * The sparseness keyword in connect_random can be a function
@@ -10,6 +21,9 @@ Improvements
 * STDP now supports nonlinear equations and parameters
 * refractory can now be a vector (see docstring for NeuronGroup) for constant
   resets.
+* modelfitting now uses playdoh library
+* C++ compiled code is now much faster thanks to adding -ffast-math switch to
+  gcc and -march=native
 
 Bug fixes
 
@@ -25,6 +39,10 @@ Bug fixes
 * unit_checking=False now works (didn't do anything before)
 * Fixed bug with using Equations object twice (for two different NeuronGroups)
 * Fixed unit checking bug and ZeroDivisionError (ticket #38)
+* Fixed rare problems with spikes being lost due to wrong size of SpikeContainer,
+  it now dynamically adapts to the number of spikes.
+* Fixed ticket #5, ionic_currents did not work with units off
+* Fixed ticket #6, Current+MembraneEquation now works
 
 Removed features
 

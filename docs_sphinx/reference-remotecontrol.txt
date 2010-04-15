@@ -1,0 +1,10 @@
+.. currentmodule:: brian
+
+.. index::
+	single: remote control
+
+Remote control
+==============
+
+.. autoclass:: RemoteControlServer
+.. autoclass:: RemoteControlClient

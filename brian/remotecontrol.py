@@ -3,7 +3,7 @@ Remote control of a Brian process, for example using an IPython shell
 
 The process running the simulation calls something like:
 
-server = remote_control_server()
+server = RemoteControlServer()
 
 and the IPython shell calls:
 
@@ -17,16 +17,14 @@ plot(t, i, '.')
 client.execute('stop()')
 '''
 
-from brian import *
+from network import NetworkOperation
 from multiprocessing.connection import Listener, Client
 import select
 import inspect
 
-__all__ = ['remote_control_server', 'RemoteControlClient']
+__all__ = ['RemoteControlServer', 'RemoteControlClient']
 
-@magic_return
-def remote_control_server(server=None, authkey='brian', clock=None,
-                          global_ns=None, local_ns=None, level=1):
+class RemoteControlServer(NetworkOperation):
     '''
     Allows remote control (via IP) of a running Brian script
     
@@ -35,7 +33,8 @@ def remote_control_server(server=None, authkey='brian', clock=None,
     ``server``
         The IP server details, a pair (host, port). If you want to allow control
         only on the one machine (for example, by an IPython shell), leave this
-        as ``None`` (which defaults to host='localhost', port=2719).
+        as ``None`` (which defaults to host='localhost', port=2719). To allow
+        remote control, use ('', portnumber).
     ``authkey``
         The authentication key to allow access, change it from 'brian' if you
         are allowing access from outside (otherwise you allow others to run
@@ -55,58 +54,70 @@ def remote_control_server(server=None, authkey='brian', clock=None,
     
     Main simulation code includes a line like this::
     
-        server = remote_control_server()
+        server = RemoteControlServer()
         
     In an IPython shell you can do something like this::
     
+        client = RemoteControlClient()
         spikes = client.evaluate('M.spikes')
         i, t = zip(*spikes)
         plot(t, i, '.')
         client.execute('stop()')
     '''
-    if server is None:
-        server = ('localhost', 2719)
-    frame = inspect.stack()[level+1][0]
-    ns_global, ns_local=frame.f_globals,frame.f_locals
-    if global_ns is None:
-        global_ns = frame.f_globals        
-    if local_ns is None:
-        local_ns = frame.f_locals
-    listener = Listener(server, authkey=authkey)
-    connholder = [None]
-    @network_operation(clock=clock)
-    def server_check():
-        conn = connholder[0]
-        if conn is None:
+    def __init__(self, server=None, authkey='brian', clock=None,
+                 global_ns=None, local_ns=None, level=0):
+        NetworkOperation.__init__(self, lambda:None, clock=clock)
+        if server is None:
+            server = ('localhost', 2719)
+        frame = inspect.stack()[level+1][0]
+        ns_global, ns_local=frame.f_globals,frame.f_locals
+        if global_ns is None:
+            global_ns = frame.f_globals        
+        if local_ns is None:
+            local_ns = frame.f_locals
+        self.local_ns = local_ns
+        self.global_ns = global_ns
+        self.listener = Listener(server, authkey=authkey)
+        self.conn = None
+    def __call__(self):
+        if self.conn is None:
             # This is kind of a hack. The multiprocessing.Listener class doesn't
             # allow you to tell if an incoming connection has been requested
             # without accepting that connection, which means if nothing attempts
             # to connect it will wait forever for something to connect. What
             # we do here is check if there is any incoming data on the
             # underlying IP socket used internally by multiprocessing.Listener.
-            socket = listener._listener._socket
+            socket = self.listener._listener._socket
             sel, _, _ = select.select([socket], [], [], 0)
             if len(sel):
-                conn = listener.accept()
-                connholder[0] = conn
-        if conn is None:
+                self.conn = self.listener.accept()
+        if self.conn is None:
             return
-        if not conn.poll():
-            return
-        job = conn.recv()
-        jobtype, jobargs = job
-        try:
-            if jobtype=='exec':
-                exec jobargs in global_ns, local_ns
+        conn = self.conn
+        global_ns = self.global_ns
+        local_ns = self.local_ns
+        paused = 1
+        while paused!=0:
+            if paused>=0 and not conn.poll():
+                return
+            job = conn.recv()
+            jobtype, jobargs = job
+            if paused==1: paused = 0
+            try:
                 result = None
-            elif jobtype=='eval':
-                result = eval(jobargs, global_ns, local_ns)
-        except Exception, e:
-            # if it raised an exception, we return that exception and the
-            # client can then raise it.
-            result = e
-        conn.send(result)
-    return server_check
+                if jobtype=='exec':
+                    exec jobargs in global_ns, local_ns
+                elif jobtype=='eval':
+                    result = eval(jobargs, global_ns, local_ns)
+                elif jobtype=='pause':
+                    paused = -1
+                elif jobtype=='go':
+                    paused = 0
+            except Exception, e:
+                # if it raised an exception, we return that exception and the
+                # client can then raise it.
+                result = e
+            conn.send(result)
 
 class RemoteControlClient(object):
     '''
@@ -117,11 +128,14 @@ class RemoteControlClient(object):
     ``server``
         The IP server details, a pair (host, port). If you want to allow control
         only on the one machine (for example, by an IPython shell), leave this
-        as ``None`` (which defaults to host='localhost', port=2719).
+        as ``None`` (which defaults to host='localhost', port=2719). To allow
+        remote control, use ('', portnumber).
     ``authkey``
         The authentication key to allow access, change it from 'brian' if you
         are allowing access from outside (otherwise you allow others to run
         arbitrary code on your machine).
+
+    Use a :class:`RemoteControlServer` on the simulation you want to control.
     
     Has the following methods:
     
@@ -138,20 +152,34 @@ class RemoteControlClient(object):
         If it raises an
         exception, the server process will catch it and reraise it in the
         client process.
+
+    .. method:: pause()
+    
+        Temporarily stop the simulation in the server process, continue
+        simulation with the :meth:'go' method.
+        
+    .. method:: go()
+    
+        Continue a simulation that was paused.
+        
+    .. method:: stop()
+    
+        Stop a simulation, equivalent to ``execute('stop()')``.
  
     **Example usage**
     
     Main simulation code includes a line like this::
     
-        server = remote_control_server()
+        server = RemoteControlServer()
         
     In an IPython shell you can do something like this::
     
+        client = RemoteControlClient()
         spikes = client.evaluate('M.spikes')
         i, t = zip(*spikes)
         plot(t, i, '.')
         client.execute('stop()')
-    '''
+   '''
     def __init__(self, server=None, authkey='brian'):
         if server is None:
             server = ('localhost', 2719)
@@ -167,4 +195,11 @@ class RemoteControlClient(object):
         if isinstance(result, Exception):
             raise result
         return result
- 
+    def pause(self):
+        self.client.send(('pause', ''))
+        self.client.recv()
+    def go(self):
+        self.client.send(('go', ''))
+        self.client.recv()
+    def stop(self):
+        self.execute('stop()')

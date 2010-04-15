@@ -32,6 +32,7 @@ Brian itself is documented in the following sections:
    inputs
    operations
    analysis
+   realtime
    clocks
    simulation
    equations

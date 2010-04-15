@@ -1,0 +1,25 @@
+.. currentmodule:: brian
+
+Realtime control
+****************
+
+A running Brian simulation can be controlled, for example using an IPython shell.
+This can work either on a single computer, or over IP from another computer.
+The process running the simulation calls something like::
+
+	server = RemoteControlServer()
+
+and the IPython shell calls::
+
+	client = RemoteControlClient()
+
+The shell can now execute and evaluate in the server process via::
+
+	spikes = client.evaluate('M.spikes')
+	i, t = zip(*spikes)
+	plot(t, i, '.')
+	client.stop()
+
+Parameters can be changed as the simulation runs. For more details, see the
+reference documentation for :class:`RemoteControlServer` and
+:class:`RemoteControlClient`.

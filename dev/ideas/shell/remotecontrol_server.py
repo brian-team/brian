@@ -1,5 +1,4 @@
 from brian import *
-from brian.experimental.remotecontrol import *
 
 eqs='''
 dv/dt = (ge+gi-(v+49*mV))/(20*ms) : volt
@@ -19,7 +18,7 @@ def clearspikes():
     M.reinit()
     print 'Simulated', defaultclock.t
 
-srv = remote_control_server()
+srv = RemoteControlServer()
 
 run(1e10*second)
 
