@@ -19,7 +19,7 @@ def clearspikes():
     M.reinit()
     print 'Simulated', defaultclock.t
 
-srv = remote_control_server(('',2719))
+srv = remote_control_server()
 
 run(1e10*second)
 
