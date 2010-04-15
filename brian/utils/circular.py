@@ -67,6 +67,8 @@ class CircularVector(object):
             self._extra_compile_args = ['-O3']
             if self._cpp_compiler=='gcc':
                 self._extra_compile_args += ['-march=native', '-ffast-math']
+        else:
+            self._cpp_compiler = ''
     
     def reinit(self):
         self.X[:]=zeros(self.n,self.dtype)
