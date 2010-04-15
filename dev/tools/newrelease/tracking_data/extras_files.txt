@@ -93,6 +93,7 @@
 + docs/_sources/experimental-multilinearstateupdater.txt
 + docs/_sources/experimental.txt
 + docs/_sources/extending.txt
++ docs/_sources/extendinglibrary.txt
 + docs/_sources/index.txt
 + docs/_sources/inputs.txt
 + docs/_sources/installation.txt
@@ -106,6 +107,7 @@
 + docs/_sources/parallel.txt
 + docs/_sources/parameters.txt
 + docs/_sources/randomprocesses.txt
++ docs/_sources/realtime.txt
 + docs/_sources/recording.txt
 + docs/_sources/reference-analysis.txt
 + docs/_sources/reference-clocks.txt
@@ -121,6 +123,7 @@
 + docs/_sources/reference-plotting.txt
 + docs/_sources/reference-preferences.txt
 + docs/_sources/reference-progressreporting.txt
++ docs/_sources/reference-remotecontrol.txt
 + docs/_sources/reference-scipy.txt
 + docs/_sources/reference-standard-groups.txt
 + docs/_sources/reference-tests.txt
@@ -247,6 +250,7 @@
 + docs/experimental-multilinearstateupdater.html
 + docs/experimental.html
 + docs/extending.html
++ docs/extendinglibrary.html
 + docs/genindex.html
 + docs/index.html
 + docs/inputs.html
@@ -256,12 +260,14 @@
 + docs/librarymodels.html
 + docs/modelfitting.html
 + docs/models.html
++ docs/modindex.html
 + docs/objects.inv
 + docs/operations.html
 + docs/othertutorials.html
 + docs/parallel.html
 + docs/parameters.html
 + docs/randomprocesses.html
++ docs/realtime.html
 + docs/recording.html
 + docs/reference-analysis.html
 + docs/reference-clocks.html
@@ -277,6 +283,7 @@
 + docs/reference-plotting.html
 + docs/reference-preferences.html
 + docs/reference-progressreporting.html
++ docs/reference-remotecontrol.html
 + docs/reference-scipy.html
 + docs/reference-standard-groups.html
 + docs/reference-tests.html
@@ -371,7 +378,7 @@
 + examples/misc/using_classes.py
 + examples/modelfitting/clusterexample_manager.py
 + examples/modelfitting/clusterexample_worker.py
-+ examples/modelfitting/current.pickle
+- examples/modelfitting/current.pickle
 + examples/modelfitting/current.txt
 + examples/modelfitting/modelfitting.py
 + examples/modelfitting/modelfitting2.py

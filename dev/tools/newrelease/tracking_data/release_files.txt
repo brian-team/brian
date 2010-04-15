@@ -54,13 +54,10 @@
 + brian/library/if.py
 + brian/library/ionic_currents.py
 + brian/library/modelfitting/__init__.py
-+ brian/library/modelfitting/cluster_splitting.py
-+ brian/library/modelfitting/clustertools.py
 - brian/library/modelfitting/current_long.txt
-+ brian/library/modelfitting/fittingparameters.py
 + brian/library/modelfitting/gpu_modelfitting.py
 + brian/library/modelfitting/modelfitting.py
-* brian/library/modelfitting/new/clusterfitting.py
+- brian/library/modelfitting/new/clusterfitting.py
 - brian/library/modelfitting/new/clustersplitting.py
 - brian/library/modelfitting/new/current.txt
 - brian/library/modelfitting/new/fittingmanager.py
@@ -70,7 +67,7 @@
 - brian/library/modelfitting/new/fittingsimulation.py
 - brian/library/modelfitting/new/fittingworker.py
 - brian/library/modelfitting/new/modelfitting.py
-* brian/library/modelfitting/new/new.txt
+- brian/library/modelfitting/new/new.txt
 - brian/library/modelfitting/new/spikes.txt
 - brian/library/modelfitting/old/__init__.py
 - brian/library/modelfitting/old/cluster_splitting.py
@@ -79,7 +76,7 @@
 - brian/library/modelfitting/old/gpu_modelfitting.py
 - brian/library/modelfitting/old/modelfitting.py
 - brian/library/modelfitting/old/singleprocessing.py
-+ brian/library/modelfitting/singleprocessing.py
+- brian/library/modelfitting/singleprocessing.py
 - brian/library/modelfitting/spikes_long.txt
 + brian/library/random_processes.py
 + brian/library/synapses.py
@@ -94,6 +91,7 @@
 + brian/optimiser.py
 + brian/plotting.py
 + brian/quantityarray.py
++ brian/remotecontrol.py
 + brian/reset.py
 + brian/stateupdater.py
 + brian/stdp.py
@@ -112,6 +110,7 @@
 + brian/tests/testinterface/test_clock.py
 + brian/tests/testinterface/test_connection.py
 + brian/tests/testinterface/test_directcontrol.py
++ brian/tests/testinterface/test_equations.py
 + brian/tests/testinterface/test_inspection.py
 + brian/tests/testinterface/test_magic.py
 + brian/tests/testinterface/test_monitor.py
@@ -155,6 +154,7 @@
 + brian/utils/fastexp/testfastexp.py
 + brian/utils/fastexp/testfastexp2.py
 + brian/utils/information_theory.py
++ brian/utils/io.py
 + brian/utils/parallelpython.py
 + brian/utils/parameters.py
 + brian/utils/particle_swarm.py
