@@ -1,6 +1,6 @@
 from brian import *
 from brian.utils.statistics import firing_rate, get_gamma_factor
-from playdoh import maximize, print_results, worker
+from playdoh import maximize, printr, worker
 try:
     import pycuda
     from brian.library.modelfitting.gpu_modelfitting import GPUModelFitting
@@ -8,7 +8,7 @@ try:
 except ImportError:
     can_use_gpu = False
 
-__all__ = ['modelfitting', 'print_results', 'worker', 'get_spikes', 'predict']
+__all__ = ['modelfitting', 'printr', 'worker', 'get_spikes', 'predict']
 
 class ModelFitting(object):
     def __init__(self, shared_data, local_data, use_gpu):
