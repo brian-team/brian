@@ -31,3 +31,4 @@ decorator.
 .. autoclass:: ISIHistogramMonitor
 .. autoclass:: PopulationRateMonitor
 .. autoclass:: CoincidenceCounter
+.. autoclass:: StateHistogramMonitor
