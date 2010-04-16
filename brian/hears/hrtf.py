@@ -145,7 +145,8 @@ class HRTFSet(object):
         if type(I)==type(True): # vector-based calculation doesn't work
             n=len(ns[cond.func_code.co_varnames[0]])
             I = array([cond(**dict((name,ns[name][j]) for name in cond.func_code.co_varnames)) for j in range(n)])
-
+            I=I.nonzero()[0]
+            
         hrtf = [self.hrtf[i] for i in I]
         coords = self.coordinates[I]
         data = self.data[:, I, :]
@@ -423,6 +424,7 @@ if __name__=='__main__':
     subplot(211)
     plot(h.hrtf[0].left)
     plot(h.hrtf[0].right)
+    print h.coordinates
 #    subplot(212)
 ##    c = h.coordinates.convert_to(AzimElev)
 ##    plot(h.coordinates['azim'], h.coordinates['elev'], 'o')

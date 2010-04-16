@@ -173,6 +173,56 @@ class Sound(numpy.ndarray):
         xlabel('Time (s)')
         ylabel('Frequency (Hz)')
         return (pxx, freqs, bins, im)
+       
+    def spectrum(self, frequency_range=None, log_spectrum=True, display=False):
+        '''
+        Plots and returns the spectrum of the sound
+        
+        If frequency_range=None it shows the full spectrum, otherwise
+        frequency_range=(minfreq, maxfreq).
+        
+        If log_spectrogram=True it shows log power, otherwise not.
+        
+        If display=True it plots the spectrum and phase, otherwise not.
+        
+        Returns the values Z, freqs, phase
+        where Z is a 1D array of powers, freqs is the corresponding frequencies,
+        phase if the unwrapped phase of spectrum.
+        '''
+        sp = numpy.fft.fft(array(self))
+        freqs=array(range(len(sp)),dtype=float64)/len(sp)*float64(self.rate)
+        pxx=abs(sp)**2
+        phase=unwrap(mod(angle(sp),2*pi))
+        if frequency_range is not None:
+            I = logical_and(frequency_range[0]<=freqs,freqs<=frequency_range[1])
+            I2 = where(I)[0]
+            Z = pxx[I2]
+            freqs = freqs[I2]
+            phase = phase[I2]
+        else:
+            Z = pxx
+        if log_spectrum:
+            Z[Z<1e-20] = 1e-20 # no zeros because we take logs
+            Z = 10*log10(Z)
+        if display:
+            subplot(211)
+            semilogx(freqs, Z)
+            ticks_freqs=32000*2**-array(range(18),dtype=float64)
+            xticks(ticks_freqs,map(str,ticks_freqs))
+            grid()
+            xlim((freqs[0], freqs[-1]))
+            xlabel('Frequency (Hz)')
+            ylabel('Power (dB)') if log_spectrum else ylabel('Power')
+            subplot(212)
+            semilogx(freqs, phase)
+            ticks_freqs=32000*2**-array(range(18),dtype=float64)
+            xticks(ticks_freqs,map(str,ticks_freqs))
+            grid()
+            xlim((freqs[0], freqs[-1]))
+            xlabel('Frequency (Hz)')
+            ylabel('Phase (rad)')
+            show()
+        return (Z, freqs, phase)
     
     def intensity(self):
         '''
@@ -422,14 +472,12 @@ silent = Sound.silent
 sequence = Sound.sequence
 
 if __name__=='__main__':
-
     import time
-    x = tone(500*Hz, 1*second).atintensity(rmsdb=80.)
-    
+    x = tone(500*Hz, 1*second).atintensity(db=60.)
     print amax(x)
     print 20*log10(sqrt(mean(x**2))/2e-5)
     print x.intensity()
-    
+    x.spectrum(frequency_range=[100,2000],display=True)
     #x.save('tone.wav', sampwidth=2)
     #x.play()
     #time.sleep(x.duration)
@@ -457,4 +505,4 @@ if __name__=='__main__':
 #    z.spectrogram()
 #    subplot(313)
 #    z.spectrogram(frequency_range=(5*kHz,10*kHz))
-#    show()
+#    show() 
