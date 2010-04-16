@@ -8,7 +8,7 @@ try:
 except ImportError:
     can_use_gpu = False
 
-__all__ = ['modelfitting', 'printr', 'worker', 'get_spikes', 'predict']
+__all__ = ['modelfitting', 'print_results', 'worker', 'get_spikes', 'predict']
 
 class ModelFitting(object):
     def __init__(self, shared_data, local_data, use_gpu):
@@ -199,6 +199,10 @@ def modelfitting(model = None, reset = None, threshold = None,
         gpu_policy = 'prefer_gpu'
     else:
         gpu_policy = 'no_gpu'
+    
+    # TODO: bug with Equation namespaces during function serialization in Playdoh
+    if (len(machines)>0) and isinstance(model, Equations):
+        raise Exception("You can't use Equations objects and multiple machines for now. Pass a string instead of an Equations object for the model.")
 
     # Make sure that 'data' is a N*2-array
     data = array(data)
@@ -260,6 +264,7 @@ def modelfitting(model = None, reset = None, threshold = None,
                     _port = port,
                     _returninfo = returninfo,
                     _verbose = verbose,
+                    _doserialize = False,
                     **params)
     
     # r is (results, fitinfo) or (results)
@@ -304,4 +309,5 @@ def predict(model = None, reset = None, threshold = None,
     else:
         return gamma
     
-    
+def print_results(r):
+    return printr(r)

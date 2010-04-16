@@ -8,12 +8,12 @@ from brian.library.modelfitting import *
 
 if __name__ == '__main__':
     
-    equations = Equations('''
+    equations = '''
         dV/dt=(R*I-V)/tau : 1
         I : 1
         R : 1
         tau : second
-    ''')
+    '''
     
     input = loadtxt('current.txt')
     spikes = loadtxt('spikes.txt')
@@ -23,6 +23,7 @@ if __name__ == '__main__':
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  particles = 1000, iterations = 3, delta = 2*ms,
+                                 max_cpu = 1,
                                  R = [1.0e9, 9.0e9], tau = [10*ms, 40*ms])
     
     print_results(results)
