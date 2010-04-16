@@ -39,8 +39,8 @@ HRTFSet
 # TODO: add some docstrings!
 
 from brian import *
-from filtering import *
-from sounds import *
+from brian.hears.filtering import *
+from brian.hears.sounds import *
 from scipy.signal import lfilter
 from scipy.io import loadmat # NOTE: this requires scipy 0.7+
 from glob import glob
@@ -146,7 +146,7 @@ class HRTFSet(object):
             n=len(ns[cond.func_code.co_varnames[0]])
             I = array([cond(**dict((name,ns[name][j]) for name in cond.func_code.co_varnames)) for j in range(n)])
             I=I.nonzero()[0]
-            
+
         hrtf = [self.hrtf[i] for i in I]
         coords = self.coordinates[I]
         data = self.data[:, I, :]
@@ -405,36 +405,126 @@ class IN_ROOM_LISTEN(HRTFDatabase):
         fname = os.path.join(self.basedir,subject+'Rev')
         return IN_ROOM__HRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
 
+############# GERBIL HRTF DATABASE ##############################################
+class GERBIL_HRTFSet(HRTFSet):
+    def load(self, filename, samplerate=None, coordsys=None, name=None):
+        # TODO: check samplerate
+        if name is None:
+            _, name = os.path.split(filename)
+        self.name = name
+        #load coordinates and data by reading the content of filename 
+        names = glob(os.path.join(filename, 'IMPL*'))
+        splitnames = [os.path.split(name) for name in names]
+        self.azim = zeros(len(names)/2-1,uint16)
+        self.elev = zeros(len(names)/2-1,int16)
+        counter=0
+        for az in arange(-180,180,10):
+            for el in arange(-40,100,10):
+                filepath=os.path.join(filename, 'IMPL'+`az`+'AZ'+`el`+'EL')
+                if os.path.exists(filepath+'_L.txt'):
+                    self.azim[counter],self.elev[counter]=mod(az,360),el
+                    #read the hrtf
+                    hrtf_left=loadtxt(filepath+'_L.txt')
+                    hrtf_right=loadtxt(filepath+'_R.txt') 
+                    if counter==0:
+                        #initialize the hrtf database
+                        # self.data has shape (num_ears=2, num_indices, hrir_length)
+                        self.data = zeros((2,len(names)/2-1,len(hrtf_left)))
+                    self.data[:,counter,]=vstack((hrtf_left,hrtf_right))
+                    counter+=1
+                    
+        coords = AzimElevDegrees.make(len(self.azim))
+        coords['azim'] = self.azim
+        coords['elev'] = self.elev
+        if coordsys is not None:
+            self.coordinates = coords.convert_to(coordsys)
+        else:
+            self.coordinates = coords 
+        
+        self.samplerate = 97.65625*kHz
+            
+class GERBIL_HRTFDatabase(HRTFDatabase):
+    def __init__(self, basedir, samplerate=None):
+        self.basedir = basedir
+        names = glob(os.path.join(basedir, 'No*'))
+        splitnames = [os.path.split(name) for name in names]
+  
+        self.subjects = [int(name[2:]) for base, name in splitnames]
+        self.samplerate = samplerate
+    def subject_name(self, subject):
+        return 'GERBIL_'+str(subject)
+    def load_subject(self, subject):
+        subject = str(subject)
+        fname = os.path.join(self.basedir, 'No'+subject)
+        #fname = os.path.join(fname, 'IMPL')
+        return GERBIL_HRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
+
+### EXAMPLES
 if __name__=='__main__':
-    ircam_locations = [
-        r'D:\HRTF\IRCAM',
-        r'/home/bertrand/Data/Measurements/HRTF/IRCAM',
-        r'C:\Documents and Settings\dan\My Documents\Programming\IRCAM'
-        ]
-    for path in ircam_locations:
-        if os.path.exists(path):
-            break
-    else:
-        raise IOError('Cannot find IRCAM HRTF location, add to ircam_locations')
-    ircam = IRCAM_LISTEN(path)
-    h = ircam.load_subject(1002)
-    #h = h.subset(lambda azim,elev:azim==90 and elev==90)
-    #h = h.subset(lambda azim,elev:(azim==90) & (elev==90) )
-    h = h.subset(lambda azim,elev:((azim,elev) in [(60,45),(90,0)]))
-    subplot(211)
-    plot(h.hrtf[0].left)
-    plot(h.hrtf[0].right)
-    print h.coordinates
-#    subplot(212)
-##    c = h.coordinates.convert_to(AzimElev)
-##    plot(h.coordinates['azim'], h.coordinates['elev'], 'o')
-##    from enthought.mayavi import mlab
-##    c = h.coordinates.convert_to(CartesianCoordinates)
-##    mlab.points3d(c['x'], c['y'], c['z'])
-##    mlab.show()
-#    c = h.coordinates
-#    c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
-#    print amax(c['elev']-c2['elev'])
-#    plot(c['azim'], c['elev'], 'o')
-    show()
     
+    choice='IRCAM'#IRCAM,Gerbil or In Room
+    hrtf_locations = [
+            r'D:\HRTF\\'+choice,
+            r'/home/bertrand/Data/Measurements/HRTF/'+choice,
+            r'C:\Documents and Settings\dan\My Documents\Programming\\'+choice
+            ]
+    found=0
+    for path in hrtf_locations:
+        if os.path.exists(path):
+            found=1
+            break
+    if found==0:
+        raise IOError('Cannot find IRCAM HRTF location, add to ircam_locations')
+    else:
+        if choice=='IRCAM':
+            
+            ircam = IRCAM_LISTEN(path)
+            h = ircam.load_subject(1002)
+            #h = h.subset(lambda azim,elev:azim==90 and elev==90)
+            h = h.subset(lambda azim,elev:(azim,elev) in ((90,60),(60,30)) )
+            subplot(211)
+            plot(h.hrtf[0].left)
+            plot(h.hrtf[0].right)
+            subplot(212)
+        ##    c = h.coordinates.convert_to(AzimElev)
+        ##    plot(h.coordinates['azim'], h.coordinates['elev'], 'o')
+        ##    from enthought.mayavi import mlab
+        ##    c = h.coordinates.convert_to(CartesianCoordinates)
+        ##    mlab.points3d(c['x'], c['y'], c['z'])
+        ##    mlab.show()
+            c = h.coordinates
+        #    c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
+        #    print amax(c['elev']-c2['elev'])
+            plot(c['azim'], c['elev'], 'o')
+            show()
+        elif choice=='Gerbil':
+            
+            gerbil = GERBIL_HRTFDatabase(path)
+            h = gerbil.load_subject(521)
+            #h = h.subset(lambda azim,elev:azim==90 and elev==90)
+            #h = h.subset(lambda azim,elev:(azim in array([60,90])) & (elev in array([40,50])) )
+            subplot(211)
+            plot(h.hrtf[400].left)
+            plot(h.hrtf[400].right)
+            subplot(212)
+            c = h.coordinates
+            c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
+            print amax(c['elev']-c2['elev'])
+            plot(c['azim'], c['elev'], 'o')
+            show()
+        elif choice=='In Room':
+            in_room = IN_ROOM_LISTEN(path)
+            h = in_room.load_subject('anech')
+            #h = h.subset(lambda azim,elev:azim==90 and elev==90)
+            #h = h.subset(lambda azim,elev:(azim==90) & (elev==40) )
+            subplot(211)
+            plot(h.hrtf[0].left)
+            plot(h.hrtf[0].right)
+            subplot(212)
+            c = h.coordinates
+        #        c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
+        #        print amax(c['elev']-c2['elev'])
+            plot(c['azim'], c['elev'], 'o')
+            show()
+
+
