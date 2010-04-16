@@ -1,4 +1,6 @@
-from brian import *
+from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
+                    ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
+                    reshape, sum
 from brian.utils.statistics import firing_rate, get_gamma_factor
 from playdoh import maximize, printr, worker
 try:
