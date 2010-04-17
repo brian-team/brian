@@ -3,16 +3,11 @@ Analysis of voltage traces (current-clamp experiments or HH models).
 '''
 from numpy import *
 from brian.stdunits import mV
-
-def spike_times(v):
-    '''
-    Returns the indexes of spike times.
-    '''
-    return ((v[1:]>0) & (v[:-1]<0)).nonzero()[0]
+from brian.utils.io import *
 
 def find_spike_criterion(v):
     '''
-    This is a rather complex method to determine above which voltage vs
+    This is a rather complex method to determine above which voltage vc
     one should consider that a spike is produced.
     We look in phase space (v,dv/dt), at the horizontal axis dv/dt=0.
     We look for a voltage for which the voltage cannot be still.
@@ -26,6 +21,15 @@ def find_spike_criterion(v):
     i=argmax(diff(vc))
     return .5*(vc[i]+vc[i+1])
 
+def spike_times(v,vc=None):
+    '''
+    Returns the indexes of spike times.
+    vc is the spike criterion (voltage above which we consider we have a spike)
+    '''
+    vc=vc or find_spike_criterion(v)
+    return ((v[1:]>vc) & (v[:-1]<vc)).nonzero()[0]
+
+"""
 def find_spike_criterion2(v):
     '''
     This is a rather complex method to determine above which voltage vs
@@ -37,6 +41,7 @@ def find_spike_criterion2(v):
     Choose the lowest possible vs.
     '''
     pass
+"""
 
 if __name__=='__main__':
     path=r'D:\My Dropbox\Neuron\Hu\recordings_Ifluct\I0_07_std_02_tau_10_sampling_20\\'
