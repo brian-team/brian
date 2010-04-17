@@ -75,7 +75,10 @@ from magic import *
 from stdp import *
 from stp import *
 from timedarray import *
-from remotecontrol import *
+try:
+    from remotecontrol import *
+except:
+    pass
 from tests.simpletest import *
 
 __version__ = '1.2.1dev'
