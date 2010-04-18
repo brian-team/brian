@@ -11,7 +11,7 @@ from scipy import stats
 __all__=['find_spike_criterion','spike_peaks','spike_onsets','find_onset_criterion',
          'slope_threshold','vm_threshold','spike_shape']
 
-# TODO: I-V curve, slopefactor, subthreshold kernel, time constant, threshold optimisation
+# TODO: I-V curve, slopefactor, subthreshold kernel, time constant, threshold optimisation, remove spikes
 
 def find_spike_criterion(v):
     '''
@@ -113,28 +113,45 @@ def slope_threshold(v,onsets=None,T=None):
         l.append(slope)
     return array(l)
 
-def estimate_capacitance(i,v,dt=1):
+def estimate_capacitance(i,v,dt=1,guess=1.):
     '''
     Estimates capacitance from current-clamp recording
     with white noise (see Badel et al., 2008).
     '''
-    dv=v/dt
-    return optimize.fmin(lambda C:var(dv-i/C),1.)
+    dv=diff(v)/dt
+    i=i[:-1]
+    return optimize.fmin(lambda C:var(dv-i/C),guess,disp=0)[0]
 
-def fit_EIF(i,v,dt=1):
+"""
+def estimate_area(i,v,dt=1,guess=1.):
+    return estimate_capacitance(i,v,dt,guess)/(0.9*uF/cm**2)
+"""
+
+def fit_EIF(i,v,dt=1,C=None):
     '''
     Fits the exponential model of spike initiation in the
     phase plane (v,dv).
     '''
-    #C=estimate_capacitance(i,v,dt) # not useful here
+    C=C or estimate_capacitance(i,v,dt)
+    # Remove spikes?
     dv=diff(v)/dt
     v=v[:-1]
-    f=lambda C,gl,El,deltat,vt:C*dv-(gl*(El-v)+gl*deltat*exp((v-vt)/deltat))
-    df=lambda C,gl,El,deltat,vt:gl*(v-gl*exp((v-vt)/deltat))
-    x,_=optimize.leastsq(lambda x:f(*x),[.2,1./80.,-80.,5.,-55.])
-    #C,gl,El,deltat,vt=x
+    i=i[:-1]
+    f=lambda gl,El,deltat,vt:C*dv-i-(gl*(El-v)+gl*deltat*exp((v-vt)/deltat))
+    #df=lambda gl,El,deltat,vt:gl*(v-gl*exp((v-vt)/deltat))
+    x,_=optimize.leastsq(lambda x:f(*x),[1./80.,-60.,3.,-55.])
+    #gl,El,deltat,vt=x
     return x
 
+def remove_spikes(v,spikes=None,T=100):
+    if spikes is None:
+        spikes=spike_peaks(v)
+    ind=(v!=1e9)
+    for i in spikes:
+        ind[i:i+100]=False
+    return ind
+
+"""
 def IV_curve(i,v,dt=1):
     '''
     Dynamic I-V curve (see Badel et al., 2008)
@@ -142,16 +159,35 @@ def IV_curve(i,v,dt=1):
     NB: maybe be better to have direct fit to exponential?
     '''
     C=estimate_capacitance(i,v,dt)
+"""
 
 if __name__=='__main__':
     #path=r'D:\My Dropbox\Neuron\Hu\recordings_Ifluct\I0_07_std_02_tau_10_sampling_20\\'
     filename=r'D:\Anna\2010_03_0020_random_noise_200pA.atf'
+    filename2=r'D:\Anna\input_file.atf' # in pF
     from pylab import *
     M=loadtxt(filename)
     t,vs=M[:,0],M[:,1]
+    M2=loadtxt(filename2)
+    _,i=M2[:,0],M2[:,1]
+    t=t[:len(i)]
+    vs=vs[:len(i)]
+    print "Data loaded"
+    ind=remove_spikes(vs)
+    vs=vs[ind]
+    i=i[ind]
+    C=estimate_capacitance(i,vs,0.05*1e-3)# in nF
+    print C
+    dv=diff(vs)/(0.05*1e-3)
+    figure()
+    plot(vs[:-1],C*dv-i[:-1])
+    figure()
+    plot(vs[:-1],C*dv)
+    print fit_EIF(i,vs,0.05*1e-3)
+    #exit()
     #shape=spike_shape(vs,before=100,after=100)
-    spikes=spike_onsets(vs)
-    plot(vs[:-1],diff(vs))
+    #spikes=spike_onsets(vs)
+    #plot(vs[:-1],diff(vs))
     #vm=vm_threshold(vs,spikes,T=200)
     #ISI=diff(spikes)
     #subplot(211)
