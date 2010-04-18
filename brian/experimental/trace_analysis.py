@@ -11,7 +11,7 @@ from scipy import stats
 __all__=['find_spike_criterion','spike_peaks','spike_onsets','find_onset_criterion',
          'slope_threshold','vm_threshold','spike_shape']
 
-# TODO: I-V curve, slopefactor, subthreshold kernel, time constant
+# TODO: I-V curve, slopefactor, subthreshold kernel, time constant, threshold optimisation
 
 def find_spike_criterion(v):
     '''
@@ -151,12 +151,13 @@ if __name__=='__main__':
     t,vs=M[:,0],M[:,1]
     #shape=spike_shape(vs,before=100,after=100)
     spikes=spike_onsets(vs)
-    vm=vm_threshold(vs,spikes,T=200)
-    ISI=diff(spikes)
-    subplot(211)
-    plot(vm,vs[spikes],'.')
-    subplot(212)
-    plot(ISI,vs[spikes[1:]],'.')
+    plot(vs[:-1],diff(vs))
+    #vm=vm_threshold(vs,spikes,T=200)
+    #ISI=diff(spikes)
+    #subplot(211)
+    #plot(vm,vs[spikes],'.')
+    #subplot(212)
+    #plot(ISI,vs[spikes[1:]],'.')
     #slope=slope_threshold(vs,spikes,T=200)
     #plot(slope,vs[spikes],'.')
     #plot(shape)
