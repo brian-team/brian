@@ -5,7 +5,13 @@ from numpy import *
 #from brian.stdunits import mV
 from brian.utils.io import *
 from time import time
-from scipy.optimize import fmin
+from scipy import optimize
+from scipy import stats
+
+__all__=['find_spike_criterion','spike_peaks','spike_onsets','find_onset_criterion',
+         'slope_threshold','vm_threshold','spike_shape']
+
+# TODO: I-V curve, slopefactor, subthreshold kernel, time constant
 
 def find_spike_criterion(v):
     '''
@@ -44,6 +50,8 @@ def spike_onsets(v,criterion=None,vc=None):
     vc is the spike criterion (voltage above which we consider we have a spike).
     First derivative criterion (dv>criterion).
     '''
+    vc=vc or find_spike_criterion(v)
+    criterion=criterion or find_onset_criterion(v,vc=vc)
     peaks=spike_peaks(v,vc)
     dv=diff(v)
     previous_i=0
@@ -62,25 +70,97 @@ def find_onset_criterion(v,guess=0.1,vc=None):
     Finds the best criterion on dv/dt to determine spike onsets,
     based on minimum threshold variability.
     '''
-    return float(fmin(lambda x:std(v[spike_onsets(v,x,vc)]),guess,disp=0))
+    vc=vc or find_spike_criterion(v)
+    return float(optimize.fmin(lambda x:std(v[spike_onsets(v,x,vc)]),guess,disp=0))
 
-def slope_threshold(v):
-    # 1. find onsets
-    # 2. linear regression on slopes
-    # 3. optimization to find best correlated time for slopes
-    pass
+def spike_shape(v,onsets=None,before=100,after=100):
+    '''
+    Spike shape (before peaks). Aligned on spike onset by default
+    (to align on peaks, just pass onsets=peaks).
+    
+    onsets: spike onset times
+    before: number of timesteps before onset
+    after: number of timesteps after onset
+    '''
+    if onsets is None: onsets=spike_onsets(v)
+    shape=zeros(after+before)
+    for i in onsets:
+        v0=v[max(0,i-before):i+after]
+        shape[len(shape)-len(v0):]+=v0
+    return shape/len(onsets)
+
+def vm_threshold(v,onsets=None,T=None):
+    '''
+    Average membrane potential before spike threshold (T steps).
+    '''
+    if onsets is None: onsets=spike_onsets(v)
+    l=[]
+    for i in onsets:
+        l.append(mean(v[max(0,i-T):i]))
+    return array(l)
+
+def slope_threshold(v,onsets=None,T=None):
+    '''
+    Slope of membrane potential before spike threshold (T steps).
+    '''
+    if onsets is None: onsets=spike_onsets(v)
+    l=[]
+    for i in onsets:
+        v0=v[max(0,i-T):i]
+        M=len(v0)
+        x=arange(M)-M+1
+        slope=sum((v0-v[i])*x)/sum(x**2)
+        l.append(slope)
+    return array(l)
+
+def estimate_capacitance(i,v,dt=1):
+    '''
+    Estimates capacitance from current-clamp recording
+    with white noise (see Badel et al., 2008).
+    '''
+    dv=v/dt
+    return optimize.fmin(lambda C:var(dv-i/C),1.)
+
+def fit_EIF(i,v,dt=1):
+    '''
+    Fits the exponential model of spike initiation in the
+    phase plane (v,dv).
+    '''
+    #C=estimate_capacitance(i,v,dt) # not useful here
+    dv=diff(v)/dt
+    v=v[:-1]
+    f=lambda C,gl,El,deltat,vt:C*dv-(gl*(El-v)+gl*deltat*exp((v-vt)/deltat))
+    df=lambda C,gl,El,deltat,vt:gl*(v-gl*exp((v-vt)/deltat))
+    x,_=optimize.leastsq(lambda x:f(*x),[.2,1./80.,-80.,5.,-55.])
+    #C,gl,El,deltat,vt=x
+    return x
+
+def IV_curve(i,v,dt=1):
+    '''
+    Dynamic I-V curve (see Badel et al., 2008)
+    E[C*dV/dt-I]=f(V)
+    NB: maybe be better to have direct fit to exponential?
+    '''
+    C=estimate_capacitance(i,v,dt)
 
 if __name__=='__main__':
-    path=r'D:\My Dropbox\Neuron\Hu\recordings_Ifluct\I0_07_std_02_tau_10_sampling_20\\'
-    t,vs=read_neuron_dat(path+'vs.dat')
-    print find_spike_criterion(vs)
-    sp=spike_peaks(vs)
-    c=find_onset_criterion(vs)
-    spikes=spike_onsets(vs,c)
-    print c/.02,std(vs[spikes])
+    #path=r'D:\My Dropbox\Neuron\Hu\recordings_Ifluct\I0_07_std_02_tau_10_sampling_20\\'
+    filename=r'D:\Anna\2010_03_0020_random_noise_200pA.atf'
     from pylab import *
-    hist(vs[spikes])
-    show()
+    M=loadtxt(filename)
+    t,vs=M[:,0],M[:,1]
+    #shape=spike_shape(vs,before=100,after=100)
+    spikes=spike_onsets(vs)
+    vm=vm_threshold(vs,spikes,T=200)
+    ISI=diff(spikes)
+    subplot(211)
+    plot(vm,vs[spikes],'.')
+    subplot(212)
+    plot(ISI,vs[spikes[1:]],'.')
+    #slope=slope_threshold(vs,spikes,T=200)
+    #plot(slope,vs[spikes],'.')
+    #plot(shape)
+    #hist(vs[spikes])
     #plot(t,vs)
     #plot(t[spikes],vs[spikes],'.r')
-    #show()
+    show()
