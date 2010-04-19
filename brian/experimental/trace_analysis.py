@@ -9,9 +9,63 @@ from scipy import optimize
 from scipy import stats
 
 __all__=['find_spike_criterion','spike_peaks','spike_onsets','find_onset_criterion',
-         'slope_threshold','vm_threshold','spike_shape']
+         'slope_threshold','vm_threshold','spike_shape','spike_duration','reset_potential',
+         'spike_mask','fit_EIF','IV_curve']
 
-# TODO: I-V curve, slopefactor, subthreshold kernel, time constant, threshold optimisation, remove spikes
+"""
+TODO:
+* A better fit_EIF function (conjugate gradient? Check also Badel et al., 2008. Or maybe just calculate gradient)
+* Fit threshold model (ISI dependence, voltage dependence)
+* Fit subthreshold kernel (least squares, see also Jolivet)
+"""
+
+def spike_duration(v,onsets=None,full=False):
+    '''
+    Average spike duration.
+    Default: time from onset to next minimum.
+    If full:
+    * Time from onset to peak
+    * Time from onset down to same value (spike width)
+    * Total duration from onset to next minimum
+    * Standard deviations for these 3 values
+    '''
+    if onsets is None: onsets=spike_onsets(v)
+    dv=diff(v)
+    total_duration=[]
+    time_to_peak=[]
+    spike_width=[]
+    for i,spike in enumerate(onsets):
+        if i==len(onsets)-1:
+            next_spike=len(dv)
+        else:
+            next_spike=onsets[i+1]
+        total_duration.append(((dv[spike:next_spike-1]<=0) & (dv[spike+1:next_spike]>0)).argmax())
+        time_to_peak.append((dv[spike:next_spike]<=0).argmax())
+        spike_width.append((v[spike+1:next_spike]<=v[spike]).argmax())
+    if full:
+        return mean(time_to_peak),mean(spike_width),mean(total_duration),\
+               std(time_to_peak),std(spike_width),std(total_duration)
+    else:
+        return mean(total_duration)
+
+def reset_potential(v,peaks=None,full=False):
+    '''
+    Average reset potential, calculated as next minimum after spike peak.
+    If full is True, also returns the standard deviation.
+    '''
+    if peaks is None: peaks=spike_peaks(v)
+    dv=diff(v)
+    reset=[]
+    for i,spike in enumerate(peaks):
+        if i==len(peaks)-1:
+            next_spike=len(dv)
+        else:
+            next_spike=peaks[i+1]
+        reset.append(v[spike+((dv[spike:next_spike-1]<=0) & (dv[spike+1:next_spike]>0)).argmax()+1])
+    if full:
+        return mean(reset),std(reset)
+    else:
+        return mean(reset)
 
 def find_spike_criterion(v):
     '''
@@ -102,6 +156,7 @@ def vm_threshold(v,onsets=None,T=None):
 def slope_threshold(v,onsets=None,T=None):
     '''
     Slope of membrane potential before spike threshold (T steps).
+    Returns all slopes as a list.
     '''
     if onsets is None: onsets=spike_onsets(v)
     l=[]
@@ -113,91 +168,112 @@ def slope_threshold(v,onsets=None,T=None):
         l.append(slope)
     return array(l)
 
-def estimate_capacitance(i,v,dt=1,guess=1.):
+def ISI_threshold_model(v,onsets=None):
+    '''
+    Fits threshold to model with ISI dependence.
+    
+    Model:
+    vt(t)=vt0+a*sum(exp((ti-t)/tau))
+    
+    Returns vt0, a, tau
+    
+    DOESN'T SEEM TO WORK
+    '''
+    if onsets is None: onsets=spike_onsets(v)
+    threshold=v[onsets]
+    n=len(onsets)
+    def f(vt0,a,b):
+        inc=exp(-diff(threshold)*b)
+        x=zeros(n)
+        for i in range(1,n):
+            x[i]=(x[i-1]+1)*inc[i-1]
+        return vt0+a*x
+    return optimize.leastsq(lambda x:f(*x)-threshold,[-40.,5.,.01])[0]
+
+def estimate_capacitance(i,v,dt=1,guess=100.):
     '''
     Estimates capacitance from current-clamp recording
     with white noise (see Badel et al., 2008).
+    
+    Hint for units: if v and dt are in ms, then the capacitance has
+    the same relationship to F than the current to A (pA -> pF).
     '''
     dv=diff(v)/dt
-    i=i[:-1]
+    i,v=i[:-1],v[:-1]
+    mask=-spike_mask(v) # subthreshold trace
+    dv,v,i=dv[mask],v[mask],i[mask]
     return optimize.fmin(lambda C:var(dv-i/C),guess,disp=0)[0]
 
-"""
-def estimate_area(i,v,dt=1,guess=1.):
-    return estimate_capacitance(i,v,dt,guess)/(0.9*uF/cm**2)
-"""
-
-def fit_EIF(i,v,dt=1,C=None):
-    '''
-    Fits the exponential model of spike initiation in the
-    phase plane (v,dv).
-    '''
-    C=C or estimate_capacitance(i,v,dt)
-    # Remove spikes?
-    dv=diff(v)/dt
-    v=v[:-1]
-    i=i[:-1]
-    f=lambda gl,El,deltat,vt:C*dv-i-(gl*(El-v)+gl*deltat*exp((v-vt)/deltat))
-    #df=lambda gl,El,deltat,vt:gl*(v-gl*exp((v-vt)/deltat))
-    x,_=optimize.leastsq(lambda x:f(*x),[1./80.,-60.,3.,-55.])
-    #gl,El,deltat,vt=x
-    return x
-
-def remove_spikes(v,spikes=None,T=100):
-    if spikes is None:
-        spikes=spike_peaks(v)
-    ind=(v!=1e9)
-    for i in spikes:
-        ind[i:i+100]=False
-    return ind
-
-"""
-def IV_curve(i,v,dt=1):
+def IV_curve(i,v,dt=1,C=None,bins=None,T=0):
     '''
     Dynamic I-V curve (see Badel et al., 2008)
     E[C*dV/dt-I]=f(V)
-    NB: maybe be better to have direct fit to exponential?
+    T: time after spike onset to include in estimation.
+    bins: bins for v (default: 20 bins between min and max).
     '''
-    C=estimate_capacitance(i,v,dt)
-"""
+    C=C or estimate_capacitance(i,v,dt)
+    if bins is None: bins=linspace(min(v),max(v),20)
+    dv=diff(v)/dt
+    v,i=v[:-1],i[:-1]
+    mask=-spike_mask(v,spike_onsets(v)+T) # subthreshold trace
+    dv,v,i=dv[mask],v[mask],i[mask]
+    fv=i-C*dv # intrinsic current
+    return array([mean(fv[(v>=vmin) & (v<vmax)]) for vmin,vmax in zip(bins[:-1],bins[1:])])
+
+def fit_EIF(i,v,dt=1,C=None,T=0):
+    '''
+    Fits the exponential model of spike initiation in the
+    phase plane (v,dv).
+    T: time after spike onset to include in estimation.
+    
+    Returns gl, El, deltat, vt
+    (leak conductance, leak reversal potential, slope factor, threshold)
+    The result does not seem very reliable (deltat depends critically on T).
+    
+    Hint for units: if v is in mV, dt in ms, i in pA, then gl is in nS
+    '''
+    C=C or estimate_capacitance(i,v,dt)
+    dv=diff(v)/dt
+    v,i=v[:-1],i[:-1]
+    mask=-spike_mask(v,spike_onsets(v)+T) # subthreshold trace
+    dv,v,i=dv[mask],v[mask],i[mask]
+    f=lambda gl,El,deltat,vt:C*dv-i-(gl*(El-v)+gl*deltat*exp((v-vt)/deltat))
+    x,_=optimize.leastsq(lambda x:f(*x),[50.,-60.,3.,-55.])
+    return x
+
+def spike_mask(v,spikes=None,T=None):
+    '''
+    Returns an array of booleans which are True in spikes.
+    spikes: starting points of spikes (default: onsets)
+    T: duration (default: next minimum)
+    
+    Ex:
+      v=v[spike_mask(v)] # only spikes
+      v=v[-spike_mask(v)] # subthreshold trace
+    '''
+    if spikes is None: spikes=spike_onsets(v)
+    ind=(v==1e9)
+    if T is None:
+        dv=diff(v)
+        for i,spike in enumerate(spikes):
+            if i==len(spikes)-1: next_spike=len(dv)
+            else: next_spike=spikes[i+1]
+            T=((dv[spike:next_spike-1]<=0) & (dv[spike+1:next_spike]>0)).argmax()
+            ind[spike:spike+T+1]=True
+    else: # fixed duration
+        for i in spikes:
+            ind[i:i+T]=True 
+    return ind
 
 if __name__=='__main__':
-    #path=r'D:\My Dropbox\Neuron\Hu\recordings_Ifluct\I0_07_std_02_tau_10_sampling_20\\'
     filename=r'D:\Anna\2010_03_0020_random_noise_200pA.atf'
-    filename2=r'D:\Anna\input_file.atf' # in pF
+    #filename2=r'D:\Anna\input_file.atf' # in pF
     from pylab import *
     M=loadtxt(filename)
     t,vs=M[:,0],M[:,1]
-    M2=loadtxt(filename2)
-    _,i=M2[:,0],M2[:,1]
-    t=t[:len(i)]
-    vs=vs[:len(i)]
-    print "Data loaded"
-    ind=remove_spikes(vs)
-    vs=vs[ind]
-    i=i[ind]
-    C=estimate_capacitance(i,vs,0.05*1e-3)# in nF
-    print C
-    dv=diff(vs)/(0.05*1e-3)
+    print array(spike_duration(vs,full=True))*.05
+    spikes=spike_onsets(vs)
+    plot(t*1000,vs)
+    plot(t[spikes]*1000,vs[spikes],'.r')
     figure()
-    plot(vs[:-1],C*dv-i[:-1])
-    figure()
-    plot(vs[:-1],C*dv)
-    print fit_EIF(i,vs,0.05*1e-3)
-    #exit()
-    #shape=spike_shape(vs,before=100,after=100)
-    #spikes=spike_onsets(vs)
-    #plot(vs[:-1],diff(vs))
-    #vm=vm_threshold(vs,spikes,T=200)
-    #ISI=diff(spikes)
-    #subplot(211)
-    #plot(vm,vs[spikes],'.')
-    #subplot(212)
-    #plot(ISI,vs[spikes[1:]],'.')
-    #slope=slope_threshold(vs,spikes,T=200)
-    #plot(slope,vs[spikes],'.')
-    #plot(shape)
-    #hist(vs[spikes])
-    #plot(t,vs)
-    #plot(t[spikes],vs[spikes],'.r')
     show()
