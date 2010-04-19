@@ -21,8 +21,8 @@ if __name__ == '__main__':
     results = modelfitting(model = equations, reset = 0, threshold = 1,
                                  data = spikes, 
                                  input = input, dt = .1*ms,
-                                 particles = 100, iterations = 1, delta = 2*ms,
-                                 use_gpu=False,
+                                 particles = 1000, iterations = 1, delta = 2*ms,
+                                 use_gpu = False, max_cpu = 2, machines=['localhost'],
                                  R = [1.0e9, 9.0e9], tau = [10*ms, 40*ms])
     
     print_results(results)
