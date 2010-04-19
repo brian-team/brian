@@ -152,7 +152,7 @@ class InstanceFollower(object):
                 return self.__instancesets__[cls].get_i_d(value)
     def get(self,cls,id=None):
         if not cls in self.__instancesets__: return []
-        return self.__instancesets__[cls].get(id)  
+        return self.__instancesets__[cls].get(id)
 
 class InstanceTracker(object):
     """Base class for all classes whose instances are to be tracked
@@ -177,7 +177,6 @@ class InstanceTracker(object):
         if obj._track_instances():
             obj.__instancefollower__.add(obj,outer_frame)
         return obj
-
 
 def magic_register(*args,**kwds):
     '''Declare that a magically tracked object should be put in a particular frame
