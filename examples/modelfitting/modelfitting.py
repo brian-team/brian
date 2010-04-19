@@ -22,7 +22,7 @@ if __name__ == '__main__':
                                  data = spikes, 
                                  input = input, dt = .1*ms,
                                  particles = 100, iterations = 1, delta = 2*ms,
-                                 use_gpu=False, machines=['localhost'], max_cpu=2,
+                                 use_gpu=False,
                                  R = [1.0e9, 9.0e9], tau = [10*ms, 40*ms])
     
     print_results(results)
