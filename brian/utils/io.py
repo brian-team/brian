@@ -3,7 +3,7 @@ Input/output utility functions
 '''
 import numpy as np
 
-__all__ = ['read_neuron_dat']
+__all__ = ['read_neuron_dat','read_atf']
 
 def read_neuron_dat(name):
     '''
@@ -13,6 +13,21 @@ def read_neuron_dat(name):
     '''
     f=open(name)
     f.readline(),f.readline() # skip first two lines
+    M=np.loadtxt(f)
+    f.close()
+    return M[:,0],M[:,1]
+
+def read_atf(name):
+    '''
+    Reads an Axon ATF file (.atf).
+    
+    Returns vector of times, vector of values
+    '''
+    f=open(name)
+    f.readline()
+    n=int(f.readline().split()[0]) # skip first two lines
+    for _ in range(n+1):
+        f.readline()
     M=np.loadtxt(f)
     f.close()
     return M[:,0],M[:,1]

@@ -7,17 +7,25 @@ from brian.utils.io import *
 from time import time
 from scipy import optimize
 from scipy import stats
+from scipy.signal import lfilter
 
 __all__=['find_spike_criterion','spike_peaks','spike_onsets','find_onset_criterion',
          'slope_threshold','vm_threshold','spike_shape','spike_duration','reset_potential',
-         'spike_mask','fit_EIF','IV_curve']
+         'spike_mask','fit_EIF','IV_curve','threshold_model']
 
 """
 TODO:
 * A better fit_EIF function (conjugate gradient? Check also Badel et al., 2008. Or maybe just calculate gradient)
-* Fit threshold model (ISI dependence, voltage dependence)
+* Better fit of threshold model or other models
 * Fit subthreshold kernel (least squares, see also Jolivet)
 """
+
+def lowpass(x,tau,dt=1.):
+    """
+    Low-pass filter x(t) with time constant tau.
+    """
+    a=exp(-dt/tau)
+    return lfilter([1.-a],[1.,-a],x)
 
 def spike_duration(v,onsets=None,full=False):
     '''
@@ -168,28 +176,45 @@ def slope_threshold(v,onsets=None,T=None):
         l.append(slope)
     return array(l)
 
-def ISI_threshold_model(v,onsets=None):
+def threshold_model(v,onsets=None,dt=1.):
     '''
-    Fits threshold to model with ISI dependence.
+    Fits adaptive threshold model.
     
     Model:
-    vt(t)=vt0+a*sum(exp((ti-t)/tau))
+    tau*dvt/dt=vt0+a*[v-vi]^+
     
-    Returns vt0, a, tau
-    
-    DOESN'T SEEM TO WORK
+    Returns vt0, vi, a, tau (tau in timesteps by default)
     '''
     if onsets is None: onsets=spike_onsets(v)
     threshold=v[onsets]
-    n=len(onsets)
-    def f(vt0,a,b):
-        inc=exp(-diff(threshold)*b)
-        x=zeros(n)
-        for i in range(1,n):
-            x[i]=(x[i-1]+1)*inc[i-1]
-        return vt0+a*x
-    return optimize.leastsq(lambda x:f(*x)-threshold,[-40.,5.,.01])[0]
+    def f(vt0,vi,a,tau):
+        return vt0+a*lowpass(clip(v-vi,0,inf),tau,dt=dt)
+    return optimize.leastsq(lambda x:f(*x)[onsets]-threshold,[-55.,-65.,1.,10.])[0]
 
+def threshold_model2(v,onsets=None,dt=1.,k=1.):
+    '''
+    Fits adaptive threshold model.
+    The criterion also includes the subthreshold condition.
+    DOESN'T WORK WELL
+    
+    Model:
+    tau*dvt/dt=vt0+a*[v-vi]^+
+    
+    k is the weight of the subthreshold condition in the error criterion.
+    
+    Returns vt0, vi, a, tau (tau in timesteps by default)
+    '''
+    if onsets is None: onsets=spike_onsets(v)
+    threshold=v[onsets]
+    def f(vt0,vi,a,tau):
+        return vt0+a*lowpass(clip(v-vi,0,inf),tau,dt=dt)
+    def E(vt0,vi,a,tau):
+        theta=f(vt0,vi,a,tau)
+        #return mean((theta[onsets]-threshold)**2)-k*mean(theta>v)
+        return mean(threshold>theta[onsets])+k*mean(theta>v)
+
+    return optimize.fmin_powell(lambda x:-E(*x),[-55.,-65.,1.,10.])
+  
 def estimate_capacitance(i,v,dt=1,guess=100.):
     '''
     Estimates capacitance from current-clamp recording
@@ -266,14 +291,20 @@ def spike_mask(v,spikes=None,T=None):
     return ind
 
 if __name__=='__main__':
-    filename=r'D:\Anna\2010_03_0020_random_noise_200pA.atf'
+    filename=r"D:\My Dropbox\Neuron\Hu\recordings_Ifluct\I0_07_std_02_tau_10_sampling_20\vs.dat"
+    #filename=r'D:\Anna\2010_03_0020_random_noise_200pA.atf'
     #filename2=r'D:\Anna\input_file.atf' # in pF
     from pylab import *
-    M=loadtxt(filename)
-    t,vs=M[:,0],M[:,1]
-    print array(spike_duration(vs,full=True))*.05
+    #M=loadtxt(filename)
+    #t,vs=M[:,0],M[:,1]
+    t,vs=read_neuron_dat(filename)
+    #t,vs=read_atf(filename)
+    #print array(spike_duration(vs,full=True))*.05
+    vt0,vi,a,tau=threshold_model(vs,dt=0.05)
+    print vt0,vi,a,tau
+    theta=vt0+a*lowpass(clip(vs-vi,0,inf),tau,dt=0.05)
     spikes=spike_onsets(vs)
-    plot(t*1000,vs)
+    plot(t*1000,vs,'k')
+    plot(t*1000,theta,'b')
     plot(t[spikes]*1000,vs[spikes],'.r')
-    figure()
     show()
