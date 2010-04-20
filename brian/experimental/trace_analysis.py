@@ -11,7 +11,7 @@ from scipy.signal import lfilter
 
 __all__=['find_spike_criterion','spike_peaks','spike_onsets','find_onset_criterion',
          'slope_threshold','vm_threshold','spike_shape','spike_duration','reset_potential',
-         'spike_mask','fit_EIF','IV_curve','threshold_model']
+         'spike_mask','fit_EIF','IV_curve','threshold_model','lowpass']
 
 """
 TODO:
