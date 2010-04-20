@@ -11,12 +11,11 @@ from scipy.signal import lfilter
 
 __all__=['find_spike_criterion','spike_peaks','spike_onsets','find_onset_criterion',
          'slope_threshold','vm_threshold','spike_shape','spike_duration','reset_potential',
-         'spike_mask','fit_EIF','IV_curve','threshold_model','lowpass']
+         'spike_mask','fit_EIF','IV_curve','threshold_model','lowpass','estimate_capacitance']
 
 """
 TODO:
 * A better fit_EIF function (conjugate gradient? Check also Badel et al., 2008. Or maybe just calculate gradient)
-* Better fit of threshold model or other models
 * Fit subthreshold kernel (least squares, see also Jolivet)
 """
 
@@ -176,45 +175,37 @@ def slope_threshold(v,onsets=None,T=None):
         l.append(slope)
     return array(l)
 
-def threshold_model(v,onsets=None,dt=1.):
+"""
+The good strategy:
+* optimise for every tau for best threshold prediction
+* find the tau that minimises misses
+"""
+def threshold_model(v,onsets=None,dt=1.,tau=None):
     '''
     Fits adaptive threshold model.
     
     Model:
     tau*dvt/dt=vt0+a*[v-vi]^+
     
-    Returns vt0, vi, a, tau (tau in timesteps by default)
+    tau can be fixed or found by optimization.
+    
+    Returns vt0, vi, a[, tau] (tau in timesteps by default)
     '''
     if onsets is None: onsets=spike_onsets(v)
-    threshold=v[onsets]
-    def f(vt0,vi,a,tau):
-        return vt0+a*lowpass(clip(v-vi,0,inf),tau,dt=dt)
-    return optimize.leastsq(lambda x:f(*x)[onsets]-threshold,[-55.,-65.,1.,10.])[0]
+    if tau is None:
+        spikes=spike_mask(v,onsets)
+        def f(tau):
+            vt0,vi,a=threshold_model(v,onsets=onsets,dt=dt,tau=tau)
+            theta=vt0+a*lowpass(clip(v-vi,0,inf),tau,dt=0.05)
+            return mean(theta[-spikes]<v[-spikes]) # false alarm rate
+        tau=float(optimize.fmin(lambda x:f(*x),10.,disp=0))
+        return list(threshold_model(v,onsets=onsets,dt=dt,tau=tau))+[tau]
+    else:
+        threshold=v[onsets]
+        def f(vt0,vi,a,tau):
+            return vt0+a*lowpass(clip(v-vi,0,inf),tau,dt=dt)
+        return optimize.leastsq(lambda x:f(x[0],x[1],x[2],tau)[onsets]-threshold,[-55.,-65.,1.])[0]
 
-def threshold_model2(v,onsets=None,dt=1.,k=1.):
-    '''
-    Fits adaptive threshold model.
-    The criterion also includes the subthreshold condition.
-    DOESN'T WORK WELL
-    
-    Model:
-    tau*dvt/dt=vt0+a*[v-vi]^+
-    
-    k is the weight of the subthreshold condition in the error criterion.
-    
-    Returns vt0, vi, a, tau (tau in timesteps by default)
-    '''
-    if onsets is None: onsets=spike_onsets(v)
-    threshold=v[onsets]
-    def f(vt0,vi,a,tau):
-        return vt0+a*lowpass(clip(v-vi,0,inf),tau,dt=dt)
-    def E(vt0,vi,a,tau):
-        theta=f(vt0,vi,a,tau)
-        #return mean((theta[onsets]-threshold)**2)-k*mean(theta>v)
-        return mean(threshold>theta[onsets])+k*mean(theta>v)
-
-    return optimize.fmin_powell(lambda x:-E(*x),[-55.,-65.,1.,10.])
-  
 def estimate_capacitance(i,v,dt=1,guess=100.):
     '''
     Estimates capacitance from current-clamp recording
