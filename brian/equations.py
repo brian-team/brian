@@ -918,8 +918,6 @@ class Equations(object):
     def __getattr__(self,name):
         '''
         Returns the corresponding function.
-        
-        Note: is this still used?
         '''
         # bug with clustertools
         if name == 'as_array':
