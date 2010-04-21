@@ -328,6 +328,7 @@
 + examples/frompapers/diesmann_et_al_1999_longer.py
 + examples/frompapers/izhikevich_2006_polychronization.py
 + examples/frompapers/izhikevich_2006_polychronization_longer.py
+- examples/frompapers/rothman_manis_2003.py
 + examples/frompapers/sturzl_et_al_2000.py
 + examples/interface/index.html
 + examples/interface/interface.py

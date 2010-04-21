@@ -83,7 +83,7 @@ except:
 from tests.simpletest import *
 
 __version__ = '1.2.1dev'
-__release_date__ = '2010-04-01'
+__release_date__ = '2010-04-21'
 
 #import unitsafefunctions as _usf
 #import numpy as _numpy
