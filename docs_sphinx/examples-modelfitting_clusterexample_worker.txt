@@ -17,6 +17,6 @@ before the manager script is run.
 
     from brian.library.modelfitting import *
     if __name__=='__main__':
-        modelfitting_worker(max_cpu=2)
+        worker(max_cpu=2)
     
 

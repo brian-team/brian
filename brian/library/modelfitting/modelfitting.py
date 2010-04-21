@@ -192,7 +192,7 @@ def modelfitting(model = None, reset = None, threshold = None,
                  data = None, 
                  input_var = 'I', input = None, dt = None,
                  particles = 1000, iterations = 10, pso_params = None,
-                 delta = 4*ms, includedelays = True,
+                 delta = 4*ms,
                  slices = 1, overlap = 0*second,
                  initial_values = None,
                  verbose = True, stepsize = 100*ms,
@@ -201,6 +201,106 @@ def modelfitting(model = None, reset = None, threshold = None,
                  machines = [], named_pipe = None, port = None,
                  returninfo = False,
                  **params):
+    """
+    Model fitting function.
+    
+    Fits a spiking neuron model to electrophysiological data (injected current and spikes).
+    
+    See also the section :ref:`model-fitting-library` in the user manual.
+    
+    **Arguments**
+    
+    ``model``
+        An :class:`~brian.Equations` object containing the equations defining the model.
+    ``reset``
+        A reset value for the membrane potential, or a string containing the reset
+        equations.
+    ``threshold``
+        A threshold value for the membrane potential, or a string containing the threshold
+        equations.
+    ``refractory``
+        The refractory period in second.
+    ``data``
+        A list of spike times, or a list of several spike trains as a list of pairs (index, spike time)
+        if the fit must be performed in parallel over several target spike trains. In this case,
+        the modelfitting function returns as many parameters sets as target spike trains.
+    ``input_var='I'``
+        The variable name used in the equations for the input current.
+    ``input``
+        A vector of values containing the time-varying signal the neuron responds to (generally
+        an injected current).
+    ``dt``
+        The time step of the input (the inverse of the sampling frequency).
+    ``**params``
+        The list of parameters to fit the model with. Each parameter must be set as follows:
+        ``param_name=[bound_min, min, max, bound_max]``
+        where ``bound_min`` and ``bound_max`` are the boundaries, and ``min`` and ``max``
+        specify the interval from which the parameter values are uniformly sampled at
+        the beginning of the optimization algorithm.
+        If not using boundaries, set ``param_name=[min, max]``.
+        Also, you can add a fit parameter which is a spike delay for all spikes :
+        add the special parameter ``_delays`` in ``**params``.
+    ``particles``
+        Number of particles per target train used by the particle swarm optimization algorithm.
+    ``iterations``
+        Number of iterations in the particle swarm optimization algorithm.
+    ``pso_params``
+        Parameters of the PSO algorithm. It is a list with three scalar values (omega, c_l, c_g).
+        The parameter ``omega`` is the "inertial constant", ``c_l`` is the "local best"
+        constant affecting how much the particle's personl best influences its movement, and
+        ``c_g`` is the "global best" constant affecting how much the global best
+        position influences each particle's movement. See the
+        `wikipedia entry on PSO <http://en.wikipedia.org/wiki/Particle_swarm_optimization>`__
+        for more details (note that they use ``c_1`` and ``c_2`` instead of ``c_l``
+        and ``c_g``). Reasonable values are (.9, .5, 1.5), but experimentation
+        with other values is a good idea.
+    ``delta=4*ms``
+        The precision factor delta (a scalar value in second).
+    ``slices=1``
+        The number of time slices to use.
+    ``overlap=0*ms``
+        When using several time slices, the overlap between consecutive slices, in seconds.
+    ``initial_values``
+        A dictionary containing the initial values for the state variables.
+    ``verbose=True``
+        A boolean value indicating whether printing the progress of the optimization algorithm or not.
+    ``use_gpu``
+        A boolean value indicating whether using the GPU or not. This value is not taken into account
+        if no GPU is present on the computer.
+    ``max_cpu``
+        The maximum number of CPUs to use in parallel. It is set to the number of CPUs in the machine by default.
+    ``max_gpu``
+        The maximum number of GPUs to use in parallel. It is set to the number of GPUs in the machine by default.
+    ``precision``
+        A string set to either ``float`` or ``double`` to specify whether to use
+        single or double precision on the GPU. If it is not specified, it will
+        use the best precision available.
+    ``machines=[]``
+        A list of machine names to use in parallel. See :ref:`modelfitting-clusters`.
+    ``named_pipe``
+        Set to ``True`` to use Windows named pipes for networking, or a string
+        to use a particular name for the pipe. See :ref:`modelfitting-clusters`.
+    ``port``
+        The port number for IP networking, you only need to specify this if the
+        default value of 2718 is blocked. See :ref:`modelfitting-clusters`.
+    ``return_info``
+        Set to ``True`` to return information about the optimization at the end of the procedure.
+    
+    **Return values**
+    
+    ``results``
+        A dictionary containing the best parameter values for each target spike train
+        found by the optimization algorithm. ``results['param_name']`` is a vector containing
+        the parameter values for each target. ``results['fitness']`` is a vector containing
+        the gamma factor for each target.
+        For more details on the gamma factor, see
+        `Jolivet et al. 2008, "A benchmark test for a quantitative assessment of simple neuron models", J. Neurosci. Methods <http://www.ncbi.nlm.nih.gov/pubmed/18160135>`__ (available in PDF
+        `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
+    ``fitinfo``
+        If ``return_matrix`` is set to ``True``, ``fitness_matrices[i]`` is a (N*iterations) matrix
+        containing the histogram of the fitness values among particle within each group at each 
+        iteration of the optimization algorithm.
+    """
     
     # Use GPU ?
     if can_use_gpu & (use_gpu is not False):
@@ -208,10 +308,6 @@ def modelfitting(model = None, reset = None, threshold = None,
     else:
         gpu_policy = 'no_gpu'
     
-    # TODO: bug with Equation namespaces during function serialization in Playdoh
-    if (len(machines)>0) and isinstance(model, Equations):
-#        raise Exception("You can't use Equations objects and multiple machines for now. Pass a string instead of an Equations object for the model.")
-        pass
     # Make sure that 'data' is a N*2-array
     data = array(data)
     if data.ndim == 1:
@@ -281,7 +377,23 @@ def modelfitting(model = None, reset = None, threshold = None,
 def get_spikes( model = None, reset = None, threshold = None,
                 input = None, input_var = 'I', dt = None,
                 **params):
+    """
+    Retrieves the spike times corresponding to the best parameters found by
+    the modelfitting function.
     
+    **Arguments**
+    
+    ``model``, ``reset``, ``threshold``, ``input``, ``input_var``, ``dt``
+        Same parameters as for the ``modelfitting`` function.
+        
+    ``**params``
+        The best parameters returned by the ``modelfitting`` function.
+    
+    **Returns**
+    
+    ``spiketimes``
+        The spike times of the model with the given input and parameters.
+    """
     duration = len(input)*dt
     ngroups = len(params[params.keys()[0]])
     group = NeuronGroup(N = ngroups, model = model, reset=reset, threshold=threshold, 
@@ -302,7 +414,33 @@ def predict(model = None, reset = None, threshold = None,
             data = None, delta = 4*ms,
             input = None, input_var = 'I', dt = None,
             **params):
+    """
+    Predicts the gamma factor of a fitted model with respect to the data with
+    a different input current.
     
+    **Arguments**
+    
+    ``model``, ``reset``, ``threshold``, ``input_var``, ``dt``
+        Same parameters as for the ``modelfitting`` function.
+        
+    ``input``
+        The input current, that can be different from the current used for the fitting
+        procedure.
+    
+    ``data``
+        The experimental spike times to compute the gamma factor against. They have
+        been obtained with the current ``input``.
+    
+    ``**params``
+        The best parameters returned by the ``modelfitting`` function.
+    
+    **Returns**
+    
+    ``gamma``
+        The gamma factor of the model spike trains against the data.
+        If there were several groups in the fitting procedure, it is a vector
+        containing the gamma factor for each group.
+    """
     spikes = get_spikes(model = model, reset = reset, threshold = threshold,
                         input = input, input_var = input_var, dt = dt,
                         **params)
@@ -318,4 +456,7 @@ def predict(model = None, reset = None, threshold = None,
         return gamma
     
 def print_results(r):
+    """
+    Displays the results obtained by the ``modelfitting`` function.
+    """
     return printr(r)
