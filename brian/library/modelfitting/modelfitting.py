@@ -283,8 +283,6 @@ def modelfitting(model = None, reset = None, threshold = None,
     ``port``
         The port number for IP networking, you only need to specify this if the
         default value of 2718 is blocked. See :ref:`modelfitting-clusters`.
-    ``return_info``
-        Set to ``True`` to return information about the optimization at the end of the procedure.
     
     **Return values**
     
@@ -296,10 +294,6 @@ def modelfitting(model = None, reset = None, threshold = None,
         For more details on the gamma factor, see
         `Jolivet et al. 2008, "A benchmark test for a quantitative assessment of simple neuron models", J. Neurosci. Methods <http://www.ncbi.nlm.nih.gov/pubmed/18160135>`__ (available in PDF
         `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
-    ``fitinfo``
-        If ``return_matrix`` is set to ``True``, ``fitness_matrices[i]`` is a (N*iterations) matrix
-        containing the histogram of the fitness values among particle within each group at each 
-        iteration of the optimization algorithm.
     """
     
     # Use GPU ?

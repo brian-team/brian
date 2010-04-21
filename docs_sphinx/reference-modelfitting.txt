@@ -4,5 +4,8 @@ Model fitting toolbox
 =====================
 
 .. autofunction:: modelfitting
-.. autofunction:: modelfitting_worker
+.. autofunction:: worker
+.. autofunction:: get_spikes
+.. autofunction:: predict
+.. autofunction:: print_results
  
