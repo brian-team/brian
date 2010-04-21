@@ -62,9 +62,16 @@ frompapers/    (models adapted from published papers)
 * Diesmann_et_al_1999: synfire chains
 * Diesmann_et_al_1999_longer: synfire chains
 * Sturzl_et_al_2000:  Theory of Arachnid Prey Localization
+* Rothman_Manis_2003: Cochlear neuron model of Rothman & Manis
+* Izhikevich_2006_Polychronization: polychronization
+* Izhikevich_2006_Polychronization_longer: polychronization
 
 interface/    (web interface)
 * interface: web interface (requires cherrypy)
+
+modelfitting/ (demo of model fitting library)
+
+multiprocessing/ (use of python 2.6 multiprocessing package for multiple cores)
 
 plasticity/    (spike-timing dependent and short term plasticity)
 * STDP1: STDP example adapted from Song, Miller and Abbott (2000), additive rule.
