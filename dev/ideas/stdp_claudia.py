@@ -20,7 +20,7 @@ w+=clip(u_minus-theta,0,inf)*A_LTD  # A_LTD<0; theta is theta_minus
 post="""
 u_minus+=delta_u_minus
 u_plus+=delta_u_plus
-w+=clip(u_plus-theta,0,inf)*A_LTP  # A_LTP>0
+w+=clip(u_plus-theta,0,inf)*x*A_LTP  # A_LTP>0
 """
 
 # The model has hard bounds wmin and wmax
