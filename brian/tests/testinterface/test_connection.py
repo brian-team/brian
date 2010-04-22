@@ -122,7 +122,7 @@ def test():
 def test_poissoninputs():
     eqs = Equations("dv/dt=(1-v)/(1*second) : 1")
     group = NeuronGroup(N=1, model=eqs, reset=0, threshold=1)
-    input = PoissonInputs(group, 'v', (10, 50*Hz, .11))
+    input = PoissonInputs(group, (10, 50*Hz, .11, 'v'))
     m = SpikeCounter(group)
     sm = StateMonitor(group, 'v', record=True)
     net = Network(group, input, m, sm)
