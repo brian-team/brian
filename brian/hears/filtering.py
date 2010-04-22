@@ -7,24 +7,24 @@ See docstrings for details. The faster gammatone filter is the GammatoneFB.
 from brian import *
 from scipy import signal
 from scipy import weave
-#try:
-#    import pycuda
-#    import pycuda.autoinit as autoinit
-#    import pycuda.driver as drv
-#    import pycuda.compiler
-#    from pycuda import gpuarray
-#    from brian.experimental.cuda.buffering import *
-#    import re
-#    def set_gpu_device(n):
-#        global _gpu_context
-#        autoinit.context.pop()
-#        _gpu_context = drv.Device(n).make_context()
-#    use_gpu = True
-#except ImportError:
-#    use_gpu = False
-use_gpu = False
+try:
+    import pycuda
+    import pycuda.autoinit as autoinit
+    import pycuda.driver as drv
+    import pycuda.compiler
+    from pycuda import gpuarray
+    from brian.experimental.cuda.buffering import *
+    import re
+    def set_gpu_device(n):
+        global _gpu_context
+        autoinit.context.pop()
+        _gpu_context = drv.Device(n).make_context()
+    use_gpu = True
+except ImportError:
+    use_gpu = False
+#use_gpu = False
 
-__all__ = ['Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
+__all__ = ['GammachirpFilterbank_NM','GammachirpFilterbank_IIR','Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step',
            'HohmannGammatoneFilterbank', 'GammatoneFilterbank', 'MeddisGammatoneFilterbank',
            'IIRFilterbank', 'design_iir_filterbank', 'design_butterworth_filterbank', 'make_butterworth_filterbank',
@@ -627,12 +627,14 @@ class GammachirpFilterbank_IIR(ParallelLinearFilterbank):
      comment: no GPU implementation so far...
      
      '''
-    def __init__(self, fs, fr):
+    def __init__(self, fs, fr,c=None):
         fr = array(fr)
         self.fr = fr
         self.fs = fs
         
-        
+        if c==None:
+            c=1*ones((fr.shape))
+        self.c = c  
         GT= GammatoneFilterbank(fs,fr)
         fs = float(fs)
         order=GT.order
@@ -650,7 +652,8 @@ class GammachirpFilterbank_IIR(ParallelLinearFilterbank):
         ERBw = 24.7*(4.37e-3*fr+1.)
         N=4
         b=1.019*ones((fr.shape))
-        c=2*ones((fr.shape))
+        
+
 
 
         p0=2
@@ -688,14 +691,57 @@ class GammachirpFilterbank_IIR(ParallelLinearFilterbank):
             
             Btemp[:,:,k]=bz
             Atemp[:,:,k]=ap
-        print B.shape,A.shape,Btemp.shape,Atemp.shape    
+        #print B.shape,A.shape,Btemp.shape,Atemp.shape    
         #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
         filt_b=concatenate([B, Btemp],axis=2)
         filt_a=concatenate([A, Atemp],axis=2)
         
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
 
+class GammachirpFilterbank_NM(ParallelLinearFilterbank):
 
+
+
+    def __init__(self, fs, fr,c=None,Tcst=None):
+        fr = array(fr)
+        self.fr = fr
+        self.fs = fs
+        #%x = [amplitude, delay, time constant, frequency, phase, bias, IF glide slope]
+        if c==None:
+            x=array([0.8932,    0.7905 ,   0.3436  ,  4.6861  , -4.4308 ,  -0.0010  ,  0.3453])
+            
+        if Tcst==None:
+            x=array([0.8932,    0.7905 ,   0.3436  ,  4.6861  , -4.4308 ,  -0.0010  ,  0.3453])
+            
+        fs=float(fs)
+
+        t=arange(0,4,1./fs*1000)
+        LenGC=len(t)
+        filt_b=zeros((1,LenGC,1))
+        filt_a=zeros((1,LenGC,1))
+
+        g=4
+        tmax=x[2]*(g-1)
+        G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[2])**2)+x[4])+x[5]
+
+        filt_b[0,:,0] = G
+        filt_a[0,0,0]=1   
+            
+#        plot(G)
+#        figure
+#
+#        print len(G)
+#        pxx, freqs, bins, im = specgram(G, NFFT=512, Fs=fs, noverlap=120) #pylab function
+#        I = logical_and(5000<=freqs,freqs<=6000)
+#        I2 = where(I)[0]
+#        I2 = [max(min(I2)-1,0), min(max(I2)+1,len(freqs)-1)]
+#        Z = pxx[I2[0]:I2[-1],:]
+#        Z = flipud(Z)
+#        imshow(Z, extent=(0, amax(bins), freqs[I2[0]], freqs[I2[-1]]), aspect='auto')
+#        show()
+#        exit()
+#        #print filt_a.shape
+        ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
 class IIRFilterbank(Filterbank):
     @check_units(samplerate=Hz)
     def __init__(self, samplerate, N, b, a):
