@@ -33,7 +33,7 @@
 # ----------------------------------------------------------------------------------
 # 
 __all__=[
-         'Connection', 'IdentityConnection', 'MultiConnection',
+         'Connection', 'IdentityConnection', 'MultiConnection', 'PoissonInputs',
          'DelayConnection',
          #'HeterogeneousDelayConnection', # this class is not defined
          'random_matrix_fixed_column',
@@ -60,6 +60,7 @@ from numpy import *
 from scipy import sparse,stats,rand,weave,linalg
 import scipy
 import numpy
+from numpy.random import binomial
 import random as pyrandom
 from scipy import random as scirandom
 from utils.approximatecomparisons import is_within_absolute_tolerance
@@ -2100,6 +2101,53 @@ class MultiConnection(Connection):
             for C in self.connections:
                 C.compress()
             self.iscompressed=True
+
+class EmptyGroup(object):
+    def __init__(self, clock):
+        self.clock = clock
+    
+    def get_spikes(self, delay):
+        return None
+
+class PoissonInputs(Connection):
+    def __init__(self, target, *inputs):
+        """
+        Adds Poisson inputs to a NeuronGroup.
+        
+        Initialised with arguments:
+        
+        ``target``
+            The target NeuronGroup
+        
+        ``state``
+            The variable to connect the Poisson inputs
+        
+        ``inputs``
+            The list of the Poisson inputs, as a list of triplets (n, f, w)
+            where n is the number of Poisson spike trains, f their rate, and w the
+            synaptic weight.
+        """
+        self.source = EmptyGroup(target.clock)
+        self.target = target
+        self.clock = target.clock
+        self.inputs = inputs
+        self.delay = None
+        self.iscompressed=True
+        self.W = zeros((len(inputs), len(target)))
+        
+        self.stateindex = dict()
+        for i in xrange(len(self.inputs)):
+            state = self.inputs[i][3]
+            if type(state)==types.StringType: # named state variable
+                self.stateindex[state] = target.get_var_index(state)
+            else:
+                self.stateindex[state] = state
+    
+    def propagate(self, spikes):
+        current = zeros(len(self.target))
+        for (n,f,w,state) in self.inputs:
+            state = self.stateindex[state]
+            self.target._S[state,:] += w*binomial(n=n, p=f*self.clock.dt, size=(len(self.target)))
 
 # Generation of matrices
 def random_matrix(n,m,p,value=1.):
