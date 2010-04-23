@@ -320,7 +320,7 @@ def spike_mask(v,spikes=None,T=None):
     return ind
 
 if __name__=='__main__':
-    filename=r"D:\My Dropbox\Neuron\Hu\recordings_Ifluct\I0_07_std_02_tau_10_sampling_20\vs.dat"
+    filename=r"D:\My Dropbox\Neuron\Hu\recordings_Ifluct\I0_1_std_1_tau_10_sampling_20\vs.dat"
     #filename=r'D:\Anna\2010_03_0020_random_noise_200pA.atf'
     #filename2=r'D:\Anna\input_file.atf' # in pF
     from pylab import *
@@ -333,11 +333,12 @@ if __name__=='__main__':
     #print vt0,vi,a,tau
     #theta=vt0+a*lowpass(clip(vs-vi,0,inf),tau,dt=0.05)
     spikes=spike_onsets(vs)
-    spikes2=spike_onsets_dv2(vs)
-    spikes3=spike_onsets_dv3(vs)
-    plot(t*1000,vs,'k')
-    #plot(t*1000,theta,'b')
-    plot(t[spikes]*1000,vs[spikes],'.r')
-    plot(t[spikes2]*1000,vs[spikes2],'.g')
-    plot(t[spikes3]*1000,vs[spikes3],'.k')
+    print std(vs[spikes])
+    #spikes2=spike_onsets_dv2(vs)
+    #spikes3=spike_onsets_dv3(vs)
+    plot(t,vs,'k')
+    #plot(t,theta,'b')
+    plot(t[spikes],vs[spikes],'.r')
+    #plot(t[spikes2],vs[spikes2],'.g')
+    #plot(t[spikes3],vs[spikes3],'.k')
     show()
