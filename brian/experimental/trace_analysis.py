@@ -141,7 +141,7 @@ def spike_onsets_dv2(v,vc=None):
     l=[]
     for i in peaks:
         # Find peak of derivative (alternatively: last sign change of d2v, i.e. last local peak)
-        j+=max(((dv3[j:i]>0) & (dv3[j+1:i]<0)).nonzero()[0])+2
+        j+=max(((dv3[j:i-1]>0) & (dv3[j+1:i]<0)).nonzero()[0])+2
         l.append(j)
     return array(l)
 
@@ -158,7 +158,7 @@ def spike_onsets_dv3(v,vc=None):
     l=[]
     for i in peaks:
         # Find peak of derivative (alternatively: last sign change of d2v, i.e. last local peak)
-        j+=max(((dv4[j:i]>0) & (dv4[j+1:i]<0)).nonzero()[0])+3
+        j+=max(((dv4[j:i-1]>0) & (dv4[j+1:i]<0)).nonzero()[0])+3
         l.append(j)
     return array(l)
 
@@ -327,11 +327,15 @@ if __name__=='__main__':
     t,vs=read_neuron_dat(filename)
     #t,vs=read_atf(filename)
     #print array(spike_duration(vs,full=True))*.05
-    vt0,vi,a,tau=threshold_model(vs,dt=0.05)
-    print vt0,vi,a,tau
-    theta=vt0+a*lowpass(clip(vs-vi,0,inf),tau,dt=0.05)
+    #vt0,vi,a,tau=threshold_model(vs,dt=0.05)
+    #print vt0,vi,a,tau
+    #theta=vt0+a*lowpass(clip(vs-vi,0,inf),tau,dt=0.05)
     spikes=spike_onsets(vs)
+    spikes2=spike_onsets_dv2(vs)
+    spikes3=spike_onsets_dv3(vs)
     plot(t*1000,vs,'k')
-    plot(t*1000,theta,'b')
+    #plot(t*1000,theta,'b')
     plot(t[spikes]*1000,vs[spikes],'.r')
+    plot(t[spikes2]*1000,vs[spikes2],'.g')
+    plot(t[spikes3]*1000,vs[spikes3],'.k')
     show()
