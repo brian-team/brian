@@ -133,6 +133,7 @@ def spike_onsets_dv2(v,vc=None):
     Returns the indexes of spike onsets.
     vc is the spike criterion (voltage above which we consider we have a spike).
     Maximum of 2nd derivative.
+    DOESN'T SEEM GOOD
     '''
     vc=vc or find_spike_criterion(v)
     peaks=spike_peaks(v,vc)
@@ -150,6 +151,7 @@ def spike_onsets_dv3(v,vc=None):
     Returns the indexes of spike onsets.
     vc is the spike criterion (voltage above which we consider we have a spike).
     Maximum of 3rd derivative.
+    DOESN'T SEEM GOOD
     '''
     vc=vc or find_spike_criterion(v)
     peaks=spike_peaks(v,vc)
