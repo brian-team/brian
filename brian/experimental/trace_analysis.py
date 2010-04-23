@@ -11,12 +11,14 @@ from scipy.signal import lfilter
 
 __all__=['find_spike_criterion','spike_peaks','spike_onsets','find_onset_criterion',
          'slope_threshold','vm_threshold','spike_shape','spike_duration','reset_potential',
-         'spike_mask','fit_EIF','IV_curve','threshold_model','lowpass','estimate_capacitance']
+         'spike_mask','fit_EIF','IV_curve','threshold_model','lowpass','estimate_capacitance',
+         'spike_onsets_dv2','spike_onsets_dv3']
 
 """
 TODO:
 * A better fit_EIF function (conjugate gradient? Check also Badel et al., 2008. Or maybe just calculate gradient)
 * Fit subthreshold kernel (least squares, see also Jolivet)
+* Standard threshold methods
 """
 
 def lowpass(x,tau,dt=1.):
@@ -124,6 +126,40 @@ def spike_onsets(v,criterion=None,vc=None):
         j+=max((dv[j:inflexion]<criterion).nonzero()[0])+1
         l.append(j)
         previous_i=i
+    return array(l)
+
+def spike_onsets_dv2(v,vc=None):
+    '''
+    Returns the indexes of spike onsets.
+    vc is the spike criterion (voltage above which we consider we have a spike).
+    Maximum of 2nd derivative.
+    '''
+    vc=vc or find_spike_criterion(v)
+    peaks=spike_peaks(v,vc)
+    dv3=diff(diff(diff(v))) # I'm guessing you have to shift v by 1/2 per differentiation
+    j=0
+    l=[]
+    for i in peaks:
+        # Find peak of derivative (alternatively: last sign change of d2v, i.e. last local peak)
+        j+=max(((dv3[j:i]>0) & (dv3[j+1:i]<0)).nonzero()[0])+2
+        l.append(j)
+    return array(l)
+
+def spike_onsets_dv3(v,vc=None):
+    '''
+    Returns the indexes of spike onsets.
+    vc is the spike criterion (voltage above which we consider we have a spike).
+    Maximum of 3rd derivative.
+    '''
+    vc=vc or find_spike_criterion(v)
+    peaks=spike_peaks(v,vc)
+    dv4=diff(diff(diff(diff(v))))
+    j=0
+    l=[]
+    for i in peaks:
+        # Find peak of derivative (alternatively: last sign change of d2v, i.e. last local peak)
+        j+=max(((dv4[j:i]>0) & (dv4[j+1:i]<0)).nonzero()[0])+3
+        l.append(j)
     return array(l)
 
 def find_onset_criterion(v,guess=0.1,vc=None):
