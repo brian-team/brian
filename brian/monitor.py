@@ -614,6 +614,7 @@ class StateMonitor(NetworkOperation,Monitor):
            accessed by calling self[i] where i is the neuron number
            - True, in which case the state of all neurons is recorded, and can be
            individually accessed by calling self[i]
+           - False, in which case only the mean and variance are recorded (.mean, .var, .std)
         -- timestep defines how often a recording is made (e.g. if you have a very
            small dt, you might not want to record every value of the variable), it
            is an integer (multiple of the clock dt)
