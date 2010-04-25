@@ -37,7 +37,11 @@ eqs='''
 dv/dt=(gl*(El-v)+Icable)/C : volt
 '''
 The term Icable would then be replaced by the adequate value by the updater. This is very easy to implement
-internally, Icable just needs to be another variable.
+internally, Icable just needs to be another variable. Alternatively, one could simply define the
+membrane current:
+eqs='''
+Im=gl*(El-v) : amp/cm**2
+'''
 The NeuronGroup is then initialized with:
 * spatial model equations (above)
 * morphology (we need a new module here, maybe using the experimental one); the morphology is
@@ -86,3 +90,50 @@ How to describe neuron groups with morphologies? Two options:
 It seems to me that option 2 is possible.
 However the threshold mechanism must be changed.
 It might also be possible to have gap junctions with this scheme.
+
+Building the morphology
+=======================
+See experimental.morphology. This could be a separate class, created before
+the neuron is initialised.
+
+mymorph=Morphology('pyramidalL5.swc')
+mymorph=Morphology() # Creates a soma
+mymorph.insert('dendrites',l=100*um,d=2*um) # Inserts cylinder at soma
+mymorph.dendrites.diameter=linspace(1*um,2*um,len(mymorph.dendrites))
+for compartment in mymorph.dendrites:
+    compartment.diameter=...
+mymorph.dendrites.insert(l=20*um,d=1*um) # Inserts branch at the end
+mymorph.dendrites[20*um].insert(l=20*um,d=1*um) # Inserts branch at 20 um
+
+Examples
+========
+mymorph=Morphology('pyramidalL5.swc')
+eqs=''' # The same equations for the whole neuron, but possibly different parameter values
+Im=gl*(El-v)+gNa*m**3*h*(ENa-v) : amp/cm**2 # distributed transmembrane current
+gNa : siemens/cm**2 # spatially distributed conductance
+dm/dt=(minf-m)/tauinf : 1
+# etc
+'''
+neuron=CompartmentalNeuron(model=eqs,morphology=mymorph,threshold="axon[50*um].v>0*mV",reset=None,refractory=4*ms,
+                           cm=0.9*uF/cm**2,Ri=150*ohm/cm) # or SpatialNeuron
+initial_segment=neuron["axon.0*um":"axon.100*um"]
+# initial_segment=neuron.axon[0*um:100*um]
+initial_segment.gNa=linspace(0*nS/cm**2,3000*nS/cm**2,len(initial_segment))
+initial_segment.cm=1*uF/cm**2 # We change the default specific capacitance (useful e.g. if myelinated)
+
+# Point processes
+exc_synapse="""
+Ie=ge*(Ee-v) : amp
+dge/dt=-ge : siemens
+"""
+neuron.dendrites.LLR[10*um].insert_current(model=exc_synapse,current="Ie")
+# neuron.dendrites is a subgroup; also neuron.dendrites.LLR (or perhaps .L.L.R ?)
+
+electrode="Iinj : amp"
+neuron.dendrites.LR[5*um].insert_current(model=electrode,current="Iinj")
+
+M=StateMonitor(neuron.axon,'v',record=[50*um:100*um]) # maybe a special monitor? SpatialStateMonitor
+
+@network_operation
+def inject_random_current():
+    neuron.dendrites.LR[5*um].Iinj=rand()*nA
