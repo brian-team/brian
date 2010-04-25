@@ -98,12 +98,32 @@ the neuron is initialised.
 
 mymorph=Morphology('pyramidalL5.swc')
 mymorph=Morphology() # Creates a soma
-mymorph.insert('dendrites',l=100*um,d=2*um) # Inserts cylinder at soma
+mymorph.insert('dendrites',l=100*um,d=2*um,n=20) # Inserts cylinder at soma, 20 compartments
 mymorph.dendrites.diameter=linspace(1*um,2*um,len(mymorph.dendrites))
 for compartment in mymorph.dendrites:
     compartment.diameter=...
-mymorph.dendrites.insert(l=20*um,d=1*um) # Inserts branch at the end
-mymorph.dendrites[20*um].insert(l=20*um,d=1*um) # Inserts branch at 20 um
+mymorph.dendrites.fork() # Inserts subtree at the end
+mymorph.dendrites.L.insert(l=50*um,d=1*um,n=10)
+
+Data structure
+--------------
+A neuron morphology is a tree of segments. The root is the soma.
+Thus, each segment has only one parent but possibly two or more children.
+More precisely, a morphology could be a tree of branches rather than segments,
+and a branch is a list of segments.
+Each segment has a diameter and length (except perhaps the soma). Each subtree
+is stored contiguously in memory, e.g. with a state matrix.
+The children of the soma can be named.
+Subtrees should be binary, and accessed using binary strings of the form LLR
+(left left right). We could however also imagine to have names for some subtrees.
+Accessing a subtree creates a submorphology (e.g. mymorph.dendrites.LLR), with a
+view on the whole morphology (view of the state matrix).
+Additional information (which is in swc files) could be stored, e.g. 3D coordinates.
+
+Attributes of a morphology:
+* diameter
+* length
+* number of compartments
 
 Examples
 ========
