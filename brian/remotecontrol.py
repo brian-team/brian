@@ -18,7 +18,11 @@ client.execute('stop()')
 '''
 
 from network import NetworkOperation
-from multiprocessing.connection import Listener, Client
+try:
+    import multiprocessing
+    from multiprocessing.connection import Listener, Client
+except ImportError:
+    multiprocessing = None
 import select
 import inspect
 
@@ -66,6 +70,8 @@ class RemoteControlServer(NetworkOperation):
     '''
     def __init__(self, server=None, authkey='brian', clock=None,
                  global_ns=None, local_ns=None, level=0):
+        if multiprocessing is None:
+            raise ImportError('Cannot import the required multiprocessing module.')
         NetworkOperation.__init__(self, lambda:None, clock=clock)
         if server is None:
             server = ('localhost', 2719)
@@ -181,6 +187,8 @@ class RemoteControlClient(object):
         client.execute('stop()')
    '''
     def __init__(self, server=None, authkey='brian'):
+        if multiprocessing is None:
+            raise ImportError('Cannot import the required multiprocessing module.')
         if server is None:
             server = ('localhost', 2719)
         self.client = Client(server, authkey=authkey)
