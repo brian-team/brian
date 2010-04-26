@@ -54,6 +54,8 @@ __all__ = [
     'CartesianCoordinates', 'SphericalCoordinates', 'AzimElev', 'AzimElevDegrees','AzimElevDistDegrees',
     # IRCAM LISTEN database
     'IRCAM_HRTFSet', 'IRCAM_LISTEN',
+    'GerbilHRTFSet','GerbilDatabase',
+    'InRoomHRTFSet','InRoomDatabase'
     ]
 
 class HRTF(object):
@@ -303,7 +305,6 @@ class AzimElevDistDegrees(Coordinates):
             inter = AzimElev.convert_from(source)
             return inter.convert_to(AzimElevDegrees)
 
-
 ############# IRCAM HRTF DATABASE ##############################################
 
 class IRCAM_HRTFSet(HRTFSet):
@@ -332,7 +333,7 @@ class IRCAM_HRTFSet(HRTFSet):
         # self.data has shape (num_ears=2, num_indices, hrir_length)
         self.data = vstack((reshape(l, (1,)+l.shape), reshape(r, (1,)+r.shape)))
         self.samplerate = 44.1*kHz
-            
+
 class IRCAM_LISTEN(HRTFDatabase):
     def __init__(self, basedir, compensated=False, samplerate=None):
         self.basedir = basedir
@@ -354,7 +355,7 @@ class IRCAM_LISTEN(HRTFDatabase):
         return IRCAM_HRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
 
 ### room database from  Barbara Shinn-Cunningham:
-class IN_ROOM__HRTFSet(HRTFSet):
+class InRoomHRTFSet(HRTFSet):
     def load(self, filename, samplerate=None, coordsys=None, name=None):
         # TODO: check samplerate
         if name is None:
@@ -389,7 +390,7 @@ class IN_ROOM__HRTFSet(HRTFSet):
         self.samplerate = 44.1*kHz
 
 # TODO: change the name (LISTEN is the name of the IRCAM project)
-class IN_ROOM_LISTEN(HRTFDatabase):
+class InRoomDatabase(HRTFDatabase):
     def __init__(self, basedir,samplerate=None):
         self.basedir = basedir
         names = glob(os.path.join(basedir, '*Rev*'))       
@@ -403,10 +404,10 @@ class IN_ROOM_LISTEN(HRTFDatabase):
     def load_subject(self, subject):
         subject = str(subject)
         fname = os.path.join(self.basedir,subject+'Rev')
-        return IN_ROOM__HRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
+        return InRoomHRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
 
 ############# GERBIL HRTF DATABASE ##############################################
-class GERBIL_HRTFSet(HRTFSet):
+class GerbilHRTFSet(HRTFSet):
     def load(self, filename, samplerate=None, coordsys=None, name=None):
         # TODO: check samplerate
         if name is None:
@@ -442,8 +443,8 @@ class GERBIL_HRTFSet(HRTFSet):
             self.coordinates = coords 
         
         self.samplerate = 97.65625*kHz
-            
-class GERBIL_HRTFDatabase(HRTFDatabase):
+
+class GerbilDatabase(HRTFDatabase):
     def __init__(self, basedir, samplerate=None):
         self.basedir = basedir
         names = glob(os.path.join(basedir, 'No*'))
@@ -457,7 +458,7 @@ class GERBIL_HRTFDatabase(HRTFDatabase):
         subject = str(subject)
         fname = os.path.join(self.basedir, 'No'+subject)
         #fname = os.path.join(fname, 'IMPL')
-        return GERBIL_HRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
+        return GerbilHRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
 
 ### EXAMPLES
 if __name__=='__main__':
@@ -477,7 +478,6 @@ if __name__=='__main__':
         raise IOError('Cannot find IRCAM HRTF location, add to ircam_locations')
     else:
         if choice=='IRCAM':
-            
             ircam = IRCAM_LISTEN(path)
             h = ircam.load_subject(1002)
             #h = h.subset(lambda azim,elev:azim==90 and elev==90)
@@ -498,8 +498,7 @@ if __name__=='__main__':
             plot(c['azim'], c['elev'], 'o')
             show()
         elif choice=='Gerbil':
-            
-            gerbil = GERBIL_HRTFDatabase(path)
+            gerbil = GerbilDatabase(path)
             h = gerbil.load_subject(521)
             #h = h.subset(lambda azim,elev:azim==90 and elev==90)
             #h = h.subset(lambda azim,elev:(azim in array([60,90])) & (elev in array([40,50])) )
@@ -513,7 +512,7 @@ if __name__=='__main__':
             plot(c['azim'], c['elev'], 'o')
             show()
         elif choice=='In Room':
-            in_room = IN_ROOM_LISTEN(path)
+            in_room = InRoomDatabase(path)
             h = in_room.load_subject('anech')
             #h = h.subset(lambda azim,elev:azim==90 and elev==90)
             #h = h.subset(lambda azim,elev:(azim==90) & (elev==40) )
