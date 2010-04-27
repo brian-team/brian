@@ -125,6 +125,14 @@ Attributes of a morphology:
 * length
 * number of compartments
 
+The data structure is:
+* A matrix of compartments (like the state matrix of a group), where each column is
+  a compartment and each row is an attribute.
+* A dictionary of branches, where each branch has the following attributes:
+** start and end index of compartments
+** name of parent branch
+** name of children branches
+
 Examples
 ========
 mymorph=Morphology('pyramidalL5.swc')
