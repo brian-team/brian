@@ -93,45 +93,50 @@ It might also be possible to have gap junctions with this scheme.
 
 Building the morphology
 =======================
-See experimental.morphology. This could be a separate class, created before
+See experimental.morphology2. This should be a separate class, created before
 the neuron is initialised.
 
 mymorph=Morphology('pyramidalL5.swc')
-mymorph=Morphology() # Creates a soma
-mymorph.insert('dendrites',l=100*um,d=2*um,n=20) # Inserts cylinder at soma, 20 compartments
+mymorph=Morphology() # Creates a soma (1 compartment) or Soma()
+mymorph.dendrites=Cylinder(l=100*um,d=2*um,n=20) # Inserts cylinder at soma, 20 compartments, subtree name "dendrites"
 mymorph.dendrites.diameter=linspace(1*um,2*um,len(mymorph.dendrites))
 for compartment in mymorph.dendrites:
     compartment.diameter=...
-mymorph.dendrites.fork() # Inserts subtree at the end
-mymorph.dendrites.L.insert(l=50*um,d=1*um,n=10)
+mymorph.dendrites.L=Cylinder(l=50*um,d=1*um,n=10) # Creates a child branch
+mymorph.dendrites.R=Cylinder(l=50*um,d=1*um,n=10) # Creates another child branch
+mymorph.dendrites.LL=Cylinder(l=50*um,d=1*um,n=10) # A short hand for L.L
 
 Data structure
 --------------
-A neuron morphology is a tree of segments. The root is the soma.
-Thus, each segment has only one parent but possibly two or more children.
-More precisely, a morphology could be a tree of branches rather than segments,
-and a branch is a list of segments.
-Each segment has a diameter and length (except perhaps the soma). Each subtree
-is stored contiguously in memory, e.g. with a state matrix.
-The children of the soma can be named.
-Subtrees should be binary, and accessed using binary strings of the form LLR
-(left left right). We could however also imagine to have names for some subtrees.
-Accessing a subtree creates a submorphology (e.g. mymorph.dendrites.LLR), with a
-view on the whole morphology (view of the state matrix).
+A neuron morphology is a tree of branches, and each branch is a list of segments.
+The root is the soma.
+Each segment has a diameter and length (except perhaps the soma).
+The children can be named, but there are two special names "L" and "R" (left/right),
+which allows concise access using binary strings of the form LLR
+(left left right).
 Additional information (which is in swc files) could be stored, e.g. 3D coordinates.
 
-Attributes of a morphology:
-* diameter
-* length
-* number of compartments
+Attributes of a branch:
+* diameter, length, area, x, y, z for all compartments (vectors)
+* number of compartments (could be implicit in vector length)
 
-The data structure is:
+The data structure is a tree of branches. Each branch has the following attributes:
 * A matrix of compartments (like the state matrix of a group), where each column is
-  a compartment and each row is an attribute.
-* A dictionary of branches, where each branch has the following attributes:
-** start and end index of compartments
-** name of parent branch
-** name of children branches
+  a compartment and each row is an attribute. The attributes are diameter etc.
+* A dictionary of children, and possibly the parent.
+
+Subgrouping
+-----------
+Ex: subtree=mymorph.dendrites.LLR
+mymorph.dendrites returns a subtree, mymorph.dendrites.LLR too but it's a shorthand
+for L.L.R. Internally, it does mymorph.dendrites.L.LR (recursive algorithm).
+
+Insertion
+---------
+Ex: mymorph.dendrites.L=Cylinder(l=50*um,d=1*um,n=10) # or Branch?
+Ex2: mymorph.dendrites.LLR=Cylinder(l=50*um,d=1*um,n=10)
+using setattr. The instruction replaces or creates the subtree (child) with the given morphology.
+LLR is shorthand for L.L.R (recursive algorithm as for subgrouping).
 
 Examples
 ========
