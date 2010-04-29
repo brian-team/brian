@@ -116,13 +116,9 @@ which allows concise access using binary strings of the form LLR
 (left left right).
 Additional information (which is in swc files) could be stored, e.g. 3D coordinates.
 
-Attributes of a branch:
+The data structure is a tree of branches. Each branch has the following attributes:
 * diameter, length, area, x, y, z for all compartments (vectors)
 * number of compartments (could be implicit in vector length)
-
-The data structure is a tree of branches. Each branch has the following attributes:
-* A matrix of compartments (like the state matrix of a group), where each column is
-  a compartment and each row is an attribute. The attributes are diameter etc.
 * A dictionary of children, and possibly the parent.
 
 Subgrouping

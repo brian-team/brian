@@ -1,35 +1,17 @@
 '''
 Neuronal morphology module for Brian.
-
-REWRITE according to BEP-15
 '''
 from brian.group import Group
-from brian.stdunits import metre
 from numpy import *
+from brian.units import meter
+from brian.stdunits import um
 
-class Morphology(Group):
+class Morphology(object):
     '''
     Neuronal morphology (=tree of branches).
-    Initialise with the filename of a swc file.
-    
-    Each branch has a parent and children (usually two).
-    We probably don't need to specify the parent.
     '''
     def __init__(self,filename=None):
-        # Morphology is a Group
-        self._eqs="""
-        diameter : metre
-        length : metre
-        area : metre**2 # = diameter*length*pi?
-        d=diameter
-        l=length
-        x : metre
-        y : metre
-        z : metre
-        """
-        if filename is None: # just a soma
-            Group.__init__(self,self._eqs,1)
-        else:
+        if filename is not None:
             self.loadswc(filename)
 
     def loadswc(self,filename):
@@ -56,11 +38,11 @@ class Morphology(Group):
         R is the radius at that node.
         P indicates the parent (the integer label) of the current point or -1 to indicate an origin (soma). 
         '''
-        # 1) Create the list of segments
+        # 1) Create the list of segments, each segment has a list of children
         lines=open(filename).read().splitlines()
-        segments=[] # list of segments
-        branching_points=[] # list of branching points
+        segment=[] # list of segments
         types=['undefined','soma','axon','dendrite','apical','fork','end','custom']
+        previousn=-1
         for line in lines:
             if line[0]!='#': # comment
                 numbers=line.split()
@@ -71,62 +53,40 @@ class Morphology(Group):
                 z=float(numbers[4])*um
                 R=float(numbers[5])*um
                 P=int(numbers[6])-1 # 0-based indexing
-                segment=dict(n=n,type=T,location=(x,y,z),radius=R,parent=P)
+                if (n!=previousn+1):
+                    raise ValueError,"Bad format in file "+filename
+                seg=dict(x=x,y=y,z=z,T=T,diameter=2*R,parent=P,children=[])
+                location=(x,y,z)
                 if T=='soma':
-                    segment['area']=4*pi*segment['radius']**2
+                    seg['area']=4*pi*R**2
+                    seg['length']=0*um
                 else: # dendrite
-                    segment['length']=(sum((array(segment['location'])-array(segments[P]['location']))**2))**.5*meter
-                    segment['area']=segment['length']*2*pi*segment['radius']
-                if (P!=n-1) and (P>-2): # P is a branching point
-                    branching_points.append(P)
-                segments.append(segment)
-        segments.sort(key=lambda segment:segment['n'])
-        Group.__init__(self,self._eqs,len(segments)) # 1 Group/branch? in fact no Group at this stage?
-        self.diameter=[2*s['radius'] for s in segments]
-        self.length=[s['length'] for s in segments]
-        self.area=[s['area'] for s in segments]
-        self.x=[s['location'][0] for s in segments]
-        self.y=[s['location'][1] for s in segments]
-        self.z=[s['location'][2] for s in segments]
-        self.parent=[s['parent'] for s in segments]
-        self.type=[s['type'] for s in segments]
+                    locationP=(segment[P]['x'],segment[P]['y'],segment[P]['z'])
+                    seg['length']=(sum((array(location)-array(locationP))**2))**.5*meter
+                    seg['area']=seg['length']*2*pi*R
+                if P>=0:
+                    segment[P]['children'].append(n)
+                segment.append(seg)
+                previousn=n
+        # We assume that the first segment is the root
+        # TODO: if it's a soma, only one compartment
+        self.create_from_segments(segment)
         
-        # -- I STOPPED HERE -- CHANGE THIS BELOW --
-        # 2) Create the dictionary of branches
-        # branches = list of dict(begin,end,segments) where segments are segment indexes
-        branches=[]
-        branch=dict(start=0,segments=[],children=0)
-        for segment in segments:
-            n=segment['n']
-            if segment['n'] in branching_points: # end of branch
-                branch['segments'].append(n)
-                branch['end']=n
-                branches.append(branch)
-                branch=dict(start=n+1,segments=[],children=0)
-            elif segment['parent']!=n-1: # new branch
-                branch['end']=n-1
-                branches.append(branch)
-                branch=dict(start=n,segments=[n],children=0)
-            else:
-                branch['segments'].append(n)
-        # Last branch
-        branch['end']=n
-        branches.append(branch)
-
-        # Name branches and segments
-        # The soma is 'soma'
-        self._branches=dict()
-        for branch in branches:
-            #if branch['type']
-            parent=self._segments[branch['start']]['parent']
-            if parent in self._segments:
-                b=[b for b in branches if parent in b['segments']][0] # parent branch
-                if b['name']=='soma':
-                    branch['name']=str(b['children'])
-                else:
-                    branch['name']=b['name']+str(b['children'])
-                b['children']+=1
-            else:
-                branch['name']='soma'
-            self._branches[branch['name']]=branch
-        
+    def create_from_segments(self,segment):
+        """
+        Recursively create the morphology from a list of segments.
+        Each segment has attributes: x,y,z,diameter,area,length,parent,children.
+        """
+        n=0
+        while len(segment[n]['children'])==1:
+            n+=1
+        # End of branch
+        branch=segment[:n+1]
+        self.diameter,self.length,self.area,self.x,self.y,self.z=\
+            zip(*[(seg['diameter'],seg['length'],seg['area'],seg['x'],seg['y'],seg['z']) for seg in branch])
+        # This should be a dictionary
+        self.children=[Morphology().create_from_segments(segment[c:]) for c in segment[n]['children']]
+        return self
+    
+if __name__=='__main__':
+    morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
