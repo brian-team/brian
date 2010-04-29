@@ -2,6 +2,7 @@
 Neuronal morphology module for Brian.
 '''
 from brian.group import Group
+from scipy import rand
 from numpy import *
 from brian.units import meter
 from brian.stdunits import um
@@ -88,5 +89,17 @@ class Morphology(object):
         self.children=[Morphology().create_from_segments(segment[c:]) for c in segment[n]['children']]
         return self
     
+    def plot(self,origin=None):
+        if origin is None:
+            plot3d(self.x,self.y,self.z,tube_radius=self.diameter[0],vmin=0,vmax=1)
+        else:
+            x0,y0,z0=origin
+            plot3d([x0]+list(self.x),[y0]+list(self.y),[z0]+list(self.z),tube_radius=self.diameter[0],vmin=0,vmax=1)
+        for c in self.children:
+            c.plot(origin=(self.x[-1],self.y[-1],self.z[-1]))
+    
 if __name__=='__main__':
+    from enthought.mayavi.mlab import *
     morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
+    morpho.plot()
+    show()
