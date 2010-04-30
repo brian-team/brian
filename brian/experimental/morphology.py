@@ -4,6 +4,9 @@ Neuronal morphology module for Brian.
 TODO:
 * compress (maybe in SpatialNeuron)
 * Maybe str: should give a text representation of the tree
+* set_length etc.: should be recursive
+* check_consistency: check that lengths, area and coordinates are consistent (and fix)
+* rescale: change number of compartments
 '''
 from brian.group import Group
 from scipy import rand
@@ -316,7 +319,6 @@ if __name__=='__main__':
     from pylab import show
     #morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
     morpho=Morphology('oi24rpy1.CNG.swc') # visual L3 pyramidal cell
-    morpho.compress()
     print len(morpho),"compartments"
     morpho.axon=None
     morpho.plot()
