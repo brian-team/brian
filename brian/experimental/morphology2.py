@@ -18,6 +18,8 @@ class Morphology(object):
     Neuronal morphology (=tree of branches).
     '''
     def __init__(self,filename=None):
+        self.children=[]
+        self._namedkids={}
         if filename is not None:
             self.loadswc(filename)
 
@@ -99,7 +101,6 @@ class Morphology(object):
         # Create children (list)
         self.children=[Morphology().create_from_segments(segment[c:]) for c in segment[n]['children']]
         # Create dictionary of names (enumerates children from number 1)
-        self._namedkid={}
         for i,child in enumerate(self.children):
             self._namedkid[i+1]=child
             # Name the child if possible
@@ -144,8 +145,37 @@ class Morphology(object):
         for c in self.children:
             c.plot(origin=(x[-1],y[-1],z[-1]),axes=axes,simple=simple)
     
+class Cylinder(Morphology):
+    """
+    A cylinder.
+    """
+    def __init__(self,length=None,diameter=None,n=1,type=None,x=None,y=None,z=None):
+        """
+        Creates a cylinder.
+        n: number of compartments.
+        type : 'soma', 'axon' or 'dendrite'
+        x,y,z : end point (relative to origin of cylinder)
+        length is optional (and ignored) if x,y,z is specified
+        If x,y,z unspecified: random direction in the plane z=0 (should it be in 3D?)
+        """
+        Morphology.__init__(self)
+        if x is None:
+            theta=rand()*2*pi
+            x=length*cos(theta)
+            y=length*sin(theta)
+            z=0*um
+        else:
+            length=(sum(array((x,y,z))**2))**.5
+        scale=arange(1,n+1)*1./n
+        self.x,self.y,self.z=x*scale,y*scale,z*scale
+        self.length=ones(n)*length/n
+        self.diameter=ones(n)*diameter
+        self.area=ones(n)*pi*diameter*length/n
+        self.type=type
+
 if __name__=='__main__':
     from pylab import show
-    morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
+    #morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
+    morpho=Cylinder(length=10*um,diameter=1*um,n=10)
     morpho.plot(simple=True)
     show()
