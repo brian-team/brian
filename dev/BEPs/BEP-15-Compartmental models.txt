@@ -26,7 +26,7 @@ much as the choice of the timestep. Most models can be described by:
 The Connection object needs to address variables by their spatial location, in a single string
 (although this might actually work with an object, with minor modifications to Connection and a few
 other places). It involves changing the method get_var_index(state) in NeuronGroup, where state would
-be for example "LLR.15*um.v" (branch left twice, branch right, advance 15 µm) or "LLR.end.v".
+be for example "LLR.15*um.v" (branch left twice, branch right, advance 15 ï¿½m) or "LLR.end.v".
 In the same way, state monitors need to address by spatial location for distributed variables
 and also by name for point processes. Another possibility for names could be "v@LLR.15*um" or "v@mysynapse".
 Those names are translated into indexes.
@@ -100,7 +100,7 @@ mymorph=Morphology('pyramidalL5.swc')
 mymorph=Morphology() # Creates a soma (1 compartment) or Soma()
 mymorph.dendrites=Cylinder(l=100*um,d=2*um,n=20) # Inserts cylinder at soma, 20 compartments, subtree name "dendrites"
 mymorph.dendrites.diameter=linspace(1*um,2*um,len(mymorph.dendrites))
-for compartment in mymorph.dendrites:
+for compartment in mymorph.dendrites: # maybe not very useful
     compartment.diameter=...
 mymorph.dendrites.L=Cylinder(l=50*um,d=1*um,n=10) # Creates a child branch
 mymorph.dendrites.R=Cylinder(l=50*um,d=1*um,n=10) # Creates another child branch

@@ -1,5 +1,9 @@
 '''
 Neuronal morphology module for Brian.
+
+TODO:
+* init with explicit branch morphology
+* compress
 '''
 from brian.group import Group
 from scipy import rand
@@ -102,7 +106,7 @@ class Morphology(object):
         self.children=[Morphology().create_from_segments(segment,origin=c) for c in segment[n]['children']]
         # Create dictionary of names (enumerates children from number 1)
         for i,child in enumerate(self.children):
-            self._namedkid[i+1]=child
+            self._namedkid[str(i+1)]=child
             # Name the child if possible
             if child.type in ['soma','axon','dendrite']:
                 if child.type in self._namedkid:
@@ -115,9 +119,94 @@ class Morphology(object):
                 del self._namedkid[k]
         # If two kids, name them L (left) and R (right)
         if len(self.children)==2:
-            self._namedkid['L']=self._namedkid[1]
-            self._namedkid['R']=self._namedkid[2]
+            self._namedkid['L']=self._namedkid['1']
+            self._namedkid['R']=self._namedkid['2']
         return self
+    
+    def __getitem__(self,x):
+        """
+        Returns the subtree named x.
+        Ex.: neuron['axon'] or neuron['11213']
+        """
+        x=str(x) # convert int to string
+        if (len(x)>1) and all([c in 'LR123456789' for c in x]): # binary string of the form LLLRLR or 1213 (or mixed)
+            return self._namedkid[x[0]][x[1:]]
+        elif x in self._namedkid:
+            return self._namedkid[x]
+        else:
+            raise AttributeError,"The subtree "+x+" does not exist"
+
+    def __setitem__(self,x,kid):
+        """
+        Inserts the subtree and name it x.
+        Ex.: neuron['axon'] or neuron['11213']
+        If the tree already exists with another name, then it creates a synonym
+        for this tree.
+        The coordinates of the subtree are relative before function call,
+        and are absolute after function call.
+        """
+        x=str(x) # convert int to string
+        if (len(x)>1) and all([c in 'LR123456789' for c in x]): # binary string of the form LLLRLR or 1213 (or mixed)
+            self._namedkid[x[0]][x[1:]]=kid
+        elif x in self._namedkid:
+            raise AttributeError,"The subtree "+x+" already exists"
+        else:
+            # Update coordinates
+            kid.x+=self.x[-1]
+            kid.y+=self.y[-1]
+            kid.z+=self.z[-1]
+            if kid not in self.children:
+                self.children.append(kid)
+                self._namedkid[str(len(self.children))]=kid # numbered child
+            self._namedkid[x]=kid
+
+    def __delitem__(self,x):
+        """
+        Removes the subtree x.
+        """
+        x=str(x) # convert int to string
+        if (len(x)>1) and all([c in 'LR123456789' for c in x]): # binary string of the form LLLRLR or 1213 (or mixed)
+            del self._namedkid[x[0]][x[1:]]
+        elif x in self._namedkid:
+            child=self._namedkid[x]
+            # Delete from name dictionary
+            for name,kid in self._namedkid.items():
+                if kid is child: del self._namedkid[name]
+            # Delete from list of children
+            for i,kid in enumerate(self.children):
+                if kid is child: del self.children[i]
+        else:
+            raise AttributeError,"The subtree "+x+" does not exist"
+    
+    def __getattr__(self,x):
+        """
+        Returns the subtree named x.
+        Ex.: axon=neuron.axon
+        """
+        return self[x]
+    
+    def __setattr__(self,x,kid):
+        """
+        Attach a subtree and named it x. If the subtree is None then the
+        subtree x is deleted.
+        Ex.: neuron.axon=Soma(diameter=10*um)
+        Ex.: neuron.axon=None
+        """
+        if isinstance(kid,Morphology):
+            if kid is None:
+                del self[x]
+            else:
+                self[x]=kid
+        else: # If it is not a subtree, then it's a normal class attribute
+            object.__setattr__(self,x,kid)
+    
+    def compress(self):
+        """
+        Compress the tree by changing the compartment vectors to views on
+        a matrix (or vectors). The morphology cannot be changed anymore but
+        all other functions should work normally.
+        """
+        pass
     
     def plot(self,axes=None,simple=True,origin=None):
         """
@@ -174,10 +263,31 @@ class Cylinder(Morphology):
         self.area=ones(n)*pi*diameter*length/n
         self.type=type
 
+class Soma(Morphology): # or Sphere?
+    """
+    A spherical soma.
+    """
+    def __init__(self,diameter=None):
+        Morphology.__init__(self)
+        self.diameter=ones(1)*diameter
+        self.area=ones(1)*pi*diameter**2
+        self.length=zeros(1)
+        self.x,self.y,self.z=zeros(1),zeros(1),zeros(1)
+        self.type='soma'
+
 if __name__=='__main__':
     from pylab import show
     #morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
     morpho=Morphology('oi24rpy1.CNG.swc') # visual L3 pyramidal cell
+    morpho.axon=None
+    morpho.plot()
     #morpho=Cylinder(length=10*um,diameter=1*um,n=10)
+    #morpho.plot(simple=True)
+    morpho=Soma(diameter=10*um)
+    morpho.axon=Cylinder(length=10*um,diameter=1*um,n=10)
+    morpho.dendrite=Cylinder(length=3*um,diameter=1*um,n=10)
+    morpho.dendrite.L=Cylinder(length=5*um,diameter=1*um,n=10)
+    morpho.dendrite.R=Cylinder(length=7*um,diameter=1*um,n=10)
+    morpho.dendrite.LL=Cylinder(length=3*um,diameter=1*um,n=10)
     morpho.plot(simple=True)
     show()
