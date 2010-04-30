@@ -1,5 +1,5 @@
 import pycuda.autoinit as autoinit
-import pycuda.driver as drv
+import pycuda.compiler as drv # .driver before pycuda 0.93
 from pycuda.gpuarray import GPUArray
 from pycuda import gpuarray
 import numpy, pylab, time
