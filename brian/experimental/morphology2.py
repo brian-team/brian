@@ -6,6 +6,12 @@ from scipy import rand
 from numpy import *
 from brian.units import meter
 from brian.stdunits import um
+import warnings
+from pylab import figure
+try:
+    from mpl_toolkits.mplot3d import Axes3D
+except:
+    warnings.warn('Pylab 0.99.1 is required for 3D plots')
 
 class Morphology(object):
     '''
@@ -70,36 +76,76 @@ class Morphology(object):
                 segment.append(seg)
                 previousn=n
         # We assume that the first segment is the root
-        # TODO: if it's a soma, only one compartment
         self.create_from_segments(segment)
         
     def create_from_segments(self,segment):
         """
         Recursively create the morphology from a list of segments.
-        Each segment has attributes: x,y,z,diameter,area,length,parent,children.
+        Each segment has attributes: x,y,z,diameter,area,length (vectors) and children (list).
+        It also creates a dictionary of names (_namedkid).
         """
         n=0
-        while len(segment[n]['children'])==1:
-            n+=1
+        if segment[0]['T']!='soma': # if it's a soma, only one compartment
+            while (len(segment[n]['children'])==1) and (segment[n]['T']!='soma'): # Go to the end of the branch
+                n+=1
         # End of branch
         branch=segment[:n+1]
+        # Set attributes
         self.diameter,self.length,self.area,self.x,self.y,self.z=\
             zip(*[(seg['diameter'],seg['length'],seg['area'],seg['x'],seg['y'],seg['z']) for seg in branch])
-        # This should be a dictionary
+        self.diameter,self.length,self.area,self.x,self.y,self.z=array(self.diameter),array(self.length),\
+            array(self.area),array(self.x),array(self.y),array(self.z)
+        self.type=segment[n]['T'] # normally same type for all compartments in the branch
+        # Create children (list)
         self.children=[Morphology().create_from_segments(segment[c:]) for c in segment[n]['children']]
+        # Create dictionary of names (enumerates children from number 1)
+        self._namedkid={}
+        for i,child in enumerate(self.children):
+            self._namedkid[i+1]=child
+            # Name the child if possible
+            if child.type in ['soma','axon','dendrite']:
+                if child.type in self._namedkid:
+                    self._namedkid[child.type]=None # two children with the same name: erase (see next block)
+                else:
+                    self._namedkid[child.type]=child
+        # Erase useless names
+        for k in self._namedkid.keys():
+            if self._namedkid[k] is None:
+                del self._namedkid[k]
+        # If two kids, name them L (left) and R (right)
+        if len(self.children)==2:
+            self._namedkid['L']=self._namedkid[1]
+            self._namedkid['R']=self._namedkid[2]
         return self
     
-    def plot(self,origin=None):
-        if origin is None:
-            plot3d(self.x,self.y,self.z,tube_radius=self.diameter[0],vmin=0,vmax=1)
-        else:
+    def plot(self,axes=None,simple=True,origin=None):
+        """
+        Plots the morphology in 3D. Units are um.
+        axes : the figure axes (new figure if not given)
+        simple : if True, the diameter of branches is ignored
+        """
+        if axes is None: # new figure
+            fig=figure()
+            axes=Axes3D(fig)
+        x,y,z,d=self.x/um,self.y/um,self.z/um,self.diameter/um
+        if origin is not None:
             x0,y0,z0=origin
-            plot3d([x0]+list(self.x),[y0]+list(self.y),[z0]+list(self.z),tube_radius=self.diameter[0],vmin=0,vmax=1)
+            x=hstack((x0,x))
+            y=hstack((y0,y))
+            z=hstack((z0,z))
+        if len(self.x)==1: # only one compartment: probably just the soma
+            axes.plot(x,y,z,"r.",linewidth=d[0])
+        else:
+            if simple:
+                axes.plot(x,y,z,"k")
+            else: # linewidth reflects compartment diameter
+                for n in range(1,len(x)):
+                    axes.plot([x[n-1],x[n]],[y[n-1],y[n]],[z[n-1],z[n]],'k',linewidth=d[n-1])
         for c in self.children:
-            c.plot(origin=(self.x[-1],self.y[-1],self.z[-1]))
+            c.plot(origin=(x[-1],y[-1],z[-1]),axes=axes,simple=simple)
     
 if __name__=='__main__':
-    from enthought.mayavi.mlab import *
+    from pylab import show
     morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
-    morpho.plot()
+    morpho.plot(simple=True)
     show()

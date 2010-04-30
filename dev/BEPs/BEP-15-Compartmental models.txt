@@ -127,6 +127,10 @@ Ex: subtree=mymorph.dendrites.LLR
 mymorph.dendrites returns a subtree, mymorph.dendrites.LLR too but it's a shorthand
 for L.L.R. Internally, it does mymorph.dendrites.L.LR (recursive algorithm).
 
+subtree=mymorph.dendrites[1131]
+If it's not a binary tree, then we need to access children with numbers, this can be
+done with setitem.
+
 Insertion
 ---------
 Ex: mymorph.dendrites.L=Cylinder(l=50*um,d=1*um,n=10) # or Branch?
