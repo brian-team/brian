@@ -19,7 +19,7 @@ class Morphology(object):
     '''
     def __init__(self,filename=None):
         self.children=[]
-        self._namedkids={}
+        self._namedkid={}
         if filename is not None:
             self.loadswc(filename)
 
@@ -80,18 +80,18 @@ class Morphology(object):
         # We assume that the first segment is the root
         self.create_from_segments(segment)
         
-    def create_from_segments(self,segment):
+    def create_from_segments(self,segment,origin=0):
         """
         Recursively create the morphology from a list of segments.
         Each segment has attributes: x,y,z,diameter,area,length (vectors) and children (list).
         It also creates a dictionary of names (_namedkid).
         """
-        n=0
-        if segment[0]['T']!='soma': # if it's a soma, only one compartment
+        n=origin
+        if segment[origin]['T']!='soma': # if it's a soma, only one compartment
             while (len(segment[n]['children'])==1) and (segment[n]['T']!='soma'): # Go to the end of the branch
                 n+=1
         # End of branch
-        branch=segment[:n+1]
+        branch=segment[origin:n+1]
         # Set attributes
         self.diameter,self.length,self.area,self.x,self.y,self.z=\
             zip(*[(seg['diameter'],seg['length'],seg['area'],seg['x'],seg['y'],seg['z']) for seg in branch])
@@ -99,7 +99,7 @@ class Morphology(object):
             array(self.area),array(self.x),array(self.y),array(self.z)
         self.type=segment[n]['T'] # normally same type for all compartments in the branch
         # Create children (list)
-        self.children=[Morphology().create_from_segments(segment[c:]) for c in segment[n]['children']]
+        self.children=[Morphology().create_from_segments(segment,origin=c) for c in segment[n]['children']]
         # Create dictionary of names (enumerates children from number 1)
         for i,child in enumerate(self.children):
             self._namedkid[i+1]=child
@@ -134,7 +134,7 @@ class Morphology(object):
             x=hstack((x0,x))
             y=hstack((y0,y))
             z=hstack((z0,z))
-        if len(self.x)==1: # only one compartment: probably just the soma
+        if len(x)==1: # root with a single compartment: probably just the soma
             axes.plot(x,y,z,"r.",linewidth=d[0])
         else:
             if simple:
@@ -156,14 +156,15 @@ class Cylinder(Morphology):
         type : 'soma', 'axon' or 'dendrite'
         x,y,z : end point (relative to origin of cylinder)
         length is optional (and ignored) if x,y,z is specified
-        If x,y,z unspecified: random direction in the plane z=0 (should it be in 3D?)
+        If x,y,z unspecified: random direction
         """
         Morphology.__init__(self)
         if x is None:
             theta=rand()*2*pi
-            x=length*cos(theta)
-            y=length*sin(theta)
-            z=0*um
+            phi=rand()*2*pi
+            x=length*sin(theta)*cos(phi)
+            y=length*sin(theta)*sin(phi)
+            z=length*cos(theta)
         else:
             length=(sum(array((x,y,z))**2))**.5
         scale=arange(1,n+1)*1./n
@@ -176,6 +177,7 @@ class Cylinder(Morphology):
 if __name__=='__main__':
     from pylab import show
     #morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
-    morpho=Cylinder(length=10*um,diameter=1*um,n=10)
+    morpho=Morphology('oi24rpy1.CNG.swc') # visual L3 pyramidal cell
+    #morpho=Cylinder(length=10*um,diameter=1*um,n=10)
     morpho.plot(simple=True)
     show()
