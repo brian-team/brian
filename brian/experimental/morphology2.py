@@ -2,8 +2,8 @@
 Neuronal morphology module for Brian.
 
 TODO:
-* init with explicit branch morphology
-* compress
+* compress (maybe in SpatialNeuron)
+* Maybe str: should give a text representation of the tree
 '''
 from brian.group import Group
 from scipy import rand
@@ -21,11 +21,40 @@ class Morphology(object):
     '''
     Neuronal morphology (=tree of branches).
     '''
-    def __init__(self,filename=None):
+    def __init__(self,filename=None,n=None):
         self.children=[]
         self._namedkid={}
         if filename is not None:
             self.loadswc(filename)
+        elif n is not None: # Creates a branch with n compartments
+            # The problem here is that these parameters should have some self-consistency
+            self.x,self.y,self.z,self.diameter,self.length,self.area=[zeros(n) for _ in range(6)]
+
+    def set_length(self):
+        '''
+        Sets the length of compartments according to their coordinates
+        '''
+        x=hstack((0*um,self.x))
+        y=hstack((0*um,self.y))
+        z=hstack((0*um,self.z))
+        self.length=sum((x[1:]-x[:-1])**2+(y[1:]-y[:-1])**2+(z[1:]-z[:-1])**2)**.5
+
+    def set_area(self):
+        '''
+        Sets the area of compartments according to diameter and length (assuming cylinders)
+        '''
+        self.area=pi*self.diameter*self.length
+
+    def set_coordinates(self):
+        '''
+        Sets the coordinates of compartments according to their lengths (taking a random direction)
+        '''
+        l=cumsum(self.length)
+        theta=rand()*2*pi
+        phi=rand()*2*pi
+        self.x=l*sin(theta)*cos(phi)
+        self.y=l*sin(theta)*sin(phi)
+        self.z=l*cos(theta)
 
     def loadswc(self,filename):
         '''
@@ -200,6 +229,12 @@ class Morphology(object):
         else: # If it is not a subtree, then it's a normal class attribute
             object.__setattr__(self,x,kid)
     
+    def __len__(self):
+        """
+        Returns the total number of compartments.
+        """
+        return len(self.x)+sum(len(child) for child in self.children)
+    
     def compress(self):
         """
         Compress the tree by changing the compartment vectors to views on
@@ -279,15 +314,20 @@ if __name__=='__main__':
     from pylab import show
     #morpho=Morphology('mp_ma_40984_gc2.CNG.swc') # retinal ganglion cell
     morpho=Morphology('oi24rpy1.CNG.swc') # visual L3 pyramidal cell
+    print len(morpho),"compartments"
     morpho.axon=None
     morpho.plot()
     #morpho=Cylinder(length=10*um,diameter=1*um,n=10)
     #morpho.plot(simple=True)
     morpho=Soma(diameter=10*um)
-    morpho.axon=Cylinder(length=10*um,diameter=1*um,n=10)
     morpho.dendrite=Cylinder(length=3*um,diameter=1*um,n=10)
     morpho.dendrite.L=Cylinder(length=5*um,diameter=1*um,n=10)
     morpho.dendrite.R=Cylinder(length=7*um,diameter=1*um,n=10)
     morpho.dendrite.LL=Cylinder(length=3*um,diameter=1*um,n=10)
+    morpho.axon=Morphology(n=5)
+    morpho.axon.diameter=ones(5)*1*um
+    morpho.axon.length=[1*um,2*um,1*um,3*um,1*um]
+    morpho.axon.set_coordinates()
+    morpho.axon.set_area()
     morpho.plot(simple=True)
     show()
