@@ -3,7 +3,7 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
                     reshape, sum
 from brian.utils.statistics import firing_rate, get_gamma_factor
 try:
-    from playdoh import maximize, printr, worker
+    from playdoh import maximize, printr, worker,PSO,GA
 except:
     raise Exception("Playdoh must be installed (https://code.google.com/p/playdoh/)")
 try:
@@ -200,6 +200,7 @@ def modelfitting(model = None, reset = None, threshold = None,
                  precision = 'double', # set to 'float' or 'double' to specify single or double precision on the GPU
                  machines = [], named_pipe = None, port = None,
                  returninfo = False,
+                 optalg=None,
                  **params):
     """
     Model fitting function.
@@ -322,10 +323,19 @@ def modelfitting(model = None, reset = None, threshold = None,
     duration = len(input)*dt # duration of the input    
 
     # WARNING: PSO-specific
-    optinfo = pso_params 
-    if optinfo is None:
-        optinfo = [.9, 0.1, 1.5]
-    optinfo = dict(omega=optinfo[0], cl=optinfo[1], cg=optinfo[2])
+    if optalg==None:
+        optalg=GA
+        
+    optinfo = pso_params
+    
+    if optalg==GA:
+        if optinfo is None:
+            optinfo = [.9, 0.1, 1.5]
+        optinfo = dict(omega=optinfo[0], cl=optinfo[1], cg=optinfo[2])
+        
+    if optalg==GA:
+        if optinfo is None:
+            optinfo = dict(Minterval=10)
 
     shared_data = dict(model = model,
                        threshold = threshold,
@@ -363,6 +373,7 @@ def modelfitting(model = None, reset = None, threshold = None,
                     _returninfo = returninfo,
                     _verbose = verbose,
                     _doserialize = False,
+                    _optalg=optalg,
                     **params)
     
     # r is (results, fitinfo) or (results)
@@ -390,6 +401,7 @@ def get_spikes( model = None, reset = None, threshold = None,
     """
     duration = len(input)*dt
     ngroups = len(params[params.keys()[0]])
+
     group = NeuronGroup(N = ngroups, model = model, reset=reset, threshold=threshold, 
                         clock=Clock(dt=dt))
     group.set_var_by_array(input_var, TimedArray(input, clock=group.clock))
@@ -401,7 +413,7 @@ def get_spikes( model = None, reset = None, threshold = None,
     M = SpikeMonitor(group)
     net = Network(group, M)
     net.run(duration)
-    
+    reinit_default_clock()
     return M.spikes
 
 def predict(model = None, reset = None, threshold = None,
