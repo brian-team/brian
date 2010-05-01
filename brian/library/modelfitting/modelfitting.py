@@ -324,7 +324,7 @@ def modelfitting(model = None, reset = None, threshold = None,
 
     # WARNING: PSO-specific
     if optalg==None:
-        optalg=GA
+        optalg=PSO
         
     optinfo = pso_params
     
