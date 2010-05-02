@@ -1,6 +1,8 @@
 '''
 Compartmental neurons
 See BEP-15
+
+Next thing to do: subgrouping
 '''
 from morphology import *
 from brian.stdunits import *
@@ -38,12 +40,17 @@ class SpatialNeuron(NeuronGroup):
         # Create the state updater
         if isinstance(model,str):
             model = Equations(model, level=level+1)
-        model+=Equations('v:volt') # membrane potential
+        model+=Equations('''
+        v:volt # membrane potential
+        #Im:amp/cm**2 # membrane current (should we have it?)
+        ''')
         full_model=model+eqs_morphology
+        Group.__init__(self, full_model, N, unit_checking=unit_checking)
         self._eqs = model
         self._state_updater = SpatialStateUpdater(model,clock)
         var_names = full_model._diffeq_names
-        Group.__init__(self, full_model, N, unit_checking=unit_checking)
+        self.cm=cm # could be a vector?
+        self.Ri=Ri
         S0 = {}
         # Fill missing units
         for key, value in full_model._units.iteritems():
@@ -56,7 +63,18 @@ class SpatialNeuron(NeuronGroup):
         NeuronGroup.__init__(self,N,model=self._state_updater,threshold=threshold,reset=reset,refractory=refractory,
                              level=level+1,clock=clock,unit_checking=unit_checking)
 
-        # Insert morphology (TODO)
+        # Insert morphology
+        self.morphology=morphology
+        self.morphology.compress(diameter=self.diameter,length=self.length,x=self.x,y=self.y,z=self.z,area=self.area)
+
+    def subgroup(self,N): # Subgrouping cannot be done in this way
+        raise NotImplementedError
+    
+    def __getitem__(self,i):
+        pass
+
+    def __getattr__(self,x):
+        return NeuronGroup.__getattr__(self,x)
 
 class SpatialStateUpdater(StateUpdater):
     """
@@ -83,3 +101,5 @@ if __name__=='__main__':
     gl : siemens/cm**2 # spatially distributed conductance
     '''
     neuron=SpatialNeuron(morphology=morpho,threshold="axon[50*um].v>0*mV",model=eqs,refractory=4*ms,cm=0.9*uF/cm**2,Ri=150*ohm*cm)
+    neuron.morphology.plot()
+    show()

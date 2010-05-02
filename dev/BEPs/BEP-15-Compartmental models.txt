@@ -82,6 +82,26 @@ State update
 2) Update the spatial equation (e.g. using Hines method)
 3) Add point currents
 
+The state update for the cable equation can be done with Hines method:
+Int J Biomed Comput. 1984 Jan-Feb;15(1):69-76.
+Efficient computation of branched nerve equations.
+Hines M.
+Available on Neuron's website:
+http://www.neuron.yale.edu/neuron/nrnpubs
+
+In this method, values of ionic currents are calculated at
+midpoints of time steps as a function of V(t), and the
+values of the conductances are considered as constant within
+a timestep for the integration of the cable equation.
+The cable equation uses a simple implicit scheme followed by
+an explicit step. As I understand it, the update of Im (IHH in
+the paper) and the integration of the cable equation are completely
+independent. Therefore, we can have separate stateupdaters which are
+called in the following order:
+1) Update the spatial equation with Hines method.
+2) Update the membrane current with a standard vectorized updater (2nd order?).
+3) Update the point processes with a standard vectorized updater.
+
 Neuron groups
 =============
 How to describe neuron groups with morphologies? Two options:
@@ -149,6 +169,7 @@ dm/dt=(minf-m)/tauinf : 1
 '''
 neuron=CompartmentalNeuron(model=eqs,morphology=mymorph,threshold="axon[50*um].v>0*mV",reset=None,refractory=4*ms,
                            cm=0.9*uF/cm**2,Ri=150*ohm/cm) # or SpatialNeuron
+# Note: the threshold and reset have to be handled differently, as if N=1
 initial_segment=neuron["axon.0*um":"axon.100*um"]
 # initial_segment=neuron.axon[0*um:100*um]
 initial_segment.gNa=linspace(0*nS/cm**2,3000*nS/cm**2,len(initial_segment))

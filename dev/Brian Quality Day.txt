@@ -1,0 +1,37 @@
+Brian Quality Day
+=================
+May 13, 2pm
+
+* Remove old commented code [Dan/Romain]
+* Remove deprecated/unused code [Dan/Romain]
+* Check style (PEP-8): patch for blank lines before def f() [Dan]
+* Check if everything is documented and has examples (especially new features) [Cyrille/Bertrand]
+
+Focus on:
+* connection
+* stdp
+* neurongroup (especially init)
+* equations
+
+and for these modules:
+* reorganize [Dan/Romain]
+* add docstrings [Dan/Romain]
+* write tests [Cyrille/Bertrand/Dan/Romain]
+
+For brianhears:
+* check docstrings [Cyrille/Bertrand/Dan]
+* write manual, examples and tests [Cyrille/Bertrand/Dan]
+
+-- Initial message --
+I was thinking of organising a "Brian Quality Day". Basically it would be an afternoon that we would devote to improving the code quality of Brian. Here's a list of possible things to do:
+* writing docstrings, docs and comments
+* writing examples (for features that are currently not illustrated)
+* writing tests (in particular for the modules that we want to change, like equations)
+* checking style (according to PEP-8)
+* removing deprecated code or old comments
+* checking TODOs in the code
+* simplifying/reorganizing some code (specifically: connection and stdp)
+* writing some docs in the developer's guide
+There are also some thoughts in dev.Refactoring.txt.
+We could even advertise that day on the google group, so that people could send us some tests for example.
+The goal is that the code is more readable and easier to modify (which requires a better test coverage). This could also include brian.hears. Hopefully this should also give everyone a better idea of the structure of the code.

@@ -2,7 +2,6 @@
 Neuronal morphology module for Brian.
 
 TODO:
-* compress (maybe in SpatialNeuron)
 * Maybe str: should give a text representation of the tree
 * set_length etc.: should be recursive
 * check_consistency: check that lengths, area and coordinates are consistent (and fix)
@@ -29,6 +28,7 @@ class Morphology(object):
     def __init__(self,filename=None,n=None):
         self.children=[]
         self._namedkid={}
+        self.iscompressed=False
         if filename is not None:
             self.loadswc(filename)
         elif n is not None: # Creates a branch with n compartments
@@ -240,13 +240,31 @@ class Morphology(object):
         """
         return len(self.x)+sum(len(child) for child in self.children)
     
-    def compress(self):
+    def compress(self,diameter=None,length=None,area=None,x=None,y=None,z=None):
         """
         Compresses the tree by changing the compartment vectors to views on
         a matrix (or vectors). The morphology cannot be changed anymore but
         all other functions should work normally.
         """
-        raise NotImplementedError
+        n=len(self.x)
+        # Update values of vectors
+        diameter[:n]=self.diameter
+        length[:n]=self.length
+        area[:n]=self.area
+        x[:n]=self.x
+        y[:n]=self.y
+        z[:n]=self.z
+        # Attributes are now views on these vectors
+        self.diameter=diameter[:n]
+        self.length=length[:n]
+        self.area=area[:n]
+        self.x=x[:n]
+        self.y=y[:n]
+        self.z=z[:n]
+        for kid in self.children:
+            kid.compress(diameter=diameter[n:],length=length[n:],area=area[n:],x=x[n:],y=y[n:],z=z[n:])
+            n+=len(kid)
+        self.iscompressed=True
     
     def plot(self,axes=None,simple=True,origin=None):
         """
