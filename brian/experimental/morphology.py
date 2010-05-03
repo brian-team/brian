@@ -14,6 +14,7 @@ from brian.units import meter
 from brian.stdunits import um
 import warnings
 from pylab import figure
+import copy
 try:
     from mpl_toolkits.mplot3d import Axes3D
 except:
@@ -157,18 +158,50 @@ class Morphology(object):
             self._namedkid['R']=self._namedkid['2']
         return self
     
+    def branch(self):
+        '''
+        Returns the current branch without the children.
+        '''
+        morpho=copy.copy(self)
+        morpho.children=[]
+        morpho._namedkid={}
+        return morpho
+    
     def __getitem__(self,x):
         """
         Returns the subtree named x.
         Ex.: neuron['axon'] or neuron['11213']
+        neuron[10*um:20*um] returns the subbranch from 10 um to 20 um.
+        
+        TODO:
+        neuron[:] returns the full branch.
+        neuron[10*um] returns one compartment.
         """
-        x=str(x) # convert int to string
-        if (len(x)>1) and all([c in 'LR123456789' for c in x]): # binary string of the form LLLRLR or 1213 (or mixed)
-            return self._namedkid[x[0]][x[1:]]
-        elif x in self._namedkid:
-            return self._namedkid[x]
+        if isinstance(x,slice): # neuron[10*um:20*um]
+            morpho=self.branch()
+            start,stop=x.start,x.stop
+            l=cumsum(morpho.length) # coordinate on the branch
+            print start,stop
+            i=searchsorted(l,start)
+            j=searchsorted(l,stop)
+            print i,j
+            morpho.diameter=morpho.diameter[i:j]
+            morpho.length=morpho.length[i:j]
+            morpho.area=morpho.area[i:j]
+            morpho.x=morpho.x[i:j]
+            morpho.y=morpho.y[i:j]
+            morpho.z=morpho.z[i:j]
+            if hasattr(morpho,'_origin'):
+                morpho._origin+=i
+            return morpho
         else:
-            raise AttributeError,"The subtree "+x+" does not exist"
+            x=str(x) # convert int to string
+            if (len(x)>1) and all([c in 'LR123456789' for c in x]): # binary string of the form LLLRLR or 1213 (or mixed)
+                return self._namedkid[x[0]][x[1:]]
+            elif x in self._namedkid:
+                return self._namedkid[x]
+            else:
+                raise AttributeError,"The subtree "+x+" does not exist"
 
     def __setitem__(self,x,kid):
         """
@@ -240,12 +273,15 @@ class Morphology(object):
         """
         return len(self.x)+sum(len(child) for child in self.children)
     
-    def compress(self,diameter=None,length=None,area=None,x=None,y=None,z=None):
+    def compress(self,diameter=None,length=None,area=None,x=None,y=None,z=None,origin=0):
         """
         Compresses the tree by changing the compartment vectors to views on
         a matrix (or vectors). The morphology cannot be changed anymore but
         all other functions should work normally.
+        
+        origin : offset in the base matrix
         """
+        self._origin=origin
         n=len(self.x)
         # Update values of vectors
         diameter[:n]=self.diameter
@@ -262,7 +298,7 @@ class Morphology(object):
         self.y=y[:n]
         self.z=z[:n]
         for kid in self.children:
-            kid.compress(diameter=diameter[n:],length=length[n:],area=area[n:],x=x[n:],y=y[n:],z=z[n:])
+            kid.compress(diameter=diameter[n:],length=length[n:],area=area[n:],x=x[n:],y=y[n:],z=z[n:],origin=n)
             n+=len(kid)
         self.iscompressed=True
     

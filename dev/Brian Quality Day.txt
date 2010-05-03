@@ -19,8 +19,15 @@ and for these modules:
 * write tests [Cyrille/Bertrand/Dan/Romain]
 
 For brianhears:
-* check docstrings [Cyrille/Bertrand/Dan]
-* write manual, examples and tests [Cyrille/Bertrand/Dan]
+* check docstrings [Bertrand/Dan]
+* write manual, examples and tests [Bertrand/Dan]
+
+Initial planning
+----------------
+Dan: style patch for blank lines before def f() (PEP-8)
+Romain: tests for equations
+Bertrand: examples/docs for brianhears
+Cyrille: check examples/docs for new features
 
 -- Initial message --
 I was thinking of organising a "Brian Quality Day". Basically it would be an afternoon that we would devote to improving the code quality of Brian. Here's a list of possible things to do:
