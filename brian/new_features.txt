@@ -26,7 +26,6 @@ Improvements
   gcc and -march=native
 
 Bug fixes
-
 * Sparse matrices with some versions of scipy
 * Weave now works on 64 bit platforms with 64 bit Python
 * Fixed bug introduced in 1.2.0 where dense DelayConnection structures would
@@ -43,6 +42,8 @@ Bug fixes
   it now dynamically adapts to the number of spikes.
 * Fixed ticket #5, ionic_currents did not work with units off
 * Fixed ticket #6, Current+MembraneEquation now works
+* Fixed bug in modelfitting : the fitness was not computed right with CPUs.
+* Fixed bug in modelfitting with random seeds on Unix systems. 
 
 Removed features
 
