@@ -13,7 +13,7 @@ try:
 except ImportError:
     can_use_gpu = False
 
-__all__ = ['modelfitting', 'print_results', 'worker', 'get_spikes', 'predict']
+__all__ = ['modelfitting', 'print_results', 'worker', 'get_spikes', 'predict', 'PSO', 'GA']
 
 class ModelFitting(object):
     def __init__(self, shared_data, local_data, use_gpu):
@@ -144,7 +144,7 @@ class ModelFitting(object):
             del param_values['_delays']
         else:
             delays = zeros(self.neurons)
-            
+        
         # kron spike delays
         delays = kron(delays, ones(self.slices))
         
@@ -168,8 +168,8 @@ class ModelFitting(object):
             coincidence_count = self.mf.coincidence_count
             spike_count = self.mf.spike_count
         else:
-            # WARNING: need to sets the group at each iteration for some reason
-            self.cc.source = self.group
+            self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset, 
+                                        onset = self.onset, delta = self.delta)
             # Sets the spike delay values
             self.cc.spikedelays = delays
             # Reinitializes the simulation objects
@@ -185,13 +185,14 @@ class ModelFitting(object):
         spike_count = sum(reshape(spike_count, (self.slices, -1)), axis=0)
         
         gamma = get_gamma_factor(coincidence_count, spike_count, self.target_length, self.target_rates, self.delta)
+        
         return gamma
 
 def modelfitting(model = None, reset = None, threshold = None,
                  refractory = 0*ms,
                  data = None, 
                  input_var = 'I', input = None, dt = None,
-                 particles = 1000, iterations = 10, pso_params = None,
+                 particles = 1000, iterations = 10,
                  delta = 4*ms,
                  slices = 1, overlap = 0*second,
                  initial_values = None,
@@ -200,7 +201,7 @@ def modelfitting(model = None, reset = None, threshold = None,
                  precision = 'double', # set to 'float' or 'double' to specify single or double precision on the GPU
                  machines = [], named_pipe = None, port = None,
                  returninfo = False,
-                 optalg=None,
+                 optalg=None, optinfo=None,
                  **params):
     """
     Model fitting function.
@@ -245,8 +246,8 @@ def modelfitting(model = None, reset = None, threshold = None,
         Number of particles per target train used by the particle swarm optimization algorithm.
     ``iterations``
         Number of iterations in the particle swarm optimization algorithm.
-    ``pso_params``
-        Parameters of the PSO algorithm. It is a list with three scalar values (omega, c_l, c_g).
+    ``optinfo``
+        Parameters of the PSO algorithm. It is a dictionary with three scalar values (omega, c_l, c_g).
         The parameter ``omega`` is the "inertial constant", ``c_l`` is the "local best"
         constant affecting how much the particle's personl best influences its movement, and
         ``c_g`` is the "global best" constant affecting how much the global best
@@ -325,13 +326,9 @@ def modelfitting(model = None, reset = None, threshold = None,
     # WARNING: PSO-specific
     if optalg==None:
         optalg=PSO
-        
-    optinfo = pso_params
     
-    if optalg==GA:
-        if optinfo is None:
-            optinfo = [.9, 0.1, 1.5]
-        optinfo = dict(omega=optinfo[0], cl=optinfo[1], cg=optinfo[2])
+    if optalg==PSO:
+        optinfo = dict(omega=.9, cl= 0.1, cg=1.5)
         
     if optalg==GA:
         if optinfo is None:

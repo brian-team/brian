@@ -14,15 +14,16 @@ if __name__ == '__main__':
         R : 1
         tau : second
     ''')
-    
+    optinfo = dict([])
+    optinfo['Minterval']=10
     input = loadtxt('current.txt')
     spikes = loadtxt('spikes.txt')
     
     results = modelfitting(model = equations, reset = 0, threshold = 1,
                                  data = spikes, 
                                  input = input, dt = .1*ms,
-                                 particles = 1000, iterations = 1, delta = 2*ms,
-                                 use_gpu = False, max_cpu = 1,
-                                 R = [1.0e9, 9.0e9], tau = [10*ms, 40*ms])
+                                 particles =1000, iterations = 10, delta = 2*ms,
+                                 use_gpu = False, max_cpu = 4, max_gpu = 1,
+                                 R = [1.0e9, 9.0e9], tau = [10*ms, 40*ms], optalg=GA,optinfo=optinfo)
     
     print_results(results)
