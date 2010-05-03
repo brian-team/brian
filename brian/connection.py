@@ -60,7 +60,7 @@ from numpy import *
 from scipy import sparse,stats,rand,weave,linalg
 import scipy
 import numpy
-from numpy.random import binomial
+from numpy.random import binomial, exponential
 import random as pyrandom
 from scipy import random as scirandom
 from utils.approximatecomparisons import is_within_absolute_tolerance
@@ -2119,35 +2119,63 @@ class PoissonInputs(Connection):
         ``target``
             The target NeuronGroup
         
-        ``state``
-            The variable to connect the Poisson inputs
-        
         ``inputs``
-            The list of the Poisson inputs, as a list of triplets (n, f, w)
-            where n is the number of Poisson spike trains, f their rate, and w the
-            synaptic weight.
+            The list of the Poisson inputs, as a list of tuples (n, f, w, state)
+            where n is the number of Poisson spike trains, f their rate, w the
+            synaptic weight, and state the name of the state to connect the input to.
         """
         self.source = EmptyGroup(target.clock)
         self.target = target
+        self.N = len(self.target)
         self.clock = target.clock
         self.inputs = inputs
         self.delay = None
         self.iscompressed=True
-        self.W = zeros((len(inputs), len(target)))
+        self.W = zeros((len(inputs), self.N))
         
         self.stateindex = dict()
+        self.delays = None # delay to wait for the j-th synchronous spike to occur after the last sync event, for target neuron i
+        self.lastevent = -inf*ones(self.N) # time of the last event for target neuron i
         for i in xrange(len(self.inputs)):
             state = self.inputs[i][3]
             if type(state)==types.StringType: # named state variable
                 self.stateindex[state] = target.get_var_index(state)
             else:
                 self.stateindex[state] = state
+            w = self.inputs[i][2]
+            if type(w) is tuple:
+                if w[0] == 'jitter':
+                    self.delays = zeros((w[2], self.N))
     
     def propagate(self, spikes):
-        current = zeros(len(self.target))
+        current = zeros(self.N)
         for (n,f,w,state) in self.inputs:
             state = self.stateindex[state]
-            self.target._S[state,:] += w*binomial(n=n, p=f*self.clock.dt, size=(len(self.target)))
+            if type(w) is not tuple:
+                self.target._S[state,:] += w*binomial(n=n, p=f*self.clock.dt, size=(self.N))
+            else:
+                # if w is a tuple, it is ('synapse', w, pmax, alpha) and there are
+                # binomial(pmax, alpha) synchronous spikes then
+                # or it is ('jitter', w, pmax, jitter) and the synchronous
+                # spikes are shifted by an exponential value with parameter jitter
+                if w[0] == 'synapse':
+                    weff = w[1]*binomial(n=w[2], p=w[3])
+                    self.target._S[state,:] += weff*binomial(n=n, p=f*self.clock.dt, size=(self.N))
+                elif w[0] == 'jitter':
+                    p = w[2]
+                    jitter = w[3]
+                    k = binomial(n=n, p=f*self.clock.dt, size=(self.N)) # number of synchronous events here, for every target neuron
+                    syncneurons = (k>0) # neurons with a syncronous event here
+                    self.lastevent[syncneurons] = self.clock.t
+                    if jitter == 0.0:
+                        self.delays[:,syncneurons] = zeros((p, sum(syncneurons)))
+                    else:
+                        self.delays[:,syncneurons] = exponential(scale=jitter, size=(p, sum(syncneurons)))
+                    # Delayed spikes occur now
+                    lastevent = tile(self.lastevent, (p, 1))
+                    b = (abs(self.clock.t - (lastevent + self.delays)) <= (self.clock.dt/2)*ones((p, self.N))) # delayed spikes occurring now
+                    weff = sum(b, axis=0)*w[1]
+                    self.target._S[state,:] += weff
 
 # Generation of matrices
 def random_matrix(n,m,p,value=1.):
