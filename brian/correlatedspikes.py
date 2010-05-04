@@ -52,8 +52,10 @@ from units import check_units,hertz,second
 from utils.circular import SpikeContainer
 from brian import poisson,binomial,rand,exponential,qarray
 from random import sample
+from numpy.random import rand
 
 __all__=['rectified_gaussian','inv_rectified_gaussian','HomogeneousCorrelatedSpikeTrains',\
+         'MixtureHomogeneousCorrelatedSpikeTrains',
          'CorrelatedSpikeTrains','mixture_process','find_mixture']
 
 """
@@ -125,6 +127,34 @@ class HomogeneousCorrelatedSpikeTrains(NeuronGroup):
         Q=NeuronGroup.__getslice__(self,i,j) # Is this correct?
         Q.N=j-i
         return Q
+
+
+class MixtureHomogeneousCorrelatedSpikeTrains(NeuronGroup):
+    def __init__(self, N, r, c, cl = None):
+        """
+        Generates a pool of N homogeneous correlated spike trains with identical
+        rates r and correlation c (0 <= c <= 1).
+        """
+        NeuronGroup.__init__(self, N, model="v : 1")
+        self.N = N
+        self.r = r
+        self.c = c
+        if cl is None:
+            cl = guessclock()
+        self.clock = cl
+        self.dt = cl.dt
+    
+    # called at each time step, returns the spiking neurons?
+    def update(self):
+        # Generates a source Poisson spike train with rate r/c
+        if rand(1) <= self.r/self.c*self.dt:
+            # If there is a source spike, it is copied to each target train with probability c
+            spikes = nonzero(rand(self.N) <= self.c)[0]
+        else:
+            spikes = []
+        self.LS.push(spikes)
+        
+
 
 def decompose_correlation_matrix(C,R):
     '''
