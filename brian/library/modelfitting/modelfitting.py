@@ -326,13 +326,6 @@ def modelfitting(model = None, reset = None, threshold = None,
     # WARNING: PSO-specific
     if optalg==None:
         optalg=PSO
-    
-    if optalg==PSO:
-        optinfo = dict(omega=.9, cl= 0.1, cg=1.5)
-        
-    if optalg==GA:
-        if optinfo is None:
-            optinfo = dict(Minterval=10)
 
     shared_data = dict(model = model,
                        threshold = threshold,
