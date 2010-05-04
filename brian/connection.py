@@ -2110,7 +2110,7 @@ class EmptyGroup(object):
         return None
 
 class PoissonInputs(Connection):
-    def __init__(self, target, *inputs):
+    def __init__(self, target, sameinputs=[], *inputs):
         """
         Adds Poisson inputs to a NeuronGroup.
         
@@ -2123,6 +2123,9 @@ class PoissonInputs(Connection):
             The list of the Poisson inputs, as a list of tuples (n, f, w, state)
             where n is the number of Poisson spike trains, f their rate, w the
             synaptic weight, and state the name of the state to connect the input to.
+        
+        ``sameinputs``
+            The list of the inputs indices which are assumed to be identical for all neurons.
         """
         self.source = EmptyGroup(target.clock)
         self.target = target
@@ -2132,6 +2135,7 @@ class PoissonInputs(Connection):
         self.delay = None
         self.iscompressed=True
         self.W = zeros((len(inputs), self.N))
+        self.sameinputs = sameinputs
         
         self.stateindex = dict()
         self.delays = None # delay to wait for the j-th synchronous spike to occur after the last sync event, for target neuron i
@@ -2149,10 +2153,14 @@ class PoissonInputs(Connection):
     
     def propagate(self, spikes):
         current = zeros(self.N)
+        i = 0
         for (n,f,w,state) in self.inputs:
             state = self.stateindex[state]
             if type(w) is not tuple:
-                self.target._S[state,:] += w*binomial(n=n, p=f*self.clock.dt, size=(self.N))
+                if i in self.sameinputs:
+                    self.target._S[state,:] += w*binomial(n=n, p=f*self.clock.dt)
+                else:
+                    self.target._S[state,:] += w*binomial(n=n, p=f*self.clock.dt, size=(self.N))
             else:
                 # if w is a tuple, it is ('synapse', w, pmax, alpha) and there are
                 # binomial(pmax, alpha) synchronous spikes then
@@ -2176,6 +2184,7 @@ class PoissonInputs(Connection):
                     b = (abs(self.clock.t - (lastevent + self.delays)) <= (self.clock.dt/2)*ones((p, self.N))) # delayed spikes occurring now
                     weff = sum(b, axis=0)*w[1]
                     self.target._S[state,:] += weff
+            i += 1
 
 # Generation of matrices
 def random_matrix(n,m,p,value=1.):
