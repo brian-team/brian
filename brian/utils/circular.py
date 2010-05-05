@@ -99,9 +99,8 @@ class CircularVector(object):
         if j0>=i0:
             return self.X[i0:j0]
         else:
-            return self.X[range(i0,n)+range(0,j0)] # Costly operation!
-            #return concatenate((self.X[i0:],self.X[0:j0])) # might be slightly faster
-            #return self.X.take(range(i0,j0+n),mode='wrap') # does not seem to work
+            #return self.X[range(i0,n)+range(0,j0)]
+            return concatenate((self.X[i0:], self.X[0:j0])) # this version is MUCH faster
 
     def get_conditional(self,i,j,min,max,offset=0):
         """
