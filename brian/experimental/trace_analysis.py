@@ -102,9 +102,14 @@ def spike_peaks(v,vc=None):
     dv=diff(v)
     spikes=((v[1:]>vc) & (v[:-1]<vc)).nonzero()[0]
     peaks=[]
-    for i in range(len(spikes)-1):
-        peaks.append(spikes[i]+(dv[spikes[i]:spikes[i+1]]<=0).nonzero()[0][0])
-    peaks.append(spikes[-1]+(dv[spikes[-1]:]<=0).nonzero()[0][0])
+    if len(spikes)>0:
+        for i in range(len(spikes)-1):
+            peaks.append(spikes[i]+(dv[spikes[i]:spikes[i+1]]<=0).nonzero()[0][0])
+        decreasing=(dv[spikes[-1]:]<=0).nonzero()[0]
+        if len(decreasing)>0:
+            peaks.append(spikes[-1]+decreasing[0])
+        else:
+            peaks.append(len(dv)) # last element (maybe should be deleted?)
     return array(peaks)
 
 def spike_onsets(v,criterion=None,vc=None):

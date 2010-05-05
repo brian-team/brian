@@ -667,6 +667,7 @@ class StateMonitor(NetworkOperation,Monitor):
     def __getitem__(self,i):
         """Returns the recorded values of the state of neuron i as a QuantityArray
         """
+        # TODO: a cache for the array conversion
         if self.record is False:
             raise IndexError('Neuron ' + str(i) + ' was not recorded.')
         if self.record is not True:
@@ -681,7 +682,7 @@ class StateMonitor(NetworkOperation,Monitor):
                 else:
                     raise
         elif self.record is True:
-            return QuantityArray(array(self._values)[:,i])*self.unit
+            return QuantityArray(array(self._values)[:,i])*self.unit # We should have a cache for the array conversion
         
     def getvalues(self):
         ri = self.get_record_indices()
