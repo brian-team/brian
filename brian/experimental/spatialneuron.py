@@ -118,6 +118,7 @@ if __name__=='__main__':
     neuron=SpatialNeuron(morphology=morpho,threshold="axon[50*um].v>0*mV",model=eqs,refractory=4*ms,cm=0.9*uF/cm**2,Ri=150*ohm*cm)
     neuron.axon[0*um:50*um].gl=1e-3*siemens/cm**2
     print sum(neuron.axon.gl)
+    print neuron.axon[40*um].gl
     #branch=neuron.axon[0*um:50*um]
     #neuron.morphology.plot()
     #show()

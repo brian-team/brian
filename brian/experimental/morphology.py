@@ -192,6 +192,20 @@ class Morphology(object):
             if hasattr(morpho,'_origin'):
                 morpho._origin+=i
             return morpho
+        elif isinstance(x,float): # neuron[10*um]
+            morpho=self.branch()
+            l=cumsum(morpho.length) # coordinate on the branch
+            i=searchsorted(l,x)
+            j=i+1
+            morpho.diameter=morpho.diameter[i:j]
+            morpho.length=morpho.length[i:j]
+            morpho.area=morpho.area[i:j]
+            morpho.x=morpho.x[i:j]
+            morpho.y=morpho.y[i:j]
+            morpho.z=morpho.z[i:j]
+            if hasattr(morpho,'_origin'):
+                morpho._origin+=i
+            return morpho
         else:
             x=str(x) # convert int to string
             if (len(x)>1) and all([c in 'LR123456789' for c in x]): # binary string of the form LLLRLR or 1213 (or mixed)
