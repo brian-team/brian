@@ -37,7 +37,9 @@
 - brian/experimental/mp_ma_40984_gc2.cng.swc
 + brian/experimental/multilinearstateupdater.py
 + brian/experimental/new_c_propagate.py
++ brian/experimental/oi24rpy1.cng.swc
 + brian/experimental/realtime_monitor.py
++ brian/experimental/spatialneuron.py
 + brian/experimental/trace_analysis.py
 + brian/globalprefs.py
 + brian/group.py

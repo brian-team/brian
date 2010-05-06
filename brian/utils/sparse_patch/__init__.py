@@ -10,6 +10,7 @@ __all__ = ['lil_matrix', 'spmatrix']
 
 default = '0_7_1'
 table = {
+    '0.7.2':     '0_7_1',
     '0.7.1':     '0_7_1',
     '0.7.1rc3':  '0_7_1',
     '0.7.1rc2':  '0_7_1',
@@ -30,7 +31,7 @@ else:
             break
     else:
         modulename = default
-        warnings.warn("Couldn't find matching sparse matrix patch for scipy version %s" % scipy.__version__)
+        warnings.warn("Couldn't find matching sparse matrix patch for scipy version %s, but in most cases this shouldn't be a problem." % scipy.__version__)
 
 module = __import__(modulename, globals(), locals(), [], -1)
 lil_matrix = module.lil_matrix

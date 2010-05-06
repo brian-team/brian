@@ -712,7 +712,7 @@ class GammachirpFilterbank_NM(ParallelLinearFilterbank):
             
         if Tcst==None:
             x=array([0.8932,    0.7905 ,   0.3436  ,  4.6861  , -4.4308 ,  -0.0010  ,  0.3453])
-            
+        x[-1]=c
         fs=float(fs)
         x[-1]=c
         t=arange(0,4,1./fs*1000)
