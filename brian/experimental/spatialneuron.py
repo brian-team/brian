@@ -2,7 +2,7 @@
 Compartmental neurons
 See BEP-15
 
-Next thing to do: subgrouping
+* Threshold and reset are special (not as normal NeuronGroup because only 1 spike)
 '''
 from morphology import *
 from brian.stdunits import *
@@ -75,18 +75,18 @@ class SpatialNeuron(NeuronGroup):
         Subgrouping mechanism.
         self['axon'] returns the subtree named "axon".
         
-        DOESN'T SEEM TO WORK PROPERLY
-        
         TODO:
         self[10*um:20*um] returns the subbranch from 10 um to 20 um.
         self[:] returns the full branch.
         self[10*um] returns one compartment.
         '''
         morpho=self.morphology[x]
-        return self[morpho._origin:morpho._origin+len(morpho)]
+        N=self[morpho._origin:morpho._origin+len(morpho)]
+        N.morphology=morpho
+        return N
 
     def __getattr__(self,x):
-        if (x in self.morphology._namedkid) or all([c in 'LR123456789' for c in x]): # subtree
+        if (x!='morphology') and ((x in self.morphology._namedkid) or all([c in 'LR123456789' for c in x])): # subtree
             return self[x]
         else:
             return NeuronGroup.__getattr__(self,x)
@@ -118,6 +118,6 @@ if __name__=='__main__':
     neuron=SpatialNeuron(morphology=morpho,threshold="axon[50*um].v>0*mV",model=eqs,refractory=4*ms,cm=0.9*uF/cm**2,Ri=150*ohm*cm)
     neuron.axon[0*um:50*um].gl=1e-3*siemens/cm**2
     print sum(neuron.axon.gl)
-    branch=neuron.axon[0*um:50*um]
-    neuron.morphology.plot()
-    show()
+    #branch=neuron.axon[0*um:50*um]
+    #neuron.morphology.plot()
+    #show()

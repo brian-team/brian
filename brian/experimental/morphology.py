@@ -181,10 +181,8 @@ class Morphology(object):
             morpho=self.branch()
             start,stop=x.start,x.stop
             l=cumsum(morpho.length) # coordinate on the branch
-            print start,stop
             i=searchsorted(l,start)
             j=searchsorted(l,stop)
-            print i,j
             morpho.diameter=morpho.diameter[i:j]
             morpho.length=morpho.length[i:j]
             morpho.area=morpho.area[i:j]
