@@ -80,7 +80,7 @@ from remotecontrol import *
 from tests.simpletest import *
 
 __version__ = '1.2.1dev'
-__release_date__ = '2010-04-21'
+__release_date__ = '2010-05-06'
 
 #import unitsafefunctions as _usf
 #import numpy as _numpy

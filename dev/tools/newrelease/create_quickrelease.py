@@ -4,6 +4,7 @@ setreleasedate()
 pathname, filename = os.path.split(__file__)
 os.chdir(pathname)
 os.chdir('../../../.') # work from Brian's root
+os.system('del MANIFEST')
 os.system('setup.py bdist_wininst')
 os.system('setup.py sdist --formats=gztar,zip')
 os.chdir('dist')
