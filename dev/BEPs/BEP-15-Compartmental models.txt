@@ -72,9 +72,32 @@ It could also be interesting if the branch was iterable:
 for compartment in branch:
 	compartment.gl=2*compartment.gK # this is in surfacic units
 
+Point processes
+===============
+Synapses and electrodes are point processes, that is, not spatially distributed.
+It makes sense to group synapses of the same type into a NeuronGroup. Thus, the neuron
+stores a list of NeuronGroups for point processes, together with the indexes of compartments
+where these point processes are inserted. The syntax could be as follows:
+
+electrode="Iinj : amp"
+neuron.dendrites.LR[5*um].insert(model=electrode,current="Iinj")
+
+But this implies that the method checks whether there is already a group of processes
+with the same model. Maybe a dictionary of models (as strings), but then we can't
+use Equation objects.
+New attributes are created: neuron.Iinj is a vector with the value of Iinj for all
+point processes.
+
 Monitoring
 ==========
 Special monitors need to be added to monitor distributed variables.
+Without modification, the following should work, through the subgrouping mechanism:
+M=StateMonitor(neuron.axon[50*um:100*um],'v',record=True)
+
+It could be nice to have this syntax:
+M=StateMonitor(neuron.axon,'v',record=[50*um:100*um])
+
+and access recorded values in a similar way, e.g. M[60*um].
 
 State update
 ============
@@ -182,11 +205,13 @@ dge/dt=-ge : siemens
 """
 neuron.dendrites.LLR[10*um].insert_current(model=exc_synapse,current="Ie")
 # neuron.dendrites is a subgroup; also neuron.dendrites.LLR (or perhaps .L.L.R ?)
+# other method names: insert, point_process
 
 electrode="Iinj : amp"
 neuron.dendrites.LR[5*um].insert_current(model=electrode,current="Iinj")
 
 M=StateMonitor(neuron.axon,'v',record=[50*um:100*um]) # maybe a special monitor? SpatialStateMonitor
+# record can be True (entire tree), 50*um, [50*um:100*um] or [:] (entire branch)
 
 @network_operation
 def inject_random_current():

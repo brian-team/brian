@@ -172,12 +172,26 @@ class Morphology(object):
         Returns the subtree named x.
         Ex.: neuron['axon'] or neuron['11213']
         neuron[10*um:20*um] returns the subbranch from 10 um to 20 um.
+        neuron[10*um] returns one compartment.
+        neuron[5] returns compartment number 5.
         
         TODO:
         neuron[:] returns the full branch.
-        neuron[10*um] returns one compartment.
         """
-        if isinstance(x,slice): # neuron[10*um:20*um]
+        if type(x)==type(0): # int: returns one compartment
+            morpho=self.branch()
+            i=x
+            j=i+1
+            morpho.diameter=morpho.diameter[i:j]
+            morpho.length=morpho.length[i:j]
+            morpho.area=morpho.area[i:j]
+            morpho.x=morpho.x[i:j]
+            morpho.y=morpho.y[i:j]
+            morpho.z=morpho.z[i:j]
+            if hasattr(morpho,'_origin'):
+                morpho._origin+=i
+            return morpho
+        elif isinstance(x,slice): # neuron[10*um:20*um]
             morpho=self.branch()
             start,stop=x.start,x.stop
             l=cumsum(morpho.length) # coordinate on the branch

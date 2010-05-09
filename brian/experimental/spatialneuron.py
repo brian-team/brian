@@ -2,7 +2,13 @@
 Compartmental neurons
 See BEP-15
 
+TODO:
 * Threshold and reset are special (not as normal NeuronGroup because only 1 spike)
+* Hines method
+* Point processes
+* StateMonitor
+* neuron.plot('gl')
+* Iteration (over the branch or the entire tree?)
 '''
 from morphology import *
 from brian.stdunits import *
@@ -76,9 +82,7 @@ class SpatialNeuron(NeuronGroup):
         self['axon'] returns the subtree named "axon".
         
         TODO:
-        self[10*um:20*um] returns the subbranch from 10 um to 20 um.
         self[:] returns the full branch.
-        self[10*um] returns one compartment.
         '''
         morpho=self.morphology[x]
         N=self[morpho._origin:morpho._origin+len(morpho)]
@@ -120,5 +124,5 @@ if __name__=='__main__':
     print sum(neuron.axon.gl)
     print neuron.axon[40*um].gl
     #branch=neuron.axon[0*um:50*um]
-    #neuron.morphology.plot()
-    #show()
+    neuron.morphology.plot()
+    show()
