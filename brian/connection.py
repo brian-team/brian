@@ -2171,23 +2171,25 @@ class PoissonInputs(Connection):
                 # or it is ('jitter', w, pmax, jitter) and the synchronous
                 # spikes are shifted by an exponential value with parameter jitter
                 if w[0] == 'synapse':
-                    weff = w[1]*binomial(n=w[2], p=w[3])
-                    self.target._S[state,:] += weff*binomial(n=n, p=f*self.clock.dt, size=(self.N))
+                    if (w[2]>0) & (w[3]>0):
+                        weff = w[1]*binomial(n=w[2], p=w[3])
+                        self.target._S[state,:] += weff*binomial(n=n, p=f*self.clock.dt, size=(self.N))
                 elif w[0] == 'jitter':
                     p = w[2]
-                    jitter = w[3]
-                    k = binomial(n=n, p=f*self.clock.dt, size=(self.N)) # number of synchronous events here, for every target neuron
-                    syncneurons = (k>0) # neurons with a syncronous event here
-                    self.lastevent[syncneurons] = self.clock.t
-                    if jitter == 0.0:
-                        self.delays[:,syncneurons] = zeros((p, sum(syncneurons)))
-                    else:
-                        self.delays[:,syncneurons] = exponential(scale=jitter, size=(p, sum(syncneurons)))
-                    # Delayed spikes occur now
-                    lastevent = tile(self.lastevent, (p, 1))
-                    b = (abs(self.clock.t - (lastevent + self.delays)) <= (self.clock.dt/2)*ones((p, self.N))) # delayed spikes occurring now
-                    weff = sum(b, axis=0)*w[1]
-                    self.target._S[state,:] += weff
+                    if (p>0) & (f>0):
+                        jitter = w[3]
+                        k = binomial(n=n, p=f*self.clock.dt, size=(self.N)) # number of synchronous events here, for every target neuron
+                        syncneurons = (k>0) # neurons with a syncronous event here
+                        self.lastevent[syncneurons] = self.clock.t
+                        if jitter == 0.0:
+                            self.delays[:,syncneurons] = zeros((p, sum(syncneurons)))
+                        else:
+                            self.delays[:,syncneurons] = exponential(scale=jitter, size=(p, sum(syncneurons)))
+                        # Delayed spikes occur now
+                        lastevent = tile(self.lastevent, (p, 1))
+                        b = (abs(self.clock.t - (lastevent + self.delays)) <= (self.clock.dt/2)*ones((p, self.N))) # delayed spikes occurring now
+                        weff = sum(b, axis=0)*w[1]
+                        self.target._S[state,:] += weff
             i += 1
 
 # Generation of matrices
