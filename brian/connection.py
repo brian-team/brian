@@ -2119,13 +2119,13 @@ class PoissonInputs(Connection):
         ``target``
             The target NeuronGroup
         
+        ``sameinputs = []``
+            The list of the inputs indices which are assumed to be identical for all neurons.
+        
         ``inputs``
             The list of the Poisson inputs, as a list of tuples (n, f, w, state)
             where n is the number of Poisson spike trains, f their rate, w the
             synaptic weight, and state the name of the state to connect the input to.
-        
-        ``sameinputs``
-            The list of the inputs indices which are assumed to be identical for all neurons.
         """
         self.source = EmptyGroup(target.clock)
         self.target = target
@@ -2150,6 +2150,7 @@ class PoissonInputs(Connection):
             if type(w) is tuple:
                 if w[0] == 'jitter':
                     self.delays = zeros((w[2], self.N))
+        self.events = []
     
     def propagate(self, spikes):
         current = zeros(self.N)
@@ -2158,7 +2159,10 @@ class PoissonInputs(Connection):
             state = self.stateindex[state]
             if type(w) is not tuple:
                 if i in self.sameinputs:
-                    self.target._S[state,:] += w*binomial(n=n, p=f*self.clock.dt)
+                    rnd = binomial(n=n, p=f*self.clock.dt)
+                    self.target._S[state,:] += w*rnd
+                    if rnd>0:
+                        self.events.append(self.clock.t)
                 else:
                     self.target._S[state,:] += w*binomial(n=n, p=f*self.clock.dt, size=(self.N))
             else:
