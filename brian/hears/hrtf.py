@@ -288,15 +288,22 @@ class AzimElevDistDegrees(Coordinates):
     def convert_to(self, target):
         if target is self.system:
             return self
+        elif target is CartesianCoordinates:
+            out = target.make(self.shape)
+            # Individual looking along x axis, ears at +- 1 on y axis, z vertical
+            out['x'] = self['dist']*sin(self['azim'])*cos(self['elev'])
+            out['y'] = self['dist']*cos(self['azim'])*cos(self['elev'])
+            out['z'] = self['dist']*sin(self['elev'])
+            return out
         elif target is AzimElev:
             out = target.make(self.shape)
             out['azim'] = self['azim']*pi/180
             out['elev'] = self['elev']*pi/180
-            out['dist'] = self['dist']*pi/180
             return out
         else:
-            inter = self.convert_to(AzimElev)
-            return inter.convert_to(target)
+            # Try to convert by going via Cartesian coordinates
+            inter = self.convert_to(CartesianCoordinates)
+            return target.convert_from(inter)
     @staticmethod
     def convert_from(source):
         if isinstance(source, AzimElevDegrees):
