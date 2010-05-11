@@ -83,10 +83,19 @@ electrode="Iinj : amp"
 neuron.dendrites.LR[5*um].insert(model=electrode,current="Iinj")
 
 But this implies that the method checks whether there is already a group of processes
-with the same model. Maybe a dictionary of models (as strings), but then we can't
-use Equation objects.
+with the same model. Maybe dictionaries of models as strings and as
+Equation objects. The problem is that we won't be able to use NeuronGroups at construction
+time, which will cause some problems. Alternatively, we could have a state matrix
+implemented as a dynamic array, or have it predeclared:
+
+P=neuron.point_process(model=synapse,current="Iinj",N=10)
+neuron.dendrites.LR[5*um].insert(P)
+
+Internally, the model could be a Current (it could be passed as a string or Current object).
+
 New attributes are created: neuron.Iinj is a vector with the value of Iinj for all
-point processes.
+point processes. This is done by overriding the getattr/setattr methods and directing them
+to the neuron groups that store the point processes.
 
 Monitoring
 ==========
