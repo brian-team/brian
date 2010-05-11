@@ -12,7 +12,7 @@ except ImportError:
 try:
     from scikits.samplerate import resample
     have_scikits_samplerate = True
-except ImportError:
+except (ImportError, ValueError):
     have_scikits_samplerate = False
 
 __all__ = ['Sound', 'play_stereo_sound', 'play_sound',
