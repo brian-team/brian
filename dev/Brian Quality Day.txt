@@ -22,9 +22,16 @@ For brianhears:
 * check docstrings [Bertrand/Dan]
 * write manual, examples and tests [Bertrand/Dan]
 
+Some other ideas:
+* Work out why static code analysis tools don't work with Brian in PyDev and fix
+  that. This may involve removing exec and eval statements from Brian import.
+  This would mean writing out all the units explicitly, for example, which could
+  be done with a tool to generate that code.
+
 Initial planning
 ----------------
-Dan: style patch for blank lines before def f() (PEP-8)
+Dan: style patch for blank lines before def f() (PEP-8), use the 'pep8' Python
+     module to help with this.
 Romain: tests for equations
 Bertrand: examples/docs for brianhears
 Cyrille: check examples/docs for new features
