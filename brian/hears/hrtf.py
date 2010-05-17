@@ -45,6 +45,7 @@ from scipy.signal import lfilter
 from scipy.io import loadmat # NOTE: this requires scipy 0.7+
 from glob import glob
 from copy import copy
+from scipy.io.wavfile import *
 import os
 
 __all__ = [
@@ -55,7 +56,11 @@ __all__ = [
     # IRCAM LISTEN database
     'IRCAM_HRTFSet', 'IRCAM_LISTEN',
     'GerbilHRTFSet','GerbilDatabase',
-    'InRoomHRTFSet','InRoomDatabase'
+    'InRoomHRTFSet','InRoomDatabase',
+    # GUINEA_PIG database
+    'GuineaPigHRTFSet', 'GuineaPigDatabase',
+    # BRIAN KATZ database
+    'KatzHRTFSet', 'KatzDatabase'
     ]
 
 class HRTF(object):
@@ -467,10 +472,107 @@ class GerbilDatabase(HRTFDatabase):
         #fname = os.path.join(fname, 'IMPL')
         return GerbilHRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
 
+############# GUINEA_PIG HRTF DATABASE ##############################################
+class GuineaPigHRTFSet(HRTFSet):
+    def load(self, filename, samplerate=None, coordsys=None, name=None):
+        # TODO: check samplerate
+        if name is None:
+            _, name = os.path.split(filename)
+        self.name = name
+        #load coordinates and data by reading the content of filename 
+        names = glob(os.path.join(filename, 'gphrir*'))
+        splitnames = [os.path.split(name) for name in names]
+        self.azim = zeros(len(names),uint16)
+        self.elev = zeros(len(names),int16)
+        
+        for j in range(len(names)):
+            temp_name=splitnames[j][1].split('_')
+            self.azim[j]=uint16(mod(int(temp_name[1]),360))
+            self.elev[j]=int16(int(temp_name[2][:-4]))#remove the .wav
+            #read the hrtf
+            temp_wav=read(names[j])
+            hrtf_left=temp_wav[1][:,0]
+            hrtf_right=temp_wav[1][:,1]
+            if j==0:
+                #initialize the hrtf database
+                # self.data has shape (num_ears=2, num_indices, hrir_length)
+                self.data = zeros((2,len(names),len(hrtf_left)))
+                self.samplerate = temp_wav[0]*Hz
+            self.data[:,j,]=vstack((hrtf_left,hrtf_right))
+
+                    
+        coords = AzimElevDegrees.make(len(self.azim))
+        coords['azim'] = self.azim
+        coords['elev'] = self.elev
+        if coordsys is not None:
+            self.coordinates = coords.convert_to(coordsys)
+        else:
+            self.coordinates = coords 
+        
+class GuineaPigDatabase(HRTFDatabase):
+    def __init__(self, basedir, samplerate=None):
+        self.basedir = basedir
+        names = ''#glob(os.path.join(basedir, 'No*'))
+        #splitnames = [os.path.split(name) for name in names]
+  
+        self.subjects = 0#[int(name[2:]) for base, name in splitnames]
+        self.samplerate = samplerate
+    def subject_name(self, subject):
+        return 'GUINEA_PIG'+str(subject)
+    def load_subject(self, subject):
+        subject = str(subject)
+        fname = self.basedir#os.path.join(self.basedir, 'No'+subject)
+        #fname = os.path.join(fname, 'IMPL')
+        return GuineaPigHRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
+
+### Mannequin database from Brian Katz:
+class KatzHRTFSet(HRTFSet):
+    def load(self, filename, samplerate=None, coordsys=None, name=None):
+        # TODO: check samplerate
+        if name is None:
+            _, name = os.path.split(filename)
+        self.name = name
+        m = loadmat(filename, struct_as_record=True)
+        if 'l_hrir_S' in m.keys():
+            affix = '_hrir_S'
+        else:
+            affix = '_hrir_sim_S'
+        l, r = m['l'+affix], m['r'+affix]
+        self.azim = l['azim_v'][0][0][:, 0]
+        self.elev = l['elev_v'][0][0][:, 0]
+        l = l['content_m'][0][0]
+        r = r['content_m'][0][0]
+        coords = AzimElevDegrees.make(len(self.azim))
+        coords['azim'] = self.azim
+        coords['elev'] = self.elev
+        if coordsys is not None:
+            self.coordinates = coords.convert_to(coordsys)
+        else:
+            self.coordinates = coords 
+        # self.data has shape (num_ears=2, num_indices, hrir_length)
+        self.data = vstack((reshape(l, (1,)+l.shape), reshape(r, (1,)+r.shape)))
+        self.samplerate = 44.1*kHz
+
+class KatzDatabase(HRTFDatabase):
+    def __init__(self, basedir,samplerate=None):
+        self.basedir = basedir+'\\Measured mannequin\\'
+        names = glob(os.path.join(self.basedir, '*IRC*'))       
+        splitnames = [os.path.split(name) for name in names]
+        self.subjects = [name.replace('.mat','').strip('IRC_1518') for base, name in splitnames]
+        self.samplerate = 44.1*kHz
+        
+    def subject_name(self, subject):
+        return str(subject)
+    
+    def load_subject(self, subject):
+        subject = str(subject)
+        fname = os.path.join(self.basedir,'IRC_1518_'+subject+'.mat')
+        return KatzHRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
+
 ### EXAMPLES
 if __name__=='__main__':
     
-    choice='IRCAM'#IRCAM,Gerbil or In Room
+    choice='Guinea Pig'#IRCAM,Gerbil, Guinea Pig, In Room, Brian Katz
     hrtf_locations = [
             r'D:\HRTF\\'+choice,
             r'/home/bertrand/Data/Measurements/HRTF/'+choice,
@@ -485,6 +587,7 @@ if __name__=='__main__':
         raise IOError('Cannot find IRCAM HRTF location, add to ircam_locations')
     else:
         if choice=='IRCAM':
+            
             ircam = IRCAM_LISTEN(path)
             h = ircam.load_subject(1002)
             #h = h.subset(lambda azim,elev:azim==90 and elev==90)
@@ -492,6 +595,7 @@ if __name__=='__main__':
             subplot(211)
             plot(h.hrtf[0].left)
             plot(h.hrtf[0].right)
+            title(choice+" Coordinates : "+`h.coordinates[0]`)
             subplot(212)
         ##    c = h.coordinates.convert_to(AzimElev)
         ##    plot(h.coordinates['azim'], h.coordinates['elev'], 'o')
@@ -505,13 +609,16 @@ if __name__=='__main__':
             plot(c['azim'], c['elev'], 'o')
             show()
         elif choice=='Gerbil':
+            
             gerbil = GerbilDatabase(path)
             h = gerbil.load_subject(521)
             #h = h.subset(lambda azim,elev:azim==90 and elev==90)
             #h = h.subset(lambda azim,elev:(azim in array([60,90])) & (elev in array([40,50])) )
+            h2 = h.subset(lambda azim,elev:([azim,elev] in [[80,60],[90,30]]))
             subplot(211)
             plot(h.hrtf[400].left)
             plot(h.hrtf[400].right)
+            title(choice+" Coordinates : "+`h.coordinates[400]`)
             subplot(212)
             c = h.coordinates
             c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
@@ -526,11 +633,49 @@ if __name__=='__main__':
             subplot(211)
             plot(h.hrtf[0].left)
             plot(h.hrtf[0].right)
+            title(choice+" Coordinates : "+`h.coordinates[0]`)
             subplot(212)
             c = h.coordinates
         #        c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
         #        print amax(c['elev']-c2['elev'])
             plot(c['azim'], c['elev'], 'o')
             show()
-
-
+        elif choice=='Guinea Pig':
+            
+            guinea_pig = GuineaPigDatabase(path)
+            h = guinea_pig.load_subject(0)
+            #h = h.subset(lambda azim,elev:azim==90 and elev==90)
+            #h = h.subset(lambda azim,elev:(azim in array([60,90])) & (elev in array([40,50])) )
+            h = h.subset(lambda azim,elev:([azim,elev] in [[40,10],[90,30]]))
+            subplot(211)
+            plot(h.hrtf[0].left)
+            plot(h.hrtf[0].right)
+            title(choice+" Coordinates : "+`h.coordinates[0]`)
+            subplot(212)
+            c = h.coordinates
+            c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
+            print amax(c['elev']-c2['elev'])
+            plot(c['azim'], c['elev'], 'o')
+            show()
+        elif choice=='Brian Katz':
+            
+            katz = KatzDatabase(path)
+            h = katz.load_subject('sim')
+            #h = h.subset(lambda azim,elev:azim==90 and elev==90)
+            h = h.subset(lambda azim,elev:[azim,elev] in [[20,20]])
+            subplot(211)
+            plot(h.hrtf[0].left)
+            plot(h.hrtf[0].right)
+            title(choice+" Coordinates : "+`h.coordinates[0]`)
+            subplot(212)
+        ##    c = h.coordinates.convert_to(AzimElev)
+        ##    plot(h.coordinates['azim'], h.coordinates['elev'], 'o')
+        ##    from enthought.mayavi import mlab
+        ##    c = h.coordinates.convert_to(CartesianCoordinates)
+        ##    mlab.points3d(c['x'], c['y'], c['z'])
+        ##    mlab.show()
+            c = h.coordinates
+        #    c2 = AzimElevDegrees.convert_from(c.convert_to(CartesianCoordinates))
+        #    print amax(c['elev']-c2['elev'])
+            plot(c['azim'], c['elev'], 'o')
+            show()
