@@ -1216,16 +1216,6 @@ class CoincidenceMatrix(SpikeMonitor):
             onset = 0*ms
         self.onset = onset
         self.N = len(source)
-        self.coincidence_count_algorithm = coincidence_count_algorithm
-
-        self.data = array(data)
-        if spiketimes_offset is None:
-            spiketimes_offset = zeros(self.N, dtype='int')
-        self.spiketimes_offset = array(spiketimes_offset)
-
-        if spikedelays is None:
-            spikedelays = zeros(self.N)
-        self.spikedelays = array(spikedelays)
         
         dt = self.source.clock.dt
         self.delta = int(rint(delta/dt))
@@ -1237,10 +1227,8 @@ class CoincidenceMatrix(SpikeMonitor):
         self.model_length = zeros(self.N, dtype = 'int')
         self.target_length = zeros(self.N, dtype = 'int')
         
-        self.coincidences = zeros(self.N, dtype = 'int')
-        self.spiketime_index = self.spiketimes_offset
-        self.last_spike_time = array(rint(self.data[self.spiketime_index]/dt), dtype=int)
-        self.next_spike_time = array(rint(self.data[self.spiketime_index+1]/dt), dtype=int)
+        self.coincidences = zeros(self.N,self.N, dtype = 'int')
+        self.last_spike_time = -100*ones(self.N, dtype=int)
         
         # First target spikes (needed for the computation of 
         #   the target train firing rates)
@@ -1253,9 +1241,18 @@ class CoincidenceMatrix(SpikeMonitor):
         dt = self.source.clock.dt
         spiking_neurons = array(spiking_neurons)
         if len(spiking_neurons):
-            pass
-
-
+            if self.source.clock.t >= self.onset:
+                self.model_length[spiking_neurons] += 1
+                
+            self.last_spike_time[spiking_neurons]=self.source.clock.t 
+            
+            I=(abs(self.last_spike_time-self.source.clock.t)<self.delta).nonzero()
+            if self.source.clock.t >= self.onset:
+                for ispike in spiking_neurons:
+                    self.coincidences[ispike,setdiff1d(I,ispike)]+=1
+        if self.source.clock.t == self.onset:
+            self.coincidences=self.coincidences+self.coincidences.T
+        
 
 class StateHistogramMonitor(NetworkOperation, Monitor):
     '''
