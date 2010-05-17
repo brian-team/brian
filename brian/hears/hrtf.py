@@ -397,6 +397,11 @@ class InRoomHRTFSet(HRTFSet):
             self.coordinates = coords 
         # self.data has shape (num_ears=2, num_indices, hrir_length)
         self.data = vstack((reshape(l, (1,)+l.shape), reshape(r, (1,)+r.shape)))
+        print amax(self.data)
+        print self.data.dtype
+        self.data[isnan(self.data)] = 0
+        print amax(self.data)
+        self.data /= amax(self.data)
         print self.data.shape
         #self.data = vstack((reshape(l, (1,)+l.shape), reshape(r, (1,)+r.shape)))
         self.samplerate = 44.1*kHz
