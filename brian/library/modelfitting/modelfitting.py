@@ -327,6 +327,7 @@ def modelfitting(model = None, reset = None, threshold = None,
     if optalg==None:
         optalg=PSO
 
+
     shared_data = dict(model = model,
                        threshold = threshold,
                        reset = reset,
