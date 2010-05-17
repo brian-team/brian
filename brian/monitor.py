@@ -1162,6 +1162,101 @@ class CoincidenceCounter(SpikeMonitor):
                 self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
                 self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed                
 
+
+class CoincidenceMatrix(SpikeMonitor):
+    """
+    Coincidence counter class.
+    
+    Counts the number of coincidences between the spikes of the neurons in the network (model spikes). This yields a matrix
+    with the coincidence counts between every pairs of neuron in the network
+    
+    Initialised as::
+    
+        cc = CoincidenceCounter(source, delta = 4*ms)
+    
+    with the following arguments:
+    
+    ``source``
+        A :class:`NeuronGroup` object which neurons are being monitored.
+    
+    
+    ``delta=4*ms``
+        The half-width of the time window for the coincidence counting algorithm.
+    
+        
+    ``coincidence_count_algorithm``
+        If set to ``'exclusive'``, the algorithm cannot count more than one
+        coincidence for each model spike.
+        If set to ``'inclusive'``, the algorithm can count several coincidences
+        for a single model spike.
+    
+    ``onset``
+        A scalar value in seconds giving the start of the counting: no
+        coincidences are counted before ``onset``.
+    
+    Has three attributes:
+    
+    ``coincidences``
+        The matrix containg the number of coincidences between each neuron of the :class:`NeuronGroup`.
+        ``coincidences[i,j]`` is the number of coincidences between neuron i and j.
+        
+    ``model_length``
+        The number of spikes for each neuron. ``model_length[i]`` is the spike
+        count for neuron i.
+        
+    ``target_length``
+        The number of spikes in the target spike train associated to each neuron.
+    """
+    def __init__(self, source,onset = None, delta = 4*ms):
+         
+        source.set_max_delay(0)
+        self.source = source
+        self.delay = 0
+        if onset is None:
+            onset = 0*ms
+        self.onset = onset
+        self.N = len(source)
+        self.coincidence_count_algorithm = coincidence_count_algorithm
+
+        self.data = array(data)
+        if spiketimes_offset is None:
+            spiketimes_offset = zeros(self.N, dtype='int')
+        self.spiketimes_offset = array(spiketimes_offset)
+
+        if spikedelays is None:
+            spikedelays = zeros(self.N)
+        self.spikedelays = array(spikedelays)
+        
+        dt = self.source.clock.dt
+        self.delta = int(rint(delta/dt))
+        self.reinit()
+    
+    def reinit(self):
+        dt = self.source.clock.dt
+        # Number of spikes for each neuron
+        self.model_length = zeros(self.N, dtype = 'int')
+        self.target_length = zeros(self.N, dtype = 'int')
+        
+        self.coincidences = zeros(self.N, dtype = 'int')
+        self.spiketime_index = self.spiketimes_offset
+        self.last_spike_time = array(rint(self.data[self.spiketime_index]/dt), dtype=int)
+        self.next_spike_time = array(rint(self.data[self.spiketime_index+1]/dt), dtype=int)
+        
+        # First target spikes (needed for the computation of 
+        #   the target train firing rates)
+        self.first_target_spike = zeros(self.N)
+        
+        self.last_spike_allowed = ones(self.N, dtype = 'bool')
+        self.next_spike_allowed = ones(self.N, dtype = 'bool')
+        
+    def propagate(self, spiking_neurons):
+        dt = self.source.clock.dt
+        spiking_neurons = array(spiking_neurons)
+        if len(spiking_neurons):
+            pass
+
+
+
 class StateHistogramMonitor(NetworkOperation, Monitor):
     '''
     Records the histogram of a state variable from a :class:`NeuronGroup`.
