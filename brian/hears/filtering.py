@@ -7,22 +7,22 @@ See docstrings for details. The faster gammatone filter is the GammatoneFB.
 from brian import *
 from scipy import signal
 from scipy import weave
-#try:
-#    import pycuda
-#    import pycuda.autoinit as autoinit
-#    import pycuda.driver as drv
-#    import pycuda.compiler
-#    from pycuda import gpuarray
-#    from brian.experimental.cuda.buffering import *
-#    import re
-#    def set_gpu_device(n):
-#        global _gpu_context
-#        autoinit.context.pop()
-#        _gpu_context = drv.Device(n).make_context()
-#    use_gpu = True
-#except ImportError:
-#    use_gpu = False
-use_gpu = False
+try:
+    import pycuda
+    import pycuda.autoinit as autoinit
+    import pycuda.driver as drv
+    import pycuda.compiler
+    from pycuda import gpuarray
+    from brian.experimental.cuda.buffering import *
+    import re
+    def set_gpu_device(n):
+        global _gpu_context
+        autoinit.context.pop()
+        _gpu_context = drv.Device(n).make_context()
+    use_gpu = True
+except ImportError:
+    use_gpu = False
+#use_gpu = False
 
 __all__ = ['GammachirpFilterbank_NM','GammachirpFilterbank_IIR','Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step',
