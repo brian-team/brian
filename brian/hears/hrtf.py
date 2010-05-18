@@ -366,6 +366,23 @@ class IRCAM_LISTEN(HRTFDatabase):
             fname = os.path.join(fname, 'RAW/MAT/HRIR/IRC_'+subject+'_R_HRIR.mat')
         return IRCAM_HRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
 
+def remove_nan_zero(x, axis=1):
+    '''
+    Removes all (rows/columns/etc.) which are all zero or have NaNs in them
+    '''
+    keep_index = []
+    x = x.swapaxes(0, axis)
+    for i in range(x.shape[0]):
+        y = x[i, ...]
+        if (abs(y)<1e-50).all() or isnan(y).any():
+            keep_index.append(False)
+        else:
+            keep_index.append(True)
+    keep_index = array(keep_index, dtype=bool)
+    x = x[keep_index, ...]
+    x = x.swapaxes(0, axis)
+    return x
+
 ### room database from  Barbara Shinn-Cunningham:
 class InRoomHRTFSet(HRTFSet):
     def load(self, filename, samplerate=None, coordsys=None, name=None):
@@ -376,6 +393,13 @@ class InRoomHRTFSet(HRTFSet):
         m = loadmat(filename, struct_as_record=True)
         affix = 'fimp_'
         l, r = m[affix+'l'], m[affix+'r']
+        # Added by Dan - remove recordings with NaNs or all 0s
+        # The reason being, that some of the recordings failed and were replaced
+        # with (I think) NaNs (but the readme says zeros, so I put both conditions
+        # here).
+        l = remove_nan_zero(l, axis=1)
+        r = remove_nan_zero(r, axis=1)
+        # Question from Dan - is this OK to take the mean of several recordings?
         l=mean(l,axis=1)
         r=mean(r,axis=1)
         l=reshape(l,(-1,21)).T
@@ -397,11 +421,10 @@ class InRoomHRTFSet(HRTFSet):
             self.coordinates = coords 
         # self.data has shape (num_ears=2, num_indices, hrir_length)
         self.data = vstack((reshape(l, (1,)+l.shape), reshape(r, (1,)+r.shape)))
-        print amax(self.data)
-        print self.data.dtype
-        self.data[isnan(self.data)] = 0
-        print amax(self.data)
-        self.data /= amax(self.data)
+
+        # Added by Dan - normalise to +/- 1
+        self.data /= amax(abs(self.data))
+        
         print self.data.shape
         #self.data = vstack((reshape(l, (1,)+l.shape), reshape(r, (1,)+r.shape)))
         self.samplerate = 44.1*kHz
