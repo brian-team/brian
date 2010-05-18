@@ -39,11 +39,11 @@ if properly coded.
 '''
 
 __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMonitor','StateMonitor','ISIHistogramMonitor','Monitor',
-           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter', 'StateHistogramMonitor']
+           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter','CoincidenceMatrix','StateHistogramMonitor']
 
 from units import *
 from connection import Connection, SparseConnectionVector
-from numpy import array, zeros, mean, histogram, linspace, tile, digitize, copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, maximum, Inf, amin, amax, sort, nonzero
+from numpy import array, zeros, mean, histogram, linspace, tile, digitize, copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, maximum, Inf, amin, amax, sort, nonzero,setdiff1d
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
@@ -1203,9 +1203,7 @@ class CoincidenceMatrix(SpikeMonitor):
     ``model_length``
         The number of spikes for each neuron. ``model_length[i]`` is the spike
         count for neuron i.
-        
-    ``target_length``
-        The number of spikes in the target spike train associated to each neuron.
+    
     """
     def __init__(self, source,onset = None, delta = 4*ms):
          
@@ -1217,8 +1215,8 @@ class CoincidenceMatrix(SpikeMonitor):
         self.onset = onset
         self.N = len(source)
         
-        dt = self.source.clock.dt
-        self.delta = int(rint(delta/dt))
+        dt = self.source.clock.dt 
+        self.delta = array(rint(delta/dt), dtype=int)
         self.reinit()
     
     def reinit(self):
@@ -1227,31 +1225,27 @@ class CoincidenceMatrix(SpikeMonitor):
         self.model_length = zeros(self.N, dtype = 'int')
         self.target_length = zeros(self.N, dtype = 'int')
         
-        self.coincidences = zeros(self.N,self.N, dtype = 'int')
-        self.last_spike_time = -100*ones(self.N, dtype=int)
+        self.coincidences = zeros((self.N,self.N), dtype = 'int')
+        self.last_spike_time = -100*ones(self.N, dtype = 'int')
         
-        # First target spikes (needed for the computation of 
-        #   the target train firing rates)
-        self.first_target_spike = zeros(self.N)
-        
-        self.last_spike_allowed = ones(self.N, dtype = 'bool')
-        self.next_spike_allowed = ones(self.N, dtype = 'bool')
-        
+
     def propagate(self, spiking_neurons):
         dt = self.source.clock.dt
         spiking_neurons = array(spiking_neurons)
         if len(spiking_neurons):
             if self.source.clock.t >= self.onset:
                 self.model_length[spiking_neurons] += 1
-                
-            self.last_spike_time[spiking_neurons]=self.source.clock.t 
+            tint=array(rint(self.source.clock.t/dt), dtype=int)
+            self.last_spike_time[spiking_neurons]=tint
             
-            I=(abs(self.last_spike_time-self.source.clock.t)<self.delta).nonzero()
+            I=(abs(self.last_spike_time-tint)<=self.delta).nonzero()
             if self.source.clock.t >= self.onset:
                 for ispike in spiking_neurons:
-                    self.coincidences[ispike,setdiff1d(I,ispike)]+=1
-        if self.source.clock.t == self.onset:
-            self.coincidences=self.coincidences+self.coincidences.T
+                    #self.coincidences[ispike,setdiff1d(I,ispike)]+=1
+                    self.coincidences[ispike,I]+=1
+                   # self.coincidences[I,ispike]+=1
+#        if self.source.clock.t == self.onset:
+#            self.coincidences=(self.coincidences+self.coincidences.T)/2
         
 
 class StateHistogramMonitor(NetworkOperation, Monitor):
