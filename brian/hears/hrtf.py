@@ -443,8 +443,20 @@ class InRoomDatabase(HRTFDatabase):
     
     def load_subject(self, subject):
         subject = str(subject)
-        fname = os.path.join(self.basedir,subject+'Rev')
-        return InRoomHRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
+        if subject=='all':
+            subjects = ('back', 'center', 'corner', 'ear') # we don't use anech
+            hrtfsets = [self.load_subject(s) for s in subjects]
+            hrtfset = hrtfsets[0]
+            hrtfset.name = 'all'
+            hrtfsets = hrtfsets[1:]
+            for h in hrtfsets:
+                hrtfset.data = hstack((hrtfset.data, h.data))
+                hrtfset.coordinates = vstack((hrtfset.coordinates, h.coordinates))
+            hrtfset.prepare()
+            return hrtfset
+        else:
+            fname = os.path.join(self.basedir,subject+'Rev')
+            return InRoomHRTFSet(fname, samplerate=self.samplerate, name=self.subject_name(subject))   
 
 ############# GERBIL HRTF DATABASE ##############################################
 class GerbilHRTFSet(HRTFSet):

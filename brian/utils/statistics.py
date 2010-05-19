@@ -216,7 +216,7 @@ def get_gamma_factor_matrix(coincidence_matrix, model_length, target_length, tar
     NCoincAvg = 2 * delta * target_lengthMAT* kron(ones((len(model_length),1)),target_rates)
     norm = .5*(1 - 2 * delta * kron(ones((len(model_length),1)),target_rates))
     gamma = (coincidence_matrix- NCoincAvg)/(norm*(target_length+ model_length))
-    gamma=(gamma+gamma.T)/2
+    #gamma=(gamma+gamma.T)/2
     return gamma
 
 

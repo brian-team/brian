@@ -39,11 +39,11 @@ if properly coded.
 '''
 
 __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMonitor','StateMonitor','ISIHistogramMonitor','Monitor',
-           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter','CoincidenceMatrix','StateHistogramMonitor']
+           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter','CoincidenceMatrixCounter','StateHistogramMonitor']
 
 from units import *
 from connection import Connection, SparseConnectionVector
-from numpy import array, zeros, mean, histogram, linspace, tile, digitize, copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, maximum, Inf, amin, amax, sort, nonzero,setdiff1d
+from numpy import array, zeros, mean, histogram, linspace, tile, digitize, copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
@@ -1163,8 +1163,10 @@ class CoincidenceCounter(SpikeMonitor):
                 self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed                
 
 
-class CoincidenceMatrix(SpikeMonitor):
+class CoincidenceMatrixCounter(SpikeMonitor):
     """
+    TODO: update docs
+    
     Coincidence counter class.
     
     Counts the number of coincidences between the spikes of the neurons in the network (model spikes). This yields a matrix
@@ -1225,9 +1227,15 @@ class CoincidenceMatrix(SpikeMonitor):
         self.model_length = zeros(self.N, dtype = 'int')
         self.target_length = zeros(self.N, dtype = 'int')
         
-        self.coincidences = zeros((self.N,self.N), dtype = 'int')
+        self._coincidences = zeros((self.N,self.N), dtype = 'int')
         self.last_spike_time = -100*ones(self.N, dtype = 'int')
+
+    def get_coincidences(self):
+        M = array(self._coincidences, dtype=float)
+        M -= diag(M.diagonal()/2)
+        return M
         
+    coincidences = property(fget=get_coincidences)
 
     def propagate(self, spiking_neurons):
         dt = self.source.clock.dt
@@ -1238,12 +1246,12 @@ class CoincidenceMatrix(SpikeMonitor):
             tint=array(rint(self.source.clock.t/dt), dtype=int)
             self.last_spike_time[spiking_neurons]=tint
             
-            I=(abs(self.last_spike_time-tint)<=self.delta).nonzero()
+            I,=(abs(self.last_spike_time-tint)<=self.delta).nonzero()
             if self.source.clock.t >= self.onset:
                 for ispike in spiking_neurons:
                     #self.coincidences[ispike,setdiff1d(I,ispike)]+=1
-                    self.coincidences[ispike,I]+=1
-                   # self.coincidences[I,ispike]+=1
+                    self._coincidences[ispike,I[ispike<=I]]+=1
+                    self._coincidences[I[ispike<=I],ispike]+=1
 #        if self.source.clock.t == self.onset:
 #            self.coincidences=(self.coincidences+self.coincidences.T)/2
         
