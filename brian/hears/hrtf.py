@@ -449,9 +449,14 @@ class InRoomDatabase(HRTFDatabase):
             hrtfset = hrtfsets[0]
             hrtfset.name = 'all'
             hrtfsets = hrtfsets[1:]
+            c = hrtfset.coordinates
             for h in hrtfsets:
                 hrtfset.data = hstack((hrtfset.data, h.data))
-                hrtfset.coordinates = vstack((hrtfset.coordinates, h.coordinates))
+                c = hstack((c, h.coordinates))
+            co = AzimElevDistDegrees.make(hrtfset.num_indices)
+            for i, n in enumerate(co.names):
+                co[n] = c[n]
+            hrtfset.coordinates = co            
             hrtfset.prepare()
             return hrtfset
         else:
