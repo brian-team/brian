@@ -9,7 +9,7 @@ from brian.stdunits import ms,Hz
 from operator import itemgetter
 
 __all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF', 'group_correlations', 'sortspikes',
-         'total_correlation','vector_strength','gamma_factor']
+         'total_correlation','vector_strength','gamma_factor','get_gamma_factor_matrix','get_gamma_factor']
 
 # First-order statistics
 def firing_rate(spikes):
@@ -207,6 +207,18 @@ def get_gamma_factor(coincidence_count, model_length, target_length, target_rate
     norm = .5*(1 - 2 * delta * target_rates)    
     gamma = (coincidence_count - NCoincAvg)/(norm*(target_length + model_length))
     return gamma
+
+# Normalize the coincidence matrix between a set of  trains (return the gamma factor matrix)
+def get_gamma_factor_matrix(coincidence_matrix, model_length, target_length, target_rates, delta):
+    
+    target_lengthMAT=kron(ones((len(model_length),1)),target_length) #repeat matrix for vectorisation
+    model_lengthMAT=kron(ones((len(target_length),1)),model_length).T #repeat matrix for vectorisation
+    NCoincAvg = 2 * delta * target_lengthMAT* kron(ones((len(model_length),1)),target_rates)
+    norm = .5*(1 - 2 * delta * kron(ones((len(model_length),1)),target_rates))
+    gamma = (coincidence_matrix- NCoincAvg)/(norm*(target_length+ model_length))
+    gamma=(gamma+gamma.T)/2
+    return gamma
+
 
 # Gamma factor
 @check_units(delta=second)
