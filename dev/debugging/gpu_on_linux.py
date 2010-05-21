@@ -5,8 +5,12 @@ import pycuda.autoinit as autoinit
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
+import os, sys
 
 def doit(x):
+    
+    sys.stdin = file(os.devnull)
+    sys.stdout = file(os.devnull) 
 
     code = '''
     __global__ void test(double *x, int n)
