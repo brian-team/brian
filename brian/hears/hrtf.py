@@ -296,9 +296,9 @@ class AzimElevDistDegrees(Coordinates):
         elif target is CartesianCoordinates:
             out = target.make(self.shape)
             # Individual looking along x axis, ears at +- 1 on y axis, z vertical
-            out['x'] = self['dist']*sin(self['azim'])*cos(self['elev'])
-            out['y'] = self['dist']*cos(self['azim'])*cos(self['elev'])
-            out['z'] = self['dist']*sin(self['elev'])
+            out['x'] = self['dist']*sin(self['azim']*pi/180)*cos(self['elev']*pi/180)
+            out['y'] = self['dist']*cos(self['azim']*pi/180)*cos(self['elev']*pi/180)
+            out['z'] = self['dist']*sin(self['elev']*pi/180)
             return out
         elif target is AzimElev:
             out = target.make(self.shape)
