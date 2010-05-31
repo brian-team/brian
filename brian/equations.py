@@ -178,7 +178,7 @@ class Equations(object):
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += ['-march=native', '-ffast-math']
+            self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
         self._frozen=False # True if all units and parameters are gone
         self._prepared = False
         

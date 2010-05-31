@@ -128,6 +128,14 @@ define_global_preference('weavecompiler','gcc',desc='''
         ''')
 set_global_preferences(weavecompiler='gcc')
 
+define_global_preference('gcc_options', "['-ffast-math']", desc='''
+        Defines the compiler switches passed to the gcc compiler. For gcc versions
+        4.2+ we recommend using ``-march=native``. By default, the ``-ffast-math``
+        optimisations are turned on - if you need IEEE guaranteed results, turn
+        this switch off.
+        ''')
+set_global_preferences(gcc_options=['-ffast-math'])
+
 define_global_preference('usecodegen','False',desc='''
         Whether or not to use experimental code generation support.
         ''')

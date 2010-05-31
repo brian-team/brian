@@ -55,7 +55,7 @@ if get_global_preference('useweave'):
     _cpp_compiler = get_global_preference('weavecompiler')
     _extra_compile_args = ['-O3']
     if _cpp_compiler=='gcc':
-        _extra_compile_args += ['-march=native', '-ffast-math']
+        _extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
     _old_parallel_lfilter_step = parallel_lfilter_step
     def parallel_lfilter_step(b, a, x, zi):
         if zi.shape[2]>1:

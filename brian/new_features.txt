@@ -23,7 +23,8 @@ Improvements
   resets.
 * modelfitting now uses playdoh library
 * C++ compiled code is now much faster thanks to adding -ffast-math switch to
-  gcc and -march=native
+  gcc, and there is an option which allows you to set your own
+  compiler switches, for example -march=native on gcc 4.2+.
 * SpikeGeneratorGroup now has a spiketimes attribute to reset the list of
   spike times.
 
