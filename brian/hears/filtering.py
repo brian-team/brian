@@ -7,6 +7,7 @@ See docstrings for details. The faster gammatone filter is the GammatoneFB.
 from brian import *
 from scipy import signal
 from scipy import weave
+from scipy import random
 try:
     import pycuda
     import pycuda.autoinit as autoinit
@@ -25,11 +26,10 @@ except ImportError:
 #use_gpu = False
 
 __all__ = ['GammachirpFilterbank_NM','GammachirpFilterbank_IIR','Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
-           'parallel_lfilter_step',
-           'HohmannGammatoneFilterbank', 'GammatoneFilterbank', 'MeddisGammatoneFilterbank',
-           'IIRFilterbank', 'design_iir_filterbank', 'design_butterworth_filterbank', 'make_butterworth_filterbank',
+           'parallel_lfilter_step', 'GammatoneFilterbank',
+           'design_iir_filterbank', 'design_butterworth_filterbank', 'make_butterworth_filterbank','MixFilterbank','TimeVarying_IIRFilterbank'
            ]
-
+#print get_global_preference('useweave')
 def parallel_lfilter_step(b, a, x, zi):
     '''
     Parallel version of scipy lfilter command for a bank of n sequences of length 1
@@ -39,7 +39,7 @@ def parallel_lfilter_step(b, a, x, zi):
     that. The coeffs b, a must be of shape (n,m,p), x must be of shape (n) or (),
     and zi must be of shape (n,m-1,p). Here n is the number of channels in the
     filterbank, m is the order of the filter, and p is the number of filters in
-    a chain to apply (you do first with (:,:,0) then (:,:,1), etc.).
+    a chain (cascade) to apply (you do first with (:,:,0) then (:,:,1), etc.).
     '''
     for curf in xrange(zi.shape[2]):
         y           =        b[:,0,curf]*x + zi[:,0,curf]
@@ -434,76 +434,31 @@ class FilterbankGroup(NeuronGroup):
         NeuronGroup.reinit(self)
         self.load_sound(self._x)
 
-class HohmannGammatoneFilterbank(Filterbank):
+class MixFilterbank(Filterbank):
     '''
-    Approximate gammatone filter based on Hohmann paper
-    
-    Initialised with arguments:
-    
-    ``sampling_rate_hz``
-        The sample rate in Hz.
-    ``center_frequency_hz``
-        A list or array of center frequencies.
-    ``gamma_order``
-        The order of the gammatone (4 by default).
-    ``bandwidth_factor``
-        How much larger the bandwidth parameter is compared to the ERB.
-        
-    The ERB values are computed according to the values in Hohmann 2002.
+    Filterbank that just applies a given function
     '''
-    GFB_L = 24.7  # see equation (17) in [Hohmann 2002]
-    GFB_Q = 9.265 # see equation (17) in [Hohmann 2002]
-    @check_units(sampling_rate_hz=Hz)
-    def __init__(self, sampling_rate_hz, center_frequency_hz, gamma_order=4, bandwidth_factor=1.019):
-        self.sampling_rate_hz = sampling_rate_hz
-        sampling_rate_hz = float(sampling_rate_hz)
-        center_frequency_hz = array(center_frequency_hz)
-        self.gamma_order = gamma_order
-        audiological_erb = (self.GFB_L + center_frequency_hz / self.GFB_Q) * bandwidth_factor
-        # equation (14), line 3 [Hohmann 2002]:
-        a_gamma          = (pi * factorial(2*self.gamma_order - 2) * \
-                            2. ** -(2*self.gamma_order - 2) /        \
-                            factorial(self.gamma_order - 1) ** 2)
-        # equation (14), line 2 [Hohmann 2002]:
-        b                = audiological_erb / a_gamma
-        # equation (14), line 1 [Hohmann 2002]:
-        lambda_          = exp(-2 * pi * b / sampling_rate_hz)
-        # equation (10) [Hohmann 2002]:
-        beta             = 2 * pi * center_frequency_hz / sampling_rate_hz
-        # equation (1), line 2 [Hohmann 2002]:
-        self.coefficient   = lambda_ * exp(1j * beta)
-        self.beta = beta
-        self.lambda_ = lambda_
-        self.b = b
-        self.a_gamma = a_gamma
-        self.audiological_erb = audiological_erb
-        self.center_frequency_hz = center_frequency_hz
-        self.normalization_factor = \
-            2 * (1 - abs(self.coefficient)) ** self.gamma_order
-        self.state = zeros((len(center_frequency_hz), self.gamma_order))
-        self.state = self.state*reshape(self.coefficient, self.coefficient.shape+(1,))
+    def __init__(self,*args,**kwargs):#weights=None,
         
-    def __len__(self):
-        return len(self.center_frequency_hz)
-    
-    samplerate = property(fget=lambda self:self.sampling_rate_hz)
-    
+        if kwargs.get('weights')==None:
+            weights=ones((len(args)))
+        else:
+            weights=kwargs.get('weights')
+        self.filterbanks = args
+        #print args
+        self.fs=args[0].fs
+        self.nbr_fb=len(self.filterbanks)
+        self.N=args[0].N
+        self.output=zeros(self.N)
+        self.weights=weights
     def timestep(self, input):
-        factor = self.normalization_factor
-        filter_state = self.state
-        for i in range(self.gamma_order):
-            b = factor
-            a = -self.coefficient
-            z = filter_state[:,i]
-            x = input
-            bx = b*x
-            y = bx+z
-            z = bx-a*y
-            input = y
-            filter_state[:,i] = z
-            factor = 1.0
-        output = input
-        return real(output)
+        self.output=zeros(self.N)
+        for ind,fb in zip(range((self.nbr_fb)),self.filterbanks):
+            self.output += self.weights[ind]*fb.timestep(input)
+        return self.output
+    def __len__(self):
+        return self.N
+    samplerate = property(fget=lambda self:self.fs)   
 
 class GammatoneFilterbank(ParallelLinearFilterbank):
     '''
@@ -580,42 +535,6 @@ class GammatoneFilterbank(ParallelLinearFilterbank):
                          array([A0*ones(len(cf)), A14, zeros(len(cf))]).T))
         
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
-
-class MeddisGammatoneFilterbank(ParallelLinearFilterbank):
-    '''
-    Parallel version of Ray Meddis' UTIL_gammatone.m
-    '''
-    # These consts from Hohmann gammatone code
-    EarQ = 9.26449                #  Glasberg and Moore Parameters
-    minBW = 24.7
-    @check_units(fs=Hz)
-    def __init__(self, fs, cf, order, bw):
-        cf = array(cf)
-        bw = array(bw)
-        self.cf = cf
-        self.fs = fs
-        fs = float(fs)
-        dt = 1/fs
-        phi = 2 * pi * bw * dt
-        theta = 2 * pi * cf * dt
-        cos_theta = cos(theta)
-        sin_theta = sin(theta)
-        alpha = -exp(-phi) * cos_theta
-        b0 = ones(len(cf))
-        b1 = 2 * alpha
-        b2 = exp(-2 * phi)
-        z1 = (1 + alpha * cos_theta) - (alpha * sin_theta) * 1j
-        z2 = (1 + b1 * cos_theta) - (b1 * sin_theta) * 1j
-        z3 = (b2 * cos(2 * theta)) - (b2 * sin(2 * theta)) * 1j
-        tf = (z2 + z3) / z1
-        a0 = abs(tf)
-        a1 = alpha * a0   
-        # we apply the same filters order times so we just duplicate them in the 3rd axis for the parallel_lfilter_step command
-        a = dstack((array([b0, b1, b2]).T,)*order)
-        b = dstack((array([a0, a1, zeros(len(cf))]).T,)*order)
-        self.order = order
-        
-        ParallelLinearFilterbank.__init__(self, b, a, fs*Hz)    
 
 
 class GammachirpFilterbank_IIR(ParallelLinearFilterbank):
@@ -727,42 +646,7 @@ class GammachirpFilterbank_NM(ParallelLinearFilterbank):
         filt_b[0,:,0] = G
         filt_a[0,0,0]=1   
             
-#        plot(G)
-#        figure
-#
-#        print len(G)
-#        pxx, freqs, bins, im = specgram(G, NFFT=512, Fs=fs, noverlap=120) #pylab function
-#        I = logical_and(5000<=freqs,freqs<=6000)
-#        I2 = where(I)[0]
-#        I2 = [max(min(I2)-1,0), min(max(I2)+1,len(freqs)-1)]
-#        Z = pxx[I2[0]:I2[-1],:]
-#        Z = flipud(Z)
-#        imshow(Z, extent=(0, amax(bins), freqs[I2[0]], freqs[I2[-1]]), aspect='auto')
-#        show()
-#        exit()
-#        #print filt_a.shape
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
-class IIRFilterbank(Filterbank):
-    @check_units(samplerate=Hz)
-    def __init__(self, samplerate, N, b, a):
-        self.fs = samplerate
-        self.a = a
-        self.b = b
-        self.N = N
-        self.zi = zeros((N, max(len(a), len(b))-1))
-    
-    def timestep(self, input):
-        input = reshape(input, (self.N,1))
-        y, self.zi = signal.lfilter(self.b, self.a, input, zi=self.zi)
-        return y
-    
-    def apply_single(self, input):
-        return signal.lfilter(self.b, self.a, input)
-    
-    def __len__(self):
-        return self.N
-    
-    samplerate = property(fget=lambda self:self.fs)
 
 @check_units(samplerate=Hz)
 def design_iir_filterbank(samplerate, N, passband, stopband, gpass, gstop, ftype):
@@ -821,7 +705,13 @@ def design_iir_filterbank(samplerate, N, passband, stopband, gpass, gstop, ftype
         raise DimensionMismatchError('IIRFilterbank passband, stopband parameters must be in Hz')
     # now design filterbank
     b, a = signal.iirdesign(passband, stopband, gpass, gstop, ftype=ftype)
-    fb = IIRFilterbank(samplerate, N, b, a)
+    print b.shape
+    b=kron(ones((N,1)),b)
+    b=b.reshape(b.shape[0],b.shape[1],1)
+    a=kron(ones((N,1)),a)
+    a=a.reshape(a.shape[0],a.shape[1],1)
+    #fb = IIRFilterbank(samplerate, N, b, a)
+    fb=ParallelLinearFilterbank(b, a,samplerate=samplerate)
     fb.N = N
     fb.passband = passband
     fb.stopband = stopband
@@ -830,6 +720,80 @@ def design_iir_filterbank(samplerate, N, passband, stopband, gpass, gstop, ftype
     fb.ftype= ftype
     return fb
 
+class TimeVarying_IIRFilterbank(Filterbank):
+    ''' IIR fliterbank where the coefficients vary. It is a bandpass filter
+    of which the center frequency vary follwoing a OrnsteinUhlenbeck process
+    '''
+    
+    @check_units(samplerate=Hz)
+    def __init__(self, samplerate, fc_init,coeff,m_i,s_i,tau_i):
+        self.fs = samplerate
+        self.N = len(fc_init)
+        self.b=zeros((self.N,3,1))
+        self.a=zeros((self.N,3,1))
+        self.t=0*ms
+        self.coeff=coeff
+        self.deltaT=1./self.fs
+        self.m_i=m_i
+        self.s_i=s_i
+        self.tau_i=tau_i
+        self.Q=1./coeff
+
+        self.BW=0.1#2*arcsinh(1./2/self.Q)*1.44269 ## bandwidth in octave
+        #print self.Q,self.BW
+        w0 = 2*pi*fc_init/self.fs
+        self.fc=fc_init
+        alpha = sin(w0)*sinh(log(2)/2 * self.BW* w0/sin(w0) ) 
+        
+        self.b[:,0,0]=sin(w0)/2
+        self.b[:,1,0]=0
+        self.b[:,2,0]=-sin(w0)/2
+        
+        #self.a=array([1 + alpha,-2*cos(w0),1 - alpha])
+        self.a[:,0,0]=1 + alpha
+        self.a[:,1,0]=-2*cos(w0)
+        self.a[:,2,0]=1 - alpha
+       ## print self.a.shape
+#        self.a = a
+#        self.b = b
+        
+        self.zi = zeros((self.b.shape[0], self.b.shape[1]-1,self.b.shape[2]))
+    def timestep(self, input):
+        if isinstance(input, ndarray):
+            input = input.flatten()
+    
+        #self.t=self.t+self.deltaT
+        #f0=8000*Hz+2000*Hz*sin(2*pi*10*Hz*self.t)
+        #tau_i=100*ms
+        sigma_I=1000
+        mu_i=self.m_i/self.tau_i
+        sigma_i=2*self.s_i/sqrt(self.tau_i)
+        self.fc=self.fc-self.fc/self.tau_i*self.deltaT+mu_i*self.deltaT+sigma_i*random.randn(1)*sqrt(self.deltaT)
+        #print self.fc
+        
+        
+        w0 = 2*pi*self.fc/self.fs
+        alpha = sin(w0)*sinh(log(2)/2 * self.BW * w0/sin(w0) ) 
+        
+        self.b[:,0,0]=sin(w0)/2
+        self.b[:,1,0]=0
+        self.b[:,2,0]=-sin(w0)/2
+        
+        #self.a=array([1 + alpha,-2*cos(w0),1 - alpha])
+        self.a[:,0,0]=1 + alpha
+        self.a[:,1,0]=-2*cos(w0)
+        self.a[:,2,0]=1 - alpha
+        #y=parallel_lfilter_step(self.b, self.a, input, self.zi)
+        #y, self.zi = signal.lfilter(self.b, self.a, input, zi=self.zi)
+        return parallel_lfilter_step(self.b, self.a, input, self.zi)
+    
+    def apply_single(self, input):
+        pass
+    def __len__(self):
+        return self.N
+    samplerate = property(fget=lambda self:self.fs)
+    
+    
 def design_butterworth_filterbank(samplerate, N, passband, stopband, gpass, gstop):
     '''
     Design a butterworth filterbank
