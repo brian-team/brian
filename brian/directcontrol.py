@@ -185,6 +185,12 @@ class SpikeGeneratorGroup(NeuronGroup):
         period. Note that iterator objects cannot be used as the ``spikelist``
         with a period as they cannot be reinitialised.
     
+    Has an attribute:
+    
+    ``spiketimes``
+        This can be used to reset the list of spike times, however the values of
+        ``N``, ``clock`` and ``period`` cannot be changed. 
+    
     **Sample usages**
     
     The simplest usage would be a list of pairs ``(i,t)``::
@@ -224,13 +230,16 @@ class SpikeGeneratorGroup(NeuronGroup):
     """
     def __init__(self,N,spiketimes,clock=None,period=None):
         clock = guess_clock(clock)
-        thresh = SpikeGeneratorThreshold(N,spiketimes,period=period)
+        thresh = SpikeGeneratorThreshold(N, spiketimes, period=period)
         self.period = period
         NeuronGroup.__init__(self,N,model=LazyStateUpdater(),threshold=thresh,clock=clock)
         
     def reinit(self):
         super(SpikeGeneratorGroup,self).reinit()
         self._threshold.reinit()
+        
+    spiketimes = property(fget=lambda self:self._threshold.spiketimes,
+                          fset=lambda self, value: self._threshold.set_spike_times(self._threshold.N, value, self._threshold.period))
         
     def __repr__(self):
         return "SpikeGeneratorGroup"

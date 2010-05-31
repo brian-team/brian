@@ -24,6 +24,8 @@ Improvements
 * modelfitting now uses playdoh library
 * C++ compiled code is now much faster thanks to adding -ffast-math switch to
   gcc and -march=native
+* SpikeGeneratorGroup now has a spiketimes attribute to reset the list of
+  spike times.
 
 Bug fixes
 * Sparse matrices with some versions of scipy
