@@ -42,6 +42,7 @@ from scipy import weave
 import bisect
 import os
 import warnings
+from ..globalprefs import get_global_preference
 
 __all__=['CircularVector','SpikeContainer']
 
