@@ -10,27 +10,27 @@ from scipy import weave
 from scipy import random
 # NOTE TO BERTRAND:
 # DO NOT COMMENT THESE LINES OUT!
-try:
-    import pycuda
-    import pycuda.autoinit as autoinit
-    import pycuda.driver as drv
-    import pycuda.compiler
-    from pycuda import gpuarray
-    from brian.experimental.cuda.buffering import *
-    import re
-    def set_gpu_device(n):
-        global _gpu_context
-        autoinit.context.pop()
-        _gpu_context = drv.Device(n).make_context()
-    use_gpu = True
-except ImportError:
-    use_gpu = False
-#use_gpu=False
+#try:
+#    import pycuda
+#    import pycuda.autoinit as autoinit
+#    import pycuda.driver as drv
+#    import pycuda.compiler
+#    from pycuda import gpuarray
+#    from brian.experimental.cuda.buffering import *
+#    import re
+#    def set_gpu_device(n):
+#        global _gpu_context
+#        autoinit.context.pop()
+#        _gpu_context = drv.Device(n).make_context()
+#    use_gpu = True
+#except ImportError:
+#    use_gpu = False
+use_gpu=False
 
 __all__=['GammachirpFilterbankFIR', 'GammachirpFilterbankIIR', 'Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step', 'GammatoneFilterbank',
-           'IIRFilterbank' , 'design_butterworth_filterbank', 'make_butterworth_filterbank', 'MixFilterbank', 'TimeVaryingIIRFilterbank'
-           ]
+           'IIRFilterbank' ,'MixFilterbank','TimeVaryingIIRFilterbank']
+
 #print get_global_preference('useweave')
 def parallel_lfilter_step(b, a, x, zi):
     '''
@@ -127,6 +127,18 @@ class Filterbank(object):
     ``samplerate``
         The sample rate of the filterbank (in Hz).
     '''
+    def __add__ (fb1,fb2):
+        #print fb1,fb2
+        return MixFilterbank(fb1,fb2)
+        
+    def __sub__ (fb1,fb2):
+        return MixFilterbank(fb1,fb2,array([1,-1]))  
+        
+    def __rmul__(fb,scalar):
+        func=lambda x:scalar*x
+        return FilterbankChain([fb,FunctionFilterbank(fb.fs, fb.N, func)])
+           
+        
     def timestep(self, input):
         raise NotImplementedError
 
@@ -151,7 +163,8 @@ class FilterbankChain(Filterbank):
     '''
     def __init__(self, filterbanks):
         self.filterbanks=filterbanks
-
+        self.fs=filterbanks[0].fs
+        self.N=filterbanks[0].N
     def timestep(self, input):
         for fb in self.filterbanks:
             input=fb.timestep(input)
@@ -437,7 +450,7 @@ class FilterbankGroup(NeuronGroup):
         self.load_sound(self._x)
 
 class MixFilterbank(Filterbank):
-    '''
+    '''  
     Mix filterbanks together with a given weight vectors
     '''
     def __init__(self, *args, **kwargs):#weights=None,
@@ -447,7 +460,7 @@ class MixFilterbank(Filterbank):
         else:
             weights=kwargs.get('weights')
         self.filterbanks=args
-        #print  self.filterbanks
+        #print  args
         self.fs=args[0].fs
         self.nbr_fb=len(self.filterbanks)
         self.N=args[0].N
@@ -484,23 +497,26 @@ class GammatoneFilterbank(ParallelLinearFilterbank):
     order=1
     @check_units(fs=Hz)
     def __init__(self, fs, cf):
-        cf=array(cf)
-        self.cf=cf
-        self.fs=fs
-        fs=float(fs)
-        EarQ, minBW, order=self.EarQ, self.minBW, self.order
-        T=1/fs
-        ERB=((cf/EarQ)**order+minBW**order)**(1/order)
-        B=1.019*2*pi*ERB
-        self.B=B
 
-        A0=T
-        A2=0
-        B0=1
-        B1=-2*cos(2*cf*pi*T)/exp(B*T)
-        B2=exp(-2*B*T)
+        cf = array(cf)
+        self.cf = cf
+        self.N = len(cf)
+        self.fs = fs
+        fs = float(fs)
+        EarQ, minBW, order = self.EarQ, self.minBW, self.order
+        T = 1/fs
+        ERB = ((cf/EarQ)**order + minBW**order)**(1/order)
+        B = 1.019*2*pi*ERB
+        self.B = B
+        
+        A0 = T
+        A2 = 0
+        B0 = 1
+        B1 = -2*cos(2*cf*pi*T)/exp(B*T)
+        B2 = exp(-2*B*T)
+        
+        A11 = -(2*T*cos(2*cf*pi*T)/exp(B*T) + 2*sqrt(3+2**1.5)*T*sin(2*cf*pi*T) / \
 
-        A11=-(2*T*cos(2*cf*pi*T)/exp(B*T)+2*sqrt(3+2**1.5)*T*sin(2*cf*pi*T)/\
                 exp(B*T))/2
         A12=-(2*T*cos(2*cf*pi*T)/exp(B*T)-2*sqrt(3+2**1.5)*T*sin(2*cf*pi*T)/\
                 exp(B*T))/2
@@ -551,10 +567,12 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
      
      '''
     def __init__(self, samplerate, fr, c=None):
-        #fr = array(fr)
-        self.fr=fr
+        fr = array(fr)
 
-        self.fs=samplerate
+        self.fr = fr
+        self.N = len(fr)
+        self.fs= samplerate
+
 
         if c==None:
             c=1*ones((fr.shape))
@@ -607,8 +625,11 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
             asymmetric_filt_a[:, :, k]=ap
         #print B.shape,A.shape,Btemp.shape,Atemp.shape    
         #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
-        filt_b=concatenate([gammatone_filt_b, asymmetric_filt_b], axis=2)
-        filt_a=concatenate([gammatone_filt_a, asymmetric_filt_a], axis=2)
+
+        filt_b=concatenate([gammatone_filt_b, asymmetric_filt_b],axis=2)
+        filt_a=concatenate([gammatone_filt_a, asymmetric_filt_a],axis=2)
+        #filt_b=concatenate([gammatone_filt_b],axis=2)
+        #filt_a=concatenate([gammatone_filt_a],axis=2)
 
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, samplerate*Hz)
 
@@ -616,10 +637,13 @@ class GammachirpFilterbankFIR(ParallelLinearFilterbank):
 
 
 
-    def __init__(self, fs, fr, c=None, Tcst=None):
-        fr=array(fr)
-        self.fr=fr
-        self.fs=fs
+
+    def __init__(self, fs, fr,c=None,Tcst=None):
+        fr = array(fr)
+        self.fr = fr
+        self.N = len(fr)
+        self.fs = fs
+
         #%x = [amplitude, delay, time constant, frequency, phase, bias, IF glide slope]
         if c==None:
             x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
@@ -677,7 +701,7 @@ class IIRFilterbank(ParallelLinearFilterbank):
     
     See the documentation for scipy.signal.iirdesign for more details.
     '''
-    def __init__(self, samplerate, n, passband, stopband, gpass, gstop, ftype):
+    def __init__(self, samplerate, N, passband, stopband, gpass, gstop, ftype):
         # passband can take form x or (a,b) in Hz and we need to convert to scipy's format
         try:
             try:
@@ -704,17 +728,20 @@ class IIRFilterbank(ParallelLinearFilterbank):
             raise DimensionMismatchError('IIRFilterbank passband, stopband parameters must be in Hz')
 
         # now design filterbank
-        self.filt_b, self.filt_a=signal.iirdesign(passband, stopband, gpass, gstop, ftype=ftype)
-        self.filt_b=kron(ones((n, 1)), self.filt_b)
-        self.filt_b=self.filt_b.reshape(self.filt_b.shape[0], self.filt_b.shape[1], 1)
-        self.filt_a=kron(ones((n, 1)), self.filt_a)
-        self.filt_a=self.filt_a.reshape(self.filt_a.shape[0], self.filt_a.shape[1], 1)
-        self.n=n
-        self.passband=passband
-        self.stopband=stopband
-        self.gpass=gpass
-        self.gstop=gstop
-        self.ftype=ftype
+
+        self.fs=samplerate
+        self.filt_b, self.filt_a = signal.iirdesign(passband, stopband, gpass, gstop, ftype=ftype)
+        self.filt_b=kron(ones((N,1)),self.filt_b)
+        self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)
+        self.filt_a=kron(ones((N,1)),self.filt_a)
+        self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
+        self.N = N
+        self.passband = passband
+        self.stopband = stopband
+        self.gpass = gpass
+        self.gstop = gstop
+        self.ftype= ftype
+
         ParallelLinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate)
 
 
@@ -807,43 +834,6 @@ class TimeVaryingIIRFilterbank(Filterbank):
     samplerate=property(fget=lambda self:self.fs)
 
 
-def design_butterworth_filterbank(samplerate, N, passband, stopband, gpass, gstop):
-    '''
-    Design a butterworth filterbank
-    
-    See docs for design_iir_filterbank for details.
-    '''
-    return design_iir_filterbank(samplerate, N, passband, stopband, gpass, gstop, ftype='butter')
-
-def make_butterworth_filterbank(samplerate, N, ord, Wn, btype='low'):
-    '''
-    Make a butterworth filterbank directly
-    
-    Alternatively, use design_butterworth_filterbank
-    
-    Parameters:
-    
-    ``samplerate``
-        Sample rate.
-    ``N``
-        Number of filters in the bank.
-    ``ord``
-        Order of the filter.
-    ``Wn``
-        Cutoff parameter(s) in Hz, either a single value or pair for band filters.
-    ``btype``
-        One of 'lowpass', 'highpass', 'bandpass' or 'bandstop'.
-    '''
-    try:
-        try:
-            Wn1, Wn2=Wn
-            Wn=(Wn1/samplerate+0.0, Wn2/samplerate+0.0)
-        except TypeError:
-            Wn=Wn/samplerate+0.0
-    except DimensionMismatchError:
-        raise DimensionMismatchError('Wn must be in Hz')
-    b, a=signal.butter(ord, Wn, btype=btype)
-    return IIRFilterbank(samplerate, N, b, a)
 
 if __name__=='__main__':
     from sounds import *
