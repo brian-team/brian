@@ -37,5 +37,4 @@ if __name__=='__main__':
     t,v=read_neuron_dat(r"D:\My Dropbox\Neuron\Hu\recordings_Ifluct\I0_05_std_1_tau_10_sampling_100\vs.dat")
     #t,v=read_atf(r"/home/bertrand/Data/Measurements/Anna/input_file.atf")
     plot(t[:50000],v[:50000])
-   # plot(t,v)
     show()
