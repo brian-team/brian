@@ -671,7 +671,7 @@ class PoissonGroup(NeuronGroup):
         NeuronGroup.update(self)
 
 
-class OfflinePoissonGroup:
+class OfflinePoissonGroup(object):
     def __init__(self, N, rates, T):
         """
         Generates a Poisson group with N spike trains and given rates over the
