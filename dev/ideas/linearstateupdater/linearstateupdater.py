@@ -63,11 +63,7 @@ def compute_euler(X0, A, b, t, n):
         X[:,i+1] = X[:,i] + dt*(dot(A,X[:,i])+b)
     return X
 
-def compute_exactstep(X0, A, b, t, n, nint):
-    dt = t/n
-    X = zeros((len(X0),n+1))
-    X[:,0] = X0
-    
+def compute_Ab(A, b, dt, nint):
     eAt = expm(A*dt)
     def f(u):
         if isscalar(u):
@@ -75,6 +71,22 @@ def compute_exactstep(X0, A, b, t, n, nint):
         else:
             return array([dot(expm(-A*v),b) for v in u])
     eAtint = dot(eAt, trapezoidal_integration(f, 0, dt, nint))
+    return eAt, eAtint
+
+def compute_exactstep(X0, A, b, t, n, nint):
+    dt = t/n
+    X = zeros((len(X0),n+1))
+    X[:,0] = X0
+    
+#    eAt = expm(A*dt)
+#    def f(u):
+#        if isscalar(u):
+#            return dot(expm(-A*u),b)
+#        else:
+#            return array([dot(expm(-A*v),b) for v in u])
+#    eAtint = dot(eAt, trapezoidal_integration(f, 0, dt, nint))
+    
+    eAt, eAtint = compute_Ab(A, b, dt, nint)
     
     for i in range(n):
         X[:,i+1] = dot(eAt, X[:,i]) + eAtint
@@ -131,8 +143,27 @@ def test_precision():
     a = b = 1000
     print precision(dt, n, D, a, b)
 
+def is_equal(x, y, epsilon):
+    return (abs(x-y)<abs(x)*epsilon).all()
+
 if __name__ == '__main__':
-    test_sim()
+#    test_sim()
+
+    epsilon = 1.
+    while 1. + epsilon > 1.:
+        epsilon /= 2
+    epsilon *= 2.
     
+    A = array([[0,-1],[1,0]])
+    D = len(A)
+    b = 10*randn(D)
+    dt = .0001
     
+    nint = 16
+    btilde2 = compute_Ab(A, b, dt, nint)[1]
+    for i in xrange(12):
+        nint *= 2
+        btilde = compute_Ab(A, b, dt, nint)[1]
+        print nint, max(abs(btilde-btilde2)), max(abs(btilde))*epsilon
+        btilde2 = btilde
     
