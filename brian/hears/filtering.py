@@ -8,26 +8,26 @@ from brian import *
 from scipy import signal
 from scipy import weave
 from scipy import random
-try:
-    import pycuda
-    import pycuda.autoinit as autoinit
-    import pycuda.driver as drv
-    import pycuda.compiler
-    from pycuda import gpuarray
-    from brian.experimental.cuda.buffering import *
-    import re
-    def set_gpu_device(n):
-        global _gpu_context
-        autoinit.context.pop()
-        _gpu_context = drv.Device(n).make_context()
-    use_gpu = True
-except ImportError:
-    use_gpu = False
-#use_gpu = False
+#try:
+#    import pycuda
+#    import pycuda.autoinit as autoinit
+#    import pycuda.driver as drv
+#    import pycuda.compiler
+#    from pycuda import gpuarray
+#    from brian.experimental.cuda.buffering import *
+#    import re
+#    def set_gpu_device(n):
+#        global _gpu_context
+#        autoinit.context.pop()
+#        _gpu_context = drv.Device(n).make_context()
+#    use_gpu = True
+#except ImportError:
+#    use_gpu = False
+use_gpu = False
 
-__all__ = ['GammachirpFilterbank_NM','GammachirpFilterbank_IIR','Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
+__all__ = ['GammachirpFilterbankFIR','GammachirpFilterbankIIR','Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step', 'GammatoneFilterbank',
-           'design_iir_filterbank', 'design_butterworth_filterbank', 'make_butterworth_filterbank','MixFilterbank','TimeVarying_IIRFilterbank'
+           'IIRFilterbank' ,'design_butterworth_filterbank', 'make_butterworth_filterbank','MixFilterbank','TimeVaryingIIRFilterbank'
            ]
 #print get_global_preference('useweave')
 def parallel_lfilter_step(b, a, x, zi):
@@ -149,9 +149,9 @@ class FilterbankChain(Filterbank):
     '''
     def __init__(self, filterbanks):
         self.filterbanks = filterbanks
-    
+
     def timestep(self, input):
-        for fb in filterbanks:
+        for fb in self.filterbanks:
             input = fb.timestep(input)
         return input
     
@@ -436,7 +436,7 @@ class FilterbankGroup(NeuronGroup):
 
 class MixFilterbank(Filterbank):
     '''
-    Filterbank that just applies a given function
+    Mix filterbanks together with a given weight vectors
     '''
     def __init__(self,*args,**kwargs):#weights=None,
         
@@ -445,17 +445,19 @@ class MixFilterbank(Filterbank):
         else:
             weights=kwargs.get('weights')
         self.filterbanks = args
-        #print args
+        #print  self.filterbanks
         self.fs=args[0].fs
         self.nbr_fb=len(self.filterbanks)
         self.N=args[0].N
         self.output=zeros(self.N)
         self.weights=weights
+        
     def timestep(self, input):
         self.output=zeros(self.N)
         for ind,fb in zip(range((self.nbr_fb)),self.filterbanks):
             self.output += self.weights[ind]*fb.timestep(input)
         return self.output
+    
     def __len__(self):
         return self.N
     samplerate = property(fget=lambda self:self.fs)   
@@ -537,68 +539,59 @@ class GammatoneFilterbank(ParallelLinearFilterbank):
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
 
 
-class GammachirpFilterbank_IIR(ParallelLinearFilterbank):
+class GammachirpFilterbankIIR(ParallelLinearFilterbank):
     '''
-    Implemtentaion of the gammachirp filter as the cascade of 4 second order IIR gammatone filters 
+    Implemtentaion of the gammachirp filter with logarithmic chirp as a cascade of 4 second order IIR gammatone filters 
     and 4 second orders asymmetric compensation filters
-     From Unoki et al. 2001 
+    From Unoki et al. 2001 
      
-     comment: no GPU implementation so far...
+     comment: no GPU implementation so far... because
      
      '''
-    def __init__(self, fs, fr,c=None):
-        fr = array(fr)
+    def __init__(self, samplerate, fr,c=None):
+        #fr = array(fr)
         self.fr = fr
-        self.fs = fs
         
+        self.fs= samplerate
+
         if c==None:
             c=1*ones((fr.shape))
         self.c = c  
-        GT= GammatoneFilterbank(fs,fr)
-        fs = float(fs)
-        order=GT.order
-        
-#        if use_gpu:
-#            B=GT.filt_bCPU 
-#            A=GT.filt_aCPU 
-#        else:
-        B=GT.filt_b
-        A=GT.filt_a
+        gammatone= GammatoneFilterbank(samplerate,fr)
+        samplerate = float(samplerate)
+        order=gammatone.order
 
-        
-        
-        #print B.reshape(len(fs),2*order+1,4)
+        gammatone_filt_b=gammatone.filt_b
+        gammatone_filt_a=gammatone.filt_a
+
         ERBw = 24.7*(4.37e-3*fr+1.)
-        N=4
+        n=4
         b=1.019*ones((fr.shape))
         
-
-
-
         p0=2
         p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
         p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
         p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
         p4=1.0724
         
-        Btemp=zeros((len(fr),2*order+1,4))
-        Atemp=zeros((len(fr),2*order+1,4))
+        asymmetric_filt_b=zeros((len(fr),2*order+1,4))
+        asymmetric_filt_a=zeros((len(fr),2*order+1,4))
         
-        for k in arange(N):
+        for k in arange(n):
             
-            r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/fs) #k instead of k-1 because range 0 N-1
+            r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/samplerate) #k instead of k-1 because range 0 N-1
             
             Dfr=(p0*p4)**(k)*p2*c*b*ERBw
          
-            phi=2*pi*maximum((fr+Dfr),0)/fs
-            psy=2*pi*maximum((fr-Dfr),0)/fs
+            phi=2*pi*maximum((fr+Dfr),0)/samplerate
+            psy=2*pi*maximum((fr-Dfr),0)/samplerate
             
             ap = vstack((ones(r.shape), -2*r*cos(phi),  r**2)).T
             bz= vstack((ones(r.shape), -2*r*cos(psy),  r**2)).T
             
             fn = fr #+ N* p3 *c *b *ERBw/4;
             
-            vwr = exp(1j*2*pi*fn/fs)
+            vwr = exp(1j*2*pi*fn/samplerate)
             vwrs= vstack((ones(vwr.shape), vwr,  vwr**2)).T
             
             ##normilization stuff
@@ -608,16 +601,16 @@ class GammachirpFilterbank_IIR(ParallelLinearFilterbank):
                 temp[i,:]=nrm[i]
             bz =bz*temp
             
-            Btemp[:,:,k]=bz
-            Atemp[:,:,k]=ap
+            asymmetric_filt_b[:,:,k]=bz
+            asymmetric_filt_a[:,:,k]=ap
         #print B.shape,A.shape,Btemp.shape,Atemp.shape    
         #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
-        filt_b=concatenate([B, Btemp],axis=2)
-        filt_a=concatenate([A, Atemp],axis=2)
+        filt_b=concatenate([gammatone_filt_b, asymmetric_filt_b],axis=2)
+        filt_a=concatenate([gammatone_filt_a, asymmetric_filt_a],axis=2)
         
-        ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
+        ParallelLinearFilterbank.__init__(self, filt_b, filt_a, samplerate*Hz)
 
-class GammachirpFilterbank_NM(ParallelLinearFilterbank):
+class GammachirpFilterbankFIR(ParallelLinearFilterbank):
 
 
 
@@ -648,8 +641,11 @@ class GammachirpFilterbank_NM(ParallelLinearFilterbank):
             
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
 
-@check_units(samplerate=Hz)
-def design_iir_filterbank(samplerate, N, passband, stopband, gpass, gstop, ftype):
+
+
+class IIRFilterbank(ParallelLinearFilterbank):
+    
+    
     '''
     Filterbank using scipy.signal.iirdesign
     
@@ -679,56 +675,56 @@ def design_iir_filterbank(samplerate, N, passband, stopband, gpass, gstop, ftype
     
     See the documentation for scipy.signal.iirdesign for more details.
     '''
-    # passband can take form x or (a,b) in Hz and we need to convert to scipy's format
-    try:
+    def __init__(self, samplerate, n, passband, stopband, gpass, gstop, ftype):
+        # passband can take form x or (a,b) in Hz and we need to convert to scipy's format
         try:
-            a, b = passband
-            a = a/samplerate
-            b = b/samplerate
-            passband = [a,b]
-            a+1 
-            b+1
-        except TypeError:
-            passband = passband/samplerate
-            passband+1
-        try:
-            a, b = stopband
-            a = a/samplerate
-            b = b/samplerate
-            stopband = [a,b]
-            a+1 
-            b+1
-        except TypeError:
-            stopband = stopband/samplerate
-            stopband+1
-    except DimensionMismatchError:
-        raise DimensionMismatchError('IIRFilterbank passband, stopband parameters must be in Hz')
-    # now design filterbank
-    b, a = signal.iirdesign(passband, stopband, gpass, gstop, ftype=ftype)
-    print b.shape
-    b=kron(ones((N,1)),b)
-    b=b.reshape(b.shape[0],b.shape[1],1)
-    a=kron(ones((N,1)),a)
-    a=a.reshape(a.shape[0],a.shape[1],1)
-    #fb = IIRFilterbank(samplerate, N, b, a)
-    fb=ParallelLinearFilterbank(b, a,samplerate=samplerate)
-    fb.N = N
-    fb.passband = passband
-    fb.stopband = stopband
-    fb.gpass = gpass
-    fb.gstop = gstop
-    fb.ftype= ftype
-    return fb
-
-class TimeVarying_IIRFilterbank(Filterbank):
+            try:
+                a, b = passband
+                a = a/samplerate
+                b = b/samplerate
+                passband = [a,b]
+                a+1 
+                b+1
+            except TypeError:
+                passband = passband/samplerate
+                passband+1
+            try:
+                a, b = stopband
+                a = a/samplerate
+                b = b/samplerate
+                stopband = [a,b]
+                a+1 
+                b+1
+            except TypeError:
+                stopband = stopband/samplerate
+                stopband+1
+        except DimensionMismatchError:
+            raise DimensionMismatchError('IIRFilterbank passband, stopband parameters must be in Hz')
+        
+        # now design filterbank
+        self.filt_b, self.filt_a = signal.iirdesign(passband, stopband, gpass, gstop, ftype=ftype)
+        self.filt_b=kron(ones((n,1)),self.filt_b)
+        self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)
+        self.filt_a=kron(ones((n,1)),self.filt_a)
+        self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
+        self.n = n
+        self.passband = passband
+        self.stopband = stopband
+        self.gpass = gpass
+        self.gstop = gstop
+        self.ftype= ftype
+        ParallelLinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate)
+        
+        
+class TimeVaryingIIRFilterbank(Filterbank):
     ''' IIR fliterbank where the coefficients vary. It is a bandpass filter
     of which the center frequency vary follwoing a OrnsteinUhlenbeck process
     '''
     
     @check_units(samplerate=Hz)
-    def __init__(self, samplerate, fc_init,coeff,m_i,s_i,tau_i):
+    def __init__(self, samplerate, coeff,m_i,s_i,tau_i):
         self.fs = samplerate
-        self.N = len(fc_init)
+        self.N = len(m_i)
         self.b=zeros((self.N,3,1))
         self.a=zeros((self.N,3,1))
         self.t=0*ms
@@ -739,10 +735,10 @@ class TimeVarying_IIRFilterbank(Filterbank):
         self.tau_i=tau_i
         self.Q=1./coeff
 
-        self.BW=0.1#2*arcsinh(1./2/self.Q)*1.44269 ## bandwidth in octave
+        self.BW=2*arcsinh(1./2/self.Q)*1.44269 ## bandwidth in octave
         #print self.Q,self.BW
-        w0 = 2*pi*fc_init/self.fs
-        self.fc=fc_init
+        w0 = 2*pi*m_i/self.fs
+        self.fc=m_i
         alpha = sin(w0)*sinh(log(2)/2 * self.BW* w0/sin(w0) ) 
         
         self.b[:,0,0]=sin(w0)/2
@@ -753,6 +749,8 @@ class TimeVarying_IIRFilterbank(Filterbank):
         self.a[:,0,0]=1 + alpha
         self.a[:,1,0]=-2*cos(w0)
         self.a[:,2,0]=1 - alpha
+        
+        #self.t=0
        ## print self.a.shape
 #        self.a = a
 #        self.b = b
@@ -765,10 +763,23 @@ class TimeVarying_IIRFilterbank(Filterbank):
         #self.t=self.t+self.deltaT
         #f0=8000*Hz+2000*Hz*sin(2*pi*10*Hz*self.t)
         #tau_i=100*ms
-        sigma_I=1000
         mu_i=self.m_i/self.tau_i
         sigma_i=2*self.s_i/sqrt(self.tau_i)
         self.fc=self.fc-self.fc/self.tau_i*self.deltaT+mu_i*self.deltaT+sigma_i*random.randn(1)*sqrt(self.deltaT)
+        BWhz=self.fc/self.Q
+        #print self.fc,BWhz
+        if self.fc<=50*Hz:
+            self.fc=50*Hz
+            
+        if self.fc+BWhz/2>=self.fs/2:
+            self.fc=self.fs/2-1000*Hz
+            
+#        if self.fc-BWhz/2<=0:
+#            self.fc=BWhz/2+20*Hz
+#        if self.fc+BWhz/2>=self.fs/2:
+#            self.fc=self.fs/2-BWhz/2-20*Hz
+#        self.fcvstime[self.t]=self.fc
+#        self.t=self.t+1
         #print self.fc
         
         
