@@ -8,7 +8,7 @@ from brian.units import check_units,second
 from brian.stdunits import ms,Hz
 from operator import itemgetter
 
-__all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF', 'group_correlations', 'sortspikes',
+__all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF', 'group_correlations', 'sort_spikes',
          'total_correlation','vector_strength','gamma_factor','get_gamma_factor_matrix','get_gamma_factor']
 
 # First-order statistics
@@ -140,19 +140,10 @@ def total_correlation(T1,T2,width=20*ms,T=None):
         x+=sum(1./(T-abs(T2[i:j]-t))) # counts coincidences with windowing (probabilities)
     return float(x/firing_rate(T1))-float(firing_rate(T2)*2*width)
 
-def sortspikes(spikes):
+def sort_spikes(spikes):
     """
-    Sorts spikes stored in a (i,t) list.
+    Sorts spikes stored in a (i,t) list by time.
     """
-#    def cmp(x,y):
-#        d = x[1]-y[1]
-#        if d>0:
-#            return 1
-#        elif d == 0:
-#            return 0
-#        else:
-#            return -1
-#    spikes.sort(cmp=cmp)
     spikes = sorted(spikes,key=itemgetter(1))
     return spikes
 
@@ -192,7 +183,6 @@ def group_correlations(spikes, delta = None):
     tauc[isnan(tauc)] = 0.0
     
     return S, tauc
-
 
 # Phase-locking properties
 def vector_strength(spikes,period):

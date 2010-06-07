@@ -11,7 +11,7 @@ def test_group_correlations():
     poisson = cumsum(exponential(1/rate, n))
     spikes = [(0, t*second) for t in poisson]
     spikes.extend([(0,t*second+1*ms) for t in poisson])
-    spikes = sortspikes(spikes)
+    spikes = sort_spikes(spikes)
     S, tauc = group_correlations(spikes, delta = 3*ms)
     assert abs(tauc[0]-.001) < .0005
 
