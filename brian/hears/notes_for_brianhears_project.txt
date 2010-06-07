@@ -145,3 +145,14 @@ HRTFSet
 * Maybe interpolation (I would say: interpolate in the Fourier domain, then convert to time domain)
 * Artificial HRTFs (sphere etc?)
 * Simultaneous calculations (all directions): ITD, etc
+
+TODO
+----
+* design_iir_filterbank -> IIRFilterBank ?
+* Doc / examples
+* MixFilterBank -> + ? and *?
+* names Gammachirp, Timevarying etc
+* ParallelLinearFilterBank -> LinearFilterBank (default)
+* simplify
+* GPU -> split
+* compression etc -> apply user-defined function
