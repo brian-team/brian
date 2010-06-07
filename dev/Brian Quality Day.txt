@@ -8,6 +8,7 @@ Done:
 * Style fixes
 * Manual for utils.io
 
+TODO:
 Victor:
 * BEP on Simulation class
 * Connectivity analysis (new module)
@@ -18,14 +19,15 @@ Bertrand:
 * A few statistical functions
 
 Romain:
-* Tests for equations
+* Move utils.* to library when not automatically imported
 
 Cyrille:
 * LinearStateUpdater
 * Examples and manual for statistics
 
-Dan:
-* Style fixes
+Dan/Romain:
+* Remove unused comments
+* Brianhears clean-up + syntax
 
 -------------------------------------------------
 
