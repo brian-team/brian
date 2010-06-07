@@ -8,7 +8,7 @@ Major features:
   
 Minor features:
 
-* New module utils.io
+* New module tools.io
 * weight and sparseness can now both be functions in connect_random
 * New StateHistogramMonitor object
 
@@ -62,7 +62,7 @@ Major features:
 Minor features:
 
 * New real-time ``refresh=`` options added to plotting functions
-* Gamma factor in utils.statistics
+* Gamma factor in tools.statistics
 * New RegularClock object
 * Added brian_sample_run function to test installation in place of nose tests
 

@@ -1,4 +1,4 @@
-from brian.utils.statistics import *
+from brian.tools.statistics import *
 from brian.units import *
 from brian.stdunits import *
 from numpy import *

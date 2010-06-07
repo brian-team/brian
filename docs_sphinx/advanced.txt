@@ -6,7 +6,6 @@ Advanced concepts
 .. toctree::
    :maxdepth: 1
   
-   parallel
    efficient
    compiledcode
    tasks_multiplefiles

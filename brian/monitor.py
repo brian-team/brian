@@ -52,7 +52,7 @@ from stdunits import ms, Hz
 from collections import defaultdict
 import types
 from operator import isSequenceType
-from utils.statistics import firing_rate
+from tools.statistics import firing_rate
 import bisect
 try:
     import pylab, matplotlib

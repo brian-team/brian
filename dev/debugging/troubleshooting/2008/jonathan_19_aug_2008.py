@@ -1,7 +1,7 @@
 from brian import *
 from customrefractoriness import *
 from scipy.optimize import fmin
-from brian.utils.autodiff import *
+from brian.tools.autodiff import *
 
 #----Fixed parameters
 ENa=60*mV

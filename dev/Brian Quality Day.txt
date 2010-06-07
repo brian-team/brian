@@ -6,7 +6,9 @@ Done:
 * More tests for equations
 * LinearStateUpdater
 * Style fixes
-* Manual for utils.io
+* Manual for tools.io
+* Remove unused comments
+* New folder tools
 
 TODO:
 Victor:
@@ -18,15 +20,11 @@ Bertrand:
 * Brianhears: examples and style fixes
 * A few statistical functions
 
-Romain:
-* Move utils.* to library when not automatically imported
-
 Cyrille:
 * LinearStateUpdater
 * Examples and manual for statistics
 
 Dan/Romain:
-* Remove unused comments
 * Brianhears clean-up + syntax
 
 -------------------------------------------------
