@@ -4,11 +4,11 @@ Brian Quality Day
 -----------
 Done:
 * More tests for equations
-* LinearStateUpdater
 * Style fixes
 * Manual for tools.io
 * Remove unused comments
 * New folder tools
+* stdp cleanup
 
 TODO:
 Victor:

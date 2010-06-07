@@ -48,6 +48,7 @@ if __name__=="__main__":
                         'brian.tests.testinterface',
                         'brian.tests.testutils',
                         'brian.tests.testfeatures',
+                    'brian.tools',
                     'brian.utils',
                         'brian.utils.ccircular',
                         'brian.utils.fastexp',

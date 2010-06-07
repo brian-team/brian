@@ -245,7 +245,26 @@ class STDP(NetworkOperation):
         # Create namespaces for pre and post codes
         pre_namespace=namespace(pre, level=level+1)
         post_namespace=namespace(post, level=level+1)
+        pre_namespace['clip']=clip
+        post_namespace['clip']=clip
+        pre_namespace['enumerate']=enumerate
+        post_namespace['enumerate']=enumerate
 
+        # Neuron groups
+        G_pre=NeuronGroup(len(C.source), model=sep_pre, clock=self.clock)
+        G_post=NeuronGroup(len(C.target), model=sep_post, clock=self.clock)
+        G_pre._S[:]=0
+        G_post._S[:]=0
+        self.pre_group=G_pre
+        self.post_group=G_post
+        var_group={} # maps variable name to group
+        for v in vars_pre:
+            var_group[v]=G_pre
+        for v in vars_post:
+            var_group[v]=G_post
+        self.var_group=var_group
+
+        # Create updaters and monitors
         if isinstance(C, DelayConnection):
             G_pre_monitors={} # these get values put in them later
             G_post_monitors={}
@@ -276,42 +295,10 @@ class STDP(NetworkOperation):
             post_immediate, post_delayed=gencode(post, vars_post, vars_pre, 'w[:,_i]')
             pre_delay_expr='max_delay-d'
             post_delay_expr='d'
-            pre_namespace['enumerate']=enumerate
-            pre_namespace['clip']=clip
-            post_namespace['enumerate']=enumerate
-            post_namespace['clip']=clip
             pre_code_immediate=compile(pre_immediate, "Presynaptic code immediate", "exec")
             pre_code_delayed=compile(pre_delayed, "Presynaptic code delayed", "exec")
             post_code=compile(post_immediate+post_delayed, "Postsynaptic code", "exec")
-        else:
-            # Indent and loop
-            pre=re.compile('^', re.M).sub('    ', pre)
-            post=re.compile('^', re.M).sub('    ', post)
-            pre='for _i in spikes:\n'+pre
-            post='for _i in spikes:\n'+post
 
-            # Pre code
-            for var in vars_pre: # presynaptic variables (vectorisation)
-                pre=re.sub(r'\b'+var+r'\b', var+'[_i]', pre)
-            pre=re.sub(r'\bw\b', 'w[_i,:]', pre) # synaptic weight
-            # Post code
-            for var in vars_post: # postsynaptic variables (vectorisation)
-                post=re.sub(r'\b'+var+r'\b', var+'[_i]', post)
-            post=re.sub(r'\bw\b', 'w[:,_i]', post) # synaptic weight
-
-            # Bounds: add one line to pre/post code (clip(w,min,max,w))
-            # or actual code? (rather than compiled string)
-            pre+='\n    w[_i,:]=clip(w[_i,:],%(min)f,%(max)f)'%{'min':wmin, 'max':wmax}
-            post+='\n    w[:,_i]=clip(w[:,_i],%(min)f,%(max)f)'%{'min':wmin, 'max':wmax}
-            pre_namespace['clip']=clip
-            post_namespace['clip']=clip
-
-            # Compile code
-            pre_code=compile(pre, "Presynaptic code", "exec")
-            post_code=compile(post, "Postsynaptic code", "exec")
-
-        # Delays
-        if isinstance(C, DelayConnection):
             if delay_pre is not None or delay_post is not None:
                 raise ValueError("Must use delay_pre=delay_post=None for the moment.")
             max_delay=C._max_delay*C.target.clock.dt
@@ -332,7 +319,40 @@ class STDP(NetworkOperation):
                                             code=post_code, namespace=post_namespace, delay=0*ms)
             updaters=[pre_updater_immediate, pre_updater_delayed, post_updater]
             self.contained_objects+=updaters
+            vars_pre_ind=dict((var,i) for i,var in enumerate(vars_pre))
+            vars_post_ind=dict((var,i) for i,var in enumerate(vars_post))
+            self.G_pre_monitors=G_pre_monitors
+            self.G_post_monitors=G_post_monitors
+            self.G_pre_monitors.update(((var, RecentStateMonitor(G_pre, vars_pre_ind[var], duration=(C._max_delay+1)*C.target.clock.dt, clock=G_pre.clock)) for var in vars_pre))
+            self.G_post_monitors.update(((var, RecentStateMonitor(G_post, vars_post_ind[var], duration=(C._max_delay+1)*C.target.clock.dt, clock=G_post.clock)) for var in vars_post))
+            self.contained_objects+=self.G_pre_monitors.values()
+            self.contained_objects+=self.G_post_monitors.values()      
+              
         else:
+            # Indent and loop
+            pre=re.compile('^', re.M).sub('    ', pre)
+            post=re.compile('^', re.M).sub('    ', post)
+            pre='for _i in spikes:\n'+pre
+            post='for _i in spikes:\n'+post
+
+            # Pre code
+            for var in vars_pre: # presynaptic variables (vectorisation)
+                pre=re.sub(r'\b'+var+r'\b', var+'[_i]', pre)
+            pre=re.sub(r'\bw\b', 'w[_i,:]', pre) # synaptic weight
+            # Post code
+            for var in vars_post: # postsynaptic variables (vectorisation)
+                post=re.sub(r'\b'+var+r'\b', var+'[_i]', post)
+            post=re.sub(r'\bw\b', 'w[:,_i]', post) # synaptic weight
+
+            # Bounds: add one line to pre/post code (clip(w,min,max,w))
+            # or actual code? (rather than compiled string)
+            pre+='\n    w[_i,:]=clip(w[_i,:],%(min)f,%(max)f)'%{'min':wmin, 'max':wmax}
+            post+='\n    w[:,_i]=clip(w[:,_i],%(min)f,%(max)f)'%{'min':wmin, 'max':wmax}
+
+            # Compile code
+            pre_code=compile(pre, "Presynaptic code", "exec")
+            post_code=compile(post, "Postsynaptic code", "exec")
+
             connection_delay=C.delay*C.source.clock.dt
             if (delay_pre is None) and (delay_post is None): # same delays as the Connnection C
                 delay_pre=connection_delay
@@ -349,43 +369,16 @@ class STDP(NetworkOperation):
             updaters=[pre_updater, post_updater]
             self.contained_objects+=[pre_updater, post_updater]
 
-        # Neuron groups
-        G_pre=NeuronGroup(len(C.source), model=sep_pre, clock=self.clock)
-        G_post=NeuronGroup(len(C.target), model=sep_post, clock=self.clock)
-        G_pre._S[:]=0
-        G_post._S[:]=0
-        self.pre_group=G_pre
-        self.post_group=G_post
-        var_group={}
-        for i, v in enumerate(vars_pre):
-            var_group[v]=G_pre
-        for i, v in enumerate(vars_post):
-            var_group[v]=G_post
-        self.var_group=var_group
-
         # Put variables in namespaces
-        vars_pre_ind={}
         for i, var in enumerate(vars_pre):
-            vars_pre_ind[var]=i
             for updater in updaters:
                 updater._namespace[var]=G_pre._S[i]
-
-        vars_post_ind={}
         for i, var in enumerate(vars_post):
-            vars_post_ind[var]=i
             for updater in updaters:
                 updater._namespace[var]=G_post._S[i]
 
-        if isinstance(C, DelayConnection):
-            self.G_pre_monitors=G_pre_monitors
-            self.G_post_monitors=G_post_monitors
-            self.G_pre_monitors.update(((var, RecentStateMonitor(G_pre, vars_pre_ind[var], duration=(C._max_delay+1)*C.target.clock.dt, clock=G_pre.clock)) for var in vars_pre))
-            self.G_post_monitors.update(((var, RecentStateMonitor(G_post, vars_post_ind[var], duration=(C._max_delay+1)*C.target.clock.dt, clock=G_post.clock)) for var in vars_post))
-            self.contained_objects+=self.G_pre_monitors.values()
-            self.contained_objects+=self.G_post_monitors.values()
-
         self.contained_objects+=[G_pre, G_post]
-
+    
     def __call__(self):
         pass
 
