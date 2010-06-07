@@ -46,5 +46,40 @@ def test():
     eqs=Equations('dv/dt=-v : volt')
     assert_raises(DimensionMismatchError, eqs.prepare)
 
+    # Free variables
+    eqs=Equations('dv/dt=(freevar-v)/tau : volt')
+    assert eqs.free_variables()==['tau', 'freevar']
+
+    # Equation types: stochastic, time dependent, linear, conditionally linear
+    eqs=Equations('''
+    dv/dt=(f(t)-v)/tau : volt
+    dw/dt=-w/tau+3*tau**-.5*xi : 1''')
+    assert eqs.is_stochastic()
+    assert eqs.is_stochastic(var='v') is False
+    assert eqs.is_stochastic(var='w')
+    assert eqs.is_time_dependent()
+    assert eqs.is_time_dependent(var='v')
+    assert eqs.is_time_dependent(var='w') is False
+    assert eqs.is_linear() is False # not linear if time-dependent
+    
+    eqs=Equations('dv/dt=-v/tau : volt')
+    assert eqs.is_linear()
+    eqs.prepare()
+    assert eqs.is_conditionally_linear()
+
+    eqs=Equations('''
+    dv/dt=(w**3-v)/tau : 1
+    dw/dt=(v**2-w)/tau : 1
+    ''')
+    eqs.prepare()
+    assert eqs.is_conditionally_linear()
+
+    eqs=Equations('''
+    dv/dt=(w**3-v**2)/tau : 1
+    dw/dt=(v**2-w)/tau : 1
+    ''')
+    eqs.prepare()
+    assert eqs.is_conditionally_linear() is False
+
 if __name__=='__main__':
     test()

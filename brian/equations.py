@@ -554,7 +554,8 @@ class Equations(object):
 
     def free_variables(self):
         """
-        Returns the list of free variables.
+        Returns the list of free variables (i.e., which are not defined within the
+        equation string).
         """
         all_variables=self._eq_names+self._diffeq_names+self._alias.keys()+['t']
         free_vars=[]
@@ -625,6 +626,7 @@ class Equations(object):
         Returns True if the differential equations are linear with respect to the
         state variable.
         '''
+        # Equations have to be prepared for it to work.
         for var in self._diffeq_names:
             S=self._units.copy()
             S[var]=AffineFunction()
