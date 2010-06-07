@@ -4,12 +4,12 @@ Spike statistics
 In all functions below, spikes is a sorted list of spike times
 '''
 from numpy import *
-from brian.units import check_units,second
-from brian.stdunits import ms,Hz
+from brian.units import check_units, second
+from brian.stdunits import ms, Hz
 from operator import itemgetter
 
-__all__=['firing_rate','CV','correlogram','autocorrelogram','CCF','ACF','CCVF','ACVF', 'group_correlations', 'sort_spikes',
-         'total_correlation','vector_strength','gamma_factor','get_gamma_factor_matrix','get_gamma_factor']
+__all__=['firing_rate', 'CV', 'correlogram', 'autocorrelogram', 'CCF', 'ACF', 'CCVF', 'ACVF', 'group_correlations', 'sort_spikes',
+         'total_correlation', 'vector_strength', 'gamma_factor', 'get_gamma_factor_matrix', 'get_gamma_factor']
 
 # First-order statistics
 def firing_rate(spikes):
@@ -26,7 +26,7 @@ def CV(spikes):
     return std(ISI)/mean(ISI)
 
 # Second-order statistics
-def correlogram(T1,T2,width=20*ms,bin=1*ms,T=None):
+def correlogram(T1, T2, width=20*ms, bin=1*ms, T=None):
     '''
     Returns a cross-correlogram with lag in [-width,width] and given bin size.
     T is the total duration (optional) and should be greater than the duration of T1 and T2.
@@ -49,19 +49,19 @@ def correlogram(T1,T2,width=20*ms,bin=1*ms,T=None):
         while j<len(T2) and T2[j]<t+width:
             j+=1
         l.extend(T2[i:j]-t)
-    H,_=histogram(l,bins=arange(2*n+1)*bin-n*bin)
-    
+    H, _=histogram(l, bins=arange(2*n+1)*bin-n*bin)
+
     # Divide by time to get rate
     if T is None:
-        T=max(T1[-1],T2[-1])-min(T1[0],T2[0])
+        T=max(T1[-1], T2[-1])-min(T1[0], T2[0])
     # Windowing function (triangle)
     W=zeros(2*n)
     W[:n]=T-bin*arange(n-1,-1,-1)
     W[n:]=T-bin*arange(n)
-    
+
     return H/W
 
-def autocorrelogram(T0,width=20*ms,bin=1*ms,T=None):
+def autocorrelogram(T0, width=20*ms, bin=1*ms, T=None):
     '''
     Returns an autocorrelogram with lag in [-width,width] and given bin size.
     T is the total duration (optional) and should be greater than the duration of T1 and T2.
@@ -69,9 +69,9 @@ def autocorrelogram(T0,width=20*ms,bin=1*ms,T=None):
 
     N.B.: units are discarded.
     '''
-    return correlogram(T0,T0,width,bin,T)
+    return correlogram(T0, T0, width, bin, T)
 
-def CCF(T1,T2,width=20*ms,bin=1*ms,T=None):
+def CCF(T1, T2, width=20*ms, bin=1*ms, T=None):
     '''
     Returns the cross-correlation function with lag in [-width,width] and given bin size.
     T is the total duration (optional).
@@ -80,9 +80,9 @@ def CCF(T1,T2,width=20*ms,bin=1*ms,T=None):
 
     N.B.: units are discarded.
     '''
-    return correlogram(T1,T2,width,bin,T)/bin
+    return correlogram(T1, T2, width, bin, T)/bin
 
-def ACF(T0,width=20*ms,bin=1*ms,T=None):
+def ACF(T0, width=20*ms, bin=1*ms, T=None):
     '''
     Returns the autocorrelation function with lag in [-width,width] and given bin size.
     T is the total duration (optional).
@@ -91,9 +91,9 @@ def ACF(T0,width=20*ms,bin=1*ms,T=None):
 
     N.B.: units are discarded.
     '''
-    return CCF(T0,T0,width,bin,T)
+    return CCF(T0, T0, width, bin, T)
 
-def CCVF(T1,T2,width=20*ms,bin=1*ms,T=None):
+def CCVF(T1, T2, width=20*ms, bin=1*ms, T=None):
     '''
     Returns the cross-covariance function with lag in [-width,width] and given bin size.
     T is the total duration (optional).
@@ -102,9 +102,9 @@ def CCVF(T1,T2,width=20*ms,bin=1*ms,T=None):
 
     N.B.: units are discarded.
     '''
-    return CCF(T1,T2,width,bin,T)-firing_rate(T1)*firing_rate(T2)
+    return CCF(T1, T2, width, bin, T)-firing_rate(T1)*firing_rate(T2)
 
-def ACVF(T0,width=20*ms,bin=1*ms,T=None):
+def ACVF(T0, width=20*ms, bin=1*ms, T=None):
     '''
     Returns the autocovariance function with lag in [-width,width] and given bin size.
     T is the total duration (optional).
@@ -113,9 +113,9 @@ def ACVF(T0,width=20*ms,bin=1*ms,T=None):
 
     N.B.: units are discarded.
     '''
-    return CCVF(T0,T0,width,bin,T)
+    return CCVF(T0, T0, width, bin, T)
 
-def total_correlation(T1,T2,width=20*ms,T=None):
+def total_correlation(T1, T2, width=20*ms, T=None):
     '''
     Returns the total correlation coefficient with lag in [-width,width].
     T is the total duration (optional).
@@ -128,7 +128,7 @@ def total_correlation(T1,T2,width=20*ms,T=None):
     T2=array(T2)
     # Divide by time to get rate
     if T is None:
-        T=max(T1[-1],T2[-1])-min(T1[0],T2[0])
+        T=max(T1[-1], T2[-1])-min(T1[0], T2[0])
     i=0
     j=0
     x=0
@@ -144,48 +144,48 @@ def sort_spikes(spikes):
     """
     Sorts spikes stored in a (i,t) list by time.
     """
-    spikes = sorted(spikes,key=itemgetter(1))
+    spikes=sorted(spikes, key=itemgetter(1))
     return spikes
 
-def group_correlations(spikes, delta = None):
+def group_correlations(spikes, delta=None):
     """
     Computes the pairwise correlation strength and timescale of the given pool of spike trains.
     spikes is a (i,t) list and must be sorted.
     delta is the length of the time window, 10*ms by default.
     """
-    aspikes = array(spikes)
-    N = aspikes[:,0].max()+1 # neuron count
-    T = aspikes[:,1].max() # total duration
-    spikecount = zeros(N)
-    tauc = zeros((N,N))
-    S = zeros((N,N))
+    aspikes=array(spikes)
+    N=aspikes[:, 0].max()+1 # neuron count
+    T=aspikes[:, 1].max() # total duration
+    spikecount=zeros(N)
+    tauc=zeros((N, N))
+    S=zeros((N, N))
     if delta is None:
-        delta = 10*ms # size of the window
-    windows = -2*delta*ones(N) # windows[i] is the end of the window for neuron i = lastspike[i}+delta
-    for i,t in spikes:
-        sources = (t <= windows) # neurons such that (i,t) is a target spike for them
+        delta=10*ms # size of the window
+    windows=-2*delta*ones(N) # windows[i] is the end of the window for neuron i = lastspike[i}+delta
+    for i, t in spikes:
+        sources=(t<=windows) # neurons such that (i,t) is a target spike for them
         if sum(sources)>0:
-            indices = nonzero(sources)[0]
-            S[indices, i] += 1
-            delays = t - windows[indices] + delta
+            indices=nonzero(sources)[0]
+            S[indices, i]+=1
+            delays=t-windows[indices]+delta
 #            print i, t, indices, delays
-            tauc[indices, i] += delays
-        spikecount[i] += 1
-        windows[i] = t + delta # window update
-    
-    tauc /= S
-    
-    S = S/tile(spikecount.reshape((-1,1)),(1,N)) # normalize S
-    rates =  spikecount/T
-    S = S - tile(rates.reshape((1,-1)), (N,1)) * delta
-    
-    S[isnan(S)] = 0.0
-    tauc[isnan(tauc)] = 0.0
-    
+            tauc[indices, i]+=delays
+        spikecount[i]+=1
+        windows[i]=t+delta # window update
+
+    tauc/=S
+
+    S=S/tile(spikecount.reshape((-1, 1)), (1, N)) # normalize S
+    rates=spikecount/T
+    S=S-tile(rates.reshape((1,-1)), (N, 1))*delta
+
+    S[isnan(S)]=0.0
+    tauc[isnan(tauc)]=0.0
+
     return S, tauc
 
 # Phase-locking properties
-def vector_strength(spikes,period):
+def vector_strength(spikes, period):
     '''
     Returns the vector strength of the given train
     '''
@@ -193,26 +193,26 @@ def vector_strength(spikes,period):
 
 # Normalize the coincidence count of two spike trains (return the gamma factor)
 def get_gamma_factor(coincidence_count, model_length, target_length, target_rates, delta):
-    NCoincAvg = 2 * delta * target_length * target_rates
-    norm = .5*(1 - 2 * delta * target_rates)    
-    gamma = (coincidence_count - NCoincAvg)/(norm*(target_length + model_length))
+    NCoincAvg=2*delta*target_length*target_rates
+    norm=.5*(1-2*delta*target_rates)
+    gamma=(coincidence_count-NCoincAvg)/(norm*(target_length+model_length))
     return gamma
 
 # Normalize the coincidence matrix between a set of  trains (return the gamma factor matrix)
 def get_gamma_factor_matrix(coincidence_matrix, model_length, target_length, target_rates, delta):
-    
-    target_lengthMAT=kron(ones((len(model_length),1)),target_length) #repeat matrix for vectorisation
-    model_lengthMAT=kron(ones((len(target_length),1)),model_length).T #repeat matrix for vectorisation
-    NCoincAvg = 2 * delta * target_lengthMAT* kron(ones((len(model_length),1)),target_rates)
-    norm = .5*(1 - 2 * delta * kron(ones((len(model_length),1)),target_rates))
-    gamma = (coincidence_matrix- NCoincAvg)/(norm*(target_length+ model_length))
+
+    target_lengthMAT=kron(ones((len(model_length), 1)), target_length) #repeat matrix for vectorisation
+    model_lengthMAT=kron(ones((len(target_length), 1)), model_length).T #repeat matrix for vectorisation
+    NCoincAvg=2*delta*target_lengthMAT*kron(ones((len(model_length), 1)), target_rates)
+    norm=.5*(1-2*delta*kron(ones((len(model_length), 1)), target_rates))
+    gamma=(coincidence_matrix-NCoincAvg)/(norm*(target_length+model_length))
     #gamma=(gamma+gamma.T)/2
     return gamma
 
 
 # Gamma factor
 @check_units(delta=second)
-def gamma_factor(source, target, delta, normalize = True, dt = None):
+def gamma_factor(source, target, delta, normalize=True, dt=None):
     '''
     Returns the gamma precision factor between source and target trains,
     with precision delta.
@@ -225,53 +225,53 @@ def gamma_factor(source, target, delta, normalize = True, dt = None):
     R. Jolivet et al., 'A benchmark test for a quantitative assessment of simple neuron models',
         Journal of Neuroscience Methods 169, no. 2 (2008): 417-424.
     '''
-    
-    source = array(source)
-    target = array(target)
-    target_rate = firing_rate(target)*Hz
-    
+
+    source=array(source)
+    target=array(target)
+    target_rate=firing_rate(target)*Hz
+
     if dt is None:
-        delta_diff = delta
+        delta_diff=delta
     else:
-        source = array(rint(source/dt), dtype=int)
-        target = array(rint(target/dt), dtype=int)
-        delta_diff = int(rint(delta/dt))
-    
-    source_length = len(source)
-    target_length = len(target)
-    
-    if (target_length == 0 or source_length == 0):
+        source=array(rint(source/dt), dtype=int)
+        target=array(rint(target/dt), dtype=int)
+        delta_diff=int(rint(delta/dt))
+
+    source_length=len(source)
+    target_length=len(target)
+
+    if (target_length==0 or source_length==0):
         return 0
-    
+
     if (source_length>1):
-        bins = .5 * (source[1:] + source[:-1])
-        indices = digitize(target, bins)
-        diff = abs(target - source[indices])
-        matched_spikes = (diff <= delta_diff)
-        coincidences = sum(matched_spikes)
+        bins=.5*(source[1:]+source[:-1])
+        indices=digitize(target, bins)
+        diff=abs(target-source[indices])
+        matched_spikes=(diff<=delta_diff)
+        coincidences=sum(matched_spikes)
     else:
-        indices = [amin(abs(source - target[i])) <= delta_diff for i in xrange(target_length)]
-        coincidences = sum(indices)
-    
+        indices=[amin(abs(source-target[i]))<=delta_diff for i in xrange(target_length)]
+        coincidences=sum(indices)
+
     # Normalization of the coincidences count
 #    NCoincAvg = 2 * delta * target_length * target_rate
 #    norm = .5*(1 - 2 * target_rate * delta)
 #    gamma = (coincidences - NCoincAvg)/(norm*(source_length + target_length))
-    
+
     # TODO: test this
-    gamma = get_gamma_factor(coincidences, source_length, target_length, target_rate, delta)
-    
+    gamma=get_gamma_factor(coincidences, source_length, target_length, target_rate, delta)
+
     if normalize:
         return gamma
     else:
         return coincidences
 
 if __name__=='__main__':
-    
+
     from brian import *
-    
-    print vector_strength([1.1*ms,1*ms,.9*ms],2*ms)
-    
+
+    print vector_strength([1.1*ms, 1*ms, .9*ms], 2*ms)
+
     N=100000
     T1=cumsum(rand(N)*10*ms)
     T2=cumsum(rand(N)*10*ms)
@@ -279,7 +279,7 @@ if __name__=='__main__':
     T1=T1[T1<duration]
     T2=T2[T2<duration]
     print firing_rate(T1)
-    C=CCVF(T1,T2,bin=1*ms)
-    print total_correlation(T1,T2)
+    C=CCVF(T1, T2, bin=1*ms)
+    print total_correlation(T1, T2)
     plot(C)
     show()

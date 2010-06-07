@@ -9,17 +9,17 @@ during the simulation, and plot it. We continue as before:
 '''
 from brian import *
 
-tau = 20*msecond        # membrane time constant
-Vt  =-50*mvolt          # spike threshold
-Vr  =-60*mvolt          # reset value
-El  =-49*mvolt          # resting potential (same as the reset)
-psp = 0.5*mvolt         # postsynaptic potential size
+tau=20*msecond        # membrane time constant
+Vt=-50*mvolt          # spike threshold
+Vr=-60*mvolt          # reset value
+El=-49*mvolt          # resting potential (same as the reset)
+psp=0.5*mvolt         # postsynaptic potential size
 
-G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
+G=NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
               threshold=Vt, reset=Vr)
 
-C = Connection(G,G)
-C.connect_random(sparseness=0.1,weight=psp)
+C=Connection(G, G)
+C.connect_random(sparseness=0.1, weight=psp)
 '''
 This time we won't record the spikes.
 
@@ -35,7 +35,7 @@ If it's a list of integers, it will record the states for
 each neuron in the list. If it's set to ``True`` it will record
 for all the neurons in the group.
 '''
-M = StateMonitor(G,'V',record=0)
+M=StateMonitor(G, 'V', record=0)
 '''
 And then we continue as before:
 '''
@@ -59,7 +59,7 @@ measured in ms and the values so that they're measured in
 mV. We also label the plot using PyLab's ``xlabel``, ``ylabel`` and
 ``title`` functions, which again mimic the Matlab equivalents.
 '''
-plot(M.times/ms,M[0]/mV)
+plot(M.times/ms, M[0]/mV)
 xlabel('Time (in ms)')
 ylabel('Membrane potential (in mV)')
 title('Membrane potential for neuron 0')

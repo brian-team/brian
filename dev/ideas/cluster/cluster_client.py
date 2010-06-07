@@ -6,6 +6,7 @@ import pypar
 
 __all__=['run_client']
 
+
 class ClientNetwork(Network):
     '''
     Network class for running a simulation over a cluster, client side.
@@ -17,10 +18,10 @@ def run_client():
     Runs
     '''
     # Identification
-    myid =    pypar.rank() # id of this process
-    nproc = pypar.size() # number of processors
+    myid=pypar.rank() # id of this process
+    nproc=pypar.size() # number of processors
 
-    print "I am client",myid
+    print "I am client", myid
     pypar.finalize()
 
 if __name__=='__main__':

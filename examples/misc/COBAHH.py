@@ -61,21 +61,21 @@ alphan = 0.032*(mV**-1)*(15*mV-v+VT)/ \
 betan = .5*exp((10*mV-v+VT)/(40*mV))/ms : Hz
 ''')
 
-P=NeuronGroup(4000,model=eqs,
+P=NeuronGroup(4000, model=eqs,
     threshold=EmpiricalThreshold(threshold=-20*mV,
                                  refractory=3*ms),
-    implicit=True,freeze=True)
+    implicit=True, freeze=True)
 Pe=P.subgroup(3200)
 Pi=P.subgroup(800)
-Ce=Connection(Pe,P,'ge',weight=we,sparseness=0.02)
-Ci=Connection(Pi,P,'gi',weight=wi,sparseness=0.02)
+Ce=Connection(Pe, P, 'ge', weight=we, sparseness=0.02)
+Ci=Connection(Pi, P, 'gi', weight=wi, sparseness=0.02)
 # Initialization
 P.v=El+(randn(len(P))*5-5)*mV
 P.ge=(randn(len(P))*1.5+4)*10.*nS
 P.gi=(randn(len(P))*12+20)*10.*nS
 
 # Record the number of spikes and a few traces
-trace=StateMonitor(P,'v',record=[1,10,100])
+trace=StateMonitor(P, 'v', record=[1, 10, 100])
 
 run(1*second)
 

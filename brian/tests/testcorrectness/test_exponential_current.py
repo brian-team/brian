@@ -22,39 +22,39 @@ def testexponentialcurrent():
         | V = (exp(-t/taum) - exp(-t/taue)) taue g0 / (taum-taue)
     '''
     reinit_default_clock()
-    taum = 20*ms
-    taue =  1*ms
-    taui = 10*ms
-    Vt   = 10*mV
-    Vr   =  0*mV
-    
-    spiketimes = [(0,0*ms)]
-    
-    G1 = SpikeGeneratorGroup(2,spiketimes)
-    G2 = NeuronGroup(N=1,model='''
+    taum=20*ms
+    taue=1*ms
+    taui=10*ms
+    Vt=10*mV
+    Vr=0*mV
+
+    spiketimes=[(0, 0*ms)]
+
+    G1=SpikeGeneratorGroup(2, spiketimes)
+    G2=NeuronGroup(N=1, model='''
                    dV/dt = (-V+ge-gi)/taum : volt
                    dge/dt = -ge/taue : volt
                    dgi/dt = -gi/taui : volt
                    ''', threshold=Vt, reset=Vr)
-    G2.V = Vr
-    
-    C1 = Connection(G1,G2,'ge')
-    C2 = Connection(G1,G2,'gi')
-    
-    C1[0,0] = 3*mV
-    C2[1,0] = 3*mV
-    
-    Mv  = StateMonitor(G2,'V',record=True)
-    Mge = StateMonitor(G2,'ge',record=True)
-    Mgi = StateMonitor(G2,'gi',record=True)
-    
-    run(100*ms)
-    
-    t = Mv.times
-    Vpredicted = (exp(-t/taum) - exp(-t/taue))*taue*(3*mV) / (taum-taue)
+    G2.V=Vr
 
-    Vdiff = abs(Vpredicted - Mv[0])
-    
+    C1=Connection(G1, G2, 'ge')
+    C2=Connection(G1, G2, 'gi')
+
+    C1[0, 0]=3*mV
+    C2[1, 0]=3*mV
+
+    Mv=StateMonitor(G2, 'V', record=True)
+    Mge=StateMonitor(G2, 'ge', record=True)
+    Mgi=StateMonitor(G2, 'gi', record=True)
+
+    run(100*ms)
+
+    t=Mv.times
+    Vpredicted=(exp(-t/taum)-exp(-t/taue))*taue*(3*mV)/(taum-taue)
+
+    Vdiff=abs(Vpredicted-Mv[0])
+
     assert max(Vdiff)<0.00001
 
 if __name__=='__main__':

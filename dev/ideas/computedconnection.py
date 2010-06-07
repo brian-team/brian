@@ -6,7 +6,7 @@ import random as pyrandom
 from scipy import random as scirandom
 import numpy
 
-__all__ = ['UserComputedConnectionMatrix', 'UserComputedSparseConnectionMatrix', 'random_row_func', 'random_sparse_row_func']
+__all__=['UserComputedConnectionMatrix', 'UserComputedSparseConnectionMatrix', 'random_row_func', 'random_sparse_row_func']
 
 def random_row_func(N, p, weight=1., initseed=None):
     '''
@@ -26,17 +26,19 @@ def random_row_func(N, p, weight=1., initseed=None):
         The initial seed value (for reproducible results).
     '''
     if initseed is None:
-        initseed = pyrandom.randint(100000,1000000) # replace this
-    cur_row = numpy.zeros(N)
-    myrange = numpy.arange(N, dtype=int)
+        initseed=pyrandom.randint(100000, 1000000) # replace this
+    cur_row=numpy.zeros(N)
+    myrange=numpy.arange(N, dtype=int)
+
     def row_func(i):
         pyrandom.seed(initseed+int(i))
         scirandom.seed(initseed+int(i))
-        k = scirandom.binomial(N, p, 1)[0]
-        cur_row[:] = 0.0
-        cur_row[pyrandom.sample(myrange,k)] = weight
+        k=scirandom.binomial(N, p, 1)[0]
+        cur_row[:]=0.0
+        cur_row[pyrandom.sample(myrange, k)]=weight
         return cur_row
     return row_func
+
 
 class UserComputedConnectionMatrix(ConnectionMatrix):
     '''
@@ -73,16 +75,18 @@ class UserComputedConnectionMatrix(ConnectionMatrix):
     is sparse you might get better performance with :class:`UserComputedSparseConnectionMatrix`.
     '''
     def __init__(self, dims, row_func):
-        self.sourcelen, self.targetlen = dims
-        self.row_func = row_func
+        self.sourcelen, self.targetlen=dims
+        self.row_func=row_func
+
     def get_row(self, i):
         return self.row_func(i)
+
     def __getitem__(self, item):
-        if isinstance(item,int):
+        if isinstance(item, int):
             return self.get_row(item)
-        if isinstance(item,tuple):
+        if isinstance(item, tuple):
             if len(item)==2:
-                item_i, item_j = item
+                item_i, item_j=item
                 if isinstance(item_i, int) and isinstance(item_j, slice):
                     if is_colon_slice(item_j):
                         return self.get_row(item_i)
@@ -106,14 +110,15 @@ def random_sparse_row_func(N, p, weight=1., initseed=None):
         The initial seed value (for reproducible results).
     '''
     if initseed is None:
-        initseed = pyrandom.randint(100000,1000000) # replace this
-    myrange = numpy.arange(N, dtype=int)
+        initseed=pyrandom.randint(100000, 1000000) # replace this
+    myrange=numpy.arange(N, dtype=int)
     def row_func(i):
         pyrandom.seed(initseed+int(i))
         scirandom.seed(initseed+int(i))
-        k = scirandom.binomial(N, p, 1)[0]
-        return (pyrandom.sample(myrange,k), weight)
+        k=scirandom.binomial(N, p, 1)[0]
+        return (pyrandom.sample(myrange, k), weight)
     return row_func
+
 
 class UserComputedSparseConnectionMatrix(ConnectionMatrix):
     '''
@@ -157,83 +162,87 @@ class UserComputedSparseConnectionMatrix(ConnectionMatrix):
     is dense you might get better performance with :class:`UserComputedConnectionMatrix`.
     '''
     def __init__(self, dims, row_func):
-        self.sourcelen, self.targetlen = dims
-        self.row_func = row_func
-        self.cur_row = numpy.zeros(dims[1])
-    def add_row(self,i,X):
-        indices, values = self.row_func(i)
+        self.sourcelen, self.targetlen=dims
+        self.row_func=row_func
+        self.cur_row=numpy.zeros(dims[1])
+
+    def add_row(self, i, X):
+        indices, values=self.row_func(i)
         X[indices]+=values
-    def add_scaled_row(self,i,X,factor):
+
+    def add_scaled_row(self, i, X, factor):
         # modulation may not work? need factor[self.rows[i]] here? is factor a number or an array?
         X[indices]+=factor*values
+
     def get_row(self, i):
-        indices, values = self.row_func(i)
-        self.cur_row[:] = 0.0
-        self.cur_row[indices] = values
+        indices, values=self.row_func(i)
+        self.cur_row[:]=0.0
+        self.cur_row[indices]=values
         return self.cur_row
+
     def __getitem__(self, item):
-        if isinstance(item,int):
+        if isinstance(item, int):
             return self.get_row(item)
-        if isinstance(item,tuple):
+        if isinstance(item, tuple):
             if len(item)==2:
-                item_i, item_j = item
+                item_i, item_j=item
                 if isinstance(item_i, int) and isinstance(item_j, slice):
                     if is_colon_slice(item_j):
                         return self.get_row(item_i)
         raise ValueError('Only "i,:" indexing supported.')
 
 if __name__=='__main__':
-    
+
     eqs='''
     dv/dt = (ge+gi-(v+49*mV))/(20*ms) : volt
     dge/dt = -ge/(5*ms) : volt
     dgi/dt = -gi/(10*ms) : volt
     '''
-    
-    N = 4000
+
+    N=4000
     #N = 20000
     #N = 100000
     #N = 1000000
-    duration = 1000*ms
-    usecc = True
-    usesparsecc = True
-    
-    Ne = int(0.8*N)
-    Ni = N-Ne
-    prob = 80./N
-    
-    P=NeuronGroup(N,model=eqs,threshold=-50*mV,reset=-60*mV)
+    duration=1000*ms
+    usecc=True
+    usesparsecc=True
+
+    Ne=int(0.8*N)
+    Ni=N-Ne
+    prob=80./N
+
+    P=NeuronGroup(N, model=eqs, threshold=-50*mV, reset=-60*mV)
     P.v=-60*mV+10*mV*rand(len(P))
     Pe=P.subgroup(Ne)
     Pi=P.subgroup(Ni)
-    
+
     if usecc:
         if usesparsecc:
-            connmat = UserComputedSparseConnectionMatrix
-            rfunc = random_sparse_row_func
+            connmat=UserComputedSparseConnectionMatrix
+            rfunc=random_sparse_row_func
         else:
-            connmat = UserComputedConnectionMatrix
-            rfunc = random_row_func
-        Ce=Connection(Pe,P,'ge',structure=connmat,
+            connmat=UserComputedConnectionMatrix
+            rfunc=random_row_func
+        Ce=Connection(Pe, P, 'ge', structure=connmat,
                       row_func=rfunc(N, p=prob, weight=1.62*mV))
-        Ci=Connection(Pi,P,'gi',structure=connmat,
+        Ci=Connection(Pi, P, 'gi', structure=connmat,
                       row_func=rfunc(N, p=prob, weight=-9*mV))
     else:
-        Ce=Connection(Pe,P,'ge')
-        Ci=Connection(Pi,P,'gi')
+        Ce=Connection(Pe, P, 'ge')
+        Ci=Connection(Pi, P, 'gi')
         Ce.connect_random(Pe, P, prob, weight=1.62*mV)
         Ci.connect_random(Pi, P, prob, weight=-9*mV)
-    
+
     if N>5000:
         M=PopulationSpikeCounter(P)
     else:
         M=SpikeMonitor(P)
-        
+
     if N>100000:
         @network_operation()
         def f(t):
             print 'Current time', t
-    
+
     import time
     t=time.time()
     run(duration)

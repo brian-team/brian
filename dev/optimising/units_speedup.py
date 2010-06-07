@@ -4,6 +4,7 @@ from time import time
 m=3
 k=1 # number of time steps
 
+
 class Fake(float):
     pass
     #def __init__(self,value):
@@ -27,7 +28,7 @@ elif m==2:
         #x=Quantity(2.)
         #x=Fake()
         #x.dim=D
-        x=Quantity.with_dimensions(2.,second.dim)
+        x=Quantity.with_dimensions(2., second.dim)
     t2=time()
     print k*(t2-t1)*second/N
 elif m==3:

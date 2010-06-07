@@ -130,12 +130,13 @@ from brian.network import *
 from brian.globalprefs import set_global_preferences
 from cluster_client import run_client
 
+
 class VirtualGroup(NeuronGroup):
     '''
     A group that is hosted on another machine.
     A number of methods will raise an exception (e.g. accessing the state variables).
     '''
-    def __init__(self,group,machine):
+    def __init__(self, group, machine):
         '''
         Initializes the virtual group:
             group: real group
@@ -149,20 +150,21 @@ class VirtualGroup(NeuronGroup):
         self.LS=group.LS
         self._owner=machine
         self._length=len(group)
-        self._numstates=group.num_states()        
- 
+        self._numstates=group.num_states()
+
     # Update and reset are disabled
     def update(self):
-        pass    
+        pass
     def reset(self):
         pass
     def __len__(self):
         return self._length
     def num_states(self):
-        return self._numstates    
+        return self._numstates
     def __repr__(self):
         return 'Virtual group of '+str(len(self))+' neurons'
-    
+
+
 class ServerNetwork(Network):
     '''
     Network class for running a simulation over a cluster.
@@ -171,8 +173,8 @@ class ServerNetwork(Network):
     pass
 
 # Identification
-myid =    pypar.rank() # id of this process
-nproc = pypar.size() # number of processors
+myid=pypar.rank() # id of this process
+nproc=pypar.size() # number of processors
 
 if myid>0: # client
     import sys

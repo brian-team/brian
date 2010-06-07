@@ -18,7 +18,7 @@ k=1/3*sigma/ms                                                      #empirical t
 #----Na channels parameters
 #--load the data
 #Va,Ka,Vi,Ki,R=load('Nav1_6.txt').T#I don't have this file
-Va,Ka,Vi,Ki,R=(zeros(10), zeros(10), zeros(10),zeros(10),zeros(10))
+Va, Ka, Vi, Ki, R=(zeros(10), zeros(10), zeros(10), zeros(10), zeros(10))
 N=len(Va)
 
 eqs=Equations("""
@@ -43,17 +43,17 @@ r : 1
 eqs.prepare()
 
 #--Function for computing the EIF and threshold dynamics parameters
-def threshold_parameters(f,h_inf,rest=El):
+def threshold_parameters(f, h_inf, rest=El):
    '''
    Calculates the threshold and the slope factor from the
    equation tau*dv/dt=f(v)
    '''
-   vt=fmin(f,rest,disp=False)[0] # Threshold (simplex algorithm)
+   vt=fmin(f, rest, disp=False)[0] # Threshold (simplex algorithm)
    vt=vt*volt
-   deltat=1/(tau*differentiate(f,vt,order=2)) # Slope factor
-   a=-differentiate(h_inf,vt,order=1)*deltat/h_inf(vt)
+   deltat=1/(tau*differentiate(f, vt, order=2)) # Slope factor
+   a=-differentiate(h_inf, vt, order=1)*deltat/h_inf(vt)
    b=-deltat*math.log(h_inf(vt))+(1-a)*vt
-   return (vt,deltat,a,b)
+   return (vt, deltat, a, b)
 
 #--Predictions for each Na channel model
 vt=[[] for i in range(len(Va))]
@@ -61,7 +61,7 @@ deltat=[[] for i in range(len(Va))]
 a=[[] for i in range(len(Va))]
 b=[[] for i in range(len(Va))]
 pente=[[] for i in range(len(Va))]
-ordonnee=[[] for i in range(len(Va))]   
+ordonnee=[[] for i in range(len(Va))]
 figure()
 for j in range(len(Va)):
     print "Sodium channel model", j+1
@@ -71,14 +71,14 @@ for j in range(len(Va)):
     vi=Vi[j]*mV
     ki=Ki[j]*mV
     r=R[j]
-    print "Va =",va,"mV ; ka =",ka,"mV ;","Vi =",vi,"mV ; ki =",ki,"mV"
+    print "Va =", va, "mV ; ka =", ka, "mV ;", "Vi =", vi, "mV ; ki =", ki, "mV"
 #--Boltzmann functions
-    Pa=lambda v: eqs.apply('Pa',{'v':v,'va':va,'ka':ka})                            # activation
-    h_inf=lambda v: 1-eqs.apply('Pi',{'v':v,'vi':vi,'ki':ki})                           # inactivation
+    Pa=lambda v: eqs.apply('Pa', {'v':v, 'va':va, 'ka':ka})                            # activation
+    h_inf=lambda v: 1-eqs.apply('Pi', {'v':v, 'vi':vi, 'ki':ki})                           # inactivation
 #--The EIF model   
     # F=lambda v: eqs.apply('v',{'Pa':Pa(v),'r':r,'h':1,'I':mu,'v':v})  # TODO: Romain, this doesn't work and probably should, see note in Equations.apply()
-    F=lambda v: eqs.apply('v',{'r':r,'h':1,'I':mu,'v':v, 'va':va, 'ka':ka})
-    v=linspace(-100*mV,0*mV,200) 
-    plot(v/mV,Pa(v))                       
-    plot(v/mV,F(v)*ms/mV) 
+    F=lambda v: eqs.apply('v', {'r':r, 'h':1, 'I':mu, 'v':v, 'va':va, 'ka':ka})
+    v=linspace(-100*mV, 0*mV, 200)
+    plot(v/mV, Pa(v))
+    plot(v/mV, F(v)*ms/mV)
 show()

@@ -1,6 +1,6 @@
 from brian import *
 if False:
-    tau = 1*second
+    tau=1*second
     eqs='''
     dy/dt = v/tau : 1
     dv/dt = -y/tau : 1
@@ -8,31 +8,31 @@ if False:
     dw/dt = z/tau : 1 # w should be the same as x
     dz/dt = v*z/tau : 1
     '''
-    G = NeuronGroup(1, eqs)
-    M = MultiStateMonitor(G, record=True, when='start')
-    G.y = 0
-    G.v = 1
-    G.x = 0
-    G.w = G.x
-    G.z = exp(G.y)
+    G=NeuronGroup(1, eqs)
+    M=MultiStateMonitor(G, record=True, when='start')
+    G.y=0
+    G.v=1
+    G.x=0
+    G.w=G.x
+    G.z=exp(G.y)
     run(1*second)
     M.plot()
     legend()
     show()
 if True:
-    tau = 1*second
+    tau=1*second
     eqs='''
     dy/dt=exp(y)/tau:1
     dx/dt=u/tau:1
     du/dt=u*u/tau:1
     '''
-    G = NeuronGroup(1, eqs)
-    M = MultiStateMonitor(G, record=True, when='start')
-    G.y = 1
-    G.x = G.y
-    G.u = exp(G.y)
+    G=NeuronGroup(1, eqs)
+    M=MultiStateMonitor(G, record=True, when='start')
+    G.y=1
+    G.x=G.y
+    G.u=exp(G.y)
     run(exp(-1)*0.99*second)
-    z = -log(-M.times+exp(-1))
+    z=-log(-M.times+exp(-1))
     subplot(211)
     plot(M.times, M['x', 0], label='dx/dt=u, du/dt=u*u')
     plot(M.times, M['y', 0], label='dy/dt=exp(y)')

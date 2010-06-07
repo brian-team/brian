@@ -87,47 +87,55 @@ InstanceTracker
       
 """
 
-__docformat__ = "restructuredtext en"
+__docformat__="restructuredtext en"
 
 from weakref import *
 from inspect import *
 from globalprefs import *
 
-__all__ = [ 'get_instances', 'find_instances', 'find_all_instances', 'magic_register', 'magic_return', 'InstanceTracker' ]
+__all__=[ 'get_instances', 'find_instances', 'find_all_instances', 'magic_register', 'magic_return', 'InstanceTracker' ]
+
 
 class ExtendedRef(ref):
     """A weak reference which also defines an optional id
     """
     def __init__(self, ob, callback=None, **annotations):
         super(ExtendedRef, self).__init__(ob, callback)
-        self.__id = 0 
-    def set_i_d(self,id):
-        self.__id = id
+        self.__id=0
+
+    def set_i_d(self, id):
+        self.__id=id
+
     def get_i_d(self):
         return self.__id
+
 
 class WeakSet(set):
     """A set of extended references
     
     Removes references from the set when they are destroyed."""
     def add(self, value, id=0):
-        wr = ExtendedRef(value, self.remove)
+        wr=ExtendedRef(value, self.remove)
         wr.set_i_d(id)
         set.add(self, wr)
-    def set_i_d(self,value,id):
+
+    def set_i_d(self, value, id):
         for _ in self:
             if _() is value:
                 _.set_i_d(id)
                 return
+
     def get_i_d(self, value):
         for _ in self:
             if _() is value:
                 return _.get_i_d()
+
     def get(self, id=None):
         if id is None:
-            return [ _() for _ in self if _.get_i_d() != -1 ]
+            return [ _() for _ in self if _.get_i_d()!=-1 ]
         else:
-            return [ _() for _ in self if _.get_i_d() == id]
+            return [ _() for _ in self if _.get_i_d()==id]
+
 
 class InstanceFollower(object):
     """Keep track of all instances of classes derived from InstanceTracker
@@ -136,23 +144,27 @@ class InstanceFollower(object):
     objects, and values which are WeakSets, so __instanceset__[cls] is a
     weak set tracking all of the instances of class cls (or a subclass).
     """
-    __instancesets__ = {}
-    def add(self,value,id=0):
+    __instancesets__={}
+    def add(self, value, id=0):
         for cls in value.__class__.__mro__: # MRO is the Method Resolution Order which contains all the superclasses of a class
             if cls not in self.__instancesets__:
-                self.__instancesets__[cls] = WeakSet()
-            self.__instancesets__[cls].add(value,id)
-    def set_i_d(self,value,id):
+                self.__instancesets__[cls]=WeakSet()
+            self.__instancesets__[cls].add(value, id)
+
+    def set_i_d(self, value, id):
         for cls in value.__class__.__mro__: # MRO is the Method Resolution Order which contains all the superclasses of a class
             if cls in self.__instancesets__:
-                self.__instancesets__[cls].set_i_d(value,id)
+                self.__instancesets__[cls].set_i_d(value, id)
+
     def get_i_d(self, value):
         for cls in value.__class__.__mro__:
             if cls in self.__instancesets__:
                 return self.__instancesets__[cls].get_i_d(value)
-    def get(self,cls,id=None):
+
+    def get(self, cls, id=None):
         if not cls in self.__instancesets__: return []
         return self.__instancesets__[cls].get(id)
+
 
 class InstanceTracker(object):
     """Base class for all classes whose instances are to be tracked
@@ -161,24 +173,27 @@ class InstanceTracker(object):
     want a subclass of a tracked class not to be tracked, define the method _track_instances
     to return False.
     """
-    __instancefollower__ = InstanceFollower() # static property of all objects of class derived from InstanceTracker
+    __instancefollower__=InstanceFollower() # static property of all objects of class derived from InstanceTracker
     @staticmethod
     def _track_instances():
         return True
-    def set_instance_id(self,idvalue=None,level=1):
+
+    def set_instance_id(self, idvalue=None, level=1):
         if idvalue is None:
-            idvalue = id(getouterframes( currentframe())[level+1][0])
-        self.__instancefollower__.set_i_d(self,idvalue)
+            idvalue=id(getouterframes(currentframe())[level+1][0])
+        self.__instancefollower__.set_i_d(self, idvalue)
+
     def get_instance_id(self):
         return self.__instancefollower__.get_i_d(self)
+
     def __new__(typ, *args, **kw):
-        obj = object.__new__(typ)#, *args, **kw)
-        outer_frame = id(getouterframes( currentframe())[1][0]) # the id is the id of the calling frame
+        obj=object.__new__(typ)#, *args, **kw)
+        outer_frame=id(getouterframes(currentframe())[1][0]) # the id is the id of the calling frame
         if obj._track_instances():
-            obj.__instancefollower__.add(obj,outer_frame)
+            obj.__instancefollower__.add(obj, outer_frame)
         return obj
 
-def magic_register(*args,**kwds):
+def magic_register(*args, **kwds):
     '''Declare that a magically tracked object should be put in a particular frame
     
     **Standard usage**
@@ -216,12 +231,12 @@ def magic_register(*args,**kwds):
     
     For each object ``x`` passed to :func:`magic_register`.
     '''
-    level = kwds.get('level',1)
+    level=kwds.get('level', 1)
     for x in args:
-        if isinstance(x,InstanceTracker):
+        if isinstance(x, InstanceTracker):
             x.set_instance_id(level=level+1)
         else:
-            magic_register(*x,**{'level':level+1})
+            magic_register(*x, **{'level':level+1})
 
 
 def magic_return(f):
@@ -266,14 +281,14 @@ def magic_return(f):
     on just the object returned by a function. See details for :func:`magic_register`.
     '''
     def new_f(*args, **kwds):
-        obj = f(*args,**kwds)
+        obj=f(*args, **kwds)
         magic_register(obj)
         return obj
-    new_f.__name__ = f.__name__
-    new_f.__doc__ = f.__doc__
-    return new_f 
+    new_f.__name__=f.__name__
+    new_f.__doc__=f.__doc__
+    return new_f
 
-def get_instances(instancetype,level=1):
+def get_instances(instancetype, level=1):
     """Find all instances of a given class at a given level in the stack
     
     See documentation for module Brian.magic
@@ -281,38 +296,38 @@ def get_instances(instancetype,level=1):
     try:
         instancetype.__instancefollower__
     except AttributeError:
-        raise InstanceTrackerError('Cannot track instances of type ',instancetype)
-    target_frame = id(getouterframes( currentframe())[level+1][0])
+        raise InstanceTrackerError('Cannot track instances of type ', instancetype)
+    target_frame=id(getouterframes(currentframe())[level+1][0])
     if not get_global_preference('magic_useframes'):
-        target_frame = None
-    objs = instancetype.__instancefollower__.get(instancetype,target_frame)
-    return (objs, map(str,map(id,objs)))
+        target_frame=None
+    objs=instancetype.__instancefollower__.get(instancetype, target_frame)
+    return (objs, map(str, map(id, objs)))
 
-def find_instances(instancetype,startlevel=1):
+def find_instances(instancetype, startlevel=1):
     """Find first instances of a given class in the stack
     
     See documentation for module Brian.magic
     """
     # Note that we start from startlevel+1 because startlevel means from the calling function's point of view 
-    for level in range(startlevel+1,len(getouterframes(currentframe()))):
-        objs,names = get_instances(instancetype,level)
+    for level in range(startlevel+1, len(getouterframes(currentframe()))):
+        objs, names=get_instances(instancetype, level)
         if len(objs):
-            return (objs,names)
-    return ([],[])
+            return (objs, names)
+    return ([], [])
 
-def find_all_instances(instancetype,startlevel=1):
+def find_all_instances(instancetype, startlevel=1):
     """Find all instances of a given class in the stack
     
     See documentation for module Brian.magic
     """
-    objs = []
-    names = []
+    objs=[]
+    names=[]
     # Note that we start from startlevel+1 because startlevel means from the calling function's point of view 
-    for level in range(startlevel+1,len(getouterframes(currentframe()))):
-        newobjs, newnames = get_instances(instancetype,level)
-        objs += newobjs
-        names += newnames
-    return (objs,names)
+    for level in range(startlevel+1, len(getouterframes(currentframe()))):
+        newobjs, newnames=get_instances(instancetype, level)
+        objs+=newobjs
+        names+=newnames
+    return (objs, names)
 
 if __name__=='__main__':
     print __doc__

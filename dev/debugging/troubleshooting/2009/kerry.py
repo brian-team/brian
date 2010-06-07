@@ -25,4 +25,4 @@ winf=0.5*(1+tanh((vm-v3)/v4)):1
 TauW=TauCofactor/cosh((vm-v3)/(2*v4)):ms
 dw/dt=phiScalingFactor*(winf-w)/TauW:kHz''')
 #eqs.compile_functions(True)
-neuron=NeuronGroup(1,eqs,freeze=True, method='Euler')
+neuron=NeuronGroup(1, eqs, freeze=True, method='Euler')

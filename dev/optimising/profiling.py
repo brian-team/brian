@@ -24,7 +24,7 @@ dge/dt = -ge/(5*ms) : volt
 dgi/dt = -gi/(10*ms) : volt
 '''
 
-P=NeuronGroup(N,model=eqs)#,threshold=-50*mV,reset=-60*mV)
+P=NeuronGroup(N, model=eqs)#,threshold=-50*mV,reset=-60*mV)
 P.v=-60*mV+10*mV*rand(len(P))
 #P._state_updater=lambda _:0
 #Pe=P.subgroup(Ne)
@@ -37,4 +37,4 @@ run(1*ms)
 t1=time()
 run(duration)
 t2=time()
-print "Simulated in",t2-t1,"s"
+print "Simulated in", t2-t1, "s"

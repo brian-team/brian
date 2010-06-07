@@ -10,11 +10,11 @@ def go():
     print 'Brian running from file:', brian.__file__
     # For running tests from an IPython shell, use magic_useframes=True, but we
     # restore the state after running 
-    magic_useframes = get_global_preference('magic_useframes')
+    magic_useframes=get_global_preference('magic_useframes')
     set_global_preferences(magic_useframes=True)
     nose.config.logging.disable(nose.config.logging.ERROR)
-    basedir, _ = os.path.split(__file__)
-    cwd = os.getcwd()
+    basedir, _=os.path.split(__file__)
+    cwd=os.getcwd()
     os.chdir(basedir)
     nose.run()
     os.chdir(cwd)

@@ -35,11 +35,12 @@
 '''
 Membrane equations for Brian models.
 '''
-__all__=['Current','IonicCurrent','InjectedCurrent','MembraneEquation']
+__all__=['Current', 'IonicCurrent', 'InjectedCurrent', 'MembraneEquation']
 
 from equations import *
-from units import have_same_dimensions,get_unit,second,volt,amp
+from units import have_same_dimensions, get_unit, second, volt, amp
 from warnings import warn
+
 
 class Current(Equations):
     '''
@@ -48,8 +49,8 @@ class Current(Equations):
     current_name is the name of the variable that must be added as a membrane current
     to the membrane equation.
     '''
-    def __init__(self,expr='',current_name=None,level=0,surfacic=False,**kwd):
-        Equations.__init__(self,expr,level=level+1,**kwd)
+    def __init__(self, expr='', current_name=None, level=0, surfacic=False, **kwd):
+        Equations.__init__(self, expr, level=level+1, **kwd)
         if surfacic: # A surfacic current is multiplied by membrane area in a MembraneEquation
             self._prefix='__scurrent_'
         else:
@@ -62,45 +63,47 @@ class Current(Equations):
                 # Only 1 variable: it's the current
                 correct_names=[name for name in self._units.keys() if name!='t']
                 if len(correct_names)!=1:
-                    raise NameError,"The equations do not include time (variable t)"
+                    raise NameError, "The equations do not include time (variable t)"
                 name,=correct_names
                 self.set_current_name(name)
             else:
                 # Look for variables with dimensions of current: won't work with units off!
-                current_names=[name for name,unit in self._units.iteritems()\
-                               if have_same_dimensions(unit,amp)]
+                current_names=[name for name, unit in self._units.iteritems()\
+                               if have_same_dimensions(unit, amp)]
                 if len(current_names)==1: # only one current
                     self.set_current_name(current_names[0])
                 else:
                     warn("The current variable could not be found!")
 
-    def set_current_name(self,name):
+    def set_current_name(self, name):
         if name!='t':
             if name is None:
                 name=unique_id()
             current_name=self._prefix+name
-            self.add_eq(current_name,name,self._units[name]) # not an alias because read-only
+            self.add_eq(current_name, name, self._units[name]) # not an alias because read-only
 
-    def __iadd__(self,other):
+    def __iadd__(self, other):
         # Adding a MembraneEquation
-        if isinstance(other,MembraneEquation):
+        if isinstance(other, MembraneEquation):
             return other.__iadd__(self)
         else:
-            return Equations.__iadd__(self,other)
+            return Equations.__iadd__(self, other)
+
 
 class IonicCurrent(Current):
     '''
     A ionic current; current direction is defined from intracellular
     to extracellular.
     '''
-    def set_current_name(self,name):
+    def set_current_name(self, name):
         if name!='t':
             if name is None:
                 name=unique_id()
             current_name=self._prefix+name
-            self.add_eq(current_name,'-'+name,self._units[name])
+            self.add_eq(current_name, '-'+name, self._units[name])
 
 InjectedCurrent=Current
+
 
 class MembraneEquation(Equations):
     '''
@@ -110,21 +113,21 @@ class MembraneEquation(Equations):
       eq=MembraneEquation(200*pF,vm='V')
     No more than one membrane equation allowed per system of equations.
     '''
-    def __init__(self,C=None,**kwd):
+    def __init__(self, C=None, **kwd):
         if C is not None:
             expr='''
             dvm/dt=__membrane_Im/C : volt
             __membrane_Im=0*unit : unit
             '''
-            Equations.__init__(self,expr,C=C,unit=get_unit(C*volt/second),**kwd)
+            Equations.__init__(self, expr, C=C, unit=get_unit(C*volt/second), **kwd)
         else:
             Equations.__init__(self)
-        
-    def __iadd__(self,other):
-        Equations.__iadd__(self,other)
+
+    def __iadd__(self, other):
+        Equations.__iadd__(self, other)
         self.set_membrane_current()
         return self
-        
+
     def set_membrane_current(self):
         current_vars=[name for name in self._eq_names if name.startswith('__current_')] # point current
         scurrent_vars=[name for name in self._eq_names if name.startswith('__scurrent_')] # surfacic current

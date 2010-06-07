@@ -31,10 +31,10 @@ try:
                             # reference is kept to it and the context is not
                             # deallocated
         autoinit.context.pop() # delete the old context before making a new one
-        _gpu_context = drv.Device(n).make_context()
-    use_gpu = True
+        _gpu_context=drv.Device(n).make_context()
+    use_gpu=True
 except ImportError:
-    use_gpu = False
+    use_gpu=False
 
 # Note that func actually takes only one argument, that argument is a tuple
 # of arguments (which is why there are double parentheses). The reason is that
@@ -52,18 +52,17 @@ def func((process_n, x)):
 if __name__=='__main__':
     # If we have GPUs we use them, otherwise we use CPUs
     if use_gpu:
-        numprocesses = drv.Device.count() # number of GPUs present in the system
-        print 'Using %d GPUs' % numprocesses
+        numprocesses=drv.Device.count() # number of GPUs present in the system
+        print 'Using %d GPUs'%numprocesses
     else:
-        numprocesses = multiprocessing.cpu_count() # number of CPUs in the system
-        print 'Using %d CPUs' % numprocesses
-    pool = multiprocessing.Pool(processes=numprocesses)
+        numprocesses=multiprocessing.cpu_count() # number of CPUs in the system
+        print 'Using %d CPUs'%numprocesses
+    pool=multiprocessing.Pool(processes=numprocesses)
     # args consists of pairs (process_n, x) where process_n is the number of the
     # process, which is used to initialiase the correct GPU if one is present,
     # and x is the argument to the function (see notes in module docstring
     # about this)
-    args = zip(range(numprocesses), range(2, numprocesses+2))
-    results = pool.map(func, args) # launches multiple processes
+    args=zip(range(numprocesses), range(2, numprocesses+2))
+    results=pool.map(func, args) # launches multiple processes
     for (pid, arg), res in zip(args, results):
         print 'Process', pid, 'argument', arg, 'result', res
-        

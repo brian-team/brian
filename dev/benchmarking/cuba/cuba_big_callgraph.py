@@ -1,7 +1,7 @@
 from brian import *
 import pycallgraph
 
-dorun = True
+dorun=True
 
 def ff(call_stack, module_name, class_name, func_name, full_name):
     if func_name=='cuba': return True
@@ -62,11 +62,11 @@ def ff_noprepare(call_stack, module_name, class_name, func_name, full_name):
     return True
 
 def cuba():
-    N = 4000
-    Ne = int(N*0.8) 
-    Ni = N-Ne
-    p = 80./N
-    
+    N=4000
+    Ne=int(N*0.8)
+    Ni=N-Ne
+    p=80./N
+
     eqs='''
     dv/dt = (ge+gi-(v+49*mV))/(20*ms) : volt
     dge/dt = -ge/(5*ms) : volt
@@ -77,25 +77,25 @@ def cuba():
     P=NeuronGroup(N, eqs,
                   threshold=-50*mV, reset=-60*mV)
     pycallgraph.stop_trace()
-    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-NeuronGroup.__init__.no_magic_state_updater.png')    
-    
-    P.v = -60*mV+10*mV*rand(len(P))
-    Pe = P.subgroup(Ne)
-    Pi = P.subgroup(Ni)
-    
-    pycallgraph.start_trace(filter_func=ff)
-    Ce = Connection(Pe,P,'ge',weight=1.62*mV,sparseness=p)
-    pycallgraph.stop_trace()
-    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-Connection.__init__.png')    
+    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-NeuronGroup.__init__.no_magic_state_updater.png')
 
-    Ci = Connection(Pi,P,'gi',weight=-9*mV,sparseness=p)
-    
+    P.v=-60*mV+10*mV*rand(len(P))
+    Pe=P.subgroup(Ne)
+    Pi=P.subgroup(Ni)
+
     pycallgraph.start_trace(filter_func=ff)
-    M = SpikeMonitor(P)
-    trace = StateMonitor(P,'v',record=0)
+    Ce=Connection(Pe, P, 'ge', weight=1.62*mV, sparseness=p)
     pycallgraph.stop_trace()
-    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-Monitors.__init__.png')    
-    
+    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-Connection.__init__.png')
+
+    Ci=Connection(Pi, P, 'gi', weight=-9*mV, sparseness=p)
+
+    pycallgraph.start_trace(filter_func=ff)
+    M=SpikeMonitor(P)
+    trace=StateMonitor(P, 'v', record=0)
+    pycallgraph.stop_trace()
+    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-Monitors.__init__.png')
+
     pycallgraph.start_trace(filter_func=ff_prepare)
     run(.1*ms)
     pycallgraph.stop_trace()
@@ -104,11 +104,11 @@ def cuba():
 cuba()
 
 def cuba():
-    N = 4000
-    Ne = int(N*0.8) 
-    Ni = N-Ne
-    p = 80./N
-    
+    N=4000
+    Ne=int(N*0.8)
+    Ni=N-Ne
+    p=80./N
+
     eqs='''
     dv/dt = (ge+gi-(v+49*mV))/(20*ms) : volt
     dge/dt = -ge/(5*ms) : volt
@@ -119,27 +119,27 @@ def cuba():
     P=NeuronGroup(N, eqs,
                   threshold=-50*mV, reset=-60*mV)
     pycallgraph.stop_trace()
-    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-NeuronGroup.__init__.magic_state_updater.png')    
+    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-NeuronGroup.__init__.magic_state_updater.png')
 
-    P.v = -60*mV+10*mV*rand(len(P))
-    Pe = P.subgroup(Ne)
-    Pi = P.subgroup(Ni)
-    
-    Ce = Connection(Pe,P,'ge',weight=1.62*mV,sparseness=p)
-    Ci = Connection(Pi,P,'gi',weight=-9*mV,sparseness=p)
-    
-    M = SpikeMonitor(P)
-    trace = StateMonitor(P,'v',record=0)
-    
+    P.v=-60*mV+10*mV*rand(len(P))
+    Pe=P.subgroup(Ne)
+    Pi=P.subgroup(Ni)
+
+    Ce=Connection(Pe, P, 'ge', weight=1.62*mV, sparseness=p)
+    Ci=Connection(Pi, P, 'gi', weight=-9*mV, sparseness=p)
+
+    M=SpikeMonitor(P)
+    trace=StateMonitor(P, 'v', record=0)
+
     pycallgraph.start_trace(filter_func=ff_noprepare)
-    net = MagicNetwork()
+    net=MagicNetwork()
     pycallgraph.stop_trace()
-    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-run-noprepare-netinit.png')    
-    
+    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-run-noprepare-netinit.png')
+
     pycallgraph.start_trace(filter_func=ff_noprepare)
     net.run(.1*second)
     pycallgraph.stop_trace()
-    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-run-noprepare-nonetinit.png')    
+    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-run-noprepare-nonetinit.png')
 
 cuba()
 
@@ -149,10 +149,10 @@ def cuba():
     dge/dt = -ge/(5*ms) : volt
     dgi/dt = -gi/(10*ms) : volt
     '''
-    eqs = Equations(eqs)
+    eqs=Equations(eqs)
     pycallgraph.start_trace(filter_func=ff)
     eqs.prepare()
     pycallgraph.stop_trace()
-    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-Equations.prepare.png')    
-    
+    pycallgraph.make_dot_graph('callgraphs/cuba-bigcallgraph-Equations.prepare.png')
+
 cuba()

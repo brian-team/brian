@@ -1,5 +1,5 @@
-cpp_cuba = []
-cur_result = []
+cpp_cuba=[]
+cur_result=[]
 cur_result.append((1.547, 12492))
 cur_result.append((1.562, 13270))
 cur_result.append((1.563, 12612))
@@ -8,7 +8,7 @@ cur_result.append((1.563, 13557))
 cur_result.append((1.578, 13830))
 cur_result.append((1.578, 14528))
 cpp_cuba.append((1000, 1.56486, 13556, cur_result))
-cur_result = []
+cur_result=[]
 cur_result.append((3.156, 27996))
 cur_result.append((3.171, 27565))
 cur_result.append((3.172, 27530))
@@ -17,7 +17,7 @@ cur_result.append((3.172, 26215))
 cur_result.append((3.187, 28784))
 cur_result.append((3.203, 29023))
 cpp_cuba.append((2000, 3.17614, 27928, cur_result))
-cur_result = []
+cur_result=[]
 cur_result.append((6.313, 51521))
 cur_result.append((6.328, 56365))
 cur_result.append((6.328, 53449))
@@ -26,7 +26,7 @@ cur_result.append((6.328, 54904))
 cur_result.append((6.344, 52057))
 cur_result.append((6.359, 57125))
 cpp_cuba.append((4000, 6.33257, 54443, cur_result))
-cur_result = []
+cur_result=[]
 cur_result.append((12.672, 107986))
 cur_result.append((12.672, 113659))
 cur_result.append((12.672, 111962))
@@ -35,7 +35,7 @@ cur_result.append((12.719, 117892))
 cur_result.append((12.719, 112842))
 cur_result.append((12.719, 115592))
 cpp_cuba.append((8000, 12.6966, 112923, cur_result))
-cur_result = []
+cur_result=[]
 cur_result.append((25.39, 217478))
 cur_result.append((25.406, 224203))
 cur_result.append((25.438, 223854))

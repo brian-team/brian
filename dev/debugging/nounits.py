@@ -7,4 +7,4 @@ tau1 : ms
 tau2 : ms
 '''
 
-G=NeuronGroup(N=1,model=eqs,threshold=1,reset=0,unit_checking=False)
+G=NeuronGroup(N=1, model=eqs, threshold=1, reset=0, unit_checking=False)

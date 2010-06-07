@@ -16,12 +16,12 @@ The first part of the code is the same.
 '''
 from brian import *
 
-tau = 20*msecond        # membrane time constant
-Vt  =-50*mvolt          # spike threshold
-Vr  =-60*mvolt          # reset value
-El  =-60*mvolt          # resting potential (same as the reset)
+tau=20*msecond        # membrane time constant
+Vt=-50*mvolt          # spike threshold
+Vr=-60*mvolt          # reset value
+El=-60*mvolt          # resting potential (same as the reset)
 
-G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
+G=NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
               threshold=Vt, reset=Vr)
 '''
 Counting spikes
@@ -33,7 +33,7 @@ of the network during the simulation. The simplest monitor of
 all is the :class:`SpikeMonitor`, which just records the spikes from a
 given :class:`NeuronGroup`.
 '''
-M = SpikeMonitor(G)
+M=SpikeMonitor(G)
 '''
 Results
 ~~~~~~~

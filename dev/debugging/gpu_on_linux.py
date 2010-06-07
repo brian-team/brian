@@ -8,11 +8,11 @@ from pycuda.compiler import SourceModule
 import os, sys
 
 def doit(x):
-    
-    sys.stdin = file(os.devnull)
-    sys.stdout = file(os.devnull) 
 
-    code = '''
+    sys.stdin=file(os.devnull)
+    sys.stdout=file(os.devnull)
+
+    code='''
     __global__ void test(double *x, int n)
     {
      int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -20,17 +20,17 @@ def doit(x):
      x[i] *= 2.0;
     }
     '''
-    
-    mod = SourceModule(code)
-    f = mod.get_function('test')
-    x = gpuarray.to_gpu(ones(100))
-    f(x, int32(100), block=(100,1,1))
+
+    mod=SourceModule(code)
+    f=mod.get_function('test')
+    x=gpuarray.to_gpu(ones(100))
+    f(x, int32(100), block=(100, 1, 1))
     return x.get()
 
 if __name__=='__main__':
 
 #    doit(1)
 
-    pool = multiprocessing.Pool(1)
-    result = pool.map(doit, [0])
+    pool=multiprocessing.Pool(1)
+    result=pool.map(doit, [0])
     print result

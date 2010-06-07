@@ -39,9 +39,9 @@ w+=clip(u_plus-theta,0,inf)*x*A_LTP  # A_LTP>0
 # The model has hard bounds wmin and wmax
 # NB: maybe we should have a rectify function (=clip(x,0,inf))
 
-N=NeuronGroup(2,'dv/dt=1*Hz:1')
-C=Connection(N,N,'v')
-mystdp=STDP(C,eqs=eqs_stdp,pre=pre,post=post,wmax=2*mV)
-mystdp.post_group.v=linked_var(N,'v')
+N=NeuronGroup(2, 'dv/dt=1*Hz:1')
+C=Connection(N, N, 'v')
+mystdp=STDP(C, eqs=eqs_stdp, pre=pre, post=post, wmax=2*mV)
+mystdp.post_group.v=linked_var(N, 'v')
 
 run(1*ms)

@@ -2,7 +2,7 @@ from brian import *
 
 N=200
 
-defaultclock.dt = 0.5*ms
+defaultclock.dt=0.5*ms
 
 izh_eqs='''
 dv/dt=0.04/ms/mV*v**2+5/ms*v+140*mV/ms-u+ge-gi+i:volt
@@ -20,7 +20,7 @@ d:volt
 reset_eqs='''
 v=c;u=u+d
 '''
-group = NeuronGroup(200, model=izh_eqs, threshold=30*volt, reset=reset_eqs)
+group=NeuronGroup(200, model=izh_eqs, threshold=30*volt, reset=reset_eqs)
 
 sub1=group[:100]
 sub2=group[100:]
@@ -39,10 +39,10 @@ for i in range(len(sub2)):
 
 
 #direct links
-linksexcit=Connection(sub1,sub2,'ge',structure='dense')
+linksexcit=Connection(sub1, sub2, 'ge', structure='dense')
 
 #CASE 1
-linksexcit.connect_full(sub1,sub2,weight=lambda i,j:rand()*10.0*mV/ms)
+linksexcit.connect_full(sub1, sub2, weight=lambda i, j:rand()*10.0*mV/ms)
 #linksexcit.connect_full(sub1,sub2,weight=lambda i,j:rand(array(j).size)*10.0*mV/ms)
 
 #CASE 2
@@ -71,4 +71,4 @@ raster_plot()
 figure()
 imshow(linksexcit.W.todense())
 colorbar()
-show() 
+show()

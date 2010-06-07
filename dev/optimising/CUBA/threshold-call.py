@@ -19,34 +19,36 @@ import time
 #repeats = 400000
 # parameters for quicker runs to try out optimisations
 # original method: 4.768s in nonzero, 1.366 in __call__
-netsize = 4000
-repeats = 50000
+netsize=4000
+repeats=50000
+
 
 class FakeNeuronGroup(object):
     pass
 
+
 class FakeThreshold(object):
     # this is the original method
-    def __call__(self,P):
+    def __call__(self, P):
         return ((P.S[0]>self.Vt).nonzero())[0]
 
-V = random.uniform(size=netsize)
-Vt = 1-0.0005
+V=random.uniform(size=netsize)
+Vt=1-0.0005
 
-P = FakeNeuronGroup()
+P=FakeNeuronGroup()
 for i in range(40):
     exec 'P.a'+str(i)+'=1'
-P.S = zeros((3,netsize))
-P.S[0] = V
+P.S=zeros((3, netsize))
+P.S[0]=V
 
-T = FakeThreshold()
+T=FakeThreshold()
 #T.Vt = Vt
 for i in range(40):
     exec 'T.a'+str(i)+'=1'
 
 def main():
     for i in xrange(repeats):
-        spikes = T(P)
+        spikes=T(P)
 c_profile.run('main()')
 
 #def timeforfiringfraction(Vt):

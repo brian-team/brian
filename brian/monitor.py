@@ -38,8 +38,8 @@ Monitors (spikes and state variables).
 if properly coded.
 '''
 
-__all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter','FileSpikeMonitor','StateMonitor','ISIHistogramMonitor','Monitor',
-           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter','CoincidenceMatrixCounter','StateHistogramMonitor']
+__all__=['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter', 'FileSpikeMonitor', 'StateMonitor', 'ISIHistogramMonitor', 'Monitor',
+           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter', 'CoincidenceMatrixCounter', 'StateHistogramMonitor']
 
 from units import *
 from connection import Connection, SparseConnectionVector
@@ -58,11 +58,13 @@ try:
     import pylab, matplotlib
 except:
     pass
-        
+
+
 class Monitor(object):
     pass
 
-class SpikeMonitor(Connection,Monitor):
+
+class SpikeMonitor(Connection, Monitor):
     '''
     Counts or records spikes from a :class:`NeuronGroup`
 
@@ -108,64 +110,64 @@ class SpikeMonitor(Connection,Monitor):
     as an argument (``function=myfunction``, with ``def myfunction(spikes):...``)
     '''
     # isn't there a units problem here for delay?
-    def __init__(self,source,record=True,delay=0,function=None):
+    def __init__(self, source, record=True, delay=0, function=None):
         # recordspikes > record?
         self.source=source # pointer to source group
         self.target=None
         self.nspikes=0
         self.spikes=[]
-        self.record = record
+        self.record=record
         self.W=None # should we just remove this variable?
         source.set_max_delay(delay)
         self.delay=int(delay/source.clock.dt) # Synaptic delay in time bins
-        self._newspikes = True
+        self._newspikes=True
         if function!=None:
             self.propagate=function
-        
+
     def reinit(self):
         """
         Clears all monitored spikes
         """
         self.nspikes=0
         self.spikes=[]
-        
-    def propagate(self,spikes):
+
+    def propagate(self, spikes):
         '''
         Deals with the spikes.
         Overload this function to store or process spikes.
         Default: counts the spikes (variable nspikes)
         '''
         if len(spikes):
-            self._newspikes = True
+            self._newspikes=True
         self.nspikes+=len(spikes)
         if self.record:
-            self.spikes+=zip(spikes,repeat(self.source.clock.t))
-            
-    def origin(self,P,Q):
+            self.spikes+=zip(spikes, repeat(self.source.clock.t))
+
+    def origin(self, P, Q):
         '''
         Returns the starting coordinate of the given groups in
         the connection matrix W.
         '''
-        return (P.origin-self.source.origin,0)
+        return (P.origin-self.source.origin, 0)
 
     def compress(self):
         pass
-    
+
     def __getitem__(self, i):
-        return qarray([t for j,t in self.spikes if j==i])
-    
+        return qarray([t for j, t in self.spikes if j==i])
+
     def getspiketimes(self):
         if self._newspikes:
-            self._newspikes = False
-            self._spiketimes = {}
+            self._newspikes=False
+            self._spiketimes={}
             for i in xrange(len(self.source)):
-                self._spiketimes[i] = []
+                self._spiketimes[i]=[]
             for i, t in self.spikes:
                 self._spiketimes[i].append(float(t))
             for i in xrange(len(self.source)):
-                self._spiketimes[i] = array(self._spiketimes[i])
+                self._spiketimes[i]=array(self._spiketimes[i])
         return self._spiketimes
-    spiketimes = property(fget=getspiketimes)
+    spiketimes=property(fget=getspiketimes)
 
 #    def getvspikes(self):
 #        if isinstance(self.source, VectorizedNeuronGroup):
@@ -176,6 +178,7 @@ class SpikeMonitor(Connection,Monitor):
 #            vspikes.sort(cmp=lambda x,y:2*int(x[1]>y[1])-1)
 #            return vspikes
 #    concatenated_spikes = property(fget=getvspikes)
+
 
 class AutoCorrelogram(SpikeMonitor):
     '''
@@ -189,28 +192,29 @@ class AutoCorrelogram(SpikeMonitor):
     
     NOT FINISHED 
     '''
-    def __init__(self,source,record=True,delay=0):
-        SpikeMonitor.__init__(self,source,record=record,delay=delay)
+    def __init__(self, source, record=True, delay=0):
+        SpikeMonitor.__init__(self, source, record=record, delay=delay)
         self.reinit()
         if record is not False:
-            if record is not True and not isinstance(record,int):
-                self.recordindex = dict((i,j) for i,j in zip(self.record,range(len(self.record))))
+            if record is not True and not isinstance(record, int):
+                self.recordindex=dict((i, j) for i, j in zip(self.record, range(len(self.record))))
 
     def reinit(self):
         if self.record==True:
-            self._autocorrelogram=zeros((len(self.record),len(self.source)))
+            self._autocorrelogram=zeros((len(self.record), len(self.source)))
         else:
-            self._autocorrelogram=zeros((len(self.record),self.delay))
+            self._autocorrelogram=zeros((len(self.record), self.delay))
 
-    def propagate(self,spikes):
+    def propagate(self, spikes):
         spikes_set=set(spikes)
         if self.record==True:
             for i in xrange(self.delay): # Not a brilliant implementation
-                self._autocorrelogram[spikes_set.intersection(self.source.LS[i]),i]+=1
-    
+                self._autocorrelogram[spikes_set.intersection(self.source.LS[i]), i]+=1
+
     def __getitem__(self, i):
         # TODO: returns the autocorrelogram of neuron i
         pass
+
 
 class PopulationSpikeCounter(SpikeMonitor):
     '''
@@ -231,7 +235,8 @@ class PopulationSpikeCounter(SpikeMonitor):
         The number of recorded spikes
     '''
     def __init__(self, source, delay=0):
-        SpikeMonitor.__init__(self,source,record=False,delay=delay)
+        SpikeMonitor.__init__(self, source, record=False, delay=delay)
+
 
 class SpikeCounter(PopulationSpikeCounter):
     '''
@@ -258,15 +263,19 @@ class SpikeCounter(PopulationSpikeCounter):
     '''
     def __init__(self, source):
         PopulationSpikeCounter.__init__(self, source)
-        self.count = zeros(len(source),dtype=int)
+        self.count=zeros(len(source), dtype=int)
+
     def __getitem__(self, i):
         return int(self.count[i])
+
     def propagate(self, spikes):
         PopulationSpikeCounter.propagate(self, spikes)
         self.count[spikes]+=1
+
     def reinit(self):
-        self.count[:] = 0
+        self.count[:]=0
         PopulationSpikeCounter.reinit(self)
+
 
 class StateSpikeMonitor(SpikeMonitor):
     '''
@@ -313,34 +322,35 @@ class StateSpikeMonitor(SpikeMonitor):
     def __init__(self, source, var):
         SpikeMonitor.__init__(self, source)
         if isinstance(var, (str, int)) or not isSequenceType(var):
-            var = (var,)
-        self._varnames = var
-        self._vars = [source.state_(v) for v in var]
-        self._varindex = dict((v,i+2) for i, v in enumerate(var))
-        self._units = [source.unit(v) for v in var]
-        
-    def propagate(self,spikes):
+            var=(var,)
+        self._varnames=var
+        self._vars=[source.state_(v) for v in var]
+        self._varindex=dict((v, i+2) for i, v in enumerate(var))
+        self._units=[source.unit(v) for v in var]
+
+    def propagate(self, spikes):
         self.nspikes+=len(spikes)
-        recordedstate = [ [x*u for x in v[spikes]] for v, u in izip(self._vars, self._units) ]
+        recordedstate=[ [x*u for x in v[spikes]] for v, u in izip(self._vars, self._units) ]
         self.spikes+=zip(spikes, repeat(self.source.clock.t), *recordedstate)
-        
-    def __getitem__(self,i):
+
+    def __getitem__(self, i):
         return NotImplemented # don't use the version from SpikeMonitor
-    
+
     def times(self, i=None):
         '''Returns the spike times (of neuron ``i`` if specified)'''
         if i is not None:
             return qarray([x[1] for x in self.spikes if x[0]==i])
         else:
             return qarray([x[1] for x in self.spikes])
-        
+
     def values(self, var, i=None):
         '''Returns the recorded values of ``var`` (for spikes from neuron ``i`` if specified)'''
-        v = self._varindex[var]
+        v=self._varindex[var]
         if i is not None:
             return qarray([x[v] for x in self.spikes if x[0]==i])
         else:
             return qarray([x[v] for x in self.spikes])
+
 
 class HistogramMonitorBase(SpikeMonitor):
     pass
@@ -374,30 +384,30 @@ class ISIHistogramMonitor(HistogramMonitorBase):
     :func:`hist_plot`.
     '''
     def __init__(self, source, bins, delay=0):
-        SpikeMonitor.__init__(self, source,delay)
-        self.bins = array(bins)
+        SpikeMonitor.__init__(self, source, delay)
+        self.bins=array(bins)
         self.reinit()
-        
+
     def reinit(self):
         super(ISIHistogramMonitor, self).reinit()
-        self.count = zeros(len(self.bins))
-        self.LS = 1000*second*ones(len(self.source))
-        
+        self.count=zeros(len(self.bins))
+        self.LS=1000*second*ones(len(self.source))
+
     def propagate(self, spikes):
         super(ISIHistogramMonitor, self).propagate(spikes)
-        isi = self.source.clock.t-self.LS[spikes]
-        self.LS[spikes] = self.source.clock.t
+        isi=self.source.clock.t-self.LS[spikes]
+        self.LS[spikes]=self.source.clock.t
         # all this nonsense is necessary to deal with the fact that
         # numpy changed the semantics of histogram in 1.2.0 or thereabouts
         try:
-            h, a = histogram(isi, self.bins, new=True)
+            h, a=histogram(isi, self.bins, new=True)
         except TypeError:
-            h, a = histogram(isi, self.bins)
+            h, a=histogram(isi, self.bins)
         if len(h)==len(self.count):
-            self.count += h
+            self.count+=h
         else:
-            self.count[:-1] += h
-            self.count[-1] += len(isi)-sum(h)
+            self.count[:-1]+=h
+            self.count[-1]+=len(isi)-sum(h)
 
 
 class FileSpikeMonitor(SpikeMonitor):
@@ -421,17 +431,20 @@ class FileSpikeMonitor(SpikeMonitor):
         Closes the file manually (will happen automatically when
         the program ends).
     """
-    def __init__(self,source,filename,record=False,delay=0):
-        super(FileSpikeMonitor,self).__init__(source,record,delay)
-        self.filename = filename
-        self.f = open(filename,'w')
+    def __init__(self, source, filename, record=False, delay=0):
+        super(FileSpikeMonitor, self).__init__(source, record, delay)
+        self.filename=filename
+        self.f=open(filename, 'w')
+
     def reinit(self):
         self.close_file()
-        self.f = open(self.filename,'w')
-    def propagate(self,spikes):
-        super(FileSpikeMonitor,self).propagate(spikes)
+        self.f=open(self.filename, 'w')
+
+    def propagate(self, spikes):
+        super(FileSpikeMonitor, self).propagate(spikes)
         for i in spikes:
             self.f.write(str(i)+", "+str(float(self.source.clock.t))+"\n")
+
     def close_file(self):
         self.f.close()
 
@@ -455,13 +468,13 @@ class PopulationRateMonitor(SpikeMonitor):
     ``bin``
         The duration of a bin (in second).
     '''
-    times  = property(fget=lambda self:qarray(self._times)*second)
-    times_ = property(fget=lambda self:array(self._times))
-    rate  = property(fget=lambda self:qarray(self._rate)*hertz)
-    rate_ = property(fget=lambda self:array(self._rate))
+    times=property(fget=lambda self:qarray(self._times)*second)
+    times_=property(fget=lambda self:array(self._times))
+    rate=property(fget=lambda self:qarray(self._rate)*hertz)
+    rate_=property(fget=lambda self:array(self._rate))
 
-    def __init__(self,source,bin=None):
-        SpikeMonitor.__init__(self,source)
+    def __init__(self, source, bin=None):
+        SpikeMonitor.__init__(self, source)
         if bin:
             self._bin=int(bin/source.clock.dt)
         else:
@@ -470,35 +483,35 @@ class PopulationRateMonitor(SpikeMonitor):
         self._times=[]
         self._curstep=0
         self._clock=source.clock
-        self._factor=1./float(self._bin*source.clock.dt*len(source))    
-       
+        self._factor=1./float(self._bin*source.clock.dt*len(source))
+
     def reinit(self):
         SpikeMonitor.reinit(self)
         self._rate=[]
         self._times=[]
         self._curstep=0
-        
-    def propagate(self,spikes):
+
+    def propagate(self, spikes):
         if self._curstep==0:
             self._rate.append(0.)
             self._times.append(self._clock._t) # +.5*bin?
             self._curstep=self._bin
         self._rate[-1]+=len(spikes)*self._factor
         self._curstep-=1
-        
-    def smooth_rate(self,width=1*msecond,filter='gaussian'):
+
+    def smooth_rate(self, width=1*msecond, filter='gaussian'):
         """
         Returns a smoothed version of the vector of rates,
         convolving the rates with a filter (gaussian or flat)
         with the given width.
         """
         width_dt=int(width/(self._bin*self._clock.dt))
-        window={'gaussian': exp(-arange(-2*width_dt,2*width_dt+1)**2*1./(2*(width_dt)**2)),
+        window={'gaussian': exp(-arange(-2*width_dt, 2*width_dt+1)**2*1./(2*(width_dt)**2)),
                 'flat': ones(width_dt)}[filter]
-        return qarray(convolve(self.rate_,window*1./sum(window),mode='same'))*hertz
-    
+        return qarray(convolve(self.rate_, window*1./sum(window), mode='same'))*hertz
 
-class StateMonitor(NetworkOperation,Monitor):
+
+class StateMonitor(NetworkOperation, Monitor):
     '''
     Records the values of a state variable from a :class:`NeuronGroup`.
 
@@ -590,19 +603,19 @@ class StateMonitor(NetworkOperation,Monitor):
             
         You may need to experiment, try WXAgg, GTKAgg, QTAgg, TkAgg.
     '''
-    times  = property(fget=lambda self:QuantityArray(self._times)*second)
-    mean   = property(fget=lambda self:self.unit*QuantityArray(self._mu/self.N))
-    _mean  = property(fget=lambda self:self._mu/self.N)
-    var    = property(fget=lambda self:(self.unit*self.unit*QuantityArray(self._sqr-self.N*self._mean**2)/(self.N-1)))
-    std    = property(fget=lambda self:self.var**.5)
-    mean_  = _mean
-    var_   = property(fget=lambda self:(self._sqr-self.N*self.mean_**2)/(self.N-1))
-    std_   = property(fget=lambda self:self.var_**.5)
-    times_ = property(fget=lambda self:array(self._times))
-    values = property(fget=lambda self:self.getvalues())
-    values_= property(fget=lambda self:self.getvalues_())
-    
-    def __init__(self,P,varname,clock=None,record=False,timestep=1,when='end'):
+    times=property(fget=lambda self:QuantityArray(self._times)*second)
+    mean=property(fget=lambda self:self.unit*QuantityArray(self._mu/self.N))
+    _mean=property(fget=lambda self:self._mu/self.N)
+    var=property(fget=lambda self:(self.unit*self.unit*QuantityArray(self._sqr-self.N*self._mean**2)/(self.N-1)))
+    std=property(fget=lambda self:self.var**.5)
+    mean_=_mean
+    var_=property(fget=lambda self:(self._sqr-self.N*self.mean_**2)/(self.N-1))
+    std_=property(fget=lambda self:self.var_**.5)
+    times_=property(fget=lambda self:array(self._times))
+    values=property(fget=lambda self:self.getvalues())
+    values_=property(fget=lambda self:self.getvalues_())
+
+    def __init__(self, P, varname, clock=None, record=False, timestep=1, when='end'):
         '''
         -- P is the neuron group
         -- varname is the variable name
@@ -619,26 +632,26 @@ class StateMonitor(NetworkOperation,Monitor):
            small dt, you might not want to record every value of the variable), it
            is an integer (multiple of the clock dt)
         '''
-        NetworkOperation.__init__(self,None,clock=clock,when=when)
-        self.record = record
-        self.clock = guess_clock(clock)
+        NetworkOperation.__init__(self, None, clock=clock, when=when)
+        self.record=record
+        self.clock=guess_clock(clock)
         if record is not False:
-            if record is not True and not isinstance(record,int):
-                self.recordindex = dict((i,j) for i,j in zip(self.record,range(len(self.record))))
-        self.timestep = timestep
-        self.curtimestep = timestep
-        self._values = None
+            if record is not True and not isinstance(record, int):
+                self.recordindex=dict((i, j) for i, j in zip(self.record, range(len(self.record))))
+        self.timestep=timestep
+        self.curtimestep=timestep
+        self._values=None
         self.P=P
         self.varname=varname
         self.N=0 # number of steps
-        self._recordstep = 0
+        self._recordstep=0
         if record is False:
             self._mu=zeros(len(P)) # sum
             self._sqr=zeros(len(P)) # sum of squares
-        self.unit = 1.0*P.unit(varname)
-        self._times = []
-        self._values = []
-        
+        self.unit=1.0*P.unit(varname)
+        self._times=[]
+        self._values=[]
+
     def __call__(self):
         '''
         This function is called every time step.
@@ -648,63 +661,63 @@ class StateMonitor(NetworkOperation,Monitor):
             self._mu+=V
             self._sqr+=V*V
         elif self.curtimestep==self.timestep:
-            i = self._recordstep
+            i=self._recordstep
             if self._values is None:
                 #numrecord = len(self.get_record_indices())
                 #numtimesteps = (int(self.clock.get_duration()/self.clock.dt))/self.timestep + 1
-                self._values = []#zeros((numtimesteps,numrecord))
-                self._times = []#QuantityArray(zeros(numtimesteps))
+                self._values=[]#zeros((numtimesteps,numrecord))
+                self._times=[]#QuantityArray(zeros(numtimesteps))
             if type(self.record)!=types.BooleanType:
                 self._values.append(V[self.record])
             elif self.record is True:
                 self._values.append(V.copy())
             self._times.append(self.clock._t)
-            self._recordstep += 1
+            self._recordstep+=1
         self.curtimestep-=1
         if self.curtimestep==0: self.curtimestep=self.timestep
         self.N+=1
-    
-    def __getitem__(self,i):
+
+    def __getitem__(self, i):
         """Returns the recorded values of the state of neuron i as a QuantityArray
         """
         # TODO: a cache for the array conversion
         if self.record is False:
-            raise IndexError('Neuron ' + str(i) + ' was not recorded.')
+            raise IndexError('Neuron '+str(i)+' was not recorded.')
         if self.record is not True:
-            if isinstance(self.record,int) and self.record!=i or (not isinstance(self.record,int) and i not in self.record):
-                raise IndexError('Neuron ' + str(i) + ' was not recorded.')
+            if isinstance(self.record, int) and self.record!=i or (not isinstance(self.record, int) and i not in self.record):
+                raise IndexError('Neuron '+str(i)+' was not recorded.')
             try:
                 #return QuantityArray(self._values[:self._recordstep,self.recordindex[i]])*self.unit
-                return QuantityArray(array(self._values)[:,self.recordindex[i]])*self.unit
+                return QuantityArray(array(self._values)[:, self.recordindex[i]])*self.unit
             except:
                 if i==self.record:
                     return QuantityArray(self._values)*self.unit
                 else:
                     raise
         elif self.record is True:
-            return QuantityArray(array(self._values)[:,i])*self.unit # We should have a cache for the array conversion
-        
+            return QuantityArray(array(self._values)[:, i])*self.unit # We should have a cache for the array conversion
+
     def getvalues(self):
-        ri = self.get_record_indices()
-        values = safeqarray(zeros((len(ri), len(self._times))),units=self.unit)
+        ri=self.get_record_indices()
+        values=safeqarray(zeros((len(ri), len(self._times))), units=self.unit)
         for i, j in enumerate(ri):
-            values[i] = self[j]
+            values[i]=self[j]
         return values
 
     def getvalues_(self):
-        ri = self.get_record_indices()
-        values = zeros((len(ri), len(self._times)))
+        ri=self.get_record_indices()
+        values=zeros((len(ri), len(self._times)))
         for i, j in enumerate(ri):
-            values[i] = self[j]
+            values[i]=self[j]
         return values
-    
+
     def reinit(self):
-        self._values = None
+        self._values=None
         self.N=0
-        self._recordstep = 0
+        self._recordstep=0
         self._mu=zeros(len(self.P))
         self._sqr=zeros(len(self.P))
-        
+
     def get_record_indices(self):
         """Returns the list of neuron numbers which were recorded.
         """
@@ -712,68 +725,69 @@ class StateMonitor(NetworkOperation,Monitor):
             return []
         elif self.record is True:
             return range(len(self.P))
-        elif isinstance(self.record,int):
+        elif isinstance(self.record, int):
             return [self.record]
         else:
             return self.record
-        
+
     def plot(self, indices=None, cmap=None, refresh=None, showlast=None, redraw=True):
-        lines = []
-        inds = []
+        lines=[]
+        inds=[]
         if indices is None:
-            recind = self.get_record_indices()
+            recind=self.get_record_indices()
             for j, i in enumerate(recind):
                 if cmap is None:
-                    line, = pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']')
+                    line,=pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']')
                 else:
-                    line, = pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']',
+                    line,=pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']',
                                color=cmap(float(j)/(len(recind)-1)))
                 inds.append(i)
                 lines.append(line)
         elif isinstance(indices, int):
-            line, = pylab.plot(self.times, self[indices], label=str(self.varname)+'['+str(indices)+']')
+            line,=pylab.plot(self.times, self[indices], label=str(self.varname)+'['+str(indices)+']')
             lines.append(line)
             inds.append(indices)
         else:
             for j, i in enumerate(indices):
                 if cmap is None:
-                    line, = pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']')
+                    line,=pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']')
                 else:
-                    line, = pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']',
+                    line,=pylab.plot(self.times, self[i], label=str(self.varname)+'['+str(i)+']',
                                color=cmap(float(j)/(len(indices)-1)))
                 inds.append(i)
                 lines.append(line)
-        ax = pylab.gca()
+        ax=pylab.gca()
         if refresh is not None:
-            ylim = [Inf, -Inf]
+            ylim=[Inf,-Inf]
             @network_operation(clock=EventClock(dt=refresh))
             def refresh_state_monitor_plot(clk):
-                ymin, ymax = ylim
+                ymin, ymax=ylim
                 if matplotlib.is_interactive():
                     if showlast is not None:
-                        tmin = clk._t-float(showlast)
-                        tmax = clk._t
+                        tmin=clk._t-float(showlast)
+                        tmax=clk._t
                     for line, i in zip(lines, inds):
                         if showlast is None:
                             line.set_xdata(self.times)
-                            y = self[i]
+                            y=self[i]
                         else:
-                            imin = bisect.bisect_left(self.times, tmin)
-                            imax = bisect.bisect_right(self.times, tmax)
+                            imin=bisect.bisect_left(self.times, tmin)
+                            imax=bisect.bisect_right(self.times, tmax)
                             line.set_xdata(self.times[imin:imax])
-                            y = self[i][imin:imax]
+                            y=self[i][imin:imax]
                         line.set_ydata(y)
-                        ymin = min(ymin, amin(y))
-                        ymax = max(ymax, amax(y))
+                        ymin=min(ymin, amin(y))
+                        ymax=max(ymax, amax(y))
                     if showlast is None:
                         ax.set_xlim(0, clk._t)
                     else:
                         ax.set_xlim(clk._t-float(showlast), clk._t)
                     ax.set_ylim(ymin, ymax)
-                    ylim[:] = [ymin, ymax]
+                    ylim[:]=[ymin, ymax]
                     if redraw:
                         pylab.draw()
             self.contained_objects.append(refresh_state_monitor_plot)
+
 
 class RecentStateMonitor(StateMonitor):
     '''
@@ -810,49 +824,49 @@ class RecentStateMonitor(StateMonitor):
     '''
     def __init__(self, P, varname, duration=5*ms, clock=None, record=True, timestep=1, when='end'):
         StateMonitor.__init__(self, P, varname, clock=clock, record=record, timestep=timestep, when=when)
-        self.duration = duration
-        self.num_duration = int(duration/(timestep*self.clock.dt))+1
+        self.duration=duration
+        self.num_duration=int(duration/(timestep*self.clock.dt))+1
         if record is False:
-            self.record_size = 0
+            self.record_size=0
         elif record is True:
-            self.record_size = len(P)
+            self.record_size=len(P)
         elif isinstance(record, int):
-            self.record_size = 1
+            self.record_size=1
         else:
-            self.record_size = len(record)
-        self._values = zeros((self.num_duration, self.record_size))
-        self._times = zeros(self.num_duration)
-        self.current_time_index = 0
-        self.has_looped = False
-        self._invtargetdt = 1.0/self.clock._dt
-        self._arange = arange(len(P))
-        
+            self.record_size=len(record)
+        self._values=zeros((self.num_duration, self.record_size))
+        self._times=zeros(self.num_duration)
+        self.current_time_index=0
+        self.has_looped=False
+        self._invtargetdt=1.0/self.clock._dt
+        self._arange=arange(len(P))
+
     def __call__(self):
-        V = self.P.state_(self.varname)
+        V=self.P.state_(self.varname)
         if self.record is False:
-            self._mu += V
-            self._sqr += V*V
+            self._mu+=V
+            self._sqr+=V*V
         if self.record is not False and self.curtimestep==self.timestep:
-            i = self._recordstep
+            i=self._recordstep
             if self.record is not True:
-                self._values[self.current_time_index, :] = V[self.record]
+                self._values[self.current_time_index, :]=V[self.record]
             else:
-                self._values[self.current_time_index, :] = V
-            self._times[self.current_time_index] = self.clock.t
-            self._recordstep += 1
-            self.current_time_index = (self.current_time_index+1)%self.num_duration
-            if self.current_time_index==0: self.has_looped = True
-        self.curtimestep -= 1
-        if self.curtimestep==0: self.curtimestep = self.timestep
-        self.N += 1
-    
-    def __getitem__(self,i):
-        timeinds = self.sorted_times_indices()
+                self._values[self.current_time_index, :]=V
+            self._times[self.current_time_index]=self.clock.t
+            self._recordstep+=1
+            self.current_time_index=(self.current_time_index+1)%self.num_duration
+            if self.current_time_index==0: self.has_looped=True
+        self.curtimestep-=1
+        if self.curtimestep==0: self.curtimestep=self.timestep
+        self.N+=1
+
+    def __getitem__(self, i):
+        timeinds=self.sorted_times_indices()
         if self.record is False:
-            raise IndexError('Neuron ' + str(i) + ' was not recorded.')
+            raise IndexError('Neuron '+str(i)+' was not recorded.')
         if self.record is not True:
-            if isinstance(self.record,int) and self.record!=i or (not isinstance(self.record,int) and i not in self.record):
-                raise IndexError('Neuron ' + str(i) + ' was not recorded.')
+            if isinstance(self.record, int) and self.record!=i or (not isinstance(self.record, int) and i not in self.record):
+                raise IndexError('Neuron '+str(i)+' was not recorded.')
             try:
                 return QuantityArray(self._values[timeinds, self.recordindex[i]])*self.unit
             except:
@@ -862,31 +876,31 @@ class RecentStateMonitor(StateMonitor):
                     raise
         elif self.record is True:
             return QuantityArray(self._values[timeinds, i])*self.unit
-    
+
     def get_past_values(self, times):
         # probably mostly to be used internally by Brian itself
-        time_indices = (self.current_time_index-1-array(self._invtargetdt*asarray(times), dtype=int))%self.num_duration
+        time_indices=(self.current_time_index-1-array(self._invtargetdt*asarray(times), dtype=int))%self.num_duration
         if isinstance(times, SparseConnectionVector):
             return SparseConnectionVector(times.n, times.ind, self._values[time_indices, times.ind])
         else:
             return self._values[time_indices, self._arange]
-    
+
     def get_past_values_sequence(self, times_seq):
         # probably mostly to be used internally by Brian itself
         if len(times_seq)==0:
             return []
-        time_indices_seq = [(self.current_time_index-1-array(self._invtargetdt*asarray(times), dtype=int))%self.num_duration for times in times_seq]
+        time_indices_seq=[(self.current_time_index-1-array(self._invtargetdt*asarray(times), dtype=int))%self.num_duration for times in times_seq]
         if isinstance(times_seq[0], SparseConnectionVector):
             return [SparseConnectionVector(times.n, times.ind, self._values[time_indices, times.ind]) for times, time_indices in izip(times_seq, time_indices_seq)]
         else:
             return [self._values[time_indices, self._arange] for times, time_indices in izip(times_seq, time_indices_seq)]
-    
+
     def getvalues(self):
         return safeqarray(self._values, units=self.unit)
 
     def getvalues_(self):
         return self._values
-    
+
     def sorted_times_indices(self):
         if not self.has_looped:
             return arange(self.current_time_index)
@@ -894,39 +908,40 @@ class RecentStateMonitor(StateMonitor):
 
     def get_sorted_times(self):
         return safeqarray(self._times[self.sorted_times_indices()], units=second)
-    
+
     def get_sorted_times_(self):
         return self._times[self.sorted_times_indices()]
-    
+
     def get_sorted_values(self):
         return safeqarray(self._values[self.sorted_times_indices(), :], units=self.unit)
-    
+
     def get_sorted_values_(self):
         return self._values[self.sorted_times_indices(), :]
 
-    times  = property(fget=get_sorted_times)
-    times_ = property(fget=get_sorted_times_)
-    values = property(fget=get_sorted_values)
-    values_= property(fget=get_sorted_values_)
-    unsorted_times  = property(fget=lambda self:QuantityArray(self._times))
-    unsorted_times_ = property(fget=lambda self:array(self._times))
-    unsorted_values = property(fget=getvalues)
-    unsorted_values_= property(fget=getvalues_)
-    
+    times=property(fget=get_sorted_times)
+    times_=property(fget=get_sorted_times_)
+    values=property(fget=get_sorted_values)
+    values_=property(fget=get_sorted_values_)
+    unsorted_times=property(fget=lambda self:QuantityArray(self._times))
+    unsorted_times_=property(fget=lambda self:array(self._times))
+    unsorted_values=property(fget=getvalues)
+    unsorted_values_=property(fget=getvalues_)
+
     def reinit(self):
-        self._values[:] = 0
-        self._times[:] = 0
-        self.current_time_index = 0
-        self.N = 0
-        self._recordstep = 0
+        self._values[:]=0
+        self._times[:]=0
+        self.current_time_index=0
+        self.N=0
+        self._recordstep=0
         self._mu=zeros(len(self.P))
         self._sqr=zeros(len(self.P))
-        self.has_looped = False
+        self.has_looped=False
 
     def plot(self, indices=None, cmap=None, refresh=None, showlast=None, redraw=True):
         if refresh is not None and showlast is None:
-            showlast = self.duration
+            showlast=self.duration
         StateMonitor.plot(self, indices=indices, cmap=cmap, refresh=refresh, showlast=showlast, redraw=redraw)
+
 
 class MultiStateMonitor(NetworkOperation):
     '''
@@ -976,43 +991,43 @@ class MultiStateMonitor(NetworkOperation):
     '''
     def __init__(self, G, vars=None, clock=None, **kwds):
         NetworkOperation.__init__(self, lambda : None, clock=clock)
-        self.monitors = {}
+        self.monitors={}
         if vars is None:
-            vars = [name for name in G.var_index.keys() if isinstance(name,str)]
-        self.vars = vars
+            vars=[name for name in G.var_index.keys() if isinstance(name, str)]
+        self.vars=vars
         for varname in vars:
-            self.monitors[varname] = StateMonitor(G, varname, clock=clock, **kwds)
-        self.contained_objects = self.monitors.values()
-        
+            self.monitors[varname]=StateMonitor(G, varname, clock=clock, **kwds)
+        self.contained_objects=self.monitors.values()
+
     def __getitem__(self, varname):
         if isinstance(varname, tuple):
-            varname, i = varname
+            varname, i=varname
             return self.monitors[varname][i]
         else:
             return self.monitors[varname]
-        
+
     def vars(self):
         return self.monitors.keys()
-    
+
     def iteritems(self):
         return self.monitors.iteritems()
-    
+
     def items(self):
         return self.monitors.items()
-    
+
     def plot(self, indices=None, cmap=None):
         for k, m in self.monitors.iteritems():
             m.plot(indices, cmap=cmap)
-            
+
     def get_times(self):
         return self.monitors.values()[0].times
-    
-    times = property(fget = lambda self:self.get_times())
-    
+
+    times=property(fget=lambda self:self.get_times())
+
     def __call__(self):
         pass
 
-    
+
 class CoincidenceCounter(SpikeMonitor):
     """
     Coincidence counter class.
@@ -1075,92 +1090,92 @@ class CoincidenceCounter(SpikeMonitor):
     ``target_length``
         The number of spikes in the target spike train associated to each neuron.
     """
-    def __init__(self, source, data = None, spiketimes_offset = None, spikedelays = None, 
-                 coincidence_count_algorithm = 'exclusive', onset = None, delta = 4*ms):
-         
-        source.set_max_delay(0)
-        self.source = source
-        self.delay = 0
-        if onset is None:
-            onset = 0*ms
-        self.onset = onset
-        self.N = len(source)
-        self.coincidence_count_algorithm = coincidence_count_algorithm
+    def __init__(self, source, data=None, spiketimes_offset=None, spikedelays=None,
+                 coincidence_count_algorithm='exclusive', onset=None, delta=4*ms):
 
-        self.data = array(data)
+        source.set_max_delay(0)
+        self.source=source
+        self.delay=0
+        if onset is None:
+            onset=0*ms
+        self.onset=onset
+        self.N=len(source)
+        self.coincidence_count_algorithm=coincidence_count_algorithm
+
+        self.data=array(data)
         if spiketimes_offset is None:
-            spiketimes_offset = zeros(self.N, dtype='int')
-        self.spiketimes_offset = array(spiketimes_offset)
+            spiketimes_offset=zeros(self.N, dtype='int')
+        self.spiketimes_offset=array(spiketimes_offset)
 
         if spikedelays is None:
-            spikedelays = zeros(self.N)
-        self.spikedelays = array(spikedelays)
-        
-        dt = self.source.clock.dt
-        self.delta = int(rint(delta/dt))
+            spikedelays=zeros(self.N)
+        self.spikedelays=array(spikedelays)
+
+        dt=self.source.clock.dt
+        self.delta=int(rint(delta/dt))
         self.reinit()
-    
+
     def reinit(self):
-        dt = self.source.clock.dt
+        dt=self.source.clock.dt
         # Number of spikes for each neuron
-        self.model_length = zeros(self.N, dtype = 'int')
-        self.target_length = zeros(self.N, dtype = 'int')
-        
-        self.coincidences = zeros(self.N, dtype = 'int')
-        self.spiketime_index = self.spiketimes_offset
-        self.last_spike_time = array(rint(self.data[self.spiketime_index]/dt), dtype=int)
-        self.next_spike_time = array(rint(self.data[self.spiketime_index+1]/dt), dtype=int)
-        
+        self.model_length=zeros(self.N, dtype='int')
+        self.target_length=zeros(self.N, dtype='int')
+
+        self.coincidences=zeros(self.N, dtype='int')
+        self.spiketime_index=self.spiketimes_offset
+        self.last_spike_time=array(rint(self.data[self.spiketime_index]/dt), dtype=int)
+        self.next_spike_time=array(rint(self.data[self.spiketime_index+1]/dt), dtype=int)
+
         # First target spikes (needed for the computation of 
         #   the target train firing rates)
-        self.first_target_spike = zeros(self.N)
-        
-        self.last_spike_allowed = ones(self.N, dtype = 'bool')
-        self.next_spike_allowed = ones(self.N, dtype = 'bool')
-        
+        self.first_target_spike=zeros(self.N)
+
+        self.last_spike_allowed=ones(self.N, dtype='bool')
+        self.next_spike_allowed=ones(self.N, dtype='bool')
+
     def propagate(self, spiking_neurons):
-        dt = self.source.clock.dt
+        dt=self.source.clock.dt
         #T = array(rint((self.source.clock.t + self.spikedelays)/dt), dtype = int)
-        spiking_neurons = array(spiking_neurons)
+        spiking_neurons=array(spiking_neurons)
         if len(spiking_neurons):
-            
-            if self.source.clock.t >= self.onset:
-                self.model_length[spiking_neurons] += 1
 
-            T_spiking = array(rint((self.source.clock.t + self.spikedelays[spiking_neurons])/dt), dtype = int)
+            if self.source.clock.t>=self.onset:
+                self.model_length[spiking_neurons]+=1
 
-            remaining_neurons = spiking_neurons
-            remaining_T_spiking = T_spiking
+            T_spiking=array(rint((self.source.clock.t+self.spikedelays[spiking_neurons])/dt), dtype=int)
+
+            remaining_neurons=spiking_neurons
+            remaining_T_spiking=T_spiking
             while True:
-                remaining_indices, = (remaining_T_spiking > self.next_spike_time[remaining_neurons]).nonzero()
+                remaining_indices,=(remaining_T_spiking>self.next_spike_time[remaining_neurons]).nonzero()
                 if len(remaining_indices):
-                    indices = remaining_neurons[remaining_indices]
-                    self.target_length[indices] += 1
-                    self.spiketime_index[indices] += 1
-                    self.last_spike_time[indices] = self.next_spike_time[indices]
-                    self.next_spike_time[indices] = array(rint(self.data[self.spiketime_index[indices]+1]/dt), dtype=int)
-                    if self.coincidence_count_algorithm == 'exclusive':
-                        self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
-                        self.next_spike_allowed[indices] = True
-                    remaining_neurons = remaining_neurons[remaining_indices]
-                    remaining_T_spiking = remaining_T_spiking[remaining_indices]
+                    indices=remaining_neurons[remaining_indices]
+                    self.target_length[indices]+=1
+                    self.spiketime_index[indices]+=1
+                    self.last_spike_time[indices]=self.next_spike_time[indices]
+                    self.next_spike_time[indices]=array(rint(self.data[self.spiketime_index[indices]+1]/dt), dtype=int)
+                    if self.coincidence_count_algorithm=='exclusive':
+                        self.last_spike_allowed[indices]=self.next_spike_allowed[indices]
+                        self.next_spike_allowed[indices]=True
+                    remaining_neurons=remaining_neurons[remaining_indices]
+                    remaining_T_spiking=remaining_T_spiking[remaining_indices]
                 else:
                     break
-    
+
             # Updates coincidences count
-            near_last_spike = self.last_spike_time[spiking_neurons]+self.delta>=T_spiking
-            near_next_spike = self.next_spike_time[spiking_neurons]-self.delta<=T_spiking
-            last_spike_allowed = self.last_spike_allowed[spiking_neurons]
-            next_spike_allowed = self.next_spike_allowed[spiking_neurons]
-            I = (near_last_spike&last_spike_allowed)|(near_next_spike&next_spike_allowed)
-            
-            if self.source.clock.t >= self.onset:
-                self.coincidences[spiking_neurons[I]] += 1
-    
-            if self.coincidence_count_algorithm == 'exclusive':
-                near_both_allowed = (near_last_spike&last_spike_allowed) & (near_next_spike&next_spike_allowed)
-                self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
-                self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed                
+            near_last_spike=self.last_spike_time[spiking_neurons]+self.delta>=T_spiking
+            near_next_spike=self.next_spike_time[spiking_neurons]-self.delta<=T_spiking
+            last_spike_allowed=self.last_spike_allowed[spiking_neurons]
+            next_spike_allowed=self.next_spike_allowed[spiking_neurons]
+            I=(near_last_spike&last_spike_allowed)|(near_next_spike&next_spike_allowed)
+
+            if self.source.clock.t>=self.onset:
+                self.coincidences[spiking_neurons[I]]+=1
+
+            if self.coincidence_count_algorithm=='exclusive':
+                near_both_allowed=(near_last_spike&last_spike_allowed)&(near_next_spike&next_spike_allowed)
+                self.last_spike_allowed[spiking_neurons]=last_spike_allowed&-near_last_spike
+                self.next_spike_allowed[spiking_neurons]=(next_spike_allowed&-near_next_spike)|near_both_allowed
 
 
 class CoincidenceMatrixCounter(SpikeMonitor):
@@ -1207,54 +1222,54 @@ class CoincidenceMatrixCounter(SpikeMonitor):
         count for neuron i.
     
     """
-    def __init__(self, source,onset = None, delta = 4*ms):
-         
+    def __init__(self, source, onset=None, delta=4*ms):
+
         source.set_max_delay(0)
-        self.source = source
-        self.delay = 0
+        self.source=source
+        self.delay=0
         if onset is None:
-            onset = 0*ms
-        self.onset = onset
-        self.N = len(source)
-        
-        dt = self.source.clock.dt 
-        self.delta = array(rint(delta/dt), dtype=int)
+            onset=0*ms
+        self.onset=onset
+        self.N=len(source)
+
+        dt=self.source.clock.dt
+        self.delta=array(rint(delta/dt), dtype=int)
         self.reinit()
-    
+
     def reinit(self):
-        dt = self.source.clock.dt
+        dt=self.source.clock.dt
         # Number of spikes for each neuron
-        self.model_length = zeros(self.N, dtype = 'int')
-        self.target_length = zeros(self.N, dtype = 'int')
-        
-        self._coincidences = zeros((self.N,self.N), dtype = 'int')
-        self.last_spike_time = -100*ones(self.N, dtype = 'int')
+        self.model_length=zeros(self.N, dtype='int')
+        self.target_length=zeros(self.N, dtype='int')
+
+        self._coincidences=zeros((self.N, self.N), dtype='int')
+        self.last_spike_time=-100*ones(self.N, dtype='int')
 
     def get_coincidences(self):
-        M = array(self._coincidences, dtype=float)
-        M -= diag(M.diagonal()/2)
+        M=array(self._coincidences, dtype=float)
+        M-=diag(M.diagonal()/2)
         return M
-        
-    coincidences = property(fget=get_coincidences)
+
+    coincidences=property(fget=get_coincidences)
 
     def propagate(self, spiking_neurons):
-        dt = self.source.clock.dt
-        spiking_neurons = array(spiking_neurons)
+        dt=self.source.clock.dt
+        spiking_neurons=array(spiking_neurons)
         if len(spiking_neurons):
-            if self.source.clock.t >= self.onset:
-                self.model_length[spiking_neurons] += 1
+            if self.source.clock.t>=self.onset:
+                self.model_length[spiking_neurons]+=1
             tint=array(rint(self.source.clock.t/dt), dtype=int)
             self.last_spike_time[spiking_neurons]=tint
-            
+
             I,=(abs(self.last_spike_time-tint)<=self.delta).nonzero()
-            if self.source.clock.t >= self.onset:
+            if self.source.clock.t>=self.onset:
                 for ispike in spiking_neurons:
                     #self.coincidences[ispike,setdiff1d(I,ispike)]+=1
-                    self._coincidences[ispike,I[ispike<=I]]+=1
-                    self._coincidences[I[ispike<=I],ispike]+=1
+                    self._coincidences[ispike, I[ispike<=I]]+=1
+                    self._coincidences[I[ispike<=I], ispike]+=1
 #        if self.source.clock.t == self.onset:
 #            self.coincidences=(self.coincidences+self.coincidences.T)/2
-        
+
 
 class StateHistogramMonitor(NetworkOperation, Monitor):
     '''
@@ -1300,35 +1315,34 @@ class StateHistogramMonitor(NetworkOperation, Monitor):
     
     for the histogram of neuron ``i``.
     '''
-    def __init__(self, group, varname, range, period = 1*ms, nbins = 20):
-        self.clock = Clock(period)
-        NetworkOperation.__init__(self,None,clock=self.clock)
-        self.group = group
-        self.len = len(group)
-        self.varname = varname
-        self.nbins = nbins
-        self.n = 0
-        self.bin_edges = linspace(range[0], range[1], self.nbins+1)
-        self._hist = zeros((self.len, self.nbins+2))
-        self.sum = zeros(self.len)
-        self.sum2 = zeros(self.len)
-        
+    def __init__(self, group, varname, range, period=1*ms, nbins=20):
+        self.clock=Clock(period)
+        NetworkOperation.__init__(self, None, clock=self.clock)
+        self.group=group
+        self.len=len(group)
+        self.varname=varname
+        self.nbins=nbins
+        self.n=0
+        self.bin_edges=linspace(range[0], range[1], self.nbins+1)
+        self._hist=zeros((self.len, self.nbins+2))
+        self.sum=zeros(self.len)
+        self.sum2=zeros(self.len)
+
     def __call__(self):
-        x = self.group.state_(self.varname)
-        self.sum += x
-        self.sum2 += x**2
-        inds = digitize(x, self.bin_edges)
+        x=self.group.state_(self.varname)
+        self.sum+=x
+        self.sum2+=x**2
+        inds=digitize(x, self.bin_edges)
         for i in xrange(self.len):
-            self._hist[i,inds[i]] += 1
-        self.n += 1
-    
+            self._hist[i, inds[i]]+=1
+        self.n+=1
+
     def __getitem__(self, i):
-        return self.hist[i,:]
-    
-    hist = property(fget=lambda self:self._hist[:,1:-1]/self.n)
-    bins = property(fget = lambda self:(self.bin_edges[:-1]+self.bin_edges[1:])/2)
-    
-    mean = property(fget=lambda self:self.sum/self.n)
-    var = property(fget=lambda self:(self.sum2/self.n-self.mean**2))
-    std = property(fget=lambda self:self.var**.5)
-    
+        return self.hist[i, :]
+
+    hist=property(fget=lambda self:self._hist[:, 1:-1]/self.n)
+    bins=property(fget=lambda self:(self.bin_edges[:-1]+self.bin_edges[1:])/2)
+
+    mean=property(fget=lambda self:self.sum/self.n)
+    var=property(fget=lambda self:(self.sum2/self.n-self.mean**2))
+    std=property(fget=lambda self:self.var**.5)

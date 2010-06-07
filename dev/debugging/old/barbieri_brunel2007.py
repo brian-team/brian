@@ -37,11 +37,11 @@ dz/dt=(h-z)/tau_dn : volt
 dh/dt=-h/tau_rn : volt
 '''
 
-neurons=NeuronGroup(N,model=eqs,threshold=theta,reset=Vr,refractory=tau_rp)
-synapses_ampa=Connection(neurons,neurons,'x',weight=(1-gamma)*tau/(tau_r*N)*J)
-synapses_nmda=Connection(neurons,neurons,'h',weight=gamma*tau/(tau_rn*N)*J)
-stp1=STP(synapses_ampa,taud=tau_rec,tauf=.1*ms,U=u)
-stp2=STP(synapses_nmda,taud=tau_rec,tauf=.1*ms,U=u)
+neurons=NeuronGroup(N, model=eqs, threshold=theta, reset=Vr, refractory=tau_rp)
+synapses_ampa=Connection(neurons, neurons, 'x', weight=(1-gamma)*tau/(tau_r*N)*J)
+synapses_nmda=Connection(neurons, neurons, 'h', weight=gamma*tau/(tau_rn*N)*J)
+stp1=STP(synapses_ampa, taud=tau_rec, tauf=.1*ms, U=u)
+stp2=STP(synapses_nmda, taud=tau_rec, tauf=.1*ms, U=u)
 
 spikes=SpikeMonitor(neurons)
 

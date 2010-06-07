@@ -16,16 +16,16 @@ exponential synaptic currents. The neurons are randomly connected with probabili
 '''
 from brian import *
 
-taum =  20*ms          # membrane time constant
-taue =   5*ms          # excitatory synaptic time constant
-taui =  10*ms          # inhibitory synaptic time constant
-Vt   = -50*mV          # spike threshold
-Vr   = -60*mV          # reset value
-El   = -49*mV          # resting potential
-we   = (60*0.27/10)*mV # excitatory synaptic weight
-wi   =  (20*4.5/10)*mV # inhibitory synaptic weight
+taum=20*ms          # membrane time constant
+taue=5*ms          # excitatory synaptic time constant
+taui=10*ms          # inhibitory synaptic time constant
+Vt=-50*mV          # spike threshold
+Vr=-60*mV          # reset value
+El=-49*mV          # resting potential
+we=(60*0.27/10)*mV # excitatory synaptic weight
+wi=(20*4.5/10)*mV # inhibitory synaptic weight
 
-eqs = Equations('''
+eqs=Equations('''
         dV/dt  = (ge-gi-(V-El))/taum : volt
         dge/dt = -ge/taue            : volt
         dgi/dt = -gi/taui            : volt
@@ -37,7 +37,7 @@ resting potential ``El`` into the equation for ``V``.
 
 Now we make lots of neurons:
 '''
-G = NeuronGroup(4000, model=eqs, threshold=Vt, reset=Vr)
+G=NeuronGroup(4000, model=eqs, threshold=Vt, reset=Vr)
 '''
 Next, we divide them into subgroups. The :meth:`~NeuronGroup.subgroup` method of a
 :class:`NeuronGroup` returns a new :class:`NeuronGroup` that can be used in
@@ -48,8 +48,8 @@ of neurons 0-100 and also 200-300 say). We designate the
 first 3200 neurons as ``Ge`` and the second 800 as ``Gi``, these
 will be the excitatory and inhibitory neurons.
 '''
-Ge = G.subgroup(3200) # Excitatory neurons
-Gi = G.subgroup(800)  # Inhibitory neurons
+Ge=G.subgroup(3200) # Excitatory neurons
+Gi=G.subgroup(800)  # Inhibitory neurons
 '''
 Now we define the connections. As in the previous part of the
 tutorial, ``ge`` is the excitatory current and ``gi`` is the inhibitory
@@ -66,17 +66,17 @@ Set up some monitors as usual. The line ``record=0`` in the :class:`StateMonitor
 declarations indicates that we only want to record the activity of
 neuron 0. This saves time and memory.
 '''
-M   = SpikeMonitor(G)
-MV  = StateMonitor(G, 'V', record=0)
-Mge = StateMonitor(G, 'ge', record=0)
-Mgi = StateMonitor(G, 'gi', record=0)
+M=SpikeMonitor(G)
+MV=StateMonitor(G, 'V', record=0)
+Mge=StateMonitor(G, 'ge', record=0)
+Mgi=StateMonitor(G, 'gi', record=0)
 '''
 And in order to start the network off in a somewhat
 more realistic state, we initialise the membrane
 potentials uniformly randomly between the reset and
 the threshold.
 '''
-G.V = Vr + (Vt-Vr) * rand(len(G))
+G.V=Vr+(Vt-Vr)*rand(len(G))
 '''
 Now we run.
 '''
@@ -103,7 +103,7 @@ plot(Mge.times/ms, Mge[0]/mV)
 plot(Mgi.times/ms, Mgi[0]/mV)
 xlabel('Time (ms)')
 ylabel('ge and gi (mV)')
-legend(('ge','gi'), 'upper right')
+legend(('ge', 'gi'), 'upper right')
 show()
 '''
 .. image:: images/tutorials/2c.jpg

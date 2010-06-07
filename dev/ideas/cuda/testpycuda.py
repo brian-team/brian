@@ -4,14 +4,14 @@ from pycuda.gpuarray import GPUArray
 from pycuda import gpuarray
 import numpy, pylab, time
 
-N = 10000
-duration = int(0.1*10000)
-record = False
-showfinal = True
-doget = True
-dosync = False
-block = (512,1,1)
-grid = (int(N/512)+1,1)
+N=10000
+duration=int(0.1*10000)
+record=False
+showfinal=True
+doget=True
+dosync=False
+block=(512, 1, 1)
+grid=(int(N/512)+1, 1)
 
 #Device attributes
 #MAX_THREADS_PER_BLOCK : 512
@@ -31,7 +31,7 @@ grid = (int(N/512)+1,1)
 #GPU_OVERLAP : 1
 #MULTIPROCESSOR_COUNT : 30
 
-mod = drv.SourceModule("""
+mod=drv.SourceModule("""
 __global__ void stateupdate(double *v, double *w)
 {
   //const int i = threadIdx.x;
@@ -43,16 +43,16 @@ __global__ void stateupdate(double *v, double *w)
 }
 """)
 
-stateupdate = mod.get_function("stateupdate")
+stateupdate=mod.get_function("stateupdate")
 
-v = gpuarray.to_gpu(numpy.ones(N))
-w = gpuarray.to_gpu(numpy.zeros(N))
+v=gpuarray.to_gpu(numpy.ones(N))
+w=gpuarray.to_gpu(numpy.zeros(N))
 
 #ov = numpy.zeros(N)
-ov = drv.pagelocked_zeros((N,), dtype=float)
+ov=drv.pagelocked_zeros((N,), dtype=float)
 
-recv = []
-start = time.time()
+recv=[]
+start=time.time()
 for _ in xrange(duration):
     stateupdate(v, w, block=block, grid=grid)
     if record:
@@ -64,14 +64,14 @@ for _ in xrange(duration):
 print 'GPU code:', time.time()-start
 
 if record:
-    x = numpy.array(recv)
-    pylab.plot(x[:,0])
+    x=numpy.array(recv)
+    pylab.plot(x[:, 0])
 if showfinal:
     pylab.figure()
     pylab.plot(v.get())
 if record or showfinal:
     pylab.show()
-    
+
 '''
 Some results:
 

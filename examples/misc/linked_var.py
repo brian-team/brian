@@ -8,32 +8,32 @@ differential equation, and then emit graded amounts of neurotransmitter
 '''
 from brian import *
 
-N = 5
-f = 50*Hz
-a_min = 1.0
-a_max = 100.0
-tau_haircell = 50*ms
-tau = 10*ms
-duration = 100*ms
+N=5
+f=50*Hz
+a_min=1.0
+a_max=100.0
+tau_haircell=50*ms
+tau=10*ms
+duration=100*ms
 
-eqs_haircells = '''
+eqs_haircells='''
 input = a*sin(2*pi*f*t) : 1
 x = clip(input, 0, Inf)**(1.0/3.0) : 1
 a : 1
 dy/dt = (x-y)/tau_haircell : 1 
 '''
 
-haircells = NeuronGroup(N, eqs_haircells)
-haircells.a = linspace(a_min, a_max, N)
-M_haircells = MultiStateMonitor(haircells, vars=('input', 'y'), record=True)
+haircells=NeuronGroup(N, eqs_haircells)
+haircells.a=linspace(a_min, a_max, N)
+M_haircells=MultiStateMonitor(haircells, vars=('input', 'y'), record=True)
 
-eqs_nervefibres = '''
+eqs_nervefibres='''
 dV/dt = (I-V)/tau : 1
 I : 1
 '''
-nervefibres = NeuronGroup(N, eqs_nervefibres, reset=0, threshold=1)
-nervefibres.I = linked_var(haircells, 'y')
-M_nervefibres = MultiStateMonitor(nervefibres, record=True)
+nervefibres=NeuronGroup(N, eqs_nervefibres, reset=0, threshold=1)
+nervefibres.I=linked_var(haircells, 'y')
+M_nervefibres=MultiStateMonitor(nervefibres, record=True)
 
 run(duration)
 

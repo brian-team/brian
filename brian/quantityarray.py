@@ -48,29 +48,29 @@ from log import *
 import weakref
 from itertools import izip
 
-__all__ = [ 'QuantityArray', 'qarray', 'has_consistent_dimensions', 'safeqarray']
+__all__=[ 'QuantityArray', 'qarray', 'has_consistent_dimensions', 'safeqarray']
 
 def consistent(*args):
-    args = [x for x in args if not isSequenceType(x)]
+    args=[x for x in args if not isSequenceType(x)]
     if len(args)<2:
         return True
-    return all(have_same_dimensions(a,b) for a,b in izip(args[:-1],args[1:]))
+    return all(have_same_dimensions(a, b) for a, b in izip(args[:-1], args[1:]))
 
-consistent_dimensions = consistent
-has_consistent_dimensions = consistent
+consistent_dimensions=consistent
+has_consistent_dimensions=consistent
 
 def unique_units(x):
-    if isinstance(x,Quantity):
+    if isinstance(x, Quantity):
         return [get_unit_fast(x)]
     return [1.]
 
 def QuantityArray(arr, units=None, copy=False, allowunitchanges=True):
-    return array(arr,copy=copy)
-qarray = QuantityArray
-safeqarray = qarray
+    return array(arr, copy=copy)
+qarray=QuantityArray
+safeqarray=qarray
 
 if not bup.use_units:
     def consistent(*args):
         return True
-    consistent_dimensions = consistent
-    has_consistent_dimensions = consistent
+    consistent_dimensions=consistent
+    has_consistent_dimensions=consistent

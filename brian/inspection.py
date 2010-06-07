@@ -39,9 +39,9 @@ and models defined by differential equations.
 TODO: some of the module is obsolete
 '''
 
-__all__=['is_affine','depends_on','Term','get_global_term',
-         'get_var_names','check_equations_units','fill_vars','AffineFunction',
-         'get_identifiers','modified_variables','namespace','clean_text',
+__all__=['is_affine', 'depends_on', 'Term', 'get_global_term',
+         'get_var_names', 'check_equations_units', 'fill_vars', 'AffineFunction',
+         'get_identifiers', 'modified_variables', 'namespace', 'clean_text',
          'namespace_replace_quantity_with_pure', 'list_replace_quantity_with_pure']
 
 import numpy
@@ -52,9 +52,11 @@ import re
 import inspect
 from copy import copy
 
+
 class PureQuantityBase(Quantity):
     def __init__(self, value):
-        self.dim = value.dim
+        self.dim=value.dim
+
     def __div__(self, other):
         if not isinstance(other, Quantity) and not is_scalar_type(other):
             return NotImplemented
@@ -62,11 +64,11 @@ class PureQuantityBase(Quantity):
             return Quantity.__div__(self, other)
         except ZeroDivisionError:
             try:
-                odim = other.dim
+                odim=other.dim
             except AttributeError:
-                odim = Dimension()
+                odim=Dimension()
             return Quantity.with_dimensions(0, self.dim/odim)
-    __truediv__ = __div__
+    __truediv__=__div__
     def __rdiv__(self, other):
         if not isinstance(other, Quantity) and not is_scalar_type(other):
             return NotImplemented
@@ -74,11 +76,11 @@ class PureQuantityBase(Quantity):
             return Quantity.__rdiv__(self, other)
         except ZeroDivisionError:
             try:
-                odim = other.dim
+                odim=other.dim
             except AttributeError:
-                odim = Dimension()
+                odim=Dimension()
             return Quantity.with_dimensions(0, odim/self.dim)
-    __rtruediv__ = __rdiv__
+    __rtruediv__=__rdiv__
     def __mod__(self, other):
         if not isinstance(other, Quantity) and not is_scalar_type(other):
             return NotImplemented
@@ -89,12 +91,13 @@ class PureQuantityBase(Quantity):
 
 def returnpure(meth):
     def f(*args, **kwds):
-        x = meth(*args, **kwds)
+        x=meth(*args, **kwds)
         if isinstance(x, Quantity):
             return PureQuantity(x)
         else:
             return x
     return f
+
 
 class PureQuantity(PureQuantityBase):
     '''
@@ -120,32 +123,32 @@ class PureQuantity(PureQuantityBase):
     in a user namespace, for example.
     '''
     for methname in dir(PureQuantityBase):
-        meth = getattr(PureQuantityBase, methname)
+        meth=getattr(PureQuantityBase, methname)
         try:
-            meth2 = getattr(numpy.float64, methname)
+            meth2=getattr(numpy.float64, methname)
         except AttributeError:
-            meth2 = meth
+            meth2=meth
         if callable(meth) and meth is not meth2:
             exec methname+'=returnpure(PureQuantityBase.'+methname+')'
     del meth, meth2, methname
 
 def namespace_replace_quantity_with_pure(ns):
-    newns = {}
+    newns={}
     for k, v in ns.iteritems():
         if isinstance(v, Quantity):
-            v = PureQuantity(v)
-        newns[k] = v
+            v=PureQuantity(v)
+        newns[k]=v
     return newns
 
 def list_replace_quantity_with_pure(L):
-    newL = []
+    newL=[]
     for v in L:
         if isinstance(v, Quantity):
-            v = PureQuantity(v)
+            v=PureQuantity(v)
         newL.append(v)
     return newL
 
-def namespace(expr,level=0,return_unknowns=False):
+def namespace(expr, level=0, return_unknowns=False):
     '''
     Returns a namespace with the values of identifiers in expr,
     taking from:
@@ -155,7 +158,7 @@ def namespace(expr,level=0,return_unknowns=False):
     '''
     # Build the namespace
     frame=inspect.stack()[level+1][0]
-    global_namespace,local_namespace=frame.f_globals,frame.f_locals
+    global_namespace, local_namespace=frame.f_globals, frame.f_locals
     # Find external objects
     space={}
     unknowns=[]
@@ -169,7 +172,7 @@ def namespace(expr,level=0,return_unknowns=False):
         else:
             unknowns.append(var)
     if return_unknowns:
-        return space,unknowns
+        return space, unknowns
     else:
         return space
 
@@ -189,11 +192,11 @@ def clean_text(expr):
     * Split at semi-columns (careful: indentation is ignored)
     '''
     # Merge multi-line statements
-    expr=re.sub('\\\s*?\n',' ',expr)
+    expr=re.sub('\\\s*?\n', ' ', expr)
     # Remove comments
-    expr=re.sub('#.*','',expr)
+    expr=re.sub('#.*', '', expr)
     # Split at semi-columns
-    expr=re.sub(';','\n',expr)
+    expr=re.sub(';', '\n', expr)
     return expr
 
 def modified_variables(expr):
@@ -213,12 +216,12 @@ def modified_variables(expr):
     # Find lines that start by an identifier
     mod_vars=[]
     for line in expr.splitlines():
-        s=re.search(r'^\s*(\w+)\b',line)
+        s=re.search(r'^\s*(\w+)\b', line)
         if s and (s.group(1) in vars):
             mod_vars.append(s.group(1))
     return mod_vars
 
-def fill_vars(f,keepnamespace=False,*varnames):
+def fill_vars(f, keepnamespace=False, *varnames):
     '''
     Returns a function with arguments given by varnames (list or tuple),
     given that the arguments of f are in varnames.
@@ -244,22 +247,22 @@ def fill_vars(f,keepnamespace=False,*varnames):
         # Create a unique name
         fname='fill_vars_function'+id(f)
         f.func_globals[fname]=f
-        return eval('lambda '+varstring+': '+fname+'('+shortvarstring+')',f.func_globals)
+        return eval('lambda '+varstring+': '+fname+'('+shortvarstring+')', f.func_globals)
     else:
-        return eval('lambda '+varstring+': f('+shortvarstring+')',{'f':f})
+        return eval('lambda '+varstring+': f('+shortvarstring+')', {'f':f})
 
-def check_equations_units(eqs,x):
+def check_equations_units(eqs, x):
     '''
     Check the units of the differential equations, using
     the units of x.
     df_i/dt must have units of x_i / time.
     '''
     try:
-        for f,x_i in zip(eqs,x):
+        for f, x_i in zip(eqs, x):
             f.func_globals['xi']=0*second**-.5 # Noise
             f(*x)+(x_i/second) # Check that the two terms have the same dimension
-    except DimensionMismatchError,inst:
-        raise DimensionMismatchError("The differential equations are not homogeneous!",*inst._dims)
+    except DimensionMismatchError, inst:
+        raise DimensionMismatchError("The differential equations are not homogeneous!", *inst._dims)
 
 def get_var_names(eqs):
     '''
@@ -274,64 +277,66 @@ def get_var_names(eqs):
                 names.append(name)
     return names
 
+
 class AffineFunction(object):
     '''
     An object that can be added and multiplied by a float (or array or int).
     '''
-    def __init__(self,a=1.,b=0.):
+    def __init__(self, a=1., b=0.):
         '''
         Defines an affine function as a*x+b.
         '''
         self.a=a
         self.b=b
-        
-    def __add__(self,y):
-        if isinstance(y,AffineFunction):
-            return AffineFunction(self.a+y.a,self.b+y.b)
+
+    def __add__(self, y):
+        if isinstance(y, AffineFunction):
+            return AffineFunction(self.a+y.a, self.b+y.b)
         else:
-            return AffineFunction(self.a,self.b+array(y))
-        
-    def __radd__(self,x):
-        if isinstance(x,AffineFunction):
-            return AffineFunction(self.a+x.a,self.b+x.b)
+            return AffineFunction(self.a, self.b+array(y))
+
+    def __radd__(self, x):
+        if isinstance(x, AffineFunction):
+            return AffineFunction(self.a+x.a, self.b+x.b)
         else:
-            return AffineFunction(self.a,self.b+array(x))
-        
+            return AffineFunction(self.a, self.b+array(x))
+
     def __neg__(self):
         return AffineFunction(-self.a,-self.b)
-        
-    def __sub__(self,y):
-        if isinstance(y,AffineFunction):
-            return AffineFunction(self.a-y.a,self.b-y.b)
+
+    def __sub__(self, y):
+        if isinstance(y, AffineFunction):
+            return AffineFunction(self.a-y.a, self.b-y.b)
         else:
-            return AffineFunction(self.a,self.b-array(y))
-    
-    def __rsub__(self,x):
-        if isinstance(x,AffineFunction):
-            return AffineFunction(x.a-self.a,x.b-self.b)
+            return AffineFunction(self.a, self.b-array(y))
+
+    def __rsub__(self, x):
+        if isinstance(x, AffineFunction):
+            return AffineFunction(x.a-self.a, x.b-self.b)
         else:
-            return AffineFunction(-self.a,array(x)-self.b)
-        
-    def __mul__(self,y):
-        if isinstance(y,float) or isinstance(y,int) or isinstance(y,array):
-            return AffineFunction(self.a*array(y),self.b*array(y))
+            return AffineFunction(-self.a, array(x)-self.b)
+
+    def __mul__(self, y):
+        if isinstance(y, float) or isinstance(y, int) or isinstance(y, array):
+            return AffineFunction(self.a*array(y), self.b*array(y))
         else:
             return y.__rmul__(self)
-        
-    def __rmul__(self,x):
-        if isinstance(x,float) or isinstance(x,int) or isinstance(x,array):
-            return AffineFunction(array(x)*self.a,array(x)*self.b)
+
+    def __rmul__(self, x):
+        if isinstance(x, float) or isinstance(x, int) or isinstance(x, array):
+            return AffineFunction(array(x)*self.a, array(x)*self.b)
         else:
             return x.__mul__(self)
-        
-    def __div__(self,y):
-        if isinstance(y,float) or isinstance(y,int) or isinstance(y,array):
-            return AffineFunction(self.a/array(y),self.b/array(y))
+
+    def __div__(self, y):
+        if isinstance(y, float) or isinstance(y, int) or isinstance(y, array):
+            return AffineFunction(self.a/array(y), self.b/array(y))
         else:
             return y.__rdiv__(self)
 
     def __repr__(self):
         return str(self.a)+'*x+'+str(self.b)
+
 
 class Term(object):
     '''
@@ -343,27 +348,27 @@ class Term(object):
       a+x(z) = x(z) + a = x(z)
       a*x(z) = x(z)*a = x(a*z)
     '''
-    def __init__(self,x=1.):
+    def __init__(self, x=1.):
         self.x=x
-        
-    def __add__(self,y):
+
+    def __add__(self, y):
         return self
-    
-    def __radd__(self,y):
+
+    def __radd__(self, y):
         return self
-    
-    def __mul__(self,y):
+
+    def __mul__(self, y):
         return Term(self.x*y)
 
-    def __rmul__(self,y):
+    def __rmul__(self, y):
         return Term(self.x*y)
-    
-    def __div__(self,y):
+
+    def __div__(self, y):
         return Term(self.x/y)
-    
+
     def __neg__(self):
         return Term(-self.x)
-    
+
     def __repr__(self):
         return str(self.x)+'*Term()'
 
@@ -388,7 +393,7 @@ def is_affine(f):
 #    nargs=f.func_code.co_argcount
 #    return is_affine(lambda x:f(x,*x0))
 
-def depends_on(f,x,x0):
+def depends_on(f, x, x0):
     '''
     Tests whether f depends on global variable x.
     N.B.: returns True also if f generates an error
@@ -403,29 +408,29 @@ def depends_on(f,x,x0):
 #    else:
 #        oldx=None
 
-    old_func_globals = copy(f.func_globals)
+    old_func_globals=copy(f.func_globals)
 
-    x0 = list_replace_quantity_with_pure(x0)
+    x0=list_replace_quantity_with_pure(x0)
     f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
-        
+
     result=False
     f.func_globals[x]=None
     nargs=f.func_code.co_argcount
     try:
         f(*x0)
     except:
-        result=True       
-    
+        result=True
+
 #    if oldx==None:
 #        del f.func_globals[x] # x was not defined
 #    else:
 #        f.func_globals[x]=oldx # previous value
 
     f.func_globals.update(old_func_globals)
-    
+
     return result
 
-def get_global_term(f,x,x0):
+def get_global_term(f, x, x0):
     '''
     Extract the term in global variable x from function x,
     returns a float.
@@ -433,15 +438,15 @@ def get_global_term(f,x,x0):
     Example:
     getterm(lambda x:2*x+5*y,'y',(0,0))) --> 5
     '''
-    old_func_globals = copy(f.func_globals)
+    old_func_globals=copy(f.func_globals)
 
-    x0 = list_replace_quantity_with_pure(x0)
+    x0=list_replace_quantity_with_pure(x0)
     f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
-    
+
     f.func_globals[x]=Term()
 
     result=f(*x0).x
 
     f.func_globals.update(old_func_globals)
-    
+
     return result

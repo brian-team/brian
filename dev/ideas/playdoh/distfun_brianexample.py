@@ -42,33 +42,32 @@ def fun(sigma, args):
     """
     if not isscalar(sigma):
         raise Exception('sigma must be a scalar')
-    N = args['N']
-    tau = args['tau']
-    model = args['model']
-    reset = args['reset']
-    threshold = args['threshold']
-    duration = args['duration']
-    G = NeuronGroup(N, model = model, reset = reset, threshold = threshold)
-    M = SpikeCounter(G)
-    net = Network(G, M)
+    N=args['N']
+    tau=args['tau']
+    model=args['model']
+    reset=args['reset']
+    threshold=args['threshold']
+    duration=args['duration']
+    G=NeuronGroup(N, model=model, reset=reset, threshold=threshold)
+    M=SpikeCounter(G)
+    net=Network(G, M)
     net.run(duration)
-    r = M.nspikes*1.0/N
+    r=M.nspikes*1.0/N
     return r
 
-if __name__ == '__main__':
+if __name__=='__main__':
     from playdoh import *
-    
-    N = 2000
-    tau = 10*ms
-    model = '''dV/dt=-V/tau+sigma*(2/tau)**.5*xi : 1'''
-    reset = 0
-    threshold = 1
-    duration = 1*second
-    sigmas = [.3, .4, .5, .6]
-    
-    dfun = distribute(fun, dict(N=N, tau=tau, duration=duration,
+
+    N=2000
+    tau=10*ms
+    model='''dV/dt=-V/tau+sigma*(2/tau)**.5*xi : 1'''
+    reset=0
+    threshold=1
+    duration=1*second
+    sigmas=[.3, .4, .5, .6]
+
+    dfun=distribute(fun, dict(N=N, tau=tau, duration=duration,
                                        model=model, reset=reset, threshold=threshold))
-    
-    rates = dfun(sigmas)
+
+    rates=dfun(sigmas)
     print rates
-    

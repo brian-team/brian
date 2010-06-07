@@ -80,7 +80,7 @@ Package and Module Names
       Note: there is some controversy about the use of __names (see below).
 '''
 
-import os,re
+import os, re
 
 os.chdir('..')
 os.chdir('..')
@@ -98,19 +98,19 @@ specific_changes={'is_number_type':'isNumberType',
                   'Library':'library'}
 
 def bad_identifiers(text):
-    return set(re.findall(r'\b[a-z0-9_]+[A-Z]\w+\b',text))
+    return set(re.findall(r'\b[a-z0-9_]+[A-Z]\w+\b', text))
 
-def replace_bad_identifiers(text,names):
+def replace_bad_identifiers(text, names):
     text2=text
     for name in names:
-        new_name=re.sub('[A-Z]',lambda c:'_'+c.group(0).lower(),name)
-        text2=re.sub(name,new_name,text2)
+        new_name=re.sub('[A-Z]', lambda c:'_'+c.group(0).lower(), name)
+        text2=re.sub(name, new_name, text2)
     return text2
 
 def make_specific_changes(text):
     text2=text
-    for name1,name2 in specific_changes.iteritems():
-        text2=re.sub(name1,name2,text2)
+    for name1, name2 in specific_changes.iteritems():
+        text2=re.sub(name1, name2, text2)
     return text2
 
 def patch_file(filename):
@@ -121,18 +121,18 @@ def patch_file(filename):
     names=bad_identifiers(text)
     text_out=text
     if names!=set([]):
-        text_out=replace_bad_identifiers(text_out,names)
+        text_out=replace_bad_identifiers(text_out, names)
     text_out=make_specific_changes(text_out)
-    
-    if text!=text_out:    
-        f_out=open(filename,'w')
+
+    if text!=text_out:
+        f_out=open(filename, 'w')
         f_out.write(text_out)
         f_out.close()
 
 def patch_all_files(verbose=True):
     # Get all source files
     files=[]
-    for dirpath,dirnames,filenames in os.walk('.'):
+    for dirpath, dirnames, filenames in os.walk('.'):
         files.extend([dirpath+'\\'+file for file in filenames if file[-3:]=='.py'])
     for file in files:
         if file[-13:]!='stylepatch.py':

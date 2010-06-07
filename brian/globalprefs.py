@@ -42,18 +42,19 @@ The following global preferences have been defined:
 # the global preferences referred to above are automatically
 # added to the docstring when they are defined via
 # define_global_preference
-__docformat__ = "restructuredtext en"
+__docformat__="restructuredtext en"
 
-__all__ = ['set_global_preferences','get_global_preference','exists_global_preference','define_global_preference']
+__all__=['set_global_preferences', 'get_global_preference', 'exists_global_preference', 'define_global_preference']
 
 import sys
 from utils.documentation import *
 
-globalprefdocs = ""
+globalprefdocs=""
+
 
 class BrianGlobalPreferences:
     pass
-g_prefs = BrianGlobalPreferences()
+g_prefs=BrianGlobalPreferences()
 
 
 def set_global_preferences(**kwds):
@@ -65,8 +66,8 @@ def set_global_preferences(**kwds):
     
     where ... is a list of keyword assignments.
     """
-    for k,v in kwds.iteritems():
-        g_prefs.__dict__[k] = v
+    for k, v in kwds.iteritems():
+        g_prefs.__dict__[k]=v
 
 
 def get_global_preference(k):
@@ -77,9 +78,9 @@ def get_global_preference(k):
 def exists_global_preference(k):
     """Determine if named global preference exists
     """
-    return hasattr(g_prefs,k)
+    return hasattr(g_prefs, k)
 
-def define_global_preference(k,defaultvaluedesc,desc):
+def define_global_preference(k, defaultvaluedesc, desc):
     """Define documentation for a new global preference
     
     Arguments:
@@ -93,5 +94,5 @@ def define_global_preference(k,defaultvaluedesc,desc):
         docstring format
     """
     global globalprefdocs
-    globalprefdocs += '``' + k + ' = ' + defaultvaluedesc + '``\n'
-    globalprefdocs += flattened_docstring(desc,numtabs=1)
+    globalprefdocs+='``'+k+' = '+defaultvaluedesc+'``\n'
+    globalprefdocs+=flattened_docstring(desc, numtabs=1)

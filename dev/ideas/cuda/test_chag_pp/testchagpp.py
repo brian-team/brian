@@ -6,48 +6,48 @@
 
 import _testchagpp
 import new
-new_instancemethod = new.instancemethod
+new_instancemethod=new.instancemethod
 try:
-    _swig_property = property
+    _swig_property=property
 except NameError:
     pass # Python < 2.2 doesn't have 'property'.
-def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
-    if (name == "thisown"): return self.this.own(value)
-    if (name == "this"):
-        if type(value).__name__ == 'PySwigObject':
-            self.__dict__[name] = value
+def _swig_setattr_nondynamic(self, class_type, name, value, static=1):
+    if (name=="thisown"): return self.this.own(value)
+    if (name=="this"):
+        if type(value).__name__=='PySwigObject':
+            self.__dict__[name]=value
             return
-    method = class_type.__swig_setmethods__.get(name,None)
-    if method: return method(self,value)
-    if (not static) or hasattr(self,name):
-        self.__dict__[name] = value
+    method=class_type.__swig_setmethods__.get(name, None)
+    if method: return method(self, value)
+    if (not static) or hasattr(self, name):
+        self.__dict__[name]=value
     else:
-        raise AttributeError("You cannot add attributes to %s" % self)
+        raise AttributeError("You cannot add attributes to %s"%self)
 
-def _swig_setattr(self,class_type,name,value):
-    return _swig_setattr_nondynamic(self,class_type,name,value,0)
+def _swig_setattr(self, class_type, name, value):
+    return _swig_setattr_nondynamic(self, class_type, name, value, 0)
 
-def _swig_getattr(self,class_type,name):
-    if (name == "thisown"): return self.this.own()
-    method = class_type.__swig_getmethods__.get(name,None)
+def _swig_getattr(self, class_type, name):
+    if (name=="thisown"): return self.this.own()
+    method=class_type.__swig_getmethods__.get(name, None)
     if method: return method(self)
-    raise AttributeError,name
+    raise AttributeError, name
 
 def _swig_repr(self):
-    try: strthis = "proxy of " + self.this.__repr__()
-    except: strthis = ""
-    return "<%s.%s; %s >" % (self.__class__.__module__, self.__class__.__name__, strthis,)
+    try: strthis="proxy of "+self.this.__repr__()
+    except: strthis=""
+    return "<%s.%s; %s >"%(self.__class__.__module__, self.__class__.__name__, strthis,)
 
 import types
 try:
-    _object = types.ObjectType
-    _newclass = 1
+    _object=types.ObjectType
+    _newclass=1
 except AttributeError:
     class _object : pass
-    _newclass = 0
+    _newclass=0
 del types
 
 
-find_positive = _testchagpp.find_positive
+find_positive=_testchagpp.find_positive
 
 

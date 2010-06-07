@@ -21,23 +21,23 @@ def dV_dt(V, t=0):
     betah=1./(1.+exp(-(V[0]+28.)/10.))
     alphan=0.05*(V[0]+34)/(1.-exp(-(V[0]+34)/10))
     betan=0.625*exp(-(V[0]+44)/80)
-    minf= alpham/(alpham+betam)
+    minf=alpham/(alpham+betam)
     return array([(gl*(El-V[0])-g_na*(minf)**3*V[1]*(V[0]-ENa)-g_kd*(V
-[2]**4)*(V[0]-EK)+ Iapp)/Cm,
+[2]**4)*(V[0]-EK)+Iapp)/Cm,
                    5*(alphah*(1-V[1])-betah*V[1]),
                    alphan*(1-V[2])-betan*V[2] ])
 
 
 V0=([-65, 0, 0])
 
-t = linspace(0, 100,  100000)
+t=linspace(0, 100, 100000)
 
 print " running..."
 
-V, infodict = integrate.odeint(dV_dt, V0, t, full_output=True)
+V, infodict=integrate.odeint(dV_dt, V0, t, full_output=True)
 
 infodict['message']
 
-plot(t, V[:,0], 'r-')
+plot(t, V[:, 0], 'r-')
 
 show()

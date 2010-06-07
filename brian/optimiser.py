@@ -49,9 +49,9 @@ except:
     use_sympy=False
 #TODO: also insert a global pref?
 
-__all__=['freeze','simplify_expr','symbolic_eval']
+__all__=['freeze', 'simplify_expr', 'symbolic_eval']
 
-def freeze(expr,vars,namespace={},safe=False):
+def freeze(expr, vars, namespace={}, safe=False):
     """
     Replaces all identifiers in expr by their float value.
     The variables vars are not changed.
@@ -67,7 +67,7 @@ def freeze(expr,vars,namespace={},safe=False):
         else:
             log_warn('brian.optimizer.freeze', "Freezing impossible because the value of "+id+" is missing")
             return None
-        if not isinstance(value[id],(int, float)): # or unit?
+        if not isinstance(value[id], (int, float)): # or unit?
             if safe:
                 log_warn('brian.optimizer.freeze', "Freezing impossible because "+id+" is not a number")
                 return None
@@ -77,9 +77,9 @@ def freeze(expr,vars,namespace={},safe=False):
             value[id]=float(value[id]) # downcast Quantity to float
     # Substitute
     for id in ids:
-        expr=re.sub("\\b"+id+"\\b",str(value[id]),expr)
+        expr=re.sub("\\b"+id+"\\b", str(value[id]), expr)
     # Clean (changes -- to +)
-    expr=re.sub("--","+",expr)
+    expr=re.sub("--", "+", expr)
     #print "freezing:",expr
     #return simplify_expr(expr)
     return expr
@@ -96,7 +96,7 @@ def symbolic_eval(expr):
     vars=get_identifiers(expr)
     for var in vars:
         namespace[var]=sympy.Symbol(var)
-    return eval(expr,namespace)
+    return eval(expr, namespace)
 
 def simplify_expr(expr):
     '''

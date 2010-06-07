@@ -5,4 +5,3 @@ if __name__=='__main__':
                           max_gpu=1, max_cpu=3,
                           named_pipe=True,
                           )
-    

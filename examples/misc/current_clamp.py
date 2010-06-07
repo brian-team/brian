@@ -16,10 +16,10 @@ dvm/dt=(-gl*vm+i_inj)/Cm : volt
 Rbridge:ohm # bridge resistance
 I:amp # command current
 ''')
-eqs+=current_clamp(i_cmd='I',Re=Re,Ce=Ce,bridge='Rbridge')
-setup=NeuronGroup(1,model=eqs)
-soma=StateMonitor(setup,'vm',record=True)
-recording=StateMonitor(setup,'v_rec',record=True)
+eqs+=current_clamp(i_cmd='I', Re=Re, Ce=Ce, bridge='Rbridge')
+setup=NeuronGroup(1, model=eqs)
+soma=StateMonitor(setup, 'vm', record=True)
+recording=StateMonitor(setup, 'v_rec', record=True)
 
 # No compensation
 run(50*ms)
@@ -36,6 +36,6 @@ run(100*ms)
 setup.I=0*nA
 run(50*ms)
 
-plot(recording.times/ms,recording[0]/mV,'b')
-plot(soma.times/ms,soma[0]/mV,'r')
+plot(recording.times/ms, recording[0]/mV, 'b')
+plot(soma.times/ms, soma[0]/mV, 'r')
 show()

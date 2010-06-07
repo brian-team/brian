@@ -5,24 +5,25 @@ from ...optimiser import symbolic_eval
 
 def boolean_printer(origop, newop, start=''):
     def f(self, expr):
-        PREC = precedence(expr)
+        PREC=precedence(expr)
         return start+newop.join(self.parenthesize(a, PREC) for a in expr.args)
-    f.__name__ = '_print_'+origop
+    f.__name__='_print_'+origop
     return f
-        
+
+
 class NewCCodePrinter(CCodePrinter):
-    _print_And = boolean_printer('And', '&&')
-    _print_Or = boolean_printer('Or', '||')
-    _print_Not = boolean_printer('Not', '', '!')
+    _print_And=boolean_printer('And', '&&')
+    _print_Or=boolean_printer('Or', '||')
+    _print_Not=boolean_printer('Not', '', '!')
 
-__all__ = ['rewrite_to_c_expression', 'sympy_rewrite', 'rewrite_pow', 'floatify_numbers']
+__all__=['rewrite_to_c_expression', 'sympy_rewrite', 'rewrite_pow', 'floatify_numbers']
 
-pow = sympy.Function('pow')
+pow=sympy.Function('pow')
 
 def rewrite_pow(e):
     if not len(e.args):
         return e
-    newargs = tuple(rewrite_pow(a) for a in e.args)
+    newargs=tuple(rewrite_pow(a) for a in e.args)
     if isinstance(e, sympy.Pow) and e.args[1]!=-1:
         return pow(*newargs)
     else:
@@ -33,43 +34,43 @@ def floatify_numbers(e):
         if e.is_number:
             return sympy.Number(float(e))
         return e
-    newargs = tuple(floatify_numbers(a) for a in e.args)
+    newargs=tuple(floatify_numbers(a) for a in e.args)
     return e.new(*newargs)
 
 def make_sympy_expressions(eqs):
-    exprs = {}
+    exprs={}
     for name in eqs._diffeq_names+eqs._eq_names:
-        exprs[name] = symbolic_eval(eqs._string[name])
+        exprs[name]=symbolic_eval(eqs._string[name])
     return exprs
 
 def sympy_rewrite(s, rewriters=None):
     if rewriters is not None:
         if callable(rewriters):
-            rewriters = [rewriters]
+            rewriters=[rewriters]
     else:
-        rewriters = []
-    expr = symbolic_eval(s)
+        rewriters=[]
+    expr=symbolic_eval(s)
     if not hasattr(expr, 'args'):
         return str(expr)
     for f in rewriters:
-        expr = f(expr)
+        expr=f(expr)
     return str(expr)
 
 def rewrite_to_c_expression(s):
-    e = symbolic_eval(s)
+    e=symbolic_eval(s)
     return NewCCodePrinter().doprint(e)
 
 def generate_c_expressions(eqs):
-    exprs = make_sympy_expressions(eqs)
-    cexprs = {}
+    exprs=make_sympy_expressions(eqs)
+    cexprs={}
     for name, expr in exprs.iteritems():
-        cexprs[name] = str(rewrite_pow(expr))
+        cexprs[name]=str(rewrite_pow(expr))
     return cexprs
 
 if __name__=='__main__':
     from brian import *
     if True:
-        s = '-V**2/(10*0.001)'
+        s='-V**2/(10*0.001)'
         print sympy_rewrite(s)
         print sympy_rewrite(s, rewrite_pow)
         print sympy_rewrite(s, floatify_numbers)
@@ -107,7 +108,7 @@ if __name__=='__main__':
         alphan = 0.032*(mV**-1)*(15*mV-v+VT)/(exp((15*mV-v+VT)/(5*mV))-1.)/ms : Hz
         betan = .5*exp((10*mV-v+VT)/(40*mV))/ms : Hz
         ''')
-        cexprs = generate_c_expressions(eqs)
+        cexprs=generate_c_expressions(eqs)
         for k, v in cexprs.iteritems():
             print k, ':', v
     if False:
@@ -116,16 +117,16 @@ if __name__=='__main__':
         taui=10*msecond
         Ee=(0.+60.)*mvolt
         Ei=(-80.+60.)*mvolt
-        eqs = Equations('''
+        eqs=Equations('''
         dv/dt = (-v+ge*(Ee-v)+gi*(Ei-v))*(1./taum) : volt
         dge/dt = -ge*(1./taue) : 1
         dgi/dt = -gi*(1./taui) : 1 
         ''')
-        cexprs = generate_c_expressions(eqs)
+        cexprs=generate_c_expressions(eqs)
         for k, v in cexprs.iteritems():
             print k, ':', v
     if False:
-        x = sympy.Symbol('x')
-        y = x**2 + 3*x    
+        x=sympy.Symbol('x')
+        y=x**2+3*x
         print y
         print rewrite_pow(y)

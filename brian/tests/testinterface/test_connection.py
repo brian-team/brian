@@ -56,80 +56,79 @@ def test():
     reinit_default_clock()
 
     # test Connection object
-    
-    eqs = '''
+
+    eqs='''
     da/dt = 0.*hertz : 1.
     db/dt = 0.*hertz : 1.
     '''
-    
-    spikes = [(0,1*msecond),(1,3*msecond)]
-    
-    G1 = SpikeGeneratorGroup(2,spikes)
-    G2 = NeuronGroup(2,model=eqs,threshold=10.,reset=0.)
-    
+
+    spikes=[(0, 1*msecond), (1, 3*msecond)]
+
+    G1=SpikeGeneratorGroup(2, spikes)
+    G2=NeuronGroup(2, model=eqs, threshold=10., reset=0.)
+
     # first test the methods
     # connect_full
-    C = Connection(G1,G2)
+    C=Connection(G1, G2)
     C.connect_full(G1, G2, weight=2.)
     for i in range(2):
         for j in range(2):
-            assert (is_approx_equal(C[i,j],2.))
+            assert (is_approx_equal(C[i, j], 2.))
     # connect_random
-    C = Connection(G1,G2)
+    C=Connection(G1, G2)
     C.connect_random(G1, G2, 0.5, weight=2.)
     # can't assert anything about that
     # connect_one_to_one
-    C = Connection(G1,G2)
+    C=Connection(G1, G2)
     C.connect_one_to_one(G1, G2)
     for i in range(2):
         for j in range(2):
             if i==j:
-                assert (is_approx_equal(C[i,j],1.))
+                assert (is_approx_equal(C[i, j], 1.))
             else:
-                assert (is_approx_equal(C[i,j],0.))
+                assert (is_approx_equal(C[i, j], 0.))
     del C
     # and we will use a specific set of connections in the next part
-    Ca = Connection(G1,G2,'a')
-    Cb = Connection(G1,G2,'b')
-    Ca[0,0]=1.
-    Ca[0,1]=1.
-    Ca[1,0]=1.
+    Ca=Connection(G1, G2, 'a')
+    Cb=Connection(G1, G2, 'b')
+    Ca[0, 0]=1.
+    Ca[0, 1]=1.
+    Ca[1, 0]=1.
     #Ca[1,1]=0 by default
     #Cb[0,0]=0 by default
-    Cb[0,1]=1.
-    Cb[1,0]=1.
-    Cb[1,1]=1.
-    net = Network(G1,G2,Ca,Cb)
+    Cb[0, 1]=1.
+    Cb[1, 0]=1.
+    Cb[1, 1]=1.
+    net=Network(G1, G2, Ca, Cb)
     net.run(2*msecond)
     # after 2 ms, neuron 0 will have fired, so a 0 and 1 should
     # have increased by 1 to [1,1], and b 1 should have increased
     # by 1 to 1
-    assert (is_approx_equal(G2.a[0],1.))
-    assert (is_approx_equal(G2.a[1],1.))
-    assert (is_approx_equal(G2.b[0],0.))
-    assert (is_approx_equal(G2.b[1],1.))
+    assert (is_approx_equal(G2.a[0], 1.))
+    assert (is_approx_equal(G2.a[1], 1.))
+    assert (is_approx_equal(G2.b[0], 0.))
+    assert (is_approx_equal(G2.b[1], 1.))
     net.run(2*msecond)
     # after 4 ms, neuron 1 will have fired, so a 0 should have
     # increased by 1 to 2, and b 0 and 1 should have increased
     # by 1 to [1, 2]
-    assert (is_approx_equal(G2.a[0],2.))
-    assert (is_approx_equal(G2.a[1],1.))
-    assert (is_approx_equal(G2.b[0],1.))
-    assert (is_approx_equal(G2.b[1],2.))
-    
+    assert (is_approx_equal(G2.a[0], 2.))
+    assert (is_approx_equal(G2.a[1], 1.))
+    assert (is_approx_equal(G2.b[0], 1.))
+    assert (is_approx_equal(G2.b[1], 2.))
+
     reinit_default_clock()
 
 def test_poissoninputs():
-    eqs = Equations("dv/dt=(1-v)/(1*second) : 1")
-    group = NeuronGroup(N=1, model=eqs, reset=0, threshold=1)
-    input = PoissonInputs(group, [], (10, 50*Hz, .11, 'v'))
-    m = SpikeCounter(group)
-    sm = StateMonitor(group, 'v', record=True)
-    net = Network(group, input, m, sm)
+    eqs=Equations("dv/dt=(1-v)/(1*second) : 1")
+    group=NeuronGroup(N=1, model=eqs, reset=0, threshold=1)
+    input=PoissonInputs(group, [], (10, 50*Hz, .11, 'v'))
+    m=SpikeCounter(group)
+    sm=StateMonitor(group, 'v', record=True)
+    net=Network(group, input, m, sm)
     net.run(500*ms)
-    assert (m.nspikes >= 1)
+    assert (m.nspikes>=1)
 
 if __name__=='__main__':
     test()
     test_poissoninputs()
-    

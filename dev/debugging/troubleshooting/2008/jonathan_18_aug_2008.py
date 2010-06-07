@@ -44,15 +44,15 @@ def myreset(P, spikes):
     P.h[spikes]=1
 
 #neuron=NeuronGroup(N,model=eqs,threshold=0*mV,reset=myreset,refractory=50*ms)
-neuron=NeuronGroup(N,model=eqs,threshold=0*mV,reset=CustomRefractoriness(myreset, 50*ms))
+neuron=NeuronGroup(N, model=eqs, threshold=0*mV, reset=CustomRefractoriness(myreset, 50*ms))
 
 #----Initial conditions
 neuron.v=El
 neuron.h=1
 
 #----Record variables
-Mv=StateMonitor(neuron,'v',record=0)
-Mh=StateMonitor(neuron,'h',record=0)
+Mv=StateMonitor(neuron, 'v', record=0)
+Mh=StateMonitor(neuron, 'h', record=0)
 Msp=SpikeMonitor(neuron)
 
 run(150*ms)
@@ -60,8 +60,8 @@ run(150*ms)
 #--Fig2:Parameters time course---------------
 figure()
 subplot(211)
-plot(Mv.times/ms,Mv[0]/mV)
+plot(Mv.times/ms, Mv[0]/mV)
 subplot(212)
-plot(Mh.times/ms,Mh[0])
+plot(Mh.times/ms, Mh[0])
 
 show()

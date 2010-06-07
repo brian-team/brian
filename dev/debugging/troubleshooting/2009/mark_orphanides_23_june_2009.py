@@ -24,9 +24,9 @@ I:1
 ''')
 
 
-PG=PoissonGroup(n,rates=2*Hz)
+PG=PoissonGroup(n, rates=2*Hz)
 
-G = NeuronGroup (n, model=eqs, reset="v=c;u=u+d",threshold='v>=30')
+G=NeuronGroup (n, model=eqs, reset="v=c;u=u+d", threshold='v>=30')
 
 
 
@@ -35,18 +35,18 @@ def Icurrent():
     G.I=10
 
 
-C2=IdentityConnection(PG,G,'I',weight=r)
+C2=IdentityConnection(PG, G, 'I', weight=r)
 
 G.v=-65
 G.u=b*G.v
 G.I=10
 
 Sp=SpikeMonitor(G)
-M=MultiStateMonitor(G,record=True)
+M=MultiStateMonitor(G, record=True)
 
 
 
-net=Network(Icurrent,PG,G,C2,Sp,M)
+net=Network(Icurrent, PG, G, C2, Sp, M)
 
 
 net.run(140)
@@ -58,27 +58,27 @@ raster_plot(Sp)
 
 
 figure(2)
-subplot(4,1,1)
-plot(M['v'].times,M['v'][0])
+subplot(4, 1, 1)
+plot(M['v'].times, M['v'][0])
 ylabel('v (dimensionless)')
-subplot(4,1,2)
-plot(M['I'].times,M['I'][0])
+subplot(4, 1, 2)
+plot(M['I'].times, M['I'][0])
 ylabel('I (dimensionless)')
-subplot(4,1,3)
-plot(M['u'].times,M['u'][0])
+subplot(4, 1, 3)
+plot(M['u'].times, M['u'][0])
 xlabel('Time/seconds')
 ylabel('u (dimensionless)')
 
 
 figure(3)
-subplot(4,1,1)
-plot(M['v'].times,M['v'][1])
+subplot(4, 1, 1)
+plot(M['v'].times, M['v'][1])
 ylabel('v (dimensionless)')
-subplot(4,1,2)
-plot(M['I'].times,M['I'][1])
+subplot(4, 1, 2)
+plot(M['I'].times, M['I'][1])
 ylabel('I (dimensionless)')
-subplot(4,1,3)
-plot(M['u'].times,M['u'][1])
+subplot(4, 1, 3)
+plot(M['u'].times, M['u'][1])
 xlabel('Time/seconds')
 ylabel('u (dimensionless)')
 

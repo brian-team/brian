@@ -1,6 +1,6 @@
-__all__ = ['euler_scheme', 'rk2_scheme', 'exp_euler_scheme']
+__all__=['euler_scheme', 'rk2_scheme', 'exp_euler_scheme']
 
-euler_scheme = [
+euler_scheme=[
     (('foreachvar', 'nonzero'),
         '''
         $vartype ${var}__tmp = $var_expr
@@ -11,7 +11,7 @@ euler_scheme = [
         ''')
     ]
 
-rk2_scheme = [
+rk2_scheme=[
     (('foreachvar', 'all'),
         '''
         $vartype ${var}__buf = $var_expr
@@ -25,7 +25,7 @@ rk2_scheme = [
         ''')
     ]
 
-exp_euler_scheme = [
+exp_euler_scheme=[
     (('foreachvar', 'nonzero'),
         '''
         $vartype ${var}__B = @substitute(var_expr, {var:0})
@@ -40,4 +40,4 @@ exp_euler_scheme = [
         $var *= exp(${var}__A)
         $var -= ${var}__B
         ''')
-    ] 
+    ]

@@ -26,9 +26,9 @@ dv/dt=(ge*(Ee-vr)+El-v)/taum : volt   # the synaptic current is linearized
 dge/dt=-ge/taue : 1
 '''
 
-input=PoissonGroup(N,rates=F)
-neurons=NeuronGroup(1,model=eqs_neurons,threshold=vt,reset=vr)
-synapses=Connection(input,neurons,'ge',weight=rand(len(input),len(neurons))*gmax)
+input=PoissonGroup(N, rates=F)
+neurons=NeuronGroup(1, model=eqs_neurons, threshold=vt, reset=vr)
+synapses=Connection(input, neurons, 'ge', weight=rand(len(input), len(neurons))*gmax)
 neurons.v=vr
 
 #stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax)
@@ -39,19 +39,19 @@ dA_post/dt=-A_post/tau_post : 1
 '''
 dA_post*=gmax
 dA_pre*=gmax
-stdp=STDP(synapses,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
-          post='A_post+=dA_post;w+=A_pre',wmax=gmax)
+stdp=STDP(synapses, eqs=eqs_stdp, pre='A_pre+=dA_pre;w+=A_post',
+          post='A_post+=dA_post;w+=A_pre', wmax=gmax)
 
 rate=PopulationRateMonitor(neurons)
 
 start_time=time()
-run(100*second,report='text')
-print "Simulation time:",time()-start_time
+run(100*second, report='text')
+print "Simulation time:", time()-start_time
 
 subplot(311)
-plot(rate.times/second,rate.smooth_rate(100*ms))
+plot(rate.times/second, rate.smooth_rate(100*ms))
 subplot(312)
-plot(synapses.W.todense()/gmax,'.')
+plot(synapses.W.todense()/gmax, '.')
 subplot(313)
-hist(synapses.W.todense()/gmax,20)
+hist(synapses.W.todense()/gmax, 20)
 show()

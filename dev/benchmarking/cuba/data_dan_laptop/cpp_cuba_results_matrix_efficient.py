@@ -1,6 +1,6 @@
 # state updater efficient matrix
-cpp_cuba = []
-cur_result = []
+cpp_cuba=[]
+cur_result=[]
 cur_result.append((0.734, 13873))
 cur_result.append((0.734, 12728))
 cur_result.append((0.734, 16332))
@@ -9,7 +9,7 @@ cur_result.append((0.75, 14317))
 cur_result.append((0.75, 13968))
 cur_result.append((0.75, 13461))
 cpp_cuba.append((1000, 0.741, 14210, cur_result))
-cur_result = []
+cur_result=[]
 cur_result.append((1.531, 29507))
 cur_result.append((1.531, 29427))
 cur_result.append((1.531, 27380))
@@ -18,7 +18,7 @@ cur_result.append((1.532, 28112))
 cur_result.append((1.532, 26619))
 cur_result.append((1.546, 31221))
 cpp_cuba.append((2000, 1.53343, 28460, cur_result))
-cur_result = []
+cur_result=[]
 cur_result.append((3.078, 54078))
 cur_result.append((3.078, 58927))
 cur_result.append((3.078, 53072))
@@ -27,7 +27,7 @@ cur_result.append((3.093, 55317))
 cur_result.append((3.094, 58091))
 cur_result.append((3.094, 55884))
 cpp_cuba.append((4000, 3.08471, 55564, cur_result))
-cur_result = []
+cur_result=[]
 cur_result.append((6.156, 104794))
 cur_result.append((6.156, 111930))
 cur_result.append((6.172, 107288))
@@ -36,7 +36,7 @@ cur_result.append((6.172, 115852))
 cur_result.append((6.188, 107904))
 cur_result.append((6.188, 115616))
 cpp_cuba.append((8000, 6.172, 111227, cur_result))
-cur_result = []
+cur_result=[]
 cur_result.append((12.375, 226296))
 cur_result.append((12.375, 218678))
 cur_result.append((12.375, 221668))

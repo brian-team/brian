@@ -22,11 +22,12 @@ try:
     import multiprocessing
     from multiprocessing.connection import Listener, Client
 except ImportError:
-    multiprocessing = None
+    multiprocessing=None
 import select
 import inspect
 
-__all__ = ['RemoteControlServer', 'RemoteControlClient']
+__all__=['RemoteControlServer', 'RemoteControlClient']
+
 
 class RemoteControlServer(NetworkOperation):
     '''
@@ -74,17 +75,18 @@ class RemoteControlServer(NetworkOperation):
             raise ImportError('Cannot import the required multiprocessing module.')
         NetworkOperation.__init__(self, lambda:None, clock=clock)
         if server is None:
-            server = ('localhost', 2719)
-        frame = inspect.stack()[level+1][0]
-        ns_global, ns_local=frame.f_globals,frame.f_locals
+            server=('localhost', 2719)
+        frame=inspect.stack()[level+1][0]
+        ns_global, ns_local=frame.f_globals, frame.f_locals
         if global_ns is None:
-            global_ns = frame.f_globals        
+            global_ns=frame.f_globals
         if local_ns is None:
-            local_ns = frame.f_locals
-        self.local_ns = local_ns
-        self.global_ns = global_ns
-        self.listener = Listener(server, authkey=authkey)
-        self.conn = None
+            local_ns=frame.f_locals
+        self.local_ns=local_ns
+        self.global_ns=global_ns
+        self.listener=Listener(server, authkey=authkey)
+        self.conn=None
+
     def __call__(self):
         if self.conn is None:
             # This is kind of a hack. The multiprocessing.Listener class doesn't
@@ -93,37 +95,38 @@ class RemoteControlServer(NetworkOperation):
             # to connect it will wait forever for something to connect. What
             # we do here is check if there is any incoming data on the
             # underlying IP socket used internally by multiprocessing.Listener.
-            socket = self.listener._listener._socket
-            sel, _, _ = select.select([socket], [], [], 0)
+            socket=self.listener._listener._socket
+            sel, _, _=select.select([socket], [], [], 0)
             if len(sel):
-                self.conn = self.listener.accept()
+                self.conn=self.listener.accept()
         if self.conn is None:
             return
-        conn = self.conn
-        global_ns = self.global_ns
-        local_ns = self.local_ns
-        paused = 1
+        conn=self.conn
+        global_ns=self.global_ns
+        local_ns=self.local_ns
+        paused=1
         while paused!=0:
             if paused>=0 and not conn.poll():
                 return
-            job = conn.recv()
-            jobtype, jobargs = job
-            if paused==1: paused = 0
+            job=conn.recv()
+            jobtype, jobargs=job
+            if paused==1: paused=0
             try:
-                result = None
+                result=None
                 if jobtype=='exec':
                     exec jobargs in global_ns, local_ns
                 elif jobtype=='eval':
-                    result = eval(jobargs, global_ns, local_ns)
+                    result=eval(jobargs, global_ns, local_ns)
                 elif jobtype=='pause':
-                    paused = -1
+                    paused=-1
                 elif jobtype=='go':
-                    paused = 0
+                    paused=0
             except Exception, e:
                 # if it raised an exception, we return that exception and the
                 # client can then raise it.
-                result = e
+                result=e
             conn.send(result)
+
 
 class RemoteControlClient(object):
     '''
@@ -190,24 +193,29 @@ class RemoteControlClient(object):
         if multiprocessing is None:
             raise ImportError('Cannot import the required multiprocessing module.')
         if server is None:
-            server = ('localhost', 2719)
-        self.client = Client(server, authkey=authkey)
+            server=('localhost', 2719)
+        self.client=Client(server, authkey=authkey)
+
     def execute(self, code):
         self.client.send(('exec', code))
-        result = self.client.recv()
+        result=self.client.recv()
         if isinstance(result, Exception):
             raise result
+
     def evaluate(self, code):
         self.client.send(('eval', code))
-        result = self.client.recv()
+        result=self.client.recv()
         if isinstance(result, Exception):
             raise result
         return result
+
     def pause(self):
         self.client.send(('pause', ''))
         self.client.recv()
+
     def go(self):
         self.client.send(('go', ''))
         self.client.recv()
+
     def stop(self):
         self.execute('stop()')

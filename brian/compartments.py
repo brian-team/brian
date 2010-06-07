@@ -37,7 +37,7 @@ Compartmental models for Brian.
 '''
 from equations import *
 from membrane_equations import *
-from units import check_units,ohm
+from units import check_units, ohm
 
 #TODO: add MembraneEquation
 class Compartments(Equations):
@@ -46,25 +46,25 @@ class Compartments(Equations):
     of MembraneEquation objects. Compartments are initially unconnected.
     Caution: the original objects are modified.
     """
-    def __init__(self,comps):
-        Equations.__init__(self,'')
-        for name,eqs in comps.iteritems():
+    def __init__(self, comps):
+        Equations.__init__(self, '')
+        for name, eqs in comps.iteritems():
             name=str(name)
             # Change variable names
             vars=eqs._units.keys()
             for var in vars:
-                eqs.substitute(var,var+'_'+name)
+                eqs.substitute(var, var+'_'+name)
             self+=eqs
-            
+
     @check_units(Ra=ohm)
-    def connect(self,a,b,Ra):
+    def connect(self, a, b, Ra):
         """
         Connects compartment a to compartment b with axial resistance Ra.
         """
-        a,b=str(a),str(b)
+        a, b=str(a), str(b)
         # Axial current from a to b
         Ia_name='Ia_'+a+'_'+b
-        self+=Equations('Ia=(va-vb)*invRa : amp',Ia=Ia_name,invRa=1./Ra,va='vm_'+a,vb='vm_'+b)
+        self+=Equations('Ia=(va-vb)*invRa : amp', Ia=Ia_name, invRa=1./Ra, va='vm_'+a, vb='vm_'+b)
         # Add the current to both compartments
         self._string['__membrane_Im_'+a]+='-'+Ia_name
         self._string['__membrane_Im_'+b]+='+'+Ia_name

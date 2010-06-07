@@ -8,29 +8,29 @@ from itertools import repeat
 import cProfile as profile
 import pstats
 
-N = 512*3200
-blocksize = 512
-duration = 10000
-record = False
-doprofile = False
-if drv.get_version()==(2,0,0): # cuda version
-    precision = 'float'
-elif drv.get_version()>(2,0,0):
-    precision = 'double'
+N=512*3200
+blocksize=512
+duration=10000
+record=False
+doprofile=False
+if drv.get_version()==(2, 0, 0): # cuda version
+    precision='float'
+elif drv.get_version()>(2, 0, 0):
+    precision='double'
 else:
-    raise Exception,"CUDA 2.0 required"
+    raise Exception, "CUDA 2.0 required"
 
 if precision=='double':
-    mydtype = numpy.float64
+    mydtype=numpy.float64
 else:
-    mydtype = numpy.float32
+    mydtype=numpy.float32
 
-block = (blocksize,1,1)
-grid = (N/blocksize,1)
-Ne = int(N*0.8)
-Ni = N-Ne
+block=(blocksize, 1, 1)
+grid=(N/blocksize, 1)
+Ne=int(N*0.8)
+Ni=N-Ne
 
-mod = drv.SourceModule("""
+mod=drv.SourceModule("""
 __global__ void stateupdate(SCALAR *V_arr, SCALAR *ge_arr, SCALAR *gi_arr)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -72,15 +72,15 @@ __global__ void reset(SCALAR *V, bool *spiked)
     bool has_spiked = spiked[i];
     V[i] = (V[i]*!has_spiked)+(-0.06)*has_spiked; // i.e. V[i]=-0.06 if spiked[i]
 }
-""".replace('SCALAR',precision))
-stateupdate = mod.get_function("stateupdate")
-threshold = mod.get_function("threshold")
-propagate = mod.get_function("propagate")
-reset = mod.get_function("reset")
+""".replace('SCALAR', precision))
+stateupdate=mod.get_function("stateupdate")
+threshold=mod.get_function("threshold")
+propagate=mod.get_function("propagate")
+reset=mod.get_function("reset")
 
-V = gpuarray.to_gpu(numpy.array(numpy.random.rand(N)*0.01-0.06,dtype=mydtype))
-ge = gpuarray.to_gpu(numpy.zeros(N,dtype=mydtype))
-gi = gpuarray.to_gpu(numpy.zeros(N,dtype=mydtype))
+V=gpuarray.to_gpu(numpy.array(numpy.random.rand(N)*0.01-0.06, dtype=mydtype))
+ge=gpuarray.to_gpu(numpy.zeros(N, dtype=mydtype))
+gi=gpuarray.to_gpu(numpy.zeros(N, dtype=mydtype))
 
 #we = 0.00162
 #wi = -0.009
@@ -110,7 +110,7 @@ stateupdate.prepare(('i', 'i', 'i'), block)
 #propagate.prepare(('i', numpy.int32, 'i', 'i', numpy.int32), block)
 #reset.prepare(('i', 'i'), block)
 
-stateupdate_args = (grid, int(V.gpudata), int(ge.gpudata), int(gi.gpudata))
+stateupdate_args=(grid, int(V.gpudata), int(ge.gpudata), int(gi.gpudata))
 #threshold_args = (grid, int(V.gpudata), int(gpu_spikes), int(gpu_spiked.gpudata), int(gpu_spike_index), numpy.int32(N))
 #reset_args = (grid, int(V.gpudata), int(gpu_spiked.gpudata))
 
@@ -153,23 +153,23 @@ def run_sim():
 #        totalnspikes += numspikes
 
 if doprofile:
-    start = time.time()
-    profile.run('run_sim()','cudacuba.prof')
-    end = time.time()
-    stats = pstats.Stats('cudacuba.prof')
+    start=time.time()
+    profile.run('run_sim()', 'cudacuba.prof')
+    end=time.time()
+    stats=pstats.Stats('cudacuba.prof')
     #stats.strip_dirs()
     stats.sort_stats('cumulative', 'calls')
     stats.print_stats(50)
 else:
-    start = time.time()
+    start=time.time()
     run_sim()
-    end = time.time()
+    end=time.time()
 print 'N:', N
 print 'GPU time:', end-start
 print 'Number of spikes:', totalnspikes
 
 if record:
-    i, t = zip(*recspikes)
+    i, t=zip(*recspikes)
     pylab.subplot(121)
     pylab.plot(t, i, '.')
     pylab.subplot(122)

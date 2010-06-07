@@ -45,7 +45,7 @@ dv/dt  = -(v-El)/taum + sigma/taum**.5*xi: volt
 p_active=F*dt
 Nactive=int(N*p_active) # number of active neurons every time step
 active_ones=arange(N)<Nactive
-P=NeuronGroup(N,model=eqs,threshold="rand(N)<p_active",reset=Vr,refractory=2*ms,delay=1*ms)
+P=NeuronGroup(N, model=eqs, threshold="rand(N)<p_active", reset=Vr, refractory=2*ms, delay=1*ms)
 
 # We design a fake connection matrix that always returns the
 # same row (thus the simulation time is unchanged but there is no
@@ -56,17 +56,18 @@ class FakeConstructionMatrix(SparseConstructionMatrix):
 class FakeConnectionMatrix(SparseConnectionMatrix):
     def get_row(self, i):
         return self.rows[0]
+
     def get_rows(self, rows):
         return [self.rows[0] for i in rows]
 
-C=Connection(P,P,'v',structure=FakeConstructionMatrix)
-C.connect_random(P[:1],P,sparseness=p*1./N,weight=1*mV)
+C=Connection(P, P, 'v', structure=FakeConstructionMatrix)
+C.connect_random(P[:1], P, sparseness=p*1./N, weight=1*mV)
 
-M=SpikeMonitor(P,record=False)
+M=SpikeMonitor(P, record=False)
 
 print "Starting..."
 t1=time()
 run(duration)
 t2=time()
-print "It took",t2-t1,"s"
-print M.nspikes,"spikes"
+print "It took", t2-t1, "s"
+print M.nspikes, "spikes"

@@ -18,17 +18,17 @@ tauc=Rs*Ce # critical tau_u
 eqs=Equations('''
 dvm/dt=(-gl*vm+i_inj)/Cm : volt
 ''')
-eqs+=electrode(.2*Re,Ce)
-eqs+=voltage_clamp(vm='v_el',v_cmd=20*mV,i_inj='i_cmd',i_rec='ic',
-                   Re=.8*Re,Rs=.9*Re,tau_u=.2*ms)
-setup=NeuronGroup(N,model=eqs)
+eqs+=electrode(.2*Re, Ce)
+eqs+=voltage_clamp(vm='v_el', v_cmd=20*mV, i_inj='i_cmd', i_rec='ic',
+                   Re=.8*Re, Rs=.9*Re, tau_u=.2*ms)
+setup=NeuronGroup(N, model=eqs)
 setup.v=0*mV
-recording=StateMonitor(setup,'ic',record=True)
-soma=StateMonitor(setup,'vm',record=True)
+recording=StateMonitor(setup, 'ic', record=True)
+soma=StateMonitor(setup, 'vm', record=True)
 
 run(200*ms)
 figure()
-plot(recording.times/ms,recording[0]/nA,'k')
+plot(recording.times/ms, recording[0]/nA, 'k')
 figure()
-plot(soma.times/ms,soma[0]/mV,'b')
+plot(soma.times/ms, soma[0]/mV, 'b')
 show()

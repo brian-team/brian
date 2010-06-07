@@ -11,21 +11,21 @@ lines remain the same:
 '''
 from brian import *
 
-tau = 20*msecond        # membrane time constant
-Vt  =-50*mvolt          # spike threshold
-Vr  =-60*mvolt          # reset value
+tau=20*msecond        # membrane time constant
+Vt=-50*mvolt          # spike threshold
+Vr=-60*mvolt          # reset value
 '''
 But we change the resting potential to -49 mV, just above the
 spike threshold:
 '''
-El  =-49*mvolt          # resting potential (same as the reset)
+El=-49*mvolt          # resting potential (same as the reset)
 '''
 And then continue as before:
 '''
-G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
+G=NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
               threshold=Vt, reset=Vr)
 
-M = SpikeMonitor(G)
+M=SpikeMonitor(G)
 
 run(1*second)
 

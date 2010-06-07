@@ -11,18 +11,18 @@ a value ``psp``. We start as before:
 '''
 from brian import *
 
-tau = 20*msecond        # membrane time constant
-Vt  =-50*mvolt          # spike threshold
-Vr  =-60*mvolt          # reset value
-El  =-49*mvolt          # resting potential (same as the reset)
+tau=20*msecond        # membrane time constant
+Vt=-50*mvolt          # spike threshold
+Vr=-60*mvolt          # reset value
+El=-49*mvolt          # resting potential (same as the reset)
 '''
 Now we include a new parameter, the PSP size:
 '''
-psp = 0.5*mvolt         # postsynaptic potential size
+psp=0.5*mvolt         # postsynaptic potential size
 '''
 And continue as before:
 '''
-G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
+G=NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
               threshold=Vt, reset=Vr)
 '''
 Connections
@@ -34,7 +34,7 @@ For the moment, this is just something that is necessary to
 do, the reason for doing it this way will become clear in the
 next tutorial.
 '''
-C = Connection(G,G)
+C=Connection(G, G)
 '''
 Now the interesting part, we make these neurons be randomly
 connected with probability 0.1 and weight ``psp``. Each neuron
@@ -43,7 +43,7 @@ with probability 0.1. The weight of the connection is the
 amount that is added to the membrane potential of the target
 neuron when the source neuron fires a spike.
 '''
-C.connect_random(sparseness=0.1,weight=psp)
+C.connect_random(sparseness=0.1, weight=psp)
 '''
 These two previous lines could be done in one line::
 
@@ -51,7 +51,7 @@ These two previous lines could be done in one line::
 
 Now we continue as before:
 '''
-M = SpikeMonitor(G)
+M=SpikeMonitor(G)
 
 G.V=Vr+rand(40)*(Vt-Vr)
 

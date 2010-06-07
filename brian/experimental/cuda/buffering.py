@@ -8,14 +8,14 @@ import pycuda
 import pycuda.gpuarray
 import numpy
 
-__all__ = ['SynchronisationError', 'GPUBufferedArray']
+__all__=['SynchronisationError', 'GPUBufferedArray']
 
 if __name__=='__main__':
-    DEBUG_BUFFER_CACHE = True
+    DEBUG_BUFFER_CACHE=True
 else:
-    DEBUG_BUFFER_CACHE = False
+    DEBUG_BUFFER_CACHE=False
 
-numpy_inplace_methods = set([
+numpy_inplace_methods=set([
      '__iadd__',
      '__iand__',
      '__idiv__',
@@ -37,7 +37,7 @@ numpy_inplace_methods = set([
      'sort',
      ])
 
-numpy_access_methods = set([
+numpy_access_methods=set([
      '__abs__',
      '__add__',
      '__and__',
@@ -166,6 +166,7 @@ numpy_access_methods = set([
      'var',
      'view'])-numpy_inplace_methods
 
+
 class SynchronisationError(RuntimeError):
     '''
     Indicates that the GPU and CPU data are in conflict (i.e. both have changed)
@@ -179,24 +180,26 @@ class SynchronisationError(RuntimeError):
 def gpu_buffered_array_inplace_method(func):
     def new_func(self, *args, **kwds):
         self.sync_to_cpu()
-        rval = func(self, *args, **kwds)
-        self._cpu_data_changed = True
+        rval=func(self, *args, **kwds)
+        self._cpu_data_changed=True
         return rval
-    new_func.__name__ = func.__name__
-    new_func.__doc__ = func.__doc__
+    new_func.__name__=func.__name__
+    new_func.__doc__=func.__doc__
     return new_func
 
 def gpu_buffered_array_access_method(func):
     def new_func(self, *args, **kwds):
         self.sync_to_cpu()
-        rval = func(self, *args, **kwds)
+        rval=func(self, *args, **kwds)
         return rval
-    new_func.__name__ = func.__name__
-    new_func.__doc__ = func.__doc__
+    new_func.__name__=func.__name__
+    new_func.__doc__=func.__doc__
     return new_func
+
 
 class DecoupledGPUBufferedArray(numpy.ndarray):
     pass
+
 
 class GPUBufferedArray(numpy.ndarray):
     '''
@@ -267,19 +270,19 @@ class GPUBufferedArray(numpy.ndarray):
     '''
     def __new__(subtype, cpu_arr, gpu_arr=None):
         return numpy.array(cpu_arr, copy=False).view(subtype)
-    
+
     def __init__(self, cpu_arr, gpu_arr=None):
         if gpu_arr is None:
             if DEBUG_BUFFER_CACHE:
                 print 'Initialising and copying GPU memory'
-            self._gpu_arr = pycuda.gpuarray.to_gpu(self)
-            self._gpu_data_changed = False
-            self._cpu_data_changed = False
+            self._gpu_arr=pycuda.gpuarray.to_gpu(self)
+            self._gpu_data_changed=False
+            self._cpu_data_changed=False
         else:
-            self._gpu_arr = gpu_arr
-            self._gpu_data_changed = False
-            self._cpu_data_changed = True
-            
+            self._gpu_arr=gpu_arr
+            self._gpu_data_changed=False
+            self._cpu_data_changed=True
+
     def _check_synchronisation(self):
         if not hasattr(self, '_cpu_data_changed'):
             # This happens if you do, for example, y[0,:][:]=1 because the y[0,:] will
@@ -288,117 +291,117 @@ class GPUBufferedArray(numpy.ndarray):
             # maybe we should throw an error here? The alternative is to try to minimise
             # the impact on code (although it will have decoupled the array from the
             # GPU data, which may not be expected).
-            self.__class__ = DecoupledGPUBufferedArray
-            self._cpu_data_changed = False
-            self._gpu_data_changed = False
+            self.__class__=DecoupledGPUBufferedArray
+            self._cpu_data_changed=False
+            self._gpu_data_changed=False
             return
         if self._cpu_data_changed and self._gpu_data_changed:
             raise SynchronisationError('GPU and CPU data desynchronised.')
-        
+
     def sync(self):
         self.sync_to_gpu()
         self.sync_to_cpu()
-        
+
     def sync_to_gpu(self):
         self._check_synchronisation()
         if self._cpu_data_changed:
-            gpu_arr = self._gpu_arr
+            gpu_arr=self._gpu_arr
             if isinstance(gpu_arr, pycuda.gpuarray.GPUArray):
                 gpu_arr.set(self)
             else:
                 pycuda.driver.memcpy_htod(gpu_arr, self)
-            self._cpu_data_changed = False
+            self._cpu_data_changed=False
             if DEBUG_BUFFER_CACHE:
                 print 'Synchronised to GPU'
-                
+
     def sync_to_cpu(self):
         self._check_synchronisation()
         if self._gpu_data_changed:
-            gpu_arr = self._gpu_arr
+            gpu_arr=self._gpu_arr
             if isinstance(gpu_arr, pycuda.gpuarray.GPUArray):
                 gpu_arr.get(self)
             else:
                 pycuda.driver.memcpy_dtoh(self, gpu_arr)
-            self._gpu_data_changed = False
+            self._gpu_data_changed=False
             if DEBUG_BUFFER_CACHE:
                 print 'Synchronised to CPU'
-                
+
     def changed_gpu_data(self):
-        self._gpu_data_changed = True
+        self._gpu_data_changed=True
         self._check_synchronisation()
-        
+
     def changed_cpu_data(self):
-        self._cpu_data_changed = True
+        self._cpu_data_changed=True
         self._check_synchronisation()
-        
+
     def get_cpu_array(self, modify=True):
         self.sync_to_cpu()
         if modify: # assume that the user is going to modify the data
-            self._cpu_data_changed = True
+            self._cpu_data_changed=True
         return self
-    
+
     def get_gpu_array(self, modify=True):
         self.sync_to_gpu()
         if modify: # assume that the user is going to modify the data
-            self._gpu_data_changed = True
+            self._gpu_data_changed=True
         if isinstance(self._gpu_arr, pycuda.gpuarray.GPUArray):
             return self._gpu_arr
         raise TypeError('GPU buffer is not a GPUArray')
-    
+
     def get_gpu_dev_alloc(self, modify=True):
         self.sync_to_gpu()
         if modify: # assume that the user is going to modify the data
-            self._gpu_data_changed = True
+            self._gpu_data_changed=True
         if isinstance(self._gpu_arr, pycuda.gpuarray.GPUArray):
             return self._gpu_arr.gpudata
         elif isinstance(self._gpu_arr, pycuda.driver.DeviceAllocation):
             return self._gpu_arr
         raise TypeError('gpu_arr should be a DeviceAllocation or GPUArray.')
-    
+
     def get_gpu_pointer(self):
         return int(self.gpu_dev_alloc)
-    
-    cpu_array = property(fget=get_cpu_array)
-    gpu_array = property(fget=get_gpu_array)
-    gpu_dev_alloc = property(fget=get_gpu_dev_alloc)
-    gpu_pointer = property(fget=get_gpu_pointer)
-    cpu_array_nomodify = property(fget=lambda self:self.get_cpu_array(False))
-    gpu_array_nomodify = property(fget=lambda self:self.get_gpu_array(False))
-    gpu_dev_alloc_nomodify = property(fget=lambda self:self.get_gpu_dev_alloc(False))
-    gpu_pointer_nomodify = property(fget=lambda self:self.get_gpu_pointer(False))
+
+    cpu_array=property(fget=get_cpu_array)
+    gpu_array=property(fget=get_gpu_array)
+    gpu_dev_alloc=property(fget=get_gpu_dev_alloc)
+    gpu_pointer=property(fget=get_gpu_pointer)
+    cpu_array_nomodify=property(fget=lambda self:self.get_cpu_array(False))
+    gpu_array_nomodify=property(fget=lambda self:self.get_gpu_array(False))
+    gpu_dev_alloc_nomodify=property(fget=lambda self:self.get_gpu_dev_alloc(False))
+    gpu_pointer_nomodify=property(fget=lambda self:self.get_gpu_pointer(False))
     for __name in numpy_inplace_methods:
-        exec __name + ' = gpu_buffered_array_inplace_method(numpy.ndarray.' + __name + ')'
+        exec __name+' = gpu_buffered_array_inplace_method(numpy.ndarray.'+__name+')'
     for __name in numpy_access_methods:
-        exec __name + ' = gpu_buffered_array_access_method(numpy.ndarray.' + __name + ')'
-        
+        exec __name+' = gpu_buffered_array_access_method(numpy.ndarray.'+__name+')'
+
     def __array_wrap__(self, obj, context=None):
         # normally, __array_wrap__ calls __array_finalize__ to convert the result obj into an object of its own type
         # but here, we don't want that, we want it to be a straight numpy array which doesn't maintain a connection
         # to the GPU array.
         return obj
-        
+
 if __name__=='__main__':
     import pycuda.autoinit
     from pycuda import driver as drv
     def gpuarrstatus(z):
         return '(cpu_changed='+str(z._cpu_data_changed)+', gpu_changed='+str(z._gpu_data_changed)+')'
-    x = array([1,2,3,4], dtype=numpy.float32)
+    x=array([1, 2, 3, 4], dtype=numpy.float32)
     print '+ About to initialise GPUBufferedArray'
-    y = GPUBufferedArray(x)
+    y=GPUBufferedArray(x)
     print '- Initialised GPUBufferedArray', gpuarrstatus(y)
     print '+ About to set item on CPU array', gpuarrstatus(y)
-    y[3] = 5
+    y[3]=5
     print '- Set item on CPU array', gpuarrstatus(y)
-    mod = drv.SourceModule('''
+    mod=drv.SourceModule('''
     __global__ void doubleit(float *y)
     {
         int i = threadIdx.x;
         y[i] *= 2.0;
     }
     ''')
-    doubleit = mod.get_function("doubleit")
+    doubleit=mod.get_function("doubleit")
     print '+ About to call GPU function', gpuarrstatus(y)
-    doubleit(y.gpu_array, block=(4,1,1))
+    doubleit(y.gpu_array, block=(4, 1, 1))
     print '- Called GPU function', gpuarrstatus(y)
     print '+ About to print CPU array', gpuarrstatus(y)
     print y

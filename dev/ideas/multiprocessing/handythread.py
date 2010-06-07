@@ -3,22 +3,22 @@ import time
 import threading
 from itertools import izip, count
 
-__all__ = ['foreach', 'parallel_map']
+__all__=['foreach', 'parallel_map']
 
-def foreach(f,l,threads=3,return_=False):
+def foreach(f, l, threads=3, return_=False):
     """
     Apply f to each element of l, in parallel
     """
 
     if threads>1:
-        iteratorlock = threading.Lock()
-        exceptions = []
+        iteratorlock=threading.Lock()
+        exceptions=[]
         if return_:
-            n = 0
-            d = {}
-            i = izip(count(),l.__iter__())
+            n=0
+            d={}
+            i=izip(count(), l.__iter__())
         else:
-            i = l.__iter__()
+            i=l.__iter__()
 
 
         def runall():
@@ -28,37 +28,37 @@ def foreach(f,l,threads=3,return_=False):
                     try:
                         if exceptions:
                             return
-                        v = i.next()
+                        v=i.next()
                     finally:
                         iteratorlock.release()
                 except StopIteration:
                     return
                 try:
                     if return_:
-                        n,x = v
-                        d[n] = f(x)
+                        n, x=v
+                        d[n]=f(x)
                     else:
                         f(v)
                 except:
-                    e = sys.exc_info()
+                    e=sys.exc_info()
                     iteratorlock.acquire()
                     try:
                         exceptions.append(e)
                     finally:
                         iteratorlock.release()
-        
-        threadlist = [threading.Thread(target=runall) for j in xrange(threads)]
+
+        threadlist=[threading.Thread(target=runall) for j in xrange(threads)]
         for t in threadlist:
             t.start()
         for t in threadlist:
             t.join()
         if exceptions:
-            a, b, c = exceptions[0]
+            a, b, c=exceptions[0]
             raise a, b, c
         if return_:
-            r = d.items()
+            r=d.items()
             r.sort()
-            return [v for (n,v) in r]
+            return [v for (n, v) in r]
     else:
         if return_:
             return [f(v) for v in l]
@@ -67,17 +67,17 @@ def foreach(f,l,threads=3,return_=False):
                 f(v)
             return
 
-def parallel_map(f,l,threads=3):
-    return foreach(f,l,threads=threads,return_=True)
+def parallel_map(f, l, threads=3):
+    return foreach(f, l, threads=threads, return_=True)
 
 if __name__=='__main__':
     def f(x):
         print x
         time.sleep(0.5)
-    foreach(f,range(10))
+    foreach(f, range(10))
     def g(x):
         time.sleep(0.5)
         print x
         raise ValueError, x
         time.sleep(0.5)
-    foreach(g,range(10))
+    foreach(g, range(10))

@@ -9,4 +9,4 @@ from brian import *
 from time import time
 
 print "Hi everyone!"
-print "Here is a voltage:",randint(100)*mV
+print "Here is a voltage:", randint(100)*mV

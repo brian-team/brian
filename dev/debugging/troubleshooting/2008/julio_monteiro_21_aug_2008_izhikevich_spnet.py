@@ -11,10 +11,10 @@ import time
 
 #set_global_preferences(useweave=True)
 
-defaultclock.dt = 0.5*ms
+defaultclock.dt=0.5*ms
 
 class VariableIzhikevichReset(object):
-    def __call__(self,P):
+    def __call__(self, P):
         spikes=P.LS.lastspikes()
         P.vm_[spikes]=Vr
         P.w_[spikes]+=P.d_[spikes]
@@ -34,24 +34,24 @@ Vt=30*mV # "firing" threshold
 min_delay=1*ms
 max_delay=20*ms # maximum axonal delay
 i_delay=1*ms # the inhibitory delay
-wE0= 6*mV #initial positive synaptic weight
-wI0= -5*mV #initial negative synaptic weight
+wE0=6*mV #initial positive synaptic weight
+wI0=-5*mV #initial negative synaptic weight
 # I think these are wrong, the units should be mV
 #wE0= 6*nA #initial positive synaptic weight
 #wI0= -5*nA #initial negative synaptic weight
 
 #STDP
-gmax = 10*mV#0.010 # maximum synaptic weight
-tau_pre = 20*ms
-tau_post = 20*ms
-dA_pre = gmax*.005
-dA_post = -dA_pre*1.05
+gmax=10*mV#0.010 # maximum synaptic weight
+tau_pre=20*ms
+tau_post=20*ms
+dA_pre=gmax*.005
+dA_post=-dA_pre*1.05
 
-eqs = Izhikevich(a='a', b=0.2/ms)+'''
+eqs=Izhikevich(a='a', b=0.2/ms)+'''
         a : Hz
         d : volt/second
         '''
-model = Model(model=eqs, threshold=Vt, reset=VariableIzhikevichReset())
+model=Model(model=eqs, threshold=Vt, reset=VariableIzhikevichReset())
 
 #dt bit needed for versions of Brian which aren't recent
 G=NeuronGroup(N, model, max_delay=i_delay+defaultclock.dt, compile=True, freeze=True)
@@ -69,18 +69,18 @@ Gi.w=w0
 Gi.a=0.1/ms
 Gi.d=2.0*mV/ms
 
-start_time = time.time()
-Ce = HeterogeneousDelayConnection(Ge, G, max_delay=max_delay, delays_per_synapse=True)
+start_time=time.time()
+Ce=HeterogeneousDelayConnection(Ge, G, max_delay=max_delay, delays_per_synapse=True)
 #Cei = HeterogeneousDelayConnection(Ge, Gi, max_delay=max_delay, delays_per_synapse=True)
-Cie = Connection(Gi, Ge, delay=1*ms)
+Cie=Connection(Gi, Ge, delay=1*ms)
 
 # Add Nc connections to each neuron in the network
 #Ce.connect_random(Ge, Ge, p=float(Nc)/N, weight=wE0)
 #Ce.connect_random(Ge, Gi, p=float(Nc)/N, weight=wI0)#really want this to be wI0?
 Ce.connect_random(Ge, G, p=float(Nc)/N, weight=wE0)
 for i in range(len(Ge)):
-    Ce[i,i]=0
-Ce.delayvec = DenseConnectionMatrix((len(Ge), len(G))) # faster in the current implementaton I think
+    Ce[i, i]=0
+Ce.delayvec=DenseConnectionMatrix((len(Ge), len(G))) # faster in the current implementaton I think
 
 # This way is slow, but if we're making delayvec a sparse matrix we have to do it like this
 #for i in xrange(len(Ge)):
@@ -88,7 +88,7 @@ Ce.delayvec = DenseConnectionMatrix((len(Ge), len(G))) # faster in the current i
 #        if abs(Ce[i,j])>1e-30:
 #            Ce.delayvec[i,j]=rand()*(max_delay-min_delay)+min_delay
 
-Ce.delayvec[:] = random((len(Ge), len(G)))*(max_delay-min_delay)+min_delay
+Ce.delayvec[:]=random((len(Ge), len(G)))*(max_delay-min_delay)+min_delay
 # Use this if you need to be sure they are integer multiples of 1ms, but not necessary I think
 #Ce.delayvec[:] = ((random((len(Ge), len(G)))*max_delay/ms).astype(int)).astype(float)*ms
 
@@ -101,37 +101,37 @@ Cie.connect_random(Gi, Ge, p=float(Nc)/N, weight=wI0)
 
 # if you turn STDP off it takes 20 times longer! The SparseSTDPConnectionMatrix is MORE efficient than
 # what was there before!!
-STDPe = SongAbbottSTDP(Ce, gmax=gmax, tau_pre=tau_pre, tau_post=tau_post,
+STDPe=SongAbbottSTDP(Ce, gmax=gmax, tau_pre=tau_pre, tau_post=tau_post,
                       dA_pre=dA_pre, dA_post=dA_post)
-Ce.W = SparseSTDPConnectionMatrix(Ce.W)
+Ce.W=SparseSTDPConnectionMatrix(Ce.W)
 
-print "Network build time:", time.time()-start_time,"seconds"
+print "Network build time:", time.time()-start_time, "seconds"
 
-thalamic_alternate = True
+thalamic_alternate=True
 
-Gvm_ = G.vm_
-thaldelta = float(20*mV)
+Gvm_=G.vm_
+thaldelta=float(20*mV)
 
 @network_operation(when='start')
 def thalamic_input():
     global thalamic_alternate
     # at each cycle, some random neuron gets a 20*mV boost
     if thalamic_alternate:
-        n = int(N*random())
-        Gvm_[n] += thaldelta#float(20*mV)
-        thalamic_alternate = False
+        n=int(N*random())
+        Gvm_[n]+=thaldelta#float(20*mV)
+        thalamic_alternate=False
     else:
-        thalamic_alternate = True
+        thalamic_alternate=True
 
-S = SpikeMonitor(G)
+S=SpikeMonitor(G)
 
-net = MagicNetwork()
+net=MagicNetwork()
 #net.update_schedule_groups_resets_connections()
 
-def do_run(T=T,doplot=True):
-    start_time = time.time()
+def do_run(T=T, doplot=True):
+    start_time=time.time()
     net.run(T)
-    print "Excecution time:", time.time()-start_time,"seconds"
+    print "Excecution time:", time.time()-start_time, "seconds"
     if doplot:
         raster_plot(S)
         show()

@@ -7,16 +7,17 @@ at the Brian Cookbook.
 from brian import *
 import scipy.ndimage as im
 
-__all__ = ['bar','StimulusArrayGroup']
+__all__=['bar', 'StimulusArrayGroup']
 
 def bar(width, height, thickness, angle):
     '''
     An array of given dimensions with a bar of given thickness and angle
     '''
-    stimulus = zeros((width, height))
-    stimulus[:,int(height/2.-thickness/2.):int(height/2.+thickness/2.)] = 1.
-    stimulus = im.rotate(stimulus, angle, reshape=False)
+    stimulus=zeros((width, height))
+    stimulus[:, int(height/2.-thickness/2.):int(height/2.+thickness/2.)]=1.
+    stimulus=im.rotate(stimulus, angle, reshape=False)
     return stimulus
+
 
 class StimulusArrayGroup(PoissonGroup):
     '''
@@ -29,9 +30,9 @@ class StimulusArrayGroup(PoissonGroup):
     for ``duration``.
     '''
     def __init__(self, stimulus, rate, onset, duration):
-        height, width = stimulus.shape
-        stim = stimulus.ravel()*rate
-        self.stimulus = stim
+        height, width=stimulus.shape
+        stim=stimulus.ravel()*rate
+        self.stimulus=stim
         def stimfunc(t):
             if onset<t<(onset+duration):
                 return stim
@@ -42,13 +43,13 @@ class StimulusArrayGroup(PoissonGroup):
 if __name__=='__main__':
     import pylab
     subplot(121)
-    stim = bar(100,100,10,90)*0.9+0.1
+    stim=bar(100, 100, 10, 90)*0.9+0.1
     pylab.imshow(stim, origin='lower')
     pylab.gray()
-    G = StimulusArrayGroup(stim, 50*Hz, 100*ms, 100*ms)
-    M = SpikeMonitor(G)
+    G=StimulusArrayGroup(stim, 50*Hz, 100*ms, 100*ms)
+    M=SpikeMonitor(G)
     run(300*ms)
     subplot(122)
     raster_plot(M)
-    axis(xmin=0,xmax=300)
+    axis(xmin=0, xmax=300)
     show()

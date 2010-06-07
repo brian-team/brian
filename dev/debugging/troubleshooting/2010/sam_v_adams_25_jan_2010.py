@@ -13,7 +13,7 @@ dt=1*ms
 tau=10*ms
 Vr=-70*mV
 Vl=-55*mV
-lif_eqs = '''
+lif_eqs='''
 dVm/dt=(Vl-Vm)/tau : volt
 K : volt
 '''
@@ -31,12 +31,12 @@ dA_post=-dA_pre*tau_pre/tau_post*2.5
 #-------------------------------------------------------
 
 # Input group of Poisson neurons
-groupi=PoissonGroup(100,rates=linspace(0.1*Hz,10*Hz,100))
+groupi=PoissonGroup(100, rates=linspace(0.1*Hz, 10*Hz, 100))
 
 # Main neuron population, split into two subgroups
 
-groupa = NeuronGroup(100, model=lif_eqs, threshold=-55*mV,
-                     reset=Vr,max_delay=6*ms,)
+groupa=NeuronGroup(100, model=lif_eqs, threshold=-55*mV,
+                     reset=Vr, max_delay=6*ms,)
 suba=groupa[0:50]
 subb=groupa[50:100]
 
@@ -46,21 +46,21 @@ subb=groupa[50:100]
 
 # Connect input to group a - this inputs to Voltage in main eqs
 
-input_signal = Connection(groupi,suba, 'Vm', weight=0.2*mV,
-                          sparseness=0.6,delay=4*ms)
+input_signal=Connection(groupi, suba, 'Vm', weight=0.2*mV,
+                          sparseness=0.6, delay=4*ms)
 
 # Connect group a to b - this inputs to Voltage in main eqs
 
-synapses = Connection(suba,subb, 'Vm', weight=0.1*mV,
-                      sparseness=0.7,delay=3*ms,structure='sparse', column_access=True)
+synapses=Connection(suba, subb, 'Vm', weight=0.1*mV,
+                      sparseness=0.7, delay=3*ms, structure='sparse', column_access=True)
 
 # Make trace connection which is a copy of synapses connection
 
-trace = Connection(suba,subb, 'K', weight = synapses.W)
+trace=Connection(suba, subb, 'K', weight=synapses.W)
 
 trace.compress()
 
-T_matrix = trace.W
+T_matrix=trace.W
 
 #-------------------------------------------------------
 # Set up STDP on trace connection to collect the weight
@@ -71,8 +71,8 @@ eqs_stdp='''
 dA_pre/dt=-A_pre/tau_pre : 1
 dA_post/dt=-A_post/tau_post : 1
 '''
-stdp=STDP(trace,eqs=eqs_stdp,pre='A_pre+=dA_pre;w+=A_post',
-                  post='A_post+=dA_post;w+=A_pre',wmax=gmax)
+stdp=STDP(trace, eqs=eqs_stdp, pre='A_pre+=dA_pre;w+=A_post',
+                  post='A_post+=dA_post;w+=A_pre', wmax=gmax)
 
 
 def update_trace(spikes):
@@ -80,7 +80,7 @@ def update_trace(spikes):
             # Apply reward to STDP weights which have been
             # collected in trace
             for j in spikes:
-                T_matrix[:,j] *= 0.05
+                T_matrix[:, j]*=0.05
 #            for i in xrange(len(trace.W.get_col(0))):
 #                for j in spikes:
 #                    if not isinstance(T_matrix[i,j],int):
@@ -94,11 +94,11 @@ def update_trace(spikes):
 
 # Custom SpikeMonitor for applying reward
 
-Sa1 = SpikeMonitor(suba,function=update_trace)
+Sa1=SpikeMonitor(suba, function=update_trace)
 
 
 # Set clock
-defaultclock.dt = 1.0*ms
+defaultclock.dt=1.0*ms
 
 # Initialise the Voltage to resting voltage, Vr
 

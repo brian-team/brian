@@ -36,8 +36,8 @@
 Reset mechanisms
 '''
 
-__all__=['Reset','VariableReset','Refractoriness','NoReset','FunReset',
-         'CustomRefractoriness', 'SimpleCustomRefractoriness','StringReset',
+__all__=['Reset', 'VariableReset', 'Refractoriness', 'NoReset', 'FunReset',
+         'CustomRefractoriness', 'SimpleCustomRefractoriness', 'StringReset',
          'select_reset']
 
 from numpy import where, zeros
@@ -47,10 +47,10 @@ import inspect
 import re
 import numpy
 from inspection import *
-from utils.documentation import flattened_docstring    
+from utils.documentation import flattened_docstring
 from globalprefs import *
 from log import *
-CReset = PythonReset = None
+CReset=PythonReset=None
 
 def select_reset(expr, eqs, level=0):
     '''
@@ -75,8 +75,8 @@ def select_reset(expr, eqs, level=0):
     # callable, but in general a callable means that it could be
     # non-constant.
     global CReset, PythonReset
-    use_codegen = get_global_preference('usecodegen') and get_global_preference('usecodegenreset')
-    use_weave = get_global_preference('useweave') and get_global_preference('usecodegenweave')
+    use_codegen=get_global_preference('usecodegen') and get_global_preference('usecodegenreset')
+    use_weave=get_global_preference('useweave') and get_global_preference('usecodegenweave')
     if use_codegen:
         if CReset is None:
             from experimental.codegen.reset import CReset, PythonReset
@@ -86,30 +86,30 @@ def select_reset(expr, eqs, level=0):
         else:
             log_warn('brian.reset', 'Using codegen PythonReset')
             return PythonReset(expr, level=level+1)
-    expr = expr.strip()
+    expr=expr.strip()
     if '\n' in expr:
         return StringReset(expr, level=level+1)
     eqs.prepare()
-    ns = namespace(expr, level=level+1)
-    s = re.search(r'\s*(\w+)\s*=(.+)', expr)
+    ns=namespace(expr, level=level+1)
+    s=re.search(r'\s*(\w+)\s*=(.+)', expr)
     if not s:
         return StringReset(expr, level=level+1)
-    A = s.group(1)
-    B = s.group(2).strip()
+    A=s.group(1)
+    B=s.group(2).strip()
     if A not in eqs._diffeq_names:
         return StringReset(expr, level=level+1)
     if B in eqs._diffeq_names:
         return VariableReset(B, A)
-    vars = get_identifiers(B)
-    all_vars = eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
+    vars=get_identifiers(B)
+    all_vars=eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
     for v in vars:
         if v not in ns or v in all_vars or callable(ns[v]):
             return StringReset(expr, level=level+1)
     try:
-        val = eval(B, ns)
+        val=eval(B, ns)
     except:
         return StringReset(expr, level=level+1)
-    return Reset(val, A)    
+    return Reset(val, A)
 
 
 class Reset(object):
@@ -131,23 +131,24 @@ class Reset(object):
     given state variable of the neuron group will be set to value
     ``resetvalue``.
     '''
-    def __init__(self,resetvalue=0*mvolt,state=0):
+    def __init__(self, resetvalue=0*mvolt, state=0):
         self.resetvalue=resetvalue
-        self.state = state
-        self.statevectors = {}
-        
-    def __call__(self,P):
+        self.state=state
+        self.statevectors={}
+
+    def __call__(self, P):
         '''
         Clamps membrane potential at reset value.
         '''
-        V = self.statevectors.get(id(P),None)
+        V=self.statevectors.get(id(P), None)
         if V is None:
-            V = P.state_(self.state)
-            self.statevectors[id(P)] = V
-        V[P.LS.lastspikes()] = self.resetvalue
-        
+            V=P.state_(self.state)
+            self.statevectors[id(P)]=V
+        V[P.LS.lastspikes()]=self.resetvalue
+
     def __repr__(self):
         return 'Reset '+str(self.resetvalue)
+
 
 class StringReset(Reset):
     '''
@@ -177,37 +178,38 @@ class StringReset(Reset):
         E -= 1*mV
         V = Vr+rand()*5*mV
     '''
-    def __init__(self,expr,level=0):
-        expr = flattened_docstring(expr)
-        self._namespace,unknowns=namespace(expr,level=level+1,return_unknowns=True)
-        self._prepared = False
-        self._expr = expr
+    def __init__(self, expr, level=0):
+        expr=flattened_docstring(expr)
+        self._namespace, unknowns=namespace(expr, level=level+1, return_unknowns=True)
+        self._prepared=False
+        self._expr=expr
         class Replacer(object):
             def __init__(self, func, n):
-                self.n = n
-                self.func = func
+                self.n=n
+                self.func=func
             def __call__(self):
                 return self.func(self.n)
-        self._Replacer = Replacer
-        
-    def __call__(self,P):
+        self._Replacer=Replacer
+
+    def __call__(self, P):
         if not self._prepared:
-            unknowns = [var for var in P.var_index if isinstance(var, str)]
-            expr = self._expr
+            unknowns=[var for var in P.var_index if isinstance(var, str)]
+            expr=self._expr
             for var in unknowns:
-                expr = re.sub("\\b"+var+"\\b", var+'[_spikes_]', expr)
-            self._code = compile(expr, "StringReset", "exec")
-            self._vars = unknowns
-        spikes = P.LS.lastspikes()
-        self._namespace['_spikes_'] = spikes
-        self._namespace['rand'] = self._Replacer(numpy.random.rand, len(spikes))
-        self._namespace['randn'] = self._Replacer(numpy.random.randn, len(spikes))
+                expr=re.sub("\\b"+var+"\\b", var+'[_spikes_]', expr)
+            self._code=compile(expr, "StringReset", "exec")
+            self._vars=unknowns
+        spikes=P.LS.lastspikes()
+        self._namespace['_spikes_']=spikes
+        self._namespace['rand']=self._Replacer(numpy.random.rand, len(spikes))
+        self._namespace['randn']=self._Replacer(numpy.random.randn, len(spikes))
         for var in self._vars:
-            self._namespace[var] = P.state(var)
+            self._namespace[var]=P.state(var)
         exec self._code in self._namespace
 
     def __repr__(self):
         return "String reset"
+
 
 class VariableReset(Reset):
     '''
@@ -226,25 +228,25 @@ class VariableReset(Reset):
     '''
     def __init__(self, resetvaluestate=1, state=0):
         self.resetvaluestate=resetvaluestate
-        self.state = state
-        self.resetstatevectors = {}
-        self.statevectors = {}
-        
-    def __call__(self,P):
+        self.state=state
+        self.resetstatevectors={}
+        self.statevectors={}
+
+    def __call__(self, P):
         '''
         Clamps membrane potential at reset value.
         '''
-        V = self.statevectors.get(id(P),None)
+        V=self.statevectors.get(id(P), None)
         if V is None:
-            V = P.state_(self.state)
-            self.statevectors[id(P)] = V
-        Vr = self.resetstatevectors.get(id(P),None)
+            V=P.state_(self.state)
+            self.statevectors[id(P)]=V
+        Vr=self.resetstatevectors.get(id(P), None)
         if Vr is None:
-            Vr = P.state_(self.resetvaluestate)
-            self.resetstatevectors[id(P)] = Vr
-        lastspikes = P.LS.lastspikes()
-        V[lastspikes] = Vr[lastspikes]
-        
+            Vr=P.state_(self.resetvaluestate)
+            self.resetstatevectors[id(P)]=Vr
+        lastspikes=P.LS.lastspikes()
+        V[lastspikes]=Vr[lastspikes]
+
     def __repr__(self):
         return 'VariableReset('+str(self.resetvaluestate)+', '+str(self.state)+')'
 
@@ -264,11 +266,11 @@ class FunReset(Reset):
         :class:`NeuronGroup` and ``spikes`` is an array of
         the indexes of the neurons to be reset.
     '''
-    def __init__(self,resetfun):
+    def __init__(self, resetfun):
         self.resetfun=resetfun
-        
-    def __call__(self,P):
-        self.resetfun(P,P.LS.lastspikes())
+
+    def __call__(self, P):
+        self.resetfun(P, P.LS.lastspikes())
 
 
 class Refractoriness(Reset):
@@ -287,34 +289,35 @@ class Refractoriness(Reset):
     '''
     @check_units(period=second)
     def __init__(self, resetvalue=0*mvolt, period=5*msecond, state=0):
-        self.period = period
-        self.resetvalue = resetvalue
-        self.state = state
-        self._periods = {} # a dictionary mapping group IDs to periods
-        self.statevectors = {}
-        
-    def __call__(self,P):
+        self.period=period
+        self.resetvalue=resetvalue
+        self.state=state
+        self._periods={} # a dictionary mapping group IDs to periods
+        self.statevectors={}
+
+    def __call__(self, P):
         '''
         Clamps state variable at reset value.
         '''
         # if we haven't computed the integer period for this group yet.
         # do so now
         if id(P) in self._periods:
-            period = self._periods[id(P)]
+            period=self._periods[id(P)]
         else:
-            period = int(self.period/P.clock.dt)+1
-            self._periods[id(P)] = period
-        V = self.statevectors.get(id(P), None)
+            period=int(self.period/P.clock.dt)+1
+            self._periods[id(P)]=period
+        V=self.statevectors.get(id(P), None)
         if V is None:
-            V = P.state_(self.state)
-            self.statevectors[id(P)] = V
-        neuronindices = P.LS[0:period]
+            V=P.state_(self.state)
+            self.statevectors[id(P)]=V
+        neuronindices=P.LS[0:period]
         if P._variable_refractory_time:
-            neuronindices = neuronindices[P._next_allowed_spiketime[neuronindices]>(P.clock._t-P.clock._dt*0.25)]
-        V[neuronindices] = self.resetvalue
-        
+            neuronindices=neuronindices[P._next_allowed_spiketime[neuronindices]>(P.clock._t-P.clock._dt*0.25)]
+        V[neuronindices]=self.resetvalue
+
     def __repr__(self):
         return 'Refractory period, '+str(self.period)
+
 
 class SimpleCustomRefractoriness(Refractoriness):
     '''
@@ -349,41 +352,42 @@ class SimpleCustomRefractoriness(Refractoriness):
 
     @check_units(period=second)
     def __init__(self, resetfun, period=5*msecond, state=0):
-        self.period = period
-        self.resetfun = resetfun
-        self.state = state
-        self._periods = {} # a dictionary mapping group IDs to periods
-        self.statevectors = {}
-        self.lastresetvalues = {}
+        self.period=period
+        self.resetfun=resetfun
+        self.state=state
+        self._periods={} # a dictionary mapping group IDs to periods
+        self.statevectors={}
+        self.lastresetvalues={}
 
-    def __call__(self,P):
+    def __call__(self, P):
         '''
         Clamps state variable at reset value.
         '''
         # if we haven't computed the integer period for this group yet.
         # do so now
         if id(P) in self._periods:
-            period = self._periods[id(P)]
+            period=self._periods[id(P)]
         else:
-            period = int(self.period/P.clock.dt)+1
-            self._periods[id(P)] = period
-        V = self.statevectors.get(id(P),None)
+            period=int(self.period/P.clock.dt)+1
+            self._periods[id(P)]=period
+        V=self.statevectors.get(id(P), None)
         if V is None:
-            V = P.state_(self.state)
-            self.statevectors[id(P)] = V
-        LRV = self.lastresetvalues.get(id(P),None)
+            V=P.state_(self.state)
+            self.statevectors[id(P)]=V
+        LRV=self.lastresetvalues.get(id(P), None)
         if LRV is None:
-            LRV = zeros(len(V))
-            self.lastresetvalues[id(P)] = LRV
-        lastspikes = P.LS.lastspikes()
-        self.resetfun(P,lastspikes)             # call custom reset function 
-        LRV[lastspikes] = V[lastspikes]         # store a copy of the custom resetted values
-        clampedindices = P.LS[0:period] 
-        V[clampedindices] = LRV[clampedindices] # clamp at custom resetted values
-        
+            LRV=zeros(len(V))
+            self.lastresetvalues[id(P)]=LRV
+        lastspikes=P.LS.lastspikes()
+        self.resetfun(P, lastspikes)             # call custom reset function 
+        LRV[lastspikes]=V[lastspikes]         # store a copy of the custom resetted values
+        clampedindices=P.LS[0:period]
+        V[clampedindices]=LRV[clampedindices] # clamp at custom resetted values
+
     def __repr__(self):
         return 'Custom refractory period, '+str(self.period)
-    
+
+
 class CustomRefractoriness(Refractoriness):
     '''
     Holds the state variable at the custom reset value for a fixed time after a spike.
@@ -409,32 +413,33 @@ class CustomRefractoriness(Refractoriness):
 
     @check_units(period=second)
     def __init__(self, resetfun, period=5*msecond, refracfunc=None):
-        self.period = period
-        self.resetfun = resetfun
+        self.period=period
+        self.resetfun=resetfun
         if refracfunc is None:
-            refracfunc = resetfun
-        self.refracfunc = refracfunc 
-        self._periods = {} # a dictionary mapping group IDs to periods
+            refracfunc=resetfun
+        self.refracfunc=refracfunc
+        self._periods={} # a dictionary mapping group IDs to periods
 
-    def __call__(self,P):
+    def __call__(self, P):
         '''
         Clamps state variable at reset value.
         '''
         # if we haven't computed the integer period for this group yet.
         # do so now
         if id(P) in self._periods:
-            period = self._periods[id(P)]
+            period=self._periods[id(P)]
         else:
-            period = int(self.period/P.clock.dt)+1
-            self._periods[id(P)] = period
-        lastspikes = P.LS.lastspikes()
-        self.resetfun(P,lastspikes)             # call custom reset function
-        clampedindices = P.LS[0:period] 
-        self.refracfunc(P,clampedindices) 
-        
+            period=int(self.period/P.clock.dt)+1
+            self._periods[id(P)]=period
+        lastspikes=P.LS.lastspikes()
+        self.resetfun(P, lastspikes)             # call custom reset function
+        clampedindices=P.LS[0:period]
+        self.refracfunc(P, clampedindices)
+
     def __repr__(self):
         return 'Custom refractory period, '+str(self.period)
-    
+
+
 class NoReset(Reset):
     '''
     Absence of reset mechanism.
@@ -445,9 +450,9 @@ class NoReset(Reset):
     '''
     def __init__(self):
         pass
-    
-    def __call__(self,P):
+
+    def __call__(self, P):
         pass
-    
+
     def __repr__(self):
         return 'No reset'

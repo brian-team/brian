@@ -18,19 +18,19 @@ dI/dt=-I/tau_e : volt
 
 rates=zeros(N)*Hz
 rates[N/2-10:N/2+10]=ones(20)*30*Hz
-layer1=PoissonGroup(N,rates=rates)
-layer1.x=linspace(0.,1.,len(layer1)) # abstract position between 0 and 1
-layer2=NeuronGroup(N,model=eqs,threshold=10*mV,reset=0*mV)
-layer2.x=linspace(0.,1.,len(layer2))
+layer1=PoissonGroup(N, rates=rates)
+layer1.x=linspace(0., 1., len(layer1)) # abstract position between 0 and 1
+layer2=NeuronGroup(N, model=eqs, threshold=10*mV, reset=0*mV)
+layer2.x=linspace(0., 1., len(layer2))
 
 # Generic connectivity function
-topomap=lambda i,j,x,y,sigma: exp(-abs(x[i]-y[j])/sigma)
+topomap=lambda i, j, x, y, sigma: exp(-abs(x[i]-y[j])/sigma)
 
-feedforward=Connection(layer1,layer2,sparseness=.5,
-                           weight=lambda i,j:topomap(i,j,layer1.x,layer2.x,.3)*3*mV)
+feedforward=Connection(layer1, layer2, sparseness=.5,
+                           weight=lambda i, j:topomap(i, j, layer1.x, layer2.x, .3)*3*mV)
 
-recurrent=Connection(layer2,layer2,sparseness=.5,
-                         weight=lambda i,j:topomap(i,j,layer1.x,layer2.x,.2)*.5*mV)
+recurrent=Connection(layer2, layer2, sparseness=.5,
+                         weight=lambda i, j:topomap(i, j, layer1.x, layer2.x, .2)*.5*mV)
 
 spikes=SpikeMonitor(layer2)
 

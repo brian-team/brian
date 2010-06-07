@@ -43,18 +43,18 @@ dgi/dt = -gi*(1./taui) : 1
 # NB 1: conductances are in units of the leak conductance
 # NB 2: multiplication is faster than division
 
-P=NeuronGroup(4000,model=eqs,threshold=10*mvolt,\
-              reset=0*mvolt,refractory=5*msecond,
-              order=1,compile=True)
+P=NeuronGroup(4000, model=eqs, threshold=10*mvolt, \
+              reset=0*mvolt, refractory=5*msecond,
+              order=1, compile=True)
 #STOPPPPPP
 Pe=P.subgroup(3200)
 Pi=P.subgroup(800)
-Ce=Connection(Pe,P,'ge')
-Ci=Connection(Pi,P,'gi')
+Ce=Connection(Pe, P, 'ge')
+Ci=Connection(Pi, P, 'gi')
 we=6./10. # excitatory synaptic weight (voltage)
 wi=67./10. # inhibitory synaptic weight
-Ce.connect_random(Pe, P, 0.02,weight=we)
-Ci.connect_random(Pi, P, 0.02,weight=wi)
+Ce.connect_random(Pe, P, 0.02, weight=we)
+Ci.connect_random(Pi, P, 0.02, weight=wi)
 # Initialization
 P.v=(randn(len(P))*5-5)*mvolt
 P.ge=randn(len(P))*1.5+4
@@ -64,12 +64,12 @@ P.gi=randn(len(P))*12+20
 Me=PopulationSpikeCounter(Pe)
 Mi=PopulationSpikeCounter(Pi)
 
-print "Network construction time:",time.time()-start_time,"seconds"
+print "Network construction time:", time.time()-start_time, "seconds"
 print "Simulation running..."
 start_time=time.time()
 
 run(1*second)
 duration=time.time()-start_time
-print "Simulation time:",duration,"seconds"
-print Me.nspikes,"excitatory spikes"
-print Mi.nspikes,"inhibitory spikes"
+print "Simulation time:", duration, "seconds"
+print Me.nspikes, "excitatory spikes"
+print Mi.nspikes, "inhibitory spikes"

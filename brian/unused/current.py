@@ -40,7 +40,7 @@ from operator import isSequenceType
 from stateupdater import StateUpdater
 from units import *
 
-__all__=['find_capacitance','Current','exp_current','exp_conductance',\
+__all__=['find_capacitance', 'Current', 'exp_current', 'exp_conductance', \
          'leak_current']
 
 def find_capacitance(model):
@@ -58,14 +58,14 @@ def find_capacitance(model):
         if 'model' in model:
             model=model['model']
         else: # no clue!
-            raise TypeError,'Strange model!'
-        
-    if isinstance(model,StateUpdater):
-        if hasattr(model,'Cm'):
+            raise TypeError, 'Strange model!'
+
+    if isinstance(model, StateUpdater):
+        if hasattr(model, 'Cm'):
             return model.Cm
-        if hasattr(model,'C'):
+        if hasattr(model, 'C'):
             return model.C
-        
+
     if isSequenceType(model):
         model=model[0] # The first equation is the membrane equation
     if type(model)==types.FunctionType:
@@ -73,23 +73,24 @@ def find_capacitance(model):
             return model.func_globals['Cm']
         if 'C' in model.func_globals:
             return model.func_globals['C']
-        
+
     # Nothing was found!
-    raise TypeError,'No capacitance found!'
+    raise TypeError, 'No capacitance found!'
+
 
 class Current(object):
     '''
     A membrane current.
     '''
-    def __init__(self,I=lambda v:0,eqs=[]):
+    def __init__(self, I=lambda v:0, eqs=[]):
         '''
         I = current function, e.g. I=lambda v,g: g*(v-E)
         eqs= differential system, e.g. eqs=[lambda v,g:-g]
         '''
         self.I=I
         self.eqs=eqs
-        
-    def __radd__(self,model):
+
+    def __radd__(self, model):
         '''
         model + self: addition of a current to a membrane equation
         '''
@@ -105,22 +106,22 @@ class Current(object):
         # Assume sequence type
         n=len(model) # number of equations in model
         m=len(self.eqs) # number of equations in current
-        print n,m
+        print n, m
         newmodel=[0]*(n+m)
         # Insert current in membrane equation
-        newmodel[0]=lambda *args: model[0](*(args[0:n]))+\
-                    self.I(args[0],*args[n:n+m])/Cm
+        newmodel[0]=lambda*args: model[0](*(args[0:n]))+\
+                    self.I(args[0], *args[n:n+m])/Cm
         # Adjust the number of variables
         # Tricky bit here
-        for i in range(1,n):
+        for i in range(1, n):
             md=model[i]
-            newmodel[i]=lambda *args: md(*(args[0:n]))
+            newmodel[i]=lambda*args: md(*(args[0:n]))
         #newmodel[1:n]=[lambda *args: md(*(args[0:n])) for md in model[1:n]]
         # Add current variables
         # Adjust the number of variables
-        for i in range(n,n+m):
+        for i in range(n, n+m):
             md=self.eqs[i-n]
-            newmodel[i]=lambda *args: md(args[0],*(args[n:n+m]))
+            newmodel[i]=lambda*args: md(args[0], *(args[n:n+m]))
         #newmodel[n:n+m]=[lambda *args: md(args[0],*(args[n:n+m])) for md in self.eqs[n:n+m]]        
         # Dictionnary?
         if modeldict!=None:
@@ -128,7 +129,7 @@ class Current(object):
             return modeldict
         else:
             return newmodel
-    
+
 # ---------------------
 # Synaptic currents
 # TODO: alpha and biexp
@@ -140,34 +141,34 @@ def exp_current(tau):
       I=g
       dg=-g/tau
     '''
-    return Current(I=lambda v,g:g,eqs=[lambda v,g:-g/tau])
+    return Current(I=lambda v, g:g, eqs=[lambda v, g:-g/tau])
 
-@check_units(tau=second,E=volt)
-def exp_conductance(tau,E):
+@check_units(tau=second, E=volt)
+def exp_conductance(tau, E):
     '''
     Exponential conductance.
       I=g*(E-v)
       dg=-g/tau
     '''
-    return Current(I=lambda v,g:g*(E-v),eqs=[lambda v,g:-g/tau])
-    
+    return Current(I=lambda v, g:g*(E-v), eqs=[lambda v, g:-g/tau])
+
 # ------------------
 # Intrinsic currents
 # ------------------
-@check_units(gl=siemens,El=volt)
-def leak_current(gl,El):
+@check_units(gl=siemens, El=volt)
+def leak_current(gl, El):
     '''
     Leak current.
       I=gl*(El-v)
     '''
-    return Current(I=lambda v:gl*(v-El),eqs=[])
-    
+    return Current(I=lambda v:gl*(v-El), eqs=[])
+
 # Test
 if __name__=='__main__':
     C=2.
     dv=lambda v:-v/C
     #mymodel={'model':[dv],'Cm':3}
-    m=dv+exp_conductance(10*msecond,E=-70*mvolt)+\
-              exp_conductance(20*msecond,E=-60*mvolt)
+    m=dv+exp_conductance(10*msecond, E=-70*mvolt)+\
+              exp_conductance(20*msecond, E=-60*mvolt)
     print m
-    print m[0](1.*mvolt,2.,3.),m[1](1.*volt,2.,3.),m[2](1.*volt,2.,3.)
+    print m[0](1.*mvolt, 2., 3.), m[1](1.*volt, 2., 3.), m[2](1.*volt, 2., 3.)

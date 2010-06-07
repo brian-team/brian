@@ -5,14 +5,14 @@ Utility for Parallel Python
 import inspect
 import os
 
-__all__ = [ 'ppfunction' ]
+__all__=[ 'ppfunction' ]
 
-brian_namespace = None
+brian_namespace=None
 
 def make_brian_namespace():
     global brian_namespace
     if brian_namespace is None:
-        brian_namespace = {}
+        brian_namespace={}
         exec 'from brian import *' in brian_namespace
 
 def ppfunction(f):
@@ -42,30 +42,30 @@ def ppfunction(f):
             return 3*mV    
     '''
     make_brian_namespace()
-    source = inspect.getsource(f)
-    sourcefname = inspect.getfile(f)
-    source = source.replace('@ppfunction','')
+    source=inspect.getsource(f)
+    sourcefname=inspect.getfile(f)
+    source=source.replace('@ppfunction', '')
     # TODO: this line could be a bit more intelligent
-    names = [name for name in brian_namespace.iterkeys() if name in source]
+    names=[name for name in brian_namespace.iterkeys() if name in source]
 
-    sourcelines = source.split('\n')
-    sourcelines = [l for l in sourcelines if l.strip()]
-    spaces = min([len(l)-len(l.lstrip()) for l in sourcelines])
-    sourcelines = [l[spaces:] for l in sourcelines]
-    fspaces = min([len(l)-len(l.lstrip()) for l in sourcelines[1:]])
-    sourcelines.insert(1,' '*fspaces+'from brian import '+', '.join(names))
-    sourcelines.insert(0,'from brian import *')
-    source = '\n'.join(sourcelines)
-    _, sourcefname = os.path.split(sourcefname)
-    basefname = sourcefname[:-3]
-    newbasefname = basefname+'_'+f.__name__+'_parallelpythonised'
-    newfname = newbasefname + '.py'
-    outfile = open(newfname,'w')
+    sourcelines=source.split('\n')
+    sourcelines=[l for l in sourcelines if l.strip()]
+    spaces=min([len(l)-len(l.lstrip()) for l in sourcelines])
+    sourcelines=[l[spaces:] for l in sourcelines]
+    fspaces=min([len(l)-len(l.lstrip()) for l in sourcelines[1:]])
+    sourcelines.insert(1, ' '*fspaces+'from brian import '+', '.join(names))
+    sourcelines.insert(0, 'from brian import *')
+    source='\n'.join(sourcelines)
+    _, sourcefname=os.path.split(sourcefname)
+    basefname=sourcefname[:-3]
+    newbasefname=basefname+'_'+f.__name__+'_parallelpythonised'
+    newfname=newbasefname+'.py'
+    outfile=open(newfname, 'w')
     outfile.write(source)
     outfile.write('\n')
     outfile.close()
-    exec 'import ' + newbasefname
-    exec 'f = ' + newbasefname + '.' + f.__name__  
+    exec 'import '+newbasefname
+    exec 'f = '+newbasefname+'.'+f.__name__
     return f
 
 if __name__=='__main__':
@@ -73,4 +73,4 @@ if __name__=='__main__':
     def testf():
         return 3*mV
     print testf()
-    print inspect.getsource(testf)    
+    print inspect.getsource(testf)

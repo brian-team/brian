@@ -73,32 +73,32 @@ from numpy.random import *
 from scipy.integrate import *
 import inspect
 
-__all__ = []
+__all__=[]
 
 # these functions are the ones that will work with the template immediately below, and
 # extend the numpy functions to know about Quantity objects (qarray dealt with automatically) 
-quantity_versions = [
+quantity_versions=[
          'sqrt',
-         'log','exp',
-         'sin','cos','tan',
-         'arcsin','arccos','arctan',
-         'sinh','cosh','tanh',
-         'arcsinh','arccosh','arctanh'
+         'log', 'exp',
+         'sin', 'cos', 'tan',
+         'arcsin', 'arccos', 'arctan',
+         'sinh', 'cosh', 'tanh',
+         'arcsinh', 'arccosh', 'arctanh'
          ]
 
 def make_quantity_version(func):
-    funcname = func.__name__
+    funcname=func.__name__
     def f(x):
-        if isinstance(x,Quantity):
-            return getattr(x,funcname)()
+        if isinstance(x, Quantity):
+            return getattr(x, funcname)()
         return func(x)
-    f.__name__ = func.__name__
-    f.__doc__ = func.__doc__
-    if hasattr(func,'__dict__'):
+    f.__name__=func.__name__
+    f.__doc__=func.__doc__
+    if hasattr(func, '__dict__'):
         f.__dict__.update(func.__dict__)
     return f
 
 for name in quantity_versions:
     if bup.use_units:
-        exec name + '=make_quantity_version(' + name + ')'
+        exec name+'=make_quantity_version('+name+')'
     __all__.append(name)

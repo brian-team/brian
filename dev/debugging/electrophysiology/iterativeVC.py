@@ -16,8 +16,8 @@ dv/dt=(-gl*v+I)/C : volt
 I : amp
 '''
 
-neuron=NeuronGroup(1,model=eqs)
-mon=StateMonitor(neuron,'v',record=0)
+neuron=NeuronGroup(1, model=eqs)
+mon=StateMonitor(neuron, 'v', record=0)
 
 j=0
 current=zeros(500)*amp
@@ -39,7 +39,7 @@ run(10*ms)
 for i in range(100):
     j=0
     run(50*ms)
-    
+
     v=mon[0][-500:]
     v+=rand(len(v))*2*mV
     err=sum(E-v) # clamp error
@@ -52,11 +52,11 @@ for i in range(100):
     prev[1:]=(E-v)[0:-1]
     #current+=C/dt*(E-v-exp(-dt/tau)*prev) # Kawato et al
     current+=g*(E-v-.99*prev)
-    current=clip(current,-maxcur,maxcur)
+    current=clip(current,-maxcur, maxcur)
     # use best combination of last 2? + new independent component
     #g=2.*g
 
     run(100*ms) # rest
 
-plot(mon.times/ms,mon[0]/mV)
+plot(mon.times/ms, mon[0]/mV)
 show()

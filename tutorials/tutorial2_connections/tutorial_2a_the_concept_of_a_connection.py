@@ -19,10 +19,10 @@ The program starts as follows.
 '''
 from brian import *
 
-tau_a =  1*ms
-tau_b = 10*ms
-Vt    = 10*mV
-Vr    =  0*mV
+tau_a=1*ms
+tau_b=10*ms
+Vt=10*mV
+Vr=0*mV
 '''
 Differential equations
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -32,7 +32,7 @@ This time, we will have multiple differential equations. We will use the
 defining the differential equations directly when initialising the :class:`NeuronGroup`
 object (see the next part of the tutorial for an example of this).
 '''
-eqs = Equations('''
+eqs=Equations('''
       dVa/dt = -Va/tau_a : volt
       dVb/dt = -Vb/tau_b : volt
       ''')
@@ -62,17 +62,17 @@ of which (neuron 0) fires at times 1 ms and 4 ms, and the second
 of which (neuron 1) fires at times 2 ms and 3 ms. The list of
 ``spiketimes`` then is:
 '''
-spiketimes = [(0,1*ms), (0,4*ms),
-              (1,2*ms), (1,3*ms)]
+spiketimes=[(0, 1*ms), (0, 4*ms),
+              (1, 2*ms), (1, 3*ms)]
 '''
 and we create the group as follows:
 '''
-G1 = SpikeGeneratorGroup(2,spiketimes)
+G1=SpikeGeneratorGroup(2, spiketimes)
 '''
 Now we create a second group, with one neuron, according to the
 model we defined earlier.
 '''
-G2 = NeuronGroup(N=1, model=eqs, threshold=Vt, reset=Vr)
+G2=NeuronGroup(N=1, model=eqs, threshold=Vt, reset=Vr)
 '''
 Connections
 ~~~~~~~~~~~
@@ -94,8 +94,8 @@ directly controlled neurons to the group of one neuron with the
 differential equations. The first connection has the target state ``Va``
 and the second has the target state ``Vb``.
 '''
-C1 = Connection(G1,G2,'Va')
-C2 = Connection(G1,G2,'Vb')
+C1=Connection(G1, G2, 'Va')
+C2=Connection(G1, G2, 'Vb')
 '''
 So far, this only declares our intention to connect neurons in group
 ``G1`` to neurons in group ``G2``, because the connection matrix is initially
@@ -106,8 +106,8 @@ will be increased by 6 mV. Then we use connection ``C2`` to connection
 neuron 1 in group ``G1`` to neuron 0 in group ``G2``, this time with weight
 3 mV.
 '''
-C1[0,0] = 6*mV
-C2[1,0] = 3*mV
+C1[0, 0]=6*mV
+C2[1, 0]=3*mV
 '''
 The net effect of this is that when neuron 0 of ``G1`` fires, ``Va`` for
 the neuron in ``G2`` will increase 6 mV, and when neuron 1 of ``G1`` fires,
@@ -116,13 +116,13 @@ the neuron in ``G2`` will increase 6 mV, and when neuron 1 of ``G1`` fires,
 Now we set up monitors to record the activity of the network,
 run it and plot it.
 '''
-Ma = StateMonitor(G2,'Va',record=True)
-Mb = StateMonitor(G2,'Vb',record=True)
+Ma=StateMonitor(G2, 'Va', record=True)
+Mb=StateMonitor(G2, 'Vb', record=True)
 
 run(10*ms)
 
-plot(Ma.times,Ma[0])
-plot(Mb.times,Mb[0])
+plot(Ma.times, Ma[0])
+plot(Mb.times, Mb[0])
 show()
 '''
 .. image:: images/tutorials/2a.jpg

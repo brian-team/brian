@@ -36,12 +36,13 @@
 Tabulation of numerical functions.
 '''
 
-__all__=['Tabulate','TabulateInterp']
+__all__=['Tabulate', 'TabulateInterp']
 
-from brian.units import get_unit,Quantity,is_dimensionless
-from brian.quantityarray import qarray,safeqarray
-from brian.unitsafefunctions import array,arange,zeros
+from brian.units import get_unit, Quantity, is_dimensionless
+from brian.quantityarray import qarray, safeqarray
+from brian.unitsafefunctions import array, arange, zeros
 from numpy import NaN
+
 
 class Tabulate(object):
     '''
@@ -58,7 +59,7 @@ class Tabulate(object):
     An IndexError is raised is arguments are above xmax, but
     not always when they are below xmin (it can give weird results).
     '''
-    def __init__(self,f,xmin,xmax,n):
+    def __init__(self, f, xmin, xmax, n):
         self.xmin=xmin
         self.xmax=xmax
         self.dx=(xmax-xmin)/float(n)
@@ -73,16 +74,17 @@ class Tabulate(object):
             self.f=zeros(n)*f(xmin) # for the unit
             for i in xrange(n):
                 self.f[i]=f(x[i])
-        
-    def __call__(self,x):
+
+    def __call__(self, x):
         try: # possible problem if x is an array and an array is wanted
-            return self.f[array((array(x)-self.xmin)*self.invdx,dtype=int)]
+            return self.f[array((array(x)-self.xmin)*self.invdx, dtype=int)]
         except IndexError: # out of bounds
-            return NaN*self.unit        
-    
+            return NaN*self.unit
+
     def __repr__(self):
         return 'Tabulated function with '+str(len(self.f))+' points'
-    
+
+
 class TabulateInterp(object):
     '''
     An object to tabulate a numerical function with linear interpolation.
@@ -98,7 +100,7 @@ class TabulateInterp(object):
     An IndexError is raised is arguments are above xmax, but
     not always when they are below xmin (it can give weird results).
     '''
-    def __init__(self,f,xmin,xmax,n):
+    def __init__(self, f, xmin, xmax, n):
         self.xmin=xmin
         self.xmax=xmax
         self.dx=(xmax-xmin)/float(n-1)
@@ -114,11 +116,11 @@ class TabulateInterp(object):
             for i in xrange(n):
                 self.f[i]=f(x[i])
         self.f=array(self.f)
-        self.df=(self.f[range(1,n)]-self.f[range(n-1)])*float(self.invdx)
-        
-    def __call__(self,x): # the units of x is not checked
+        self.df=(self.f[range(1, n)]-self.f[range(n-1)])*float(self.invdx)
+
+    def __call__(self, x): # the units of x is not checked
         y=array(x)-self.xmin
-        ind=array(y*self.invdx,dtype=int)
+        ind=array(y*self.invdx, dtype=int)
         try:
             if is_dimensionless(x): # could be a problem if it is a Quantity with units=1
                 return self.f[ind]+self.df[ind]*(y-array(ind)*self.dx)

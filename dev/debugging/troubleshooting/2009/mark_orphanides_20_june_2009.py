@@ -8,15 +8,15 @@ from brian import *
 #run(1*ms)
 #print M.spikes
 
-eqs = '''
+eqs='''
 dV/dt = dV_dt: 1
 dV_dt = V/(3*ms) : 1/second
 thresh = (V>1)&(dV_dt>1/second) : 1
 '''
 
-G = NeuronGroup(1, eqs, threshold=EmpiricalThreshold(0, 1*ms, 'thresh'))
-G.V = 0.1
-M = MultiStateMonitor(G, ('V', 'dV_dt', 'thresh'), record=True)
+G=NeuronGroup(1, eqs, threshold=EmpiricalThreshold(0, 1*ms, 'thresh'))
+G.V=0.1
+M=MultiStateMonitor(G, ('V', 'dV_dt', 'thresh'), record=True)
 
 run(10*ms)
 

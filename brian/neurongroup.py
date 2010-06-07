@@ -35,10 +35,10 @@
 '''
 Neuron groups
 '''
-__all__ = ['NeuronGroup', 'PoissonGroup', 'OfflinePoissonGroup', 'linked_var']
+__all__=['NeuronGroup', 'PoissonGroup', 'OfflinePoissonGroup', 'linked_var']
 
 from numpy import *
-from scipy import rand,linalg,random
+from scipy import rand, linalg, random
 from numpy.random import exponential, randint
 import copy
 from units import *
@@ -63,8 +63,9 @@ from base import *
 from group import *
 from threshold import select_threshold
 
-timedarray = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
-network = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
+timedarray=None # ugly hack: import this module when it is needed, can't do it here because of order of imports
+network=None # ugly hack: import this module when it is needed, can't do it here because of order of imports
+
 
 class TArray(numpy.ndarray):
     '''
@@ -78,13 +79,14 @@ class TArray(numpy.ndarray):
         # http://www.scipy.org/Subclasses
         return numpy.array(arr, copy=False).view(subtype)
 
+
 class LinkedVar(object):
     def __init__(self, source, var=0, func=None, when='start', clock=None):
-        self.source = source
-        self.var = var
-        self.func = func
-        self.when = when
-        self.clock = clock
+        self.source=source
+        self.var=var
+        self.func=func
+        self.when=when
+        self.clock=clock
 
 def linked_var(source, var=0, func=None, when='start', clock=None):
     """
@@ -118,6 +120,7 @@ def linked_var(source, var=0, func=None, when='start', clock=None):
         of the target group.
     """
     return LinkedVar(source, var, func, when, clock)
+
 
 class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     """Group of neurons
@@ -239,11 +242,11 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
     TODO: details of other methods and properties for people
     wanting to write extensions?
     """
-    
+
     @check_units(max_delay=second)
     def __init__(self, N, model=None, threshold=None, reset=NoReset(),
                  init=None, refractory=0*msecond, level=0,
-                 clock=None, order=1, implicit=False,unit_checking=True,
+                 clock=None, order=1, implicit=False, unit_checking=True,
                  max_delay=0*msecond, compile=False, freeze=False, method=None,
                  max_refractory=None,
                  ):#**args): # any reason why **args was included here?
@@ -251,73 +254,73 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         Initializes the group.
         '''
 
-        self._spiking = True # by default, produces spikes
+        self._spiking=True # by default, produces spikes
         if bup.use_units: # one additional frame level induced by the decorator
-            level += 1
+            level+=1
 
         # If it is a string, convert to Equations object
-        if isinstance(model,(str,list,tuple)):
-            model = Equations(model, level=level+1)        
+        if isinstance(model, (str, list, tuple)):
+            model=Equations(model, level=level+1)
 
-        if isinstance(threshold,str):
+        if isinstance(threshold, str):
             if isinstance(model, Equations):
-                threshold = select_threshold(threshold, model, level=level+1)
+                threshold=select_threshold(threshold, model, level=level+1)
             else:
-                threshold = StringThreshold(threshold, level=level+1)
+                threshold=StringThreshold(threshold, level=level+1)
 
-        if isinstance(reset,str):
+        if isinstance(reset, str):
             if isinstance(model, Equations):
-                reset = select_reset(reset, model, level=level+1)
+                reset=select_reset(reset, model, level=level+1)
             else:
-                reset = StringReset(reset, level=level+1)
+                reset=StringReset(reset, level=level+1)
 
         # Clock
         clock=guess_clock(clock)#not needed with protocol checking
-        self.clock=clock 
-        
+        self.clock=clock
+
         # Initial state
         self._S0=init
         self.staticvars=[]
 
         # StateUpdater
-        if isinstance(model,StateUpdater):
-            self._state_updater = model # Update mechanism
-        elif isinstance(model,Equations):
-            self._eqs = model
+        if isinstance(model, StateUpdater):
+            self._state_updater=model # Update mechanism
+        elif isinstance(model, Equations):
+            self._eqs=model
             if (init==None) and (model._units=={}):
-                raise AttributeError,"The group must be initialized."
-            self._state_updater, var_names = magic_state_updater(model, clock=clock, order=order,
+                raise AttributeError, "The group must be initialized."
+            self._state_updater, var_names=magic_state_updater(model, clock=clock, order=order,
                                                                  check_units=unit_checking, implicit=implicit,
                                                                  compile=compile, freeze=freeze,
                                                                  method=method)
             Group.__init__(self, model, N, unit_checking=unit_checking)
             # Converts S0 from dictionary to tuple
             if self._S0==None: # No initialization: 0 with units
-                S0 = {}
+                S0={}
             else:
-                S0 = self._S0.copy()
+                S0=self._S0.copy()
             # Fill missing units
             for key, value in model._units.iteritems():
                 if not key in S0:
-                    S0[key] = 0*value
-            self._S0 = [0]*len(var_names)
+                    S0[key]=0*value
+            self._S0=[0]*len(var_names)
             for var, i in zip(var_names, count()):
-                self._S0[i] = S0[var]
+                self._S0[i]=S0[var]
         else:
-            raise TypeError,"StateUpdater must be specified at initialization."        
+            raise TypeError, "StateUpdater must be specified at initialization."
         # TODO: remove temporary unit hack, this makes all state variables dimensionless if no units are specified
         # What is this??
         if self._S0 is None:
-            self._S0 = dict((i,1.) for i in range(len(self._state_updater)))
-                 
+            self._S0=dict((i, 1.) for i in range(len(self._state_updater)))
+
         # Threshold
         if isinstance(threshold, Threshold):
-            self._threshold = threshold
+            self._threshold=threshold
         elif type(threshold)==types.FunctionType:
             if threshold.func_code.co_argcount==1:
-                self._threshold = SimpleFunThreshold(threshold)
+                self._threshold=SimpleFunThreshold(threshold)
             else:
-                self._threshold = FunThreshold(threshold)
+                self._threshold=FunThreshold(threshold)
         elif is_scalar_type(threshold):
             # Check unit
             if self._S0!=None:
@@ -325,103 +328,103 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                     threshold+self._S0[0]
                 except DimensionMismatchError, inst:
                     raise DimensionMismatchError("The threshold does not have correct units.", *inst._dims)
-            self._threshold = Threshold(threshold=threshold)
+            self._threshold=Threshold(threshold=threshold)
         else: # maybe raise an error?
-            self._threshold = NoThreshold()
-            self._spiking = False
-        
+            self._threshold=NoThreshold()
+            self._spiking=False
+
         # Initialization of the state matrix
         if not hasattr(self, '_S'):
-            self._S = zeros((len(self._state_updater),N))
+            self._S=zeros((len(self._state_updater), N))
         if self._S0!=None:
             for i in range(len(self._state_updater)):
-                self._S[i,:] = self._S0[i]
-                
+                self._S[i, :]=self._S0[i]
+
         # Reset and refractory period
-        self._variable_refractory_time = False
-        period_max = 0
+        self._variable_refractory_time=False
+        period_max=0
         if is_scalar_type(reset) or reset.__class__ is Reset:
             if reset.__class__ is Reset:
                 if isinstance(reset.state, str):
-                    numstate = self.get_var_index(reset.state)
+                    numstate=self.get_var_index(reset.state)
                 else:
-                    numstate = reset.state
-                reset = reset.resetvalue
+                    numstate=reset.state
+                reset=reset.resetvalue
             else:
-                numstate = 0
+                numstate=0
             # Check unit
             if self._S0!=None:
                 try:
                     reset+self._S0[numstate]
-                except DimensionMismatchError,inst:
-                    raise DimensionMismatchError("The reset does not have correct units.",*inst._dims)
+                except DimensionMismatchError, inst:
+                    raise DimensionMismatchError("The reset does not have correct units.", *inst._dims)
             if isinstance(refractory, float):
-                max_refractory = refractory
+                max_refractory=refractory
             else:
                 if isinstance(refractory, str):
                     if max_refractory is None:
                         raise ValueError('Must specify max_refractory if using variable refractoriness.')
-                    self._refractory_variable = refractory
-                    self._refractory_array = None
+                    self._refractory_variable=refractory
+                    self._refractory_array=None
                 else:
-                    max_refractory = amax(refractory)*second
-                    self._refractory_variable = None
-                    self._refractory_array = refractory
-                self._variable_refractory_time = True
+                    max_refractory=amax(refractory)*second
+                    self._refractory_variable=None
+                    self._refractory_array=refractory
+                self._variable_refractory_time=True
             # What is this 0.9 ?!! Answer: it's just to check that the refractory period is at least clock.dt otherwise don't bother
             if max_refractory>0.9*clock.dt: # Refractory period - unit checking is done here
-                self._resetfun = Refractoriness(period=max_refractory, resetvalue=reset, state=numstate)
-                period_max = int(max_refractory/clock.dt)+1
+                self._resetfun=Refractoriness(period=max_refractory, resetvalue=reset, state=numstate)
+                period_max=int(max_refractory/clock.dt)+1
             else: # Simple reset
-                self._resetfun = Reset(reset,state=numstate)
+                self._resetfun=Reset(reset, state=numstate)
         elif type(reset)==types.FunctionType:
-            self._resetfun = FunReset(reset)
+            self._resetfun=FunReset(reset)
             if refractory>0.9*clock.dt:
                 raise ValueError('Refractoriness for custom reset functions not yet implemented, see http://groups.google.fr/group/briansupport/browse_thread/thread/182aaf1af3499a63?hl=en for some options.')
         elif hasattr(reset, 'period'): # A reset with refractoriness
             # TODO: check unit (in Reset())
-            self._resetfun = reset # reset function
-            period_max = int(reset.period/clock.dt)+1
+            self._resetfun=reset # reset function
+            period_max=int(reset.period/clock.dt)+1
         else: # No reset?
-            self._resetfun = reset
+            self._resetfun=reset
         if hasattr(threshold, 'refractory'): # A threshold with refractoriness
-            period_max = max(period_max, threshold.refractory+1)
+            period_max=max(period_max, threshold.refractory+1)
         if max_refractory is None:
-            max_refractory = refractory
+            max_refractory=refractory
         if max_delay<period_max*clock.dt:
-            max_delay = period_max*clock.dt
-        self._max_delay = 0
+            max_delay=period_max*clock.dt
+        self._max_delay=0
         self.set_max_delay(max_delay)
-        
-        self._next_allowed_spiketime = -ones(N)
-        self._refractory_time = float(max_refractory)-0.5*clock._dt
-        self._use_next_allowed_spiketime_refractoriness = True
-        
-        self._owner = self # owner (for subgroups)
-        self._subgroup_set = magic.WeakSet()
-        self._origin = 0 # start index from owner if subgroup
-        self._next_subgroup = 0 # start index of next subgroup
-        
+
+        self._next_allowed_spiketime=-ones(N)
+        self._refractory_time=float(max_refractory)-0.5*clock._dt
+        self._use_next_allowed_spiketime_refractoriness=True
+
+        self._owner=self # owner (for subgroups)
+        self._subgroup_set=magic.WeakSet()
+        self._origin=0 # start index from owner if subgroup
+        self._next_subgroup=0 # start index of next subgroup
+
         # ensure that var_index has all the 0,...,N-1 integers as names
-        if not hasattr(self,'var_index'):
-            self.var_index = {}
+        if not hasattr(self, 'var_index'):
+            self.var_index={}
         for i in range(self.num_states()):
-            self.var_index[i] = i
-        
+            self.var_index[i]=i
+
         # these are here for the weave accelerated version of the threshold
         # call mechanism.
-        self._spikesarray = zeros(N,dtype=int)
-        
+        self._spikesarray=zeros(N, dtype=int)
+
         # various things for optimising
-        self.__t = TArray(zeros(N))
-        self._var_array = {}
+        self.__t=TArray(zeros(N))
+        self._var_array={}
         for i in range(self.num_states()):
-            self._var_array[i] = self._S[i]
+            self._var_array[i]=self._S[i]
         for kk, i in self.var_index.iteritems():
-            sv = self.state_(i)
+            sv=self.state_(i)
             if sv.base is self._S:
-                self._var_array[kk] = sv
-        
+                self._var_array[kk]=sv
+
         # todo: should we have a guarantee that var_index exists (even if it just
         # consists of mappings i->i)?
 
@@ -429,17 +432,17 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         if hasattr(self, '_owner') and self._owner is not self:
             self._owner.set_max_delay(max_delay)
             return
-        _max_delay = int(max_delay/self.clock.dt)+2 # in time bins
+        _max_delay=int(max_delay/self.clock.dt)+2 # in time bins
         if _max_delay>self._max_delay:
-            self._max_delay = _max_delay
-            self.LS = SpikeContainer(self._max_delay,
+            self._max_delay=_max_delay
+            self.LS=SpikeContainer(self._max_delay,
                                      useweave=get_global_preference('useweave'),
                                      compiler=get_global_preference('weavecompiler')) # Spike storage
             # update all subgroups if any exist
             if hasattr(self, '_subgroup_set'): # the first time set_max_delay is called this is false
                 for G in self._owner._subgroup_set.get():
-                    G._max_delay = self._max_delay
-                    G.LS = self.LS
+                    G._max_delay=self._max_delay
+                    G.LS=self.LS
 
     def rest(self):
         '''
@@ -454,12 +457,12 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         if self._owner is self:
             if self._S0 is not None:
                 for i in range(len(self._state_updater)):
-                    self._S[i,:] = self._S0[i]
+                    self._S[i, :]=self._S0[i]
             else:
-                self._S[:] = 0 # State matrix
-            self._next_allowed_spiketime[:] = -1
+                self._S[:]=0 # State matrix
+            self._next_allowed_spiketime[:]=-1
             self.LS.reinit()
-        
+
     def update(self):
         '''
         Updates the state variables.
@@ -468,23 +471,23 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         if self._spiking:
             spikes=self._threshold(self) # get spikes
             if not isinstance(spikes, numpy.ndarray):
-                spikes = array(spikes, dtype=int)
+                spikes=array(spikes, dtype=int)
             if self._use_next_allowed_spiketime_refractoriness:
-                spikes = spikes[self._next_allowed_spiketime[spikes]<=self.clock._t]
+                spikes=spikes[self._next_allowed_spiketime[spikes]<=self.clock._t]
                 if self._variable_refractory_time:
                     if self._refractory_variable is not None:
-                        refractime = self.state_(self._refractory_variable)
+                        refractime=self.state_(self._refractory_variable)
                     else:
-                        refractime = self._refractory_array
-                    self._next_allowed_spiketime[spikes] = self.clock._t+refractime[spikes]
+                        refractime=self._refractory_array
+                    self._next_allowed_spiketime[spikes]=self.clock._t+refractime[spikes]
                 else:
-                    self._next_allowed_spiketime[spikes] = self.clock._t+self._refractory_time
+                    self._next_allowed_spiketime[spikes]=self.clock._t+self._refractory_time
             self.LS.push(spikes) # Store spikes
-    
+
     def get_refractory_indices(self):
         return (self._next_allowed_spiketime>self.clock._t).nonzero()[0]
-    
-    def get_spikes(self,delay=0):
+
+    def get_spikes(self, delay=0):
         '''
         Returns indexes of neurons that spiked at time t-delay*dt.
         '''
@@ -493,10 +496,10 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
 #            if delay==0:
 #                return self.LS.lastspikes()
             #return self.LS[delay] # last spikes
-            return self.LS.get_spikes(delay,0,len(self))
+            return self.LS.get_spikes(delay, 0, len(self))
         else:
             # Subgroup
-            return self.LS.get_spikes(delay,self._origin,len(self))
+            return self.LS.get_spikes(delay, self._origin, len(self))
 #            if delay==0:
 #                ls = self.LS.lastspikes()
 #            else:
@@ -507,21 +510,21 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
 #                          bisect.bisect_left(spikes,len(self))]
 #            return ls[bisect.bisect_left(ls,self._origin):\
 #                          bisect.bisect_left(ls,len(self)+self._origin)]-self._origin
-    
+
     def reset(self):
         '''
         Resets the neurons.
         '''
         self._resetfun(self)
-        
-    def subgroup(self,N):
+
+    def subgroup(self, N):
         if self._next_subgroup+N>len(self):
-            raise IndexError,"Subgroup is too large."
+            raise IndexError, "Subgroup is too large."
         P=self[self._next_subgroup:self._next_subgroup+N]
         self._next_subgroup+=N;
         return P
-       
-    def unit(self,name):
+
+    def unit(self, name):
         '''
         Returns the unit of variable name
         '''
@@ -532,35 +535,35 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             return second
         else:
             return get_unit(self._S0[self.get_var_index(name)])
-    
+
     def state_(self, name):
         if name=='t':
-            self.__t[:] = self.clock._t
+            self.__t[:]=self.clock._t
             return self.__t
         else:
             return Group.state_(self, name)
-    state = state_
-    
-    def __getitem__(self,i):
+    state=state_
+
+    def __getitem__(self, i):
         if i==-1:
             return self[self._S.shape[1]-1:]
         else:
             return self[i:i+1]
-    
-    def __getslice__(self,i,j):
+
+    def __getslice__(self, i, j):
         '''
         Creates subgroup (view).
         TODO: views for all arrays.
         '''
         Q=copy.copy(self)
-        Q._S=self._S[:,i:j]
+        Q._S=self._S[:, i:j]
         Q.N=Q._S.shape[1]
         Q._origin=self._origin+i
-        Q._next_subgroup = 0
+        Q._next_subgroup=0
         self._subgroup_set.add(Q)
         return Q
-        
-    def same(self,Q):
+
+    def same(self, Q):
         '''
         Tests if the two groups (subgroups) are of the same kind,
         i.e., if they can be added.
@@ -570,18 +573,18 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         if self.__class__!=Q.__class__:
             return False
         # Check all variables except arrays and a few ones
-        exceptvar=['owner','nextsubgroup','origin']
-        for v,val in self.__dict__.iteritems():
+        exceptvar=['owner', 'nextsubgroup', 'origin']
+        for v, val in self.__dict__.iteritems():
             if not(v in Q.__dict__):
                 return False
-            if (not(isinstance(val,ndarray)) and (not v in exceptvar) and (val!=Q.__dict__[v])):
+            if (not(isinstance(val, ndarray)) and (not v in exceptvar) and (val!=Q.__dict__[v])):
                 return False
         for v in Q.__dict__.iterkeys():
             if not(v in self.__dict__):
                 return False
-            
+
         return True
-    
+
     def __repr__(self):
         if self._owner==self:
             return 'Group of '+str(len(self))+' neurons'
@@ -604,17 +607,17 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         if network is None:
             import network
         if clock is None:
-            clock = self.clock
-        selfarr = self.state_(var)
-        sourcearr = source.state_(sourcevar)
+            clock=self.clock
+        selfarr=self.state_(var)
+        sourcearr=source.state_(sourcevar)
         if func is None:
             @network.network_operation(when=when, clock=clock)
             def update_link_var():
-                selfarr[:] = sourcearr
+                selfarr[:]=sourcearr
         else:
             @network.network_operation(when=when, clock=clock)
             def update_link_var():
-                selfarr[:] = func(sourcearr)
+                selfarr[:]=func(sourcearr)
         self._owner.contained_objects.append(update_link_var)
 
     def set_var_by_array(self, var, arr, times=None, clock=None, start=None, dt=None):
@@ -622,6 +625,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         # is messed up.
         import timedarray
         timedarray.set_group_var_by_array(self, var, arr, times=times, clock=clock, start=start, dt=dt)
+
 
 class PoissonGroup(NeuronGroup):
     '''
@@ -644,12 +648,12 @@ class PoissonGroup(NeuronGroup):
         The clock which the group will update with, do not
         specify to use the default clock.
     '''
-    def __init__(self,N,rates=0*hertz,clock=None):
+    def __init__(self, N, rates=0*hertz, clock=None):
         '''
         Initializes the group.
         P.rates gives the rates.
         '''
-        NeuronGroup.__init__(self,N,model=LazyStateUpdater(),threshold=PoissonThreshold(),\
+        NeuronGroup.__init__(self, N, model=LazyStateUpdater(), threshold=PoissonThreshold(), \
                              clock=clock)
         if callable(rates): # a function is passed
             self._variable_rate=True
@@ -657,15 +661,16 @@ class PoissonGroup(NeuronGroup):
             self._S0[0]=self.rates(self.clock.t)
         else:
             self._variable_rate=False
-            self._S[0,:]=rates
+            self._S[0, :]=rates
             self._S0[0]=rates
         self.var_index={'rate':0}
 
     def update(self):
         if self._variable_rate:
-            self._S[0,:]=self.rates(self.clock.t)
+            self._S[0, :]=self.rates(self.clock.t)
         NeuronGroup.update(self)
-    
+
+
 class OfflinePoissonGroup:
     def __init__(self, N, rates, T):
         """
@@ -673,11 +678,10 @@ class OfflinePoissonGroup:
         time window [0,T].
         """
         if isscalar(rates):
-            rates = rates*ones(N)
-        totalrate = sum(rates)
-        isi = exponential(1/totalrate, T*totalrate*2)
-        spikes = cumsum(isi)
-        spikes = spikes[spikes<=T]
-        neurons = randint(0,N,len(spikes))
-        self.spiketimes = zip(neurons, spikes)
-    
+            rates=rates*ones(N)
+        totalrate=sum(rates)
+        isi=exponential(1/totalrate, T*totalrate*2)
+        spikes=cumsum(isi)
+        spikes=spikes[spikes<=T]
+        neurons=randint(0, N, len(spikes))
+        self.spiketimes=zip(neurons, spikes)

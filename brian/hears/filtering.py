@@ -23,11 +23,11 @@ from scipy import random
 #    use_gpu = True
 #except ImportError:
 #    use_gpu = False
-use_gpu = False
+use_gpu=False
 
-__all__ = ['GammachirpFilterbankFIR','GammachirpFilterbankIIR','Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
+__all__=['GammachirpFilterbankFIR', 'GammachirpFilterbankIIR', 'Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step', 'GammatoneFilterbank',
-           'IIRFilterbank' ,'design_butterworth_filterbank', 'make_butterworth_filterbank','MixFilterbank','TimeVaryingIIRFilterbank'
+           'IIRFilterbank' , 'design_butterworth_filterbank', 'make_butterworth_filterbank', 'MixFilterbank', 'TimeVaryingIIRFilterbank'
            ]
 #print get_global_preference('useweave')
 def parallel_lfilter_step(b, a, x, zi):
@@ -42,38 +42,38 @@ def parallel_lfilter_step(b, a, x, zi):
     a chain (cascade) to apply (you do first with (:,:,0) then (:,:,1), etc.).
     '''
     for curf in xrange(zi.shape[2]):
-        y           =        b[:,0,curf]*x + zi[:,0,curf]
+        y=b[:, 0, curf]*x+zi[:, 0, curf]
         for i in xrange(b.shape[1]-2):
-            zi[:,i,curf] = b[:,i+1,curf]*x + zi[:,i+1,curf] - a[:,i+1,curf]*y
-        i = b.shape[1]-2
-        zi[:,i,curf]     = b[:,i+1,curf]*x                  - a[:,i+1,curf]*y
-        x = y
+            zi[:, i, curf]=b[:, i+1, curf]*x+zi[:, i+1, curf]-a[:, i+1, curf]*y
+        i=b.shape[1]-2
+        zi[:, i, curf]=b[:, i+1, curf]*x-a[:, i+1, curf]*y
+        x=y
     return y
 
 if get_global_preference('useweave'):
     # TODO: accelerate this even more using SWIG instead of weave
-    _cpp_compiler = get_global_preference('weavecompiler')
-    _extra_compile_args = ['-O3']
+    _cpp_compiler=get_global_preference('weavecompiler')
+    _extra_compile_args=['-O3']
     if _cpp_compiler=='gcc':
-        _extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
-    _old_parallel_lfilter_step = parallel_lfilter_step
+        _extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+    _old_parallel_lfilter_step=parallel_lfilter_step
     def parallel_lfilter_step(b, a, x, zi):
         if zi.shape[2]>1:
             # we need to do this so as not to alter the values in x in the C code below
             # but if zi.shape[2] is 1 there is only one filter in the chain and the
             # copy operation at the end of the C code will never happen.
-            x = array(x, copy=True)
+            x=array(x, copy=True)
         if not isinstance(x, ndarray) or not len(x.shape) or x.shape==(1,):
-            newx = empty(b.shape[0])
-            newx[:] = x
-            x = newx
-        y = empty(b.shape[0])
-        n, m, p = b.shape
-        n1, m1, p1 = a.shape
+            newx=empty(b.shape[0])
+            newx[:]=x
+            x=newx
+        y=empty(b.shape[0])
+        n, m, p=b.shape
+        n1, m1, p1=a.shape
         assert n1==n and m1==m and p1==p
         assert x.shape==(n,), str(x.shape)
-        assert zi.shape==(n,m-1,p)
-        code = '''
+        assert zi.shape==(n, m-1, p)
+        code='''
         for(int k=0;k<p;k++)
         {
             for(int j=0;j<n;j++)
@@ -88,15 +88,15 @@ if get_global_preference('useweave'):
                     x(j) = y(j);
         }
         '''
-        weave.inline(code,['b', 'a', 'x', 'zi', 'y', 'n', 'm', 'p'],
+        weave.inline(code, ['b', 'a', 'x', 'zi', 'y', 'n', 'm', 'p'],
                      compiler=_cpp_compiler,
                      type_converters=weave.converters.blitz,
                      extra_compile_args=_extra_compile_args)
         return y
-    parallel_lfilter_step.__doc__ = _old_parallel_lfilter_step.__doc__
-       
+    parallel_lfilter_step.__doc__=_old_parallel_lfilter_step.__doc__
+
 def factorial(n):
-    return prod(arange(1,n+1))
+    return prod(arange(1, n+1))
 
 class Filterbank(object):
     '''
@@ -127,12 +127,12 @@ class Filterbank(object):
     '''
     def timestep(self, input):
         raise NotImplementedError
-    
+
     def __len__(self):
         raise NotImplementedError
-    
-    samplerate = property(fget=lambda self:NotImplemented)
-    
+
+    samplerate=property(fget=lambda self:NotImplemented)
+
     def apply(self, input):
         return array([self.timestep(x) for x in input])
 
@@ -148,34 +148,34 @@ class FilterbankChain(Filterbank):
     this list, and then the output of that is fed into the next, and so on.
     '''
     def __init__(self, filterbanks):
-        self.filterbanks = filterbanks
+        self.filterbanks=filterbanks
 
     def timestep(self, input):
         for fb in self.filterbanks:
-            input = fb.timestep(input)
+            input=fb.timestep(input)
         return input
-    
+
     def __len__(self):
         return len(self.filterbanks[0])
-    
-    samplerate = property(fget=lambda self:self.filterbanks[0].samplerate)
+
+    samplerate=property(fget=lambda self:self.filterbanks[0].samplerate)
 
 class FunctionFilterbank(Filterbank):
     '''
     Filterbank that just applies a given function
     '''
     def __init__(self, samplerate, N, func):
-        self.fs = samplerate
-        self.N = N
-        self.func = func
-    
+        self.fs=samplerate
+        self.N=N
+        self.func=func
+
     def timestep(self, input):
         return self.func(input)
-    
+
     def __len__(self):
         return self.N
-    
-    samplerate = property(fget=lambda self:self.fs)   
+
+    samplerate=property(fget=lambda self:self.fs)
 
 class ParallelLinearFilterbank(Filterbank):
     '''
@@ -187,29 +187,29 @@ class ParallelLinearFilterbank(Filterbank):
     function ``parallel_lfilter_step``.
     '''
     def __init__(self, b, a, samplerate=None):
-        self.filt_b = b
-        self.filt_a = a
-        self.fs = samplerate
-        self.N = b.shape[0]
-        self.filt_state = zeros((b.shape[0], b.shape[1]-1, b.shape[2]))
-    
+        self.filt_b=b
+        self.filt_a=a
+        self.fs=samplerate
+        self.N=b.shape[0]
+        self.filt_state=zeros((b.shape[0], b.shape[1]-1, b.shape[2]))
+
     def reset(self):
-        self.filt_state[:] = 0
-    
+        self.filt_state[:]=0
+
     def __len__(self):
         return self.N
-    
-    samplerate = property(fget=lambda self:self.fs)   
-    
+
+    samplerate=property(fget=lambda self:self.fs)
+
     def timestep(self, input):
         if isinstance(input, ndarray):
-            input = input.flatten()
+            input=input.flatten()
         return parallel_lfilter_step(self.filt_b, self.filt_a, input, self.filt_state)
 
 if use_gpu:
-    
-    nongpu_ParallelLinearFilterbank = ParallelLinearFilterbank
-    
+
+    nongpu_ParallelLinearFilterbank=ParallelLinearFilterbank
+
     class ParallelLinearFilterbank(Filterbank):
         '''
         Generalised parallel linear filterbank
@@ -237,38 +237,38 @@ if use_gpu:
         def __init__(self, b, a, samplerate=None,
                      precision='double', forcesync=True, pagelocked_mem=True, unroll_filterorder=True):
             if not use_gpu:
-                self.__class__ = nongpu_ParallelLinearFilterbank
+                self.__class__=nongpu_ParallelLinearFilterbank
                 self.__init__(b, a, samplerate=samplerate)
                 return
-            self.precision = precision
+            self.precision=precision
             if self.precision=='double':
-                self.precision_dtype = float64
+                self.precision_dtype=float64
             else:
-                self.precision_dtype = float32
-            self.forcesync = forcesync
-            self.pagelocked_mem = pagelocked_mem
-            self.fs = samplerate
-            self.N = b.shape[0]
+                self.precision_dtype=float32
+            self.forcesync=forcesync
+            self.pagelocked_mem=pagelocked_mem
+            self.fs=samplerate
+            self.N=b.shape[0]
             #print a,b
-            self.filt_bCPU = b
-            self.filt_aCPU = a
-            n, m, p = b.shape
-            filt_b = array(b, dtype=self.precision_dtype)
-            filt_a = array(a, dtype=self.precision_dtype)
-            filt_state = zeros((n, m-1, p), dtype=self.precision_dtype)
+            self.filt_bCPU=b
+            self.filt_aCPU=a
+            n, m, p=b.shape
+            filt_b=array(b, dtype=self.precision_dtype)
+            filt_a=array(a, dtype=self.precision_dtype)
+            filt_state=zeros((n, m-1, p), dtype=self.precision_dtype)
             if pagelocked_mem:
-                filt_y = drv.pagelocked_zeros((n,), dtype=self.precision_dtype)
-                self.pre_x = drv.pagelocked_zeros((n,), dtype=self.precision_dtype)
+                filt_y=drv.pagelocked_zeros((n,), dtype=self.precision_dtype)
+                self.pre_x=drv.pagelocked_zeros((n,), dtype=self.precision_dtype)
             else:
-                filt_y = zeros(n, dtype=self.precision_dtype)
-                self.pre_x = zeros(n, dtype=self.precision_dtype)
-            filt_x = zeros(n, dtype=self.precision_dtype)
-            self.filt_b = gpuarray.to_gpu(filt_b.T.flatten()) # transform to Fortran order for better GPU mem
-            self.filt_a = gpuarray.to_gpu(filt_a.T.flatten()) # access speeds
-            self.filt_state = gpuarray.to_gpu(filt_state.T.flatten())
-            self.filt_x = gpuarray.to_gpu(filt_x)
-            self.filt_y = GPUBufferedArray(filt_y)
-            code = '''
+                filt_y=zeros(n, dtype=self.precision_dtype)
+                self.pre_x=zeros(n, dtype=self.precision_dtype)
+            filt_x=zeros(n, dtype=self.precision_dtype)
+            self.filt_b=gpuarray.to_gpu(filt_b.T.flatten()) # transform to Fortran order for better GPU mem
+            self.filt_a=gpuarray.to_gpu(filt_a.T.flatten()) # access speeds
+            self.filt_state=gpuarray.to_gpu(filt_state.T.flatten())
+            self.filt_x=gpuarray.to_gpu(filt_x)
+            self.filt_y=GPUBufferedArray(filt_y)
+            code='''
             #define x(i) _x[i]
             #define y(i) _y[i]
             #define a(i,j,k) _a[(i)+(j)*n+(k)*n*m]
@@ -280,70 +280,70 @@ if use_gpu:
                 if(j>=n) return;
             '''
             for k in range(p):
-                loopcode = '''
+                loopcode='''
                 y(j) = b(j,0,k)*x(j) + zi(j,0,k);
                 '''
                 if unroll_filterorder:
                     for i in range(m-2):
-                        loopcode += re.sub('\\bi\\b', str(i), '''
+                        loopcode+=re.sub('\\bi\\b', str(i), '''
                         zi(j,i,k) = b(j,i+1,k)*x(j) + zi(j,i+1,k) - a(j,i+1,k)*y(j);
                         ''')
                 else:
-                    loopcode += '''
+                    loopcode+='''
                     for(int i=0;i<m-2;i++)
                         zi(j,i,k) = b(j,i+1,k)*x(j) + zi(j,i+1,k) - a(j,i+1,k)*y(j);
                     '''
-                loopcode += '''
+                loopcode+='''
                 zi(j,m-2,k) = b(j,m-1,k)*x(j) - a(j,m-1,k)*y(j);
                 '''
                 if k<p-1:
-                    loopcode += '''
+                    loopcode+='''
                     x(j) = y(j);
                     '''
-                loopcode = re.sub('\\bk\\b', str(k), loopcode)
-                code += loopcode
-            code += '''
+                loopcode=re.sub('\\bk\\b', str(k), loopcode)
+                code+=loopcode
+            code+='''
             }
             '''
-            code = code.replace('SCALAR', self.precision)
-            code = re.sub("\\bp\\b", str(p), code) #replace the variable by their values
-            code = re.sub("\\bm\\b", str(m), code)
-            code = re.sub("\\bn\\b", str(n), code)
+            code=code.replace('SCALAR', self.precision)
+            code=re.sub("\\bp\\b", str(p), code) #replace the variable by their values
+            code=re.sub("\\bm\\b", str(m), code)
+            code=re.sub("\\bn\\b", str(n), code)
             #print code
-            self.gpu_mod = pycuda.compiler.SourceModule(code)
-            self.gpu_filt_func = self.gpu_mod.get_function("filt")
-            blocksize = 512#self.maxblocksize
+            self.gpu_mod=pycuda.compiler.SourceModule(code)
+            self.gpu_filt_func=self.gpu_mod.get_function("filt")
+            blocksize=512#self.maxblocksize
             if n<blocksize:
-                blocksize = n
+                blocksize=n
             if n%blocksize==0:
-                gridsize = n/blocksize
+                gridsize=n/blocksize
             else:
-                gridsize = n/blocksize+1
-            self.block = (blocksize,1,1)
-            self.grid = (gridsize,1)
-            self.gpu_filt_func.prepare(('i','i','i','i','i'), self.block)
-            self._has_run_once = False
-    
+                gridsize=n/blocksize+1
+            self.block=(blocksize, 1, 1)
+            self.grid=(gridsize, 1)
+            self.gpu_filt_func.prepare(('i', 'i', 'i', 'i', 'i'), self.block)
+            self._has_run_once=False
+
         def reset(self):
             self.filt_state.set(zeros(self.filt_state.shape, dtype=self.filt_state.dtype))
-        
+
         def __len__(self):
             return self.N
-        
-        samplerate = property(fget=lambda self:self.fs)   
-        
+
+        samplerate=property(fget=lambda self:self.fs)
+
         def timestep(self, input):
-            b = self.filt_b
-            a = self.filt_a
-            x = input
-            zi = self.filt_state
-            y = self.filt_y
-            fx = self.filt_x
+            b=self.filt_b
+            a=self.filt_a
+            x=input
+            zi=self.filt_state
+            y=self.filt_y
+            fx=self.filt_x
             if isinstance(x, GPUBufferedArray):
                 if not len(x.shape) or x.shape==(1,):
                     x.sync_to_cpu()
-                    newx = empty(self.N, dtype=b.dtype)
-                    newx[:] = x
+                    newx=empty(self.N, dtype=b.dtype)
+                    newx[:]=x
                     fx.set(newx)
                 else:
                     drv.memcpy_dtod(fx.gpu_dev_alloc, x.gpu_dev_alloc)
@@ -351,36 +351,36 @@ if use_gpu:
                 if not isinstance(x, ndarray) or not len(x.shape) or x.shape==(1,):
                     # Current version of pycuda doesn't allow .fill(val) method on float64 gpuarrays
                     # because it assumed float32 only, so we have to do our own copying here
-                    px = self.pre_x
-                    px[:] = x
-                    x = px
+                    px=self.pre_x
+                    px[:]=x
+                    x=px
                 fx.set(x)
             if self._has_run_once:
                 self.gpu_filt_func.launch_grid(*self.grid)
             else:
                 self.gpu_filt_func.prepared_call(self.grid, int(b.gpudata), int(a.gpudata), int(fx.gpudata),
                                                  int(zi.gpudata), y.gpu_pointer)
-                self._has_run_once = True
+                self._has_run_once=True
             y.changed_gpu_data()
             if self.forcesync:
                 y.sync_to_cpu()#might need to turn this on although it slows everything down
             return y
-        
+
         def apply(self, input):
             return array([self.timestep(x).copy() for x in input])
 
 class FilterbankGroupStateUpdater(StateUpdater):
     def __init__(self):
         pass
-    
+
     def __call__(self, P):
         if P._x_stilliter is not None:
             try:
-                P.input = P._x_iter.next()
+                P.input=P._x_iter.next()
             except StopIteration:
-                P.input = 0
-                P._x_stilliter = False
-        P.output[:] = P.filterbank.timestep(P.input)
+                P.input=0
+                P._x_stilliter=False
+        P.output[:]=P.filterbank.timestep(P.input)
 
 class FilterbankGroup(NeuronGroup):
     '''
@@ -410,26 +410,26 @@ class FilterbankGroup(NeuronGroup):
         Loads the sound 
     '''
     def __init__(self, filterbank, x=None):
-        self.filterbank = filterbank
-        fs = filterbank.samplerate
-        eqs = '''
+        self.filterbank=filterbank
+        fs=filterbank.samplerate
+        eqs='''
         output : 1
         input : 1
         '''
         NeuronGroup.__init__(self, len(filterbank), eqs, clock=Clock(dt=1/fs))
-        self._state_updater = FilterbankGroupStateUpdater()
-        fs = float(fs)
+        self._state_updater=FilterbankGroupStateUpdater()
+        fs=float(fs)
         self.load_sound(x)
-        
+
     def load_sound(self, x):
-        self._x = x
+        self._x=x
         if x is not None:
-            self._x_iter = iter(self._x)
-            self._x_stilliter = True
+            self._x_iter=iter(self._x)
+            self._x_stilliter=True
         else:
-            self._x_iter = None
-            self._x_stilliter = False
-            
+            self._x_iter=None
+            self._x_stilliter=False
+
     def reinit(self):
         NeuronGroup.reinit(self)
         self.load_sound(self._x)
@@ -438,29 +438,29 @@ class MixFilterbank(Filterbank):
     '''
     Mix filterbanks together with a given weight vectors
     '''
-    def __init__(self,*args,**kwargs):#weights=None,
-        
+    def __init__(self, *args, **kwargs):#weights=None,
+
         if kwargs.get('weights')==None:
             weights=ones((len(args)))
         else:
             weights=kwargs.get('weights')
-        self.filterbanks = args
+        self.filterbanks=args
         #print  self.filterbanks
         self.fs=args[0].fs
         self.nbr_fb=len(self.filterbanks)
         self.N=args[0].N
         self.output=zeros(self.N)
         self.weights=weights
-        
+
     def timestep(self, input):
         self.output=zeros(self.N)
-        for ind,fb in zip(range((self.nbr_fb)),self.filterbanks):
-            self.output += self.weights[ind]*fb.timestep(input)
+        for ind, fb in zip(range((self.nbr_fb)), self.filterbanks):
+            self.output+=self.weights[ind]*fb.timestep(input)
         return self.output
-    
+
     def __len__(self):
         return self.N
-    samplerate = property(fget=lambda self:self.fs)   
+    samplerate=property(fget=lambda self:self.fs)
 
 class GammatoneFilterbank(ParallelLinearFilterbank):
     '''
@@ -477,65 +477,65 @@ class GammatoneFilterbank(ParallelLinearFilterbank):
     '''
     # Change the following three parameters if you wish to use a different
     # ERB scale.  Must change in ERBSpace too.
-    EarQ = 9.26449                #  Glasberg and Moore Parameters
-    minBW = 24.7
-    order = 1
+    EarQ=9.26449                #  Glasberg and Moore Parameters
+    minBW=24.7
+    order=1
     @check_units(fs=Hz)
     def __init__(self, fs, cf):
-        cf = array(cf)
-        self.cf = cf
-        self.fs = fs
-        fs = float(fs)
-        EarQ, minBW, order = self.EarQ, self.minBW, self.order
-        T = 1/fs
-        ERB = ((cf/EarQ)**order + minBW**order)**(1/order)
-        B = 1.019*2*pi*ERB
-        self.B = B
-        
-        A0 = T
-        A2 = 0
-        B0 = 1
-        B1 = -2*cos(2*cf*pi*T)/exp(B*T)
-        B2 = exp(-2*B*T)
-        
-        A11 = -(2*T*cos(2*cf*pi*T)/exp(B*T) + 2*sqrt(3+2**1.5)*T*sin(2*cf*pi*T) / \
-                exp(B*T))/2
-        A12 = -(2*T*cos(2*cf*pi*T)/exp(B*T) - 2*sqrt(3+2**1.5)*T*sin(2*cf*pi*T) / \
-                exp(B*T))/2
-        A13 = -(2*T*cos(2*cf*pi*T)/exp(B*T) + 2*sqrt(3-2**1.5)*T*sin(2*cf*pi*T) / \
-                exp(B*T))/2
-        A14 = -(2*T*cos(2*cf*pi*T)/exp(B*T) - 2*sqrt(3-2**1.5)*T*sin(2*cf*pi*T) / \
-                exp(B*T))/2
-        
-        i = 1j
-        gain = abs((-2*exp(4*i*cf*pi*T)*T + \
-                         2*exp(-(B*T) + 2*i*cf*pi*T)*T* \
-                                 (cos(2*cf*pi*T) - sqrt(3 - 2**(3./2))* \
-                                  sin(2*cf*pi*T))) * \
-                   (-2*exp(4*i*cf*pi*T)*T + \
-                     2*exp(-(B*T) + 2*i*cf*pi*T)*T* \
-                      (cos(2*cf*pi*T) + sqrt(3 - 2**(3./2)) * \
-                       sin(2*cf*pi*T)))* \
-                   (-2*exp(4*i*cf*pi*T)*T + \
-                     2*exp(-(B*T) + 2*i*cf*pi*T)*T* \
-                      (cos(2*cf*pi*T) - \
-                       sqrt(3 + 2**(3./2))*sin(2*cf*pi*T))) * \
-                   (-2*exp(4*i*cf*pi*T)*T + 2*exp(-(B*T) + 2*i*cf*pi*T)*T* \
-                   (cos(2*cf*pi*T) + sqrt(3 + 2**(3./2))*sin(2*cf*pi*T))) / \
-                  (-2 / exp(2*B*T) - 2*exp(4*i*cf*pi*T) +  \
-                   2*(1 + exp(4*i*cf*pi*T))/exp(B*T))**4)
+        cf=array(cf)
+        self.cf=cf
+        self.fs=fs
+        fs=float(fs)
+        EarQ, minBW, order=self.EarQ, self.minBW, self.order
+        T=1/fs
+        ERB=((cf/EarQ)**order+minBW**order)**(1/order)
+        B=1.019*2*pi*ERB
+        self.B=B
 
-        allfilts = ones(len(cf))
-        
-        self.A0, self.A11, self.A12, self.A13, self.A14, self.A2, self.B0, self.B1, self.B2, self.gain = \
+        A0=T
+        A2=0
+        B0=1
+        B1=-2*cos(2*cf*pi*T)/exp(B*T)
+        B2=exp(-2*B*T)
+
+        A11=-(2*T*cos(2*cf*pi*T)/exp(B*T)+2*sqrt(3+2**1.5)*T*sin(2*cf*pi*T)/\
+                exp(B*T))/2
+        A12=-(2*T*cos(2*cf*pi*T)/exp(B*T)-2*sqrt(3+2**1.5)*T*sin(2*cf*pi*T)/\
+                exp(B*T))/2
+        A13=-(2*T*cos(2*cf*pi*T)/exp(B*T)+2*sqrt(3-2**1.5)*T*sin(2*cf*pi*T)/\
+                exp(B*T))/2
+        A14=-(2*T*cos(2*cf*pi*T)/exp(B*T)-2*sqrt(3-2**1.5)*T*sin(2*cf*pi*T)/\
+                exp(B*T))/2
+
+        i=1j
+        gain=abs((-2*exp(4*i*cf*pi*T)*T+\
+                         2*exp(-(B*T)+2*i*cf*pi*T)*T*\
+                                 (cos(2*cf*pi*T)-sqrt(3-2**(3./2))*\
+                                  sin(2*cf*pi*T)))*\
+                   (-2*exp(4*i*cf*pi*T)*T+\
+                     2*exp(-(B*T)+2*i*cf*pi*T)*T*\
+                      (cos(2*cf*pi*T)+sqrt(3-2**(3./2))*\
+                       sin(2*cf*pi*T)))*\
+                   (-2*exp(4*i*cf*pi*T)*T+\
+                     2*exp(-(B*T)+2*i*cf*pi*T)*T*\
+                      (cos(2*cf*pi*T)-\
+                       sqrt(3+2**(3./2))*sin(2*cf*pi*T)))*\
+                   (-2*exp(4*i*cf*pi*T)*T+2*exp(-(B*T)+2*i*cf*pi*T)*T*\
+                   (cos(2*cf*pi*T)+sqrt(3+2**(3./2))*sin(2*cf*pi*T)))/\
+                  (-2/exp(2*B*T)-2*exp(4*i*cf*pi*T)+\
+                   2*(1+exp(4*i*cf*pi*T))/exp(B*T))**4)
+
+        allfilts=ones(len(cf))
+
+        self.A0, self.A11, self.A12, self.A13, self.A14, self.A2, self.B0, self.B1, self.B2, self.gain=\
             A0*allfilts, A11, A12, A13, A14, A2*allfilts, B0*allfilts, B1, B2, gain
-                   
-        filt_a = dstack((array([ones(len(cf)), B1, B2]).T,)*4)
-        filt_b = dstack((array([A0/gain, A11/gain, A2/gain]).T,
+
+        filt_a=dstack((array([ones(len(cf)), B1, B2]).T,)*4)
+        filt_b=dstack((array([A0/gain, A11/gain, A2/gain]).T,
                          array([A0*ones(len(cf)), A12, zeros(len(cf))]).T,
                          array([A0*ones(len(cf)), A13, zeros(len(cf))]).T,
                          array([A0*ones(len(cf)), A14, zeros(len(cf))]).T))
-        
+
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
 
 
@@ -548,104 +548,104 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
      comment: no GPU implementation so far... because
      
      '''
-    def __init__(self, samplerate, fr,c=None):
+    def __init__(self, samplerate, fr, c=None):
         #fr = array(fr)
-        self.fr = fr
-        
-        self.fs= samplerate
+        self.fr=fr
+
+        self.fs=samplerate
 
         if c==None:
             c=1*ones((fr.shape))
-        self.c = c  
-        gammatone= GammatoneFilterbank(samplerate,fr)
-        samplerate = float(samplerate)
+        self.c=c
+        gammatone=GammatoneFilterbank(samplerate, fr)
+        samplerate=float(samplerate)
         order=gammatone.order
 
         gammatone_filt_b=gammatone.filt_b
         gammatone_filt_a=gammatone.filt_a
 
-        ERBw = 24.7*(4.37e-3*fr+1.)
+        ERBw=24.7*(4.37e-3*fr+1.)
         n=4
         b=1.019*ones((fr.shape))
-        
+
         p0=2
         p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
         p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
         p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
         p4=1.0724
-        
-        asymmetric_filt_b=zeros((len(fr),2*order+1,4))
-        asymmetric_filt_a=zeros((len(fr),2*order+1,4))
-        
+
+        asymmetric_filt_b=zeros((len(fr), 2*order+1, 4))
+        asymmetric_filt_a=zeros((len(fr), 2*order+1, 4))
+
         for k in arange(n):
-            
+
             r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/samplerate) #k instead of k-1 because range 0 N-1
-            
+
             Dfr=(p0*p4)**(k)*p2*c*b*ERBw
-         
-            phi=2*pi*maximum((fr+Dfr),0)/samplerate
-            psy=2*pi*maximum((fr-Dfr),0)/samplerate
-            
-            ap = vstack((ones(r.shape), -2*r*cos(phi),  r**2)).T
-            bz= vstack((ones(r.shape), -2*r*cos(psy),  r**2)).T
-            
-            fn = fr #+ N* p3 *c *b *ERBw/4;
-            
-            vwr = exp(1j*2*pi*fn/samplerate)
-            vwrs= vstack((ones(vwr.shape), vwr,  vwr**2)).T
-            
+
+            phi=2*pi*maximum((fr+Dfr), 0)/samplerate
+            psy=2*pi*maximum((fr-Dfr), 0)/samplerate
+
+            ap=vstack((ones(r.shape),-2*r*cos(phi), r**2)).T
+            bz=vstack((ones(r.shape),-2*r*cos(psy), r**2)).T
+
+            fn=fr #+ N* p3 *c *b *ERBw/4;
+
+            vwr=exp(1j*2*pi*fn/samplerate)
+            vwrs=vstack((ones(vwr.shape), vwr, vwr**2)).T
+
             ##normilization stuff
-            nrm = abs( sum(vwrs*ap,1) / sum(vwrs*bz,1))
+            nrm=abs(sum(vwrs*ap, 1)/sum(vwrs*bz, 1))
             temp=ones((bz.shape))
             for i in range((len(nrm))):
-                temp[i,:]=nrm[i]
-            bz =bz*temp
-            
-            asymmetric_filt_b[:,:,k]=bz
-            asymmetric_filt_a[:,:,k]=ap
+                temp[i, :]=nrm[i]
+            bz=bz*temp
+
+            asymmetric_filt_b[:, :, k]=bz
+            asymmetric_filt_a[:, :, k]=ap
         #print B.shape,A.shape,Btemp.shape,Atemp.shape    
         #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
-        filt_b=concatenate([gammatone_filt_b, asymmetric_filt_b],axis=2)
-        filt_a=concatenate([gammatone_filt_a, asymmetric_filt_a],axis=2)
-        
+        filt_b=concatenate([gammatone_filt_b, asymmetric_filt_b], axis=2)
+        filt_a=concatenate([gammatone_filt_a, asymmetric_filt_a], axis=2)
+
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, samplerate*Hz)
 
 class GammachirpFilterbankFIR(ParallelLinearFilterbank):
 
 
 
-    def __init__(self, fs, fr,c=None,Tcst=None):
-        fr = array(fr)
-        self.fr = fr
-        self.fs = fs
+    def __init__(self, fs, fr, c=None, Tcst=None):
+        fr=array(fr)
+        self.fr=fr
+        self.fs=fs
         #%x = [amplitude, delay, time constant, frequency, phase, bias, IF glide slope]
         if c==None:
-            x=array([0.8932,    0.7905 ,   0.3436  ,  4.6861  , -4.4308 ,  -0.0010  ,  0.3453])
-            
+            x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
+
         if Tcst==None:
-            x=array([0.8932,    0.7905 ,   0.3436  ,  4.6861  , -4.4308 ,  -0.0010  ,  0.3453])
+            x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
         x[-1]=c
         fs=float(fs)
         x[-1]=c
-        t=arange(0,4,1./fs*1000)
+        t=arange(0, 4, 1./fs*1000)
         LenGC=len(t)
-        filt_b=zeros((1,LenGC,1))
-        filt_a=zeros((1,LenGC,1))
+        filt_b=zeros((1, LenGC, 1))
+        filt_a=zeros((1, LenGC, 1))
 
         g=4
         tmax=x[2]*(g-1)
         G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[2])**2)+x[4])+x[5]
 
-        filt_b[0,:,0] = G
-        filt_a[0,0,0]=1   
-            
+        filt_b[0, :, 0]=G
+        filt_a[0, 0, 0]=1
+
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
 
 
 
 class IIRFilterbank(ParallelLinearFilterbank):
-    
-    
+
+
     '''
     Filterbank using scipy.signal.iirdesign
     
@@ -679,54 +679,54 @@ class IIRFilterbank(ParallelLinearFilterbank):
         # passband can take form x or (a,b) in Hz and we need to convert to scipy's format
         try:
             try:
-                a, b = passband
-                a = a/samplerate
-                b = b/samplerate
-                passband = [a,b]
-                a+1 
+                a, b=passband
+                a=a/samplerate
+                b=b/samplerate
+                passband=[a, b]
+                a+1
                 b+1
             except TypeError:
-                passband = passband/samplerate
+                passband=passband/samplerate
                 passband+1
             try:
-                a, b = stopband
-                a = a/samplerate
-                b = b/samplerate
-                stopband = [a,b]
-                a+1 
+                a, b=stopband
+                a=a/samplerate
+                b=b/samplerate
+                stopband=[a, b]
+                a+1
                 b+1
             except TypeError:
-                stopband = stopband/samplerate
+                stopband=stopband/samplerate
                 stopband+1
         except DimensionMismatchError:
             raise DimensionMismatchError('IIRFilterbank passband, stopband parameters must be in Hz')
-        
+
         # now design filterbank
-        self.filt_b, self.filt_a = signal.iirdesign(passband, stopband, gpass, gstop, ftype=ftype)
-        self.filt_b=kron(ones((n,1)),self.filt_b)
-        self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)
-        self.filt_a=kron(ones((n,1)),self.filt_a)
-        self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
-        self.n = n
-        self.passband = passband
-        self.stopband = stopband
-        self.gpass = gpass
-        self.gstop = gstop
-        self.ftype= ftype
+        self.filt_b, self.filt_a=signal.iirdesign(passband, stopband, gpass, gstop, ftype=ftype)
+        self.filt_b=kron(ones((n, 1)), self.filt_b)
+        self.filt_b=self.filt_b.reshape(self.filt_b.shape[0], self.filt_b.shape[1], 1)
+        self.filt_a=kron(ones((n, 1)), self.filt_a)
+        self.filt_a=self.filt_a.reshape(self.filt_a.shape[0], self.filt_a.shape[1], 1)
+        self.n=n
+        self.passband=passband
+        self.stopband=stopband
+        self.gpass=gpass
+        self.gstop=gstop
+        self.ftype=ftype
         ParallelLinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate)
-        
-        
+
+
 class TimeVaryingIIRFilterbank(Filterbank):
     ''' IIR fliterbank where the coefficients vary. It is a bandpass filter
     of which the center frequency vary follwoing a OrnsteinUhlenbeck process
     '''
-    
+
     @check_units(samplerate=Hz)
-    def __init__(self, samplerate, coeff,m_i,s_i,tau_i):
-        self.fs = samplerate
-        self.N = len(m_i)
-        self.b=zeros((self.N,3,1))
-        self.a=zeros((self.N,3,1))
+    def __init__(self, samplerate, coeff, m_i, s_i, tau_i):
+        self.fs=samplerate
+        self.N=len(m_i)
+        self.b=zeros((self.N, 3, 1))
+        self.a=zeros((self.N, 3, 1))
         self.t=0*ms
         self.coeff=coeff
         self.deltaT=1./self.fs
@@ -737,29 +737,29 @@ class TimeVaryingIIRFilterbank(Filterbank):
 
         self.BW=2*arcsinh(1./2/self.Q)*1.44269 ## bandwidth in octave
         #print self.Q,self.BW
-        w0 = 2*pi*m_i/self.fs
+        w0=2*pi*m_i/self.fs
         self.fc=m_i
-        alpha = sin(w0)*sinh(log(2)/2 * self.BW* w0/sin(w0) ) 
-        
-        self.b[:,0,0]=sin(w0)/2
-        self.b[:,1,0]=0
-        self.b[:,2,0]=-sin(w0)/2
-        
+        alpha=sin(w0)*sinh(log(2)/2*self.BW*w0/sin(w0))
+
+        self.b[:, 0, 0]=sin(w0)/2
+        self.b[:, 1, 0]=0
+        self.b[:, 2, 0]=-sin(w0)/2
+
         #self.a=array([1 + alpha,-2*cos(w0),1 - alpha])
-        self.a[:,0,0]=1 + alpha
-        self.a[:,1,0]=-2*cos(w0)
-        self.a[:,2,0]=1 - alpha
-        
+        self.a[:, 0, 0]=1+alpha
+        self.a[:, 1, 0]=-2*cos(w0)
+        self.a[:, 2, 0]=1-alpha
+
         #self.t=0
        ## print self.a.shape
 #        self.a = a
 #        self.b = b
-        
-        self.zi = zeros((self.b.shape[0], self.b.shape[1]-1,self.b.shape[2]))
+
+        self.zi=zeros((self.b.shape[0], self.b.shape[1]-1, self.b.shape[2]))
     def timestep(self, input):
         if isinstance(input, ndarray):
-            input = input.flatten()
-    
+            input=input.flatten()
+
         #self.t=self.t+self.deltaT
         #f0=8000*Hz+2000*Hz*sin(2*pi*10*Hz*self.t)
         #tau_i=100*ms
@@ -770,10 +770,10 @@ class TimeVaryingIIRFilterbank(Filterbank):
         #print self.fc,BWhz
         if self.fc<=50*Hz:
             self.fc=50*Hz
-            
+
         if self.fc+BWhz/2>=self.fs/2:
             self.fc=self.fs/2-1000*Hz
-            
+
 #        if self.fc-BWhz/2<=0:
 #            self.fc=BWhz/2+20*Hz
 #        if self.fc+BWhz/2>=self.fs/2:
@@ -781,30 +781,30 @@ class TimeVaryingIIRFilterbank(Filterbank):
 #        self.fcvstime[self.t]=self.fc
 #        self.t=self.t+1
         #print self.fc
-        
-        
-        w0 = 2*pi*self.fc/self.fs
-        alpha = sin(w0)*sinh(log(2)/2 * self.BW * w0/sin(w0) ) 
-        
-        self.b[:,0,0]=sin(w0)/2
-        self.b[:,1,0]=0
-        self.b[:,2,0]=-sin(w0)/2
-        
+
+
+        w0=2*pi*self.fc/self.fs
+        alpha=sin(w0)*sinh(log(2)/2*self.BW*w0/sin(w0))
+
+        self.b[:, 0, 0]=sin(w0)/2
+        self.b[:, 1, 0]=0
+        self.b[:, 2, 0]=-sin(w0)/2
+
         #self.a=array([1 + alpha,-2*cos(w0),1 - alpha])
-        self.a[:,0,0]=1 + alpha
-        self.a[:,1,0]=-2*cos(w0)
-        self.a[:,2,0]=1 - alpha
+        self.a[:, 0, 0]=1+alpha
+        self.a[:, 1, 0]=-2*cos(w0)
+        self.a[:, 2, 0]=1-alpha
         #y=parallel_lfilter_step(self.b, self.a, input, self.zi)
         #y, self.zi = signal.lfilter(self.b, self.a, input, zi=self.zi)
         return parallel_lfilter_step(self.b, self.a, input, self.zi)
-    
+
     def apply_single(self, input):
         pass
     def __len__(self):
         return self.N
-    samplerate = property(fget=lambda self:self.fs)
-    
-    
+    samplerate=property(fget=lambda self:self.fs)
+
+
 def design_butterworth_filterbank(samplerate, N, passband, stopband, gpass, gstop):
     '''
     Design a butterworth filterbank
@@ -834,30 +834,30 @@ def make_butterworth_filterbank(samplerate, N, ord, Wn, btype='low'):
     '''
     try:
         try:
-            Wn1, Wn2 = Wn
-            Wn = (Wn1/samplerate+0.0, Wn2/samplerate+0.0)
+            Wn1, Wn2=Wn
+            Wn=(Wn1/samplerate+0.0, Wn2/samplerate+0.0)
         except TypeError:
-            Wn = Wn/samplerate+0.0
+            Wn=Wn/samplerate+0.0
     except DimensionMismatchError:
         raise DimensionMismatchError('Wn must be in Hz')
-    b, a = signal.butter(ord, Wn, btype=btype)
+    b, a=signal.butter(ord, Wn, btype=btype)
     return IIRFilterbank(samplerate, N, b, a)
 
 if __name__=='__main__':
     from sounds import *
     from erb import *
-     
-    sound = whitenoise(100*ms).ramp()
-    defaultclock.dt = 1/sound.rate 
+
+    sound=whitenoise(100*ms).ramp()
+    defaultclock.dt=1/sound.rate
     print sound.rate, erbspace(100*Hz, 5*kHz, 4)
-    fb = GammatoneFilterbank(sound.rate, erbspace(100*Hz, 5*kHz, 4))
-    G = FilterbankGroup(fb, sound)
-    neurons=NeuronGroup(len(G),model='''dv/dt=(I-v)/(5*ms):1
+    fb=GammatoneFilterbank(sound.rate, erbspace(100*Hz, 5*kHz, 4))
+    G=FilterbankGroup(fb, sound)
+    neurons=NeuronGroup(len(G), model='''dv/dt=(I-v)/(5*ms):1
                                         I:1''', reset=0, threshold=1)
-    neurons.I = linked_var(G, 'output', func=lambda x:50*clip(x,0,Inf))
-    fb_mon = StateMonitor(G, 'output', record=True)
-    neuron_mon = StateMonitor(neurons, 'v', record=True)
-    spikes = SpikeMonitor(neurons)
+    neurons.I=linked_var(G, 'output', func=lambda x:50*clip(x, 0, Inf))
+    fb_mon=StateMonitor(G, 'output', record=True)
+    neuron_mon=StateMonitor(neurons, 'v', record=True)
+    spikes=SpikeMonitor(neurons)
     run(sound.duration)
     G.load_sound(tone(500*Hz, 100*ms).ramp())
     run(100*ms)

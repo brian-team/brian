@@ -2,7 +2,8 @@
 Various base classes for Brian
 '''
 
-__all__ = ['ObjectContainer']
+__all__=['ObjectContainer']
+
 
 class ObjectContainer(object):
     '''
@@ -23,26 +24,31 @@ class ObjectContainer(object):
     def get_contained_objects(self):
         if hasattr(self, '_contained_objects'):
             return self._contained_objects
-        self._contained_objects = []
+        self._contained_objects=[]
         return self._contained_objects
+
     def set_contained_objects(self, newobjs):
-        self._contained_objects = self.get_contained_objects()
+        self._contained_objects=self.get_contained_objects()
         self._contained_objects.extend(newobjs)
-    contained_objects = property(fget=get_contained_objects,
+
+    contained_objects=property(fget=get_contained_objects,
                                  fset=set_contained_objects)
 
 if __name__=='__main__':
     from brian import *
+
     class A(NetworkOperation):
         def __init__(self):
-            x = NetworkOperation(lambda:None)
+            x=NetworkOperation(lambda:None)
             print 'A:', id(x)
-            self.contained_objects = [x]
+            self.contained_objects=[x]
+
     class B(A):
         def __init__(self):
             super(B, self).__init__()
-            x = NetworkOperation(lambda:None)
+            x=NetworkOperation(lambda:None)
             print 'B:', id(x)
-            self.contained_objects = [x]
-    b = B()
+            self.contained_objects=[x]
+
+    b=B()
     print map(id, b.contained_objects)

@@ -36,24 +36,24 @@
 Various utilities for documentation
 """
 
-def indent_string(s,numtabs=1,spacespertab=4,split=False):
+def indent_string(s, numtabs=1, spacespertab=4, split=False):
     """
     Indents a given string or list of lines
     
     split=True returns the output as a list of lines
     """
-    indent = ' '*(numtabs*spacespertab)
-    if isinstance(s,str):
-        indentedstring = indent+s.replace('\n','\n'+indent)
+    indent=' '*(numtabs*spacespertab)
+    if isinstance(s, str):
+        indentedstring=indent+s.replace('\n', '\n'+indent)
     else:
-        indentedstring = ''
+        indentedstring=''
         for l in s:
-            indentedstring += indent + l + '\n'
-    indentedstring = indentedstring.rstrip() + '\n'
+            indentedstring+=indent+l+'\n'
+    indentedstring=indentedstring.rstrip()+'\n'
     if split: return indentedstring.split('\n')
     return indentedstring
 
-def flattened_docstring(docstr,numtabs=0,spacespertab=4,split=False):
+def flattened_docstring(docstr, numtabs=0, spacespertab=4, split=False):
     """
     Returns a docstring with the indentation removed according to the Python standard
     
@@ -61,30 +61,30 @@ def flattened_docstring(docstr,numtabs=0,spacespertab=4,split=False):
     
     Changing numtabs adds a custom indentation afterwards
     """
-    if isinstance(docstr,str):
-        lines = docstr.split('\n')
+    if isinstance(docstr, str):
+        lines=docstr.split('\n')
     else:
-        lines = docstr
+        lines=docstr
     if len(lines)<2: # nothing to do
         return docstr
-    flattenedstring = ''
+    flattenedstring=''
     # Interpret multiline strings according to the Python docstring standard 
-    indentlevel = min( # the smallest number of whitespace characters in the lines of the description
-                      map( # the number of whitespaces at the beginning of each string in the lines of the description
+    indentlevel=min(# the smallest number of whitespace characters in the lines of the description
+                      map(# the number of whitespaces at the beginning of each string in the lines of the description
                           lambda l:len(l)-len(l.lstrip()), # the number of whitespaces at the beginning of the string
-                          filter( # only those lines with some text on are counted
+                          filter(# only those lines with some text on are counted
                                  lambda l:len(l.strip())
-                                 ,lines[1:] # ignore the first line
+                                 , lines[1:] # ignore the first line
                                  )))
     if lines[0].strip(): # treat first line differently (probably has nothing on it)
-        flattenedstring += lines[0]+'\n'
+        flattenedstring+=lines[0]+'\n'
     for l in lines[1:-1]:
-        flattenedstring += l[indentlevel:]+'\n'
+        flattenedstring+=l[indentlevel:]+'\n'
     if lines[-1].strip(): # treat last line differently (probably has nothing on it)
-        flattenedstring += lines[-1][indentlevel:]+'\n'
-    return indent_string(flattenedstring,numtabs=numtabs,spacespertab=spacespertab,split=split)
+        flattenedstring+=lines[-1][indentlevel:]+'\n'
+    return indent_string(flattenedstring, numtabs=numtabs, spacespertab=spacespertab, split=split)
 
-def rest_section(name,level='-',split=False):
+def rest_section(name, level='-', split=False):
     """
     Returns a restructuredtext section heading
     
@@ -94,7 +94,7 @@ def rest_section(name,level='-',split=False):
         ----
         
     """
-    s = name + '\n' + level*len(name) + '\n\n'
+    s=name+'\n'+level*len(name)+'\n\n'
     if split:
         return s.split('\n')
     return s

@@ -38,7 +38,7 @@ NeuronGroups and callable objects which allow direct
 control over the behaviour of neurons.
 """
 
-__all__ = ['MultipleSpikeGeneratorGroup','SpikeGeneratorGroup','PulsePacket']
+__all__=['MultipleSpikeGeneratorGroup', 'SpikeGeneratorGroup', 'PulsePacket']
 
 from neurongroup import *
 from threshold import *
@@ -53,6 +53,7 @@ import warnings
 from operator import itemgetter
 from log import *
 import numpy
+
 
 class MultipleSpikeGeneratorGroup(NeuronGroup):
     """Emits spikes at given times
@@ -93,24 +94,28 @@ class MultipleSpikeGeneratorGroup(NeuronGroup):
         spiketimes = [[1*msecond, 2*msecond]]
         P = MultipleSpikeGeneratorGroup(spiketimes)
     """
-    def __init__(self,spiketimes,clock=None,period=None):
+    def __init__(self, spiketimes, clock=None, period=None):
         """Pass spiketimes
         
         spiketimes is a list of lists, one list for each neuron
         in the group. Each sublist consists of the spike times.
         """
-        clock = guess_clock(clock)
-        thresh = MultipleSpikeGeneratorThreshold(spiketimes,period=period)
-        NeuronGroup.__init__(self,len(spiketimes),model=LazyStateUpdater(),threshold=thresh,clock=clock)
+        clock=guess_clock(clock)
+        thresh=MultipleSpikeGeneratorThreshold(spiketimes, period=period)
+        NeuronGroup.__init__(self, len(spiketimes), model=LazyStateUpdater(), threshold=thresh, clock=clock)
+
     def reinit(self):
-        super(MultipleSpikeGeneratorGroup,self).reinit()
-        self._threshold.reinit()        
+        super(MultipleSpikeGeneratorGroup, self).reinit()
+        self._threshold.reinit()
+
     def __repr__(self):
         return "MultipleSpikeGeneratorGroup"
 
+
 class MultipleSpikeGeneratorThreshold(Threshold):
-    def __init__(self,spiketimes,period=None):
-        self.set_spike_times(spiketimes,period=period)
+    def __init__(self, spiketimes, period=None):
+        self.set_spike_times(spiketimes, period=period)
+
     def reinit(self):
         # spiketimes is a container where each element is an iterable container of spike times for
         # each neuron. We store the iterator for each neuron, and the next spike time if it exists
@@ -118,44 +123,47 @@ class MultipleSpikeGeneratorThreshold(Threshold):
         def makeiter(obj):
             if callable(obj): return iter(obj())
             return iter(obj)
-        self.spiketimeiter = [makeiter(st) for st in self.spiketimes]
-        self.nextspiketime = [None for st in self.spiketimes]
+        self.spiketimeiter=[makeiter(st) for st in self.spiketimes]
+        self.nextspiketime=[None for st in self.spiketimes]
         for i in range(len(self.spiketimes)):
             try:
-                self.nextspiketime[i] = self.spiketimeiter[i].next()
+                self.nextspiketime[i]=self.spiketimeiter[i].next()
             except StopIteration:
                 pass
-        self.curperiod = -1
-    def set_spike_times(self,spiketimes,period=None):
-        self.spiketimes = spiketimes
-        self.period = period
+        self.curperiod=-1
+
+    def set_spike_times(self, spiketimes, period=None):
+        self.spiketimes=spiketimes
+        self.period=period
         self.reinit()
-    def __call__(self,P):
-        firing = zeros(len(self.spiketimes))
-        t = P.clock.t
+
+    def __call__(self, P):
+        firing=zeros(len(self.spiketimes))
+        t=P.clock.t
         if self.period is not None:
-            cp = int(t/self.period)
+            cp=int(t/self.period)
             if cp>self.curperiod:
                 self.reinit()
                 self.curperiod=cp
-            t = t - cp * self.period
+            t=t-cp*self.period
         # it is the iterator for neuron i, and nextspiketime is the stored time of the next spike
-        for it, nextspiketime, i in zip(self.spiketimeiter,self.nextspiketime,range(len(self.spiketimes))):
+        for it, nextspiketime, i in zip(self.spiketimeiter, self.nextspiketime, range(len(self.spiketimes))):
             # Note we use approximate equality testing because the clock t+=dt mechanism accumulates errors
-            if isinstance(self.spiketimes[i],numpy.ndarray):
-                curt = float(t)
+            if isinstance(self.spiketimes[i], numpy.ndarray):
+                curt=float(t)
             else:
-                curt = t
-            if nextspiketime is not None and is_approx_less_than_or_equal(nextspiketime,curt):
+                curt=t
+            if nextspiketime is not None and is_approx_less_than_or_equal(nextspiketime, curt):
                 firing[i]=1
                 try:
-                    nextspiketime = it.next()
-                    if is_approx_less_than_or_equal(nextspiketime,curt):
+                    nextspiketime=it.next()
+                    if is_approx_less_than_or_equal(nextspiketime, curt):
                         log_warn('brian.MultipleSpikeGeneratorThreshold', 'Stacking multiple firing times')
                 except StopIteration:
-                    nextspiketime = None
-                self.nextspiketime[i] = nextspiketime
+                    nextspiketime=None
+                self.nextspiketime[i]=nextspiketime
         return where(firing)[0]
+
 
 class SpikeGeneratorGroup(NeuronGroup):
     """Emits spikes at given times
@@ -228,79 +236,81 @@ class SpikeGeneratorGroup(NeuronGroup):
     Whenever P is reinitialised, it will call ``nextspike()`` to create the required spike
     container.
     """
-    def __init__(self,N,spiketimes,clock=None,period=None):
-        clock = guess_clock(clock)
-        thresh = SpikeGeneratorThreshold(N, spiketimes, period=period)
-        self.period = period
-        NeuronGroup.__init__(self,N,model=LazyStateUpdater(),threshold=thresh,clock=clock)
-        
+    def __init__(self, N, spiketimes, clock=None, period=None):
+        clock=guess_clock(clock)
+        thresh=SpikeGeneratorThreshold(N, spiketimes, period=period)
+        self.period=period
+        NeuronGroup.__init__(self, N, model=LazyStateUpdater(), threshold=thresh, clock=clock)
+
     def reinit(self):
-        super(SpikeGeneratorGroup,self).reinit()
+        super(SpikeGeneratorGroup, self).reinit()
         self._threshold.reinit()
-        
-    spiketimes = property(fget=lambda self:self._threshold.spiketimes,
+
+    spiketimes=property(fget=lambda self:self._threshold.spiketimes,
                           fset=lambda self, value: self._threshold.set_spike_times(self._threshold.N, value, self._threshold.period))
-        
+
     def __repr__(self):
         return "SpikeGeneratorGroup"
 
+
 class SpikeGeneratorThreshold(Threshold):
-    def __init__(self,N,spiketimes,period=None):
-        self.set_spike_times(N,spiketimes,period=period)
-        
+    def __init__(self, N, spiketimes, period=None):
+        self.set_spike_times(N, spiketimes, period=period)
+
     def reinit(self):
         def makeiter(obj):
             if callable(obj): return iter(obj())
             return iter(obj)
-        self.spiketimeiter = makeiter(self.spiketimes)
+        self.spiketimeiter=makeiter(self.spiketimes)
         try:
-            self.nextspikenumber, self.nextspiketime = self.spiketimeiter.next()
+            self.nextspikenumber, self.nextspiketime=self.spiketimeiter.next()
         except StopIteration:
-            self.nextspiketime = None
-            self.nextspikenumber = 0
-        self.curperiod = -1
-        
-    def set_spike_times(self,N,spiketimes,period=None):
+            self.nextspiketime=None
+            self.nextspikenumber=0
+        self.curperiod=-1
+
+    def set_spike_times(self, N, spiketimes, period=None):
         # N is the number of neurons, spiketimes is an iterable object of tuples (i,t) where
         # t is the spike time, and i is the neuron number. If spiketimes is a list or tuple,
         # then it will be sorted here.
-        if isinstance(spiketimes,(list,tuple)):
-            spiketimes = sorted(spiketimes,key=itemgetter(1))
-        self.spiketimes = spiketimes
-        self.N = N
-        self.period = period
+        if isinstance(spiketimes, (list, tuple)):
+            spiketimes=sorted(spiketimes, key=itemgetter(1))
+        self.spiketimes=spiketimes
+        self.N=N
+        self.period=period
         self.reinit()
-        
-    def __call__(self,P):
-        firing = zeros(self.N)
-        t = P.clock.t
+
+    def __call__(self, P):
+        firing=zeros(self.N)
+        t=P.clock.t
         if self.period is not None:
-            cp = int(t/self.period)
+            cp=int(t/self.period)
             if cp>self.curperiod:
                 self.reinit()
                 self.curperiod=cp
-            t = t - cp * self.period
-        if isinstance(self.spiketimes,numpy.ndarray):
-            t = float(t)
-        while self.nextspiketime is not None and is_approx_less_than_or_equal(self.nextspiketime,t):
+            t=t-cp*self.period
+        if isinstance(self.spiketimes, numpy.ndarray):
+            t=float(t)
+        while self.nextspiketime is not None and is_approx_less_than_or_equal(self.nextspiketime, t):
             if firing[self.nextspikenumber]:
                 log_warn('brian.SpikeGeneratorThreshold', 'Discarding multiple overlapping spikes')
-            firing[self.nextspikenumber] = 1
+            firing[self.nextspikenumber]=1
             try:
-                self.nextspikenumber, self.nextspiketime = self.spiketimeiter.next()
+                self.nextspikenumber, self.nextspiketime=self.spiketimeiter.next()
             except StopIteration:
-                self.nextspiketime = None
+                self.nextspiketime=None
         return where(firing)[0]
 
 # The output of this function is fed into SpikeGeneratorGroup, consisting of
 # time sorted pairs (t,i) where t is when neuron i fires
-@check_units(t=second,n=1,sigma=second)
-def PulsePacketGenerator(t,n,sigma):
-    times = [pyrandom.gauss(t,sigma) for i in range(n)]
+@check_units(t=second, n=1, sigma=second)
+def PulsePacketGenerator(t, n, sigma):
+    times=[pyrandom.gauss(t, sigma) for i in range(n)]
     times.sort()
-    neuron = range(n)
+    neuron=range(n)
     pyrandom.shuffle(neuron)
-    return zip(neuron,times)
+    return zip(neuron, times)
+
 
 class PulsePacket(SpikeGeneratorGroup):
     """
@@ -330,16 +340,18 @@ class PulsePacket(SpikeGeneratorGroup):
     
         Change the parameters and/or generate a new pulse packet.
     """
-    @check_units(t=second,n=1,sigma=second)
-    def __init__(self,t,n,sigma,clock=None):
-        self.clock = guess_clock(clock)
-        self.generate(t,n,sigma)
+    @check_units(t=second, n=1, sigma=second)
+    def __init__(self, t, n, sigma, clock=None):
+        self.clock=guess_clock(clock)
+        self.generate(t, n, sigma)
+
     def reinit(self):
-        super(PulsePacket,self).reinit()
+        super(PulsePacket, self).reinit()
         self._threshold.reinit()
-    @check_units(t=second,n=1,sigma=second)
-    def generate(self,t,n,sigma):
-        SpikeGeneratorGroup.__init__(self,n,PulsePacketGenerator(t,n,sigma),self.clock)
+    @check_units(t=second, n=1, sigma=second)
+    def generate(self, t, n, sigma):
+        SpikeGeneratorGroup.__init__(self, n, PulsePacketGenerator(t, n, sigma), self.clock)
+
     def __repr__(self):
         return "Pulse packet neuron group"
 

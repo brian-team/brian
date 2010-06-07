@@ -50,7 +50,7 @@ import optimiser
 import warnings
 import uuid
 import numpy
-from numpy import zeros,ones
+from numpy import zeros, ones
 from log import *
 from optimiser import *
 from scipy import optimize
@@ -63,7 +63,7 @@ except:
     warnings.warn('sympy not installed')
     use_sympy=False
 
-__all__=['Equations','unique_id']
+__all__=['Equations', 'unique_id']
 
 # TODO: write interface for equations.py
 
@@ -72,6 +72,7 @@ def unique_id():
     Returns a unique name (e.g. for internal hidden variables).
     """
     return '_'+str(uuid.uuid1().int)
+
 
 class Equations(object):
     """Container that stores equations from which models can be created
@@ -162,7 +163,7 @@ class Equations(object):
     
     For more details, see :ref:`moreonequations` in the user manual.
     """
-    def __init__(self,expr='',level=0,**kwds):
+    def __init__(self, expr='', level=0, **kwds):
         # Empty object
         self._Vm=None # name of variable with membrane potential
         self._eq_names=[] # equations names
@@ -175,42 +176,42 @@ class Equations(object):
         self._units={'t':second} # dictionary of units
         self._dependencies={} # dictionary of dependencies (on static equations)
         self._useweave=get_global_preference('useweave')
-        self._cpp_compiler = get_global_preference('weavecompiler')
-        self._extra_compile_args = ['-O3']
+        self._cpp_compiler=get_global_preference('weavecompiler')
+        self._extra_compile_args=['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+            self._extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
         self._frozen=False # True if all units and parameters are gone
-        self._prepared = False
-        
-        if not isinstance(expr,str): # assume it is a sequence of Equations objects
+        self._prepared=False
+
+        if not isinstance(expr, str): # assume it is a sequence of Equations objects
             for eqs in expr:
-                if not isinstance(eqs,Equations):
-                    eqs = Equations(eqs,level=level+1)
+                if not isinstance(eqs, Equations):
+                    eqs=Equations(eqs, level=level+1)
                 self+=eqs
         elif expr!='':
             # Check keyword arguments
             param_dict={}
-            for name,value in kwds.iteritems():
+            for name, value in kwds.iteritems():
                 if value is None: # name is not important: choose unique name
                     value=unique_id()
-                if isinstance(value,str): # variable name substitution
-                    expr=re.sub('\\b'+name+'\\b',value,expr)
-                    expr=re.sub('\\bd'+name+'\\b','d'+value,expr) # derivative
+                if isinstance(value, str): # variable name substitution
+                    expr=re.sub('\\b'+name+'\\b', value, expr)
+                    expr=re.sub('\\bd'+name+'\\b', 'd'+value, expr) # derivative
                 else:
                     param_dict[name]=value
 
             if kwds=={}: # weird: changed from param_dict on 18/06/08
-                self.parse_string_equations(expr,level=level+1)
+                self.parse_string_equations(expr, level=level+1)
             else:
-                self.parse_string_equations(expr,namespace=param_dict,level=level+1)
-    
+                self.parse_string_equations(expr, namespace=param_dict, level=level+1)
+
     """
     -----------------------------------------------------------------------
     PARSING AND BUILDING NAMESPACES
     -----------------------------------------------------------------------
     """
-    
-    def parse_string_equations(self,eqns,level=1,namespace=None):
+
+    def parse_string_equations(self, eqns, level=1, namespace=None):
         """
         Parses a string defining equations and builds an Equations object.
         Uses the namespace in the given level of the stack.
@@ -220,40 +221,40 @@ class Equations(object):
         alias_pattern=re.compile('\s*(\w+)\s*=\s*(\w+)\s*$')
         param_pattern=re.compile('\s*(\w+)\s*:\s*(.*)')
         empty_pattern=re.compile('\s*$')
-        patterns=[diffeq_pattern,eq_pattern,alias_pattern,param_pattern,empty_pattern]
+        patterns=[diffeq_pattern, eq_pattern, alias_pattern, param_pattern, empty_pattern]
         # Merge multi-line statements
-        eqns=re.sub('\\\s*?\n',' ',eqns)
-        
+        eqns=re.sub('\\\s*?\n', ' ', eqns)
+
         # Namespace of the functions
-        ns_global,ns_local=namespace,namespace
+        ns_global, ns_local=namespace, namespace
         if namespace is None:
             frame=inspect.stack()[level+1][0]
-            ns_global,ns_local=frame.f_globals,frame.f_locals
+            ns_global, ns_local=frame.f_globals, frame.f_locals
             #print frame.f_code.co_filename #useful for debugging which file the namespace came from
-        
+
         for line in eqns.splitlines():
-            line=re.sub('#.*','',line) # remove comments
+            line=re.sub('#.*', '', line) # remove comments
             result=None
             for pattern in patterns:
                 result=pattern.match(line)
                 if result:
                     break
             if result==None:
-                raise TypeError,"Invalid equation string: "+line
+                raise TypeError, "Invalid equation string: "+line
             if pattern==eq_pattern:
-                name,eq,unit=result.groups()
-                self.add_eq(name,eq,unit,ns_global,ns_local)
+                name, eq, unit=result.groups()
+                self.add_eq(name, eq, unit, ns_global, ns_local)
             elif pattern==diffeq_pattern:
-                name,eq,unit=result.groups()
-                self.add_diffeq(name,eq,unit,ns_global,ns_local)
+                name, eq, unit=result.groups()
+                self.add_diffeq(name, eq, unit, ns_global, ns_local)
             elif pattern==alias_pattern:
-                name1,name2=result.groups()
-                self.add_alias(name1,name2)
+                name1, name2=result.groups()
+                self.add_alias(name1, name2)
             elif pattern==param_pattern:
-                name,unit=result.groups()
-                self.add_param(name,unit,ns_global,ns_local)
+                name, unit=result.groups()
+                self.add_param(name, unit, ns_global, ns_local)
 
-    def add_eq(self,name,eq,unit,global_namespace={},local_namespace={}):
+    def add_eq(self, name, eq, unit, global_namespace={}, local_namespace={}):
         """
         Inserts an equation.
         name = variable name
@@ -273,15 +274,15 @@ class Equations(object):
                 self._namespace[name][var]=global_namespace[var]
             elif var in globals(): # typically units
                 self._namespace[name][var]=globals()[var]
-        
+
         self._eq_names.append(name)
         if type(unit)==types.StringType:
-            self._units[name]=eval(unit,self._namespace[name].copy())
+            self._units[name]=eval(unit, self._namespace[name].copy())
         else:
             self._units[name]=unit
         self._string[name]=eq
 
-    def add_diffeq(self,name,eq,unit,global_namespace={},local_namespace={},nonzero=True):
+    def add_diffeq(self, name, eq, unit, global_namespace={}, local_namespace={}, nonzero=True):
         """
         Inserts a differential equation.
         name = variable name
@@ -302,17 +303,17 @@ class Equations(object):
                 self._namespace[name][var]=global_namespace[var]
             elif var in globals(): # typically units
                 self._namespace[name][var]=globals()[var]
-        
+
         self._diffeq_names.append(name)
         if type(unit)==types.StringType:
-            self._units[name]=eval(unit,self._namespace[name].copy())
+            self._units[name]=eval(unit, self._namespace[name].copy())
         else:
             self._units[name]=unit
         self._string[name]=eq
         if nonzero:
             self._diffeq_names_nonzero.append(name)
 
-    def add_alias(self,name1,name2):
+    def add_alias(self, name1, name2):
         """
         Inserts an alias.
         name1 = new name
@@ -320,9 +321,9 @@ class Equations(object):
         """
         self._alias[name1]=name2
         # TODO: what if name2 is not defined yet?
-        self.add_eq(name1,name2,self._units[name2])
+        self.add_eq(name1, name2, self._units[name2])
 
-    def add_param(self,name,unit,global_namespace={},local_namespace={}):
+    def add_param(self, name, unit, global_namespace={}, local_namespace={}):
         """
         Inserts a parameter.
         name = variable name
@@ -330,9 +331,9 @@ class Equations(object):
         unit = unit of the variable (possibly a string)
         *_namespace = namespaces associated to the string
         """
-        if isinstance(unit,Quantity):
+        if isinstance(unit, Quantity):
             unit=scalar_representation(unit)
-        self.add_diffeq(name,'0*'+unit+'/second',unit,global_namespace,local_namespace,nonzero=False)
+        self.add_diffeq(name, '0*'+unit+'/second', unit, global_namespace, local_namespace, nonzero=False)
 
     """
     -----------------------------------------------------------------------
@@ -340,7 +341,7 @@ class Equations(object):
     -----------------------------------------------------------------------
     """
 
-    def prepare(self,check_units=True):
+    def prepare(self, check_units=True):
         '''
         Do a number of checks (units) and preparation of the object.
         '''
@@ -351,13 +352,13 @@ class Equations(object):
         if vm_name:
             # TODO: INFO logging
             i=self._diffeq_names.index(vm_name)
-            self._diffeq_names[0],self._diffeq_names[i]=self._diffeq_names[i],self._diffeq_names[0]
+            self._diffeq_names[0], self._diffeq_names[i]=self._diffeq_names[i], self._diffeq_names[0]
         else:
             pass
             # TODO: WARNING log that a potential problem has occurred here?
-    
+
         # Clean namespace (avoids conflicts between variables and external variables)
-        self.clean_namespace()        
+        self.clean_namespace()
         # Compile strings to functions
         self.compile_functions()
         # Check units
@@ -367,13 +368,13 @@ class Equations(object):
         # Replace static variables by their value in differential equations
         self.substitute_eq()
         self.compile_functions()
-        
+
         # Check free variables
         free_vars=self.free_variables()
         if free_vars!=[]:
             log_info('brian.equations', 'Free variables: '+str(free_vars))
-        
-        self._prepared = True
+
+        self._prepared=True
 
     def get_Vm(self):
         '''
@@ -382,7 +383,7 @@ class Equations(object):
         '''
         if self._Vm:
             return self._Vm
-        vm_names=['v','V','vm','Vm']
+        vm_names=['v', 'V', 'vm', 'Vm']
         guesses=[var for var in self._diffeq_names if var in vm_names]
         if len(guesses)==1: # Unambiguous
             return guesses[0]
@@ -397,10 +398,10 @@ class Equations(object):
         for name in self._namespace:
             for var in all_variables:
                 if var in self._namespace[name]:
-                    log_warn('brian.equations','Equation variable '+var+' also exists in the namespace')
+                    log_warn('brian.equations', 'Equation variable '+var+' also exists in the namespace')
                     del self._namespace[name][var]
 
-    def compile_functions(self,freeze=False):
+    def compile_functions(self, freeze=False):
         """
         Compile all functions defined as strings.
         If freeze is True, all external parameters and units are replaced by their value.
@@ -408,21 +409,21 @@ class Equations(object):
         """
         all_variables=self._eq_names+self._diffeq_names+self._alias.keys()+['t']
         # Check if freezable
-        freeze=freeze and all([optimiser.freeze(expr,all_variables,self._namespace[name])\
-                               for name,expr in self._string.iteritems()])
+        freeze=freeze and all([optimiser.freeze(expr, all_variables, self._namespace[name])\
+                               for name, expr in self._string.iteritems()])
         self._frozen=freeze
-       
+
         # Compile strings to functions
-        for name,expr in self._string.iteritems():
+        for name, expr in self._string.iteritems():
             namespace=self._namespace[name] # name space of the function
             # Find variables
             vars=[var for var in get_identifiers(expr) if var in all_variables]
             if freeze:
-                expr=optimiser.freeze(expr,all_variables,namespace)
+                expr=optimiser.freeze(expr, all_variables, namespace)
                 #self._string[name]=expr # should we?
                 #namespace={}
             s="lambda "+','.join(vars)+":"+expr
-            self._function[name]=eval(s,namespace)
+            self._function[name]=eval(s, namespace)
 
     def check_units(self):
         '''
@@ -434,22 +435,22 @@ class Equations(object):
         # Better: replace xi in the string, or in the namespace
         try:
             for var in self._eq_names:
-                f = self._function[var]
-                old_func_globals = copy.copy(f.func_globals)
+                f=self._function[var]
+                old_func_globals=copy.copy(f.func_globals)
                 f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
-                units = namespace_replace_quantity_with_pure(self._units)
+                units=namespace_replace_quantity_with_pure(self._units)
                 self.apply(var, units)+self._units[var] # Check that the two terms have the same dimension
                 f.func_globals.update(old_func_globals)
             for var in self._diffeq_names:
-                f = self._function[var]
-                old_func_globals = copy.copy(f.func_globals)
+                f=self._function[var]
+                old_func_globals=copy.copy(f.func_globals)
                 f.func_globals['xi']=0*second**-.5 # Noise
                 f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
-                units = namespace_replace_quantity_with_pure(self._units)
+                units=namespace_replace_quantity_with_pure(self._units)
                 self.apply(var, units)+(self._units[var]/second) # Check that the two terms have the same dimension
                 f.func_globals.update(old_func_globals)
-        except DimensionMismatchError,inst:
-            raise DimensionMismatchError("The differential equation of "+var+" is not homogeneous",*inst._dims)
+        except DimensionMismatchError, inst:
+            raise DimensionMismatchError("The differential equation of "+var+" is not homogeneous", *inst._dims)
         except:
             warnings.warn("Unexpected exception in checking units of "+var)
             raise
@@ -467,24 +468,24 @@ class Equations(object):
             for key in self._eq_names:
                 f=self._function[key]
                 dependency[key]=[var for var in f.func_code.co_varnames if var in self._eq_names]
-            
+
             # Sets the order
             staticvars_list=[]
             no_dep=None
             while (len(staticvars_list)<len(self._eq_names)) and (no_dep!=[]):
-                no_dep=[key for key,value in dependency.iteritems() if value==[]]
+                no_dep=[key for key, value in dependency.iteritems() if value==[]]
                 staticvars_list+=no_dep
                 # Clear dependency list
                 for key in no_dep:
                     del dependency[key]
-                for key,value in dependency.iteritems():
+                for key, value in dependency.iteritems():
                     dependency[key]=[var for var in value if not(var in staticvars_list)]
-            
+
             if no_dep==[]: # The dependency graph has cycles!
-                raise ReferenceError,"The static variables are referring to each other"
+                raise ReferenceError, "The static variables are referring to each other"
         else:
             staticvars_list=[]
-            
+
         # Calculate dependencies on static variables
         self._dependencies={}
         for key in staticvars_list:
@@ -498,17 +499,17 @@ class Equations(object):
             for var in f.func_code.co_varnames:
                 if var in self._eq_names:
                     self._dependencies[key]+=[var]+self._dependencies[var]
-        
+
         # Sort the dependency lists
         for key in self._dependencies:
-            staticdep=[(staticvars_list.index(var),var) for var in self._dependencies[key]]
+            staticdep=[(staticvars_list.index(var), var) for var in self._dependencies[key]]
             staticdep.sort()
             self._dependencies[key]=[x[1] for x in staticdep]
-            
+
         # Update _eq
         self._eq_names=staticvars_list
 
-    def substitute_eq(self,name=None):
+    def substitute_eq(self, name=None):
         """
         Replaces the static variable 'name' by its value in differential
         equations.
@@ -522,32 +523,32 @@ class Equations(object):
             #print name
             for var in self._diffeq_names_nonzero:
                 # String
-                self._string[var]=re.sub("\\b"+name+"\\b",'('+self._string[name]+')',self._string[var])
+                self._string[var]=re.sub("\\b"+name+"\\b", '('+self._string[name]+')', self._string[var])
                 # Namespace
                 self._namespace[var].update(self._namespace[name])
             #print self
 
-    def add_prefix_namespace(self,name):
+    def add_prefix_namespace(self, name):
         """
         Make the variables in the namespace associated to variable name
         specific to that variable by inserting the prefix name_.
         """
         vars=self._namespace[name].keys()
-        untransformed_funcs = set(getattr(unitsafefunctions, v) for v in unitsafefunctions.quantity_versions)
+        untransformed_funcs=set(getattr(unitsafefunctions, v) for v in unitsafefunctions.quantity_versions)
         untransformed_funcs.update(set([numpy.clip]))
         for var in vars:
-            v = self._namespace[name][var]
-            addprefix = True
+            v=self._namespace[name][var]
+            addprefix=True
             if isinstance(v, numpy.ufunc):
-                addprefix = False
+                addprefix=False
             try:
                 if v in untransformed_funcs:
-                    addprefix = False
+                    addprefix=False
             except TypeError: #unhashable types
                 pass
             if addprefix:
                 # String
-                self._string[name]=re.sub("\\b"+var+"\\b",name+'_'+var,self._string[name])
+                self._string[name]=re.sub("\\b"+var+"\\b", name+'_'+var, self._string[name])
                 # Namespace
                 self._namespace[name][name+'_'+var]=self._namespace[name][var]
                 del self._namespace[name][var]
@@ -568,7 +569,7 @@ class Equations(object):
     CALCULATING RHS OF DIFF EQUATIONS
     -----------------------------------------------------------------------
     """
-    def apply(self,state,vardict):
+    def apply(self, state, vardict):
         '''
         Calculates self._function[state] with arguments in vardict and
         static variables. The dictionary is filled with the required
@@ -578,7 +579,7 @@ class Equations(object):
         # Calculate static variables
         for var in self._dependencies[state]:
             # could add something like: if var not in vardict: this would allow you to override the dependencies if you wanted to - worth doing?
-            vardict[var]=call_with_dict(self._function[var],vardict)
+            vardict[var]=call_with_dict(self._function[var], vardict)
         return f(*[vardict[var] for var in f.func_code.co_varnames])
 
     """
@@ -586,7 +587,7 @@ class Equations(object):
     EQUATION INSPECTION
     -----------------------------------------------------------------------
     """
-    def is_stochastic(self,var=None):
+    def is_stochastic(self, var=None):
         '''
         Returns True if the equation for var is stochastic,
         or if all equations are stochastic (var=None).
@@ -596,7 +597,7 @@ class Equations(object):
         else:
             return any([self.is_stochastic(name) for name in self._diffeq_names_nonzero])
 
-    def is_time_dependent(self,var=None):
+    def is_time_dependent(self, var=None):
         '''
         Returns True if the equation for var is time dependent,
         or if all equations are time dependent (var=None).
@@ -606,7 +607,7 @@ class Equations(object):
         else:
             return any([self.is_time_dependent(name) for name in self._diffeq_names_nonzero])
 #            return any([self.is_time_dependent(name) for name in self._diffeq_names_nonzero+self._eq_names])
-    
+
     def is_linear(self):
         '''
         Returns True if all equations are linear.
@@ -615,12 +616,12 @@ class Equations(object):
         '''
         if self.is_time_dependent():
             return False
-        
+
         for f in self._namespace.iterkeys():
             if any([type(key)==types.FunctionType for key in self._namespace[f].itervalues()]):
                 return False
         return all([is_affine(f) for f in self._function.itervalues()])
-    
+
     def is_conditionally_linear(self):
         '''
         Returns True if the differential equations are linear with respect to the
@@ -631,18 +632,18 @@ class Equations(object):
             S=self._units.copy()
             S[var]=AffineFunction()
             try:
-                self.apply(var,S)
+                self.apply(var, S)
             except:
                 return False
         return True
-    
+
     """
     -----------------------------------------------------------------------
     NUMERICAL INTEGRATION (to be replaced by code generation)
     -----------------------------------------------------------------------
     """
-    
-    def forward_euler(self,S,dt):
+
+    def forward_euler(self, S, dt):
         '''
         Updates the value of the state variables in dictionary S
         with the forward Euler algorithm over step dt.
@@ -658,7 +659,7 @@ class Equations(object):
         # Update variables
         for var in self._diffeq_names_nonzero:
             S[var]+=dt*buffer[var]
-    
+
     def forward_euler_code_string(self):
         '''
         Generates Python code for a forward Euler step.
@@ -672,14 +673,14 @@ class Equations(object):
         lines+=','.join(vars_tmp)+'=P._dS\n'
         for name in self._diffeq_names_nonzero:
             namespace=self._namespace[name]
-            expr=optimiser.freeze(self._string[name],all_variables,namespace)
+            expr=optimiser.freeze(self._string[name], all_variables, namespace)
             lines+=name+'__tmp[:]='+expr+'\n'
         lines+='P._S+=dt*P._dS\n'
         #print lines
         return lines
         # Return a function f(P) or a namespace (exec code in namespace)
         # 1st option: include directly in neurongroup._state_updater (good?)        
-    
+
     def forward_euler_code(self):
         '''
         Generates Python code for a forward Euler step.
@@ -693,15 +694,15 @@ class Equations(object):
         lines+=','.join(vars_tmp)+'=P._dS\n'
         for name in self._diffeq_names_nonzero:
             namespace=self._namespace[name]
-            expr=optimiser.freeze(self._string[name],all_variables,namespace)
+            expr=optimiser.freeze(self._string[name], all_variables, namespace)
             lines+=name+'__tmp[:]='+expr+'\n'
         lines+='P._S+=dt*P._dS\n'
         #print lines
-        return compile(lines,'Euler update code','exec')
+        return compile(lines, 'Euler update code', 'exec')
         # Return a function f(P) or a namespace (exec code in namespace)
         # 1st option: include directly in neurongroup._state_updater (good?)
 
-    def Runge_Kutta2(self,S,dt):
+    def Runge_Kutta2(self, S, dt):
         '''
         Updates the value of the state variables in dictionary S
         with the 2nd order Runge-Kutta algorithm over step dt (midpoint).
@@ -719,7 +720,7 @@ class Equations(object):
         # Update variables
         for var in self._diffeq_names_nonzero:
             S_half[var]=S[var]+.5*dt*buffer[var]
-            
+
         # Whole step
         for varname in self._diffeq_names_nonzero:
             f=self._function[varname]
@@ -728,7 +729,7 @@ class Equations(object):
         for var in self._diffeq_names_nonzero:
             S[var]+=dt*buffer[var]
 
-    def exponential_euler(self,S,dt):
+    def exponential_euler(self, S, dt):
         '''
         Updates the value of the state variables in dictionary S
         with an exponential Euler algorithm over step dt.
@@ -763,11 +764,11 @@ class Equations(object):
                 Sx=S[varname]
                 # Compilation with blitz: we need an approximation because exp is not understood
                 #weave.blitz('Sx[:]=-Bx+(Sx+Bx)*(1.+Ax*dt*(1.+.5*Ax*dt))',check_size=0)
-                code =  """
+                code="""
                 for(int k=0;k<n;k++)
                     Sx(k)=-Bx(k)+(Sx(k)+Bx(k))*exp(Ax(k)*dt);
                 """
-                weave.inline(code,['n','Bx','Sx','Ax','dt'],\
+                weave.inline(code, ['n', 'Bx', 'Sx', 'Ax', 'dt'], \
                              compiler=self._cpp_compiler,
                              type_converters=weave.converters.blitz,
                              extra_compile_args=self._extra_compile_args)
@@ -777,7 +778,7 @@ class Equations(object):
                 S[varname]+=B[varname]
                 S[varname]*=exp(A[varname]*dt)
                 S[varname]-=B[varname]
-    
+
     def exponential_euler_code(self):
         '''
         Generates Python code for an exponential Euler step.
@@ -790,15 +791,15 @@ class Equations(object):
         for name in self._diffeq_names:
             # Freeze
             namespace=self._namespace[name]
-            expr=optimiser.freeze(self._string[name],all_variables,namespace)
+            expr=optimiser.freeze(self._string[name], all_variables, namespace)
             # Find a and b in dx/dt=a*x+b
             sym_expr=symbolic_eval(expr)
-            if isinstance(sym_expr,float):
+            if isinstance(sym_expr, float):
                 lines+=name+'__tmp[:]='+name+'+('+str(expr)+')*dt\n'
             else:
                 sym_expr=sym_expr.expand()
                 sname=sympy.Symbol(name)
-                terms=sympy.collect(sym_expr,name,evaluate=False)
+                terms=sympy.collect(sym_expr, name, evaluate=False)
                 if sname**0 in terms:
                     b=terms[sname**0]
                 else:
@@ -810,61 +811,61 @@ class Equations(object):
                 lines+=name+'__tmp[:]='+str(-b/a+(sname+b/a)*sympy.exp(a*sympy.Symbol('dt')))+'\n'
         lines+='P._S[:]=P._dS'
         #print lines
-        return compile(lines,'Exponential Euler update code','exec')
-    
+        return compile(lines, 'Exponential Euler update code', 'exec')
+
     """
     -------------------
     COMBINING EQUATIONS
     -------------------
     """
-    def __add__(self,other):
+    def __add__(self, other):
         '''
         Union of two sets of equations
         '''
-        if not isinstance(other,Equations):
-            other = Equations(other,level=1)
+        if not isinstance(other, Equations):
+            other=Equations(other, level=1)
         result=self.__class__()
         result+=self
         result+=other
         return result
-    __radd__ = __add__
-    
-    def __iadd__(self,other):
-        if not isinstance(other,Equations):
-            other = Equations(other,level=1)
+    __radd__=__add__
+
+    def __iadd__(self, other):
+        if not isinstance(other, Equations):
+            other=Equations(other, level=1)
         self._eq_names=list(set(self._eq_names+other._eq_names)) # what to do if same variables?
         self._diffeq_names=list(set(self._diffeq_names+other._diffeq_names))
         self._diffeq_names_nonzero=list(set(self._diffeq_names_nonzero+other._diffeq_names_nonzero))
-        self._function=disjoint_dict_union(self._function,other._function)
-        self._alias=disjoint_dict_union(self._alias,other._alias)
-        self._string=disjoint_dict_union(self._string,other._string)
-        self._namespace=disjoint_dict_union(self._namespace,other._namespace)
+        self._function=disjoint_dict_union(self._function, other._function)
+        self._alias=disjoint_dict_union(self._alias, other._alias)
+        self._string=disjoint_dict_union(self._string, other._string)
+        self._namespace=disjoint_dict_union(self._namespace, other._namespace)
         # We do this to fix a bug where if you add two Equations together and
         # then create groups from them, the add_prefix_namespace step creates
         # names which can't be correctly resolved in the second NeuronGroup
         # created. This happens because although self._namespace is a new object,
         # self._namespace[var] is shared between the two objects.
         for var in self._namespace.keys():
-            self._namespace[var] = copy.copy(self._namespace[var])
+            self._namespace[var]=copy.copy(self._namespace[var])
         try:
-            self._units=disjoint_dict_union(self._units,other._units)
+            self._units=disjoint_dict_union(self._units, other._units)
         except AttributeError:
             raise DimensionMismatchError("The two sets of equations do not have compatible units")
         return self
-    
+
     """
     ---------------------------------
     OTHER METHODS (CALLED EXTERNALLY)
     ---------------------------------
     """
-    def fixed_point(self,**kwd):
+    def fixed_point(self, **kwd):
         '''
         Returns a fixed point of the differential equations
         as a dictionary. The keyword arguments give the (optional)
         initial point (default = 0).
         '''
         values={}
-        for name,value in self._units.iteritems():
+        for name, value in self._units.iteritems():
             values[name]=0*value
         values.update(kwd)
         # Initial vector
@@ -872,20 +873,20 @@ class Equations(object):
         # Vector function
         def f(x):
             # Put the units back
-            x=[xi*get_unit(x0i) for xi,x0i in zip(x,x0)]            
-            values.update(zip(self._diffeq_names_nonzero,x))
-            return [self.apply(name,values) for name in self._diffeq_names_nonzero]
-        xf,_,ier,_=optimize.fsolve(f,x0,full_output=True)
+            x=[xi*get_unit(x0i) for xi, x0i in zip(x, x0)]
+            values.update(zip(self._diffeq_names_nonzero, x))
+            return [self.apply(name, values) for name in self._diffeq_names_nonzero]
+        xf, _, ier, _=optimize.fsolve(f, x0, full_output=True)
         if ier:
             # Put the units back
-            xf=[xfi*get_unit(x0i) for xfi,x0i in zip(xf,x0)]
+            xf=[xfi*get_unit(x0i) for xfi, x0i in zip(xf, x0)]
             # Return a dictionary
-            return dict(zip(self._diffeq_names_nonzero,xf))
+            return dict(zip(self._diffeq_names_nonzero, xf))
         else: # Not found
             warnings.warn('Could not find a fixed point of the equations')
             return kwd
-    
-    def substitute(self,name1,name2):
+
+    def substitute(self, name1, name2):
         """
         Changes name1 to name2 (variable names).
         Note: I don't where this is called!
@@ -910,21 +911,21 @@ class Equations(object):
         if name1 in self._string:
             self._string[name2]=self._string[name1]
             del self._string[name1]
-        for name,value in self._string.iteritems():
-            self._string[name]=re.sub("\\b"+name1+"\\b",name2,value)
+        for name, value in self._string.iteritems():
+            self._string[name]=re.sub("\\b"+name1+"\\b", name2, value)
         # Namespaces
         if name1 in self._namespace:
             self._namespace[name2]=self._namespace[name1]
             del self._namespace[name1]
 
-    def __getattr__(self,name):
+    def __getattr__(self, name):
         '''
         Returns the corresponding function.
         '''
         # bug with clustertools
-        if name == 'as_array':
+        if name=='as_array':
             raise Exception()
-        return lambda **kwd:self.apply(name,kwd)
+        return lambda**kwd:self.apply(name, kwd)
 
     def __len__(self):
         '''
@@ -941,50 +942,51 @@ class Equations(object):
         for var in self._eq_names:
             s+=var+' = '+self._string[var]+'\n'
         return s
-    
+
     def __reduce__(self):
         # To avoid recursion, we temporarily set the class to a trivial
         # class, this is restored at the end, and by _load_Equations_from_pickle
         # too
-        self.__class__, cls = PickledEquations, self.__class__
-        selfcopy = copy.copy(self)
+        self.__class__, cls=PickledEquations, self.__class__
+        selfcopy=copy.copy(self)
         # We need to delete __builtins__ from all the namespaces as it is
         # not picklable, so we make copies
-        selfcopy._namespace = copy.copy(selfcopy._namespace)
+        selfcopy._namespace=copy.copy(selfcopy._namespace)
         for key in selfcopy._namespace.keys():
-            selfcopy._namespace[key] = copy.copy(selfcopy._namespace[key])
+            selfcopy._namespace[key]=copy.copy(selfcopy._namespace[key])
             if '__builtins__' in selfcopy._namespace[key]:
                 del selfcopy._namespace[key]['__builtins__']
-        selfcopy._function = {}
-        self.__class__ = cls
+        selfcopy._function={}
+        self.__class__=cls
         return (_load_Equations_from_pickle, (selfcopy, cls))
+
 
 class PickledEquations(object):
     pass
-    
+
 def _load_Equations_from_pickle(eqs, cls):
-    eqs.__class__ = cls
+    eqs.__class__=cls
     eqs.prepare()
     return eqs
-    
+
 # Utilitary functions
 # -------------------
-def call_with_dict(f,d):
+def call_with_dict(f, d):
     '''
     Calls a function f with arguments from dictionary d.
     The dictionary can contain keys that are not variables of f.
     '''
     return f(*[d[var] for var in f.func_code.co_varnames])
 
-def disjoint_dict_union(d1,d2):
+def disjoint_dict_union(d1, d2):
     '''
     Merges the dictionaries d1 and d2 and checks that
     they are compatible (i.e., raises an exception if d1[key]!=d2[key])
     '''
     result={}
     result.update(d1)
-    for key,value in d2.iteritems(): # Bug here
+    for key, value in d2.iteritems(): # Bug here
         if (key in d1) and (d1[key]!=value):
-            raise AttributeError,"Incompatible dictionaries in disjoint union, problem with key "+key
+            raise AttributeError, "Incompatible dictionaries in disjoint union, problem with key "+key
         result[key]=value
     return result

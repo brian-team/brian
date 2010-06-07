@@ -57,7 +57,7 @@ import types
 import magic
 from log import *
 from numpy import *
-from scipy import sparse,stats,rand,weave,linalg
+from scipy import sparse, stats, rand, weave, linalg
 import scipy
 import numpy
 from numpy.random import binomial, exponential
@@ -69,7 +69,7 @@ from base import *
 from stdunits import ms
 from operator import isSequenceType
 
-use_sparse_matrix = 'scipy_patch' # values are own, own_scipy, scipy, scipy_patch
+use_sparse_matrix='scipy_patch' # values are own, own_scipy, scipy, scipy_patch
 if use_sparse_matrix=='own':
     from utils import sparse_matrix as sparse
 elif use_sparse_matrix=='own_scipy':
@@ -79,8 +79,8 @@ elif use_sparse_matrix=='scipy_patch':
 # We should do this:
 # from network import network_operation
 # but instead we do it at the bottom of the module (see comments there for explanation)
-    
-effective_zero = 1e-40
+
+effective_zero=1e-40
 
 def random_row_func(N, p, weight=1., initseed=None):
     '''
@@ -100,18 +100,18 @@ def random_row_func(N, p, weight=1., initseed=None):
         The initial seed value (for reproducible results).
     '''
     if initseed is None:
-        initseed = pyrandom.randint(100000,1000000) # replace this
-    cur_row = numpy.zeros(N)
-    myrange = numpy.arange(N, dtype=int)
-    
+        initseed=pyrandom.randint(100000, 1000000) # replace this
+    cur_row=numpy.zeros(N)
+    myrange=numpy.arange(N, dtype=int)
+
     def row_func(i):
         pyrandom.seed(initseed+int(i))
         scirandom.seed(initseed+int(i))
-        k = scirandom.binomial(N, p, 1)[0]
-        cur_row[:] = 0.0
-        cur_row[pyrandom.sample(myrange,k)] = weight
+        k=scirandom.binomial(N, p, 1)[0]
+        cur_row[:]=0.0
+        cur_row[pyrandom.sample(myrange, k)]=weight
         return cur_row
-    
+
     return row_func
 
 #class UserComputedConnectionMatrix(ConnectionMatrix):
@@ -264,13 +264,14 @@ def random_row_func(N, p, weight=1., initseed=None):
 #                        return self.get_row(item_i)
 #        raise ValueError('Only "i,:" indexing supported.')
 
-    
-colon_slice = slice(None,None,None)
+
+colon_slice=slice(None, None, None)
 
 def todense(x):
     if hasattr(x, 'todense'):
         return x.todense()
     return array(x, copy=False)
+
 
 class ConnectionVector(object):
     '''
@@ -284,9 +285,10 @@ class ConnectionVector(object):
     '''
     def todense(self):
         return NotImplemented
-    
+
     def tosparse(self):
         return NotImplemented
+
 
 class DenseConnectionVector(ConnectionVector, numpy.ndarray):
     '''
@@ -294,12 +296,13 @@ class DenseConnectionVector(ConnectionVector, numpy.ndarray):
     '''
     def __new__(subtype, arr):
         return numpy.array(arr, copy=False).view(subtype)
-    
+
     def todense(self):
         return self
-    
+
     def tosparse(self):
         return SparseConnectionVector(len(self), self.nonzero(), self)
+
 
 class SparseConnectionVector(ConnectionVector, numpy.ndarray):
     '''
@@ -325,31 +328,31 @@ class SparseConnectionVector(ConnectionVector, numpy.ndarray):
     of the nonzero elements.
     '''
     def __new__(subtype, n, ind, data):
-        x = numpy.array(data, copy=False).view(subtype)
-        x.n = n
-        x.ind = ind
+        x=numpy.array(data, copy=False).view(subtype)
+        x.n=n
+        x.ind=ind
         return x
-    
+
     def __array_finalize__(self, orig):
         # the array is passed through this function after standard numpy operations,
         # this ensures that the indices are kept from the original array. This makes,
         # for example, sin(x) do the right thing for x a sparse vector.
         try:
-            self.ind = orig.ind
-            self.n = orig.n
+            self.ind=orig.ind
+            self.n=orig.n
         except AttributeError:
             pass
         return self
-    
+
     def todense(self):
-        x = zeros(self.n)
-        x[self.ind] = self
+        x=zeros(self.n)
+        x[self.ind]=self
         return x
-    
+
     def tosparse(self):
         return self
     # This is a list of the binary operations that numpy arrays support.
-    modifymeths = ['__add__', '__and__', 
+    modifymeths=['__add__', '__and__',
          '__div__', '__divmod__', '__eq__',
          '__floordiv__', '__ge__', '__gt__', '__iadd__', '__iand__', '__idiv__',
          '__ifloordiv__', '__ilshift__', '__imod__', '__imul__',
@@ -361,7 +364,7 @@ class SparseConnectionVector(ConnectionVector, numpy.ndarray):
          '__rsub__', '__rtruediv__', '__rxor__', '__sub__', '__truediv__', '__xor__']
     # This template function (where __add__ is replaced by any of the methods above) implements
     # the semantics described in this class' docstring when operating with a dense vector.
-    template = '''
+    template='''
 def __add__(self, other):
     if isinstance(other, SparseConnectionVector):
         # Note that removing this check is potentially dangerous, but only in weird circumstances would it cause
@@ -380,9 +383,10 @@ def __add__(self, other):
     # the moment (it's slower at import time, but not at run time, and errors are more difficult to
     # catch when it is done like this).
     for m in modifymeths:
-        s = template.replace('__add__', m)
+        s=template.replace('__add__', m)
         exec s
     del modifymeths, template
+
 
 class ConstructionMatrix(object):
     '''
@@ -396,6 +400,7 @@ class ConstructionMatrix(object):
     def connection_matrix(self, *args, **kwds):
         return NotImplemented
 
+
 class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
     '''
     Dense construction matrix. Essentially just numpy.ndarray.
@@ -407,33 +412,33 @@ class DenseConstructionMatrix(ConstructionMatrix, numpy.ndarray):
     a sparse matrix.
     '''
     def __init__(self, val, **kwds):
-        self[:] = 0
-        self.init_kwds = kwds
-    
+        self[:]=0
+        self.init_kwds=kwds
+
     def connection_matrix(self, **additional_kwds):
         self.init_kwds.update(additional_kwds)
-        kwds = self.init_kwds
+        kwds=self.init_kwds
         return DenseConnectionMatrix(self, **kwds)
-    
+
     def __setitem__(self, index, W):
         # Make it work for sparse matrices
         #if isinstance(W,sparse.spmatrix):
-        if isinstance(W,sparse.spmatrix):
-            ndarray.__setitem__(self,index,W.todense())
+        if isinstance(W, sparse.spmatrix):
+            ndarray.__setitem__(self, index, W.todense())
         else:
-            ndarray.__setitem__(self,index,W)
-    
+            ndarray.__setitem__(self, index, W)
+
     def todense(self):
         return asarray(self)
 
 # set this to True using the sparse library packaged with Brian, from scipy 0.7.1
 if use_sparse_matrix=='own' or use_sparse_matrix=='own_scipy':
-    oldscipy = True
+    oldscipy=True
 else:
-    olscipy = scipy.__version__.startswith('0.6.') or scipy.__version__.startswith('0.7.1')
+    olscipy=scipy.__version__.startswith('0.6.') or scipy.__version__.startswith('0.7.1')
 
 if use_sparse_matrix=='own' or use_sparse_matrix=='scipy_patch':
-    SparseMatrix = sparse.lil_matrix
+    SparseMatrix=sparse.lil_matrix
 else:
     class SparseMatrix(sparse.lil_matrix):
         '''
@@ -451,45 +456,46 @@ else:
             TODO: checks (first remove the data).
             """
             try:
-                i, j = index
+                i, j=index
             except (ValueError, TypeError):
                 raise IndexError, "invalid index"
-    
-            if isinstance(i, slice) and isinstance(j,slice) and\
+
+            if isinstance(i, slice) and isinstance(j, slice) and\
                (i.step is None) and (j.step is None) and\
-               (isinstance(W,sparse.spmatrix) or isinstance(W,numpy.ndarray)):
-                rows = self.rows[i]
-                datas = self.data[i]
+               (isinstance(W, sparse.spmatrix) or isinstance(W, numpy.ndarray)):
+                rows=self.rows[i]
+                datas=self.data[i]
                 j0=j.start
-                if isinstance(W,sparse.lil_matrix):
-                    for row,data,rowW,dataW in izip(rows,datas,W.rows,W.data):
-                        jj=bisect.bisect(row,j0) # Find the insertion point
+                if isinstance(W, sparse.lil_matrix):
+                    for row, data, rowW, dataW in izip(rows, datas, W.rows, W.data):
+                        jj=bisect.bisect(row, j0) # Find the insertion point
                         row[jj:jj]=[j0+k for k in rowW]
                         data[jj:jj]=dataW
-                elif isinstance(W,ndarray):
+                elif isinstance(W, ndarray):
                     nq=W.shape[1]
-                    for row,data,rowW in izip(rows,datas,W):
-                        jj=bisect.bisect(row,j0) # Find the insertion point
-                        row[jj:jj]=range(j0,j0+nq)
+                    for row, data, rowW in izip(rows, datas, W):
+                        jj=bisect.bisect(row, j0) # Find the insertion point
+                        row[jj:jj]=range(j0, j0+nq)
                         data[jj:jj]=rowW
             elif oldscipy and isinstance(i, int) and isinstance(j, (list, tuple, numpy.ndarray)):
-                row = dict(izip(self.rows[i], self.data[i]))
+                row=dict(izip(self.rows[i], self.data[i]))
                 try:
-                    row.update(dict(izip(j,W)))
+                    row.update(dict(izip(j, W)))
                 except TypeError:
-                    row.update(dict(izip(j,itertools.repeat(W))))
-                items = row.items()
+                    row.update(dict(izip(j, itertools.repeat(W))))
+                items=row.items()
                 items.sort()
-                row, data = izip(*items)
-                self.rows[i] = list(row)
-                self.data[i] = list(data)
+                row, data=izip(*items)
+                self.rows[i]=list(row)
+                self.data[i]=list(data)
             elif isinstance(i, slice) and isinstance(j, int) and isSequenceType(W):
                 # This corrects a bug in scipy sparse matrix as of version 0.7.0, but
                 # it is not efficient!
                 for w, k in izip(W, xrange(*i.indices(self.shape[0]))):
-                    sparse.lil_matrix.__setitem__(self, (k,j), w)
+                    sparse.lil_matrix.__setitem__(self, (k, j), w)
             else:
-                sparse.lil_matrix.__setitem__(self,index,W)
+                sparse.lil_matrix.__setitem__(self, index, W)
+
 
 class SparseConstructionMatrix(ConstructionMatrix, SparseMatrix):
     '''
@@ -497,30 +503,32 @@ class SparseConstructionMatrix(ConstructionMatrix, SparseMatrix):
     '''
     def __init__(self, arg, **kwds):
         SparseMatrix.__init__(self, arg)
-        self.init_kwds = kwds
-        
+        self.init_kwds=kwds
+
     def connection_matrix(self, **additional_kwds):
         self.init_kwds.update(additional_kwds)
         return SparseConnectionMatrix(self, **self.init_kwds)
-            
+
+
 class DynamicConstructionMatrix(ConstructionMatrix, SparseMatrix):
     '''
     DynamicConstructionMatrix is converted to DynamicConnectionMatrix.
     '''
     def __init__(self, arg, **kwds):
         SparseMatrix.__init__(self, arg)
-        self.init_kwds = kwds
-        
+        self.init_kwds=kwds
+
     def connection_matrix(self, **additional_kwds):
         self.init_kwds.update(additional_kwds)
         return DynamicConnectionMatrix(self, **self.init_kwds)
 
 # this is used to look up str->class conversions for structure=... keyword
-construction_matrix_register = {
+construction_matrix_register={
         'dense':DenseConstructionMatrix,
         'sparse':SparseConstructionMatrix,
         'dynamic':DynamicConstructionMatrix,
         }
+
 
 class ConnectionMatrix(object):
     '''
@@ -558,37 +566,37 @@ class ConnectionMatrix(object):
     # methods to be implemented by subclass
     def get_row(self, i):
         return NotImplemented
-    
+
     def get_col(self, i):
         return NotImplemented
-    
+
     def set_row(self, i, x):
-        return NotImplemented    
-    
+        return NotImplemented
+
     def set_col(self, i, x):
-        return NotImplemented    
-    
+        return NotImplemented
+
     def set_element(self, i, j, x):
         return NotImplemented
-    
+
     def get_element(self, i, j):
         return NotImplemented
-    
+
     def get_rows(self, rows):
         return [self.get_row(i) for i in rows]
 
     def get_cols(self, cols):
         return [self.get_col(i) for i in cols]
-    
+
     def insert(self, i, j, x):
         return NotImplemented
-    
+
     def remove(self, i, j):
         return NotImplemented
-    
+
     def getnnz(self):
         return NotImplemented
-    
+
     def todense(self):
         return array([todense(r) for r in self])
     # we support the following indexing schemes:
@@ -596,21 +604,21 @@ class ConnectionMatrix(object):
     # - s[i,:]
     # - s[:,i]
     # - s[i,j]
-    
+
     def __getitem__(self, item):
-        if isinstance(item,tuple) and isinstance(item[0],int) and item[1]==colon_slice:
+        if isinstance(item, tuple) and isinstance(item[0], int) and item[1]==colon_slice:
             return self.get_row(item[0])
-        if isinstance(item,slice):
+        if isinstance(item, slice):
             if item==colon_slice:
                 return self
             else:
                 raise ValueError(str(item)+' not supported.')
-        if isinstance(item,int):
+        if isinstance(item, int):
             return self.get_row(item)
-        if isinstance(item,tuple):
+        if isinstance(item, tuple):
             if len(item)!=2:
                 raise TypeError('Only 2D indexing supported.')
-            item_i, item_j = item
+            item_i, item_j=item
             if isinstance(item_i, int) and isinstance(item_j, slice):
                 if item_j==colon_slice:
                     return self.get_row(item_i)
@@ -623,18 +631,18 @@ class ConnectionMatrix(object):
                 return self.get_element(item_i, item_j)
             raise TypeError('Only (i,:), (:,j), (i,j) indexing supported.')
         raise TypeError('Can only get items of type slice or tuple')
-    
+
     def __setitem__(self, item, value):
-        if isinstance(item,tuple) and isinstance(item[0],int) and item[1]==colon_slice:
+        if isinstance(item, tuple) and isinstance(item[0], int) and item[1]==colon_slice:
             return self.set_row(item[0], value)
-        if isinstance(item,slice):
+        if isinstance(item, slice):
             raise ValueError(str(item)+' not supported.')
-        if isinstance(item,int):
+        if isinstance(item, int):
             return self.set_row(item, value)
-        if isinstance(item,tuple):
+        if isinstance(item, tuple):
             if len(item)!=2:
                 raise TypeError('Only 2D indexing supported.')
-            item_i, item_j = item
+            item_i, item_j=item
             if isinstance(item_i, int) and isinstance(item_j, slice):
                 if item_j==colon_slice:
                     return self.set_row(item_i, value)
@@ -647,6 +655,7 @@ class ConnectionMatrix(object):
                 return self.set_element(item_i, item_j, value)
             raise TypeError('Only (i,:), (:,j), (i,j) indexing supported.')
         raise TypeError('Can only set items of type slice or tuple')
+
 
 class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
     '''
@@ -661,46 +670,47 @@ class DenseConnectionMatrix(ConnectionMatrix, numpy.ndarray):
     '''
     def __new__(subtype, data, **kwds):
         if 'copy' not in kwds:
-            kwds = dict(kwds.iteritems())
-            kwds['copy'] = False
+            kwds=dict(kwds.iteritems())
+            kwds['copy']=False
         return numpy.array(data, **kwds).view(subtype)
 
     def __init__(self, val, **kwds):
         # precompute rows and cols for fast returns by get_rows etc.
-        self.rows = [DenseConnectionVector(numpy.ndarray.__getitem__(self, i)) for i in xrange(val.shape[0])]
-        self.cols = [DenseConnectionVector(numpy.ndarray.__getitem__(self, (slice(None), i))) for i in xrange(val.shape[1])]
-    
+        self.rows=[DenseConnectionVector(numpy.ndarray.__getitem__(self, i)) for i in xrange(val.shape[0])]
+        self.cols=[DenseConnectionVector(numpy.ndarray.__getitem__(self, (slice(None), i))) for i in xrange(val.shape[1])]
+
     def get_rows(self, rows):
         return [self.rows[i] for i in rows]
 
     def get_cols(self, cols):
         return [self.cols[i] for i in cols]
-    
+
     def get_row(self, i):
         return self.rows[i]
-    
+
     def get_col(self, i):
         return self.cols[i]
-    
+
     def set_row(self, i, x):
         numpy.ndarray.__setitem__(self, i, todense(x))
-    
+
     def set_col(self, i, x):
         numpy.ndarray.__setitem__(self, (colon_slice, i), todense(x))
         #self[:, i] = todense(x)
-    
+
     def get_element(self, i, j):
         return numpy.ndarray.__getitem__(self, (i, j))
         #return self[i,j]
-    
+
     def set_element(self, i, j, val):
         numpy.ndarray.__setitem__(self, (i, j), val)
         #self[i,j] = val
-    insert = set_element
-    
+    insert=set_element
+
     def remove(self, i, j):
         numpy.ndarray.__setitem__(self, (i, j), 0)
         #self[i, j] = 0
+
 
 class SparseConnectionMatrix(ConnectionMatrix):
     '''
@@ -744,51 +754,51 @@ class SparseConnectionMatrix(ConnectionMatrix):
     row indices and 4 extra bytes for the data indices).
     '''
     def __init__(self, val, column_access=True, **kwds):
-        self._useaccel = get_global_preference('useweave')
-        self._cpp_compiler = get_global_preference('weavecompiler')
-        self._extra_compile_args = ['-O3']
+        self._useaccel=get_global_preference('useweave')
+        self._cpp_compiler=get_global_preference('weavecompiler')
+        self._extra_compile_args=['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
-        self.nnz = nnz = val.getnnz()# nnz stands for number of nonzero entries
-        alldata = numpy.zeros(nnz)
+            self._extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+        self.nnz=nnz=val.getnnz()# nnz stands for number of nonzero entries
+        alldata=numpy.zeros(nnz)
         if column_access:
-            colind = numpy.zeros(val.shape[1]+1, dtype=int)
-        allj = numpy.zeros(nnz, dtype=int)
-        rowind = numpy.zeros(val.shape[0]+1, dtype=int)
-        rowdata = []
-        rowj = []
+            colind=numpy.zeros(val.shape[1]+1, dtype=int)
+        allj=numpy.zeros(nnz, dtype=int)
+        rowind=numpy.zeros(val.shape[0]+1, dtype=int)
+        rowdata=[]
+        rowj=[]
         if column_access:
-            coli = []
-            coldataindices = []
-        i = 0 # i points to the current index in the alldata array as we go through row by row
+            coli=[]
+            coldataindices=[]
+        i=0 # i points to the current index in the alldata array as we go through row by row
         for c in xrange(val.shape[0]):
             # extra the row values and column indices of row c of the initialising matrix
             # this works for any of the scipy sparse matrix formats
             if isinstance(val, sparse.lil_matrix):
-                r = val.rows[c]
-                d = val.data[c]
+                r=val.rows[c]
+                d=val.data[c]
             else:
-                sr = val[c, :]
-                sr = sr.tolil()
-                r = sr.rows[0]
-                d = sr.data[0]
+                sr=val[c, :]
+                sr=sr.tolil()
+                r=sr.rows[0]
+                d=sr.data[0]
             # copy the values into the alldata array, the indices into the allj array, and
             # so forth
-            rowind[c] = i
-            alldata[i:i+len(d)] = d
-            allj[i:i+len(r)] = r
+            rowind[c]=i
+            alldata[i:i+len(d)]=d
+            allj[i:i+len(r)]=r
             rowdata.append(alldata[i:i+len(d)])
             rowj.append(allj[i:i+len(r)])
-            i = i+len(r)
-        rowind[val.shape[0]] = i
+            i=i+len(r)
+        rowind[val.shape[0]]=i
         if column_access:
             # counts the number of nonzero elements in each column
-            counts = zeros(val.shape[1], dtype=int)
+            counts=zeros(val.shape[1], dtype=int)
             if len(allj):
-                bincounts = numpy.bincount(allj)
+                bincounts=numpy.bincount(allj)
             else:
-                bincounts = numpy.array([], dtype=int)
-            counts[:len(bincounts)] = bincounts # ensure that counts is the right length
+                bincounts=numpy.array([], dtype=int)
+            counts[:len(bincounts)]=bincounts # ensure that counts is the right length
             # two algorithms depending on whether weave is available
             if self._useaccel:
                 # this algorithm just goes through one by one adding each
@@ -797,12 +807,12 @@ class SparseConnectionMatrix(ConnectionMatrix):
                 # in blocks alldi[s[i]:s[i+1]] of length counts[i], and
                 # curcdi[i] is the current offset into each block. s is
                 # therefore just the cumulative sum of counts.
-                curcdi = numpy.zeros(val.shape[1], dtype=int)
-                allcoldataindices = numpy.zeros(nnz, dtype=int)
-                colind[:] = numpy.hstack(([0], cumsum(counts)))
-                colalli = numpy.zeros(nnz, dtype=int)
-                numrows = val.shape[0]
-                code = '''
+                curcdi=numpy.zeros(val.shape[1], dtype=int)
+                allcoldataindices=numpy.zeros(nnz, dtype=int)
+                colind[:]=numpy.hstack(([0], cumsum(counts)))
+                colalli=numpy.zeros(nnz, dtype=int)
+                numrows=val.shape[0]
+                code='''
                 int i = 0;
                 for(int k=0;k<nnz;k++)
                 {
@@ -820,8 +830,8 @@ class SparseConnectionMatrix(ConnectionMatrix):
                              extra_compile_args=self._extra_compile_args)
                 # now store the blocks of allcoldataindices in coldataindices and update coli too
                 for i in xrange(len(colind)-1):
-                    D = allcoldataindices[colind[i]:colind[i+1]]
-                    I = colalli[colind[i]:colind[i+1]]
+                    D=allcoldataindices[colind[i]:colind[i+1]]
+                    I=colalli[colind[i]:colind[i+1]]
                     coldataindices.append(D)
                     coli.append(I)
             else:
@@ -831,59 +841,59 @@ class SparseConnectionMatrix(ConnectionMatrix):
                 # will be the data indices of the elements (i,j) with j==0
                 # mergesort is necessary because we want the relative ordering
                 # of the elements of a within a block to be maintained
-                allcoldataindices = a = argsort(allj, kind='mergesort')
+                allcoldataindices=a=argsort(allj, kind='mergesort')
                 # this defines colind so that a[colind[i]:colind[i+1]] are the data
                 # indices where j==i
-                colind[:] = numpy.hstack(([0], cumsum(counts)))
+                colind[:]=numpy.hstack(([0], cumsum(counts)))
                 # in this loop, I are the data indices where j==i
                 # and alli[I} are the corresponding i coordinates
                 if len(a):
-                    colalli = digitize(a, rowind)
-                    colalli -= 1
+                    colalli=digitize(a, rowind)
+                    colalli-=1
                 else:
-                    colalli = numpy.zeros(nnz, dtype=int)
+                    colalli=numpy.zeros(nnz, dtype=int)
                 for i in xrange(len(colind)-1):
-                    D = a[colind[i]:colind[i+1]]
-                    I = colalli[colind[i]:colind[i+1]]
+                    D=a[colind[i]:colind[i+1]]
+                    I=colalli[colind[i]:colind[i+1]]
                     coldataindices.append(D)
                     coli.append(I)
 
-        self.alldata = alldata
-        self.rowdata = rowdata
-        self.allj = allj
-        self.rowj = rowj
-        self.rowind = rowind
-        self.shape = val.shape
-        self.column_access = column_access
+        self.alldata=alldata
+        self.rowdata=rowdata
+        self.allj=allj
+        self.rowj=rowj
+        self.rowind=rowind
+        self.shape=val.shape
+        self.column_access=column_access
         if column_access:
-            self.colalli = colalli
-            self.coli = coli
-            self.coldataindices = coldataindices
-            self.allcoldataindices = allcoldataindices
-            self.colind = colind
-        self.rows = [SparseConnectionVector(self.shape[1], self.rowj[i], self.rowdata[i]) for i in xrange(self.shape[0])]
-    
+            self.colalli=colalli
+            self.coli=coli
+            self.coldataindices=coldataindices
+            self.allcoldataindices=allcoldataindices
+            self.colind=colind
+        self.rows=[SparseConnectionVector(self.shape[1], self.rowj[i], self.rowdata[i]) for i in xrange(self.shape[0])]
+
     def getnnz(self):
         return self.nnz
-    
+
     def get_element(self, i, j):
-        n = searchsorted(self.rowj[i], j)
+        n=searchsorted(self.rowj[i], j)
         if n>=len(self.rowj[i]) or self.rowj[i][n]!=j:
             return 0
         return self.rowdata[i][n]
-    
+
     def set_element(self, i, j, x):
-        n = searchsorted(self.rowj[i], j)
+        n=searchsorted(self.rowj[i], j)
         if n>=len(self.rowj[i]) or self.rowj[i][n]!=j:
             raise ValueError('Insertion of new elements not supported for SparseConnectionMatrix.')
-        self.rowdata[i][n] = x
-    
+        self.rowdata[i][n]=x
+
     def get_row(self, i):
         return self.rows[i]
-    
+
     def get_rows(self, rows):
         return [self.rows[i] for i in rows]
-    
+
     def get_col(self, j):
         if self.column_access:
             return SparseConnectionVector(self.shape[0], self.coli[j], self.alldata[self.coldataindices[j]])
@@ -895,41 +905,42 @@ class SparseConnectionMatrix(ConnectionMatrix):
             return [SparseConnectionVector(self.shape[0], self.coli[j], self.alldata[self.coldataindices[j]]) for j in cols]
         else:
             raise TypeError('No column access.')
-    
+
     def set_row(self, i, val):
         if isinstance(val, SparseConnectionVector):
             if val.ind is not self.rowj[i]:
                 if not (val.ind==self.rowj[i]).all():
                     raise ValueError('Sparse row setting must use same indices.')
-            self.rowdata[i][:] = val
+            self.rowdata[i][:]=val
         else:
             if isinstance(val, numpy.ndarray):
-                val = asarray(val)
-                self.rowdata[i][:] = val[self.rowj[i]]
+                val=asarray(val)
+                self.rowdata[i][:]=val[self.rowj[i]]
             else:
-                self.rowdata[i][:] = val
-    
+                self.rowdata[i][:]=val
+
     def set_col(self, j, val):
         if self.column_access:
             if isinstance(val, SparseConnectionVector):
                 if val.ind is not self.coli[j]:
                     if not (val.ind==self.coli[j]).all():
                         raise ValueError('Sparse col setting must use same indices.')
-                self.alldata[self.coldataindices[j]] = val
+                self.alldata[self.coldataindices[j]]=val
             else:
                 if isinstance(val, numpy.ndarray):
-                    val = asarray(val)
-                    self.alldata[self.coldataindices[j]] = val[self.coli[j]]
+                    val=asarray(val)
+                    self.alldata[self.coldataindices[j]]=val[self.coli[j]]
                 else:
-                    self.alldata[self.coldataindices[j]] = val
+                    self.alldata[self.coldataindices[j]]=val
         else:
             raise TypeError('No column access.')
-    
+
     def __setitem__(self, item, value):
         if item==colon_slice:
-            self.alldata[:] = value
+            self.alldata[:]=value
         else:
             ConnectionMatrix.__setitem__(self, item, value)
+
 
 class DynamicConnectionMatrix(ConnectionMatrix):
     '''
@@ -966,180 +977,181 @@ class DynamicConnectionMatrix(ConnectionMatrix):
     consist of arrays of pointers to the indices in the ``alldata`` array. 
     '''
     def __init__(self, val, nnzmax=None, dynamic_array_const=2, **kwds):
-        self.shape = val.shape
-        self.dynamic_array_const = dynamic_array_const
+        self.shape=val.shape
+        self.dynamic_array_const=dynamic_array_const
         if nnzmax is None or nnzmax<val.getnnz():
-            nnzmax = val.getnnz()
-        self.nnzmax = nnzmax
-        self.nnz = val.getnnz()
-        self.alldata = numpy.zeros(nnzmax)
-        self.unusedinds = range(self.nnz, self.nnzmax)
-        i = 0
-        self.rowj = []
-        self.rowdataind = []
-        alli = zeros(self.nnz, dtype=int)
-        allj = zeros(self.nnz, dtype=int)
+            nnzmax=val.getnnz()
+        self.nnzmax=nnzmax
+        self.nnz=val.getnnz()
+        self.alldata=numpy.zeros(nnzmax)
+        self.unusedinds=range(self.nnz, self.nnzmax)
+        i=0
+        self.rowj=[]
+        self.rowdataind=[]
+        alli=zeros(self.nnz, dtype=int)
+        allj=zeros(self.nnz, dtype=int)
         for c in xrange(val.shape[0]):
             # extra the row values and column indices of row c of the initialising matrix
             # this works for any of the scipy sparse matrix formats
             if isinstance(val, sparse.lil_matrix):
-                r = val.rows[c]
-                d = val.data[c]
+                r=val.rows[c]
+                d=val.data[c]
             else:
-                sr = val[c, :]
-                sr = sr.tolil()
-                r = sr.rows[0]
-                d = sr.data[0]
-            self.alldata[i:i+len(d)] = d
+                sr=val[c, :]
+                sr=sr.tolil()
+                r=sr.rows[0]
+                d=sr.data[0]
+            self.alldata[i:i+len(d)]=d
             self.rowj.append(array(r, dtype=int))
             self.rowdataind.append(arange(i, i+len(d)))
-            allj[i:i+len(d)] = r
-            alli[i:i+len(d)] = c
-            i += len(d)
+            allj[i:i+len(d)]=r
+            alli[i:i+len(d)]=c
+            i+=len(d)
         # now update the coli and coldataind variables
-        self.coli = []
-        self.coldataind = []
+        self.coli=[]
+        self.coldataind=[]
         # counts the number of nonzero elements in each column
         if numpy.__version__>='1.3.0':
-            counts = numpy.histogram(allj, numpy.arange(val.shape[1]+1, dtype=int))[0]
+            counts=numpy.histogram(allj, numpy.arange(val.shape[1]+1, dtype=int))[0]
         else:
-            counts = numpy.histogram(allj, numpy.arange(val.shape[1]+1, dtype=int), new=True)[0]
+            counts=numpy.histogram(allj, numpy.arange(val.shape[1]+1, dtype=int), new=True)[0]
         # now we have to go through one by one unfortunately, and so we keep curcdi, the
         # current column data index for each column
-        curcdi = numpy.zeros(val.shape[1], dtype=int)
+        curcdi=numpy.zeros(val.shape[1], dtype=int)
         # initialise the memory for the column data indices
         for j in xrange(val.shape[1]):
             self.coldataind.append(numpy.zeros(counts[j], dtype=int))
         # one by one for every element, update the dataindices and curcdi data pointers
         for i, j in enumerate(allj):
-            self.coldataind[j][curcdi[j]] = i
+            self.coldataind[j][curcdi[j]]=i
             curcdi[j]+=1
         for j in xrange(val.shape[1]):
             self.coli.append(alli[self.coldataind[j]])
-    
+
     def getnnz(self):
         return self.nnz
-    
+
     def insert(self, i, j, x):
-        n = searchsorted(self.rowj[i], j)
+        n=searchsorted(self.rowj[i], j)
         if n<len(self.rowj[i]) and self.rowj[i][n]==j:
-            self.alldata[self.rowdataind[i][n]] = x
+            self.alldata[self.rowdataind[i][n]]=x
             return
-        m = searchsorted(self.coli[j], i)        
+        m=searchsorted(self.coli[j], i)
         if self.nnz==self.nnzmax:
             # reallocate memory using a dynamic array structure (amortized O(1) cost for append)
-            newnnzmax = int(self.nnzmax*self.dynamic_array_const)
+            newnnzmax=int(self.nnzmax*self.dynamic_array_const)
             if newnnzmax<=self.nnzmax:
-                newnnzmax += 1
+                newnnzmax+=1
             if newnnzmax>self.shape[0]*self.shape[1]:
-                newnnzmax = self.shape[0]*self.shape[1]
-            self.alldata = hstack((self.alldata, numpy.zeros(newnnzmax-self.nnzmax, dtype=self.alldata.dtype)))
+                newnnzmax=self.shape[0]*self.shape[1]
+            self.alldata=hstack((self.alldata, numpy.zeros(newnnzmax-self.nnzmax, dtype=self.alldata.dtype)))
             self.unusedinds.extend(range(self.nnz, newnnzmax))
-            self.nnzmax = newnnzmax
-        newind = self.unusedinds.pop(-1)
-        self.alldata[newind] = x
-        self.nnz += 1
+            self.nnzmax=newnnzmax
+        newind=self.unusedinds.pop(-1)
+        self.alldata[newind]=x
+        self.nnz+=1
         # update row
-        newrowj = numpy.zeros(len(self.rowj[i])+1, dtype=int)
-        newrowj[:n] = self.rowj[i][:n]
-        newrowj[n] = j
-        newrowj[n+1:] = self.rowj[i][n:]
-        self.rowj[i] = newrowj
-        newrowdataind = numpy.zeros(len(self.rowdataind[i])+1, dtype=int)
-        newrowdataind[:n] = self.rowdataind[i][:n]
-        newrowdataind[n] = newind
-        newrowdataind[n+1:] = self.rowdataind[i][n:]
-        self.rowdataind[i] = newrowdataind
+        newrowj=numpy.zeros(len(self.rowj[i])+1, dtype=int)
+        newrowj[:n]=self.rowj[i][:n]
+        newrowj[n]=j
+        newrowj[n+1:]=self.rowj[i][n:]
+        self.rowj[i]=newrowj
+        newrowdataind=numpy.zeros(len(self.rowdataind[i])+1, dtype=int)
+        newrowdataind[:n]=self.rowdataind[i][:n]
+        newrowdataind[n]=newind
+        newrowdataind[n+1:]=self.rowdataind[i][n:]
+        self.rowdataind[i]=newrowdataind
         # update col
-        newcoli = numpy.zeros(len(self.coli[j])+1, dtype=int)
-        newcoli[:m] = self.coli[j][:m]
-        newcoli[m] = i
-        newcoli[m+1:] = self.coli[j][m:]
-        self.coli[j] = newcoli
-        newcoldataind = numpy.zeros(len(self.coldataind[j])+1, dtype=int)
-        newcoldataind[:m] = self.coldataind[j][:m]
-        newcoldataind[m] = newind
-        newcoldataind[m+1:] = self.coldataind[j][m:]
-        self.coldataind[j] = newcoldataind
-    
+        newcoli=numpy.zeros(len(self.coli[j])+1, dtype=int)
+        newcoli[:m]=self.coli[j][:m]
+        newcoli[m]=i
+        newcoli[m+1:]=self.coli[j][m:]
+        self.coli[j]=newcoli
+        newcoldataind=numpy.zeros(len(self.coldataind[j])+1, dtype=int)
+        newcoldataind[:m]=self.coldataind[j][:m]
+        newcoldataind[m]=newind
+        newcoldataind[m+1:]=self.coldataind[j][m:]
+        self.coldataind[j]=newcoldataind
+
     def remove(self, i, j):
-        n = searchsorted(self.rowj[i], j)
+        n=searchsorted(self.rowj[i], j)
         if n>=len(self.rowj[i]) or self.rowj[i][n]!=j:
-            raise ValueError('No element to remove at position '+str(i,j))
-        oldind = self.rowdataind[i][n]
+            raise ValueError('No element to remove at position '+str(i, j))
+        oldind=self.rowdataind[i][n]
         self.unusedinds.append(oldind)
-        self.nnz -= 1
-        m = searchsorted(self.coli[j], i)
+        self.nnz-=1
+        m=searchsorted(self.coli[j], i)
         # update row
-        newrowj = numpy.zeros(len(self.rowj[i])-1, dtype=int)
-        newrowj[:n] = self.rowj[i][:n]
-        newrowj[n:] = self.rowj[i][n+1:]
-        self.rowj[i] = newrowj
-        newrowdataind = numpy.zeros(len(self.rowdataind[i])-1, dtype=int)
-        newrowdataind[:n] = self.rowdataind[i][:n]
-        newrowdataind[n:] = self.rowdataind[i][n+1:]
-        self.rowdataind[i] = newrowdataind
+        newrowj=numpy.zeros(len(self.rowj[i])-1, dtype=int)
+        newrowj[:n]=self.rowj[i][:n]
+        newrowj[n:]=self.rowj[i][n+1:]
+        self.rowj[i]=newrowj
+        newrowdataind=numpy.zeros(len(self.rowdataind[i])-1, dtype=int)
+        newrowdataind[:n]=self.rowdataind[i][:n]
+        newrowdataind[n:]=self.rowdataind[i][n+1:]
+        self.rowdataind[i]=newrowdataind
         # update col
-        newcoli = numpy.zeros(len(self.coli[j])-1, dtype=int)
-        newcoli[:m] = self.coli[j][:m]
-        newcoli[m:] = self.coli[j][m+1:]
-        self.coli[j] = newcoli
-        newcoldataind = numpy.zeros(len(self.coldataind[j])-1, dtype=int)
-        newcoldataind[:m] = self.coldataind[j][:m]
-        newcoldataind[m:] = self.coldataind[j][m+1:]
-        self.coldataind[j] = newcoldataind
+        newcoli=numpy.zeros(len(self.coli[j])-1, dtype=int)
+        newcoli[:m]=self.coli[j][:m]
+        newcoli[m:]=self.coli[j][m+1:]
+        self.coli[j]=newcoli
+        newcoldataind=numpy.zeros(len(self.coldataind[j])-1, dtype=int)
+        newcoldataind[:m]=self.coldataind[j][:m]
+        newcoldataind[m:]=self.coldataind[j][m+1:]
+        self.coldataind[j]=newcoldataind
 
     def get_element(self, i, j):
-        n = searchsorted(self.rowj[i], j)
+        n=searchsorted(self.rowj[i], j)
         if n>=len(self.rowj[i]) or self.rowj[i][n]!=j:
             return 0
         return self.alldata[self.rowdataind[i][n]]
 
-    set_element = insert
-    
+    set_element=insert
+
     def get_row(self, i):
         return SparseConnectionVector(self.shape[1], self.rowj[i], self.alldata[self.rowdataind[i]])
-    
+
     def get_rows(self, rows):
         return [SparseConnectionVector(self.shape[1], self.rowj[i], self.alldata[self.rowdataind[i]]) for i in rows]
-    
+
     def get_col(self, j):
         return SparseConnectionVector(self.shape[0], self.coli[j], self.alldata[self.coldataind[j]])
 
     def get_cols(self, cols):
         return [SparseConnectionVector(self.shape[0], self.coli[j], self.alldata[self.coldataind[j]]) for j in cols]
-    
+
     def set_row(self, i, val):
         if isinstance(val, SparseConnectionVector):
             if val.ind is not self.rowj[i]:
                 if not (val.ind==self.rowj[i]).all():
                     raise ValueError('Sparse row setting must use same indices.')
-            self.alldata[self.rowdataind[i]] = val
+            self.alldata[self.rowdataind[i]]=val
         else:
             if isinstance(val, numpy.ndarray):
-                val = asarray(val)
-                self.alldata[self.rowdataind[i]] = val[self.rowj[i]]
+                val=asarray(val)
+                self.alldata[self.rowdataind[i]]=val[self.rowj[i]]
             else:
-                self.alldata[self.rowdataind[i]] = val
-    
+                self.alldata[self.rowdataind[i]]=val
+
     def set_col(self, j, val):
         if isinstance(val, SparseConnectionVector):
             if val.ind is not self.coli[j]:
                 if not (val.ind==self.coli[j]).all():
                     raise ValueError('Sparse row setting must use same indices.')
-            self.alldata[self.coldataind[j]] = val
+            self.alldata[self.coldataind[j]]=val
         else:
             if isinstance(val, numpy.ndarray):
-                val = asarray(val)
-                self.alldata[self.coldataind[j]] = val[self.coli[j]]
+                val=asarray(val)
+                self.alldata[self.coldataind[j]]=val[self.coli[j]]
             else:
-                self.alldata[self.coldataind[j]] = val
-    
+                self.alldata[self.coldataind[j]]=val
+
     def __setitem__(self, item, value):
         if item==colon_slice:
-            self.alldata[:self.nnz] = value
+            self.alldata[:self.nnz]=value
         else:
             ConnectionMatrix.__setitem__(self, item, value)
+
 
 class Connection(magic.InstanceTracker, ObjectContainer):
     '''
@@ -1295,48 +1307,48 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         the ``get_spikes`` method of the ``source`` :class:`NeuronGroup`.
     '''
     #@check_units(delay=second)
-    def __init__(self,source,target,state=0,delay=0*msecond,modulation=None,
-                 structure='sparse',weight=None,sparseness=None,max_delay=5*ms,**kwds):
+    def __init__(self, source, target, state=0, delay=0*msecond, modulation=None,
+                 structure='sparse', weight=None, sparseness=None, max_delay=5*ms, **kwds):
         if not isinstance(delay, float):
             if delay is True:
-                delay = None # this instructs us to use DelayConnection, but not initialise any delays
-            self.__class__ = DelayConnection
+                delay=None # this instructs us to use DelayConnection, but not initialise any delays
+            self.__class__=DelayConnection
             self.__init__(source, target, state=state, modulation=modulation, structure=structure,
                           weight=weight, sparseness=sparseness, delay=delay, max_delay=max_delay, **kwds)
             return
-        self.source = source # pointer to source group
-        self.target = target # pointer to target group
+        self.source=source # pointer to source group
+        self.target=target # pointer to target group
         if isinstance(state, str): # named state variable
-            self.nstate = target.get_var_index(state)
+            self.nstate=target.get_var_index(state)
         else:
-            self.nstate = state # target state index
+            self.nstate=state # target state index
         if isinstance(modulation, str): # named state variable
-            self._nstate_mod = source.get_var_index(modulation)
+            self._nstate_mod=source.get_var_index(modulation)
         else:
-            self._nstate_mod = modulation # source state index
+            self._nstate_mod=modulation # source state index
         if isinstance(structure, str):
-            structure = construction_matrix_register[structure]
-        self.W = structure((len(source),len(target)),**kwds)
-        self.iscompressed = False # True if compress() has been called
+            structure=construction_matrix_register[structure]
+        self.W=structure((len(source), len(target)), **kwds)
+        self.iscompressed=False # True if compress() has been called
         source.set_max_delay(delay)
         if not isinstance(self, DelayConnection):
-            self.delay = int(delay/source.clock.dt) # Synaptic delay in time bins
-        self._useaccel = get_global_preference('useweave')
-        self._cpp_compiler = get_global_preference('weavecompiler')
-        self._extra_compile_args = ['-O3']
+            self.delay=int(delay/source.clock.dt) # Synaptic delay in time bins
+        self._useaccel=get_global_preference('useweave')
+        self._cpp_compiler=get_global_preference('weavecompiler')
+        self._extra_compile_args=['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+            self._extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
         self._keyword_based_init(weight=weight, sparseness=sparseness)
-        
+
     def _keyword_based_init(self, weight=None, sparseness=None, **kwds):
         # Initialisation of weights
         # TODO: check consistency of weight and sparseness
         # TODO: select dense or sparse according to sparseness
         if weight is not None or sparseness is not None:
             if weight is None:
-                weight = 1.0
+                weight=1.0
             if sparseness is None:
-                sparseness = 1
+                sparseness=1
             if isinstance(weight, sparse.lil_matrix) or isinstance(weight, ndarray):
                 self.connect(W=weight)
             elif sparseness==1:
@@ -1352,38 +1364,38 @@ class Connection(magic.InstanceTracker, ObjectContainer):
             sv=self.target._S[self.nstate]
             # If specified, modulation state variable
             if self._nstate_mod is not None:
-                sv_pre = self.source._S[self._nstate_mod]
+                sv_pre=self.source._S[self._nstate_mod]
             # Get the rows of the connection matrix, each row will be either a
             # DenseConnectionVector or a SparseConnectionVector.
-            rows = self.W.get_rows(spikes)
+            rows=self.W.get_rows(spikes)
             if not self._useaccel: # Pure Python version is easier to understand, but slower than C++ version below
                 if isinstance(rows[0], SparseConnectionVector):
                     if self._nstate_mod is None:
                         # Rows stored as sparse vectors without modulation
                         for row in rows:
-                            sv[row.ind] += row
+                            sv[row.ind]+=row
                     else:
                         # Rows stored as sparse vectors with modulation
                         for i, row in izip(spikes, rows):
                             # note we call the numpy __mul__ directly because row is
                             # a SparseConnectionVector with different mul semantics
-                            sv[row.ind] += numpy.ndarray.__mul__(row, sv_pre[i])
+                            sv[row.ind]+=numpy.ndarray.__mul__(row, sv_pre[i])
                 else:
                     if self._nstate_mod is None:
                         # Rows stored as dense vectors without modulation
                         for row in rows:
-                            sv += row
+                            sv+=row
                     else:
                         # Rows stored as dense vectors with modulation
                         for i, row in izip(spikes, rows):
-                            sv += numpy.ndarray.__mul__(row, sv_pre[i])                    
+                            sv+=numpy.ndarray.__mul__(row, sv_pre[i])
             else: # C++ accelerated code, does the same as the code above but faster and less pretty
                 if isinstance(rows[0], SparseConnectionVector):
                     if self._nstate_mod is None:
-                        nspikes = len(spikes)
-                        rowinds = [r.ind for r in rows]
-                        datas = rows
-                        code =  """
+                        nspikes=len(spikes)
+                        rowinds=[r.ind for r in rows]
+                        datas=rows
+                        code="""
                                 for(int j=0;j<nspikes;j++)
                                 {
                                     PyObject* _rowind = rowinds[j];
@@ -1405,15 +1417,15 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                                     Py_DECREF(_datasj);
                                 }
                                 """
-                        weave.inline(code,['sv','rowinds','datas','spikes','nspikes'],
+                        weave.inline(code, ['sv', 'rowinds', 'datas', 'spikes', 'nspikes'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
                     else:
-                        nspikes = len(spikes)
-                        rowinds = [r.ind for r in rows]
-                        datas = rows
-                        code =  """
+                        nspikes=len(spikes)
+                        rowinds=[r.ind for r in rows]
+                        datas=rows
+                        code="""
                                 for(int j=0;j<nspikes;j++)
                                 {
                                     PyObject* _rowind = rowinds[j];
@@ -1436,17 +1448,17 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                                     Py_DECREF(_datasj);
                                 }
                                 """
-                        weave.inline(code,['sv','sv_pre','rowinds','datas','spikes','nspikes'],
+                        weave.inline(code, ['sv', 'sv_pre', 'rowinds', 'datas', 'spikes', 'nspikes'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
                 else:
                     if self._nstate_mod is None:
                         if not isinstance(spikes, numpy.ndarray):
-                            spikes = array(spikes, dtype=int)
-                        nspikes = len(spikes)
-                        N = len(sv)
-                        code =  """
+                            spikes=array(spikes, dtype=int)
+                        nspikes=len(spikes)
+                        N=len(sv)
+                        code="""
                                 for(int j=0;j<nspikes;j++)
                                 {
                                     PyObject* _rowsj = rows[j];
@@ -1459,16 +1471,16 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                                     Py_DECREF(_rowsj);
                                 }
                                 """
-                        weave.inline(code,['sv','spikes','nspikes','N', 'rows'],
+                        weave.inline(code, ['sv', 'spikes', 'nspikes', 'N', 'rows'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
                     else:
                         if not isinstance(spikes, numpy.ndarray):
-                            spikes = array(spikes, dtype=int)
-                        nspikes = len(spikes)
-                        N = len(sv)
-                        code =  """
+                            spikes=array(spikes, dtype=int)
+                        nspikes=len(spikes)
+                        N=len(sv)
+                        code="""
                                 for(int j=0;j<nspikes;j++)
                                 {
                                     PyObject* _rowsj = rows[j];
@@ -1482,15 +1494,15 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                                     Py_DECREF(_rowsj);
                                 }
                                 """
-                        weave.inline(code,['sv','sv_pre','spikes','nspikes','N', 'rows'],
+                        weave.inline(code, ['sv', 'sv_pre', 'spikes', 'nspikes', 'N', 'rows'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
-                    
+
     def compress(self):
         if not self.iscompressed:
-            self.W = self.W.connection_matrix()
-            self.iscompressed = True
+            self.W=self.W.connection_matrix()
+            self.iscompressed=True
 
     def reinit(self):
         '''
@@ -1500,18 +1512,18 @@ class Connection(magic.InstanceTracker, ObjectContainer):
 
     def do_propagate(self):
         self.propagate(self.source.get_spikes(self.delay))
-    
-    def origin(self,P,Q):
+
+    def origin(self, P, Q):
         '''
         Returns the starting coordinate of the given groups in
         the connection matrix W.
         '''
-        return (P._origin-self.source._origin,Q._origin-self.target._origin)
+        return (P._origin-self.source._origin, Q._origin-self.target._origin)
 
     # TODO: rewrite all the connection functions to work row by row for memory and time efficiency 
 
     # TODO: change this
-    def connect(self,source=None,target=None,W=None):
+    def connect(self, source=None, target=None, W=None):
         '''
         Connects (sub)groups P and Q with the weight matrix W (any type).
         Internally: inserts W as a submatrix.
@@ -1519,10 +1531,10 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         '''
         P=source or self.source
         Q=target or self.target
-        i0,j0=self.origin(P,Q)
-        self.W[i0:i0+len(P),j0:j0+len(Q)]=W
-        
-    def connect_random(self,source=None,target=None,p=1.,weight=1.,fixed=False, seed=None, sparseness=None):
+        i0, j0=self.origin(P, Q)
+        self.W[i0:i0+len(P), j0:j0+len(Q)]=W
+
+    def connect_random(self, source=None, target=None, p=1., weight=1., fixed=False, seed=None, sparseness=None):
         '''
         Connects the neurons in group P to neurons in group Q with probability p,
         with given weight (default 1).
@@ -1531,7 +1543,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         '''
         P=source or self.source
         Q=target or self.target
-        if sparseness is not None: p = sparseness # synonym
+        if sparseness is not None: p=sparseness # synonym
         if seed is not None:
             numpy.random.seed(seed) # numpy's random number seed
             pyrandom.seed(seed) # Python's random number seed
@@ -1539,26 +1551,26 @@ class Connection(magic.InstanceTracker, ObjectContainer):
             random_matrix_function=random_matrix_fixed_column
         else:
             random_matrix_function=random_matrix
-            
+
         if callable(weight):
             # Check units
             try:
                 if weight.func_code.co_argcount==2:
-                    weight(0,0)+Q._S0[self.nstate]
+                    weight(0, 0)+Q._S0[self.nstate]
                 else:
                     weight()+Q._S0[self.nstate]
-            except DimensionMismatchError,inst:
-                raise DimensionMismatchError("Incorrects unit for the synaptic weights.",*inst._dims)
-            self.connect(P,Q,random_matrix_function(len(P),len(Q),p,value=weight))
+            except DimensionMismatchError, inst:
+                raise DimensionMismatchError("Incorrects unit for the synaptic weights.", *inst._dims)
+            self.connect(P, Q, random_matrix_function(len(P), len(Q), p, value=weight))
         else:
             # Check units
             try:
                 weight+Q._S0[self.nstate]
-            except DimensionMismatchError,inst:
-                raise DimensionMismatchError("Incorrects unit for the synaptic weights.",*inst._dims)
-            self.connect(P,Q,random_matrix_function(len(P),len(Q),p,value=float(weight)))
+            except DimensionMismatchError, inst:
+                raise DimensionMismatchError("Incorrects unit for the synaptic weights.", *inst._dims)
+            self.connect(P, Q, random_matrix_function(len(P), len(Q), p, value=float(weight)))
 
-    def connect_full(self,source=None,target=None,weight=1.):
+    def connect_full(self, source=None, target=None, weight=1.):
         '''
         Connects the neurons in group P to all neurons in group Q,
         with given weight (default 1).
@@ -1570,56 +1582,57 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         if callable(weight):
             # Check units
             try:
-                weight(0,0)+Q._S0[self.nstate]
-            except DimensionMismatchError,inst:
-                raise DimensionMismatchError("Incorrects unit for the synaptic weights.",*inst._dims)
-            W=zeros((len(P),len(Q)))
+                weight(0, 0)+Q._S0[self.nstate]
+            except DimensionMismatchError, inst:
+                raise DimensionMismatchError("Incorrects unit for the synaptic weights.", *inst._dims)
+            W=zeros((len(P), len(Q)))
             try:
-                x=weight(0,1.*arange(0,len(Q)))
+                x=weight(0, 1.*arange(0, len(Q)))
                 failed=False
                 if array(x).size!=len(Q):
                     failed=True
             except:
-                failed= True
+                failed=True
             if failed: # vector-based not possible
-                log_debug('connections','Cannot build the connection matrix by rows')
+                log_debug('connections', 'Cannot build the connection matrix by rows')
                 for i in range(len(P)):
                     for j in range(len(Q)):
-                        w = float(weight(i,j))
+                        w=float(weight(i, j))
                         #if not is_within_absolute_tolerance(w,0.,effective_zero):
-                        W[i,j] = w
+                        W[i, j]=w
             else:
                 for i in range(len(P)): # build W row by row
                     #w = weight(i,1.*arange(0,len(Q)))
                     #I = (abs(w)>effective_zero).nonzero()[0]
                     #print w, I, w[I]
                     #W[i,I] = w[I]
-                    W[i,:] = weight(i,1.*arange(0,len(Q)))
-            self.connect(P,Q,W)
+                    W[i, :]=weight(i, 1.*arange(0, len(Q)))
+            self.connect(P, Q, W)
         else:
             try:
                 weight+Q._S0[self.nstate]
-            except DimensionMismatchError,inst:
-                raise DimensionMismatchError("Incorrect unit for the synaptic weights.",*inst._dims)
-            self.connect(P,Q,float(weight)*ones((len(P),len(Q))))
+            except DimensionMismatchError, inst:
+                raise DimensionMismatchError("Incorrect unit for the synaptic weights.", *inst._dims)
+            self.connect(P, Q, float(weight)*ones((len(P), len(Q))))
 
-    def connect_one_to_one(self,source=None,target=None,weight=1):
+    def connect_one_to_one(self, source=None, target=None, weight=1):
         '''
         Connects source[i] to target[i] with weights 1 (or weight).
         '''
         P=source or self.source
         Q=target or self.target
         if (len(P)!=len(Q)):
-            raise AttributeError,'The connected (sub)groups must have the same size.'
+            raise AttributeError, 'The connected (sub)groups must have the same size.'
         # TODO: unit checking
-        self.connect(P,Q,float(weight)*eye_lil_matrix(len(P)))
-        
-    def __getitem__(self,i):
+        self.connect(P, Q, float(weight)*eye_lil_matrix(len(P)))
+
+    def __getitem__(self, i):
         return self.W.__getitem__(i)
 
-    def __setitem__(self,i,x):
+    def __setitem__(self, i, x):
         # TODO: unit checking
-        self.W.__setitem__(i,x)
+        self.W.__setitem__(i, x)
+
 
 class DelayConnection(Connection):
     '''
@@ -1688,26 +1701,26 @@ class DelayConnection(Connection):
     ensure that the nonzero entries of the weight matrix and the delay matrix
     exactly coincide. This is not an issue for sparse or dense matrices.
     '''
-       
+
     def __init__(self, source, target, state=0, modulation=None,
                  structure='sparse',
                  weight=None, sparseness=None, delay=None,
                  max_delay=5*msecond, **kwds):
         Connection.__init__(self, source, target, state=state, modulation=modulation,
                             structure=structure, weight=weight, sparseness=sparseness, **kwds)
-        self._max_delay = int(max_delay/target.clock.dt)+1
+        self._max_delay=int(max_delay/target.clock.dt)+1
         source.set_max_delay(max_delay)
         # Each row of the following array stores the cumulative effect of spikes at some
         # particular time, defined by a circular indexing scheme. The _cur_delay_ind attribute
         # stores the row corresponding to the current time, so that _cur_delay_ind+1 corresponds
         # to that time + target.clock.dt, and so on. When _cur_delay_ind reaches _max_delay it
         # resets to zero.
-        self._delayedreaction = numpy.zeros((self._max_delay, len(target)))
+        self._delayedreaction=numpy.zeros((self._max_delay, len(target)))
         # vector of delay times, can be changed during a run
-        if isinstance(structure,str):
-            structure = construction_matrix_register[structure]
-        self.delayvec = structure((len(source),len(target)),**kwds)
-        self._cur_delay_ind = 0
+        if isinstance(structure, str):
+            structure=construction_matrix_register[structure]
+        self.delayvec=structure((len(source), len(target)), **kwds)
+        self._cur_delay_ind=0
         # this network operation is added to the Network object via the contained_objects
         # protocol (see the line after the function definition). The standard Connection.propagate
         # function propagates spikes to _delayedreaction rather than the target, and this
@@ -1716,35 +1729,35 @@ class DelayConnection(Connection):
         @network_operation(clock=target.clock, when='after_connections')
         def delayed_propagate():
             # propagate from _delayedreaction -> target group
-            target._S[self.nstate] += self._delayedreaction[self._cur_delay_ind, :]
+            target._S[self.nstate]+=self._delayedreaction[self._cur_delay_ind, :]
             # reset the current row of _delayedreaction
-            self._delayedreaction[self._cur_delay_ind, :] = 0.0
+            self._delayedreaction[self._cur_delay_ind, :]=0.0
             # increase the index for the circular indexing scheme
-            self._cur_delay_ind = (self._cur_delay_ind + 1) % self._max_delay
-        self.contained_objects = [delayed_propagate]
+            self._cur_delay_ind=(self._cur_delay_ind+1)%self._max_delay
+        self.contained_objects=[delayed_propagate]
         # this is just used to convert delayvec's which are in ms to integers, precalculating it makes it faster
-        self._invtargetdt = 1/self.target.clock._dt
-        self._useaccel = get_global_preference('useweave')
-        self._cpp_compiler = get_global_preference('weavecompiler')
-        self._extra_compile_args = ['-O3']
+        self._invtargetdt=1/self.target.clock._dt
+        self._useaccel=get_global_preference('useweave')
+        self._cpp_compiler=get_global_preference('weavecompiler')
+        self._extra_compile_args=['-O3']
         if self._cpp_compiler=='gcc':
-            self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+            self._extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
         if delay is not None:
             self.set_delays(delay=delay)
-        
+
     def propagate(self, spikes):
         if not self.iscompressed:
             self.compress()
         if len(spikes):
             # Target state variable
-            dr = self._delayedreaction
+            dr=self._delayedreaction
             # If specified, modulation state variable
             if self._nstate_mod is not None:
-                sv_pre = self.source._S[self._nstate_mod]
+                sv_pre=self.source._S[self._nstate_mod]
             # Get the rows of the connection matrix, each row will be either a
             # DenseConnectionVector or a SparseConnectionVector.
-            rows = self.W.get_rows(spikes)
-            dvecrows = self.delayvec.get_rows(spikes)
+            rows=self.W.get_rows(spikes)
+            dvecrows=self.delayvec.get_rows(spikes)
             if not self._useaccel: # Pure Python version is easier to understand, but slower than C++ version below
                 if isinstance(rows[0], SparseConnectionVector):
                     if self._nstate_mod is None:
@@ -1752,40 +1765,40 @@ class DelayConnection(Connection):
                         for row, dvecrow in izip(rows, dvecrows):
                             if not len(row.ind)==len(dvecrow.ind):
                                 raise RuntimeError('Weight and delay matrices must be kept in synchrony for sparse matrices.')
-                            drind = (self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow, dtype=int))%self._max_delay
-                            dr[drind, dvecrow.ind] += row
+                            drind=(self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow, dtype=int))%self._max_delay
+                            dr[drind, dvecrow.ind]+=row
                     else:
                         # Rows stored as sparse vectors with modulation
                         for i, row, dvecrow in izip(spikes, rows, dvecrows):
                             if not len(row.ind)==len(dvecrow.ind):
                                 raise RuntimeError('Weight and delay matrices must be kept in synchrony for sparse matrices.')
-                            drind = (self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow, dtype=int))%self._max_delay
+                            drind=(self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow, dtype=int))%self._max_delay
                             # note we call the numpy __mul__ directly because row is
                             # a SparseConnectionVector with different mul semantics
-                            dr[drind, dvecrow.ind] += numpy.ndarray.__mul__(row, sv_pre[i])
+                            dr[drind, dvecrow.ind]+=numpy.ndarray.__mul__(row, sv_pre[i])
                 else:
                     if self._nstate_mod is None:
                         # Rows stored as dense vectors without modulation
-                        drjind = numpy.arange(len(self.target), dtype=int)
+                        drjind=numpy.arange(len(self.target), dtype=int)
                         for row, dvecrow in izip(rows, dvecrows):
-                            drind = (self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow, dtype=int))%self._max_delay
-                            dr[drind, drjind[:len(drind)]] += row
+                            drind=(self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow, dtype=int))%self._max_delay
+                            dr[drind, drjind[:len(drind)]]+=row
                     else:
                         # Rows stored as dense vectors with modulation
-                        drjind = numpy.arange(len(self.target), dtype=int)
+                        drjind=numpy.arange(len(self.target), dtype=int)
                         for i, row, dvecrow in izip(spikes, rows, dvecrows):
-                            drind = (self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow, dtype=int))%self._max_delay
-                            dr[drind, drjind[:len(drind)]] += numpy.ndarray.__mul__(row, sv_pre[i])                     
+                            drind=(self._cur_delay_ind+numpy.array(self._invtargetdt*dvecrow, dtype=int))%self._max_delay
+                            dr[drind, drjind[:len(drind)]]+=numpy.ndarray.__mul__(row, sv_pre[i])
             else: # C++ accelerated code, does the same as the code above but faster and less pretty
                 if isinstance(rows[0], SparseConnectionVector):
                     if self._nstate_mod is None:
-                        nspikes = len(spikes)
-                        rowinds = [r.ind for r in rows]
-                        datas = rows
-                        cdi = self._cur_delay_ind
-                        idt = self._invtargetdt
-                        md = self._max_delay
-                        code =  """
+                        nspikes=len(spikes)
+                        rowinds=[r.ind for r in rows]
+                        datas=rows
+                        cdi=self._cur_delay_ind
+                        idt=self._invtargetdt
+                        md=self._max_delay
+                        code="""
                                 for(int j=0;j<nspikes;j++)
                                 {
                                     PyObject* _rowind = rowinds[j];
@@ -1813,19 +1826,19 @@ class DelayConnection(Connection):
                                     Py_DECREF(_dvecrowsj);
                                 }
                                 """
-                        weave.inline(code,['rowinds','datas','spikes','nspikes',
+                        weave.inline(code, ['rowinds', 'datas', 'spikes', 'nspikes',
                                            'dvecrows', 'dr', 'cdi', 'idt', 'md'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
                     else:
-                        nspikes = len(spikes)
-                        rowinds = [r.ind for r in rows]
-                        datas = rows
-                        cdi = self._cur_delay_ind
-                        idt = self._invtargetdt
-                        md = self._max_delay
-                        code =  """
+                        nspikes=len(spikes)
+                        rowinds=[r.ind for r in rows]
+                        datas=rows
+                        cdi=self._cur_delay_ind
+                        idt=self._invtargetdt
+                        md=self._max_delay
+                        code="""
                                 for(int j=0;j<nspikes;j++)
                                 {
                                     PyObject* _rowind = rowinds[j];
@@ -1854,7 +1867,7 @@ class DelayConnection(Connection):
                                     Py_DECREF(_dvecrowsj);
                                 }
                                 """
-                        weave.inline(code,['sv_pre','rowinds','datas','spikes','nspikes',
+                        weave.inline(code, ['sv_pre', 'rowinds', 'datas', 'spikes', 'nspikes',
                                            'dvecrows', 'dr', 'cdi', 'idt', 'md'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
@@ -1862,13 +1875,13 @@ class DelayConnection(Connection):
                 else:
                     if self._nstate_mod is None:
                         if not isinstance(spikes, numpy.ndarray):
-                            spikes = array(spikes, dtype=int)
-                        nspikes = len(spikes)
-                        N = len(self.target)
-                        cdi = self._cur_delay_ind
-                        idt = self._invtargetdt
-                        md = self._max_delay
-                        code =  """
+                            spikes=array(spikes, dtype=int)
+                        nspikes=len(spikes)
+                        N=len(self.target)
+                        cdi=self._cur_delay_ind
+                        idt=self._invtargetdt
+                        md=self._max_delay
+                        code="""
                                 for(int j=0;j<nspikes;j++)
                                 {
                                     PyObject* _rowsj = rows[j];
@@ -1887,20 +1900,20 @@ class DelayConnection(Connection):
                                     Py_DECREF(_dvecrowsj);
                                 }
                                 """
-                        weave.inline(code,['spikes','nspikes','N', 'rows',
-                                           'dr','cdi','idt','md','dvecrows'],
+                        weave.inline(code, ['spikes', 'nspikes', 'N', 'rows',
+                                           'dr', 'cdi', 'idt', 'md', 'dvecrows'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
                     else:
                         if not isinstance(spikes, numpy.ndarray):
-                            spikes = array(spikes, dtype=int)
-                        nspikes = len(spikes)
-                        N = len(self.target)
-                        cdi = self._cur_delay_ind
-                        idt = self._invtargetdt
-                        md = self._max_delay
-                        code =  """
+                            spikes=array(spikes, dtype=int)
+                        nspikes=len(spikes)
+                        N=len(self.target)
+                        cdi=self._cur_delay_ind
+                        idt=self._invtargetdt
+                        md=self._max_delay
+                        code="""
                                 for(int j=0;j<nspikes;j++)
                                 {
                                     PyObject* _rowsj = rows[j];
@@ -1920,19 +1933,19 @@ class DelayConnection(Connection):
                                     Py_DECREF(_dvecrowsj);
                                 }
                                 """
-                        weave.inline(code,['sv_pre','spikes','nspikes','N', 'rows',
-                                           'dr','cdi','idt','md','dvecrows'],
+                        weave.inline(code, ['sv_pre', 'spikes', 'nspikes', 'N', 'rows',
+                                           'dr', 'cdi', 'idt', 'md', 'dvecrows'],
                                      compiler=self._cpp_compiler,
                                      type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
 
     def do_propagate(self):
         self.propagate(self.source.get_spikes(0))
-            
+
     def _set_delay_property(self, val):
         self.delayvec[:]=val
 
-    delay = property(fget=lambda self:self.delayvec, fset=_set_delay_property)
+    delay=property(fget=lambda self:self.delayvec, fset=_set_delay_property)
 
     def compress(self):
         if not self.iscompressed:
@@ -1943,16 +1956,16 @@ class DelayConnection(Connection):
             # to be perfectly intersected at the initialisation stage. If
             # the structure is dynamic, it will be the user's
             # responsibility to update them in sequence
-            delayvec = self.delayvec
+            delayvec=self.delayvec
             # The delayvec[i,:] operation for sparse.lil_matrix format
             # is VERY slow, but the CSR format is fine. 
             if isinstance(delayvec, sparse.lil_matrix):
-                delayvec = delayvec.tocsr()
-            self.delayvec = self.W.connection_matrix(copy=True)
+                delayvec=delayvec.tocsr()
+            self.delayvec=self.W.connection_matrix(copy=True)
             for i in xrange(self.W.shape[0]):
-                self.delayvec.set_row(i, array(todense(delayvec[i,:]), copy=False).flatten())    
+                self.delayvec.set_row(i, array(todense(delayvec[i, :]), copy=False).flatten())
             Connection.compress(self)
-    
+
     def set_delays(self, source=None, target=None, delay=None):
         '''
         Set the delays corresponding to the weight matrix
@@ -1970,46 +1983,46 @@ class DelayConnection(Connection):
         '''
         if delay is None:
             return
-        W = self.W
-        P = source or self.source
-        Q = target or self.target
-        i0, j0 = self.origin(P, Q)
-        i1 = i0+len(P)
-        j1 = j0+len(Q)
+        W=self.W
+        P=source or self.source
+        Q=target or self.target
+        i0, j0=self.origin(P, Q)
+        i1=i0+len(P)
+        j1=j0+len(Q)
         if isinstance(W, sparse.lil_matrix):
             def getrow(i):
-                inds = array(W.rows[i], dtype=int)
-                inds = inds[logical_and(inds>=j0, inds<j1)]
+                inds=array(W.rows[i], dtype=int)
+                inds=inds[logical_and(inds>=j0, inds<j1)]
                 return inds, len(inds)
         else:
             def getrow(i):
-                inds = (W[i, j0:j1]!=0).nonzero()[0]+j0
+                inds=(W[i, j0:j1]!=0).nonzero()[0]+j0
                 return inds, len(inds)
                 #return slice(j0, j1), j1-j0
         if isinstance(delay, (float, int)):
             for i in xrange(i0, i1):
-                inds, L = getrow(i)
-                self.delayvec[i, inds] = delay
+                inds, L=getrow(i)
+                self.delayvec[i, inds]=delay
         elif isinstance(delay, (tuple, list)) and len(delay)==2:
-            delaymin, delaymax = delay
+            delaymin, delaymax=delay
             for i in xrange(i0, i1):
-                inds, L = getrow(i)
-                rowdelay = rand(L)*(delaymax-delaymin)+delaymin
-                self.delayvec[i, inds] = rowdelay
+                inds, L=getrow(i)
+                rowdelay=rand(L)*(delaymax-delaymin)+delaymin
+                self.delayvec[i, inds]=rowdelay
         elif callable(delay) and delay.func_code.co_argcount==0:
             for i in xrange(i0, i1):
-                inds, L = getrow(i)
-                rowdelay = [delay() for _ in xrange(L)]
-                self.delayvec[i, inds] = rowdelay
+                inds, L=getrow(i)
+                rowdelay=[delay() for _ in xrange(L)]
+                self.delayvec[i, inds]=rowdelay
         elif callable(delay) and delay.func_code.co_argcount==2:
             for i in xrange(i0, i1):
-                inds, L = getrow(i)
+                inds, L=getrow(i)
                 if isinstance(inds, slice):
-                    inds = numpy.arange(inds.start, inds.stop)
-                self.delayvec[i, inds] = delay(i-i0, inds-j0)
+                    inds=numpy.arange(inds.start, inds.stop)
+                self.delayvec[i, inds]=delay(i-i0, inds-j0)
         else:
             #raise TypeError('delays must be float, pair or function of 0 or 2 arguments')
-            self.delayvec[i0:i1, j0:j1] = delay # probably won't work, but then it will raise an error
+            self.delayvec[i0:i1, j0:j1]=delay # probably won't work, but then it will raise an error
 
     def connect(self, source=None, target=None, W=None, delay=None):
         Connection.connect(self, source=source, target=target, W=W)
@@ -2023,7 +2036,7 @@ class DelayConnection(Connection):
                                   sparseness=sparseness)
         if delay is not None:
             self.set_delays(source, target, delay)
-    
+
     def connect_full(self, source=None, target=None, weight=1.0, delay=None):
         Connection.connect_full(self, source=source, target=target, weight=weight)
         if delay is not None:
@@ -2034,6 +2047,7 @@ class DelayConnection(Connection):
                                       weight=weight)
         if delay is not None:
             self.set_delays(source, target, delay)
+
 
 class IdentityConnection(Connection):
     '''
@@ -2055,9 +2069,9 @@ class IdentityConnection(Connection):
     this special case.
     '''
     @check_units(delay=second)
-    def __init__(self,source,target,state=0,weight=1,delay=0*msecond):
+    def __init__(self, source, target, state=0, weight=1, delay=0*msecond):
         if (len(source)!=len(target)):
-            raise AttributeError,'The connected (sub)groups must have the same size.'
+            raise AttributeError, 'The connected (sub)groups must have the same size.'
         self.source=source # pointer to source group
         self.target=target # pointer to target group
         if type(state)==types.StringType: # named state variable
@@ -2069,45 +2083,48 @@ class IdentityConnection(Connection):
         self.delay=int(delay/source.clock.dt) # Synaptic delay in time bins
         #if self.delay>source._max_delay:
         #    raise AttributeError,"Transmission delay is too long."
-        
-    def propagate(self,spikes):
+
+    def propagate(self, spikes):
         '''
         Propagates the spikes to the target.
         '''
-        self.target._S[self.nstate,spikes]+=self.W
-        
+        self.target._S[self.nstate, spikes]+=self.W
+
     def compress(self):
         pass
-    
+
+
 class MultiConnection(Connection):
     '''
     A hub for multiple connections with a common source group.
     '''
-    def __init__(self,source,connections=[]):
+    def __init__(self, source, connections=[]):
         self.source=source
         self.connections=connections
         self.iscompressed=False
         self.delay=connections[0].delay
-        
-    def propagate(self,spikes):
+
+    def propagate(self, spikes):
         '''
         Propagates the spikes to the targets.
         '''
         for C in self.connections:
             C.propagate(spikes)
-            
+
     def compress(self):
         if not self.iscompressed:
             for C in self.connections:
                 C.compress()
             self.iscompressed=True
 
+
 class EmptyGroup(object):
     def __init__(self, clock):
-        self.clock = clock
-    
+        self.clock=clock
+
     def get_spikes(self, delay):
         return None
+
 
 class PoissonInputs(Connection):
     def __init__(self, target, sameinputs=[], *inputs):
@@ -2127,73 +2144,73 @@ class PoissonInputs(Connection):
             where n is the number of Poisson spike trains, f their rate, w the
             synaptic weight, and state the name of the state to connect the input to.
         """
-        self.source = EmptyGroup(target.clock)
-        self.target = target
-        self.N = len(self.target)
-        self.clock = target.clock
-        self.inputs = inputs
-        self.delay = None
+        self.source=EmptyGroup(target.clock)
+        self.target=target
+        self.N=len(self.target)
+        self.clock=target.clock
+        self.inputs=inputs
+        self.delay=None
         self.iscompressed=True
-        self.W = zeros((len(inputs), self.N))
-        self.sameinputs = sameinputs
-        
-        self.stateindex = dict()
-        self.delays = None # delay to wait for the j-th synchronous spike to occur after the last sync event, for target neuron i
-        self.lastevent = -inf*ones(self.N) # time of the last event for target neuron i
+        self.W=zeros((len(inputs), self.N))
+        self.sameinputs=sameinputs
+
+        self.stateindex=dict()
+        self.delays=None # delay to wait for the j-th synchronous spike to occur after the last sync event, for target neuron i
+        self.lastevent=-inf*ones(self.N) # time of the last event for target neuron i
         for i in xrange(len(self.inputs)):
-            state = self.inputs[i][3]
+            state=self.inputs[i][3]
             if type(state)==types.StringType: # named state variable
-                self.stateindex[state] = target.get_var_index(state)
+                self.stateindex[state]=target.get_var_index(state)
             else:
-                self.stateindex[state] = state
-            w = self.inputs[i][2]
+                self.stateindex[state]=state
+            w=self.inputs[i][2]
             if type(w) is tuple:
-                if w[0] == 'jitter':
-                    self.delays = zeros((w[2], self.N))
-        self.events = []
-    
+                if w[0]=='jitter':
+                    self.delays=zeros((w[2], self.N))
+        self.events=[]
+
     def propagate(self, spikes):
-        current = zeros(self.N)
-        i = 0
-        for (n,f,w,state) in self.inputs:
-            state = self.stateindex[state]
+        current=zeros(self.N)
+        i=0
+        for (n, f, w, state) in self.inputs:
+            state=self.stateindex[state]
             if type(w) is not tuple:
                 if i in self.sameinputs:
-                    rnd = binomial(n=n, p=f*self.clock.dt)
-                    self.target._S[state,:] += w*rnd
+                    rnd=binomial(n=n, p=f*self.clock.dt)
+                    self.target._S[state, :]+=w*rnd
                     if rnd>0:
                         self.events.append(self.clock.t)
                 else:
-                    self.target._S[state,:] += w*binomial(n=n, p=f*self.clock.dt, size=(self.N))
+                    self.target._S[state, :]+=w*binomial(n=n, p=f*self.clock.dt, size=(self.N))
             else:
                 # if w is a tuple, it is ('synapse', w, pmax, alpha) and there are
                 # binomial(pmax, alpha) synchronous spikes then
                 # or it is ('jitter', w, pmax, jitter) and the synchronous
                 # spikes are shifted by an exponential value with parameter jitter
-                if w[0] == 'synapse':
-                    if (w[2]>0) & (w[3]>0):
-                        weff = w[1]*binomial(n=w[2], p=w[3])
-                        self.target._S[state,:] += weff*binomial(n=n, p=f*self.clock.dt, size=(self.N))
-                elif w[0] == 'jitter':
-                    p = w[2]
-                    if (p>0) & (f>0):
-                        jitter = w[3]
-                        k = binomial(n=n, p=f*self.clock.dt, size=(self.N)) # number of synchronous events here, for every target neuron
-                        syncneurons = (k>0) # neurons with a syncronous event here
-                        self.lastevent[syncneurons] = self.clock.t
-                        if jitter == 0.0:
-                            self.delays[:,syncneurons] = zeros((p, sum(syncneurons)))
+                if w[0]=='synapse':
+                    if (w[2]>0)&(w[3]>0):
+                        weff=w[1]*binomial(n=w[2], p=w[3])
+                        self.target._S[state, :]+=weff*binomial(n=n, p=f*self.clock.dt, size=(self.N))
+                elif w[0]=='jitter':
+                    p=w[2]
+                    if (p>0)&(f>0):
+                        jitter=w[3]
+                        k=binomial(n=n, p=f*self.clock.dt, size=(self.N)) # number of synchronous events here, for every target neuron
+                        syncneurons=(k>0) # neurons with a syncronous event here
+                        self.lastevent[syncneurons]=self.clock.t
+                        if jitter==0.0:
+                            self.delays[:, syncneurons]=zeros((p, sum(syncneurons)))
                         else:
-                            self.delays[:,syncneurons] = exponential(scale=jitter, size=(p, sum(syncneurons)))
+                            self.delays[:, syncneurons]=exponential(scale=jitter, size=(p, sum(syncneurons)))
                         # Delayed spikes occur now
-                        lastevent = tile(self.lastevent, (p, 1))
-                        b = (abs(self.clock.t - (lastevent + self.delays)) <= (self.clock.dt/2)*ones((p, self.N))) # delayed spikes occurring now
-                        weff = sum(b, axis=0)*w[1]
-                        self.target._S[state,:] += weff
-            i += 1
+                        lastevent=tile(self.lastevent, (p, 1))
+                        b=(abs(self.clock.t-(lastevent+self.delays))<=(self.clock.dt/2)*ones((p, self.N))) # delayed spikes occurring now
+                        weff=sum(b, axis=0)*w[1]
+                        self.target._S[state, :]+=weff
+            i+=1
 
 # Generation of matrices
-def random_matrix(n,m,p,value=1.):
+def random_matrix(n, m, p, value=1.):
     '''
     Generates a sparse random matrix with size (n,m).
     Entries are 1 (or optionnally value) with probability p.
@@ -2202,105 +2219,105 @@ def random_matrix(n,m,p,value=1.):
     '''
     # TODO:
     # Simplify (by using valuef)
-    W=sparse.lil_matrix((n,m))
+    W=sparse.lil_matrix((n, m))
     if callable(value) and callable(p):
         if value.func_code.co_argcount==0:
-            valuef=lambda i,j:[value() for _ in j] # value function
+            valuef=lambda i, j:[value() for _ in j] # value function
         elif value.func_code.co_argcount==2:
             try:
-                failed=(array(value(0,arange(m))).size!=m)
+                failed=(array(value(0, arange(m))).size!=m)
             except:
-                failed= True
+                failed=True
             if failed: # vector-based not possible
-                log_debug('connections','Cannot build the connection matrix by rows')
-                valuef=lambda i,j:[value(i,k) for k in j]
+                log_debug('connections', 'Cannot build the connection matrix by rows')
+                valuef=lambda i, j:[value(i, k) for k in j]
             else:
                 valuef=value
         else:
-            raise AttributeError,"Bad number of arguments in value function (should be 0 or 2)"
-        
+            raise AttributeError, "Bad number of arguments in value function (should be 0 or 2)"
+
         if p.func_code.co_argcount==2:
             # Check if p(i,j) is vectorisable
             try:
-                failed=(array(p(0,arange(m))).size!=m)
+                failed=(array(p(0, arange(m))).size!=m)
             except:
-                failed= True
+                failed=True
             if failed: # vector-based not possible
-                log_debug('connections','Cannot build the connection matrix by rows')
+                log_debug('connections', 'Cannot build the connection matrix by rows')
                 for i in xrange(n):
-                    W.rows[i]=[j for j in range(m) if rand()<p(i,j)]
-                    W.data[i]=list(valuef(i,array(W.rows[i])))
+                    W.rows[i]=[j for j in range(m) if rand()<p(i, j)]
+                    W.data[i]=list(valuef(i, array(W.rows[i])))
             else: # vector-based possible
                 for i in xrange(n):
-                    W.rows[i]=list((rand(m)<p(i,arange(m))).nonzero()[0])
-                    W.data[i]=list(valuef(i,array(W.rows[i])))
+                    W.rows[i]=list((rand(m)<p(i, arange(m))).nonzero()[0])
+                    W.data[i]=list(valuef(i, array(W.rows[i])))
         elif p.func_code.co_argcount==0:
             for i in xrange(n):
                 W.rows[i]=[j for j in range(m) if rand()<p()]
-                W.data[i]=list(valuef(i,array(W.rows[i])))
+                W.data[i]=list(valuef(i, array(W.rows[i])))
         else:
-            raise AttributeError,"Bad number of arguments in p function (should be 2)"
+            raise AttributeError, "Bad number of arguments in p function (should be 2)"
     elif callable(value):
         if value.func_code.co_argcount==0: # TODO: should work with partial objects
             for i in xrange(n):
-                k=random.binomial(m,p,1)[0]
-                W.rows[i]=sample(xrange(m),k)
+                k=random.binomial(m, p, 1)[0]
+                W.rows[i]=sample(xrange(m), k)
                 W.rows[i].sort()
                 W.data[i]=[value() for _ in xrange(k)]
         elif value.func_code.co_argcount==2:
             try:
-                failed=(array(value(0,arange(m))).size!=m)
+                failed=(array(value(0, arange(m))).size!=m)
             except:
-                failed= True
+                failed=True
             if failed: # vector-based not possible
-                log_debug('connections','Cannot build the connection matrix by rows')
+                log_debug('connections', 'Cannot build the connection matrix by rows')
                 for i in xrange(n):
-                    k=random.binomial(m,p,1)[0]
-                    W.rows[i]=sample(xrange(m),k)
+                    k=random.binomial(m, p, 1)[0]
+                    W.rows[i]=sample(xrange(m), k)
                     W.rows[i].sort()
-                    W.data[i]=[value(i,j) for j in W.rows[i]]     
-            else:       
+                    W.data[i]=[value(i, j) for j in W.rows[i]]
+            else:
                 for i in xrange(n):
-                    k=random.binomial(m,p,1)[0]
-                    W.rows[i]=sample(xrange(m),k)
+                    k=random.binomial(m, p, 1)[0]
+                    W.rows[i]=sample(xrange(m), k)
                     W.rows[i].sort()
-                    W.data[i]=list(value(i,array(W.rows[i])))
+                    W.data[i]=list(value(i, array(W.rows[i])))
         else:
-            raise AttributeError,"Bad number of arguments in value function (should be 0 or 2)"
+            raise AttributeError, "Bad number of arguments in value function (should be 0 or 2)"
     elif callable(p):
         if p.func_code.co_argcount==2:
             # Check if p(i,j) is vectorisable
             try:
-                failed=(array(p(0,arange(m))).size!=m)
+                failed=(array(p(0, arange(m))).size!=m)
             except:
-                failed= True
+                failed=True
             if failed: # vector-based not possible
-                log_debug('connections','Cannot build the connection matrix by rows')
+                log_debug('connections', 'Cannot build the connection matrix by rows')
                 for i in xrange(n):
-                    W.rows[i]=[j for j in range(m) if rand()<p(i,j)]
+                    W.rows[i]=[j for j in range(m) if rand()<p(i, j)]
                     W.data[i]=[value]*len(W.rows[i])
             else: # vector-based possible
                 for i in xrange(n):
-                    W.rows[i]=list((rand(m)<p(i,arange(m))).nonzero()[0])
+                    W.rows[i]=list((rand(m)<p(i, arange(m))).nonzero()[0])
                     W.data[i]=[value]*len(W.rows[i])
         elif p.func_code.co_argcount==0:
             for i in xrange(n):
                 W.rows[i]=[j for j in range(m) if rand()<p()]
                 W.data[i]=[value]*len(W.rows[i])
         else:
-            raise AttributeError,"Bad number of arguments in p function (should be 2)"
+            raise AttributeError, "Bad number of arguments in p function (should be 2)"
     else:
         for i in xrange(n):
-            k=random.binomial(m,p,1)[0]
+            k=random.binomial(m, p, 1)[0]
             # Not significantly faster to generate all random numbers in one pass
             # N.B.: the sample method is implemented in Python and it is not in Scipy
-            W.rows[i]=sample(xrange(m),k)
+            W.rows[i]=sample(xrange(m), k)
             W.rows[i].sort()
             W.data[i]=[value]*k
 
     return W
 
-def random_matrix_fixed_column(n,m,p,value=1.):
+def random_matrix_fixed_column(n, m, p, value=1.):
     '''
     Generates a sparse random matrix with size (n,m).
     Entries are 1 (or optionnally value) with probability p.
@@ -2308,22 +2325,22 @@ def random_matrix_fixed_column(n,m,p,value=1.):
     If value is a function, then that function is called for each
     non zero element as value() or value(i,j).
     '''
-    W=sparse.lil_matrix((n,m))
+    W=sparse.lil_matrix((n, m))
     k=(int)(p*n)
     for j in xrange(m):
         # N.B.: the sample method is implemented in Python and it is not in Scipy
-        for i in sample(xrange(n),k):
+        for i in sample(xrange(n), k):
             W.rows[i].append(j)
-            
+
     if callable(value):
         if value.func_code.co_argcount==0:
             for i in xrange(n):
                 W.data[i]=[value() for _ in xrange(len(W.rows[i]))]
         elif value.func_code.co_argcount==2:
             for i in xrange(n):
-                W.data[i]=[value(i,j) for j in W.rows[i]]            
+                W.data[i]=[value(i, j) for j in W.rows[i]]
         else:
-            raise AttributeError,"Bad number of arguments in value function (should be 0 or 2)"
+            raise AttributeError, "Bad number of arguments in value function (should be 0 or 2)"
     else:
         for i in xrange(n):
             W.data[i]=[value]*len(W.rows[i])
@@ -2333,7 +2350,7 @@ def random_matrix_fixed_column(n,m,p,value=1.):
 # Generation of matrices row by row
 # TODO: vectorise
 # This one seems obsolete!
-def random_matrix_row_by_row(n,m,p,value=1.):
+def random_matrix_row_by_row(n, m, p, value=1.):
     '''
     Generates a sparse random matrix with size (n,m).
     Entries are 1 (or optionnally value) with probability p.
@@ -2343,31 +2360,31 @@ def random_matrix_row_by_row(n,m,p,value=1.):
     if callable(value):
         if value.func_code.co_argcount==0:
             for i in xrange(n):
-                k=random.binomial(m,p,1)[0]
-                row = sample(xrange(m),k)
+                k=random.binomial(m, p, 1)[0]
+                row=sample(xrange(m), k)
                 row.sort()
                 yield row, [value() for _ in xrange(k)]
         elif value.func_code.co_argcount==2:
             for i in xrange(n):
-                k=random.binomial(m,p,1)[0]
-                row = sample(xrange(m),k)
+                k=random.binomial(m, p, 1)[0]
+                row=sample(xrange(m), k)
                 row.sort()
-                yield row, [value(i,j) for j in row]
+                yield row, [value(i, j) for j in row]
         else:
-            raise AttributeError,"Bad number of arguments in value function (should be 0 or 2)"
+            raise AttributeError, "Bad number of arguments in value function (should be 0 or 2)"
     else:
         for i in xrange(n):
-            k=random.binomial(m,p,1)[0]
-            row = sample(xrange(m),k)
+            k=random.binomial(m, p, 1)[0]
+            row=sample(xrange(m), k)
             row.sort()
-            yield row, value 
+            yield row, value
 
 def eye_lil_matrix(n):
     '''
     Returns the identity matrix of size n as a lil_matrix
     (sparse matrix).
     '''
-    M=sparse.lil_matrix((n,n))
+    M=sparse.lil_matrix((n, n))
     M.setdiag([1.]*n)
     return M
 

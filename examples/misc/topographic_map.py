@@ -17,15 +17,15 @@ dI/dt=-I/tau_e : volt
 
 rates=zeros(N)*Hz
 rates[N/2-10:N/2+10]=ones(20)*30*Hz
-layer1=PoissonGroup(N,rates=rates)
-layer2=NeuronGroup(N,model=eqs,threshold=10*mV,reset=0*mV)
+layer1=PoissonGroup(N, rates=rates)
+layer2=NeuronGroup(N, model=eqs, threshold=10*mV, reset=0*mV)
 
-topomap=lambda i,j:exp(-abs(i-j)*.1)*3*mV
-feedforward=Connection(layer1,layer2,sparseness=.5,weight=topomap)
+topomap=lambda i, j:exp(-abs(i-j)*.1)*3*mV
+feedforward=Connection(layer1, layer2, sparseness=.5, weight=topomap)
 #feedforward[2,3]=1*mV
 
-lateralmap=lambda i,j:exp(-abs(i-j)*.05)*0.5*mV
-recurrent=Connection(layer2,layer2,sparseness=.5,weight=lateralmap)
+lateralmap=lambda i, j:exp(-abs(i-j)*.05)*0.5*mV
+recurrent=Connection(layer2, layer2, sparseness=.5, weight=lateralmap)
 
 spikes=SpikeMonitor(layer2)
 

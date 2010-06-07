@@ -26,7 +26,7 @@ import pp
 #js = pp.Server(ppservers=('computer1.complete.domain.name','computer2.complete.domain.name')) # For running over the internet
 #js = pp.Server(ppservers=('computer1','computer2')) # For running over the local network
 #js = pp.Server(ppservers=('*',)) # For running with autodiscovery mode over the local network
-js = pp.Server(ppservers=()) # For running only on your own computer (but using multiple CPU cores)
+js=pp.Server(ppservers=()) # For running only on your own computer (but using multiple CPU cores)
 
 # Now we write a function which defines the job to be executed. Note that
 # there are some annoying features of pp: functions cannot use any global
@@ -46,14 +46,14 @@ def howmanyspikes(excitatory_weight):
     dge/dt = -ge/(5*ms) : volt
     dgi/dt = -gi/(10*ms) : volt
     '''
-    P=NeuronGroup(4000,model=eqs,threshold=-50*mV,reset=-60*mV)
+    P=NeuronGroup(4000, model=eqs, threshold=-50*mV, reset=-60*mV)
     P.v=-60*mV+10*mV*rand(len(P))
     Pe=P.subgroup(3200)
     Pi=P.subgroup(800)
-    Ce=Connection(Pe,P,'ge')
-    Ci=Connection(Pi,P,'gi')
-    Ce.connect_random(Pe, P, 0.02,weight=excitatory_weight)
-    Ci.connect_random(Pi, P, 0.02,weight=-9*mV)
+    Ce=Connection(Pe, P, 'ge')
+    Ci=Connection(Pi, P, 'gi')
+    Ce.connect_random(Pe, P, 0.02, weight=excitatory_weight)
+    Ci.connect_random(Pi, P, 0.02, weight=-9*mV)
     M=SpikeMonitor(P)
     run(100*ms)
     return M.nspikes
@@ -72,9 +72,9 @@ def howmanyspikes(excitatory_weight):
 
 # Multiple jobs, and results plotted
 
-excitatory_weight_range = linspace(0,4,20)
-jobs = [ js.submit(howmanyspikes, (ew*mV,), (), ('brian','numpy')) for ew in excitatory_weight_range ]
-numspikes = [ j() for j in jobs ]
+excitatory_weight_range=linspace(0, 4, 20)
+jobs=[ js.submit(howmanyspikes, (ew*mV,), (), ('brian', 'numpy')) for ew in excitatory_weight_range ]
+numspikes=[ j() for j in jobs ]
 
 js.print_stats()
 

@@ -13,15 +13,16 @@ TODO:
 * problem with simplify and location
 * check if surfacic when applying on a branch
 '''
-from brian.units import meter,ohm
-from brian.stdunits import um,cm,ms,uF,mV
-from numpy import sqrt,array,pi,mean
+from brian.units import meter, ohm
+from brian.stdunits import um, cm, ms, uF, mV
+from numpy import sqrt, array, pi, mean
 from brian.compartments import *
 from brian.membrane_equations import *
 from brian import sum
 
-def space_constant(d,Rm,Ri):
+def space_constant(d, Rm, Ri):
     return (d*Rm/Ri)**.5
+
 
 class Morphology(object):
     '''
@@ -29,15 +30,15 @@ class Morphology(object):
     ----------------
     
     '''
-    def __init__(self,name=None,Cm=1*uF/(cm**2)):
+    def __init__(self, name=None, Cm=1*uF/(cm**2)):
         '''
         Cm is the specific membrane capacitance
         '''
         self._segments=[]
         if name is not None:
-            self.load(name,Cm)
-        
-    def load(self,name,Cm=1*uF/(cm**2)):
+            self.load(name, Cm)
+
+    def load(self, name, Cm=1*uF/(cm**2)):
         '''
         Reads a SWC file containing a neuronal morphology and returns
         a morphology object
@@ -82,7 +83,7 @@ class Morphology(object):
         lines=open(name).read().splitlines()
         segments=[]
         branching_points=[]
-        types=['undefined','soma','axon','dendrite','apical','fork','end','custom']
+        types=['undefined', 'soma', 'axon', 'dendrite', 'apical', 'fork', 'end', 'custom']
         for line in lines:
             if line[0]!='#': # comment
                 numbers=line.split()
@@ -93,44 +94,44 @@ class Morphology(object):
                 z=float(numbers[4])*um
                 R=float(numbers[5])*um
                 P=int(numbers[6])-1 # 0-based indexing
-                segment=dict(n=n,type=T,location=(x,y,z),radius=R,parent=P)
+                segment=dict(n=n, type=T, location=(x, y, z), radius=R, parent=P)
                 if T=='soma':
                     segment['area']=4*pi*segment['radius']**2
                 else: # dendrite
                     segment['length']=(sum((array(segment['location'])-array(segments[P]['location']))**2))**.5*meter
                     segment['area']=segment['length']*2*pi*segment['radius']
-         
+
                 if (P!=n-1) and (P>-2): # P is a branching point
                     branching_points.append(P)
-                
+
                 segments.append(segment)
-               
+
         # Create branches
         # branches = list of dict(begin,end,segments) where segments are segment indexes
         branches=[]
-        branch=dict(start=0,segments=[],children=0)
+        branch=dict(start=0, segments=[], children=0)
         for segment in segments:
             n=segment['n']
             if segment['n'] in branching_points: # end of branch
                 branch['segments'].append(n)
                 branch['end']=n
                 branches.append(branch)
-                branch=dict(start=n+1,segments=[],children=0)
+                branch=dict(start=n+1, segments=[], children=0)
             elif segment['parent']!=n-1: # new branch
                 branch['end']=n-1
                 branches.append(branch)
-                branch=dict(start=n,segments=[n],children=0)
+                branch=dict(start=n, segments=[n], children=0)
             else:
                 branch['segments'].append(n)
         # Last branch
         branch['end']=n
         branches.append(branch)
-        
+
         # Make segment dictionary
         self._segments=dict()
         for segment in segments:
             self._segments[segment['n']]=segment
-        
+
         # Name branches and segments
         # The soma is 'soma'
         self._branches=dict()
@@ -154,36 +155,36 @@ class Morphology(object):
         '''
         Prints information about the morphology
         '''
-        print len([s for n,s in self._segments.iteritems() if s['n']==n]),'segments'
+        print len([s for n, s in self._segments.iteritems() if s['n']==n]), 'segments'
         print 'Branches:'
-        for name,branch in self._branches.iteritems():
+        for name, branch in self._branches.iteritems():
             area=sum([self._segments[s]['area'] for s in branch['segments']])*meter**2
             length=sum([self._segments[s]['length'] for s in branch['segments']\
                         if 'length' in self._segments[s]])*meter
-            print name,':',len(branch['segments']),'segments ; area =',area,'; length =',length
+            print name, ':', len(branch['segments']), 'segments ; area =', area, '; length =', length
 
-    def build_equations(self,Cm=1*uF/(cm**2)):
+    def build_equations(self, Cm=1*uF/(cm**2)):
         '''
         Builds a dictionary of equations.
         Cm is the specific capacitance.
         '''
         self._eqs=dict()
-        for n,segment in self._segments.iteritems():
+        for n, segment in self._segments.iteritems():
             if segment['n']==n: # otherwise it is a copy
                 self._eqs[n]=MembraneEquation(C=Cm*segment['area'])
                 self._eqs[n].area=segment['area']
-        
-    def __getitem__(self,x):
+
+    def __getitem__(self, x):
         '''
         Returns a branch or a compartment (equations).
         '''
-        if type(x)==type((0,0)): # tuple: compartment
-            branch,location=x
-            return self.compartment(branch,location)
+        if type(x)==type((0, 0)): # tuple: compartment
+            branch, location=x
+            return self.compartment(branch, location)
         else: # single variable: branch
             return self.branch(x)
-    
-    def index(self,branch,location):
+
+    def index(self, branch, location):
         '''
         Returns the index of the segment at given location on given branch
         '''
@@ -203,53 +204,53 @@ class Morphology(object):
                     else:
                         return s-1
                 oldx=x
-            raise IndexError,'Location not found'
-    
-    def radius(self,branch,location=None):
+            raise IndexError, 'Location not found'
+
+    def radius(self, branch, location=None):
         '''
         Returns the radius of a compartment or branch
         '''
         if location is None: # branch: return mean radius
-            return mean([self.radius(branch,n) for n in self._branches[branch]['segments']])*meter
+            return mean([self.radius(branch, n) for n in self._branches[branch]['segments']])*meter
         else:
-            seg=self._segments[self.index(branch,location)]
+            seg=self._segments[self.index(branch, location)]
             return seg['radius']
 
-    def diameter(self,branch,location=None):
+    def diameter(self, branch, location=None):
         '''
         Returns the diameter of a compartment or branch
         '''
-        return 2*self.radius(branch,location)
-            
-    def length(self,branch,location=None):
+        return 2*self.radius(branch, location)
+
+    def length(self, branch, location=None):
         '''
         Returns the length of a compartment or branch.
         '''
         if location is None: # branch
             l=0*meter
             for n in self._branches[branch]['segments']:
-                l+=self.length(branch,n)
+                l+=self.length(branch, n)
             return l
         else:
-            return self._segments[self.index(branch,location)]['length']
-    
-    def area(self,branch,location=None):
+            return self._segments[self.index(branch, location)]['length']
+
+    def area(self, branch, location=None):
         '''
         Returns the area of a compartment or branch.
         '''
         if location is None: # branch
             a=0*meter**2
             for n in self._branches[branch]['segments']:
-                a+=self.area(branch,n)
+                a+=self.area(branch, n)
             return a
         else:
-            seg=self._segments[self.index(branch,location)]
+            seg=self._segments[self.index(branch, location)]
             if seg['type']=='soma':
-                return 4*pi*self.radius(branch,location)**2
+                return 4*pi*self.radius(branch, location)**2
             else:
-                return self.length(branch,location)*2*pi*self.radius(branch,location)
-    
-    def branch(self,branch,children=False):
+                return self.length(branch, location)*2*pi*self.radius(branch, location)
+
+    def branch(self, branch, children=False):
         '''
         Returns a branch.
         
@@ -264,24 +265,24 @@ class Morphology(object):
             return l
         else:
             return [self._eqs[n] for n in self._branches[branch]['segments']]
-    
-    def subtree(self,branch):
-        return self.branch(branch,children=True)
-    
-    def compartment(self,branch,location):
+
+    def subtree(self, branch):
+        return self.branch(branch, children=True)
+
+    def compartment(self, branch, location):
         '''
         Returns the segment at given location on given branch
         '''
-        return self._eqs[self.index(branch,location)]
-        
-    def equations(self,Ri=100*ohm*cm):
+        return self._eqs[self.index(branch, location)]
+
+    def equations(self, Ri=100*ohm*cm):
         '''
         Returns an Equations object for the whole morphology.
         Ri is the intracellular resistivity.
         Connects all segments together.
         '''
         eqs=Compartments(self._eqs)
-        for n,s in self._segments.iteritems():
+        for n, s in self._segments.iteritems():
             if s['n']==n: # otherwise it is a copy
                 n0=s['parent']
                 if n0 in self._segments:
@@ -291,9 +292,9 @@ class Morphology(object):
                     else:
                         l=.5*(s['length']+s0['length']) # connection length
                     Ra=Ri*l/(pi*.5*(s0['radius']**2+s['radius']**2))
-                    eqs.connect(n0,n,Ra)
+                    eqs.connect(n0, n, Ra)
         return eqs
-    
+
     def simplify(self):
         '''
         Replaces branches by equivalent cylinders.
@@ -314,16 +315,16 @@ class Morphology(object):
                 # Destroy other segments
                 for seg in segs[1:-1]:
                     del self._segments[seg['n']]
-    
-    def insert_current(self,current,branch,location=None):
+
+    def insert_current(self, current, branch, location=None):
         if location is None: # on branch
             if current._prefix=='__current_': # point current
-                raise ValueError,"The current should be surfacic"
+                raise ValueError, "The current should be surfacic"
             branch=morpho.branch(branch)
             for c in branch:
                 c+=current
         else:
-            c=morpho.compartment(branch,location)
+            c=morpho.compartment(branch, location)
             c+=current
 
 if __name__=='__main__':
@@ -332,8 +333,7 @@ if __name__=='__main__':
     #print morpho.branch(100)
     #morpho.simplify()
     #morpho.info()
-    morpho.insert_current(Current('I=g*(E-vm) : amp/(cm**2)',surfacic=True,
-                                  g=1*uF/(cm**2)/(20*ms),E=-75*mV),101,10*um)
-    print morpho[101,10*um]
+    morpho.insert_current(Current('I=g*(E-vm) : amp/(cm**2)', surfacic=True,
+                                  g=1*uF/(cm**2)/(20*ms), E=-75*mV), 101, 10*um)
+    print morpho[101, 10*um]
     model=morpho.equations(Ri=70*ohm*cm)
-    

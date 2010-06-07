@@ -36,7 +36,7 @@
 Brian
 """
 
-__docformat__ = "restructuredtext en"
+__docformat__="restructuredtext en"
 
 import warnings as _warnings
 from scipy import *
@@ -71,7 +71,6 @@ from membrane_equations import *
 from compartments import *
 from log import *
 from utils.parallelpython import *
-#from tests import *
 from magic import *
 from stdp import *
 from stp import *
@@ -79,114 +78,105 @@ from timedarray import *
 from remotecontrol import *
 from tests.simpletest import *
 
-__version__ = '1.2.1dev'
-__release_date__ = '2010-05-06'
-
-#import unitsafefunctions as _usf
-#import numpy as _numpy
-#for _k in _usf.added_knowledge:
-#    if hasattr(qarray, _k):
-#        exec _k+'=_numpy.'+_k
+__version__='1.2.1dev'
+__release_date__='2010-05-06'
 
 ### Define global preferences which are not defined anywhere else
 
-#import sys as _sys
-#import os as _os
-#_stdout = _sys.stdout
-#_sys.stdout = open(_os.devnull, "w")
-#import scipy as _scipy
-#try:
-#    _scipy.weave.inline('int x=1;',[],
-#                        compiler='msvc', verbose=0,
-#                        type_converters=_scipy.weave.converters.blitz)
-#    _useweave = True
-#    _weavecompiler = 'msvc'
-#except:
-#    try:
-#        _scipy.weave.inline('int x=1;',[],
-#                            compiler='gcc', verbose=0,
-#                            type_converters=_scipy.weave.converters.blitz)
-#        _useweave = True
-#        _weavecompiler = 'gcc'
-#    except:
-#        _useweave = False
-#        _weavecompiler = 'gcc'
-#_sys.stdout = _stdout
-
-define_global_preference('useweave','False',
-                           desc = """
-                                  Defines whether or not functions should use inlined compiled
-                                  C code where defined. Requires a compatible C++ compiler.
-                                  The ``gcc`` and ``g++`` compilers are probably the easiest
-                                  option (use Cygwin on Windows machines). See also the
-                                  ``weavecompiler`` global preference.
-                                  """)
+define_global_preference(
+    'useweave', 'False',
+    desc="""
+         Defines whether or not functions should use inlined compiled
+         C code where defined. Requires a compatible C++ compiler.
+         The ``gcc`` and ``g++`` compilers are probably the easiest
+         option (use Cygwin on Windows machines). See also the
+         ``weavecompiler`` global preference.
+         """)
 set_global_preferences(useweave=False)
-define_global_preference('weavecompiler','gcc',desc='''
-        Defines the compiler to use for weave compilation. On Windows machines, installing
-        Cygwin is the easiest way to get access to the gcc compiler.
-        ''')
+define_global_preference(
+    'weavecompiler', 'gcc',
+    desc='''
+         Defines the compiler to use for weave compilation. On Windows machines, installing
+         Cygwin is the easiest way to get access to the gcc compiler.
+         ''')
 set_global_preferences(weavecompiler='gcc')
 
-define_global_preference('gcc_options', "['-ffast-math']", desc='''
-        Defines the compiler switches passed to the gcc compiler. For gcc versions
-        4.2+ we recommend using ``-march=native``. By default, the ``-ffast-math``
-        optimisations are turned on - if you need IEEE guaranteed results, turn
-        this switch off.
-        ''')
+define_global_preference(
+    'gcc_options', "['-ffast-math']",
+    desc='''
+         Defines the compiler switches passed to the gcc compiler. For gcc versions
+         4.2+ we recommend using ``-march=native``. By default, the ``-ffast-math``
+         optimisations are turned on - if you need IEEE guaranteed results, turn
+         this switch off.
+         ''')
 set_global_preferences(gcc_options=['-ffast-math'])
 
-define_global_preference('usecodegen','False',desc='''
-        Whether or not to use experimental code generation support.
-        ''')
+define_global_preference(
+    'usecodegen', 'False',
+    desc='''
+         Whether or not to use experimental code generation support.
+         ''')
 set_global_preferences(usecodegen=False)
-define_global_preference('usecodegenweave','False',desc='''
-        Whether or not to use C with experimental code generation support.
-        ''')
+define_global_preference(
+    'usecodegenweave', 'False',
+    desc='''
+         Whether or not to use C with experimental code generation support.
+         ''')
 set_global_preferences(usecodegenweave=False)
-define_global_preference('usecodegenstateupdate','True',desc='''
-        Whether or not to use experimental code generation support on state updaters.
-        ''')
+define_global_preference(
+    'usecodegenstateupdate', 'True',
+    desc='''
+         Whether or not to use experimental code generation support on state updaters.
+         ''')
 set_global_preferences(usecodegenstateupdate=True)
-define_global_preference('usecodegenreset','False',desc='''
-        Whether or not to use experimental code generation support on resets.
-        Typically slower due to weave overheads, so usually leave this off.
-        ''')
+define_global_preference(
+    'usecodegenreset', 'False',
+    desc='''
+         Whether or not to use experimental code generation support on resets.
+         Typically slower due to weave overheads, so usually leave this off.
+         ''')
 set_global_preferences(usecodegenreset=False)
-define_global_preference('usecodegenthreshold','True',desc='''
-        Whether or not to use experimental code generation support on thresholds.
-        ''')
+define_global_preference(
+    'usecodegenthreshold', 'True',
+    desc='''
+         Whether or not to use experimental code generation support on thresholds.
+         ''')
 set_global_preferences(usecodegenthreshold=True)
 
-define_global_preference('usenewpropagate','False',desc='''
-        Whether or not to use experimental new C propagation functions.
-        ''')
+define_global_preference(
+    'usenewpropagate', 'False',
+    desc='''
+         Whether or not to use experimental new C propagation functions.
+         ''')
 set_global_preferences(usenewpropagate=False)
 
-define_global_preference('usecstdp','False',desc='''
-        Whether or not to use experimental new C STDP.
-        ''')
+define_global_preference(
+    'usecstdp', 'False',
+    desc='''
+         Whether or not to use experimental new C STDP.
+         ''')
 set_global_preferences(usecstdp=False)
 
 # check if we were run from a file or some other source, and set the default
 # behaviour for magic functions accordingly
 import inspect as _inspect
 import os as _os
-_of = _inspect.getouterframes(_inspect.currentframe())
+_of=_inspect.getouterframes(_inspect.currentframe())
 if len(_of)>1 and _os.path.exists(_of[1][1]):
-    _magic_useframes = True
+    _magic_useframes=True
 else:
-    _magic_useframes = False
-define_global_preference('magic_useframes',str(_magic_useframes),
-                       desc = """
-                              Defines whether or not the magic functions should search
-                              for objects defined only in the calling frame or if they
-                              should find all objects defined in any frame. This should
-                              be set to ``False`` if you are using Brian from an interactive
-                              shell like IDLE or IPython where each command has its own
-                              frame, otherwise set it to ``True``.
-                              """) 
-set_global_preferences(magic_useframes = _magic_useframes)
+    _magic_useframes=False
+define_global_preference(
+    'magic_useframes', str(_magic_useframes),
+    desc="""
+         Defines whether or not the magic functions should search
+         for objects defined only in the calling frame or if they
+         should find all objects defined in any frame. This should
+         be set to ``False`` if you are using Brian from an interactive
+         shell like IDLE or IPython where each command has its own
+         frame, otherwise set it to ``True``.
+         """)
+set_global_preferences(magic_useframes=_magic_useframes)
 
 ### Update documentation for global preferences
 import globalprefs as _gp
@@ -199,16 +189,13 @@ except ImportError:
 
 try:
     import nose
+
     @nose.tools.nottest
     def run_all_tests():
         import tests
         tests.go()
+
 except ImportError:
+
     def run_all_tests():
         print "Brian test framework requires 'nose' package."
-    
-#__all__ = dir()
-#
-#import sys
-#if 'epydoc' in sys.modules:
-#    __all__=[]

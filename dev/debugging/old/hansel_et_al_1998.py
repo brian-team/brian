@@ -29,15 +29,15 @@ dx/dt=-x/tau2 : volt
 
 T=-tau*log((I0-theta)/(I0-Vl))
 
-P=NeuronGroup(N,model=eqs,threshold=theta,reset=Vl)
-C=Connection(P,P,'x',weight=w)
+P=NeuronGroup(N, model=eqs, threshold=theta, reset=Vl)
+C=Connection(P, P, 'x', weight=w)
 c=1. # in 0..1
 P.V=I0+(Vl-I0)*exp(-c*arange(N)/N*T/tau)
 
 run(duration1)
 
 M=PopulationRateMonitor(P) # average spiking activity
-S=StateMonitor(P,'V') # to measure the individual variances of V
+S=StateMonitor(P, 'V') # to measure the individual variances of V
 
 mv=[]
 @network_operation
@@ -51,5 +51,5 @@ sigma=deltaN/delta # Measure of synchrony
 print sigma
 
 # Visual check
-plot(M.times/ms,M.smooth_rate(1*ms))
+plot(M.times/ms, M.smooth_rate(1*ms))
 show()

@@ -25,24 +25,24 @@ Eh=-43*mV
 EK=-70*mV # -77*mV in mod file
 El=-65*mV
 ENa=50*mV
-nf = 0.85 # proportion of n vs p kinetics
-zss = 0.5 # steady state inactivation of glt
+nf=0.85 # proportion of n vs p kinetics
+zss=0.5 # steady state inactivation of glt
 celsius=22. # temperature
-q10 = 3.**((celsius - 22)/10.)
+q10=3.**((celsius-22)/10.)
 # hcno current (octopus cell)
 frac=0.0
 qt=4.5**((celsius-33.)/10.)
 
 # Maximal conductances of different cell types in nS
 maximal_conductances=dict(
-type1c=(1000,150,0,0,0.5,0,2),
-type1t=(1000,80,0,65,0.5,0,2),
-type12=(1000,150,20,0,2,0,2),
-type21=(1000,150,35,0,3.5,0,2),
-type2=(1000,150,200,0,20,0,2),
-type2o=(1000,150,600,0,0,40,2) # octopus cell
+type1c=(1000, 150, 0, 0, 0.5, 0, 2),
+type1t=(1000, 80, 0, 65, 0.5, 0, 2),
+type12=(1000, 150, 20, 0, 2, 0, 2),
+type21=(1000, 150, 35, 0, 3.5, 0, 2),
+type2=(1000, 150, 200, 0, 20, 0, 2),
+type2o=(1000, 150, 600, 0, 0, 40, 2) # octopus cell
 )
-gnabar,gkhtbar,gkltbar,gkabar,ghbar,gbarno,gl=[x*nS for x in maximal_conductances[neuron_type]]
+gnabar, gkhtbar, gkltbar, gkabar, ghbar, gbarno, gl=[x*nS for x in maximal_conductances[neuron_type]]
 
 # Classical Na channel
 eqs_na="""
@@ -125,15 +125,15 @@ I : amp
 """
 eqs+=eqs_leak+eqs_ka+eqs_na+eqs_ih+eqs_klt+eqs_kht+eqs_hcno
 
-neuron=NeuronGroup(1,eqs,implicit=True)
+neuron=NeuronGroup(1, eqs, implicit=True)
 neuron.v=El
 
 run(50*ms) # Go to rest
 
-M=StateMonitor(neuron,'v',record=0)
+M=StateMonitor(neuron, 'v', record=0)
 neuron.I=Ipulse
 
-run(100*ms,report='text')
+run(100*ms, report='text')
 
-plot(M.times/ms,M[0]/mV)
+plot(M.times/ms, M[0]/mV)
 show()

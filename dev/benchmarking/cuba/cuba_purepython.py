@@ -42,9 +42,9 @@ multiplying the state matrix by a (3,3) 'update matrix'
 """
 
 # Update matrix
-A=array([[exp(-dt/taum),0,0],
-         [taue/(taum-taue)*(exp(-dt/taum)-exp(-dt/taue)),exp(-dt/taue),0],
-         [taui/(taum-taui)*(exp(-dt/taum)-exp(-dt/taui)),0,exp(-dt/taui)]]).T
+A=array([[exp(-dt/taum), 0, 0],
+         [taue/(taum-taue)*(exp(-dt/taum)-exp(-dt/taue)), exp(-dt/taue), 0],
+         [taui/(taum-taui)*(exp(-dt/taum)-exp(-dt/taui)), 0, exp(-dt/taui)]]).T
 
 """
 State variables
@@ -52,14 +52,14 @@ State variables
 P=NeuronGroup(4000,model=eqs,
               threshold=-50*mV,reset=-60*mV)
 """
-S=zeros((3,N))
+S=zeros((3, N))
 
 """
 Initialisation
 --------------
 P.v=-60*mV+10*mV*rand(len(P))
 """
-S[0,:]=rand(N)*(Vt-Vr)+Vr # Potential: uniform between reset and threshold
+S[0, :]=rand(N)*(Vt-Vr)+Vr # Potential: uniform between reset and threshold
 
 """
 Connectivity matrices
@@ -72,16 +72,16 @@ Ci=Connection(Pi,P,'gi',weight=-9*mV,sparseness=p)
 We_target=[]
 We_weight=[]
 for _ in range(Ne):
-    k=scirandom.binomial(N,p,1)[0]
-    target=sample(xrange(N),k)
+    k=scirandom.binomial(N, p, 1)[0]
+    target=sample(xrange(N), k)
     target.sort()
     We_target.append(array(target))
     We_weight.append(array([1.62*mV]*k))
 Wi_target=[]
 Wi_weight=[]
 for _ in range(Ni):
-    k=scirandom.binomial(N,p,1)[0]
-    target=sample(xrange(N),k)
+    k=scirandom.binomial(N, p, 1)[0]
+    target=sample(xrange(N), k)
     target.sort()
     Wi_target.append(array(target))
     Wi_weight.append(array([-9*mV]*k))
@@ -111,36 +111,36 @@ t1=time()
 t=0*ms
 while t<duration:
     # STATE UPDATES
-    S[:]=dot(A,S)
+    S[:]=dot(A, S)
 
     # Threshold
-    all_spikes=(S[0,:]>Vt).nonzero()[0]     # List of neurons that meet threshold condition
+    all_spikes=(S[0, :]>Vt).nonzero()[0]     # List of neurons that meet threshold condition
 
     # PROPAGATION OF SPIKES
     # Excitatory neurons
-    spikes=all_spikes[0:bisect.bisect_left(all_spikes,Ne)]
+    spikes=all_spikes[0:bisect.bisect_left(all_spikes, Ne)]
     for i in spikes:
-        S[1,We_target[i]]+=We_weight[i]
-        
+        S[1, We_target[i]]+=We_weight[i]
+
     # Inhibitory neurons
-    spikes=all_spikes[bisect.bisect_left(all_spikes,Ne):]-Ne
+    spikes=all_spikes[bisect.bisect_left(all_spikes, Ne):]-Ne
     for i in spikes:
-        S[2,Wi_target[i]]+=Wi_weight[i]
-    
+        S[2, Wi_target[i]]+=Wi_weight[i]
+
     # Reset neurons after spiking
-    S[0,all_spikes]=Vr                       # Reset membrane potential
-      
+    S[0, all_spikes]=Vr                       # Reset membrane potential
+
     # Spike monitor
-    spike_monitor+=[(i,t) for i in all_spikes]
-    
+    spike_monitor+=[(i, t) for i in all_spikes]
+
     # State monitor
-    trace.append(S[0,0])
+    trace.append(S[0, 0])
 
     t+=dt
 
 t2=time()
-print "Simulated in",t2-t1,"s"
-print len(spike_monitor),"spikes"
+print "Simulated in", t2-t1, "s"
+print len(spike_monitor), "spikes"
 
 """
 Plot
@@ -152,8 +152,8 @@ plot(trace.times/ms,trace[0]/mV)
 show()
 """
 subplot(211)
-i,t=zip(*spike_monitor)
-plot(i,t,'.')
+i, t=zip(*spike_monitor)
+plot(i, t, '.')
 subplot(212)
-plot(arange(len(trace))*dt/ms,array(trace)/mV)
+plot(arange(len(trace))*dt/ms, array(trace)/mV)
 show()

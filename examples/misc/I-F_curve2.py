@@ -13,13 +13,13 @@ eqs='''
 dv/dt=(v0-v)/tau : volt
 v0 : volt
 '''
-group=NeuronGroup(N,model=eqs,threshold=10*mV,reset=0*mV,refractory=5*ms)
+group=NeuronGroup(N, model=eqs, threshold=10*mV, reset=0*mV, refractory=5*ms)
 group.v=0*mV
-group.v0=linspace(0*mV,20*mV,N)
+group.v0=linspace(0*mV, 20*mV, N)
 
 counter=SpikeCounter(group)
 
 duration=5*second
 run(duration)
-plot(group.v0/mV,counter.count/duration)
+plot(group.v0/mV, counter.count/duration)
 show()

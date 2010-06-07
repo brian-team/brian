@@ -6,89 +6,89 @@
 # This file is compatible with both classic and new-style classes.
 
 from sys import version_info
-if version_info >= (2,6,0):
+if version_info>=(2, 6, 0):
     def swig_import_helper():
         from os.path import dirname
         import imp
-        fp = None
+        fp=None
         try:
-            fp, pathname, description = imp.find_module('_ccircular', [dirname(__file__)])
+            fp, pathname, description=imp.find_module('_ccircular', [dirname(__file__)])
         except ImportError:
             import _ccircular
             return _ccircular
         if fp is not None:
             try:
-                _mod = imp.load_module('_ccircular', fp, pathname, description)
+                _mod=imp.load_module('_ccircular', fp, pathname, description)
             finally:
                 fp.close()
             return _mod
-    _ccircular = swig_import_helper()
+    _ccircular=swig_import_helper()
     del swig_import_helper
 else:
     import _ccircular
 del version_info
 try:
-    _swig_property = property
+    _swig_property=property
 except NameError:
     pass # Python < 2.2 doesn't have 'property'.
-def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
-    if (name == "thisown"): return self.this.own(value)
-    if (name == "this"):
-        if type(value).__name__ == 'SwigPyObject':
-            self.__dict__[name] = value
+def _swig_setattr_nondynamic(self, class_type, name, value, static=1):
+    if (name=="thisown"): return self.this.own(value)
+    if (name=="this"):
+        if type(value).__name__=='SwigPyObject':
+            self.__dict__[name]=value
             return
-    method = class_type.__swig_setmethods__.get(name,None)
-    if method: return method(self,value)
-    if (not static) or hasattr(self,name):
-        self.__dict__[name] = value
+    method=class_type.__swig_setmethods__.get(name, None)
+    if method: return method(self, value)
+    if (not static) or hasattr(self, name):
+        self.__dict__[name]=value
     else:
-        raise AttributeError("You cannot add attributes to %s" % self)
+        raise AttributeError("You cannot add attributes to %s"%self)
 
-def _swig_setattr(self,class_type,name,value):
-    return _swig_setattr_nondynamic(self,class_type,name,value,0)
+def _swig_setattr(self, class_type, name, value):
+    return _swig_setattr_nondynamic(self, class_type, name, value, 0)
 
-def _swig_getattr(self,class_type,name):
-    if (name == "thisown"): return self.this.own()
-    method = class_type.__swig_getmethods__.get(name,None)
+def _swig_getattr(self, class_type, name):
+    if (name=="thisown"): return self.this.own()
+    method=class_type.__swig_getmethods__.get(name, None)
     if method: return method(self)
     raise AttributeError(name)
 
 def _swig_repr(self):
-    try: strthis = "proxy of " + self.this.__repr__()
-    except: strthis = ""
-    return "<%s.%s; %s >" % (self.__class__.__module__, self.__class__.__name__, strthis,)
+    try: strthis="proxy of "+self.this.__repr__()
+    except: strthis=""
+    return "<%s.%s; %s >"%(self.__class__.__module__, self.__class__.__name__, strthis,)
 
 try:
-    _object = object
-    _newclass = 1
+    _object=object
+    _newclass=1
 except AttributeError:
     class _object : pass
-    _newclass = 0
+    _newclass=0
 
 
 class CircularVector(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, CircularVector, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, CircularVector, name)
-    __swig_setmethods__["X"] = _ccircular.CircularVector_X_set
-    __swig_getmethods__["X"] = _ccircular.CircularVector_X_get
-    if _newclass:X = _swig_property(_ccircular.CircularVector_X_get, _ccircular.CircularVector_X_set)
-    __swig_setmethods__["cursor"] = _ccircular.CircularVector_cursor_set
-    __swig_getmethods__["cursor"] = _ccircular.CircularVector_cursor_get
-    if _newclass:cursor = _swig_property(_ccircular.CircularVector_cursor_get, _ccircular.CircularVector_cursor_set)
-    __swig_setmethods__["n"] = _ccircular.CircularVector_n_set
-    __swig_getmethods__["n"] = _ccircular.CircularVector_n_get
-    if _newclass:n = _swig_property(_ccircular.CircularVector_n_get, _ccircular.CircularVector_n_set)
-    __swig_setmethods__["retarray"] = _ccircular.CircularVector_retarray_set
-    __swig_getmethods__["retarray"] = _ccircular.CircularVector_retarray_get
-    if _newclass:retarray = _swig_property(_ccircular.CircularVector_retarray_get, _ccircular.CircularVector_retarray_set)
-    def __init__(self, *args): 
-        this = _ccircular.new_CircularVector(*args)
+    __swig_setmethods__={}
+    __setattr__=lambda self, name, value: _swig_setattr(self, CircularVector, name, value)
+    __swig_getmethods__={}
+    __getattr__=lambda self, name: _swig_getattr(self, CircularVector, name)
+    __swig_setmethods__["X"]=_ccircular.CircularVector_X_set
+    __swig_getmethods__["X"]=_ccircular.CircularVector_X_get
+    if _newclass:X=_swig_property(_ccircular.CircularVector_X_get, _ccircular.CircularVector_X_set)
+    __swig_setmethods__["cursor"]=_ccircular.CircularVector_cursor_set
+    __swig_getmethods__["cursor"]=_ccircular.CircularVector_cursor_get
+    if _newclass:cursor=_swig_property(_ccircular.CircularVector_cursor_get, _ccircular.CircularVector_cursor_set)
+    __swig_setmethods__["n"]=_ccircular.CircularVector_n_set
+    __swig_getmethods__["n"]=_ccircular.CircularVector_n_get
+    if _newclass:n=_swig_property(_ccircular.CircularVector_n_get, _ccircular.CircularVector_n_set)
+    __swig_setmethods__["retarray"]=_ccircular.CircularVector_retarray_set
+    __swig_getmethods__["retarray"]=_ccircular.CircularVector_retarray_get
+    if _newclass:retarray=_swig_property(_ccircular.CircularVector_retarray_get, _ccircular.CircularVector_retarray_set)
+    def __init__(self, *args):
+        this=_ccircular.new_CircularVector(*args)
         try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _ccircular.delete_CircularVector
-    __del__ = lambda self : None;
+        except: self.this=this
+    __swig_destroy__=_ccircular.delete_CircularVector
+    __del__=lambda self : None;
     def reinit(self): return _ccircular.CircularVector_reinit(self)
     def advance(self, *args): return _ccircular.CircularVector_advance(self, *args)
     def __len__(self): return _ccircular.CircularVector___len__(self)
@@ -100,29 +100,29 @@ class CircularVector(_object):
     def __repr__(self): return _ccircular.CircularVector___repr__(self)
     def __str__(self): return _ccircular.CircularVector___str__(self)
     def expand(self, *args): return _ccircular.CircularVector_expand(self, *args)
-CircularVector_swigregister = _ccircular.CircularVector_swigregister
+CircularVector_swigregister=_ccircular.CircularVector_swigregister
 CircularVector_swigregister(CircularVector)
 
 class SpikeContainer(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, SpikeContainer, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, SpikeContainer, name)
-    __swig_setmethods__["S"] = _ccircular.SpikeContainer_S_set
-    __swig_getmethods__["S"] = _ccircular.SpikeContainer_S_get
-    if _newclass:S = _swig_property(_ccircular.SpikeContainer_S_get, _ccircular.SpikeContainer_S_set)
-    __swig_setmethods__["ind"] = _ccircular.SpikeContainer_ind_set
-    __swig_getmethods__["ind"] = _ccircular.SpikeContainer_ind_get
-    if _newclass:ind = _swig_property(_ccircular.SpikeContainer_ind_get, _ccircular.SpikeContainer_ind_set)
-    __swig_setmethods__["remaining_space"] = _ccircular.SpikeContainer_remaining_space_set
-    __swig_getmethods__["remaining_space"] = _ccircular.SpikeContainer_remaining_space_get
-    if _newclass:remaining_space = _swig_property(_ccircular.SpikeContainer_remaining_space_get, _ccircular.SpikeContainer_remaining_space_set)
-    def __init__(self, *args): 
-        this = _ccircular.new_SpikeContainer(*args)
+    __swig_setmethods__={}
+    __setattr__=lambda self, name, value: _swig_setattr(self, SpikeContainer, name, value)
+    __swig_getmethods__={}
+    __getattr__=lambda self, name: _swig_getattr(self, SpikeContainer, name)
+    __swig_setmethods__["S"]=_ccircular.SpikeContainer_S_set
+    __swig_getmethods__["S"]=_ccircular.SpikeContainer_S_get
+    if _newclass:S=_swig_property(_ccircular.SpikeContainer_S_get, _ccircular.SpikeContainer_S_set)
+    __swig_setmethods__["ind"]=_ccircular.SpikeContainer_ind_set
+    __swig_getmethods__["ind"]=_ccircular.SpikeContainer_ind_get
+    if _newclass:ind=_swig_property(_ccircular.SpikeContainer_ind_get, _ccircular.SpikeContainer_ind_set)
+    __swig_setmethods__["remaining_space"]=_ccircular.SpikeContainer_remaining_space_set
+    __swig_getmethods__["remaining_space"]=_ccircular.SpikeContainer_remaining_space_get
+    if _newclass:remaining_space=_swig_property(_ccircular.SpikeContainer_remaining_space_get, _ccircular.SpikeContainer_remaining_space_set)
+    def __init__(self, *args):
+        this=_ccircular.new_SpikeContainer(*args)
         try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _ccircular.delete_SpikeContainer
-    __del__ = lambda self : None;
+        except: self.this=this
+    __swig_destroy__=_ccircular.delete_SpikeContainer
+    __del__=lambda self : None;
     def reinit(self): return _ccircular.SpikeContainer_reinit(self)
     def push(self, *args): return _ccircular.SpikeContainer_push(self, *args)
     def lastspikes(self): return _ccircular.SpikeContainer_lastspikes(self)
@@ -131,7 +131,7 @@ class SpikeContainer(_object):
     def __getslice__(self, *args): return _ccircular.SpikeContainer___getslice__(self, *args)
     def __repr__(self): return _ccircular.SpikeContainer___repr__(self)
     def __str__(self): return _ccircular.SpikeContainer___str__(self)
-SpikeContainer_swigregister = _ccircular.SpikeContainer_swigregister
+SpikeContainer_swigregister=_ccircular.SpikeContainer_swigregister
 SpikeContainer_swigregister(SpikeContainer)
 
 

@@ -29,34 +29,35 @@ def printargs(*args, **kwds):
     print args
     print kwds
 
+
 class AutoParallelNetwork(Network):
     def __init__(self, makenet, params):
-        self.apn_params = params
-        self.apn_makenet = makenet
+        self.apn_params=params
+        self.apn_makenet=makenet
         Network.__init__(self)
-        
-        makenet_globals = copy(makenet.func_globals)
-        makenet_globals['NeuronGroup'] = printargs
-        newfuncspace = {}
+
+        makenet_globals=copy(makenet.func_globals)
+        makenet_globals['NeuronGroup']=printargs
+        newfuncspace={}
         exec inspect.getsource(makenet) in makenet_globals, newfuncspace
         exec makenet.func_name+'()' in makenet_globals, newfuncspace
 
 def makenet():
     global M
-    Vr = -70*mV
-    Vt = -55*mV
-    El = -54*mV
+    Vr=-70*mV
+    Vt=-55*mV
+    El=-54*mV
     eqs='''
         dV/dt = -(V-El)/tau : volt
         tau : second
         '''
-    model = Model(equations=eqs, threshold=Vt, reset=Vr)
-    G = NeuronGroup(1,model)
+    model=Model(equations=eqs, threshold=Vt, reset=Vr)
+    G=NeuronGroup(1, model)
 #    spikes = linspace(10*ms,100*ms,25)
 #    input = MultipleSpikeGeneratorGroup([spikes])
 #    C = Connection(input, G)
 #    C[0,0] = 5*mV
-    M = StateMonitor(G, 'V', record=True)
+    M=StateMonitor(G, 'V', record=True)
 #    G.V = Vr
 #    G.tau = 10*ms
 #    net = MagicNetwork(verbose=False)
@@ -66,9 +67,9 @@ makenet()
 
 print 'made net'
 
-anet = AutoParallelNetwork(makenet,
+anet=AutoParallelNetwork(makenet,
         [
-         ('G','tau',[5*ms,10*ms,15*ms])
+         ('G', 'tau', [5*ms, 10*ms, 15*ms])
         ]
         )
 

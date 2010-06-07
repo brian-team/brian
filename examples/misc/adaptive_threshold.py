@@ -13,14 +13,14 @@ v=0*mV
 vt+=3*mV
 '''
 
-IF = NeuronGroup(1, model=eqs,reset=reset,threshold='v>vt')
+IF=NeuronGroup(1, model=eqs, reset=reset, threshold='v>vt')
 IF.rest()
-PG = PoissonGroup(1, 500*Hz)
+PG=PoissonGroup(1, 500*Hz)
 
-C = Connection(PG, IF, 'v',weight=3*mV)
+C=Connection(PG, IF, 'v', weight=3*mV)
 
-Mv = StateMonitor(IF, 'v', record=True)
-Mvt = StateMonitor(IF, 'vt', record=True)
+Mv=StateMonitor(IF, 'v', record=True)
+Mvt=StateMonitor(IF, 'vt', record=True)
 
 run(100*ms)
 
