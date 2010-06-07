@@ -8,22 +8,24 @@ from brian import *
 from scipy import signal
 from scipy import weave
 from scipy import random
-#try:
-#    import pycuda
-#    import pycuda.autoinit as autoinit
-#    import pycuda.driver as drv
-#    import pycuda.compiler
-#    from pycuda import gpuarray
-#    from brian.experimental.cuda.buffering import *
-#    import re
-#    def set_gpu_device(n):
-#        global _gpu_context
-#        autoinit.context.pop()
-#        _gpu_context = drv.Device(n).make_context()
-#    use_gpu = True
-#except ImportError:
-#    use_gpu = False
-use_gpu=False
+# NOTE TO BERTRAND:
+# DO NOT COMMENT THESE LINES OUT!
+try:
+    import pycuda
+    import pycuda.autoinit as autoinit
+    import pycuda.driver as drv
+    import pycuda.compiler
+    from pycuda import gpuarray
+    from brian.experimental.cuda.buffering import *
+    import re
+    def set_gpu_device(n):
+        global _gpu_context
+        autoinit.context.pop()
+        _gpu_context = drv.Device(n).make_context()
+    use_gpu = True
+except ImportError:
+    use_gpu = False
+#use_gpu=False
 
 __all__=['GammachirpFilterbankFIR', 'GammachirpFilterbankIIR', 'Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step', 'GammatoneFilterbank',
