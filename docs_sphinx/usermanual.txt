@@ -36,6 +36,7 @@ Brian itself is documented in the following sections:
    clocks
    simulation
    equations
+   files
 
 For more detailed information, see the reference chapter.
  

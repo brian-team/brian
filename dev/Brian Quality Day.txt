@@ -1,6 +1,33 @@
 Brian Quality Day
 =================
-May 13, 2pm
+7 June 2010
+-----------
+Done:
+* More tests for equations
+* LinearStateUpdater
+* Style fixes
+* Manual for utils.io
+
+Victor:
+* BEP on Simulation class
+* Connectivity analysis (new module)
+* A few examples from literature
+
+Bertrand:
+* Brianhears: examples and style fixes
+* A few statistical functions
+
+Romain:
+* Tests for equations
+
+Cyrille:
+* LinearStateUpdater
+* Examples and manual for statistics
+
+Dan:
+* Style fixes
+
+-------------------------------------------------
 
 * Remove old commented code [Dan/Romain]
 * Remove deprecated/unused code [Dan/Romain]
