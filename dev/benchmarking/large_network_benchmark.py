@@ -25,27 +25,27 @@ caching and/or memory access issues.
 from brian import *
 from time import time
 
-dt=defaultclock.dt
+dt = defaultclock.dt
 
-N=100000 # neurons
-p=10000 # synapses (that's a billion synapses)
-F=2.5*Hz # firing rate
-duration=1*second
+N = 100000 # neurons
+p = 10000 # synapses (that's a billion synapses)
+F = 2.5 * Hz # firing rate
+duration = 1 * second
 
-taum=20*ms
-Vt=-50*mV
-Vr=-60*mV
-El=-49*mV
-sigma=1*mV
+taum = 20 * ms
+Vt = -50 * mV
+Vr = -60 * mV
+El = -49 * mV
+sigma = 1 * mV
 
-eqs="""
+eqs = """
 dv/dt  = -(v-El)/taum + sigma/taum**.5*xi: volt
 """
 
-p_active=F*dt
-Nactive=int(N*p_active) # number of active neurons every time step
-active_ones=arange(N)<Nactive
-P=NeuronGroup(N, model=eqs, threshold="rand(N)<p_active", reset=Vr, refractory=2*ms, delay=1*ms)
+p_active = F * dt
+Nactive = int(N * p_active) # number of active neurons every time step
+active_ones = arange(N) < Nactive
+P = NeuronGroup(N, model=eqs, threshold="rand(N)<p_active", reset=Vr, refractory=2 * ms, delay=1 * ms)
 
 # We design a fake connection matrix that always returns the
 # same row (thus the simulation time is unchanged but there is no
@@ -60,14 +60,14 @@ class FakeConnectionMatrix(SparseConnectionMatrix):
     def get_rows(self, rows):
         return [self.rows[0] for i in rows]
 
-C=Connection(P, P, 'v', structure=FakeConstructionMatrix)
-C.connect_random(P[:1], P, sparseness=p*1./N, weight=1*mV)
+C = Connection(P, P, 'v', structure=FakeConstructionMatrix)
+C.connect_random(P[:1], P, sparseness=p * 1. / N, weight=1 * mV)
 
-M=SpikeMonitor(P, record=False)
+M = SpikeMonitor(P, record=False)
 
 print "Starting..."
-t1=time()
+t1 = time()
 run(duration)
-t2=time()
-print "It took", t2-t1, "s"
+t2 = time()
+print "It took", t2 - t1, "s"
 print M.nspikes, "spikes"

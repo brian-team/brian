@@ -35,7 +35,7 @@
 '''
 Network class
 '''
-__all__=['Network', 'MagicNetwork', 'NetworkOperation', 'network_operation', 'run',
+__all__ = ['Network', 'MagicNetwork', 'NetworkOperation', 'network_operation', 'run',
            'reinit', 'stop', 'clear', 'forget', 'recall']
 
 from Queue import Queue
@@ -55,7 +55,7 @@ import time
 from utils.progressreporting import *
 from globalprefs import *
 
-globally_stopped=False
+globally_stopped = False
 
 
 class Network(object):
@@ -187,17 +187,17 @@ class Network(object):
     operations which need to be run in a given order.    
     '''
 
-    operations=property(fget=lambda self:self._all_operations)
+    operations = property(fget=lambda self:self._all_operations)
 
     def __init__(self, *args, **kwds):
-        self.clock=None # Initialized later
-        self.groups=[]
-        self.connections=[]
+        self.clock = None # Initialized later
+        self.groups = []
+        self.connections = []
         # The following dict keeps a copy of which operations are in which slot
-        self._operations_dict=defaultdict(list)
-        self._all_operations=[]
+        self._operations_dict = defaultdict(list)
+        self._all_operations = []
         self.update_schedule_standard()
-        self.prepared=False
+        self.prepared = False
         for o in chain(args, kwds.itervalues()):
             self.add(o)
 
@@ -223,7 +223,7 @@ class Network(object):
                 raise TypeError('Only the following types of objects can be added to a network: NeuronGroup, Connection or NetworkOperation')
 
             try:
-                gco=obj.contained_objects
+                gco = obj.contained_objects
                 if gco is not None:
                     self.add(gco)
             except AttributeError:
@@ -240,7 +240,7 @@ class Network(object):
         '''
         Resets the objects and clocks.
         '''
-        objs=self.groups+self.connections+self.operations
+        objs = self.groups + self.connections + self.operations
         if self.clock is not None:
             objs.append(self.clock)
         else:
@@ -267,19 +267,19 @@ class Network(object):
 
         # Gather connections with identical subgroups
         # 'subgroups' maps subgroups to connections (initialize with immutable object (not [])!)
-        subgroups=dict.fromkeys([(C.source, C.delay) for C in self.connections], None)
+        subgroups = dict.fromkeys([(C.source, C.delay) for C in self.connections], None)
         for C in self.connections:
-            if subgroups[(C.source, C.delay)]==None:
-                subgroups[(C.source, C.delay)]=[C]
+            if subgroups[(C.source, C.delay)] == None:
+                subgroups[(C.source, C.delay)] = [C]
             else:
                 subgroups[(C.source, C.delay)].append(C)
-        self.connections=subgroups.values()
-        cons=self.connections # just for readability
+        self.connections = subgroups.values()
+        cons = self.connections # just for readability
         for i in range(len(cons)):
-            if len(cons[i])>1: # at least 2 connections with the same subgroup
-                cons[i]=MultiConnection(cons[i][0].source, cons[i])
+            if len(cons[i]) > 1: # at least 2 connections with the same subgroup
+                cons[i] = MultiConnection(cons[i][0].source, cons[i])
             else:
-                cons[i]=cons[i][0]
+                cons[i] = cons[i][0]
 
         # Compress connections
         for C in self.connections:
@@ -294,10 +294,10 @@ class Network(object):
         # build operations list for each clock
         self._build_update_schedule()
 
-        self.prepared=True
+        self.prepared = True
 
     def update_schedule_standard(self):
-        self._schedule=['ops start',
+        self._schedule = ['ops start',
                           'ops before_groups',
                           'groups',
                           'ops after_groups',
@@ -313,7 +313,7 @@ class Network(object):
         self._build_update_schedule()
 
     def update_schedule_groups_resets_connections(self):
-        self._schedule=['ops start',
+        self._schedule = ['ops start',
                           'ops before_groups',
                           'groups',
                           'ops after_groups',
@@ -373,7 +373,7 @@ class Network(object):
             placed in the update schedule only of the clock
             obj.clock.
         """
-        self._schedule=schedule
+        self._schedule = schedule
         self._build_update_schedule()
 
     def _build_update_schedule(self):
@@ -388,47 +388,47 @@ class Network(object):
         See documentation for set_update_schedule for an explanation of
         the self._schedule object. 
         '''
-        self._update_schedule=defaultdict(list)
+        self._update_schedule = defaultdict(list)
         if hasattr(self, 'clocks'):
-            clocks=self.clocks
+            clocks = self.clocks
         else:
-            clocks=[self.clock]
-        clockset=clocks
+            clocks = [self.clock]
+        clockset = clocks
         for item in self._schedule:
             # we define some simple names for common schedule items
             if isinstance(item, str):
-                if item=='groups':
-                    objset=self.groups
-                    objfun='update'
-                    allclocks=False
-                elif item=='resets':
-                    objset=self.groups
-                    objfun='reset'
-                    allclocks=False
-                elif item=='connections':
-                    objset=self.connections
-                    objfun='do_propagate'
-                    allclocks=False
+                if item == 'groups':
+                    objset = self.groups
+                    objfun = 'update'
+                    allclocks = False
+                elif item == 'resets':
+                    objset = self.groups
+                    objfun = 'reset'
+                    allclocks = False
+                elif item == 'connections':
+                    objset = self.connections
+                    objfun = 'do_propagate'
+                    allclocks = False
                     # Connections do not define their own clock, but they should
                     # be updated on the schedule of their source group
                     for obj in objset:
-                        obj.clock=obj.source.clock
-                elif len(item)>4 and item[0:3]=='ops': # the item is of the forms 'ops when'
-                    objset=self._operations_dict[item[4:]]
-                    objfun=None
-                    allclocks=False
+                        obj.clock = obj.source.clock
+                elif len(item) > 4 and item[0:3] == 'ops': # the item is of the forms 'ops when'
+                    objset = self._operations_dict[item[4:]]
+                    objfun = None
+                    allclocks = False
             else:
                 # we allow the more general form of usage as well
-                objset, objfun, allclocks=item
+                objset, objfun, allclocks = item
             for obj in objset:
                 if objfun is None:
-                    f=obj
+                    f = obj
                 else:
-                    f=getattr(obj, objfun)
+                    f = getattr(obj, objfun)
                 if not allclocks:
-                    useclockset=[obj.clock]
+                    useclockset = [obj.clock]
                 else:
-                    useclockset=clockset
+                    useclockset = clockset
                 for clock in useclockset:
                     self._update_schedule[id(clock)].append(f)
 
@@ -457,13 +457,13 @@ class Network(object):
             op()
     """
 
-    def run(self, duration, threads=1, report=None, report_period=10*second):
+    def run(self, duration, threads=1, report=None, report_period=10 * second):
         '''
         Runs the simulation for the given duration.
         '''
         global globally_stopped
-        self.stopped=False
-        globally_stopped=False
+        self.stopped = False
+        globally_stopped = False
         if not self.prepared:
             self.prepare()
         self.clock.set_duration(duration)
@@ -473,27 +473,27 @@ class Network(object):
         except AttributeError:
             pass
         if report is not None:
-            start_time=time.time()
+            start_time = time.time()
             if not isinstance(report, ProgressReporter):
-                report=ProgressReporter(report, report_period)
-                next_report_time=start_time+float(report_period)
+                report = ProgressReporter(report, report_period)
+                next_report_time = start_time + float(report_period)
             else:
-                report_period=report.period
-                next_report_time=report.next_report_time
+                report_period = report.period
+                next_report_time = report.next_report_time
 
         if self.clock.still_running() and not self.stopped and not globally_stopped:
-            not_same_clocks=not self.same_clocks()
+            not_same_clocks = not self.same_clocks()
             while self.clock.still_running() and not self.stopped and not globally_stopped:
                 if report is not None:
-                    cur_time=time.time()
-                    if cur_time>next_report_time:
-                        next_report_time=cur_time+float(report_period)
-                        report.update((self.clock.t-self.clock.start)/duration)
+                    cur_time = time.time()
+                    if cur_time > next_report_time:
+                        next_report_time = cur_time + float(report_period)
+                        report.update((self.clock.t - self.clock.start) / duration)
                 self.update()
                 self.clock.tick()
                 if not_same_clocks:
                     # Find the next clock to update
-                    self.clock=min([(clock.t, clock) for clock in self.clocks])[1]
+                    self.clock = min([(clock.t, clock) for clock in self.clocks])[1]
         if report is not None:
             report.update(1.0)
 
@@ -501,21 +501,21 @@ class Network(object):
         '''
         Stops the network from running, this is reset the next time ``run()`` is called.
         '''
-        self.stopped=True
+        self.stopped = True
 
     def same_clocks(self):
         '''
         Returns True if the clocks of all groups and operations are the same.
         '''
-        clock=self.groups[0].clock
-        return all([obj.clock==clock for obj in self.groups+self.operations])
+        clock = self.groups[0].clock
+        return all([obj.clock == clock for obj in self.groups + self.operations])
 
     def set_clock(self):
         '''
         Sets the clock and checks that clocks of all groups are synchronized.
         '''
         if self.same_clocks():
-            self.clock=self.groups[0].clock
+            self.clock = self.groups[0].clock
         else:
             raise TypeError, 'Clocks are not synchronized!' # other error type?
 
@@ -524,20 +524,20 @@ class Network(object):
         Sets a list of clocks.
         self.clock points to the current clock between considered.
         '''
-        self.clocks=list(set([obj.clock for obj in self.groups+self.operations]))
-        self.clock=min([(clock.t, clock) for clock in self.clocks])[1]
+        self.clocks = list(set([obj.clock for obj in self.groups + self.operations]))
+        self.clock = min([(clock.t, clock) for clock in self.clocks])[1]
 
     def __len__(self):
         '''
         Number of neurons in the network
         '''
-        n=0
+        n = 0
         for P in self.groups:
-            n+=len(P) # use compact iterator function?
+            n += len(P) # use compact iterator function?
         return n
 
     def __repr__(self):
-        return 'Network of'+str(len(self))+'neurons'
+        return 'Network of' + str(len(self)) + 'neurons'
 
     # TODO: obscure custom update schedules might still lead to unpicklable Network object
     def __reduce__(self):
@@ -562,11 +562,11 @@ class Network(object):
         # Network for derived classes), work with this, and then restore
         # everything back to the way it was when everything is done.
         #
-        oldclass=self.__class__ # class may be derived from Network
-        self.__class__=NetworkNoMethods # stops recursion in copy.copy
-        net=copy.copy(self) # we make a copy because after returning from this function we can't restore the class
-        self.__class__=oldclass # restore the class of the original, which is now back in its original state
-        net._update_schedule=None # remove the problematic element from the copy
+        oldclass = self.__class__ # class may be derived from Network
+        self.__class__ = NetworkNoMethods # stops recursion in copy.copy
+        net = copy.copy(self) # we make a copy because after returning from this function we can't restore the class
+        self.__class__ = oldclass # restore the class of the original, which is now back in its original state
+        net._update_schedule = None # remove the problematic element from the copy
         return (unpickle_network, (oldclass, net)) # the unpickle_network function called with arguments oldclass, net restores it as it was
 
 # This class just used as a general 'heap' class - has no methods but can have attributes
@@ -577,7 +577,7 @@ def unpickle_network(oldclass, net):
     # See Network.__reduce__ for an explanation, basically the _update_schedule
     # cannot be pickled because it contains instance methods, but it can just be
     # rebuilt.
-    net.__class__=oldclass
+    net.__class__ = oldclass
     net._build_update_schedule()
     return net
 
@@ -597,12 +597,12 @@ class NetworkOperation(magic.InstanceTracker, ObjectContainer):
     as that argument.
     """
     def __init__(self, function, clock=None, when='end'):
-        self.clock=guess_clock(clock)
-        self.when=when
-        self.function=function
+        self.clock = guess_clock(clock)
+        self.when = when
+        self.function = function
 
     def __call__(self):
-        if self.function.func_code.co_argcount==1:
+        if self.function.func_code.co_argcount == 1:
             self.function(self.clock)
         else:
             self.function()
@@ -682,10 +682,10 @@ def network_operation(*args, **kwds):
     # as argument and returns a NetworkOperation object.
     class do_network_operation(object):
         def __init__(self, clock=None, when='end'):
-            self.clock=clock
-            self.when=when
+            self.clock = clock
+            self.when = when
         def __call__(self, f, level=1):
-            new_network_operation=NetworkOperation(f, self.clock, self.when)
+            new_network_operation = NetworkOperation(f, self.clock, self.when)
             # Depending on whether we were called as @network_operation or
             # @network_operation(...) we need different levels, the level is
             # 2 in the first case and 1 in the second case (because in the
@@ -693,11 +693,11 @@ def network_operation(*args, **kwds):
             # and in the second case we go originalcaller->do_network_operation
             # at the time when this method is called).
             new_network_operation.set_instance_id(level=level)
-            new_network_operation.__name__=f.__name__
-            new_network_operation.__doc__=f.__doc__
+            new_network_operation.__name__ = f.__name__
+            new_network_operation.__doc__ = f.__doc__
             new_network_operation.__dict__.update(f.__dict__)
             return new_network_operation
-    if len(args)==1 and callable(args[0]):
+    if len(args) == 1 and callable(args[0]):
         # We're in case (1), the user has written:
         # @network_operation
         # def f():
@@ -713,16 +713,16 @@ def network_operation(*args, **kwds):
         # called with or without names, so we check both the variable length
         # argument list *args, and the keyword dictionary **kwds, falling
         # back on the default values if nothing is given.
-        clk=None
-        when='end'
+        clk = None
+        when = 'end'
         for arg in args:
             if isinstance(arg, Clock):
-                clk=arg
+                clk = arg
             elif isinstance(arg, str):
-                when=arg
+                when = arg
         for key, val in kwds.iteritems():
-            if key=='clock': clk=val
-            if key=='when': when=val
+            if key == 'clock': clk = val
+            if key == 'when': when = val
         return do_network_operation(clock=clk, when=when)
     #raise TypeError, "Decorator must be used as @network_operation or @network_operation(clock)"
 
@@ -772,11 +772,11 @@ class MagicNetwork(Network):
         Set verbose=False to turn off comments.
         The level variable contains the location of the namespace.
         '''
-        (groups, groupnames)=magic.find_instances(NeuronGroup)
-        groups=[g for g in groups if g._owner is g]
-        groupnames=[gn for g, gn in zip(groups, groupnames) if g._owner is g]
-        (connections, connectionnames)=magic.find_instances(Connection)
-        (operations, operationnames)=magic.find_instances(NetworkOperation)
+        (groups, groupnames) = magic.find_instances(NeuronGroup)
+        groups = [g for g in groups if g._owner is g]
+        groupnames = [gn for g, gn in zip(groups, groupnames) if g._owner is g]
+        (connections, connectionnames) = magic.find_instances(Connection)
+        (operations, operationnames) = magic.find_instances(NetworkOperation)
         if verbose:
             print "[MagicNetwork] Groups:", groupnames
             print "[MagicNetwork] Connections:", connectionnames
@@ -785,7 +785,7 @@ class MagicNetwork(Network):
         Network.__init__(self, list(set(groups)), list(set(connections)), list(set(operations)))
 
 
-def run(duration, threads=1, report=None, report_period=10*second):
+def run(duration, threads=1, report=None, report_period=10 * second):
     '''
     Run a network created from any suitable objects that can be found
     
@@ -846,7 +846,7 @@ def stop():
     Globally stops any running network, this is reset the next time a network is run
     '''
     global globally_stopped
-    globally_stopped=True
+    globally_stopped = True
 
 def clear(erase=True):
     '''
@@ -859,8 +859,8 @@ def clear(erase=True):
     to objects in any given session, stopping the data and memory from being freed
     up.  See also :func:`forget`.
     '''
-    net=MagicNetwork(level=2)
-    for o in net.groups+net.connections+net.operations:
+    net = MagicNetwork(level=2)
+    for o in net.groups + net.connections + net.operations:
         o.set_instance_id(-1)
         if erase:
             for k, v in o.__dict__.iteritems():
@@ -876,7 +876,7 @@ def forget(*objs):
     '''
     for obj in objs:
         if isinstance(obj, (NeuronGroup, Connection, NetworkOperation)):
-            obj._forgotten_instance_id=obj.get_instance_id()
+            obj._forgotten_instance_id = obj.get_instance_id()
             obj.set_instance_id(-1)
         elif isSequenceType(obj):
             for o in obj:

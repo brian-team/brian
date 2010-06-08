@@ -39,17 +39,17 @@ Logging information for Brian
 import logging
 import sys
 
-__all__=[ 'log_warn', 'log_info', 'log_debug',
+__all__ = [ 'log_warn', 'log_info', 'log_debug',
            'log_level_error', 'log_level_warn', 'log_level_info', 'log_level_debug' ]
 
-console=logging.StreamHandler(sys.stderr)
-formatter=logging.Formatter('%(name)-18s: %(levelname)-8s %(message)s')
+console = logging.StreamHandler(sys.stderr)
+formatter = logging.Formatter('%(name)-18s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('brian').addHandler(console)
 
 #brian_loggers = {}
 
-get_log=logging.getLogger
+get_log = logging.getLogger
 #def get_log(logname):
 #    if logname in brian_loggers:
 #        return brian_loggers[logname]
@@ -87,7 +87,7 @@ def log_level_debug():
     '''
     logging.getLogger('brian').setLevel(logging.DEBUG)
 
-if __name__=='__main__':
+if __name__ == '__main__':
     #log_level_info()
     log_warn('brian.fish', 'Warning')
     log_warn('brian.monkey', 'Ook')

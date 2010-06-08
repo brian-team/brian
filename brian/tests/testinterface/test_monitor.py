@@ -4,9 +4,9 @@ from brian.utils.approximatecomparisons import is_approx_equal, is_within_absolu
 try:
     from brian.experimental.cuda.gpu_modelfitting import *
     import pycuda.autoinit as autoinit
-    use_gpu=True
+    use_gpu = True
 except ImportError:
-    use_gpu=False
+    use_gpu = False
 
 def test_spikemonitor():
     '''
@@ -116,48 +116,48 @@ def test_spikemonitor():
 
     # test that SpikeMonitor retrieves the spikes generator by SpikeGeneratorGroup
 
-    spikes=[(0, 3*ms), (1, 4*ms), (0, 7*ms)]
+    spikes = [(0, 3 * ms), (1, 4 * ms), (0, 7 * ms)]
 
-    G=SpikeGeneratorGroup(2, spikes, clock=defaultclock)
-    M=SpikeMonitor(G)
-    net=Network(G, M)
-    net.run(10*ms)
+    G = SpikeGeneratorGroup(2, spikes, clock=defaultclock)
+    M = SpikeMonitor(G)
+    net = Network(G, M)
+    net.run(10 * ms)
 
-    assert (M.nspikes==3)
+    assert (M.nspikes == 3)
     for (mi, mt), (i, t) in zip(M.spikes, spikes):
-        assert (mi==i)
+        assert (mi == i)
         assert (is_approx_equal(mt, t))
 
     # test that SpikeMonitor function calling usage does what you'd expect    
 
-    f_spikes=[]
+    f_spikes = []
 
     def f(spikes):
         if len(spikes):
             f_spikes.extend(spikes)
 
-    G=SpikeGeneratorGroup(2, spikes, clock=defaultclock)
-    M=SpikeMonitor(G, function=f)
-    net=Network(G, M)
+    G = SpikeGeneratorGroup(2, spikes, clock=defaultclock)
+    M = SpikeMonitor(G, function=f)
+    net = Network(G, M)
     reinit_default_clock()
-    net.run(10*ms)
-    assert (f_spikes==[0, 1, 0])
+    net.run(10 * ms)
+    assert (f_spikes == [0, 1, 0])
 
     # test interface for StateMonitor object
 
-    dV='dV/dt = 0*Hz : 1.'
-    G=NeuronGroup(3, model=dV, reset=0., threshold=10.)
+    dV = 'dV/dt = 0*Hz : 1.'
+    G = NeuronGroup(3, model=dV, reset=0., threshold=10.)
     @network_operation(when='start')
     def f(clock):
-        if clock.t>=1*ms:
-            G.V=[1., 2., 3.]
-    M1=StateMonitor(G, 'V')
-    M2=StateMonitor(G, 'V', record=0)
-    M3=StateMonitor(G, 'V', record=[0, 1])
-    M4=StateMonitor(G, 'V', record=True)
+        if clock.t >= 1 * ms:
+            G.V = [1., 2., 3.]
+    M1 = StateMonitor(G, 'V')
+    M2 = StateMonitor(G, 'V', record=0)
+    M3 = StateMonitor(G, 'V', record=[0, 1])
+    M4 = StateMonitor(G, 'V', record=True)
     reinit_default_clock()
-    net=Network(G, f, M1, M2, M3, M4)
-    net.run(2*ms)
+    net = Network(G, f, M1, M2, M3, M4)
+    net.run(2 * ms)
     assert (is_within_absolute_tolerance(M2[0][0], 0.))
     assert (is_within_absolute_tolerance(M2[0][-1], 1.))
     assert (is_within_absolute_tolerance(M3[1][0], 0.))
@@ -169,34 +169,34 @@ def test_spikemonitor():
     assert_raises(IndexError, M3.__getitem__, 2)
     assert_raises(IndexError, M4.__getitem__, 3)
     for M in [M3, M4]:
-        assert (is_within_absolute_tolerance(float(max(abs(M.times-M2.times))), float(0*ms)))
-        assert (is_within_absolute_tolerance(float(max(abs(M.times_-M2.times_))), 0.))
-    assert (is_within_absolute_tolerance(float(M2.times[0]), float(0*ms)))
-    d=diff(M2.times)
+        assert (is_within_absolute_tolerance(float(max(abs(M.times - M2.times))), float(0 * ms)))
+        assert (is_within_absolute_tolerance(float(max(abs(M.times_ - M2.times_))), 0.))
+    assert (is_within_absolute_tolerance(float(M2.times[0]), float(0 * ms)))
+    d = diff(M2.times)
     assert (is_within_absolute_tolerance(max(d), min(d)))
     assert (is_within_absolute_tolerance(float(max(d)), float(get_default_clock().dt)))
     # construct unbiased estimator from variances of recorded arrays
-    v=qarray([ var(M4[0]), var(M4[1]), var(M4[2]) ])*float(len(M4[0]))/float(len(M4[0])-1)
-    m=qarray([0.5, 1.0, 1.5])
-    assert (is_within_absolute_tolerance(abs(max(M1.mean-m)), 0.))
-    assert (is_within_absolute_tolerance(abs(max(M1.var-v)), 0.))
-    assert (is_within_absolute_tolerance(abs(max(M1.std-v**0.5)), 0.))
+    v = qarray([ var(M4[0]), var(M4[1]), var(M4[2]) ]) * float(len(M4[0])) / float(len(M4[0]) - 1)
+    m = qarray([0.5, 1.0, 1.5])
+    assert (is_within_absolute_tolerance(abs(max(M1.mean - m)), 0.))
+    assert (is_within_absolute_tolerance(abs(max(M1.var - v)), 0.))
+    assert (is_within_absolute_tolerance(abs(max(M1.std - v ** 0.5)), 0.))
 
     # test when, timestep, clock for StateMonitor
-    c=Clock(dt=0.1*ms)
-    cslow=Clock(dt=0.2*ms)
-    dV='dV/dt = 0*Hz : 1.'
-    G=NeuronGroup(1, model=dV, reset=0., threshold=1., clock=c)
+    c = Clock(dt=0.1 * ms)
+    cslow = Clock(dt=0.2 * ms)
+    dV = 'dV/dt = 0*Hz : 1.'
+    G = NeuronGroup(1, model=dV, reset=0., threshold=1., clock=c)
     @network_operation(when='start', clock=c)
     def f():
-        G.V=2.
-    M1=StateMonitor(G, 'V', record=True, clock=cslow)
-    M2=StateMonitor(G, 'V', record=True, timestep=2, clock=c)
-    M3=StateMonitor(G, 'V', record=True, when='before_groups', clock=c)
-    net=Network(G, f, M1, M2, M3, M4)
-    net.run(2*ms)
-    assert (2*len(M1[0])==len(M3[0]))
-    assert (len(M1[0])==len(M2[0]))
+        G.V = 2.
+    M1 = StateMonitor(G, 'V', record=True, clock=cslow)
+    M2 = StateMonitor(G, 'V', record=True, timestep=2, clock=c)
+    M3 = StateMonitor(G, 'V', record=True, when='before_groups', clock=c)
+    net = Network(G, f, M1, M2, M3, M4)
+    net.run(2 * ms)
+    assert (2 * len(M1[0]) == len(M3[0]))
+    assert (len(M1[0]) == len(M2[0]))
     for i in range(len(M1[0])):
         assert (is_within_absolute_tolerance(M1[0][i], M2[0][i]))
         assert (is_within_absolute_tolerance(M1[0][i], 0.))
@@ -211,32 +211,32 @@ def test_coincidencecounter():
     the total number of coincidences with prediction.
     """
 
-    eqs="""
+    eqs = """
     dV/dt = (-V+R*I)/tau : 1
     I : 1
     R : 1
     tau : second
     """
-    reset=0
-    threshold=1
+    reset = 0
+    threshold = 1
 
-    duration=500*ms
-    input=1.2+.2*randn(int(duration/defaultclock._dt))
-    delta=4*ms
-    n=10
+    duration = 500 * ms
+    input = 1.2 + .2 * randn(int(duration / defaultclock._dt))
+    delta = 4 * ms
+    n = 10
 
     def get_data(n):
         # Generates data from an IF neuron
-        group=NeuronGroup(N=1, model=eqs, reset=reset, threshold=threshold,
-                            method='Euler', refractory=3*delta)
-        group.I=TimedArray(input, start=0*second, dt=defaultclock.dt)
-        group.R=1.0
-        group.tau=20*ms
-        M=SpikeMonitor(group)
-        stM=StateMonitor(group, 'V', record=True)
-        net=Network(group, M, stM)
+        group = NeuronGroup(N=1, model=eqs, reset=reset, threshold=threshold,
+                            method='Euler', refractory=3 * delta)
+        group.I = TimedArray(input, start=0 * second, dt=defaultclock.dt)
+        group.R = 1.0
+        group.tau = 20 * ms
+        M = SpikeMonitor(group)
+        stM = StateMonitor(group, 'V', record=True)
+        net = Network(group, M, stM)
         net.run(duration)
-        data=M.spikes
+        data = M.spikes
 #        train0 = M.spiketimes[0]
         reinit_default_clock()
 
@@ -248,40 +248,40 @@ def test_coincidencecounter():
 
         return data, stM.values#, trains
 
-    data, data_voltage=get_data(n=n)
-    train0=[t for i, t in data]
+    data, data_voltage = get_data(n=n)
+    train0 = [t for i, t in data]
 
-    group=NeuronGroup(n, eqs, reset=reset, threshold=threshold,
+    group = NeuronGroup(n, eqs, reset=reset, threshold=threshold,
                         method='Euler')
-    group.I=TimedArray(input, start=0*second, dt=defaultclock.dt)
-    group.R=1.0*ones(n)
-    group.tau=20*ms*(1+.1*(2*rand(n)-1))
+    group.I = TimedArray(input, start=0 * second, dt=defaultclock.dt)
+    group.R = 1.0 * ones(n)
+    group.tau = 20 * ms * (1 + .1 * (2 * rand(n) - 1))
 
-    cc=CoincidenceCounter(source=group, data=([-1*second]+train0+[duration+1*second]), delta=delta)
-    sm=SpikeMonitor(group)
-    statem=StateMonitor(group, 'V', record=True)
-    net=Network(group, cc, sm, statem)
+    cc = CoincidenceCounter(source=group, data=([-1 * second] + train0 + [duration + 1 * second]), delta=delta)
+    sm = SpikeMonitor(group)
+    statem = StateMonitor(group, 'V', record=True)
+    net = Network(group, cc, sm, statem)
     net.run(duration)
     reinit_default_clock()
 
-    cpu_voltage=statem.values
+    cpu_voltage = statem.values
 
-    online_coincidences=cc.coincidences
-    cpu_spike_count=array([len(sm[i]) for i in range(n)])
-    offline_coincidences=array([gamma_factor(sm[i], train0, delta=delta, normalize=False, dt=defaultclock.dt) for i in range(n)])
+    online_coincidences = cc.coincidences
+    cpu_spike_count = array([len(sm[i]) for i in range(n)])
+    offline_coincidences = array([gamma_factor(sm[i], train0, delta=delta, normalize=False, dt=defaultclock.dt) for i in range(n)])
 
     if use_gpu:
         # Compute gamma factor with GPU
-        inp=array(input)
-        I_offset=zeros(n, dtype=int)
+        inp = array(input)
+        I_offset = zeros(n, dtype=int)
         #spiketimes = array(hstack(([-1*second],train0,[data[-1][1]+1*second])))
-        spiketimes=array(hstack(([-1*second], train0, [duration+1*second])))
-        spiketimes_offset=zeros(n, dtype=int)
-        spikedelays=zeros(n)
-        cd=CoincidenceCounter(source=group, data=data, delta=delta)
-        group.V=0.0
+        spiketimes = array(hstack(([-1 * second], train0, [duration + 1 * second])))
+        spiketimes_offset = zeros(n, dtype=int)
+        spikedelays = zeros(n)
+        cd = CoincidenceCounter(source=group, data=data, delta=delta)
+        group.V = 0.0
 
-        mf=GPUModelFitting(group, Equations(eqs),
+        mf = GPUModelFitting(group, Equations(eqs),
                              inp, I_offset, spiketimes, spiketimes_offset,
                              spikedelays, delta)
 
@@ -322,33 +322,33 @@ def test_coincidencecounter():
     #    gpu_voltage = array(allV)
 
 
-        cc=mf.coincidence_count
-        gpu_spike_count=mf.spike_count
-        cd._model_length=gpu_spike_count
-        cd._coincidences=cc
-        gpu_coincidences=cc
+        cc = mf.coincidence_count
+        gpu_spike_count = mf.spike_count
+        cd._model_length = gpu_spike_count
+        cd._coincidences = cc
+        gpu_coincidences = cc
 
     print "Spike count"
     print "Data", len(data)
     print "CPU", cpu_spike_count
     if use_gpu:
         print "GPU", gpu_spike_count
-        print "max error : %.1f"%max(abs(cpu_spike_count-gpu_spike_count))
+        print "max error : %.1f" % max(abs(cpu_spike_count - gpu_spike_count))
         print
     print "Offline"
     print offline_coincidences
     print
     print "Online"
     print online_coincidences
-    print "max error : %.6f"%max(abs(online_coincidences-offline_coincidences))
+    print "max error : %.6f" % max(abs(online_coincidences - offline_coincidences))
     if use_gpu:
         print
         print "GPU"
         print gpu_coincidences
-        print "max error : %.6f"%max(abs(gpu_coincidences-offline_coincidences))
+        print "max error : %.6f" % max(abs(gpu_coincidences - offline_coincidences))
 
-        bad_neuron=nonzero(abs(gpu_coincidences-offline_coincidences)>1e-10)[0]
-        if len(bad_neuron)>0:
+        bad_neuron = nonzero(abs(gpu_coincidences - offline_coincidences) > 1e-10)[0]
+        if len(bad_neuron) > 0:
             print "Bad neuron", bad_neuron, group.tau[bad_neuron[0]]
     print
     print
@@ -358,28 +358,28 @@ def test_coincidencecounter():
 #    plot(linspace(0,duration/second,len(cpu_voltage[0])), cpu_voltage[0], 'b')
 #    plot(linspace(0,duration/second,len(gpu_voltage[:,0])), gpu_voltage[:,0], 'g')
 #    show()
-    times=linspace(0, duration/second, len(all_pst))
+    times = linspace(0, duration / second, len(all_pst))
 
     figure()
 
-    plot(times, array(all_pst)*defaultclock.dt)
-    plot(times, array(all_nst)*defaultclock.dt)
+    plot(times, array(all_pst) * defaultclock.dt)
+    plot(times, array(all_nst) * defaultclock.dt)
     plot(train0, train0, 'o')
     plot(allspike, allspike, 'x')
     plot(allcoinc, allcoinc, '+')
-    plot(times, array(all_nsa)*times, '--')
-    plot(times, array(all_lsa)*times, '-.')
-    predicted_spikes=allspike
-    target_spikes=train0+[duration+1*second]
-    i=0
-    truecoinc=[]
+    plot(times, array(all_nsa) * times, '--')
+    plot(times, array(all_lsa) * times, '-.')
+    predicted_spikes = allspike
+    target_spikes = train0 + [duration + 1 * second]
+    i = 0
+    truecoinc = []
     for pred_t in predicted_spikes:
-         while target_spikes[i]<=pred_t+delta-1e-10*second:
-             if abs(target_spikes[i]-pred_t)<=delta+1e-10*second:
+         while target_spikes[i] <= pred_t + delta - 1e-10 * second:
+             if abs(target_spikes[i] - pred_t) <= delta + 1e-10 * second:
                  truecoinc.append((pred_t, target_spikes[i]))
-                 i+=1
+                 i += 1
                  break
-             i+=1
+             i += 1
     print 'Truecoinc:', len(truecoinc)
     for t1, t2 in truecoinc:
         plot([t1, t2], [t1, t2], ':', color=(0.5, 0, 0), lw=3)
@@ -407,6 +407,6 @@ def test_coincidencecounter():
 #    raster_plot(M)
 #    show()
 
-if __name__=='__main__':
+if __name__ == '__main__':
 #    test_spikemonitor()
     test_coincidencecounter()

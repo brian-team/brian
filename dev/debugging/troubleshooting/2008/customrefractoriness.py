@@ -1,6 +1,6 @@
 from brian import *
 
-__all__=['SimpleCustomRefractoriness', 'CustomRefractoriness']
+__all__ = ['SimpleCustomRefractoriness', 'CustomRefractoriness']
 
 
 class SimpleCustomRefractoriness(Refractoriness):
@@ -35,13 +35,13 @@ class SimpleCustomRefractoriness(Refractoriness):
     '''
 
     @check_units(period=second)
-    def __init__(self, resetfun, period=5*msecond, state=0):
-        self.period=period
-        self.resetfun=resetfun
-        self.state=state
-        self._periods={} # a dictionary mapping group IDs to periods
-        self.statevectors={}
-        self.lastresetvalues={}
+    def __init__(self, resetfun, period=5 * msecond, state=0):
+        self.period = period
+        self.resetfun = resetfun
+        self.state = state
+        self._periods = {} # a dictionary mapping group IDs to periods
+        self.statevectors = {}
+        self.lastresetvalues = {}
 
     def __call__(self, P):
         '''
@@ -50,26 +50,26 @@ class SimpleCustomRefractoriness(Refractoriness):
         # if we haven't computed the integer period for this group yet.
         # do so now
         if id(P) in self._periods:
-            period=self._periods[id(P)]
+            period = self._periods[id(P)]
         else:
-            period=int(self.period/P.clock.dt)+1
-            self._periods[id(P)]=period
-        V=self.statevectors.get(id(P), None)
+            period = int(self.period / P.clock.dt) + 1
+            self._periods[id(P)] = period
+        V = self.statevectors.get(id(P), None)
         if V is None:
-            V=P.state_(self.state)
-            self.statevectors[id(P)]=V
-        LRV=self.lastresetvalues.get(id(P), None)
+            V = P.state_(self.state)
+            self.statevectors[id(P)] = V
+        LRV = self.lastresetvalues.get(id(P), None)
         if LRV is None:
-            LRV=zeros(len(V))
-            self.lastresetvalues[id(P)]=LRV
-        lastspikes=P.LS.lastspikes()
+            LRV = zeros(len(V))
+            self.lastresetvalues[id(P)] = LRV
+        lastspikes = P.LS.lastspikes()
         self.resetfun(P, lastspikes)             # call custom reset function 
-        LRV[lastspikes]=V[lastspikes]         # store a copy of the custom resetted values
-        clampedindices=P.LS[0:period]
-        V[clampedindices]=LRV[clampedindices] # clamp at custom resetted values
+        LRV[lastspikes] = V[lastspikes]         # store a copy of the custom resetted values
+        clampedindices = P.LS[0:period]
+        V[clampedindices] = LRV[clampedindices] # clamp at custom resetted values
 
     def __repr__(self):
-        return 'Custom refractory period, '+str(self.period)
+        return 'Custom refractory period, ' + str(self.period)
 
 
 class CustomRefractoriness(Refractoriness):
@@ -96,13 +96,13 @@ class CustomRefractoriness(Refractoriness):
     '''
 
     @check_units(period=second)
-    def __init__(self, resetfun, period=5*msecond, refracfunc=None):
-        self.period=period
-        self.resetfun=resetfun
+    def __init__(self, resetfun, period=5 * msecond, refracfunc=None):
+        self.period = period
+        self.resetfun = resetfun
         if refracfunc is None:
-            refracfunc=resetfun
-        self.refracfunc=refracfunc
-        self._periods={} # a dictionary mapping group IDs to periods
+            refracfunc = resetfun
+        self.refracfunc = refracfunc
+        self._periods = {} # a dictionary mapping group IDs to periods
 
     def __call__(self, P):
         '''
@@ -111,28 +111,28 @@ class CustomRefractoriness(Refractoriness):
         # if we haven't computed the integer period for this group yet.
         # do so now
         if id(P) in self._periods:
-            period=self._periods[id(P)]
+            period = self._periods[id(P)]
         else:
-            period=int(self.period/P.clock.dt)+1
-            self._periods[id(P)]=period
-        lastspikes=P.LS.lastspikes()
+            period = int(self.period / P.clock.dt) + 1
+            self._periods[id(P)] = period
+        lastspikes = P.LS.lastspikes()
         self.resetfun(P, lastspikes)             # call custom reset function
-        clampedindices=P.LS[0:period]
+        clampedindices = P.LS[0:period]
         self.refracfunc(P, clampedindices)
 
     def __repr__(self):
-        return 'Custom refractory period, '+str(self.period)
+        return 'Custom refractory period, ' + str(self.period)
 
-if __name__=='__main__':
+if __name__ == '__main__':
     def f(P, spikes):
-        P.V[spikes]=rand(len(spikes))*0.5
-    R=SimpleCustomRefractoriness(f)
-    G=NeuronGroup(5,
+        P.V[spikes] = rand(len(spikes)) * 0.5
+    R = SimpleCustomRefractoriness(f)
+    G = NeuronGroup(5,
             model='''
             dV/dt = -(V-1.1)/(5*ms) : 1
             ''', reset=R, threshold=1)
-    M=StateMonitor(G, 'V', record=True)
-    run(1*second)
+    M = StateMonitor(G, 'V', record=True)
+    run(1 * second)
     for i in range(5):
         plot(M.times, M[i])
     show()

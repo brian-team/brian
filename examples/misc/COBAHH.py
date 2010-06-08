@@ -22,26 +22,26 @@ R. Brette - Dec 2007
 from brian import *
 
 # Parameters
-area=20000*umetre**2
-Cm=(1*ufarad*cm**-2)*area
-gl=(5e-5*siemens*cm**-2)*area
-El=-60*mV
-EK=-90*mV
-ENa=50*mV
-g_na=(100*msiemens*cm**-2)*area
-g_kd=(30*msiemens*cm**-2)*area
-VT=-63*mV
+area = 20000 * umetre ** 2
+Cm = (1 * ufarad * cm ** -2) * area
+gl = (5e-5 * siemens * cm ** -2) * area
+El = -60 * mV
+EK = -90 * mV
+ENa = 50 * mV
+g_na = (100 * msiemens * cm ** -2) * area
+g_kd = (30 * msiemens * cm ** -2) * area
+VT = -63 * mV
 # Time constants
-taue=5*ms
-taui=10*ms
+taue = 5 * ms
+taui = 10 * ms
 # Reversal potentials
-Ee=0*mV
-Ei=-80*mV
-we=6*nS # excitatory synaptic weight (voltage)
-wi=67*nS # inhibitory synaptic weight
+Ee = 0 * mV
+Ei = -80 * mV
+we = 6 * nS # excitatory synaptic weight (voltage)
+wi = 67 * nS # inhibitory synaptic weight
 
 # The model
-eqs=Equations('''
+eqs = Equations('''
 dv/dt = (gl*(El-v)+ge*(Ee-v)+gi*(Ei-v)-\
     g_na*(m*m*m)*h*(v-ENa)-\
     g_kd*(n*n*n*n)*(v-EK))/Cm : volt 
@@ -61,23 +61,23 @@ alphan = 0.032*(mV**-1)*(15*mV-v+VT)/ \
 betan = .5*exp((10*mV-v+VT)/(40*mV))/ms : Hz
 ''')
 
-P=NeuronGroup(4000, model=eqs,
-    threshold=EmpiricalThreshold(threshold=-20*mV,
-                                 refractory=3*ms),
+P = NeuronGroup(4000, model=eqs,
+    threshold=EmpiricalThreshold(threshold= -20 * mV,
+                                 refractory=3 * ms),
     implicit=True, freeze=True)
-Pe=P.subgroup(3200)
-Pi=P.subgroup(800)
-Ce=Connection(Pe, P, 'ge', weight=we, sparseness=0.02)
-Ci=Connection(Pi, P, 'gi', weight=wi, sparseness=0.02)
+Pe = P.subgroup(3200)
+Pi = P.subgroup(800)
+Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02)
+Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02)
 # Initialization
-P.v=El+(randn(len(P))*5-5)*mV
-P.ge=(randn(len(P))*1.5+4)*10.*nS
-P.gi=(randn(len(P))*12+20)*10.*nS
+P.v = El + (randn(len(P)) * 5 - 5) * mV
+P.ge = (randn(len(P)) * 1.5 + 4) * 10. * nS
+P.gi = (randn(len(P)) * 12 + 20) * 10. * nS
 
 # Record the number of spikes and a few traces
-trace=StateMonitor(P, 'v', record=[1, 10, 100])
+trace = StateMonitor(P, 'v', record=[1, 10, 100])
 
-run(1*second)
+run(1 * second)
 
 plot(trace[1])
 plot(trace[10])

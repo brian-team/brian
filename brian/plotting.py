@@ -41,15 +41,15 @@ Functions:
 * ``hist_plot(monitor,options...)``
 """
 
-__docformat__="restructuredtext en"
+__docformat__ = "restructuredtext en"
 
-__all__=['plot', 'show', 'figure', 'xlabel', 'ylabel', 'title', 'axis', 'raster_plot', 'hist_plot']
+__all__ = ['plot', 'show', 'figure', 'xlabel', 'ylabel', 'title', 'axis', 'raster_plot', 'hist_plot']
 
 try:
     from pylab import plot, show, figure, xlabel, ylabel, title, axis
     import pylab, matplotlib
 except:
-    plot, show, figure, xlabel, ylabel, title, axis=(None,)*7
+    plot, show, figure, xlabel, ylabel, title, axis = (None,)*7
 from stdunits import *
 import magic
 from connection import *
@@ -70,7 +70,7 @@ def _take_options(myopts, givenopts):
     """
     for k in myopts.keys():
         if k in givenopts:
-            myopts[k]=givenopts.pop(k)
+            myopts[k] = givenopts.pop(k)
 
 
 def raster_plot(*monitors, **plotoptions):
@@ -130,72 +130,72 @@ def raster_plot(*monitors, **plotoptions):
         
     You may need to experiment, try WXAgg, GTKAgg, QTAgg, TkAgg.
     """
-    if len(monitors)==0:
-        (monitors, monitornames)=magic.find_instances(SpikeMonitor)
+    if len(monitors) == 0:
+        (monitors, monitornames) = magic.find_instances(SpikeMonitor)
     if len(monitors):
         # OPTIONS
         # Defaults
-        myopts={"title":"", "xlabel":"Time (ms)", "showplot":False, "showgrouplines":False, \
+        myopts = {"title":"", "xlabel":"Time (ms)", "showplot":False, "showgrouplines":False, \
                   "spacebetweengroups":0.0, "grouplinecol":"k", 'newfigure':False,
                   'refresh':None, 'showlast':None, 'redraw':True}
-        if len(monitors)==1:
-            myopts["ylabel"]='Neuron number'
+        if len(monitors) == 1:
+            myopts["ylabel"] = 'Neuron number'
         else:
-            myopts["ylabel"]='Group number'
+            myopts["ylabel"] = 'Group number'
         # User options
         _take_options(myopts, plotoptions)
         # PLOTTING ROUTINE
-        spacebetween=myopts['spacebetweengroups']
+        spacebetween = myopts['spacebetweengroups']
         class SecondTupleArray(object):
             def __init__(self, obj):
-                self.obj=obj
+                self.obj = obj
             def __getitem__(self, i):
                 return float(self.obj[i][1])
             def __len__(self):
                 return len(self.obj)
         def get_plot_coords(tmin=None, tmax=None):
-            allsn=[]
-            allst=[]
+            allsn = []
+            allst = []
             for i, m in enumerate(monitors):
-                mspikes=m.spikes
+                mspikes = m.spikes
                 if tmin is not None and tmax is not None:
-                    x=SecondTupleArray(mspikes)
-                    imin=bisect.bisect_left(x, tmin)
-                    imax=bisect.bisect_right(x, tmax)
-                    mspikes=mspikes[imin:imax]
+                    x = SecondTupleArray(mspikes)
+                    imin = bisect.bisect_left(x, tmin)
+                    imax = bisect.bisect_right(x, tmax)
+                    mspikes = mspikes[imin:imax]
                 if len(mspikes):
-                    sn, st=array(mspikes).T
+                    sn, st = array(mspikes).T
                 else:
-                    sn, st=array([]), array([])
-                st/=ms
-                if len(monitors)==1:
-                    allsn=[sn]
+                    sn, st = array([]), array([])
+                st /= ms
+                if len(monitors) == 1:
+                    allsn = [sn]
                 else:
-                    allsn.append(i+((1.-spacebetween)/float(len(m.source)))*sn)
+                    allsn.append(i + ((1. - spacebetween) / float(len(m.source))) * sn)
                 allst.append(st)
-            sn=hstack(allsn)
-            st=hstack(allst)
-            if len(monitors)==1:
-                nmax=len(monitors[0].source)
+            sn = hstack(allsn)
+            st = hstack(allst)
+            if len(monitors) == 1:
+                nmax = len(monitors[0].source)
             else:
-                nmax=len(monitors)
+                nmax = len(monitors)
             return st, sn, nmax
-        st, sn, nmax=get_plot_coords()
+        st, sn, nmax = get_plot_coords()
         if myopts['newfigure']:
             pylab.figure()
         if myopts['refresh'] is None:
-            line,=pylab.plot(st, sn, '.', **plotoptions)
+            line, = pylab.plot(st, sn, '.', **plotoptions)
         else:
-            line,=pylab.plot([], [], '.', **plotoptions)
+            line, = pylab.plot([], [], '.', **plotoptions)
         if myopts['refresh'] is not None:
             pylab.axis(ymin=0, ymax=nmax)
             if myopts['showlast'] is not None:
-                pylab.axis(xmin=-myopts['showlast']/ms, xmax=0)
-        ax=pylab.gca()
+                pylab.axis(xmin= -myopts['showlast'] / ms, xmax=0)
+        ax = pylab.gca()
         if myopts['showgrouplines']:
             for i in range(len(monitors)):
                 pylab.axhline(i, color=myopts['grouplinecol'])
-                pylab.axhline(i+(1-spacebetween), color=myopts['grouplinecol'])
+                pylab.axhline(i + (1 - spacebetween), color=myopts['grouplinecol'])
         pylab.ylabel(myopts['ylabel'])
         pylab.xlabel(myopts['xlabel'])
         pylab.title(myopts["title"])
@@ -206,13 +206,13 @@ def raster_plot(*monitors, **plotoptions):
             def refresh_raster_plot(clk):
                 if matplotlib.is_interactive():
                     if myopts['showlast'] is None:
-                        st, sn, nmax=get_plot_coords()
+                        st, sn, nmax = get_plot_coords()
                         line.set_xdata(st)
                         line.set_ydata(sn)
                         ax.set_xlim(0, amax(st))
                     else:
-                        st, sn, nmax=get_plot_coords(clk._t-float(myopts['showlast']), clk._t)
-                        ax.set_xlim((clk.t-myopts['showlast'])/ms, clk.t/ms)
+                        st, sn, nmax = get_plot_coords(clk._t - float(myopts['showlast']), clk._t)
+                        ax.set_xlim((clk.t - myopts['showlast']) / ms, clk.t / ms)
                         line.set_xdata(array(st))
                         line.set_ydata(sn)
                     if myopts['redraw']:
@@ -256,21 +256,21 @@ def hist_plot(histmon=None, **plotoptions):
         title for the plot
     """
     if histmon is None:
-        (histmons, histmonnames)=magic.find_instances(HistogramMonitorBase)
-        if len(histmons)==0:
+        (histmons, histmonnames) = magic.find_instances(HistogramMonitorBase)
+        if len(histmons) == 0:
             raise TypeError, "No histogram monitors found."
-        elif len(histmons)>1:
+        elif len(histmons) > 1:
             log_info('brian.hist_plot', "Found more than one histogram monitor, using first one.")
-        histmon=histmons[0]
+        histmon = histmons[0]
     # OPTIONS
     # Defaults
-    myopts={"title":"", "xlabel":"Time (ms)", "ylabel":"Count", "showplot":False, 'newfigure':True }
+    myopts = {"title":"", "xlabel":"Time (ms)", "ylabel":"Count", "showplot":False, 'newfigure':True }
     # User options
     _take_options(myopts, plotoptions)
     # PLOTTING ROUTINE
     if myopts['newfigure']:
         pylab.figure()
-    pylab.bar(histmon.bins[:-1]/ms, histmon.count[:-1], (histmon.bins[1:]-histmon.bins[:-1])/ms, **plotoptions)
+    pylab.bar(histmon.bins[:-1] / ms, histmon.count[:-1], (histmon.bins[1:] - histmon.bins[:-1]) / ms, **plotoptions)
     pylab.ylabel(myopts['ylabel'])
     pylab.xlabel(myopts['xlabel'])
     pylab.title(myopts["title"])

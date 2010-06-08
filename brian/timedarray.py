@@ -9,7 +9,7 @@ try:
 except:
     warnings.warn("Couldn't import pylab.")
 
-__all__=['TimedArray', 'TimedArraySetter', 'set_group_var_by_array']
+__all__ = ['TimedArray', 'TimedArraySetter', 'set_group_var_by_array']
 
 
 class TimedArray(numpy.ndarray):
@@ -78,10 +78,10 @@ class TimedArray(numpy.ndarray):
         # when a new one is made from an old one, the times will be the
         # same.
         try:
-            self.times=orig.times
-            self.clock=orig.clock
-            self._t_init=orig._t_init
-            self._dt=orig._dt
+            self.times = orig.times
+            self.clock = orig.clock
+            self._t_init = orig._t_init
+            self._dt = orig._dt
         except AttributeError:
             pass
         return self
@@ -94,23 +94,23 @@ class TimedArray(numpy.ndarray):
         # as the __call__ method).
         if start is not None or dt is not None:
             if start is None:
-                start=0*second
+                start = 0 * second
             if clock is not None:
                 raise ValueError('Specify start and dt or block, but not both.')
-            clock=Clock(t=start, dt=dt)
+            clock = Clock(t=start, dt=dt)
         if times is not None and clock is not None:
             raise ValueError('Specify times or clock but not both.')
         if times is None and clock is None:
-            clock=guess_clock(clock)
-        self.clock=clock
+            clock = guess_clock(clock)
+        self.clock = clock
         if clock is not None:
-            self._t_init=int(clock._t/clock._dt)*clock._dt
-            self._dt=clock._dt
-            times=clock._t+numpy.arange(len(arr))*clock._dt
+            self._t_init = int(clock._t / clock._dt) * clock._dt
+            self._dt = clock._dt
+            times = clock._t + numpy.arange(len(arr)) * clock._dt
         else:
-            self._t_init=None
-            self._dt=None
-        self.times=times
+            self._t_init = None
+            self._dt = None
+        self.times = times
 
     def __getitem__(self, item):
         # __getitem__ can deal with all sorts of indexing, we consider the
@@ -123,30 +123,30 @@ class TimedArray(numpy.ndarray):
 
         # The values are the same as the numpy array version of __getitem__ in
         # all cases
-        x=numpy.ndarray.__getitem__(self, item)
+        x = numpy.ndarray.__getitem__(self, item)
         if isinstance(item, slice):
-            newtimes=self.times[item]
-            if self.clock is not None and len(newtimes)>1:
-                newdt=newtimes[1]-newtimes[0]
-                newclock=Clock(t=newtimes[0]*second, dt=newdt*second)
+            newtimes = self.times[item]
+            if self.clock is not None and len(newtimes) > 1:
+                newdt = newtimes[1] - newtimes[0]
+                newclock = Clock(t=newtimes[0] * second, dt=newdt * second)
                 return TimedArray(x, clock=newclock)
             else:
                 return TimedArray(x, self.times[item])
         if isinstance(item, int):
-            return TimedArray(x, self.times[item:item+1])
+            return TimedArray(x, self.times[item:item + 1])
         if isinstance(item, tuple):
-            item0=item[0]
-            times=self.times[item0]
-            if isinstance(item0, slice) and self.clock is not None and hasattr(times, '__len__') and len(times)>1:
-                newdt=times[1]-times[0]
-                newclock=Clock(t=times[0]*second, dt=newdt*second)
+            item0 = item[0]
+            times = self.times[item0]
+            if isinstance(item0, slice) and self.clock is not None and hasattr(times, '__len__') and len(times) > 1:
+                newdt = times[1] - times[0]
+                newclock = Clock(t=times[0] * second, dt=newdt * second)
                 return TimedArray(x, clock=newclock)
             if not isinstance(times, numpy.ndarray):
-                times=numpy.array([times])
+                times = numpy.array([times])
             return TimedArray(x, times)
-        times=self.times[item]
+        times = self.times[item]
         if not isinstance(times, numpy.ndarray):
-            times=numpy.array([times])
+            times = numpy.array([times])
         return TimedArray(x, times)
 
     def __getslice__(self, start, end):
@@ -155,9 +155,9 @@ class TimedArray(numpy.ndarray):
         return self.__getitem__(slice(start, end))
 
     def plot(self, *args, **kwds):
-        if self.size>self.times.size and len(self.shape)==2:
+        if self.size > self.times.size and len(self.shape) == 2:
             for i in xrange(self.shape[1]):
-                kwds['label']=str(i)
+                kwds['label'] = str(i)
                 self[:, i].plot(*args, **kwds)
         else:
             pylab.plot(self.times, self, *args, **kwds)
@@ -168,37 +168,37 @@ class TimedArray(numpy.ndarray):
             raise ValueError('Can only call timed arrays if they are based on a clock.')
         else:
             if isinstance(t, (list, tuple)):
-                t=numpy.array(t)
+                t = numpy.array(t)
             if isinstance(t, neurongroup.TArray):
                 # In this case, we know that t = ones(N)*t so we just use the first value
-                t=t[0]
+                t = t[0]
             elif isinstance(t, numpy.ndarray):
-                if len(self.shape)>2:
+                if len(self.shape) > 2:
                     raise ValueError('Calling TimedArray with array valued t only supported for 1D or 2D TimedArray.')
-                if len(self.shape)==2 and len(t)!=self.shape[1]:
+                if len(self.shape) == 2 and len(t) != self.shape[1]:
                     raise ValueError('Calling TimedArray with array valued t on 2D TimedArray requires len(t)=arr.shape[1]')
                 #t = numpy.array((t-self._t_init)/self._dt, dtype=int)
-                t=numpy.array(numpy.rint((t-self._t_init)/self._dt), dtype=int)
-                t[t<0]=0
-                t[t>=len(self.times)]=len(self.times)-1
-                if len(self.shape)==1:
+                t = numpy.array(numpy.rint((t - self._t_init) / self._dt), dtype=int)
+                t[t < 0] = 0
+                t[t >= len(self.times)] = len(self.times) - 1
+                if len(self.shape) == 1:
                     return numpy.asarray(self)[t]
                 return numpy.asarray(self)[t, numpy.arange(len(t))]
-            t=float(t)
-            ot=t
+            t = float(t)
+            ot = t
             #t = int((t-self._t_init)/self._dt)
-            t=int(numpy.rint((t-self._t_init)/self._dt))
+            t = int(numpy.rint((t - self._t_init) / self._dt))
 #            if t-tlast!=1:
 #                print 'int t:', t, tlast
 #                print 't:', repr(ot)
 #                print 't_init:', repr(self._t_init)
 #                print 't/dt:', repr((ot-self._t_init)/self._dt)
 #            tlast = t
-            if t<0: t=0
-            if t>=len(self.times): t=len(self.times)-1
+            if t < 0: t = 0
+            if t >= len(self.times): t = len(self.times) - 1
             return numpy.asarray(self)[t]
 
-tlast=0
+tlast = 0
 
 
 class TimedArraySetter(NetworkOperation):
@@ -236,15 +236,15 @@ class TimedArraySetter(NetworkOperation):
     '''
     def __init__(self, group, var, arr, times=None, clock=None, start=None, dt=None, when='start'):
         if clock is None:
-            self.clock=group.clock
+            self.clock = group.clock
         else:
-            self.clock=clock
-        self.when=when
-        self.group=group
-        self.var=var
+            self.clock = clock
+        self.when = when
+        self.group = group
+        self.var = var
         if not isinstance(arr, TimedArray):
-            arr=TimedArray(arr, times=times, clock=clock, start=start, dt=dt)
-        self.arr=arr
+            arr = TimedArray(arr, times=times, clock=clock, start=start, dt=dt)
+        self.arr = arr
         self.reinit()
 
     def __call__(self):
@@ -252,23 +252,23 @@ class TimedArraySetter(NetworkOperation):
             # in this case, the time intervals need not be fixed so we
             # have to step through the array until we find the appropriate
             # one
-            tcur=self.clock._t
+            tcur = self.clock._t
             while True:
-                if self._cur_i==len(self.arr.times)-1:
-                    self.group.state_(self.var)[:]=self.arr[self._cur_i]
+                if self._cur_i == len(self.arr.times) - 1:
+                    self.group.state_(self.var)[:] = self.arr[self._cur_i]
                     return
-                ti_now=self.arr.times[self._cur_i]
-                ti_next=self.arr.times[self._cur_i+1]
-                if ti_next>=tcur:
-                    self.group.state_(self.var)[:]=self.arr[self._cur_i]
+                ti_now = self.arr.times[self._cur_i]
+                ti_next = self.arr.times[self._cur_i + 1]
+                if ti_next >= tcur:
+                    self.group.state_(self.var)[:] = self.arr[self._cur_i]
                     return
-                self._cur_i+=1
+                self._cur_i += 1
         else:
-            self.group.state_(self.var)[:]=self.arr(self.clock._t)
+            self.group.state_(self.var)[:] = self.arr(self.clock._t)
 
     def reinit(self):
         if self.arr.clock is None:
-            self._cur_i=0
+            self._cur_i = 0
 
 def set_group_var_by_array(group, var, arr, times=None, clock=None, start=None, dt=None):
     '''
@@ -276,5 +276,5 @@ def set_group_var_by_array(group, var, arr, times=None, clock=None, start=None, 
     
     Creates a :class:`TimedArraySetter`, see that class for details.
     '''
-    array_setter=TimedArraySetter(group, var, arr, times=times, clock=clock, start=start, dt=dt)
+    array_setter = TimedArraySetter(group, var, arr, times=times, clock=clock, start=start, dt=dt)
     group._owner.contained_objects.append(array_setter)

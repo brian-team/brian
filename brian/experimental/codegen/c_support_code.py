@@ -1,4 +1,4 @@
-c_support_code='''
+c_support_code = '''
 double clip(double x, double low, double high)
 {
     if(x<low) return low;

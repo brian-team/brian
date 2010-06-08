@@ -36,7 +36,7 @@
 Brian
 """
 
-__docformat__="restructuredtext en"
+__docformat__ = "restructuredtext en"
 
 import warnings as _warnings
 from scipy import *
@@ -74,8 +74,8 @@ from timedarray import *
 from remotecontrol import *
 from tests.simpletest import *
 
-__version__='1.2.1dev'
-__release_date__='2010-05-06'
+__version__ = '1.2.1dev'
+__release_date__ = '2010-05-06'
 
 ### Define global preferences which are not defined anywhere else
 
@@ -157,11 +157,11 @@ set_global_preferences(usecstdp=False)
 # behaviour for magic functions accordingly
 import inspect as _inspect
 import os as _os
-_of=_inspect.getouterframes(_inspect.currentframe())
-if len(_of)>1 and _os.path.exists(_of[1][1]):
-    _magic_useframes=True
+_of = _inspect.getouterframes(_inspect.currentframe())
+if len(_of) > 1 and _os.path.exists(_of[1][1]):
+    _magic_useframes = True
 else:
-    _magic_useframes=False
+    _magic_useframes = False
 define_global_preference(
     'magic_useframes', str(_magic_useframes),
     desc="""
@@ -176,7 +176,7 @@ set_global_preferences(magic_useframes=_magic_useframes)
 
 ### Update documentation for global preferences
 import globalprefs as _gp
-_gp.__doc__+=_gp.globalprefdocs
+_gp.__doc__ += _gp.globalprefdocs
 
 try:
     import brian_global_config

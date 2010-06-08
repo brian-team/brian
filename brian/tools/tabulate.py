@@ -36,7 +36,7 @@
 Tabulation of numerical functions.
 '''
 
-__all__=['Tabulate', 'TabulateInterp']
+__all__ = ['Tabulate', 'TabulateInterp']
 
 from brian.units import get_unit, Quantity, is_dimensionless
 from brian.quantityarray import qarray, safeqarray
@@ -60,29 +60,29 @@ class Tabulate(object):
     not always when they are below xmin (it can give weird results).
     '''
     def __init__(self, f, xmin, xmax, n):
-        self.xmin=xmin
-        self.xmax=xmax
-        self.dx=(xmax-xmin)/float(n)
-        self.invdx=1/self.dx
-        self.unit=get_unit(f(xmin))
+        self.xmin = xmin
+        self.xmax = xmax
+        self.dx = (xmax - xmin) / float(n)
+        self.invdx = 1 / self.dx
+        self.unit = get_unit(f(xmin))
         # Tabulation at midpoints
-        x=xmin+(.5+arange(n))*self.dx
+        x = xmin + (.5 + arange(n)) * self.dx
         try:
-            self.f=f(x)
+            self.f = f(x)
         except:
             # If it fails we try passing the values one by one
-            self.f=zeros(n)*f(xmin) # for the unit
+            self.f = zeros(n) * f(xmin) # for the unit
             for i in xrange(n):
-                self.f[i]=f(x[i])
+                self.f[i] = f(x[i])
 
     def __call__(self, x):
         try: # possible problem if x is an array and an array is wanted
-            return self.f[array((array(x)-self.xmin)*self.invdx, dtype=int)]
+            return self.f[array((array(x) - self.xmin) * self.invdx, dtype=int)]
         except IndexError: # out of bounds
-            return NaN*self.unit
+            return NaN * self.unit
 
     def __repr__(self):
-        return 'Tabulated function with '+str(len(self.f))+' points'
+        return 'Tabulated function with ' + str(len(self.f)) + ' points'
 
 
 class TabulateInterp(object):
@@ -101,33 +101,33 @@ class TabulateInterp(object):
     not always when they are below xmin (it can give weird results).
     '''
     def __init__(self, f, xmin, xmax, n):
-        self.xmin=xmin
-        self.xmax=xmax
-        self.dx=(xmax-xmin)/float(n-1)
-        self.invdx=1/self.dx
+        self.xmin = xmin
+        self.xmax = xmax
+        self.dx = (xmax - xmin) / float(n - 1)
+        self.invdx = 1 / self.dx
         # Not at midpoints here
-        x=xmin+arange(n)*self.dx
-        self.unit=get_unit(f(xmin))
+        x = xmin + arange(n) * self.dx
+        self.unit = get_unit(f(xmin))
         try:
-            self.f=f(x)
+            self.f = f(x)
         except:
             # If it fails we try passing the values one by one
-            self.f=zeros(n)*f(xmin) # for the unit
+            self.f = zeros(n) * f(xmin) # for the unit
             for i in xrange(n):
-                self.f[i]=f(x[i])
-        self.f=array(self.f)
-        self.df=(self.f[range(1, n)]-self.f[range(n-1)])*float(self.invdx)
+                self.f[i] = f(x[i])
+        self.f = array(self.f)
+        self.df = (self.f[range(1, n)] - self.f[range(n - 1)]) * float(self.invdx)
 
     def __call__(self, x): # the units of x is not checked
-        y=array(x)-self.xmin
-        ind=array(y*self.invdx, dtype=int)
+        y = array(x) - self.xmin
+        ind = array(y * self.invdx, dtype=int)
         try:
             if is_dimensionless(x): # could be a problem if it is a Quantity with units=1
-                return self.f[ind]+self.df[ind]*(y-array(ind)*self.dx)
+                return self.f[ind] + self.df[ind] * (y - array(ind) * self.dx)
             else:
-                return safeqarray(self.f[ind]+self.df[ind]*(y-array(ind)*self.dx))*self.unit
+                return safeqarray(self.f[ind] + self.df[ind] * (y - array(ind) * self.dx)) * self.unit
         except IndexError: # out of bounds
-            return NaN*self.unit
+            return NaN * self.unit
 
     def __repr__(self):
-        return 'Tabulated function with '+str(len(self.f))+' points (interpolated)'
+        return 'Tabulated function with ' + str(len(self.f)) + ' points (interpolated)'

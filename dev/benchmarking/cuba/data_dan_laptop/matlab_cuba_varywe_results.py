@@ -1,5 +1,5 @@
-matlab_cuba=[]
-cur_result=[]
+matlab_cuba = []
+cur_result = []
 cur_result.append((4.532, 12789))
 cur_result.append((4.547, 13436))
 cur_result.append((4.562, 14370))
@@ -8,7 +8,7 @@ cur_result.append((4.563, 14667))
 cur_result.append((4.563, 12155))
 cur_result.append((4.579, 13731))
 matlab_cuba.append((1000, 4.55829, 13515.7, cur_result))
-cur_result=[]
+cur_result = []
 cur_result.append((4.609, 18324))
 cur_result.append((4.625, 18587))
 cur_result.append((4.64, 18563))
@@ -17,7 +17,7 @@ cur_result.append((4.641, 18806))
 cur_result.append((4.641, 17696))
 cur_result.append((4.656, 18252))
 matlab_cuba.append((1000, 4.63614, 18249.7, cur_result))
-cur_result=[]
+cur_result = []
 cur_result.append((4.609, 20156))
 cur_result.append((4.625, 19513))
 cur_result.append((4.672, 21783))
@@ -26,7 +26,7 @@ cur_result.append((4.687, 21224))
 cur_result.append((4.687, 23118))
 cur_result.append((4.687, 24035))
 matlab_cuba.append((1000, 4.66271, 21617.3, cur_result))
-cur_result=[]
+cur_result = []
 cur_result.append((4.609, 18235))
 cur_result.append((4.609, 22806))
 cur_result.append((4.64, 22725))

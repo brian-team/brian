@@ -8,7 +8,7 @@ import pyscr
 
 class MySaver(pyscr.Screensaver):
     #set up timer for tick() calls
-    TIMEBASE=1. # called every second
+    TIMEBASE = 1. # called every second
 
     def configure(self):
         #called to open the screensaver configuration
@@ -35,11 +35,11 @@ class MySaver(pyscr.Screensaver):
         self.dc.setFont("arial")
         #~ self.dc.setBgTransparent(True)
         self.dc.drawText((100, 100), "Brian is thinking...")
-        w, h=self.dc.getSize()
-        self.dc.drawRect((0, 0), (w-1, h-1))
+        w, h = self.dc.getSize()
+        self.dc.drawRect((0, 0), (w - 1, h - 1))
         self.dc.fillEllipse((50, 50), (60, 60))
         self.dc.endDrawing()
 
 #standard 'main' detection and startof screensaver
-if __name__=='__main__':
+if __name__ == '__main__':
     pyscr.main()

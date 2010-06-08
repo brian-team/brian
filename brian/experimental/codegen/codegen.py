@@ -3,7 +3,7 @@ from string import Template
 import re
 from rewriting import *
 
-__all__=['CodeGenerator']
+__all__ = ['CodeGenerator']
 
 
 class CodeGenerator(object):
@@ -124,21 +124,21 @@ class CodeGenerator(object):
             ]
     '''
     def __init__(self, sympy_rewrite=True):
-        self.sympy_rewrite=sympy_rewrite
+        self.sympy_rewrite = sympy_rewrite
 
     def single_statement(self, expr):
-        m=re.search(r'[^><=]=', expr)
+        m = re.search(r'[^><=]=', expr)
         if m:
-            return expr[:m.end()]+' '+self.single_expr(expr[m.end():])
+            return expr[:m.end()] + ' ' + self.single_expr(expr[m.end():])
         return expr
 
     def single_expr(self, expr):
         if self.sympy_rewrite is not False:
             if self.sympy_rewrite is True:
                 #rewriters = [floatify_numbers]
-                rewriters=[]
+                rewriters = []
             else:
-                rewriters=self.sympy_rewrite
+                rewriters = self.sympy_rewrite
             return sympy_rewrite(expr.strip(), rewriters)
         return expr.strip()
 
@@ -152,54 +152,54 @@ class CodeGenerator(object):
         return ''
 
     def generate(self, eqs, scheme):
-        code=self.initialisation(eqs)
-        code+=self.scheme(eqs, scheme)
-        code+=self.finalisation(eqs)
+        code = self.initialisation(eqs)
+        code += self.scheme(eqs, scheme)
+        code += self.finalisation(eqs)
         return code
 
     def scheme(self, eqs, scheme):
-        code=''
-        all_variables=eqs._eq_names+eqs._diffeq_names+eqs._alias.keys()+['t']
-        vartype=self.vartype()
+        code = ''
+        all_variables = eqs._eq_names + eqs._diffeq_names + eqs._alias.keys() + ['t']
+        vartype = self.vartype()
         for block_specifier, block_code in scheme:
             # for the moment, processing of block_specifier is very crude
-            if block_specifier==('foreachvar', 'all'):
-                vars_to_use=eqs._diffeq_names
-            elif block_specifier==('foreachvar', 'nonzero'):
-                vars_to_use=eqs._diffeq_names_nonzero
+            if block_specifier == ('foreachvar', 'all'):
+                vars_to_use = eqs._diffeq_names
+            elif block_specifier == ('foreachvar', 'nonzero'):
+                vars_to_use = eqs._diffeq_names_nonzero
             for line in block_code.split('\n'):
-                line=line.strip()
+                line = line.strip()
                 if line:
-                    origline=line
+                    origline = line
                     for var in vars_to_use:
-                        vars=eqs._diffeq_names
-                        line=origline
-                        namespace=eqs._namespace[var]
-                        var_expr=freeze(eqs._string[var], all_variables, namespace)
+                        vars = eqs._diffeq_names
+                        line = origline
+                        namespace = eqs._namespace[var]
+                        var_expr = freeze(eqs._string[var], all_variables, namespace)
                         while 1:
-                            m=re.search(r'\@(\w+)\(', line)
+                            m = re.search(r'\@(\w+)\(', line)
                             if not m:
                                 break
-                            methname=m.group(1)
-                            start, end=m.span()
-                            numopen=1
+                            methname = m.group(1)
+                            start, end = m.span()
+                            numopen = 1
                             for i in xrange(end, len(line)):
-                                if line[i]=='(':
-                                    numopen+=1
-                                if line[i]==')':
-                                    numopen-=1
-                                if numopen==0:
+                                if line[i] == '(':
+                                    numopen += 1
+                                if line[i] == ')':
+                                    numopen -= 1
+                                if numopen == 0:
                                     break
-                            if numopen!=0:
+                            if numopen != 0:
                                 raise SyntaxError('Parentheses unmatching.')
-                            args=line[start+1:i+1]
+                            args = line[start + 1:i + 1]
                             #print args
-                            exec 'line = line[:start]+self.'+args+'+line[i+1:]'
-                        substitutions={'vartype':vartype,
+                            exec 'line = line[:start]+self.' + args + '+line[i+1:]'
+                        substitutions = {'vartype':vartype,
                                          'var':var,
                                          'var_expr':var_expr}
-                        t=Template(line)
-                        code+=self.single_statement(t.substitute(**substitutions))+'\n'
+                        t = Template(line)
+                        code += self.single_statement(t.substitute(**substitutions)) + '\n'
         return code
 
     def single_substitute(self, s):
@@ -207,5 +207,5 @@ class CodeGenerator(object):
 
     def substitute(self, var_expr, substitutions):
         for var, replace_var in substitutions.iteritems():
-            var_expr=re.sub(r'\b'+var+r'\b', self.single_substitute(replace_var), var_expr)
+            var_expr = re.sub(r'\b' + var + r'\b', self.single_substitute(replace_var), var_expr)
         return var_expr

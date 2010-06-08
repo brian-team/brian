@@ -70,38 +70,38 @@ import math
 
 # This finds the 'machine epsilon' for the current hardware float type, the
 # smallest value of epsilon so that 1+epsilon>1
-epsilon=1.
-while 1.+epsilon>1.:
-    epsilon/=2
-epsilon*=2.
+epsilon = 1.
+while 1. + epsilon > 1.:
+    epsilon /= 2
+epsilon *= 2.
 # Result for 32 bit float should be: 1.1929093e-7 
 # For 64 bit float should be:        2.220446049250313e-16
 
 # This value can be used for more approximate testing
-approxepsilon=epsilon*10000
+approxepsilon = epsilon * 10000
 
 # This value is the default tolerance for medium sized numbers (used in the units class)
-defaultabsolutetolerance=math.sqrt(epsilon) # 1.4901161193847656e-008 on 64 bit system
+defaultabsolutetolerance = math.sqrt(epsilon) # 1.4901161193847656e-008 on 64 bit system
 
 def is_equal(x, y):
-    if x==y: return True
-    return abs(x-y)<abs(x)*epsilon
+    if x == y: return True
+    return abs(x - y) < abs(x) * epsilon
 
 def is_less_than_or_equal(x, y):
-    return x<y or is_equal(x, y)
+    return x < y or is_equal(x, y)
 
 def is_greater_than_or_equal(x, y):
-    return x>y or is_equal(x, y)
+    return x > y or is_equal(x, y)
 
 def is_approx_equal(x, y):
-    if x==y: return True
-    return abs(x-y)<abs(x)*approxepsilon
+    if x == y: return True
+    return abs(x - y) < abs(x) * approxepsilon
 
 def is_approx_less_than_or_equal(x, y):
-    return x<y or is_approx_equal(x, y)
+    return x < y or is_approx_equal(x, y)
 
 def is_approx_greater_than_or_equal(x, y):
-    return x>y or is_approx_equal(x, y)
+    return x > y or is_approx_equal(x, y)
 
 def is_within_absolute_tolerance(x, y, absolutetolerance=defaultabsolutetolerance):
-    return float(abs(x-y))<absolutetolerance
+    return float(abs(x - y)) < absolutetolerance

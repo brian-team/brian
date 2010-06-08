@@ -36,9 +36,9 @@
 Clocks for the simulator
 """
 
-__docformat__="restructuredtext en"
+__docformat__ = "restructuredtext en"
 
-__all__=['Clock', 'defaultclock', 'guess_clock', 'define_default_clock', 'reinit_default_clock', 'get_default_clock',
+__all__ = ['Clock', 'defaultclock', 'guess_clock', 'define_default_clock', 'reinit_default_clock', 'get_default_clock',
            'EventClock', 'RegularClock']
 
 from inspect import stack
@@ -115,22 +115,22 @@ class Clock(magic.InstanceTracker):
     '''
 
     @check_units(dt=second, t=second)
-    def __init__(self, dt=0.1*msecond, t=0*msecond, makedefaultclock=False):
-        self._t=float(t)
-        self._dt=float(dt)
-        self._end=float(t)
+    def __init__(self, dt=0.1 * msecond, t=0 * msecond, makedefaultclock=False):
+        self._t = float(t)
+        self._dt = float(dt)
+        self._end = float(t)
         if not exists_global_preference('defaultclock') or makedefaultclock:
             set_global_preferences(defaultclock=self)
 
     @check_units(t=second)
-    def reinit(self, t=0*msecond):
-        self._t=float(t)
+    def reinit(self, t=0 * msecond):
+        self._t = float(t)
 
     def tick(self):
-        self._t+=self._dt
+        self._t += self._dt
 
     def __repr__(self):
-        return 'Clock: t = '+str(self.t)+', dt = '+str(self.dt)
+        return 'Clock: t = ' + str(self.t) + ', dt = ' + str(self.dt)
 
     def __str__(self):
         '''
@@ -140,52 +140,52 @@ class Clock(magic.InstanceTracker):
 
     @check_units(dt=second)
     def set_dt(self, dt):
-        self._dt=float(dt)
+        self._dt = float(dt)
 
     @check_units(t=second)
     def set_t(self, t):
-        self._t=float(t)
-        self._end=float(t)
+        self._t = float(t)
+        self._end = float(t)
 
     @check_units(end=second)
     def set_end(self, end):
         """Sets the end-point for the clock
         """
-        self._end=float(end)
+        self._end = float(end)
 
     @check_units(start=second)
     def set_start(self, start):
         """Sets the start-point for the clock
         """
-        self._start=float(start)
+        self._start = float(start)
 
     # Clock object internally stores floats, but these properties
     # return quantities
     if isinstance(second, Quantity):
-        t=property(fget=lambda self:Quantity.with_dimensions(self._t, second.dim), fset=set_t)
-        dt=property(fget=lambda self:Quantity.with_dimensions(self._dt, second.dim), fset=set_dt)
-        end=property(fget=lambda self:Quantity.with_dimensions(self._end, second.dim), fset=set_end)
-        start=property(fget=lambda self:Quantity.with_dimensions(self._start, second.dim), fset=set_start)
+        t = property(fget=lambda self:Quantity.with_dimensions(self._t, second.dim), fset=set_t)
+        dt = property(fget=lambda self:Quantity.with_dimensions(self._dt, second.dim), fset=set_dt)
+        end = property(fget=lambda self:Quantity.with_dimensions(self._end, second.dim), fset=set_end)
+        start = property(fget=lambda self:Quantity.with_dimensions(self._start, second.dim), fset=set_start)
     else:
-        t=property(fget=lambda self:self._t, fset=set_t)
-        dt=property(fget=lambda self:self._dt, fset=set_dt)
-        end=property(fget=lambda self:self._end, fset=set_end)
-        start=property(fget=lambda self:self._start, fset=set_start)
+        t = property(fget=lambda self:self._t, fset=set_t)
+        dt = property(fget=lambda self:self._dt, fset=set_dt)
+        end = property(fget=lambda self:self._end, fset=set_end)
+        start = property(fget=lambda self:self._start, fset=set_start)
 
     @check_units(duration=second)
     def set_duration(self, duration):
         """Sets the duration of the clock
         """
-        self._start=self._t
-        self._end=self._t+float(duration)
+        self._start = self._t
+        self._end = self._t + float(duration)
 
     def get_duration(self):
-        return self.end-self.t
+        return self.end - self.t
 
     def still_running(self):
         """Checks if the clock is still running
         """
-        return self._t<self._end
+        return self._t < self._end
 
 
 def guess_clock(clock=None):
@@ -199,11 +199,11 @@ def guess_clock(clock=None):
     if clock:
         return clock
     # Get variables from the stack
-    (clocks, clocknames)=magic.find_instances(Clock)
-    if len(clocks)>1: # several clocks: ambiguous
+    (clocks, clocknames) = magic.find_instances(Clock)
+    if len(clocks) > 1: # several clocks: ambiguous
         # What type of error?
         raise TypeError("Clock is ambiguous. Please specify it explicitly.")
-    if len(clocks)==1:
+    if len(clocks) == 1:
         return clocks[0]
     # Fall back on default clock
     if exists_global_preference('defaultclock'): return get_global_preference('defaultclock')
@@ -215,7 +215,7 @@ def guess_clock(clock=None):
 class DefaultClock(Clock):
     @staticmethod
     def _track_instances(): return False
-defaultclock=DefaultClock(dt=0.1*msecond)
+defaultclock = DefaultClock(dt=0.1 * msecond)
 define_global_preference(
     'defaultclock', 'Clock(dt=0.1*msecond)',
     desc="""
@@ -248,68 +248,68 @@ class RegularClock(Clock):
     ``t`` is always in the interval ``[i*dt, (i+1)*dt)``.
     '''
     @check_units(dt=second, t=second)
-    def __init__(self, dt=0.1*msecond, t=0*msecond, offset=1e-15*second, makedefaultclock=False):
-        self._gridoffset=float(gridoffset)
-        self.__t=int(t/dt)
-        self.__dt=1
-        self._dt=float(dt)
-        self.__end=self.__t
+    def __init__(self, dt=0.1 * msecond, t=0 * msecond, offset=1e-15 * second, makedefaultclock=False):
+        self._gridoffset = float(gridoffset)
+        self.__t = int(t / dt)
+        self.__dt = 1
+        self._dt = float(dt)
+        self.__end = self.__t
         if not exists_global_preference('defaultclock') or makedefaultclock:
             set_global_preferences(defaultclock=self)
 
     @check_units(t=second)
-    def reinit(self, t=0*msecond):
-        self.__t=int(float(t)/self._dt)
+    def reinit(self, t=0 * msecond):
+        self.__t = int(float(t) / self._dt)
 
     def tick(self):
-        self.__t+=self.__dt
+        self.__t += self.__dt
 
     @check_units(t=second)
     def set_t(self, t):
-        self.__t=int(float(t)/self._dt)
-        self.__end=int(float(t)/self._dt)
+        self.__t = int(float(t) / self._dt)
+        self.__end = int(float(t) / self._dt)
 
     @check_units(dt=second)
     def set_dt(self, dt):
-        self._dt=float(dt)
+        self._dt = float(dt)
 
     @check_units(end=second)
     def set_end(self, end):
-        self.__end=int(float(end)/self._dt)
+        self.__end = int(float(end) / self._dt)
 
     @check_units(start=second)
     def set_start(self, start):
-        self.__start=int(float(start)/self._dt)
+        self.__start = int(float(start) / self._dt)
 
     # Regular clock uses integers, but lots of Brian code extracts _t and _dt
     # directly from the clock, so these should be implemented directly
-    _t=property(fget=lambda self:self.__t*self._dt+self._gridoffset)
-    _end=property(fget=lambda self:self.__end*self._dt+self._gridoffset)
-    _start=property(fget=lambda self:self.__start*self._dt)
+    _t = property(fget=lambda self:self.__t * self._dt + self._gridoffset)
+    _end = property(fget=lambda self:self.__end * self._dt + self._gridoffset)
+    _start = property(fget=lambda self:self.__start * self._dt)
 
     # Clock object internally stores floats, but these properties
     # return quantities
     if isinstance(second, Quantity):
-        t=property(fget=lambda self:Quantity.with_dimensions(self._t, second.dim), fset=set_t)
-        dt=property(fget=lambda self:Quantity.with_dimensions(self._dt, second.dim), fset=set_dt)
-        end=property(fget=lambda self:Quantity.with_dimensions(self._end, second.dim), fset=set_end)
-        start=property(fget=lambda self:Quantity.with_dimensions(self._start, second.dim), fset=set_start)
+        t = property(fget=lambda self:Quantity.with_dimensions(self._t, second.dim), fset=set_t)
+        dt = property(fget=lambda self:Quantity.with_dimensions(self._dt, second.dim), fset=set_dt)
+        end = property(fget=lambda self:Quantity.with_dimensions(self._end, second.dim), fset=set_end)
+        start = property(fget=lambda self:Quantity.with_dimensions(self._start, second.dim), fset=set_start)
     else:
-        t=property(fget=lambda self:self._t, fset=set_t)
-        dt=property(fget=lambda self:self._dt, fset=set_dt)
-        end=property(fget=lambda self:self._end, fset=set_end)
-        start=property(fget=lambda self:self._start, fset=set_start)
+        t = property(fget=lambda self:self._t, fset=set_t)
+        dt = property(fget=lambda self:self._dt, fset=set_dt)
+        end = property(fget=lambda self:self._end, fset=set_end)
+        start = property(fget=lambda self:self._start, fset=set_start)
 
     @check_units(duration=second)
     def set_duration(self, duration):
-        self.__start=self.__t
-        self.__end=self.__t+int(float(duration)/self._dt)
+        self.__start = self.__t
+        self.__end = self.__t + int(float(duration) / self._dt)
 
     def get_duration(self):
-        return self.end-self.t
+        return self.end - self.t
 
     def still_running(self):
-        return self.__t<self.__end
+        return self.__t < self.__end
 
 
 def define_default_clock(**kwds):
@@ -322,11 +322,11 @@ def define_default_clock(**kwds):
     
         define_default_clock(dt=1*ms)
     '''
-    kwds['makedefaultclock']=True
-    newdefaultclock=Clock(**kwds)
+    kwds['makedefaultclock'] = True
+    newdefaultclock = Clock(**kwds)
 
 
-def reinit_default_clock(t=0*msecond):
+def reinit_default_clock(t=0 * msecond):
     '''
     Reinitialise the default clock (to zero or a specified time)
     '''
@@ -339,5 +339,5 @@ def get_default_clock():
     '''
     return get_global_preference('defaultclock')
 
-if __name__=='__main__':
+if __name__ == '__main__':
     print id(guess_clock()), id(defaultclock)

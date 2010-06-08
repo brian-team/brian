@@ -27,16 +27,16 @@ def testfromtutorial1c():
     As predicted.
     '''
     reinit_default_clock()
-    tau=20*msecond        # membrane time constant
-    Vt=-50*mvolt          # spike threshold
-    Vr=-60*mvolt          # reset value
-    El=-49*mvolt          # resting potential (same as the reset)
-    dV='dV/dt = -(V-El)/tau : volt # membrane potential'
-    G=NeuronGroup(N=40, model=dV, threshold=Vt, reset=Vr)
-    G.V=El
-    M=SpikeMonitor(G)
-    run(1*second)
-    assert M.nspikes==840
+    tau = 20 * msecond        # membrane time constant
+    Vt = -50 * mvolt          # spike threshold
+    Vr = -60 * mvolt          # reset value
+    El = -49 * mvolt          # resting potential (same as the reset)
+    dV = 'dV/dt = -(V-El)/tau : volt # membrane potential'
+    G = NeuronGroup(N=40, model=dV, threshold=Vt, reset=Vr)
+    G.V = El
+    M = SpikeMonitor(G)
+    run(1 * second)
+    assert M.nspikes == 840
 
-if __name__=='__main__':
+if __name__ == '__main__':
     testfromtutorial1c()

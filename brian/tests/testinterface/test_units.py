@@ -81,78 +81,78 @@ def test():
     reinit_default_clock()
 
     # the following units should exist:
-    units_which_should_exist=[ metre, meter, kilogram, second, amp, kelvin, mole, candle,
+    units_which_should_exist = [ metre, meter, kilogram, second, amp, kelvin, mole, candle,
                                 radian, steradian, hertz, newton, pascal, joule, watt,
                                 coulomb, volt, farad, ohm, siemens, weber, tesla, henry,
                                 celsius, lumen, lux, becquerel, gray, sievert, katal,
                                 gram, gramme ]
     # scaled versions of all these units should exist (we just check farad as an example)
-    some_scaled_units=[ Yfarad, Zfarad, Efarad, Pfarad, Tfarad, Gfarad, Mfarad, kfarad,
+    some_scaled_units = [ Yfarad, Zfarad, Efarad, Pfarad, Tfarad, Gfarad, Mfarad, kfarad,
                          hfarad, dafarad, dfarad, cfarad, mfarad, ufarad, nfarad, pfarad,
                          ffarad, afarad, zfarad, yfarad ]
     # and check that the above is in descending order of size
     import copy
-    sorted_scaled_units=copy.copy(some_scaled_units)
+    sorted_scaled_units = copy.copy(some_scaled_units)
     sorted_scaled_units.sort(reverse=True)
-    assert some_scaled_units==sorted_scaled_units
+    assert some_scaled_units == sorted_scaled_units
     # some powered units
-    powered_units=[ cmetre2, Yfarad3 ]
+    powered_units = [ cmetre2, Yfarad3 ]
 
     # check that operations requiring consistent units work with consistent units
-    a=1*kilogram
-    b=2*kilogram
-    c=[ a+b, a-b, a<b, a<=b, a>b, a>=b, a==b, a!=b ]
+    a = 1 * kilogram
+    b = 2 * kilogram
+    c = [ a + b, a - b, a < b, a <= b, a > b, a >= b, a == b, a != b ]
     # check that given inconsistent units they raise an exception
     from operator import add, sub, mul, div, lt, le, gt, ge, eq, ne
-    tryops=[add, sub, lt, le, gt, ge, eq, ne]
-    a=1*kilogram
-    b=1*second
+    tryops = [add, sub, lt, le, gt, ge, eq, ne]
+    a = 1 * kilogram
+    b = 1 * second
     def inconsistent_operation(a, b, op):
         return op(a, b)
     for op in tryops:
         assert_raises(DimensionMismatchError, inconsistent_operation, a, b, op)
 
     # check that operations not requiring consistent units work
-    a=1*kilogram
-    b=1*second
-    c=[ a*b, a/b ]
+    a = 1 * kilogram
+    b = 1 * second
+    c = [ a * b, a / b ]
 
     # check that - and abs give results with the same dimensions
     assert (-a).has_same_dimensions(a)
     assert abs(a).has_same_dimensions(a)
-    assert-abs(a)<abs(a) # well why not, this should be true
+    assert - abs(a) < abs(a) # well why not, this should be true
 
     # check that pow requires the index to be dimensionless
-    a=(1*kilogram)**0.352
+    a = (1 * kilogram) ** 0.352
     def inconsistent_power(a, b):
-        return a**b
-    a=1*kilogram
-    b=1*second
+        return a ** b
+    a = 1 * kilogram
+    b = 1 * second
     assert_raises(DimensionMismatchError, inconsistent_power, a, b)
 
     # check casting rule 1
-    a=1*kilogram
-    b=2*kilogram
+    a = 1 * kilogram
+    b = 2 * kilogram
     for op in [add, sub, mul, div]: assert isinstance(op(a, b), Quantity)
 
     # check casting rule 2
-    a=1
-    b=1*kilogram
+    a = 1
+    b = 1 * kilogram
     for op in [mul, div]: assert isinstance(op(a, b), Quantity) and isinstance(op(b, a), Quantity)
     for op in [add, sub]:
         assert_raises(DimensionMismatchError, inconsistent_operation, a, b, op)
-    for op in [add, sub, mul, div]: assert isinstance(op(a, b/b), Quantity) and isinstance(op(b/b, a), Quantity)
+    for op in [add, sub, mul, div]: assert isinstance(op(a, b / b), Quantity) and isinstance(op(b / b, a), Quantity)
 
     # check casting rule 3
-    assert isinstance(numpy.array([1, 2])*(1*kilogram), numpy.ndarray)
-    assert isinstance((1*kilogram)*numpy.array([1, 2]), numpy.ndarray)
+    assert isinstance(numpy.array([1, 2]) * (1 * kilogram), numpy.ndarray)
+    assert isinstance((1 * kilogram) * numpy.array([1, 2]), numpy.ndarray)
 
     # check_units decorator
     @check_units(I=amp, V=volt)
     def find_resistance(I, V):
-        return V/I
-    R=find_resistance(1*amp, 1*volt)
+        return V / I
+    R = find_resistance(1 * amp, 1 * volt)
     assert_raises(DimensionMismatchError, find_resistance, 1, 1)
 
-if __name__=='__main__':
+if __name__ == '__main__':
     test()

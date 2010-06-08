@@ -12,19 +12,19 @@ delays).
 from brian import *
 # Starter neuron, threshold is below 0 so it fires immediately, reset is below
 # threshold so it fires only once.
-G=NeuronGroup(1, model='V:1', threshold=-1.0, reset=-2.0)
+G = NeuronGroup(1, model='V:1', threshold= -1.0, reset= -2.0)
 # 100 LIF neurons, no reset or threshold so they will not spike
-H=NeuronGroup(100, model='dV/dt=-V/(10*ms):volt')
+H = NeuronGroup(100, model='dV/dt=-V/(10*ms):volt')
 # Connection with delays, here the delays are specified as a function of (i,j)
 # giving the delay from neuron i to neuron j. In this case there is only one
 # presynaptic neuron so i will be 0.
-C=Connection(G, H, weight=5*mV, max_delay=10*ms,
-               delay=lambda i, j:10*ms*(j/50.-1)**2)
-M=StateMonitor(H, 'V', record=True)
-run(40*ms)
+C = Connection(G, H, weight=5 * mV, max_delay=10 * ms,
+               delay=lambda i, j:10 * ms * (j / 50. - 1) ** 2)
+M = StateMonitor(H, 'V', record=True)
+run(40 * ms)
 subplot(211)
 # These are the delays from neuron 0 to neuron i in ms
-plot([C.delay[0, i]/ms for i in range(100)])
+plot([C.delay[0, i] / ms for i in range(100)])
 ylabel('Delay (ms)')
 title('Delays')
 subplot(212)

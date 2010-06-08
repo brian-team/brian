@@ -8,32 +8,32 @@ import bisect
 import numpy, pylab, time, random
 from scipy import weave
 
-N=512*512
-nspike=int(0.1*N)
-blocksize=512
-duration=10000
-use_atomic_threshold=False
+N = 512 * 512
+nspike = int(0.1 * N)
+blocksize = 512
+duration = 10000
+use_atomic_threshold = False
 
-N=int(numpy.ceil(1.*N/blocksize)*blocksize)
+N = int(numpy.ceil(1. * N / blocksize) * blocksize)
 
-if drv.get_version()==(2, 0, 0): # cuda version
-    precision='float'
-elif drv.get_version()>(2, 0, 0):
-    precision='double'
+if drv.get_version() == (2, 0, 0): # cuda version
+    precision = 'float'
+elif drv.get_version() > (2, 0, 0):
+    precision = 'double'
 else:
     raise Exception, "CUDA 2.0 required"
 
-if precision=='double':
-    mydtype=numpy.float64
+if precision == 'double':
+    mydtype = numpy.float64
 else:
-    mydtype=numpy.float32
+    mydtype = numpy.float32
 
-block=(blocksize, 1, 1)
-Ngrid=N/blocksize
-grid=(Ngrid, 1)
-grid1=(1, 1)
+block = (blocksize, 1, 1)
+Ngrid = N / blocksize
+grid = (Ngrid, 1)
+grid1 = (1, 1)
 
-mod=drv.SourceModule("""
+mod = drv.SourceModule("""
 __global__ void stateupdate(SCALAR *V_arr, SCALAR *ge_arr, SCALAR *gi_arr)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -118,27 +118,27 @@ __global__ void threshold_compact(SCALAR *V, int *spikes, unsigned int *blocksum
     }
 }
 """.replace('SCALAR', precision).replace('BLOCKSIZE', str(blocksize)))
-stateupdate=mod.get_function("stateupdate")
-threshold=mod.get_function("threshold")
-threshold_blocksumcount=mod.get_function("threshold_blocksumcount")
-threshold_cumsum=mod.get_function("threshold_cumsum")
-threshold_compact=mod.get_function("threshold_compact")
+stateupdate = mod.get_function("stateupdate")
+threshold = mod.get_function("threshold")
+threshold_blocksumcount = mod.get_function("threshold_blocksumcount")
+threshold_cumsum = mod.get_function("threshold_cumsum")
+threshold_compact = mod.get_function("threshold_compact")
 
-V_cpu=numpy.zeros(N, dtype=mydtype)
-V_cpu[:nspike]=-0.04 # above threshold
-V_cpu[nspike:]=-0.06 # below threshold
+V_cpu = numpy.zeros(N, dtype=mydtype)
+V_cpu[:nspike] = -0.04 # above threshold
+V_cpu[nspike:] = -0.06 # below threshold
 random.shuffle(V_cpu)
-V=gpuarray.to_gpu(V_cpu)
-ge=gpuarray.to_gpu(numpy.zeros(N, dtype=mydtype))
-gi=gpuarray.to_gpu(numpy.zeros(N, dtype=mydtype))
+V = gpuarray.to_gpu(V_cpu)
+ge = gpuarray.to_gpu(numpy.zeros(N, dtype=mydtype))
+gi = gpuarray.to_gpu(numpy.zeros(N, dtype=mydtype))
 
-gpu_spikes=drv.mem_alloc(4*N)
-gpu_spiked=gpuarray.to_gpu(numpy.zeros(N, dtype=bool))
-gpu_spike_index=drv.mem_alloc(4)
-spikes=master_spikes=numpy.zeros(N, dtype=int)
-spike_index=numpy.zeros(1, dtype=numpy.uint32)
-gpu_blocksumcount=gpuarray.to_gpu(numpy.zeros(Ngrid, dtype=numpy.uint32))
-gpu_cumblocksumcount=gpuarray.to_gpu(numpy.zeros(Ngrid+1, dtype=numpy.uint32))
+gpu_spikes = drv.mem_alloc(4 * N)
+gpu_spiked = gpuarray.to_gpu(numpy.zeros(N, dtype=bool))
+gpu_spike_index = drv.mem_alloc(4)
+spikes = master_spikes = numpy.zeros(N, dtype=int)
+spike_index = numpy.zeros(1, dtype=numpy.uint32)
+gpu_blocksumcount = gpuarray.to_gpu(numpy.zeros(Ngrid, dtype=numpy.uint32))
+gpu_cumblocksumcount = gpuarray.to_gpu(numpy.zeros(Ngrid + 1, dtype=numpy.uint32))
 drv.memcpy_htod(gpu_spikes, master_spikes)
 drv.memcpy_htod(gpu_spike_index, spike_index)
 
@@ -148,11 +148,11 @@ threshold_blocksumcount.prepare(('i', 'i'), block)
 threshold_cumsum.prepare(('i', 'i'), block)
 threshold_compact.prepare(('i', 'i', 'i', 'i'), block)
 
-stateupdate_args=(grid, int(V.gpudata), int(ge.gpudata), int(gi.gpudata))
-threshold_args=(grid, int(V.gpudata), int(gpu_spikes), int(gpu_spiked.gpudata), int(gpu_spike_index), numpy.int32(N))
-threshold_blocksumcount_args=(grid, int(V.gpudata), int(gpu_blocksumcount.gpudata))
-threshold_cumsum_args=(grid1, int(gpu_blocksumcount.gpudata), int(gpu_cumblocksumcount.gpudata))
-threshold_compact_args=(grid, int(V.gpudata), int(gpu_spikes), int(gpu_blocksumcount.gpudata), int(gpu_cumblocksumcount.gpudata))
+stateupdate_args = (grid, int(V.gpudata), int(ge.gpudata), int(gi.gpudata))
+threshold_args = (grid, int(V.gpudata), int(gpu_spikes), int(gpu_spiked.gpudata), int(gpu_spike_index), numpy.int32(N))
+threshold_blocksumcount_args = (grid, int(V.gpudata), int(gpu_blocksumcount.gpudata))
+threshold_cumsum_args = (grid1, int(gpu_blocksumcount.gpudata), int(gpu_cumblocksumcount.gpudata))
+threshold_compact_args = (grid, int(V.gpudata), int(gpu_spikes), int(gpu_blocksumcount.gpudata), int(gpu_cumblocksumcount.gpudata))
 stateupdate.prepared_call(*stateupdate_args)
 threshold.prepared_call(*threshold_args)
 
@@ -168,9 +168,9 @@ if 0:
     threshold_cumsum.prepared_call(*threshold_cumsum_args)
     autoinit.context.synchronize()
     #print gpu_cumblocksumcount.get()
-    A1=gpu_cumblocksumcount.get()[1:]
-    A2=numpy.cumsum(gpu_blocksumcount.get())
-    print 'Passed first cumsum test:', (A1==A2).all()
+    A1 = gpu_cumblocksumcount.get()[1:]
+    A2 = numpy.cumsum(gpu_blocksumcount.get())
+    print 'Passed first cumsum test:', (A1 == A2).all()
     #print 'before compact'
     threshold_compact.prepared_call(*threshold_compact_args)
     autoinit.context.synchronize()
@@ -186,13 +186,13 @@ if 0:
     #print spikes[:102]
     #print gpu_cumblocksumcount.get()[-1]
     #print sum(V_cpu>-0.05)
-    S1=spikes[:gpu_cumblocksumcount.get()[-1]]
-    S2=(V_cpu>-0.05).nonzero()[0]
+    S1 = spikes[:gpu_cumblocksumcount.get()[-1]]
+    S2 = (V_cpu > -0.05).nonzero()[0]
     S1.sort()
     S2.sort()
     #print S1
     #print S2
-    print 'Passed spikes test:', (S1==S2).all() # TODO: not quite there yet...
+    print 'Passed spikes test:', (S1 == S2).all() # TODO: not quite there yet...
 
     exit()
 else:
@@ -206,7 +206,7 @@ else:
 def run_sim():
     if use_atomic_threshold:
         for t in xrange(duration):
-            spike_index[0]=0
+            spike_index[0] = 0
             drv.memcpy_htod(gpu_spike_index, spike_index)
             threshold.launch_grid(*grid)
     else:
@@ -221,25 +221,25 @@ def run_sim():
 
 def run_sim_cpu():
     for t in xrange(duration):
-        Vt=-0.05
-        code="""
+        Vt = -0.05
+        code = """
                 int numspikes=0;
                 for(int i=0;i<N;i++)
                     if(V_cpu(i)>Vt)
                         spikes(numspikes++) = i;
                 return_val = numspikes;
                 """
-        numspikes=weave.inline(code, ['spikes', 'V_cpu', 'Vt', 'N'],
+        numspikes = weave.inline(code, ['spikes', 'V_cpu', 'Vt', 'N'],
                                  compiler='gcc',
                                  type_converters=weave.converters.blitz)
 
-start=time.time()
+start = time.time()
 run_sim()
-timetaken_gpu=time.time()-start
+timetaken_gpu = time.time() - start
 
-start=time.time()
+start = time.time()
 run_sim_cpu()
-timetaken_cpu=time.time()-start
+timetaken_cpu = time.time() - start
 
 print 'N:', N, 'nspike', nspike, 'blocksize:', blocksize, 'numsteps:', duration
 print 'Atomic threshold algorithm:', use_atomic_threshold

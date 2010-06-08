@@ -7,49 +7,49 @@ import time, timeit
 from numpy import zeros, hstack, concatenate
 
 def f_hstack(n, m, repeats=100000):
-    x=zeros(n)
-    start=time.time()
+    x = zeros(n)
+    start = time.time()
     for _ in xrange(repeats):
         hstack((x[m:], x[:m]))
-    end=time.time()
-    return (end-start)/repeats
+    end = time.time()
+    return (end - start) / repeats
 
 def f_concatenate(n, m, repeats=100000):
-    x=zeros(n)
-    start=time.time()
+    x = zeros(n)
+    start = time.time()
     for _ in xrange(repeats):
         concatenate((x[m:], x[:m]))
-    end=time.time()
-    return (end-start)/repeats
+    end = time.time()
+    return (end - start) / repeats
 
 def f_range(n, m, repeats=100000):
-    x=zeros(n)
-    start=time.time()
+    x = zeros(n)
+    start = time.time()
     for _ in xrange(repeats):
-        x[range(m, n)+range(m)]
-    end=time.time()
-    return (end-start)/repeats
+        x[range(m, n) + range(m)]
+    end = time.time()
+    return (end - start) / repeats
 
 def f_take(n, m, repeats=100000):
-    x=zeros(n)
-    start=time.time()
+    x = zeros(n)
+    start = time.time()
     for _ in xrange(repeats):
-        x.take(arange(m, m+n), mode='wrap')
-    end=time.time()
-    return (end-start)/repeats
+        x.take(arange(m, m + n), mode='wrap')
+    end = time.time()
+    return (end - start) / repeats
 
-N=[1, 2, 3, 4, 5, 10, 100]
-P=[.1, .25, .5, .75]
+N = [1, 2, 3, 4, 5, 10, 100]
+P = [.1, .25, .5, .75]
 
 for p in P:
     print p
-    t_hstack=[]
-    t_concatenate=[]
-    t_range=[]
-    t_take=[]
+    t_hstack = []
+    t_concatenate = []
+    t_range = []
+    t_take = []
     for n in N:
         print n
-        m=int(n*p)
+        m = int(n * p)
         t_hstack.append(f_hstack(n, m))
         t_concatenate.append(f_concatenate(n, m))
         t_range.append(f_range(n, m))

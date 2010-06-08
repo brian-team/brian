@@ -28,10 +28,10 @@ Brian has a system for defining physical quantities (quantities with
 a physical dimension such as time). The code below illustrates how
 to use this system, which (mostly) works just as you'd expect.
 '''
-tau=20*msecond        # membrane time constant
-Vt=-50*mvolt          # spike threshold
-Vr=-60*mvolt          # reset value
-El=-60*mvolt          # resting potential (same as the reset)
+tau = 20 * msecond        # membrane time constant
+Vt = -50 * mvolt          # spike threshold
+Vr = -60 * mvolt          # reset value
+El = -60 * mvolt          # resting potential (same as the reset)
 '''
 The built in standard units in Brian consist of all the fundamental
 SI units like second and metre, along with a selection of derived
@@ -60,7 +60,7 @@ to define the variable ``V`` with units ``volt``.
 To complete the specification of the model, we also define a threshold and reset
 value and create a group of 40 neurons with this model.
 '''
-G=NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
+G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
               threshold=Vt, reset=Vr)
 '''
 The statement creates a new object 'G' which is an instance of the
@@ -80,7 +80,7 @@ Simulation
 Finally, we run the simulation for 1 second of simulated time.
 By default, the simulator uses a timestep dt = 0.1 ms.
 '''
-run(1*second)
+run(1 * second)
 '''
 And that's it! To see some of the output of this network, go
 to the next part of the tutorial.

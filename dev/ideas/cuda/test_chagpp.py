@@ -36,9 +36,9 @@ import bisect
 import numpy, pylab, time, random
 from scipy import weave
 
-N=1024
+N = 1024
 
-mod=drv.SourceModule('''
+mod = drv.SourceModule('''
 #include <chag/pp/compact.cuh>
 
 __global__ void test()

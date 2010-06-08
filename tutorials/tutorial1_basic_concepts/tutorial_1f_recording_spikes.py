@@ -9,23 +9,23 @@ and display a raster plot of them. We start as before:
 '''
 from brian import *
 
-tau=20*msecond        # membrane time constant
-Vt=-50*mvolt          # spike threshold
-Vr=-60*mvolt          # reset value
-El=-49*mvolt          # resting potential (same as the reset)
-psp=0.5*mvolt         # postsynaptic potential size
+tau = 20 * msecond        # membrane time constant
+Vt = -50 * mvolt          # spike threshold
+Vr = -60 * mvolt          # reset value
+El = -49 * mvolt          # resting potential (same as the reset)
+psp = 0.5 * mvolt         # postsynaptic potential size
 
-G=NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
+G = NeuronGroup(N=40, model='dV/dt = -(V-El)/tau : volt',
               threshold=Vt, reset=Vr)
 
-C=Connection(G, G)
+C = Connection(G, G)
 C.connect_random(sparseness=0.1, weight=psp)
 
-M=SpikeMonitor(G)
+M = SpikeMonitor(G)
 
-G.V=Vr+rand(40)*(Vt-Vr)
+G.V = Vr + rand(40) * (Vt - Vr)
 
-run(1*second)
+run(1 * second)
 
 print M.nspikes
 '''

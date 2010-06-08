@@ -1,5 +1,5 @@
 import os, glob
-curdir=os.getcwd()
+curdir = os.getcwd()
 #print "Generating interface..."
 #os.system('generate_interface.py')
 #os.chdir(curdir)

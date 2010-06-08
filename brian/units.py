@@ -108,13 +108,13 @@ are not included by default in the units module because of
 the potential for variable name clashes.
 """
 
-__origall__=['Dimension', 'Scale', 'DimensionMismatchError',
+__origall__ = ['Dimension', 'Scale', 'DimensionMismatchError',
            'get_dimensions', 'is_dimensionless', 'have_same_dimensions',
            'display_in_unit', 'Quantity', 'Unit', 'register_new_unit',
            'check_units', 'is_scalar_type', 'get_unit', 'get_unit_fast',
            'scalar_representation']
 
-__all__=__origall__+[]
+__all__ = __origall__ + []
 
 from brian_unit_prefs import bup
 from operator import isNumberType, isSequenceType
@@ -130,23 +130,23 @@ import sys
 # i.e. if 'sphinx' or 'docutils' or 'epydoc' are loaded.
 try:
     import decorator
-    use_decorator='sphinx' in sys.modules or 'docutils' in sys.modules or 'epydoc' in sys.modules
+    use_decorator = 'sphinx' in sys.modules or 'docutils' in sys.modules or 'epydoc' in sys.modules
 except:
-    use_decorator=False
+    use_decorator = False
 
 # SI dimensions (see table at end of file) and various descriptions,
 # each description maps to an index i, and the power of each dimension
 # is stored in the variable dims[i]
-_di={ "Length":0, "length": 0, "metre":0, "metres":0, "metre": 0, "metres":0, "metre":0, "metres":0, "metre": 0, "metres":0, "m": 0, \
+_di = { "Length":0, "length": 0, "metre":0, "metres":0, "metre": 0, "metres":0, "metre":0, "metres":0, "metre": 0, "metres":0, "m": 0, \
        "Mass":1, "mass": 1, "kilogram":1, "kilograms":1, "kilogram": 1, "kilograms":1, "kg": 1, \
        "Time":2, "time": 2, "second":2, "seconds":2, "second": 2, "seconds":2, "s": 2, \
        "Electric Current":3, "Electric Current":3, "electric current": 3, "Current":3, "current":3, "ampere":3, "amperes":3, "ampere": 3, "amperes":3, "A": 3, \
        "Temperature":4, "temperature": 4, "kelvin":4, "kelvins":4, "kelvin": 4, "kelvins":4, "K": 4, \
        "Quantity of Substance":5, "Quantity of substance": 5, "quantity of substance": 5, "Substance":5, "substance":5, "mole":5, "moles":5, "mole": 5, "moles":5, "mol": 5, \
        "Luminosity":6, "luminosity": 6, "candle":6, "candles":6, "candle": 6, "candles":6, "cd": 6 }
-_ilabel=["m", "kg", "s", "A", "K", "mol", "cd"]
+_ilabel = ["m", "kg", "s", "A", "K", "mol", "cd"]
 # SI unit _prefixes, see table at end of file
-_siprefixes={"y":1e-24, "z":1e-21, "a":1e-18, "f":1e-15, "p":1e-12, "n":1e-9, "u":1e-6, "m":1e-3, "c":1e-2, "d":1e-1, \
+_siprefixes = {"y":1e-24, "z":1e-21, "a":1e-18, "f":1e-15, "p":1e-12, "n":1e-9, "u":1e-6, "m":1e-3, "c":1e-2, "d":1e-1, \
             "":1, \
             "da":1e1, "h":1e2, "k":1e3, "M":1e6, "G":1e9, "T":1e12, "P":1e15, "E":1e18, "Z":1e21, "Y":1e24}
 
@@ -168,7 +168,7 @@ class Dimension(object):
     
     x = 3 * mvolt, etc.
     '''
-    __slots__=["_dims"]
+    __slots__ = ["_dims"]
     #### INITIALISATION ####
     def __init__(self, *args, **keywords):
         """Initialise Dimension object with a vector or keywords
@@ -197,18 +197,18 @@ class Dimension(object):
         e.g. length, metre, and m all refer to the same thing here.
         """
         if len(args):
-            if isSequenceType(args[0]) and len(args[0])==7:
+            if isSequenceType(args[0]) and len(args[0]) == 7:
                 # initialisation by list
-                self._dims=args[0]
+                self._dims = args[0]
             elif isinstance(args[0], Dimension):
                 # initialisation by another dimension object
-                self._dims=args[0]._dims
+                self._dims = args[0]._dims
         else:
             # initialisation by keywords
-            self._dims=[0, 0, 0, 0, 0, 0, 0]
+            self._dims = [0, 0, 0, 0, 0, 0, 0]
             for k in keywords.keys():
                 # _di stores the index of the dimension with name 'k'
-                self._dims[_di[k]]=keywords[k]
+                self._dims[_di[k]] = keywords[k]
     #### METHODS ####
     def get_dimension(self, d):
         """Returns the list of dimension indices.
@@ -222,23 +222,23 @@ class Dimension(object):
         
         See documentation for __init__.
         """
-        self._dims[_di[d]]=value
+        self._dims[_di[d]] = value
 
     def is_dimensionless(self):
         """Tells you whether the object is dimensionless."""
-        return sum([x==0 for x in self._dims])==7
+        return sum([x == 0 for x in self._dims]) == 7
     #### REPRESENTATION ####
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
         """String representation in basic SI units, or 1 for dimensionless."""
-        s=""
+        s = ""
         for i in range(len(self._dims)):
             if self._dims[i]:
-                s+=_ilabel[i]
-                if self._dims[i]!=1: s+="^"+str(self._dims[i])
-                s+=" "
+                s += _ilabel[i]
+                if self._dims[i] != 1: s += "^" + str(self._dims[i])
+                s += " "
         if not len(s): return "1"
         return s.strip()
     #### ARITHMETIC ####
@@ -246,35 +246,35 @@ class Dimension(object):
     # on their inputs, although most will throw an exception if you pass the
     # wrong sort of input
     def __mul__(self, value):
-        return Dimension([x+y for x, y in izip(self._dims, value._dims)])
+        return Dimension([x + y for x, y in izip(self._dims, value._dims)])
 
     def __div__(self, value):
-        return Dimension([x-y for x, y in izip(self._dims, value._dims)])
+        return Dimension([x - y for x, y in izip(self._dims, value._dims)])
 
     def __truediv__(self, value):
         return self.__div__(value)
 
     def __pow__(self, value):
-        return Dimension([x*value for x in self._dims])
+        return Dimension([x * value for x in self._dims])
 
     def __imul__(self, value):
-        self._dims=[x+y for x, y in izip(self._dims, value._dims)]
+        self._dims = [x + y for x, y in izip(self._dims, value._dims)]
         return self
 
     def __idiv__(self, value):
-        self._dims=[x-y for x, y in izip(self._dims, value._dims)]
+        self._dims = [x - y for x, y in izip(self._dims, value._dims)]
         return self
 
     def __itruediv__(self, value):
         return self.__idiv__(value)
 
     def __ipow__(self, value):
-        self._dims=[x*value for x in self._dims]
+        self._dims = [x * value for x in self._dims]
         return self
     #### COMPARISON ####
     def __eq__(self, value):
         #return sum([x==y for x,y in izip(self._dims,value._dims)])==7
-        return sum([is_within_absolute_tolerance(x, y) for x, y in izip(self._dims, value._dims)])==7
+        return sum([is_within_absolute_tolerance(x, y) for x, y in izip(self._dims, value._dims)]) == 7
 
     def __ne__(self, value):
         return not self.__eq__(value)
@@ -283,7 +283,7 @@ class Dimension(object):
         return self._dims
 
     def __setstate__(self, state):
-        self._dims=state
+        self._dims = state
 
 
 class Scale(object):
@@ -301,7 +301,7 @@ class Scale(object):
        the unit defined by the Scale object applied to dimension
        dim 
     """
-    __slots__=["scale"]
+    __slots__ = ["scale"]
 
     def __init__(self, *args, **keywords):
         """Initialise by list of scales or keywords, see Dimension documentation
@@ -311,9 +311,9 @@ class Scale(object):
         corresponds to measuring the unit of length at the milli scale
         and the unit of time at the u scale.
         """
-        self.scale=[ "", "", "", "", "", "", "" ]
+        self.scale = [ "", "", "", "", "", "", "" ]
         for k in keywords:
-            self.scale[_di[k]]=keywords[k]
+            self.scale[_di[k]] = keywords[k]
 
     def scale_factor(self, dim):
         """Returns the scaling factor for dimension dim
@@ -322,9 +322,9 @@ class Scale(object):
         dimensions of dim are length^2 then the scale factor will be
         0.001^2.
         """
-        sf=1
+        sf = 1
         for s, i in izip(self.scale, dim._dims):
-            if i: sf*=_siprefixes[s]**i
+            if i: sf *= _siprefixes[s] ** i
         return sf
 
     def unit_representation(self, dim):
@@ -333,13 +333,13 @@ class Scale(object):
         For example, if the scale factor of length is milli, and the
         dimensions of dim are length^2 then this will return mm^2.
         """
-        s=""
+        s = ""
         for i in range(7):
             if dim._dims[i]:
-                s+=self.scale[i]+_ilabel[i]
-                if dim._dims[i]!=1:
-                    s+="^"+str(dim._dims[i])
-                s+=" "
+                s += self.scale[i] + _ilabel[i]
+                if dim._dims[i] != 1:
+                    s += "^" + str(dim._dims[i])
+                s += " "
         return s.strip()
 
 
@@ -370,16 +370,16 @@ class DimensionMismatchError(Exception):
         dim -- the dimensions of the objects involved in the operation, any
                number of them is possible
         """
-        self._dims=dims
-        self.desc=description
+        self._dims = dims
+        self.desc = description
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        s=self.desc+", dimensions were "
+        s = self.desc + ", dimensions were "
         for d in self._dims:
-            s+="("+str(d)+") "
+            s += "(" + str(d) + ") "
         return s
 
 def is_scalar_type(obj):
@@ -409,7 +409,7 @@ def is_dimensionless(obj):
     Note that the syntax may change in later releases of Brian, with tighter
     integration of scalar and array valued quantities.
     """
-    return get_dimensions(obj)==Dimension()
+    return get_dimensions(obj) == Dimension()
 
 
 def have_same_dimensions(obj1, obj2):
@@ -418,19 +418,19 @@ def have_same_dimensions(obj1, obj2):
     Note that the syntax may change in later releases of Brian, with tighter
     integration of scalar and array valued quantities.
     """
-    return get_dimensions(obj1)==get_dimensions(obj2)
+    return get_dimensions(obj1) == get_dimensions(obj2)
 
 def display_in_unit(x, u):
     """String representation of the object x in unit u.
     """
     if not have_same_dimensions(x, u):
         raise DimensionMismatchError("Non-matching unit for function display_in_unit", get_dimensions(x), get_dimensions(u))
-    s=str(float(x/u))+" "
+    s = str(float(x / u)) + " "
     if not is_dimensionless(u):
         if isinstance(u, Unit):
-            s+=str(u)
+            s += str(u)
         else:
-            s+=str(u.dim)
+            s += str(u.dim)
     return s.strip()
 
 def quantity_with_dimensions(floatval, dims):
@@ -523,13 +523,13 @@ class Quantity(numpy.float64):
     -- in_unit(unit) return string
     -- in_best_unit() return string
     """
-    __slots__=["dim"]
+    __slots__ = ["dim"]
     #### CONSTRUCTION ####
     def __init__(self, value):
         """Initialises as dimensionless
         """
         super(Quantity, self).__init__()
-        self.dim=Dimension()
+        self.dim = Dimension()
     @staticmethod
     def with_dimensions(value, *args, **keywords):
         """Static method to create a Quantity object with dimensions
@@ -550,7 +550,7 @@ class Quantity(numpy.float64):
         
         all define the same object.
         """
-        x=Quantity(value)
+        x = Quantity(value)
         if len(args) and isinstance(args[0], Dimension):
             x.set_dimensions(args[0])
         else:
@@ -565,7 +565,7 @@ class Quantity(numpy.float64):
     def set_dimensions(self, dim):
         """Set the dimensions of this object
         """
-        self.dim=dim
+        self.dim = dim
 
     def is_dimensionless(self):
         """Tells you whether this is a dimensionless object
@@ -575,24 +575,24 @@ class Quantity(numpy.float64):
     def at_scale(self, scale):
         """Returns a string representation at given scale
         """
-        return str(float(self)/scale.scale_factor(self.dim))+" "+scale.unit_representation(self.dim)
+        return str(float(self) / scale.scale_factor(self.dim)) + " " + scale.unit_representation(self.dim)
 
     def has_same_dimensions(self, other):
         """Tells you if this object has the same dimensions as another.
         """
-        return self.dim==get_dimensions(other)
+        return self.dim == get_dimensions(other)
 
     def in_unit(self, u):
         """String representation of the object in unit u.
         """
         if not self.has_same_dimensions(u):
             raise DimensionMismatchError("Non-matching unit for method in_unit", self.dim, u.dim)
-        s=str(float(self/u))+" "
+        s = str(float(self / u)) + " "
         if not u.is_dimensionless():
             if isinstance(u, Unit):
-                s+=str(u)
+                s += str(u)
             else:
-                s+=str(u.dim)
+                s += str(u.dim)
         return s.strip()
 
     def in_best_unit(self, *regs):
@@ -604,11 +604,11 @@ class Quantity(numpy.float64):
         the one with the most compact representation. Standard units are
         built in, but you can register new units for consideration. 
         """
-        u=_get_best_unit(self, *regs)
+        u = _get_best_unit(self, *regs)
         return self.in_unit(u)
     #### METHODS (NUMERICAL) ####
     def sqrt(self):
-        return self**0.5
+        return self ** 0.5
 
     def log(self):
         if self.is_dimensionless():
@@ -649,9 +649,9 @@ class Quantity(numpy.float64):
         if self.is_dimensionless():
             return Quantity.with_dimensions(math.atan(float(self)), self.dim)
         raise DimensionMismatchError('atan', self.dim)
-    arcsin=asin
-    arccos=cos
-    arctan=tan
+    arcsin = asin
+    arccos = cos
+    arctan = tan
 
     def sinh(self):
         if self.is_dimensionless():
@@ -704,9 +704,9 @@ class Quantity(numpy.float64):
         # This code, like all the other arithmetic code below, implements the casting rules
         # defined above.
         if isinstance(other, Quantity):
-            return Quantity.with_dimensions(float(self)*float(other), self.dim*other.dim)
+            return Quantity.with_dimensions(float(self) * float(other), self.dim * other.dim)
         elif is_scalar_type(other):
-            return Quantity.with_dimensions(float(self)*other, self.dim)
+            return Quantity.with_dimensions(float(self) * other, self.dim)
         else:
             return NotImplemented
             #return super(Quantity,self).__mul__(other)
@@ -716,45 +716,45 @@ class Quantity(numpy.float64):
 
     def __div__(self, other):
         if isinstance(other, Quantity):
-            return Quantity.with_dimensions(float(self)/float(other), self.dim/other.dim)
+            return Quantity.with_dimensions(float(self) / float(other), self.dim / other.dim)
         elif is_scalar_type(other):
-            return Quantity.with_dimensions(float(self)/other, self.dim)
+            return Quantity.with_dimensions(float(self) / other, self.dim)
         else:
             return NotImplemented
             #return super(Quantity,self).__div__(other)
 
     def __truediv__(self, other):
         if isinstance(other, Quantity):
-            return Quantity.with_dimensions(float(self)/float(other), self.dim/other.dim)
+            return Quantity.with_dimensions(float(self) / float(other), self.dim / other.dim)
         elif is_scalar_type(other):
-            return Quantity.with_dimensions(float(self)/other, self.dim)
+            return Quantity.with_dimensions(float(self) / other, self.dim)
         else:
             return NotImplemented
             #return super(Quantity,self).__truediv__(other)
 
     def __rdiv__(self, other):
         if isinstance(other, Quantity):
-            return Quantity.with_dimensions(float(other)/float(self), other.dim/self.dim)
+            return Quantity.with_dimensions(float(other) / float(self), other.dim / self.dim)
         elif is_scalar_type(other):
-            return Quantity.with_dimensions(other/float(self), [-x for x in self.dim._dims])
+            return Quantity.with_dimensions(other / float(self), [-x for x in self.dim._dims])
         else:
             return NotImplemented
             #return super(Quantity,self).__rdiv__(other)
 
     def __rtruediv__(self, other):
         if isinstance(other, Quantity):
-            return Quantity.with_dimensions(float(other)/float(self), other.dim/self.dim)
+            return Quantity.with_dimensions(float(other) / float(self), other.dim / self.dim)
         elif is_scalar_type(other):
-            return Quantity.with_dimensions(other/float(self), [-x for x in self.dim._dims])
+            return Quantity.with_dimensions(other / float(self), [-x for x in self.dim._dims])
         else:
             return NotImplemented
             #return super(Quantity,self).__rtruediv__(other)
 
     def __mod__(self, other):
         if isinstance(other, Quantity) or is_scalar_type(other):
-            dim=get_dimensions(other)
-            if dim==self.dim:
-                return Quantity.with_dimensions(float(self)%float(other), self.dim)
+            dim = get_dimensions(other)
+            if dim == self.dim:
+                return Quantity.with_dimensions(float(self) % float(other), self.dim)
             else: raise DimensionMismatchError("Addition", self.dim, dim)
         else:
             return NotImplemented
@@ -762,9 +762,9 @@ class Quantity(numpy.float64):
 
     def __add__(self, other):
         if isinstance(other, Quantity) or is_scalar_type(other):
-            dim=get_dimensions(other)
-            if dim==self.dim:
-                return Quantity.with_dimensions(float(self)+float(other), self.dim)
+            dim = get_dimensions(other)
+            if dim == self.dim:
+                return Quantity.with_dimensions(float(self) + float(other), self.dim)
             else: raise DimensionMismatchError("Addition", self.dim, dim)
         else:
             return NotImplemented
@@ -775,9 +775,9 @@ class Quantity(numpy.float64):
 
     def __sub__(self, other):
         if isinstance(other, Quantity) or is_scalar_type(other):
-            dim=get_dimensions(other)
-            if dim==self.dim:
-                return Quantity.with_dimensions(float(self)-float(other), self.dim)
+            dim = get_dimensions(other)
+            if dim == self.dim:
+                return Quantity.with_dimensions(float(self) - float(other), self.dim)
             else: raise DimensionMismatchError("Subtraction", self.dim, dim)
         else:
             return NotImplemented
@@ -785,9 +785,9 @@ class Quantity(numpy.float64):
 
     def __rsub__(self, other):
         if isinstance(other, Quantity) or is_scalar_type(other):
-            dim=get_dimensions(other)
-            if dim==self.dim:
-                return Quantity.with_dimensions(float(other)-float(self), self.dim)
+            dim = get_dimensions(other)
+            if dim == self.dim:
+                return Quantity.with_dimensions(float(other) - float(self), self.dim)
             else: raise DimensionMismatchError("Subtraction(R)", self.dim, dim)
         else:
             return NotImplemented
@@ -798,10 +798,10 @@ class Quantity(numpy.float64):
             if other.is_dimensionless():
                 # WARNING: because dimension consistency is checked by exact comparison of dimensions,
                 # this may lead to unexpected behaviour (e.g. (x**2)**0.5 may not have the same dimensions as x)
-                return Quantity.with_dimensions(float(self)**float(other), self.dim**float(other))
+                return Quantity.with_dimensions(float(self) ** float(other), self.dim ** float(other))
             else: raise DimensionMismatchError("Power", self.dim, other.dim)
         elif is_scalar_type(other):
-            return Quantity.with_dimensions(float(self)**other, self.dim**other)
+            return Quantity.with_dimensions(float(self) ** other, self.dim ** other)
         else:
             return NotImplemented
             #return super(Quantity,self).__pow__(other)
@@ -809,9 +809,9 @@ class Quantity(numpy.float64):
     def __rpow__(self, other):
         if self.is_dimensionless():
             if isinstance(other, Quantity):
-                return Quantity.with_dimensions(float(other)**float(self), other.dim**float(self))
+                return Quantity.with_dimensions(float(other) ** float(self), other.dim ** float(self))
             elif is_scalar_type(other):
-                return Quantity(other**float(self))
+                return Quantity(other ** float(self))
             else:
                 return NotImplemented
                 #return super(Quantity,self).__pow__(other)
@@ -829,15 +829,15 @@ class Quantity(numpy.float64):
     #### COMPARISONS ####
     def __lt__(self, other):
         if isinstance(other, Quantity):
-            if self.dim==other.dim:
-                return float(self)<float(other)
+            if self.dim == other.dim:
+                return float(self) < float(other)
             else: raise DimensionMismatchError("LessThan", self.dim, other.dim)
         elif is_scalar_type(other):
-            if other==0 or other==0.: return float(self)<other
+            if other == 0 or other == 0.: return float(self) < other
             if numpy.isposinf(other): return True
             if numpy.isneginf(other): return False
             if self.is_dimensionless():
-                return float(self)<other
+                return float(self) < other
             else: raise DimensionMismatchError("LessThan", self.dim, Dimension())
         else:
             return NotImplemented
@@ -845,15 +845,15 @@ class Quantity(numpy.float64):
 
     def __le__(self, other):
         if isinstance(other, Quantity):
-            if self.dim==other.dim:
-                return float(self)<=float(other)
+            if self.dim == other.dim:
+                return float(self) <= float(other)
             else: raise DimensionMismatchError("LessThanOrEquals", self.dim, other.dim)
         elif is_scalar_type(other):
-            if other==0 or other==0.: return float(self)<=other
+            if other == 0 or other == 0.: return float(self) <= other
             if numpy.isposinf(other): return True
             if numpy.isneginf(other): return False
             if self.is_dimensionless():
-                return float(self)<=other
+                return float(self) <= other
             else: raise DimensionMismatchError("LessThanOrEquals", self.dim, Dimension())
         else:
             return NotImplemented
@@ -861,15 +861,15 @@ class Quantity(numpy.float64):
 
     def __gt__(self, other):
         if isinstance(other, Quantity):
-            if self.dim==other.dim:
-                return float(self)>float(other)
+            if self.dim == other.dim:
+                return float(self) > float(other)
             else: raise DimensionMismatchError("GreaterThan", self.dim, other.dim)
         elif is_scalar_type(other):
-            if other==0 or other==0.: return float(self)>other
+            if other == 0 or other == 0.: return float(self) > other
             if numpy.isneginf(other): return True
             if numpy.isposinf(other): return False
             if self.is_dimensionless():
-                return float(self)>other
+                return float(self) > other
             else: raise DimensionMismatchError("GreaterThan", self.dim, Dimension())
         else:
             return NotImplemented
@@ -877,15 +877,15 @@ class Quantity(numpy.float64):
 
     def __ge__(self, other):
         if isinstance(other, Quantity):
-            if self.dim==other.dim:
-                return float(self)>=float(other)
+            if self.dim == other.dim:
+                return float(self) >= float(other)
             else: raise DimensionMismatchError("GreaterThanOrEquals", self.dim, other.dim)
         elif is_scalar_type(other):
-            if other==0 or other==0.: return float(self)>=other
+            if other == 0 or other == 0.: return float(self) >= other
             if numpy.isneginf(other): return True
             if numpy.isposinf(other): return False
             if self.is_dimensionless():
-                return float(self)>=other
+                return float(self) >= other
             else: raise DimensionMismatchError("GreaterThanOrEquals", self.dim, Dimension())
         else:
             return NotImplemented
@@ -893,13 +893,13 @@ class Quantity(numpy.float64):
 
     def __eq__(self, other):
         if isinstance(other, Quantity):
-            if self.dim==other.dim:
-                return float(self)==float(other)
+            if self.dim == other.dim:
+                return float(self) == float(other)
             else: raise DimensionMismatchError("Equals", self.dim, other.dim)
         elif is_scalar_type(other):
-            if other==0 or other==0. or numpy.isinf(other): return float(self)==other
+            if other == 0 or other == 0. or numpy.isinf(other): return float(self) == other
             if self.dim.is_dimensionless():
-                return float(self)==other
+                return float(self) == other
             else: raise DimensionMismatchError("Equals", self.dim, Dimension())
         else:
             return NotImplemented
@@ -907,13 +907,13 @@ class Quantity(numpy.float64):
 
     def __ne__(self, other):
         if isinstance(other, Quantity):
-            if self.dim==other.dim:
-                return float(self)!=float(other)
+            if self.dim == other.dim:
+                return float(self) != float(other)
             else: raise DimensionMismatchError("Equals", self.dim, other.dim)
         elif is_scalar_type(other):
-            if other==0 or other==0. or numpy.isinf(other): return float(self)!=other
+            if other == 0 or other == 0. or numpy.isinf(other): return float(self) != other
             if self.dim.is_dimensionless():
-                return float(self)!=other
+                return float(self) != other
             else: raise DimensionMismatchError("NotEquals", self.dim, Dimension())
         else:
             return NotImplemented
@@ -1038,20 +1038,20 @@ class Unit(Quantity):
     don't like the automatically generated name, use the 
     set_display_name(name) method.
     """
-    __slots__=["dim", "scale", "scalefactor", "dispname", "name", "iscompound"]
+    __slots__ = ["dim", "scale", "scalefactor", "dispname", "name", "iscompound"]
     #### CONSTRUCTION ####
     def __init__(self, value):
         """Initialises a dimensionless unit
         """
         super(Unit, self).__init__(value)
-        self.dim=Dimension()
-        self.scale=[ "", "", "", "", "", "", "" ]
-        self.scalefactor=""
-        self.dispname=""
-        self.iscompound=False
+        self.dim = Dimension()
+        self.scale = [ "", "", "", "", "", "", "" ]
+        self.scalefactor = ""
+        self.dispname = ""
+        self.iscompound = False
 
     def __new__(typ, *args, **kw):
-        obj=super(Unit, typ).__new__(typ, *args, **kw)
+        obj = super(Unit, typ).__new__(typ, *args, **kw)
         global automatically_register_units
         if automatically_register_units:
             register_new_unit(obj)
@@ -1066,19 +1066,19 @@ class Unit(Quantity):
         scalefactor -- scaling factor, e.g. m for mvolt
         keywords -- the scaling for each SI dimension, e.g. length="m", mass="-1", etc.
         """
-        scale=[ "", "", "", "", "", "", "" ]
+        scale = [ "", "", "", "", "", "", "" ]
         for k in keywords:
-            scale[_di[k]]=keywords[k]
-        v=1.0
+            scale[_di[k]] = keywords[k]
+        v = 1.0
         for s, i in izip(scale, dim._dims):
-            if i: v*=_siprefixes[s]**i
-        u=Unit(v*_siprefixes[scalefactor])
-        u.dim=dim
-        u.scale=scale
-        u.scalefactor=scalefactor+""
-        u.name=name+""
-        u.dispname=dispname+""
-        u.iscompound=False
+            if i: v *= _siprefixes[s] ** i
+        u = Unit(v * _siprefixes[scalefactor])
+        u.dim = dim
+        u.scale = scale
+        u.scalefactor = scalefactor + ""
+        u.name = name + ""
+        u.dispname = dispname + ""
+        u.iscompound = False
         return u
     @staticmethod
     def create_scaled_unit(baseunit, scalefactor):
@@ -1087,36 +1087,36 @@ class Unit(Quantity):
         baseunit -- e.g. volt, amp
         scalefactor -- e.g. "m" for mvolt, mamp
         """
-        u=Unit(float(baseunit)*_siprefixes[scalefactor])
-        u.dim=baseunit.dim
-        u.scale=baseunit.scale
-        u.scalefactor=scalefactor
-        u.name=scalefactor+baseunit.name
-        u.dispname=scalefactor+baseunit.dispname
-        u.iscompound=False
+        u = Unit(float(baseunit) * _siprefixes[scalefactor])
+        u.dim = baseunit.dim
+        u.scale = baseunit.scale
+        u.scalefactor = scalefactor
+        u.name = scalefactor + baseunit.name
+        u.dispname = scalefactor + baseunit.dispname
+        u.iscompound = False
         return u
     #### METHODS ####
     def set_name(self, name):
         """Sets the name for the unit
         """
-        self.name=name
+        self.name = name
 
     def set_display_name(self, name):
         """Sets the display name for the unit
         """
-        self.dispname=name
+        self.dispname = name
     #### REPRESENTATION ####
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        if self.dispname=="":
-            s=self.scalefactor+" "
+        if self.dispname == "":
+            s = self.scalefactor + " "
             for i in range(7):
                 if self.dim._dims[i]:
-                    s+=self.scale[i]+_ilabel[i]
-                    if self.dim._dims[i]!=1: s+="^"+str(self.dim._dims[i])
-                    s+=" "
+                    s += self.scale[i] + _ilabel[i]
+                    if self.dim._dims[i] != 1: s += "^" + str(self.dim._dims[i])
+                    s += " "
             if not len(s): return "1"
             return s.strip()
         else:
@@ -1124,130 +1124,130 @@ class Unit(Quantity):
     #### ARITHMETIC ####
     def __mul__(self, other):
         if isinstance(other, Unit):
-            u=Unit(float(self)*float(other))
-            u.name=self.name+other.name
-            u.dispname=self.dispname+' '+other.dispname
-            u.dim=self.dim*other.dim
-            u.iscompound=True
+            u = Unit(float(self) * float(other))
+            u.name = self.name + other.name
+            u.dispname = self.dispname + ' ' + other.dispname
+            u.dim = self.dim * other.dim
+            u.iscompound = True
             return u
         else:
             return super(Unit, self).__mul__(other)
 
     def __div__(self, other):
         if isinstance(other, Unit):
-            u=Unit(float(self)/float(other))
-            u.name=self.name+'inv_'+other.name+'_endinv'
+            u = Unit(float(self) / float(other))
+            u.name = self.name + 'inv_' + other.name + '_endinv'
             if other.iscompound:
-                u.dispname='('+self.dispname+')'
+                u.dispname = '(' + self.dispname + ')'
             else:
-                u.dispname=self.dispname
-            u.dispname+='/'
+                u.dispname = self.dispname
+            u.dispname += '/'
             if other.iscompound:
-                u.dispname+='('+other.dispname+')'
+                u.dispname += '(' + other.dispname + ')'
             else:
-                u.dispname+=other.dispname
-            u.dim=self.dim/other.dim
-            u.iscompound=True
+                u.dispname += other.dispname
+            u.dim = self.dim / other.dim
+            u.iscompound = True
             return u
         else:
             return super(Unit, self).__div__(other)
 
     def __pow__(self, other):
         if is_scalar_type(other):
-            u=Unit(float(self)**other)
-            u.name=self.name+'pow_'+str(other)+'_endpow'
+            u = Unit(float(self) ** other)
+            u.name = self.name + 'pow_' + str(other) + '_endpow'
             if self.iscompound:
-                u.dispname='('+self.dispname+')'
+                u.dispname = '(' + self.dispname + ')'
             else:
-                u.dispname=self.dispname
-            u.dispname+='^'+str(other)
-            u.dim=self.dim**other
+                u.dispname = self.dispname
+            u.dispname += '^' + str(other)
+            u.dim = self.dim ** other
             return u
         else:
             return super(Unit, self).__mul__(other)
 
-automatically_register_units=False
+automatically_register_units = False
 #### FUNDAMENTAL UNITS
-metre=Unit.create(Dimension(m=1), "metre", "m")
-meter=Unit.create(Dimension(m=1), "meter", "m")
-kilogram=Unit.create(Dimension(kg=1), "kilogram", "kg")
-gram=Unit.create_scaled_unit(kilogram, "m")
+metre = Unit.create(Dimension(m=1), "metre", "m")
+meter = Unit.create(Dimension(m=1), "meter", "m")
+kilogram = Unit.create(Dimension(kg=1), "kilogram", "kg")
+gram = Unit.create_scaled_unit(kilogram, "m")
 gram.set_name('gram')
 gram.set_display_name('g')
-gramme=Unit.create_scaled_unit(kilogram, "m")
+gramme = Unit.create_scaled_unit(kilogram, "m")
 gramme.set_name('gramme')
 gramme.set_display_name('g')
-second=Unit.create(Dimension(s=1), "second", "s")
-amp=Unit.create(Dimension(A=1), "amp", "A")
-kelvin=Unit.create(Dimension(K=1), "kelvin", "K")
-mole=Unit.create(Dimension(mol=1), "mole", "mol")
-candle=Unit.create(Dimension(candle=1), "candle", "cd")
-fundamental_units=[ metre, meter, gram, second, amp, kelvin, mole, candle ]
+second = Unit.create(Dimension(s=1), "second", "s")
+amp = Unit.create(Dimension(A=1), "amp", "A")
+kelvin = Unit.create(Dimension(K=1), "kelvin", "K")
+mole = Unit.create(Dimension(mol=1), "mole", "mol")
+candle = Unit.create(Dimension(candle=1), "candle", "cd")
+fundamental_units = [ metre, meter, gram, second, amp, kelvin, mole, candle ]
 
 #### DERIVED UNITS, from http://physics.nist.gov/cuu/Units/units.html
-derived_unit_table=\
+derived_unit_table = \
         [\
         [ 'radian', 'rad', Dimension() ], \
         [ 'steradian', 'sr', Dimension() ], \
-        [ 'hertz', 'Hz', Dimension(s=-1) ], \
-        [ 'newton', 'N', Dimension(m=1, kg=1, s=-2) ], \
-        [ 'pascal', 'Pa', Dimension(m=-1, kg=1, s=-2) ], \
-        [ 'joule', 'J', Dimension(m=2, kg=1, s=-2) ], \
-        [ 'watt', 'W', Dimension(m=2, kg=1, s=-3) ], \
+        [ 'hertz', 'Hz', Dimension(s= -1) ], \
+        [ 'newton', 'N', Dimension(m=1, kg=1, s= -2) ], \
+        [ 'pascal', 'Pa', Dimension(m= -1, kg=1, s= -2) ], \
+        [ 'joule', 'J', Dimension(m=2, kg=1, s= -2) ], \
+        [ 'watt', 'W', Dimension(m=2, kg=1, s= -3) ], \
         [ 'coulomb', 'C', Dimension(s=1, A=1) ], \
-        [ 'volt', 'V', Dimension(m=2, kg=1, s=-3, A=-1) ], \
-        [ 'farad', 'F', Dimension(m=-2, kg=-1, s=4, A=2) ], \
-        [ 'ohm', 'ohm', Dimension(m=2, kg=1, s=-3, A=-2) ], \
-        [ 'siemens', 'S', Dimension(m=-2, kg=-1, s=3, A=2) ], \
-        [ 'weber', 'Wb', Dimension(m=2, kg=1, s=-2, A=-1) ], \
-        [ 'tesla', 'T', Dimension(kg=1, s=-2, A=-1) ], \
-        [ 'henry', 'H', Dimension(m=2, kg=1, s=-2, A=-2) ], \
+        [ 'volt', 'V', Dimension(m=2, kg=1, s= -3, A= -1) ], \
+        [ 'farad', 'F', Dimension(m= -2, kg= -1, s=4, A=2) ], \
+        [ 'ohm', 'ohm', Dimension(m=2, kg=1, s= -3, A= -2) ], \
+        [ 'siemens', 'S', Dimension(m= -2, kg= -1, s=3, A=2) ], \
+        [ 'weber', 'Wb', Dimension(m=2, kg=1, s= -2, A= -1) ], \
+        [ 'tesla', 'T', Dimension(kg=1, s= -2, A= -1) ], \
+        [ 'henry', 'H', Dimension(m=2, kg=1, s= -2, A= -2) ], \
         [ 'celsius', 'degC', Dimension(K=1) ], \
         [ 'lumen', 'lm', Dimension(cd=1) ], \
-        [ 'lux', 'lx', Dimension(m=-2, cd=1) ], \
-        [ 'becquerel', 'Bq', Dimension(s=-1) ], \
-        [ 'gray', 'Gy', Dimension(m=2, s=-2) ], \
-        [ 'sievert', 'Sv', Dimension(m=2, s=-2) ], \
-        [ 'katal', 'kat', Dimension(s=-1, mol=1) ]\
+        [ 'lux', 'lx', Dimension(m= -2, cd=1) ], \
+        [ 'becquerel', 'Bq', Dimension(s= -1) ], \
+        [ 'gray', 'Gy', Dimension(m=2, s= -2) ], \
+        [ 'sievert', 'Sv', Dimension(m=2, s= -2) ], \
+        [ 'katal', 'kat', Dimension(s= -1, mol=1) ]\
         ]
 
 # Pointless list only here so that static analysis in Eclipse works ok
 # All the values here are overwritten by the code below
-volt=Unit(1); mvolt=Unit(1); uvolt=Unit(1)
-namp=Unit(1); mamp=Unit(1); uamp=Unit(1); pamp=Unit(1)
-ohm=Unit(1); Mohm=Unit(1); kohm=Unit(1)
-siemens=Unit(1); msiemens=Unit(1); usiemens=Unit(1)
-hertz=Unit(1); khertz=Unit(1); Mhertz=Unit(1)
-farad=Unit(1); mfarad=Unit(1); ufarad=Unit(1); nfarad=Unit(1)
-msecond=Unit(1)
+volt = Unit(1); mvolt = Unit(1); uvolt = Unit(1)
+namp = Unit(1); mamp = Unit(1); uamp = Unit(1); pamp = Unit(1)
+ohm = Unit(1); Mohm = Unit(1); kohm = Unit(1)
+siemens = Unit(1); msiemens = Unit(1); usiemens = Unit(1)
+hertz = Unit(1); khertz = Unit(1); Mhertz = Unit(1)
+farad = Unit(1); mfarad = Unit(1); ufarad = Unit(1); nfarad = Unit(1)
+msecond = Unit(1)
 
 # Generate derived unit objects and make a table of base units from these and the fundamental ones
-base_units=fundamental_units+[gramme, kilogram] # make a copy
+base_units = fundamental_units + [gramme, kilogram] # make a copy
 for _du in derived_unit_table:
-    _u=Unit.create(_du[2], _du[0], _du[1])
-    exec _du[0]+"=_u"
+    _u = Unit.create(_du[2], _du[0], _du[1])
+    exec _du[0] + "=_u"
     base_units.append(_u)
 
-all_units=base_units+[]
+all_units = base_units + []
 
 # Generate scaled units for all base units
-scaled_units=[]
+scaled_units = []
 for _bu in base_units:
     for _k in _siprefixes.keys():
         if len(_k):
-            _u=Unit.create_scaled_unit(_bu, _k)
-            exec _k+_bu.name+"=_u"
+            _u = Unit.create_scaled_unit(_bu, _k)
+            exec _k + _bu.name + "=_u"
             all_units.append(_u)
             if not _k in ["da", "d", "c", "h"]:
                 scaled_units.append(_u)
 
 # Generate 2nd and 3rd powers for all scaled base units
-powered_units=[]
-for bu in all_units+[]:
+powered_units = []
+for bu in all_units + []:
     for i in [2, 3]:
-        u=bu**i
-        u.name=bu.name+str(i)
-        exec bu.name+str(i)+'=u'
+        u = bu ** i
+        u.name = bu.name + str(i)
+        exec bu.name + str(i) + '=u'
         all_units.append(u)
         if not bu.scalefactor in ['da', 'd', 'c', 'h']:
             powered_units.append(u)
@@ -1255,13 +1255,13 @@ for bu in all_units+[]:
 # Define additional units
 
 # Current list from http://physics.nist.gov/cuu/Units/units.html, far from complete
-additional_units=[ pascal*second, newton*metre, watt/metre**2, joule/kelvin, \
-                   joule/(kilogram*kelvin), joule/kilogram, watt/(metre*kelvin), \
-                   joule/metre**3, volt/metre**3, coulomb/metre**3, coulomb/metre**2, \
-                   farad/metre, henry/metre, joule/mole, joule/(mole*kelvin), \
-                   coulomb/kilogram, gray/second, katal/metre**3 ]
+additional_units = [ pascal * second, newton * metre, watt / metre ** 2, joule / kelvin, \
+                   joule / (kilogram * kelvin), joule / kilogram, watt / (metre * kelvin), \
+                   joule / metre ** 3, volt / metre ** 3, coulomb / metre ** 3, coulomb / metre ** 2, \
+                   farad / metre, henry / metre, joule / mole, joule / (mole * kelvin), \
+                   coulomb / kilogram, gray / second, katal / metre ** 3 ]
 
-automatically_register_units=True
+automatically_register_units = True
 
 
 class UnitRegistry(object):
@@ -1288,7 +1288,7 @@ class UnitRegistry(object):
       e.g. UnitRegistry ur; ur[3*mvolt] returns mvolt
     """
     def __init__(self):
-        self.objs=[]
+        self.objs = []
 
     def add(self, u):
         """Add a unit to the registry
@@ -1307,10 +1307,10 @@ class UnitRegistry(object):
         the first matching unit (which will typically be the unscaled
         version).
         """
-        matching=filter(lambda o: have_same_dimensions(o, x), self.objs)
-        if len(matching)==0:
+        matching = filter(lambda o: have_same_dimensions(o, x), self.objs)
+        if len(matching) == 0:
             raise KeyError("Unit not found in registry.")
-        floatrep=filter(lambda o: 0.1<=abs(float(x/o))<100, matching)
+        floatrep = filter(lambda o: 0.1 <= abs(float(x / o)) < 100, matching)
         if len(floatrep):
             return floatrep[0]
         else:
@@ -1327,17 +1327,17 @@ def register_new_unit(u):
     """
     UserUnitRegister.add(u)
 
-standard_unit_register=UnitRegistry()
-additional_unit_register=UnitRegistry()
-UserUnitRegister=UnitRegistry()
-map(standard_unit_register.add, base_units+scaled_units+powered_units)
+standard_unit_register = UnitRegistry()
+additional_unit_register = UnitRegistry()
+UserUnitRegister = UnitRegistry()
+map(standard_unit_register.add, base_units + scaled_units + powered_units)
 map(additional_unit_register.add, additional_units)
 
 def all_registered_units(*regs):
     """Returns all registered units in the correct order
     """
     if not len(regs):
-        regs=[ standard_unit_register, UserUnitRegister, additional_unit_register]
+        regs = [ standard_unit_register, UserUnitRegister, additional_unit_register]
     for r in regs:
         for u in r.objs:
             yield u
@@ -1349,7 +1349,7 @@ def _get_best_unit(x, *regs):
     case it will check the standard, user and additional unit
     registers in turn.
     """
-    if get_dimensions(x)==Dimension():
+    if get_dimensions(x) == Dimension():
         return Quantity(1)
     if len(regs):
         for r in regs:
@@ -1420,18 +1420,18 @@ def check_units(**au):
     def do_check_units(f):
         @wraps(f)
         def new_f(*args, **kwds):
-            newkeyset=kwds.copy()
-            arg_names=f.func_code.co_varnames[0:f.func_code.co_argcount]
+            newkeyset = kwds.copy()
+            arg_names = f.func_code.co_varnames[0:f.func_code.co_argcount]
             for (n, v) in zip(arg_names, args[0:f.func_code.co_argcount]):
-                newkeyset[n]=v
+                newkeyset[n] = v
             for k in newkeyset.iterkeys():
                 if (k in au.keys()) and not isinstance(newkeyset[k], str): # string variables are allowed to pass, the presumption is they name another variable
                     if not have_same_dimensions(newkeyset[k], au[k]):
-                        raise DimensionMismatchError("Function "+f.__name__+" variable "+k+" should have dimensions of "+str(au[k]), get_dimensions(newkeyset[k]))
-            result=f(*args, **kwds)
+                        raise DimensionMismatchError("Function " + f.__name__ + " variable " + k + " should have dimensions of " + str(au[k]), get_dimensions(newkeyset[k]))
+            result = f(*args, **kwds)
             if "result" in au:
                 assert have_same_dimensions(result, au["result"]), \
-                    "Function "+f.__name__+" should return a value with unit "+str(au["result"])+" but has returned "+str(get_dimensions(result))
+                    "Function " + f.__name__ + " should return a value with unit " + str(au["result"]) + " but has returned " + str(get_dimensions(result))
             return result
 #        new_f.__name__ = f.__name__
 #        new_f.__doc__ = f.__doc__
@@ -1441,10 +1441,10 @@ def check_units(**au):
 
 # Note: do not normally call this, see note on importing of decorator module at the top of this module
 if use_decorator:
-    old_check_units=check_units
+    old_check_units = check_units
     def check_units(**au):
         return lambda f : decorator.new_wrapper(old_check_units(**au)(f), f)
-    check_units.__doc__=old_check_units.__doc__
+    check_units.__doc__ = old_check_units.__doc__
 
 def _check_nounits(**au):
     """Don't bother checking units decorator
@@ -1456,18 +1456,18 @@ def _check_nounits(**au):
 def scalar_representation(x):
     if isinstance(x, Unit):
         return x.name
-    u=get_unit(x)
+    u = get_unit(x)
     if isinstance(u, Unit):
-        return '('+repr(float(x))+'*'+u.name+')'
+        return '(' + repr(float(x)) + '*' + u.name + ')'
     if isinstance(x, Quantity):
-        return '(Quantity.with_dimensions('+repr(float(x))+','+repr(x.dim._dims)+'))'
+        return '(Quantity.with_dimensions(' + repr(float(x)) + ',' + repr(x.dim._dims) + '))'
     return repr(x)
 
 # Remove all units
 if not bup.use_units:
     for _u in all_units:
-        exec _u.name+"=float(_u)"
-    check_units=_check_nounits
+        exec _u.name + "=float(_u)"
+    check_units = _check_nounits
     def get_dimensions(obj):
         return Dimension()
 
@@ -1484,10 +1484,10 @@ if not bup.use_units:
         return '1.0'
 
 # Add unit names to __all__
-all_unit_names=[u.name for u in all_units]
+all_unit_names = [u.name for u in all_units]
 __all__.extend(all_unit_names)
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
 #    # the pattern 'pat' below is a regular expression for all the unit names
 #    # you can use it as an exclusion pattern for the epydoc api docs
@@ -1509,22 +1509,22 @@ if __name__=="__main__":
 
     # shorthand function used for example code below
     def pE(vname, str):
-        uname=vname
-        if vname=="": uname="temp"
-        exec(uname+"="+str)
-        if vname!="": print vname, "=",
+        uname = vname
+        if vname == "": uname = "temp"
+        exec(uname + "=" + str)
+        if vname != "": print vname, "=",
         print str,
-        if locals()[uname]!=None:
+        if locals()[uname] != None:
             print '=', locals()[uname]
         else:
             print
         return locals()[uname]
 
-    V=pE("V", "3 * volt")
-    I=pE("I", "2 * amp")
-    a=pE("a", "array([1,2,3])")
+    V = pE("V", "3 * volt")
+    I = pE("I", "2 * amp")
+    a = pE("a", "array([1,2,3])")
     print
-    R=pE("R", "V/I")
+    R = pE("R", "V/I")
     pE("", "I*R")
     print
     pE("", "a*V")
@@ -1538,7 +1538,7 @@ if __name__=="__main__":
     pE("", "(2*volt)/mvolt")
     print "(2*volt).in_unit(amp) =",
     try:
-        print (2*volt).in_unit(amp)
+        print (2 * volt).in_unit(amp)
     except DimensionMismatchError, i:
         print "DimensionMismatchError:", i
     print
@@ -1557,12 +1557,12 @@ if __name__=="__main__":
 
     @check_units(I=amp, R=ohm, wibble=metre, result=volt)
     def getvoltage(I, R, *args, **k):
-        return I*R
+        return I * R
 
     try:
-        print getvoltage(1*amp, 2*ohm, 20)
-        print getvoltage(R=2*ohm, I=1*amp, wibble=7*mmetre)
-        print getvoltage(1*amp, 2*ohm*metre)
+        print getvoltage(1 * amp, 2 * ohm, 20)
+        print getvoltage(R=2 * ohm, I=1 * amp, wibble=7 * mmetre)
+        print getvoltage(1 * amp, 2 * ohm * metre)
     except DimensionMismatchError, inst:
         print "DME:", inst
 

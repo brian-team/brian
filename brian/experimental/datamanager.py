@@ -6,33 +6,33 @@ import platform
 from glob import glob
 from multiprocessing import Manager
 
-__all__=['DataManager']
+__all__ = ['DataManager']
 
 
 class LockingSession(object):
     def __init__(self, dataman, session_filename):
-        self.dataman=dataman
-        self.session_filename=session_filename
-        self.lock=Manager().Lock()
+        self.dataman = dataman
+        self.session_filename = session_filename
+        self.lock = Manager().Lock()
 
     def acquire(self):
         self.lock.acquire()
-        self.session=DataManager.shelf(self.session_filename)
+        self.session = DataManager.shelf(self.session_filename)
 
     def release(self):
         self.session.close()
-        self.session=None
+        self.session = None
         self.lock.release()
 
     def __getitem__(self, item):
         self.acquire()
-        ret=self.session[item]
+        ret = self.session[item]
         self.release()
         return ret
 
     def __setitem__(self, item, value):
         self.acquire()
-        self.session[item]=value
+        self.session[item] = value
         self.release()
 
 
@@ -99,26 +99,26 @@ class DataManager(object):
     '''
     def __init__(self, name, datapath=''):
         # check if directory exists, and if not, make it
-        basepath=os.path.join(datapath, name+'.data')
+        basepath = os.path.join(datapath, name + '.data')
         if not os.path.exists(basepath):
-            subpaths=(name+'.data').split('/')
-            curpath=''
+            subpaths = (name + '.data').split('/')
+            curpath = ''
             for path in subpaths:
-                curpath+=path
+                curpath += path
                 if not os.path.exists(os.path.join(datapath, curpath)):
                     os.mkdir(os.path.join(datapath, curpath))
-                curpath+='/'
-        self.basepath=basepath
-        self.computer_name=getuser()+'.'+platform.node()
-        self.computer_session_filename=self.session_filename(self.computer_name)
+                curpath += '/'
+        self.basepath = basepath
+        self.computer_name = getuser() + '.' + platform.node()
+        self.computer_session_filename = self.session_filename(self.computer_name)
 
     def session_name(self):
-        return getuser()+'.'+str(uuid4())
+        return getuser() + '.' + str(uuid4())
 
     def session_filename(self, session_name=None):
         if session_name is None:
-            session_name=self.session_name()
-        fname=os.path.normpath(os.path.join(self.basepath, session_name))
+            session_name = self.session_name()
+        fname = os.path.normpath(os.path.join(self.basepath, session_name))
         return fname
     @staticmethod
     def shelf(fname):
@@ -140,18 +140,18 @@ class DataManager(object):
         return glob(os.path.join(self.basepath, '*'))
 
     def get(self, key):
-        allfiles=self.session_filenames()
-        ret={}
+        allfiles = self.session_filenames()
+        ret = {}
         for name in allfiles:
-            path, file=os.path.split(name)
-            shelf=shelve.open(name, protocol=2)
+            path, file = os.path.split(name)
+            shelf = shelve.open(name, protocol=2)
             if key in shelf:
-                ret[file]=shelf[key]
+                ret[file] = shelf[key]
         return ret
 
     def get_merged(self, key):
-        allitems=self.get(key)
-        ret=[]
+        allitems = self.get(key)
+        ret = []
         for _, val in allitems.iteritems():
             if isinstance(val, (list, tuple)):
                 ret.extend(val)
@@ -160,37 +160,37 @@ class DataManager(object):
         return ret
 
     def get_matching_keys(self, match):
-        allkeys=self.keys()
-        matching_keys=[key for key in allkeys if (callable(match) and match(key)) or key.startswith(match)]
+        allkeys = self.keys()
+        matching_keys = [key for key in allkeys if (callable(match) and match(key)) or key.startswith(match)]
         return matching_keys
 
     def get_matching(self, match):
-        ret={}
+        ret = {}
         for key in self.get_matching_keys(match):
-            ret[key]=self.get(key)
+            ret[key] = self.get(key)
         return ret
 
     def get_merged_matching(self, match):
-        ret=[]
+        ret = []
         for key in self.get_matching_keys(match):
             ret.extend(self.get_merged(key))
         return ret
 
     def get_flat_matching(self, match):
-        allitems=self.get_matching(match)
-        ret=[]
+        allitems = self.get_matching(match)
+        ret = []
         for matching_key, matching_dict in allitems.iteritems():
             ret.extend(matching_dict.values())
         return ret
 
     def keys(self):
-        allkeys=set([])
+        allkeys = set([])
         for name in self.session_filenames():
             allkeys.update(set(shelve.open(name, protocol=2).keys()))
         return list(allkeys)
 
-if __name__=='__main__':
-    d=DataManager('test/testing')
+if __name__ == '__main__':
+    d = DataManager('test/testing')
     #s = d.session()
     #s['a'] = [7]
     print d.get_merged('a')

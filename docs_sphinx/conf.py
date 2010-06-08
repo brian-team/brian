@@ -13,7 +13,7 @@
 
 import sys, os
 
-building_as='html'
+building_as = 'html'
 
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
@@ -25,37 +25,37 @@ building_as='html'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions=['sphinx.ext.autodoc', 'sphinx.ext.ifconfig']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.ifconfig']
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path=['_templates']
+templates_path = ['_templates']
 
 # The suffix of source filenames.
-source_suffix='.txt'
+source_suffix = '.txt'
 
 # The master toctree document.
-master_doc='index'
+master_doc = 'index'
 
 # General substitutions.
-project='Brian'
-copyright='2008, Romain Brette, Dan Goodman'
+project = 'Brian'
+copyright = '2008, Romain Brette, Dan Goodman'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version='1.2'
+version = '1.2'
 # The full version, including alpha/beta/rc tags.
-release='1.2.1dev'
+release = '1.2.1dev'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
 #today = ''
 # Else, today_fmt is used as the format for a strftime call.
-today_fmt='%B %d, %Y'
+today_fmt = '%B %d, %Y'
 
 # List of documents that shouldn't be included in the build.
-unused_docs=['completecontents']
+unused_docs = ['completecontents']
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
@@ -69,7 +69,7 @@ unused_docs=['completecontents']
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style='sphinx'
+pygments_style = 'sphinx'
 
 
 # Options for HTML output
@@ -78,10 +78,10 @@ pygments_style='sphinx'
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
 # given in html_static_path.
-html_style='default.css'
+html_style = 'default.css'
 
-html_theme="default"
-html_theme_options={
+html_theme = "default"
+html_theme_options = {
     'sidebarbgcolor':'#ccccff',
     'sidebartextcolor':'#000000',
     'sidebarlinkcolor':'#0000a8',
@@ -93,16 +93,16 @@ html_theme_options={
 
 # The name of an image file (within the static path) to place at the top of
 # the sidebar.
-html_logo='brian-logo.png'
+html_logo = 'brian-logo.png'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path=['_static']
+html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-html_last_updated_fmt='%b %d, %Y'
+html_last_updated_fmt = '%b %d, %Y'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -116,7 +116,7 @@ html_last_updated_fmt='%b %d, %Y'
 #html_additional_pages = {}
 
 # If false, no module index is generated.
-html_use_modindex=False
+html_use_modindex = False
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
 #html_copy_source = True
@@ -126,7 +126,7 @@ html_use_modindex=False
 #html_use_opensearch = False
 
 # Output file base name for HTML help builder.
-htmlhelp_basename='Briandoc'
+htmlhelp_basename = 'Briandoc'
 
 
 # Options for LaTeX output
@@ -140,7 +140,7 @@ htmlhelp_basename='Briandoc'
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
-latex_documents=[
+latex_documents = [
   ('index', 'Brian.tex', 'Brian Documentation', 'Romain Brette, Dan Goodman', 'manual'),
 ]
 

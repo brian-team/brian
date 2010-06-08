@@ -30,36 +30,36 @@ def testepsp():
     connected to the first
     """
     reinit_default_clock()
-    clock=Clock(dt=0.1*ms)
-    expected_vmax=0.136889*mvolt
-    expected_vmaxtime=1.69735*msecond
-    desired_vmaxaccuracy=0.001*mvolt
-    desired_vmaxtimeaccuracy=max(clock.dt, 0.00001*ms)
-    taum=10*ms
-    taupsp=0.325*ms
-    y0=4.86*mV
-    P=NeuronGroup(N=1, model='''
+    clock = Clock(dt=0.1 * ms)
+    expected_vmax = 0.136889 * mvolt
+    expected_vmaxtime = 1.69735 * msecond
+    desired_vmaxaccuracy = 0.001 * mvolt
+    desired_vmaxtimeaccuracy = max(clock.dt, 0.00001 * ms)
+    taum = 10 * ms
+    taupsp = 0.325 * ms
+    y0 = 4.86 * mV
+    P = NeuronGroup(N=1, model='''
                   dV/dt = (-V+x)*(1./taum) : volt
                   dx/dt = (-x+y)*(1./taupsp) : volt
                   dy/dt = -y*(1./taupsp) : volt
                   ''',
-                  threshold=100*mV, reset=0*mV)
-    Pinit=SpikeGeneratorGroup(1, [(0, 0*ms)])
-    C=Connection(Pinit, P, 'y')
+                  threshold=100 * mV, reset=0 * mV)
+    Pinit = SpikeGeneratorGroup(1, [(0, 0 * ms)])
+    C = Connection(Pinit, P, 'y')
     C.connect_full(Pinit, P, y0)
-    M=StateMonitor(P, 'V', record=0)
-    run(10*ms)
-    V=M[0]
-    Vmax=0
-    Vi=0
+    M = StateMonitor(P, 'V', record=0)
+    run(10 * ms)
+    V = M[0]
+    Vmax = 0
+    Vi = 0
     for i in range(len(V)):
-        if V[i]>Vmax:
-            Vmax=V[i]
-            Vi=i
-    Vmaxtime=M.times[Vi]*second
-    Vmax=Vmax*volt
-    assert abs(Vmax-expected_vmax)<desired_vmaxaccuracy
-    assert abs(Vmaxtime-expected_vmaxtime)<desired_vmaxtimeaccuracy
+        if V[i] > Vmax:
+            Vmax = V[i]
+            Vi = i
+    Vmaxtime = M.times[Vi] * second
+    Vmax = Vmax * volt
+    assert abs(Vmax - expected_vmax) < desired_vmaxaccuracy
+    assert abs(Vmaxtime - expected_vmaxtime) < desired_vmaxtimeaccuracy
 
-if __name__=='__main__':
+if __name__ == '__main__':
     testepsp()

@@ -2,9 +2,9 @@ from brian import *
 
 set_global_preferences(useweave=False)
 
-G=NeuronGroup(3, 'V:1')
-H=NeuronGroup(4, 'V:1')
-C=Connection(G, H, 'V')
+G = NeuronGroup(3, 'V:1')
+H = NeuronGroup(4, 'V:1')
+C = Connection(G, H, 'V')
 C.connect_random(p=0.5, weight=1)
 
 C.compress()

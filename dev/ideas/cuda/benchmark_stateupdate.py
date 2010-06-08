@@ -5,28 +5,28 @@ from pycuda import gpuarray
 import bisect
 import numpy, pylab, time
 
-N=1000000
-blocksize=512
-duration=10000
+N = 1000000
+blocksize = 512
+duration = 10000
 
-N=int(numpy.ceil(1.*N/blocksize)*blocksize)
+N = int(numpy.ceil(1. * N / blocksize) * blocksize)
 
-if drv.get_version()==(2, 0, 0): # cuda version
-    precision='float'
-elif drv.get_version()>(2, 0, 0):
-    precision='double'
+if drv.get_version() == (2, 0, 0): # cuda version
+    precision = 'float'
+elif drv.get_version() > (2, 0, 0):
+    precision = 'double'
 else:
     raise Exception, "CUDA 2.0 required"
 
-if precision=='double':
-    mydtype=numpy.float64
+if precision == 'double':
+    mydtype = numpy.float64
 else:
-    mydtype=numpy.float32
+    mydtype = numpy.float32
 
-block=(blocksize, 1, 1)
-grid=(N/blocksize, 1)
+block = (blocksize, 1, 1)
+grid = (N / blocksize, 1)
 
-mod=drv.SourceModule("""
+mod = drv.SourceModule("""
 /*__global__ void stateupdate(SCALAR *V_arr, SCALAR *ge_arr, SCALAR *gi_arr)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -69,15 +69,15 @@ __global__ void stateupdate_noglobal(SCALAR *V_arr, SCALAR *ge_arr, SCALAR *gi_a
     gi = gi+0.0001*gi__tmp;
 }
 """.replace('SCALAR', precision))
-stateupdate=mod.get_function("stateupdate")
-stateupdate_noglobal=mod.get_function("stateupdate_noglobal")
+stateupdate = mod.get_function("stateupdate")
+stateupdate_noglobal = mod.get_function("stateupdate_noglobal")
 
-V=gpuarray.to_gpu(numpy.array(numpy.random.rand(N)*0.01-0.06, dtype=mydtype))
-ge=gpuarray.to_gpu(numpy.zeros(N, dtype=mydtype))
-gi=gpuarray.to_gpu(numpy.zeros(N, dtype=mydtype))
+V = gpuarray.to_gpu(numpy.array(numpy.random.rand(N) * 0.01 - 0.06, dtype=mydtype))
+ge = gpuarray.to_gpu(numpy.zeros(N, dtype=mydtype))
+gi = gpuarray.to_gpu(numpy.zeros(N, dtype=mydtype))
 
 stateupdate.prepare(('i', 'i', 'i'), block)
-stateupdate_args=(grid, int(V.gpudata), int(ge.gpudata), int(gi.gpudata))
+stateupdate_args = (grid, int(V.gpudata), int(ge.gpudata), int(gi.gpudata))
 stateupdate.prepared_call(*stateupdate_args)
 #stateupdate_noglobal.prepared_call(*stateupdate_args)
 
@@ -85,16 +85,16 @@ def run_sim(stateupdate=stateupdate):
     for t in xrange(duration):
         stateupdate.launch_grid(*grid)
 
-start=time.time()
+start = time.time()
 run_sim()
-duration_stateupdate=time.time()-start
+duration_stateupdate = time.time() - start
 
-start=time.time()
+start = time.time()
 run_sim(stateupdate_noglobal)
-duration_stateupdate_noglobal=time.time()-start
+duration_stateupdate_noglobal = time.time() - start
 
-data_copied_gb=N*mydtype().nbytes*3*duration*2./1024.**3
-transfer_rate_gb_sec=data_copied_gb/(duration_stateupdate-duration_stateupdate_noglobal)
+data_copied_gb = N * mydtype().nbytes * 3 * duration * 2. / 1024. ** 3
+transfer_rate_gb_sec = data_copied_gb / (duration_stateupdate - duration_stateupdate_noglobal)
 
 print 'N:', N, 'blocksize:', blocksize, 'numsteps:', duration
 print 'GPU time:', duration_stateupdate

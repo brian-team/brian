@@ -1,7 +1,7 @@
 # state updater matrix
 # no spiking
-cpp_cuba=[]
-cur_result=[]
+cpp_cuba = []
+cur_result = []
 cur_result.append((0.719, 47065))
 cur_result.append((0.735, 47066))
 cur_result.append((0.75, 47070))
@@ -10,7 +10,7 @@ cur_result.append((0.75, 47080))
 cur_result.append((0.75, 47067))
 cur_result.append((0.75, 47076))
 cpp_cuba.append((1000, 0.743429, 47071, cur_result))
-cur_result=[]
+cur_result = []
 cur_result.append((1.531, 94149))
 cur_result.append((1.547, 94143))
 cur_result.append((1.547, 94138))
@@ -19,7 +19,7 @@ cur_result.append((1.547, 94141))
 cur_result.append((1.547, 94151))
 cur_result.append((1.547, 94148))
 cpp_cuba.append((2000, 1.54471, 94146, cur_result))
-cur_result=[]
+cur_result = []
 cur_result.append((3.078, 188271))
 cur_result.append((3.093, 188268))
 cur_result.append((3.093, 188279))
@@ -28,7 +28,7 @@ cur_result.append((3.094, 188296))
 cur_result.append((3.094, 188285))
 cur_result.append((3.109, 188287))
 cpp_cuba.append((4000, 3.09357, 188283, cur_result))
-cur_result=[]
+cur_result = []
 cur_result.append((6.156, 376601))
 cur_result.append((6.156, 376555))
 cur_result.append((6.172, 376560))
@@ -37,7 +37,7 @@ cur_result.append((6.187, 376613))
 cur_result.append((6.188, 376557))
 cur_result.append((6.203, 376575))
 cpp_cuba.append((8000, 6.17629, 376573, cur_result))
-cur_result=[]
+cur_result = []
 cur_result.append((12.359, 753106))
 cur_result.append((12.359, 753105))
 cur_result.append((12.375, 753120))

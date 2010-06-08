@@ -31,13 +31,13 @@ potential.
 '''
 from brian import *
 
-taum=20*ms
-taue=1*ms
-taui=10*ms
-Vt=10*mV
-Vr=0*mV
+taum = 20 * ms
+taue = 1 * ms
+taui = 10 * ms
+Vt = 10 * mV
+Vr = 0 * mV
 
-eqs=Equations('''
+eqs = Equations('''
       dV/dt  = (-V+ge-gi)/taum : volt
       dge/dt = -ge/taue        : volt
       dgi/dt = -gi/taui        : volt
@@ -53,29 +53,29 @@ demonstrate the effect, we'll have two excitatory spikes reasonably close
 together, followed by an inhibitory spike later on, and then shortly after
 that two excitatory spikes close together.
 '''
-spiketimes=[(0, 1*ms), (0, 10*ms),
-              (1, 40*ms),
-              (0, 50*ms), (0, 55*ms)]
+spiketimes = [(0, 1 * ms), (0, 10 * ms),
+              (1, 40 * ms),
+              (0, 50 * ms), (0, 55 * ms)]
 
-G1=SpikeGeneratorGroup(2, spiketimes)
-G2=NeuronGroup(N=1, model=eqs, threshold=Vt, reset=Vr)
+G1 = SpikeGeneratorGroup(2, spiketimes)
+G2 = NeuronGroup(N=1, model=eqs, threshold=Vt, reset=Vr)
 
-C1=Connection(G1, G2, 'ge')
-C2=Connection(G1, G2, 'gi')
+C1 = Connection(G1, G2, 'ge')
+C2 = Connection(G1, G2, 'gi')
 '''
 The weights are the same - when we increase ``ge`` the effect on ``V`` is excitatory
 and when we increase ``gi`` the effect on ``V`` is inhibitory.
 '''
-C1[0, 0]=3*mV
-C2[1, 0]=3*mV
+C1[0, 0] = 3 * mV
+C2[1, 0] = 3 * mV
 '''
 We set up monitors and run as normal.
 '''
-Mv=StateMonitor(G2, 'V', record=True)
-Mge=StateMonitor(G2, 'ge', record=True)
-Mgi=StateMonitor(G2, 'gi', record=True)
+Mv = StateMonitor(G2, 'V', record=True)
+Mge = StateMonitor(G2, 'ge', record=True)
+Mgi = StateMonitor(G2, 'gi', record=True)
 
-run(100*ms)
+run(100 * ms)
 '''
 This time we do something a little bit different when plotting it. We want
 a plot with two subplots, the top one will show ``V``, and the bottom one will

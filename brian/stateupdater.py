@@ -36,7 +36,7 @@
 Neuron StateUpdaters
 '''
 
-__all__=['StateUpdater', 'LinearStateUpdater', 'NonlinearStateUpdater',
+__all__ = ['StateUpdater', 'LinearStateUpdater', 'NonlinearStateUpdater',
            'SynapticNoise', 'LazyStateUpdater', 'magic_state_updater',
            'FunStateUpdater', 'get_linear_equations']
 
@@ -59,7 +59,7 @@ import warnings
 from log import *
 from globalprefs import *
 from experimental.codegen import *
-CStateUpdater=PythonStateUpdater=None
+CStateUpdater = PythonStateUpdater = None
 
 def magic_state_updater(model, clock=None, order=1, implicit=False, compile=False, freeze=False, \
                         method=None, check_units=True):
@@ -78,15 +78,15 @@ def magic_state_updater(model, clock=None, order=1, implicit=False, compile=Fals
     * nonlinear: automatic selection, but not linear
     '''
     global CStateUpdater, PythonStateUpdater
-    if method=='exponential_Euler':
-        implicit=True
-        order=1
-    elif method=='Euler':
-        implicit=False
-        order=1
-    elif method=='RK':
-        implicit=False
-        order=2
+    if method == 'exponential_Euler':
+        implicit = True
+        order = 1
+    elif method == 'Euler':
+        implicit = False
+        order = 1
+    elif method == 'RK':
+        implicit = False
+        order = 2
     elif method is None:
         pass
     else:
@@ -97,62 +97,62 @@ def magic_state_updater(model, clock=None, order=1, implicit=False, compile=Fals
         raise TypeError, "An Equations object must be passed."
 
     model.prepare(check_units=check_units) # check units and other things
-    dynamicvars=model._diffeq_names # Dynamic variables
+    dynamicvars = model._diffeq_names # Dynamic variables
 
     # Identify stochastic equations
-    noiselist=[]
+    noiselist = []
     for statevar in model._diffeq_names:
-        f=model._function[statevar]
-        x0=[model._units[var] for var in f.func_code.co_varnames] # init variables
+        f = model._function[statevar]
+        x0 = [model._units[var] for var in f.func_code.co_varnames] # init variables
         if depends_on(f, 'xi', x0):
             noiselist.append((statevar, get_global_term(f, 'xi', x0))) # s.d. of noise
-            f.func_globals['xi']=0*second**-.5
+            f.func_globals['xi'] = 0 * second ** -.5
         # better: remove in string
 
-    use_codegen=get_global_preference('usecodegen') and get_global_preference('usecodegenstateupdate')
-    use_weave=get_global_preference('useweave') and get_global_preference('usecodegenweave')
+    use_codegen = get_global_preference('usecodegen') and get_global_preference('usecodegenstateupdate')
+    use_weave = get_global_preference('useweave') and get_global_preference('usecodegenweave')
     if CStateUpdater is None:
         from experimental.codegen.stateupdaters import CStateUpdater, PythonStateUpdater
 
     # Linearity test
     # insert this in equations
-    allow_linear=(method is None) or (method=='linear')
+    allow_linear = (method is None) or (method == 'linear')
     if allow_linear and model.is_linear():
         log_info('brian.stateupdater', "Linear model: using exact updates")
-        stateupdaterobj=LinearStateUpdater(model, clock=clock)
+        stateupdaterobj = LinearStateUpdater(model, clock=clock)
     else:
         # Nonlinear model - check order of the method
         if implicit: # implicit integration schemes
             if model.is_conditionally_linear():
                 log_info('brian.stateupdater', "Using exponential Euler")
                 if not use_codegen:
-                    stateupdaterobj=ExponentialEulerStateUpdater(model, clock=clock, compile=compile, freeze=freeze)
+                    stateupdaterobj = ExponentialEulerStateUpdater(model, clock=clock, compile=compile, freeze=freeze)
                 elif use_weave:
-                    stateupdaterobj=CStateUpdater(model, exp_euler_scheme, clock=clock, freeze=freeze)
+                    stateupdaterobj = CStateUpdater(model, exp_euler_scheme, clock=clock, freeze=freeze)
                     log_warn('brian.stateupdater', 'Using codegen CStateUpdater')
                 else:
-                    stateupdaterobj=PythonStateUpdater(model, exp_euler_scheme, clock=clock, freeze=freeze)
+                    stateupdaterobj = PythonStateUpdater(model, exp_euler_scheme, clock=clock, freeze=freeze)
                     log_warn('brian.stateupdater', 'Using codegen PythonStateUpdater')
             else:
                 raise TypeError, "General implicit methods are not implemented yet."
         else: # explicit method
-            if order==1:
+            if order == 1:
                 if not use_codegen:
-                    stateupdaterobj=NonlinearStateUpdater(model, clock=clock, compile=compile, freeze=freeze)
+                    stateupdaterobj = NonlinearStateUpdater(model, clock=clock, compile=compile, freeze=freeze)
                 elif use_weave:
-                    stateupdaterobj=CStateUpdater(model, euler_scheme, clock=clock, freeze=freeze)
+                    stateupdaterobj = CStateUpdater(model, euler_scheme, clock=clock, freeze=freeze)
                     log_warn('brian.stateupdater', 'Using codegen CStateUpdater')
                 else:
-                    stateupdaterobj=PythonStateUpdater(model, euler_scheme, clock=clock, freeze=freeze)
+                    stateupdaterobj = PythonStateUpdater(model, euler_scheme, clock=clock, freeze=freeze)
                     log_warn('brian.stateupdater', 'Using codegen PythonStateUpdater')
-            elif order==2:
+            elif order == 2:
                 if not use_codegen:
-                    stateupdaterobj=RK2StateUpdater(model, clock=clock, compile=compile, freeze=freeze)
+                    stateupdaterobj = RK2StateUpdater(model, clock=clock, compile=compile, freeze=freeze)
                 elif use_weave:
-                    stateupdaterobj=CStateUpdater(model, rk2_scheme, clock=clock, freeze=freeze)
+                    stateupdaterobj = CStateUpdater(model, rk2_scheme, clock=clock, freeze=freeze)
                     log_warn('brian.stateupdater', 'Using codegen CStateUpdater')
                 else:
-                    stateupdaterobj=PythonStateUpdater(model, rk2_scheme, clock=clock, freeze=freeze)
+                    stateupdaterobj = PythonStateUpdater(model, rk2_scheme, clock=clock, freeze=freeze)
                     log_warn('brian.stateupdater', 'Using codegen PythonStateUpdater')
             else:
                 raise TypeError, "Methods with order greater than 2 are not implemented yet."
@@ -160,8 +160,8 @@ def magic_state_updater(model, clock=None, order=1, implicit=False, compile=Fals
     # Insert noise
     for var, sigma in noiselist:
         # TODO: noise with mu = 0
-        i=dynamicvars.index(var)
-        stateupdaterobj=SynapticNoise(stateupdaterobj, i, 0*model._units[var]/second, sigma, clock)
+        i = dynamicvars.index(var)
+        stateupdaterobj = SynapticNoise(stateupdaterobj, i, 0 * model._units[var] / second, sigma, clock)
 
     return stateupdaterobj, dynamicvars
 
@@ -180,8 +180,8 @@ class StateUpdater(object):
         '''
         Default model: dv/dt=-v
         '''
-        if clock==None:
-            self.update_factor=exp(-clock.dt) # The update matrix
+        if clock == None:
+            self.update_factor = exp(-clock.dt) # The update matrix
         else:
             raise TypeError, "A time reference must be passed."
 
@@ -198,7 +198,7 @@ class StateUpdater(object):
         Careful here: always use the slice operation for affectations.
         P is the neuron group.
         '''
-        P._S[:]*=self.update_factor
+        P._S[:] *= self.update_factor
 
     def __repr__(self):
         return 'Leaky integrate-and-fire StateUpdater'
@@ -245,61 +245,61 @@ def get_linear_equations(eqs):
     where eqs is an Equations object. 
     '''
     # Otherwise assumes it is given in functional form
-    n=len(eqs._diffeq_names) # number of state variables
-    dynamicvars=eqs._diffeq_names
+    n = len(eqs._diffeq_names) # number of state variables
+    dynamicvars = eqs._diffeq_names
     # Calculate B
-    AB=zeros((n, 1))
-    d=dict.fromkeys(dynamicvars)
+    AB = zeros((n, 1))
+    d = dict.fromkeys(dynamicvars)
     for j in range(n):
-        d[dynamicvars[j]]=0.*eqs._units[dynamicvars[j]]
+        d[dynamicvars[j]] = 0. * eqs._units[dynamicvars[j]]
     for var, i in zip(dynamicvars, count()):
-        AB[i]=-eqs.apply(var, d)
+        AB[i] = -eqs.apply(var, d)
     # Calculate A
-    M=zeros((n, n))
+    M = zeros((n, n))
     for i in range(n):
         for j in range(n):
-            d[dynamicvars[j]]=0.*eqs._units[dynamicvars[j]]
+            d[dynamicvars[j]] = 0. * eqs._units[dynamicvars[j]]
         if isinstance(eqs._units[dynamicvars[i]], Quantity):
-            d[dynamicvars[i]]=Quantity.with_dimensions(1., eqs._units[dynamicvars[i]].get_dimensions())
+            d[dynamicvars[i]] = Quantity.with_dimensions(1., eqs._units[dynamicvars[i]].get_dimensions())
         else:
-            d[dynamicvars[i]]=1.
+            d[dynamicvars[i]] = 1.
         for var, j in zip(dynamicvars, count()):
-            M[j, i]=eqs.apply(var, d)+AB[j]
+            M[j, i] = eqs.apply(var, d) + AB[j]
     #M-=eye(n)*1e-10 # quick dirty fix for problem of constant derivatives; dimension = Hz
     #B=linalg.lstsq(M,AB)[0] # We use this instead of solve in case M is degenerate
-    B=linalg.solve(M, AB) # We use this instead of solve in case M is degenerate
+    B = linalg.solve(M, AB) # We use this instead of solve in case M is degenerate
     return M, B
 
 def get_linear_equations_solution_numerically(eqs, dt):
     # Otherwise assumes it is given in functional form
-    n=len(eqs._diffeq_names) # number of state variables
-    dynamicvars=eqs._diffeq_names
+    n = len(eqs._diffeq_names) # number of state variables
+    dynamicvars = eqs._diffeq_names
     # Calculate B
-    AB=zeros((n, 1))
-    d=dict.fromkeys(dynamicvars)
+    AB = zeros((n, 1))
+    d = dict.fromkeys(dynamicvars)
     for j in range(n):
-        d[dynamicvars[j]]=0.*eqs._units[dynamicvars[j]]
+        d[dynamicvars[j]] = 0. * eqs._units[dynamicvars[j]]
     for var, i in zip(dynamicvars, count()):
-        AB[i]=-eqs.apply(var, d)
+        AB[i] = -eqs.apply(var, d)
     # Calculate A
-    M=zeros((n, n))
+    M = zeros((n, n))
     for i in range(n):
         for j in range(n):
-            d[dynamicvars[j]]=0.*eqs._units[dynamicvars[j]]
+            d[dynamicvars[j]] = 0. * eqs._units[dynamicvars[j]]
         if isinstance(eqs._units[dynamicvars[i]], Quantity):
-            d[dynamicvars[i]]=Quantity.with_dimensions(1., eqs._units[dynamicvars[i]].get_dimensions())
+            d[dynamicvars[i]] = Quantity.with_dimensions(1., eqs._units[dynamicvars[i]].get_dimensions())
         else:
-            d[dynamicvars[i]]=1.
+            d[dynamicvars[i]] = 1.
         for var, j in zip(dynamicvars, count()):
-            M[j, i]=eqs.apply(var, d)+AB[j]
+            M[j, i] = eqs.apply(var, d) + AB[j]
     #B=linalg.solve(M,AB)
-    numeulersteps=100
-    deltat=dt/numeulersteps
-    E=eye(n)+deltat*M
-    C=eye(n)
-    D=zeros((n, 1))
+    numeulersteps = 100
+    deltat = dt / numeulersteps
+    E = eye(n) + deltat * M
+    C = eye(n)
+    D = zeros((n, 1))
     for step in xrange(numeulersteps):
-        C, D=dot(E, C), dot(E, D)-AB*deltat
+        C, D = dot(E, C), dot(E, D) - AB * deltat
     return C, D
     #return M,B
 
@@ -344,51 +344,51 @@ class LinearStateUpdater(StateUpdater):
         TODO: more checks
         TODO: rest
         '''
-        self._useaccel=get_global_preference('useweave_linear_diffeq')
-        self._cpp_compiler=get_global_preference('weavecompiler')
-        self._extra_compile_args=['-O3']
-        if self._cpp_compiler=='gcc':
-            self._extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
-        self._useB=False
-        if clock==None:
-            clock=guess_clock()
+        self._useaccel = get_global_preference('useweave_linear_diffeq')
+        self._cpp_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._cpp_compiler == 'gcc':
+            self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+        self._useB = False
+        if clock == None:
+            clock = guess_clock()
         if isinstance(M, ndarray):
-            self.A=linalg.expm(M*clock.dt)
-            self.B=B
+            self.A = linalg.expm(M * clock.dt)
+            self.B = B
         elif isinstance(M, Equations):
             try:
-                M, self.B=get_linear_equations(M)
-                self.A=linalg.expm(M*clock.dt)
+                M, self.B = get_linear_equations(M)
+                self.A = linalg.expm(M * clock.dt)
                 #self.A=array(self.A,single)
                 if self.B is not None:
-                    self._C=-dot(self.A, self.B)+self.B
+                    self._C = -dot(self.A, self.B) + self.B
                     #self._C=array(self._C,single)
-                    self._useB=True
+                    self._useB = True
                 else:
-                    self._useB=False
+                    self._useB = False
             except LinAlgError:
                 log_info('brian.stateupdater', 'Solving linear equations numerically')
-                self.A, self._C=get_linear_equations_solution_numerically(M, clock.dt)
-                self.B=NotImplemented # raises error on trying to use this
-                self._useB=True
+                self.A, self._C = get_linear_equations_solution_numerically(M, clock.dt)
+                self.B = NotImplemented # raises error on trying to use this
+                self._useB = True
         # note the numpy dot command works faster if self.A has C ordering compared
         # to fortran ordering (although maybe this depends on which implementation
         # of BLAS you're using). The difference is only significant in small
         # calculations because making a copy of self.A is usually not serious, its
         # size is only the number of variables, not the number of neurons.
-        self.A=array(self.A, order='C')
+        self.A = array(self.A, order='C')
         if self._useB:
-            self._C=array(self._C, order='C')
+            self._C = array(self._C, order='C')
 
     def rest(self, P):
         if self._useB:
             if self.B is NotImplemented:
                 raise NotImplementedError, \
-                    "The resting potential cannot be found because the equations are degenerate "+\
+                    "The resting potential cannot be found because the equations are degenerate " + \
                     "(most likely because they include a parameter)"
-            P._S[:]=self.B
+            P._S[:] = self.B
         else:
-            P._S[:]=0
+            P._S[:] = 0
 
     def __call__(self, P):
         '''
@@ -399,18 +399,18 @@ class LinearStateUpdater(StateUpdater):
         if self._useB: # This could be removed
             if not self._useaccel:
                 #P._S[:]=dot(self.A,P._S)+self._C
-                P._S[:]=dot(self.A, P._S)
+                P._S[:] = dot(self.A, P._S)
                 #P._S = dot(self.A,P._S)
                 #P._S += self._C
                 add(P._S, self._C, P._S)
                 #P._S[:]=dot(self.A,P._S-self.B)+self.B
             else:
-                m=len(self)
-                S=P._S
-                n=S.shape[1] #n = len(P)
-                A=self.A
-                c=self._C
-                code='''
+                m = len(self)
+                S = P._S
+                n = S.shape[1] #n = len(P)
+                A = self.A
+                c = self._C
+                code = '''
                 double x[m]; 
                 for(int i=0;i<n;i++)  
                 {
@@ -430,13 +430,13 @@ class LinearStateUpdater(StateUpdater):
                              extra_compile_args=self._extra_compile_args)
         else:
             if not self._useaccel:
-                P._S[:]=dot(self.A, P._S)
+                P._S[:] = dot(self.A, P._S)
             else:
-                n=len(P)
-                m=len(self)
-                S=P._S
-                A=self.A
-                code='''
+                n = len(P)
+                m = len(self)
+                S = P._S
+                A = self.A
+                code = '''
                 double x[m]; 
                 for(int i=0;i<n;i++)  
                 {
@@ -456,7 +456,7 @@ class LinearStateUpdater(StateUpdater):
                              extra_compile_args=self._extra_compile_args)
 
     def __repr__(self):
-        return 'Linear StateUpdater with '+str(len(self))+' state variables'
+        return 'Linear StateUpdater with ' + str(len(self)) + ' state variables'
 
     def __len__(self):
         '''
@@ -478,20 +478,20 @@ class NonlinearStateUpdater(StateUpdater):
         If compile is True, a Python code object is compiled.
         '''
         # TODO: global pref?
-        self.eqs=eqs
-        self.optimized=compile
-        self._first_time=True
+        self.eqs = eqs
+        self.optimized = compile
+        self._first_time = True
         if freeze:
             self.eqs.compile_functions(freeze=freeze)
         if compile:
-            self._code=self.eqs.forward_euler_code()
+            self._code = self.eqs.forward_euler_code()
 
     def rest(self, P):
         '''
         Sets the variables at rest.
         '''
         for name, value in self.eqs.fixed_point().iteritems():
-            P.state(name)[:]=value
+            P.state(name)[:] = value
 
     def __call__(self, P):
         '''
@@ -508,21 +508,21 @@ class NonlinearStateUpdater(StateUpdater):
         # store that in the neurongroup?
         if self.optimized:
             if self._first_time:
-                self._first_time=False
-                P._dS=0*P._S
-            dt=P.clock._dt
-            t=P.clock.t
+                self._first_time = False
+                P._dS = 0 * P._S
+            dt = P.clock._dt
+            t = P.clock.t
             exec(self._code)
         else:
-            states=dict.fromkeys(self.eqs._diffeq_names) # ={}?
+            states = dict.fromkeys(self.eqs._diffeq_names) # ={}?
             #for var in self.eqs.dynamicvars:
             for var in self.eqs._diffeq_names:
-                states[var]=P.state_(var)
-            states['t']=P.clock.t #time
+                states[var] = P.state_(var)
+            states['t'] = P.clock.t #time
             self.eqs.forward_euler(states, P.clock._dt)
 
     def __repr__(self):
-        return 'Nonlinear StateUpdater with '+str(len(self))+' state variables'
+        return 'Nonlinear StateUpdater with ' + str(len(self)) + ' state variables'
 
     def __len__(self):
         '''
@@ -544,8 +544,8 @@ class RK2StateUpdater(NonlinearStateUpdater):
         If compile is True, a Python code object is compiled.
         '''
         # TODO: global pref?
-        self.eqs=eqs
-        self._first_time=True
+        self.eqs = eqs
+        self._first_time = True
         if freeze:
             self.eqs.compile_functions(freeze=freeze)
         if compile:
@@ -558,11 +558,11 @@ class RK2StateUpdater(NonlinearStateUpdater):
         P is the neuron group.
         Euler integration.
         '''
-        states=dict.fromkeys(self.eqs._diffeq_names) # ={}?
+        states = dict.fromkeys(self.eqs._diffeq_names) # ={}?
         #for var in self.eqs.dynamicvars:
         for var in self.eqs._diffeq_names:
-            states[var]=P.state_(var)
-        states['t']=P.clock.t #time
+            states[var] = P.state_(var)
+        states['t'] = P.clock.t #time
         self.eqs.Runge_Kutta2(states, P.clock._dt)
 
 
@@ -572,13 +572,13 @@ class ExponentialEulerStateUpdater(NonlinearStateUpdater):
         Initialize a nonlinear model with dynamics dX/dt = f(X).
         '''
         # TODO: global pref?
-        self.eqs=eqs
-        self.optimized=compile
-        self._first_time=True
+        self.eqs = eqs
+        self.optimized = compile
+        self._first_time = True
         if freeze:
             self.eqs.compile_functions(freeze=freeze)
         if compile:
-            self._code=self.eqs.exponential_euler_code()
+            self._code = self.eqs.exponential_euler_code()
 
     def __call__(self, P):
         '''
@@ -588,17 +588,17 @@ class ExponentialEulerStateUpdater(NonlinearStateUpdater):
         '''
         if self.optimized:
             if self._first_time:
-                self._first_time=False
-                P._dS=P._S.copy()
-            dt=P.clock._dt
-            t=P.clock.t
+                self._first_time = False
+                P._dS = P._S.copy()
+            dt = P.clock._dt
+            t = P.clock.t
             exec(self._code)
         else:
             # TODO: do these operations once
-            states=dict.fromkeys(self.eqs._diffeq_names) #={}?
+            states = dict.fromkeys(self.eqs._diffeq_names) #={}?
             for var in self.eqs._diffeq_names:
-                states[var]=P.state_(var)
-            states['t']=P.clock.t #time
+                states[var] = P.state_(var)
+            states['t'] = P.clock.t #time
             self.eqs.exponential_euler(states, P.clock._dt)
 
 
@@ -613,14 +613,14 @@ class SynapticNoise(StateUpdater):
         mu = mean synaptic input rate (per ms)
         sigma = s.d. of synaptic input per ms^{1/2}
         '''
-        self.baseupdater=baseupdater
-        self.nstate=nstate
-        if clock==None:
-            clock=guess_clock()
+        self.baseupdater = baseupdater
+        self.nstate = nstate
+        if clock == None:
+            clock = guess_clock()
         if clock:
             # TODO: check units
-            self.mu=mu*clock.dt
-            self.sigma=sigma*clock.dt**.5
+            self.mu = mu * clock.dt
+            self.sigma = sigma * clock.dt ** .5
         else:
             raise TypeError, "A time reference must be passed."
 
@@ -634,10 +634,10 @@ class SynapticNoise(StateUpdater):
         P is the neuron group.
         '''
         self.baseupdater(P) # update the underlying model
-        P._S[self.nstate, :]+=self.mu+random.randn(P._S.shape[1])*self.sigma
+        P._S[self.nstate, :] += self.mu + random.randn(P._S.shape[1]) * self.sigma
 
     def __repr__(self):
-        return self.baseupdater.__repr__()+' with synaptic noise on variable '+str(self.nstate)
+        return self.baseupdater.__repr__() + ' with synaptic noise on variable ' + str(self.nstate)
 
     def __len__(self):
         '''
@@ -665,7 +665,7 @@ class LazyStateUpdater(StateUpdater):
 #    Alternatively, we might replace the parent StateUpdater class by this and
 #    write a basic leaky integrator class.
     def __init__(self, numstatevariables=1, clock=None):
-        self._N=numstatevariables
+        self._N = numstatevariables
         pass
 
     def __call__(self, P):
@@ -692,15 +692,15 @@ class FunStateUpdater(StateUpdater):
     that is being updated.
     """
     def __init__(self, func, numstates, clock=None):
-        self.clock=guess_clock(clock)
-        self.func=func
-        self.numstates=numstates
+        self.clock = guess_clock(clock)
+        self.func = func
+        self.numstates = numstates
 
     def __call__(self, P):
         self.func(P)
 
     def __repr__(self):
-        return "Function StateUpdater, function "+self.func.__name__
+        return "Function StateUpdater, function " + self.func.__name__
 
     def __len__(self):
         return self.numstates

@@ -4,14 +4,14 @@ from codegen_python import *
 from codegen_c import *
 from codegen_gpu import *
 
-if __name__=='__main__':
+if __name__ == '__main__':
     if True:
         from brian import *
-        eqs=Equations('''
+        eqs = Equations('''
         dV/dt = -W*V/(10*second) : volt 
         dW/dt = -V**2/(1*second) : volt
         ''')
-        scheme=exp_euler_scheme
+        scheme = exp_euler_scheme
         print 'Equations'
         print '========='
         print eqs

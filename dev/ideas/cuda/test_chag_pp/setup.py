@@ -6,10 +6,10 @@ setup.py file for SWIG example
 
 from distutils.core import setup, Extension
 import os, numpy
-numpy_base_dir=os.path.split(numpy.__file__)[0]
-numpy_include_dir=os.path.join(numpy_base_dir, 'core/include')
+numpy_base_dir = os.path.split(numpy.__file__)[0]
+numpy_include_dir = os.path.join(numpy_base_dir, 'core/include')
 
-testchagpp_module=Extension('_testchagpp',
+testchagpp_module = Extension('_testchagpp',
                            sources=['testchagpp_wrap.cxx',
                                     'testchagpp.cu',
                                     ],

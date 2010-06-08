@@ -22,12 +22,12 @@ from scipy import weave
 from scipy import randn
 import time
 
-n=4000
-x=array(randn(n, n), order='F')
-y=array(randn(n, n), order='F')
-z=array(zeros((n, n)), order='F')
+n = 4000
+x = array(randn(n, n), order='F')
+y = array(randn(n, n), order='F')
+z = array(zeros((n, n)), order='F')
 
-code='''
+code = '''
 cublasStatus status;
 double *d_x = 0;
 double *d_y = 0;
@@ -114,7 +114,7 @@ if (status != CUBLAS_STATUS_SUCCESS) {
 
 '''
 
-start=time.time()
+start = time.time()
 weave.inline(code, ['x', 'y', 'z', 'n'],
              compiler='gcc', #msvc works too
              headers=['"cublas.h"'],
@@ -122,16 +122,16 @@ weave.inline(code, ['x', 'y', 'z', 'n'],
              libraries=['cublas'],
              library_dirs=['C:\\CUDA\\lib'],
              )
-end=time.time()
+end = time.time()
 
-print 'GPU time:', end-start
+print 'GPU time:', end - start
 
-start=time.time()
-w=dot(x, y)
-end=time.time()
+start = time.time()
+w = dot(x, y)
+end = time.time()
 
-print 'CPU time:', end-start
+print 'CPU time:', end - start
 
-print 'Max abs difference in values:', amax(abs(w-z))
+print 'Max abs difference in values:', amax(abs(w - z))
 
 print 'OK'

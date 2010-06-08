@@ -143,14 +143,14 @@ class VirtualGroup(NeuronGroup):
             machine: machine id
         '''
         # How do we deal with clocks?
-        self._S0=group._S0
-        self.staticvars=group.staticvars
-        self.var_index=group.var_index
-        self._max_delay=group._max_delay
-        self.LS=group.LS
-        self._owner=machine
-        self._length=len(group)
-        self._numstates=group.num_states()
+        self._S0 = group._S0
+        self.staticvars = group.staticvars
+        self.var_index = group.var_index
+        self._max_delay = group._max_delay
+        self.LS = group.LS
+        self._owner = machine
+        self._length = len(group)
+        self._numstates = group.num_states()
 
     # Update and reset are disabled
     def update(self):
@@ -162,7 +162,7 @@ class VirtualGroup(NeuronGroup):
     def num_states(self):
         return self._numstates
     def __repr__(self):
-        return 'Virtual group of '+str(len(self))+' neurons'
+        return 'Virtual group of ' + str(len(self)) + ' neurons'
 
 
 class ServerNetwork(Network):
@@ -173,10 +173,10 @@ class ServerNetwork(Network):
     pass
 
 # Identification
-myid=pypar.rank() # id of this process
-nproc=pypar.size() # number of processors
+myid = pypar.rank() # id of this process
+nproc = pypar.size() # number of processors
 
-if myid>0: # client
+if myid > 0: # client
     import sys
     run_client()
     sys.exit(0)

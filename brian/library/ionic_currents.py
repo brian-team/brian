@@ -10,7 +10,7 @@ def leak_current(gl, El, current_name=None):
     '''
     Leak current: gl*(El-vm)
     '''
-    current_name=current_name or unique_id()
+    current_name = current_name or unique_id()
     return Current('I=gl*(El-vm) : amp', gl=gl, El=El, I=current_name, current_name=current_name)
 
 #check_units(EK=volt)
@@ -19,7 +19,7 @@ def K_current_HH(gmax, EK, current_name=None):
     Hodkin-Huxley K+ current.
     Resting potential is 0 mV.
     '''
-    current_name=current_name or unique_id()
+    current_name = current_name or unique_id()
     return Current('''
     I=gmax*n**4*(EK-vm) : amp
     dn/dt=alphan*(1-n)-betan*n : 1
@@ -42,7 +42,7 @@ def Na_current_HH(gmax, ENa, current_name=None):
     '''
     Hodkin-Huxley Na+ current.
     '''
-    current_name=current_name or unique_id()
+    current_name = current_name or unique_id()
     return Current('''
     I=gmax*m**3*h*(ENa-vm) : amp
     dm/dt=alpham*(1-m)-betam*m : 1

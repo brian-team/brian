@@ -17,24 +17,24 @@ from brian import *
 Simulation parameters: choose current amplitude and neuron type
 (from type1c, type1t, type12, type 21, type2, type2o)
 '''
-neuron_type='type1c'
-Ipulse=250*pA
+neuron_type = 'type1c'
+Ipulse = 250 * pA
 
-C=12*pF
-Eh=-43*mV
-EK=-70*mV # -77*mV in mod file
-El=-65*mV
-ENa=50*mV
-nf=0.85 # proportion of n vs p kinetics
-zss=0.5 # steady state inactivation of glt
-celsius=22. # temperature
-q10=3.**((celsius-22)/10.)
+C = 12 * pF
+Eh = -43 * mV
+EK = -70 * mV # -77*mV in mod file
+El = -65 * mV
+ENa = 50 * mV
+nf = 0.85 # proportion of n vs p kinetics
+zss = 0.5 # steady state inactivation of glt
+celsius = 22. # temperature
+q10 = 3. ** ((celsius - 22) / 10.)
 # hcno current (octopus cell)
-frac=0.0
-qt=4.5**((celsius-33.)/10.)
+frac = 0.0
+qt = 4.5 ** ((celsius - 33.) / 10.)
 
 # Maximal conductances of different cell types in nS
-maximal_conductances=dict(
+maximal_conductances = dict(
 type1c=(1000, 150, 0, 0, 0.5, 0, 2),
 type1t=(1000, 80, 0, 65, 0.5, 0, 2),
 type12=(1000, 150, 20, 0, 2, 0, 2),
@@ -42,10 +42,10 @@ type21=(1000, 150, 35, 0, 3.5, 0, 2),
 type2=(1000, 150, 200, 0, 20, 0, 2),
 type2o=(1000, 150, 600, 0, 0, 40, 2) # octopus cell
 )
-gnabar, gkhtbar, gkltbar, gkabar, ghbar, gbarno, gl=[x*nS for x in maximal_conductances[neuron_type]]
+gnabar, gkhtbar, gkltbar, gkabar, ghbar, gbarno, gl = [x * nS for x in maximal_conductances[neuron_type]]
 
 # Classical Na channel
-eqs_na="""
+eqs_na = """
 ina = gnabar*m**3*h*(ENa-v) : amp
 dm/dt=q10*(minf-m)/mtau : 1
 dh/dt=q10*(hinf-h)/htau : 1
@@ -56,7 +56,7 @@ htau =  ((100. / (7*exp((vu+60.) / 11.) + 10.*exp(-(vu+60.) / 25.))) + 0.6)*ms :
 """
 
 # KHT channel (delayed-rectifier K+)
-eqs_kht="""
+eqs_kht = """
 ikht = gkhtbar*(nf*n**2 + (1-nf)*p)*(EK-v) : amp
 dn/dt=q10*(ninf-n)/ntau : 1
 dp/dt=q10*(pinf-p)/ptau : 1
@@ -67,7 +67,7 @@ ptau = ((100. / (4*exp((vu+60) / 32.) + 5*exp(-(vu+60) / 22.))) + 5)*ms : ms
 """
 
 # Ih channel (subthreshold adaptive, non-inactivating)
-eqs_ih="""
+eqs_ih = """
 ih = ghbar*r*(Eh-v) : amp
 dr/dt=q10*(rinf-r)/rtau : 1
 rinf = 1. / (1+exp((vu + 76.) / 7.)) : 1
@@ -75,7 +75,7 @@ rtau = ((100000. / (237.*exp((vu+60.) / 12.) + 17.*exp(-(vu+60.) / 14.))) + 25.)
 """
 
 # KLT channel (low threshold K+)
-eqs_klt="""
+eqs_klt = """
 iklt = gkltbar*w**4*z*(EK-v) : amp
 dw/dt=q10*(winf-w)/wtau : 1
 dz/dt=q10*(zinf-z)/wtau : 1
@@ -86,7 +86,7 @@ ztau = ((1000. / (exp((vu+60.) / 20.) + exp(-(vu+60.) / 8.))) + 50)*ms : ms
 """
 
 # Ka channel (transient K+)
-eqs_ka="""
+eqs_ka = """
 ika = gkabar*a**4*b*c*(EK-v): amp
 da/dt=q10*(ainf-a)/atau : 1
 db/dt=q10*(binf-b)/btau : 1
@@ -100,12 +100,12 @@ ctau = ((90. / (1 + exp((-66-vu) / 17.))) + 10)*ms : ms
 """
 
 # Leak
-eqs_leak="""
+eqs_leak = """
 ileak = gl*(El-v) : amp
 """
 
 # h current for octopus cells
-eqs_hcno="""
+eqs_hcno = """
 ihcno = gbarno*(h1*frac + h2*(1-frac))*(Eh-v) : amp
 dh1/dt=(hinfno-h1)/tau1 : 1
 dh2/dt=(hinfno-h2)/tau2 : 1
@@ -118,22 +118,22 @@ alp2 = exp(1e-3*3*(vu+84)*9.648e4/(8.315*(273.16+celsius))) : 1
 bet2 = exp(1e-3*3*0.6*(vu+84)*9.648e4/(8.315*(273.16+celsius))) : 1
 """
 
-eqs="""
+eqs = """
 dv/dt=(ileak+ina+ikht+iklt+ika+ih+ihcno+I)/C : volt
 vu = v/mV : 1 # unitless v
 I : amp
 """
-eqs+=eqs_leak+eqs_ka+eqs_na+eqs_ih+eqs_klt+eqs_kht+eqs_hcno
+eqs += eqs_leak + eqs_ka + eqs_na + eqs_ih + eqs_klt + eqs_kht + eqs_hcno
 
-neuron=NeuronGroup(1, eqs, implicit=True)
-neuron.v=El
+neuron = NeuronGroup(1, eqs, implicit=True)
+neuron.v = El
 
-run(50*ms) # Go to rest
+run(50 * ms) # Go to rest
 
-M=StateMonitor(neuron, 'v', record=0)
-neuron.I=Ipulse
+M = StateMonitor(neuron, 'v', record=0)
+neuron.I = Ipulse
 
-run(100*ms, report='text')
+run(100 * ms, report='text')
 
-plot(M.times/ms, M[0]/mV)
+plot(M.times / ms, M[0] / mV)
 show()

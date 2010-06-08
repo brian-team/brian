@@ -20,45 +20,45 @@ matplotlib.use('WXAgg') # You may need to experiment, try WXAgg, GTKAgg, QTAgg, 
 from brian import *
 import random
 
-dt=defaultclock.dt=1*ms
+dt = defaultclock.dt = 1 * ms
 
-M=100                # number of synapses per neuron
-D=20*ms              # maximal conduction delay
-D_min=1*ms           # minimal conduction delay
-D_i=1*ms             # inhibitory neuron conduction delay
+M = 100                # number of synapses per neuron
+D = 20 * ms              # maximal conduction delay
+D_min = 1 * ms           # minimal conduction delay
+D_i = 1 * ms             # inhibitory neuron conduction delay
 
 # excitatory neurons
-Ne=800
-a_e=0.02/ms
-d_e=8*mV/ms
-s_e=6*mV/ms
+Ne = 800
+a_e = 0.02 / ms
+d_e = 8 * mV / ms
+s_e = 6 * mV / ms
 # inhibitory neurons
-Ni=200
-a_i=0.1/ms
-d_i=2*mV/ms
-s_i=-5*mV/ms
+Ni = 200
+a_i = 0.1 / ms
+d_i = 2 * mV / ms
+s_i = -5 * mV / ms
 # all neurons
-b=0.2/ms
-c=-65*mV
-sm=10*mV/ms           # maximal synaptic strength
-N=Ne+Ni
+b = 0.2 / ms
+c = -65 * mV
+sm = 10 * mV / ms           # maximal synaptic strength
+N = Ne + Ni
 
-thalamic_input_weight=20*mV/ms
+thalamic_input_weight = 20 * mV / ms
 
-eqs=Equations('''
+eqs = Equations('''
 dv/dt = (0.04/ms/mV)*v**2+(5/ms)*v+140*mV/ms-u   : volt
 du/dt = a*(b*v-u)                                : volt/second
 a                                                : 1/second
 d                                                : volt/second
 I                                                : volt/second
 ''')
-reset='''
+reset = '''
 v = c
 u += d
 '''
-threshold=30*mV
+threshold = 30 * mV
 
-G=NeuronGroup(N, eqs, threshold=threshold, reset=reset)
+G = NeuronGroup(N, eqs, threshold=threshold, reset=reset)
 
 # Izhikevich's numerical integration scheme is not built in to Brian, but
 # we can specify it explicitly. By setting the NeuronGroup._state_updater
@@ -66,20 +66,20 @@ G=NeuronGroup(N, eqs, threshold=threshold, reset=reset)
 # scheme (Euler) defined by Brian. This function can run arbitrary Python
 # code.
 def Izhikevich_scheme(G):
-    G.v+=0.5*dt*((0.04/ms/mV)*G.v**2+(5/ms)*G.v+140*mV/ms-G.u+G.I)
-    G.v+=0.5*dt*((0.04/ms/mV)*G.v**2+(5/ms)*G.v+140*mV/ms-G.u+G.I)
-    G.u+=dt*G.a*(b*G.v-G.u)
-G._state_updater=Izhikevich_scheme
+    G.v += 0.5 * dt * ((0.04 / ms / mV) * G.v ** 2 + (5 / ms) * G.v + 140 * mV / ms - G.u + G.I)
+    G.v += 0.5 * dt * ((0.04 / ms / mV) * G.v ** 2 + (5 / ms) * G.v + 140 * mV / ms - G.u + G.I)
+    G.u += dt * G.a * (b * G.v - G.u)
+G._state_updater = Izhikevich_scheme
 
-Ge=G.subgroup(Ne)
-Gi=G.subgroup(Ni)
+Ge = G.subgroup(Ne)
+Gi = G.subgroup(Ni)
 
-G.v=c
-G.u=b*c
-Ge.a=a_e
-Ge.d=d_e
-Gi.a=a_i
-Gi.d=d_i
+G.v = c
+G.u = b * c
+Ge.a = a_e
+Ge.d = d_e
+Gi.a = a_i
+Gi.d = d_i
 
 # In Izhikevich's simulation, the value of I is set to zero each time step,
 # then a 'thalamic input' is added to I, then spikes cause a postsynaptic
@@ -90,11 +90,11 @@ Gi.d=d_i
 
 @network_operation(when='before_connections')
 def thalamic_input():
-    G.I=0*mV/ms
-    G.I[randint(N)]=float(thalamic_input_weight)
+    G.I = 0 * mV / ms
+    G.I[randint(N)] = float(thalamic_input_weight)
 
-Ce=Connection(Ge, G, 'I', delay=True, max_delay=D)
-Ci=Connection(Gi, Ge, 'I', delay=D_i)
+Ce = Connection(Ge, G, 'I', delay=True, max_delay=D)
+Ci = Connection(Gi, Ge, 'I', delay=D_i)
 
 # In order to implement Izhikevich's STDP rule, we need two weight matrices,
 # one is the actual weight matrix and the second is a weight matrix derivative.
@@ -105,33 +105,33 @@ Ci=Connection(Gi, Ge, 'I', delay=D_i)
 # because we create an ExponentialSTDP object that acts on Ce_deriv not
 # directly on Ce.
 
-Ce_deriv=Connection(Ge, G, 'I', delay=True, max_delay=D)
+Ce_deriv = Connection(Ge, G, 'I', delay=True, max_delay=D)
 forget(Ce_deriv)
 
 for i in xrange(Ne):
-    inds=random.sample(xrange(N), M)
-    Ce[i, inds]=s_e*ones(len(inds))
-    Ce.delay[i, inds]=rand(len(inds))*(D-D_min)+D_min
+    inds = random.sample(xrange(N), M)
+    Ce[i, inds] = s_e * ones(len(inds))
+    Ce.delay[i, inds] = rand(len(inds)) * (D - D_min) + D_min
 for i in xrange(Ni):
-    inds=random.sample(xrange(Ne), M)
-    Ci[i, inds]=s_i*ones(len(inds))
+    inds = random.sample(xrange(Ne), M)
+    Ci[i, inds] = s_i * ones(len(inds))
 
 # Now we duplicate Ce to Ce_deriv
 
 for i in xrange(Ne):
-    Ce_deriv[i, :]=Ce[i, :]
-    Ce_deriv.delay[i, :]=Ce.delay[i, :]
+    Ce_deriv[i, :] = Ce[i, :]
+    Ce_deriv.delay[i, :] = Ce.delay[i, :]
 
 # STDP acts directly on Ce_deriv rather than Ce. With this STDP rule alone,
 # we would not see any learning, the network operation below propagates changes
 # in Ce_deriv to Ce.
 
-artificial_wmax=1e10*mV/ms
-stdp=ExponentialSTDP(Ce_deriv,
-                       taup=20*ms, taum=20*ms,
-                       Ap=(0.1*mV/ms/artificial_wmax),
-                       Am=(-0.12*mV/ms/artificial_wmax),
-                       wmin=-artificial_wmax,
+artificial_wmax = 1e10 * mV / ms
+stdp = ExponentialSTDP(Ce_deriv,
+                       taup=20 * ms, taum=20 * ms,
+                       Ap=(0.1 * mV / ms / artificial_wmax),
+                       Am=(-0.12 * mV / ms / artificial_wmax),
+                       wmin= -artificial_wmax,
                        wmax=artificial_wmax,
                        interactions='nearest'
                        )
@@ -152,18 +152,18 @@ stdp=ExponentialSTDP(Ce_deriv,
 # have a different pattern of non-zero entries.
 
 Ce_deriv.compress()
-Ce_deriv.W.alldata[:]=0
-@network_operation(clock=EventClock(dt=1*second))
+Ce_deriv.W.alldata[:] = 0
+@network_operation(clock=EventClock(dt=1 * second))
 def update_weights_from_derivative():
-    Ce.W.alldata[:]=clip(Ce.W.alldata+0.01*mV/ms+Ce_deriv.W.alldata, 0, sm)
-    Ce_deriv.W.alldata[:]*=0.9
+    Ce.W.alldata[:] = clip(Ce.W.alldata + 0.01 * mV / ms + Ce_deriv.W.alldata, 0, sm)
+    Ce_deriv.W.alldata[:] *= 0.9
 
-M=SpikeMonitor(G)
+M = SpikeMonitor(G)
 
 ion()
-raster_plot(M, refresh=.2*second, showlast=1*second)
+raster_plot(M, refresh=.2 * second, showlast=1 * second)
 
-run(50*second, report='stderr')
+run(50 * second, report='stderr')
 
 ioff()
 show()

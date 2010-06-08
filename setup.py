@@ -4,9 +4,9 @@ Setup script for Brian
 
 from distutils.core import setup
 
-version='1.2.1dev'
+version = '1.2.1dev'
 
-long_description='''
+long_description = '''
 Brian is a simulator for spiking neural networks available on almost all platforms.
 The motivation for this project is that a simulator should not only save the time of
 processors, but also the time of scientists.
@@ -20,7 +20,7 @@ support and extension packages.
 
 # the create_extras.py script will automatically generate an extras files
 # containing the following files
-extras_folders=['tutorials/tutorial1_basic_concepts/*.py', 'tutorials/tutorial1_basic_concepts/*.txt',
+extras_folders = ['tutorials/tutorial1_basic_concepts/*.py', 'tutorials/tutorial1_basic_concepts/*.txt',
                   'tutorials/tutorial2_connections/*.py', 'tutorials/tutorial2_connections/*.txt',
                   'examples/*.py', 'examples/*.txt', 'examples/audition/*.py',
                   'examples/electrophysiology/*.py', 'examples/frompapers/*.py',
@@ -31,7 +31,7 @@ extras_folders=['tutorials/tutorial1_basic_concepts/*.py', 'tutorials/tutorial1_
                   'docs/*.*', 'docs/_images/*.jpg',
                   'docs/_sources/*.*', 'docs/_static/*.*' ]
 
-if __name__=="__main__":
+if __name__ == "__main__":
     setup(name='brian',
       version=version,
       py_modules=['brian_unit_prefs', 'brian_no_units', 'brian_no_units_no_warnings'],

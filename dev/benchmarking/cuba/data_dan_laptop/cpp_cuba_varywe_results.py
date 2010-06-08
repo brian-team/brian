@@ -1,7 +1,7 @@
 # vary weights
 # state updater matrix
-cpp_cuba=[]
-cur_result=[]
+cpp_cuba = []
+cur_result = []
 cur_result.append((0.718, 13579))
 cur_result.append((0.719, 15140))
 cur_result.append((0.719, 13051))
@@ -11,7 +11,7 @@ cur_result.append((0.735, 13061))
 cur_result.append((0.735, 12719))
 # we = 1.62
 cpp_cuba.append((1000, 0.727714, 13644, cur_result))
-cur_result=[]
+cur_result = []
 cur_result.append((0.734, 21315))
 cur_result.append((0.734, 19045))
 cur_result.append((0.734, 18084))
@@ -21,7 +21,7 @@ cur_result.append((0.735, 20307))
 cur_result.append((0.735, 16269))
 # we = 2.4
 cpp_cuba.append((1000, 0.734429, 18861, cur_result))
-cur_result=[]
+cur_result = []
 cur_result.append((0.735, 19993))
 cur_result.append((0.735, 25975))
 cur_result.append((0.75, 23947))
@@ -31,7 +31,7 @@ cur_result.append((0.75, 27273))
 cur_result.append((0.75, 23499))
 # we = 2.9
 cpp_cuba.append((1000, 0.745714, 24542, cur_result))
-cur_result=[]
+cur_result = []
 cur_result.append((0.734, 24987))
 cur_result.append((0.734, 25586))
 cur_result.append((0.734, 21295))

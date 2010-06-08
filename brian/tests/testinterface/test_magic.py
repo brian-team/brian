@@ -90,10 +90,10 @@ def test():
     # Define a heirarchy of classes A, B, C, D, E and track instances of them
     # Do not track instances of D or E
     class A(InstanceTracker):
-        gval=0
+        gval = 0
         def __init__(self):
-            self.value=A.gval
-            A.gval+=1
+            self.value = A.gval
+            A.gval += 1
         def __repr__(self):
             return str(self)
         def __str__(self):
@@ -109,19 +109,19 @@ def test():
         pass
 
     # Create some sample objects of each type
-    a1=A() # object 0
-    a2=A() # object 1
-    b=B()  # object 2
-    c=C()  # object 3
-    d=D()  # object 4
-    e=E()  # object 5
+    a1 = A() # object 0
+    a2 = A() # object 1
+    b = B()  # object 2
+    c = C()  # object 3
+    d = D()  # object 4
+    e = E()  # object 5
 
     # Find the instances of each type on this level
-    instA, names=get_instances(A, level=0)
-    instB, names=get_instances(B, level=0)
-    instC, names=get_instances(C, level=0)
-    instD, names=get_instances(D, level=0)
-    instE, names=get_instances(E, level=0)
+    instA, names = get_instances(A, level=0)
+    instB, names = get_instances(B, level=0)
+    instC, names = get_instances(C, level=0)
+    instD, names = get_instances(D, level=0)
+    instE, names = get_instances(E, level=0)
 
     # This is the expected behaviour:
     # instA = [a1, a2, b, c]
@@ -134,61 +134,61 @@ def test():
     assert c in instC
     assert all(o not in instC for o in [a1, a2, b, d, e])
     # instD = instE = []
-    assert len(instD)==0
-    assert len(instE)==0
+    assert len(instD) == 0
+    assert len(instE) == 0
 
     # Check that level=0 and level=1 work as expected
     def f1(vars, A, B, C, D, E):
-        a3=A() # object 6
-        inst_ahere, names=get_instances(A, level=0) # level=0 should refer to definitions inside f
-        inst_abefore, names=get_instances(A, level=1) # level=1 should refer to definitions inside the function calling f
+        a3 = A() # object 6
+        inst_ahere, names = get_instances(A, level=0) # level=0 should refer to definitions inside f
+        inst_abefore, names = get_instances(A, level=1) # level=1 should refer to definitions inside the function calling f
         # inst_abefore = [a1, a2, b, c]
         assert all(o in instA for o in vars[0:4])
         assert all(o not in instA for o in vars[4:])
         # inst_ahere = [a3]
-        assert len(inst_ahere)==1 and a3 in inst_ahere
+        assert len(inst_ahere) == 1 and a3 in inst_ahere
     f1([a1, a2, b, c, d, e], A, B, C, D, E)
 
     # Check that nested function calling works as expected
     def f2(A):
-        a4=A() # object 7
+        a4 = A() # object 7
         return [get_instances(A, level) for level in range(2)]
-    inst=f2(A)
+    inst = f2(A)
     # inst[0][0] = [a4]
-    assert str(inst[0][0])=='[7]'
+    assert str(inst[0][0]) == '[7]'
     # inst[1][0] = [a1,a2,c,b]
-    assert len(inst[1][0])==4 and all(o in inst[1][0] for o in [a1, a2, b, c])
+    assert len(inst[1][0]) == 4 and all(o in inst[1][0] for o in [a1, a2, b, c])
     def f3(A):
-        a5=A() # object 9
+        a5 = A() # object 9
         return [get_instances(A, level) for level in range(2)]
     def f4(A):
-        a6=A() # object 8
+        a6 = A() # object 8
         return f3(A)
-    inst=f4(A)
+    inst = f4(A)
     # inst[0][0] = [a5]
-    assert str(inst[0][0])=='[9]'
+    assert str(inst[0][0]) == '[9]'
     # inst[1][0] = [a6]
-    assert str(inst[1][0])=='[8]'
+    assert str(inst[1][0]) == '[8]'
 
     # check that find_instances works as expected
     def f5(A):
         return f6(A)
     def f6(A):
-        a=A() # object 10
+        a = A() # object 10
         return f7(A)
     def f7(A):
         return find_instances(A, startlevel=0)
-    inst=f5(A)[0][0]
-    assert str(inst)=='10'
+    inst = f5(A)[0][0]
+    assert str(inst) == '10'
 
     # check that find_all_instances works as expected
     def f8(A):
-        a=A() # object 11
+        a = A() # object 11
         return find_all_instances(A, startlevel=0)
-    insts=f8(A)[0] # should be objects 0,1,2,3 and 11
-    s=map(str, insts)
+    insts = f8(A)[0] # should be objects 0,1,2,3 and 11
+    s = map(str, insts)
     s.sort()
-    assert str(s)=="['0', '1', '11', '2', '3']"
+    assert str(s) == "['0', '1', '11', '2', '3']"
 
-if __name__=='__main__':
+if __name__ == '__main__':
     test()

@@ -25,7 +25,7 @@ from monitor import SpikeMonitor
 from scipy import zeros, exp, isscalar
 from connection import DelayConnection
 
-__all__=['STP']
+__all__ = ['STP']
 
 
 class STPGroup(NeuronGroup):
@@ -33,7 +33,7 @@ class STPGroup(NeuronGroup):
     Neuron group forwarding spikes with short term plasticity modulation.
     '''
     def __init__(self, N, clock=None):
-        eqs='''
+        eqs = '''
         ux : 1
         x : 1
         u : 1
@@ -51,26 +51,26 @@ class STPUpdater(SpikeMonitor):
     def __init__(self, source, P, taud, tauf, U, delay=0):
         SpikeMonitor.__init__(self, source, record=False, delay=delay)
         # P is the group with the STP variables
-        N=len(P)
-        self.P=P
-        self.minvtaud=-1./taud
-        self.minvtauf=-1./tauf
-        self.U=U
-        self.ux=P.ux
-        self.x=P.x
-        self.u=P.u
-        self.lastt=zeros(N) # last update
-        self.clock=P.clock
+        N = len(P)
+        self.P = P
+        self.minvtaud = -1. / taud
+        self.minvtauf = -1. / tauf
+        self.U = U
+        self.ux = P.ux
+        self.x = P.x
+        self.u = P.u
+        self.lastt = zeros(N) # last update
+        self.clock = P.clock
 
     def propagate(self, spikes):
-        interval=self.clock.t-self.lastt[spikes]
-        self.u[spikes]=self.U+(self.u[spikes]-self.U)*exp(interval*self.minvtauf)
-        tmp=1-self.u[spikes]
-        self.x[spikes]=1+(self.x[spikes]-1)*exp(interval*self.minvtaud)
-        self.ux[spikes]=self.u[spikes]*self.x[spikes]
-        self.x[spikes]*=tmp
-        self.u[spikes]+=self.U*tmp
-        self.lastt[spikes]=self.clock.t
+        interval = self.clock.t - self.lastt[spikes]
+        self.u[spikes] = self.U + (self.u[spikes] - self.U) * exp(interval * self.minvtauf)
+        tmp = 1 - self.u[spikes]
+        self.x[spikes] = 1 + (self.x[spikes] - 1) * exp(interval * self.minvtaud)
+        self.ux[spikes] = self.u[spikes] * self.x[spikes]
+        self.x[spikes] *= tmp
+        self.u[spikes] += self.U * tmp
+        self.lastt[spikes] = self.clock.t
         self.P.LS.push(spikes)
 
 
@@ -79,14 +79,14 @@ class STPUpdater2(STPUpdater):
     STP Updater where U, taud and tauf are vectors
     '''
     def propagate(self, spikes):
-        interval=self.clock.t-self.lastt[spikes]
-        self.u[spikes]=self.U[spikes]+(self.u[spikes]-self.U[spikes])*exp(interval*self.minvtauf[spikes])
-        tmp=1-self.u[spikes]
-        self.x[spikes]=1+(self.x[spikes]-1)*exp(interval*self.minvtaud[spikes])
-        self.ux[spikes]=self.u[spikes]*self.x[spikes]
-        self.x[spikes]*=tmp
-        self.u[spikes]+=self.U[spikes]*tmp
-        self.lastt[spikes]=self.clock.t
+        interval = self.clock.t - self.lastt[spikes]
+        self.u[spikes] = self.U[spikes] + (self.u[spikes] - self.U[spikes]) * exp(interval * self.minvtauf[spikes])
+        tmp = 1 - self.u[spikes]
+        self.x[spikes] = 1 + (self.x[spikes] - 1) * exp(interval * self.minvtaud[spikes])
+        self.ux[spikes] = self.u[spikes] * self.x[spikes]
+        self.x[spikes] *= tmp
+        self.u[spikes] += self.U[spikes] * tmp
+        self.lastt[spikes] = self.clock.t
         self.P.LS.push(spikes)
 
 
@@ -104,21 +104,21 @@ class SynapticDepressionUpdater(SpikeMonitor):
     def __init__(self, source, P, taud, tauf, U, delay=0):
         SpikeMonitor.__init__(self, source, record=False, delay=delay)
         # P is the group with the STP variables
-        N=len(P)
-        self.P=P
-        self.minvtaud=-1./taud
-        self.U=U
-        self.ux=P.ux
-        self.x=P.x
-        self.lastt=zeros(N) # last update
-        self.clock=P.clock
+        N = len(P)
+        self.P = P
+        self.minvtaud = -1. / taud
+        self.U = U
+        self.ux = P.ux
+        self.x = P.x
+        self.lastt = zeros(N) # last update
+        self.clock = P.clock
 
     def propagate(self, spikes):
-        interval=self.clock.t-self.lastt[spikes]
-        self.x[spikes]=1+(self.x[spikes]-1)*exp(interval*self.minvtaud)
-        self.ux[spikes]=self.U*self.x[spikes]
-        self.x[spikes]*=1-self.U
-        self.lastt[spikes]=self.clock.t
+        interval = self.clock.t - self.lastt[spikes]
+        self.x[spikes] = 1 + (self.x[spikes] - 1) * exp(interval * self.minvtaud)
+        self.ux[spikes] = self.U * self.x[spikes]
+        self.x[spikes] *= 1 - self.U
+        self.lastt[spikes] = self.clock.t
         self.P.LS.push(spikes)
 
 
@@ -152,20 +152,20 @@ class STP(NetworkOperation):
         if isinstance(C, DelayConnection):
             raise AttributeError, "STP does not handle heterogeneous connections yet."
         NetworkOperation.__init__(self, lambda:None, clock=C.source.clock)
-        N=len(C.source)
-        P=STPGroup(N, clock=C.source.clock)
-        P.x=1
-        P.u=U
-        P.ux=U
-        if (isscalar(taud)&isscalar(tauf)&isscalar(U)):
-            updater=STPUpdater(C.source, P, taud, tauf, U, delay=C.delay*C.source.clock.dt)
+        N = len(C.source)
+        P = STPGroup(N, clock=C.source.clock)
+        P.x = 1
+        P.u = U
+        P.ux = U
+        if (isscalar(taud) & isscalar(tauf) & isscalar(U)):
+            updater = STPUpdater(C.source, P, taud, tauf, U, delay=C.delay * C.source.clock.dt)
         else:
-            updater=STPUpdater2(C.source, P, taud, tauf, U, delay=C.delay*C.source.clock.dt)
-        self.contained_objects=[updater]
-        C.source=P
-        C.delay=0
-        C._nstate_mod=0 # modulation of synaptic weights
-        self.vars=P
+            updater = STPUpdater2(C.source, P, taud, tauf, U, delay=C.delay * C.source.clock.dt)
+        self.contained_objects = [updater]
+        C.source = P
+        C.delay = 0
+        C._nstate_mod = 0 # modulation of synaptic weights
+        self.vars = P
 
     def __call__(self):
         pass

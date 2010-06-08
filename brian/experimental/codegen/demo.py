@@ -1,10 +1,10 @@
 from brian import *
 from brian.experimental.codegen import *
-eqs=Equations('''
+eqs = Equations('''
 dV/dt = -W*V/(10*second) : volt 
 dW/dt = -V**2/(1*second) : volt
 ''')
-scheme=exp_euler_scheme
+scheme = exp_euler_scheme
 print 'Equations'
 print '========='
 print eqs

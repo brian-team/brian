@@ -42,25 +42,25 @@ Ideas:
 from brian import *
 import brianlib as bl
 import time
-duration=0.1*second
-N=10
-doplot=True
-domonitor=True
-debugmode=False
+duration = 0.1 * second
+N = 10
+doplot = True
+domonitor = True
+debugmode = False
 if debugmode:
     log_level_info()
 ######### Define a network we want to simulate ###############
-eqs='''
+eqs = '''
 dV/dt = -(V-11*mV)/(10*ms) : volt
 dW/dt = -(W-5*mV)/(50*ms) : volt
 '''
-G=NeuronGroup(N, eqs, threshold=10*mV, reset=0*mV, refractory=5*ms)
-G.V=rand(N)*10*mV
-G.W=rand(N)*5*mV
+G = NeuronGroup(N, eqs, threshold=10 * mV, reset=0 * mV, refractory=5 * ms)
+G.V = rand(N) * 10 * mV
+G.W = rand(N) * 5 * mV
 if domonitor:
-    M=StateMonitor(G, 'V', record=True)
-    M2=StateMonitor(G, 'W', record=True)
-net=Network()
+    M = StateMonitor(G, 'V', record=True)
+    M2 = StateMonitor(G, 'W', record=True)
+net = Network()
 net.add(G)
 if domonitor:
     net.add(M)
@@ -68,21 +68,21 @@ if domonitor:
 ######### Convert to C++ versions from brianlib ##############
 # This code is lengthy, but is obviously easily automatable (a user
 # would certainly never have to do anything like this).
-c=array(G._state_updater._C.flatten()) # if we don't do this the memory is corrupted
+c = array(G._state_updater._C.flatten()) # if we don't do this the memory is corrupted
 if debugmode:
     print 'c.flags', c.flags
     print 'A.flags', G._state_updater.A.flags
-blGsu=bl.LinearStateUpdater(G._state_updater.A, c)
-blGthr=bl.Threshold(G._threshold.state, float(G._threshold.threshold))
+blGsu = bl.LinearStateUpdater(G._state_updater.A, c)
+blGthr = bl.Threshold(G._threshold.state, float(G._threshold.threshold))
 #blGreset = bl.Reset(G._resetfun.state, float(G._resetfun.resetvalue))
-period=int(G._resetfun.period/G.clock.dt)+1
-blGreset=bl.Refractoriness(G._resetfun.state, float(G._resetfun.resetvalue), period)
-blG=bl.NeuronGroup(G._S, blGsu, blGthr, blGreset, G.LS.S.n, G.LS.ind.n)
+period = int(G._resetfun.period / G.clock.dt) + 1
+blGreset = bl.Refractoriness(G._resetfun.state, float(G._resetfun.resetvalue), period)
+blG = bl.NeuronGroup(G._S, blGsu, blGthr, blGreset, G.LS.S.n, G.LS.ind.n)
 if debugmode: print "brianlib.NeuronGroup instantiated OK:", G.LS.S.n, G.LS.ind.n
 if domonitor:
-    blM=bl.StateMonitor(blG, 0)
-    blM2=bl.StateMonitor(blG, 1)
-blnet=bl.Network()
+    blM = bl.StateMonitor(blG, 0)
+    blM2 = bl.StateMonitor(blG, 1)
+blnet = bl.Network()
 blnet.add(blG)
 if domonitor:
     blnet.add(blM)
@@ -95,14 +95,14 @@ if debugmode:
     print 'test reset completed'
 ########## Run the network in C++ and Brian ##################
 # make a copy of V so we can run it twice
-V=copy(G.V)
-W=copy(G.W)
+V = copy(G.V)
+W = copy(G.W)
 # Run in C++
-start=time.time()
-blnet.run(int(duration/defaultclock.dt))
-end=time.time()
+start = time.time()
+blnet.run(int(duration / defaultclock.dt))
+end = time.time()
 print 'N =', N, 'duration =', duration, 'domonitor =', domonitor
-print 'C++ time:', (end-start)*second
+print 'C++ time:', (end - start) * second
 if doplot and domonitor:
     subplot(221)
     for i in range(10):
@@ -113,12 +113,12 @@ if doplot and domonitor:
         plot(blM2[i])
     title('W, C++')
 # Run in Brian
-G.V=V
-G.W=W
-start=time.time()
+G.V = V
+G.W = W
+start = time.time()
 net.run(duration)
-end=time.time()
-print 'Brian time:', (end-start)*second
+end = time.time()
+print 'Brian time:', (end - start) * second
 if doplot and domonitor:
     subplot(223)
     for i in range(10):

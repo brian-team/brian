@@ -12,33 +12,33 @@ monitored network firing rate is above a minimum threshold.
 
 from brian import *
 
-clk=Clock()
+clk = Clock()
 
-Vr=0*mV
-El=0*mV
-Vt=10*mV
-tau=10*ms
-weight=0.2*mV
-duration=100*msecond
-max_input_rate=10000*Hz
-num_input_neurons=1000
-input_connection_p=0.1
-rate_per_neuron=max_input_rate/(num_input_neurons*input_connection_p)
+Vr = 0 * mV
+El = 0 * mV
+Vt = 10 * mV
+tau = 10 * ms
+weight = 0.2 * mV
+duration = 100 * msecond
+max_input_rate = 10000 * Hz
+num_input_neurons = 1000
+input_connection_p = 0.1
+rate_per_neuron = max_input_rate / (num_input_neurons * input_connection_p)
 
-P=PoissonGroup(num_input_neurons, lambda t: rate_per_neuron*(t/duration))
+P = PoissonGroup(num_input_neurons, lambda t: rate_per_neuron * (t / duration))
 
-G=NeuronGroup(1000, model='dV/dt=-(V-El)/tau : volt', threshold=Vt, reset=Vr)
-G.V=Vr+(Vt-Vr)*rand(len(G))
+G = NeuronGroup(1000, model='dV/dt=-(V-El)/tau : volt', threshold=Vt, reset=Vr)
+G.V = Vr + (Vt - Vr) * rand(len(G))
 
-CPG=Connection(P, G, weight=weight, sparseness=input_connection_p)
+CPG = Connection(P, G, weight=weight, sparseness=input_connection_p)
 
-CGG=Connection(G, G, weight=weight)
+CGG = Connection(G, G, weight=weight)
 
-MP=PopulationRateMonitor(G, bin=1*ms)
+MP = PopulationRateMonitor(G, bin=1 * ms)
 
 @network_operation
 def stop_condition():
-    if MP.rate[-1]*Hz>10*Hz:
+    if MP.rate[-1] * Hz > 10 * Hz:
         stop()
 
 run(duration)

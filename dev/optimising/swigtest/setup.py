@@ -7,7 +7,7 @@ setup.py file for SWIG example
 from distutils.core import setup, Extension
 
 
-test_module=Extension('_test',
+test_module = Extension('_test',
                            sources=['test_wrap.c', 'test.c'],
                            )
 

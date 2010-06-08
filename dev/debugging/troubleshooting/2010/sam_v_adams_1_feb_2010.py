@@ -49,30 +49,30 @@ per-synapse variables in all but a very few cases.
 
 from brian import *
 
-sim_clock=Clock(dt=.1*ms)
-weight_update_clock=Clock(dt=10*ms)
+sim_clock = Clock(dt=.1 * ms)
+weight_update_clock = Clock(dt=10 * ms)
 
-N=100
-tau_m=10*ms
+N = 100
+tau_m = 10 * ms
 
-G=NeuronGroup(N, 'dV/dt=-V/tau_m:1', reset=0, threshold=1, clock=sim_clock)
+G = NeuronGroup(N, 'dV/dt=-V/tau_m:1', reset=0, threshold=1, clock=sim_clock)
 
-C=Connection(G, G, 'V', delay=True)
-C_trace=Connection(G, G, 'V', delay=True)
+C = Connection(G, G, 'V', delay=True)
+C_trace = Connection(G, G, 'V', delay=True)
 forget(C_trace)
 
 for i in range(N):
-    C_trace[i, :]=C[i, :]
-    C_trace.delay[i, :]=C.delay[i, :]
+    C_trace[i, :] = C[i, :]
+    C_trace.delay[i, :] = C.delay[i, :]
 
 C_trace.compress()
-C_trace.W.alldata[:]=0
+C_trace.W.alldata[:] = 0
 
 @network_operation(clock=weight_update_clock)
 def weight_update():
-    C.W.alldata+=weight_update_clock.dt*C_trace.W.alldata
+    C.W.alldata += weight_update_clock.dt * C_trace.W.alldata
 
-stdp=STDP(C_trace, '''
+stdp = STDP(C_trace, '''
             dA_pre/dt  = (A_pre_aux-A_pre)/tau_pre : 1
             dA_pre_aux/dt = -A_pre_aux/tau_pre_aux : 1
             dA_post/dt = (A_post_aux-A_post)/tau_post : 1

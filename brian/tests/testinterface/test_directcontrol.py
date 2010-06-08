@@ -105,108 +105,108 @@ def test():
     # helper function for running a simple network
     def mininet(grouptype, *args, **kwds):
         reinit_default_clock()
-        G=grouptype(*args, **kwds)
-        M=SpikeMonitor(G, True)
-        net=Network(G, M)
-        net.run(5*msecond)
+        G = grouptype(*args, **kwds)
+        M = SpikeMonitor(G, True)
+        net = Network(G, M)
+        net.run(5 * msecond)
         reinit_default_clock()
         return M.spikes
 
     # run mininet twice to see if it handles reinit() correctly
     def mininet2(grouptype, *args, **kwds):
         reinit_default_clock()
-        G=grouptype(*args, **kwds)
-        M=SpikeMonitor(G, True)
-        net=Network(G, M)
-        net.run(5*msecond)
-        spikes1=M.spikes
+        G = grouptype(*args, **kwds)
+        M = SpikeMonitor(G, True)
+        net = Network(G, M)
+        net.run(5 * msecond)
+        spikes1 = M.spikes
         net.reinit()
-        net.run(5*msecond)
-        spikes2=M.spikes
+        net.run(5 * msecond)
+        spikes2 = M.spikes
         reinit_default_clock()
         return (spikes1, spikes2)
 
     # check multiple spike generator group with lists
-    spiketimes=[[0*msecond, 2*msecond, 4*msecond],
-                  [1*msecond, 3*msecond]]
-    spikes=mininet(MultipleSpikeGeneratorGroup, spiketimes)
+    spiketimes = [[0 * msecond, 2 * msecond, 4 * msecond],
+                  [1 * msecond, 3 * msecond]]
+    spikes = mininet(MultipleSpikeGeneratorGroup, spiketimes)
 
     def test1(spikes):
-        assert len(spikes)==5
-        i, t=zip(*spikes) # zip(*...) is the inverse of zip, so i is the ordered list of neurons that fired, and t is the ordered list of times
-        assert i==(0, 1, 0, 1, 0) # check that the order of neuron firings is correct
+        assert len(spikes) == 5
+        i, t = zip(*spikes) # zip(*...) is the inverse of zip, so i is the ordered list of neurons that fired, and t is the ordered list of times
+        assert i == (0, 1, 0, 1, 0) # check that the order of neuron firings is correct
         for s1, s2 in enumerate(t):
-            assert is_approx_equal(s1*msecond, s2) # the firing times are (0,1,2,3,4)ms
+            assert is_approx_equal(s1 * msecond, s2) # the firing times are (0,1,2,3,4)ms
     test1(spikes)
 
     # check that given a different clock it works as expected, wrap in a function to stop magic functions from
     # picking up the clock objects we define here
     def testwithclock():
-        spikes=mininet(MultipleSpikeGeneratorGroup, spiketimes, clock=Clock(dt=0.1*msecond))
+        spikes = mininet(MultipleSpikeGeneratorGroup, spiketimes, clock=Clock(dt=0.1 * msecond))
         test1(spikes)
-        spikes=mininet(MultipleSpikeGeneratorGroup, spiketimes, clock=Clock(dt=2*msecond))
-        assert len(spikes)==5
-        i, t=zip(*spikes) # zip(*...) is the inverse of zip, so i is the ordered list of neurons that fired, and t is the ordered list of times
+        spikes = mininet(MultipleSpikeGeneratorGroup, spiketimes, clock=Clock(dt=2 * msecond))
+        assert len(spikes) == 5
+        i, t = zip(*spikes) # zip(*...) is the inverse of zip, so i is the ordered list of neurons that fired, and t is the ordered list of times
         for s1, s2 in zip([0, 2, 2, 4, 4], t):
-            assert is_approx_equal(s1*msecond, s2) # the firing times are (0,2,2,4,4)ms
+            assert is_approx_equal(s1 * msecond, s2) # the firing times are (0,2,2,4,4)ms
     testwithclock()
 
     # check multiple spike generator group with generators
     def st1():
-        yield 0*msecond
-        yield 2*msecond
-        yield 4*msecond
+        yield 0 * msecond
+        yield 2 * msecond
+        yield 4 * msecond
 
     def st2():
-        yield 1*msecond
-        yield 3*msecond
-    spikes=mininet(MultipleSpikeGeneratorGroup, [st1(), st2()])
+        yield 1 * msecond
+        yield 3 * msecond
+    spikes = mininet(MultipleSpikeGeneratorGroup, [st1(), st2()])
     test1(spikes)
 
     # check reinit
-    spikes1, spikes2=mininet2(MultipleSpikeGeneratorGroup, [st1, st2])
+    spikes1, spikes2 = mininet2(MultipleSpikeGeneratorGroup, [st1, st2])
     test1(spikes1)
     test1(spikes2)
 
     # spike generator with list
-    spiketimes=[(0, 0*msecond), (1, 1*msecond), (0, 2*msecond), (1, 3*msecond), (0, 4*msecond) ]
-    spikes=mininet(SpikeGeneratorGroup, 2, spiketimes)
+    spiketimes = [(0, 0 * msecond), (1, 1 * msecond), (0, 2 * msecond), (1, 3 * msecond), (0, 4 * msecond) ]
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)
     test1(spikes)
 
     # check that it works with a clock
     def testwithclock():
-        spikes=mininet(SpikeGeneratorGroup, 2, spiketimes, clock=Clock(dt=0.1*msecond))
+        spikes = mininet(SpikeGeneratorGroup, 2, spiketimes, clock=Clock(dt=0.1 * msecond))
         test1(spikes)
-        spikes=mininet(SpikeGeneratorGroup, 2, spiketimes, clock=Clock(dt=2*msecond))
-        assert len(spikes)==5
-        i, t=zip(*spikes) # zip(*...) is the inverse of zip, so i is the ordered list of neurons that fired, and t is the ordered list of times
+        spikes = mininet(SpikeGeneratorGroup, 2, spiketimes, clock=Clock(dt=2 * msecond))
+        assert len(spikes) == 5
+        i, t = zip(*spikes) # zip(*...) is the inverse of zip, so i is the ordered list of neurons that fired, and t is the ordered list of times
         for s1, s2 in zip([0, 2, 2, 4, 4], t):
-            assert is_approx_equal(s1*msecond, s2) # the firing times are (0,2,2,4,4)ms
+            assert is_approx_equal(s1 * msecond, s2) # the firing times are (0,2,2,4,4)ms
     testwithclock()
 
     # spike generator with generator
     def sg():
-        yield (0, 0*msecond)
-        yield (1, 1*msecond)
-        yield (0, 2*msecond)
-        yield (1, 3*msecond)
-        yield (0, 4*msecond)
-    spikes=mininet(SpikeGeneratorGroup, 2, sg())
+        yield (0, 0 * msecond)
+        yield (1, 1 * msecond)
+        yield (0, 2 * msecond)
+        yield (1, 3 * msecond)
+        yield (0, 4 * msecond)
+    spikes = mininet(SpikeGeneratorGroup, 2, sg())
     test1(spikes)
 
     # spike generator reinit
-    spikes1, spikes2=mininet2(SpikeGeneratorGroup, 2, sg)
+    spikes1, spikes2 = mininet2(SpikeGeneratorGroup, 2, sg)
     test1(spikes1)
     test1(spikes2)
 
     # pulse packet with 0 spread
-    spikes=mininet(PulsePacket, 2.5*msecond, 10, 0*msecond)
-    assert len(spikes)==10
-    i, t=zip(*spikes)
+    spikes = mininet(PulsePacket, 2.5 * msecond, 10, 0 * msecond)
+    assert len(spikes) == 10
+    i, t = zip(*spikes)
     for s in t:
-        assert is_approx_equal(2.5*msecond, s)
+        assert is_approx_equal(2.5 * msecond, s)
     # do not attempt to verify the behaviour of PulsePacket here, this is
     # an interface test only
 
-if __name__=='__main__':
+if __name__ == '__main__':
     test()

@@ -6,10 +6,10 @@ setup.py file for SWIG example
 
 from distutils.core import setup, Extension
 import os, numpy
-numpy_base_dir=os.path.split(numpy.__file__)[0]
-numpy_include_dir=os.path.join(numpy_base_dir, 'core/include')
+numpy_base_dir = os.path.split(numpy.__file__)[0]
+numpy_include_dir = os.path.join(numpy_base_dir, 'core/include')
 
-brianlib_module=Extension('_brianlib',
+brianlib_module = Extension('_brianlib',
                            sources=['brianlib_wrap.cxx',
                                     'circular.cpp',
                                     'monitor.cpp',

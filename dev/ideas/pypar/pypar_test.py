@@ -11,27 +11,27 @@ from brian import *
 import pypar
 
 # Identification
-myid=pypar.rank() # id of this process
-nproc=pypar.size() # number of processors
-node=pypar.get_processor_name()
+myid = pypar.rank() # id of this process
+nproc = pypar.size() # number of processors
+node = pypar.get_processor_name()
 
-print "I am processor %d of %d on node %s"%(myid, nproc, node)
+print "I am processor %d of %d on node %s" % (myid, nproc, node)
 
 # Generation of spikes
-myspikes=randint(100, size=randint(10))
+myspikes = randint(100, size=randint(10))
 print "I am sending", myspikes
 
 # Broadcasting
-spikes=[[] for _ in range(nproc)]
-spikes[myid]=myspikes
-nspikes=array([0])
+spikes = [[] for _ in range(nproc)]
+spikes[myid] = myspikes
+nspikes = array([0])
 for i in range(nproc):
-    if i==myid: # that's me!
+    if i == myid: # that's me!
         # Create spikes
-        nspikes[0]=len(myspikes)
+        nspikes[0] = len(myspikes)
     pypar.broadcast(nspikes, i)
-    if i!=myid: # This would be the virtual group
-        spikes[i]=zeros(nspikes, dtype=int)
+    if i != myid: # This would be the virtual group
+        spikes[i] = zeros(nspikes, dtype=int)
     pypar.broadcast(spikes[i], i)
 
 print "I received", spikes

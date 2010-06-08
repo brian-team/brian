@@ -6,25 +6,25 @@ from brian import *
 from scipy import weave
 import time
 
-dtype=float32
-repeats=100
-N=1000000
-complexity=10
-x=zeros(N, dtype=dtype)
-y=ones(N, dtype=dtype)
+dtype = float32
+repeats = 100
+N = 1000000
+complexity = 10
+x = zeros(N, dtype=dtype)
+y = ones(N, dtype=dtype)
 
 if dtype is float32:
-    supp='''
+    supp = '''
     typedef float scalar;
     typedef float vec __attribute__ ((vector_size (16)));
     '''
 else:
-    supp='''
+    supp = '''
     typedef double scalar;
     typedef double vec __attribute__ ((vector_size (16)));
     '''
 
-code='''
+code = '''
 for(int j=0;j<repeats;j++)
   for(int i=0;i<N;i++)
   {
@@ -32,15 +32,15 @@ for(int j=0;j<repeats;j++)
     scalar &vy = y[i];
     vx += VY;
   }
-'''.replace('VY', '*'.join(['vy']*complexity))
+'''.replace('VY', '*'.join(['vy'] * complexity))
 
 if dtype is float32:
-    scalarsize=4
-    vecsize=4
+    scalarsize = 4
+    vecsize = 4
 else:
-    scalarsize=8
-    vecsize=2
-code2='''
+    scalarsize = 8
+    vecsize = 2
+code2 = '''
 int i0, i1;
 i0 = ((unsigned int)x%16)/SCALARSIZE;
 i1 = ((N-i0)/VECSIZE)*VECSIZE;
@@ -65,22 +65,22 @@ for(int j=0;j<repeats;j++)
     vx += VY;
   }
 }
-'''.replace('VY', '*'.join(['vy']*complexity)).replace('VECSIZE', str(vecsize)).replace('SCALARSIZE', str(scalarsize))
+'''.replace('VY', '*'.join(['vy'] * complexity)).replace('VECSIZE', str(vecsize)).replace('SCALARSIZE', str(scalarsize))
 
 def f(N, repeats, force):
-    start=time.time()
+    start = time.time()
     weave.inline(code, ['x', 'y', 'N', 'repeats'], compiler='gcc',
                  extra_compile_args=[
                     '-march=native', '-ffast-math',
                     '-O3',
                     ],
                  support_code=supp,
-                 verbose=2*force,
+                 verbose=2 * force,
                  force=force,
                  )
-    end=time.time()
-    return end-start
+    end = time.time()
+    return end - start
 
 f(0, 0, True)
 print 'Time taken:', f(N, repeats, False)
-print 'Correct:', (x==repeats).all()
+print 'Correct:', (x == repeats).all()

@@ -36,7 +36,7 @@
 Classes and functions for storing and using parameters
 """
 
-__all__=['attribdict', 'Parameters']
+__all__ = ['attribdict', 'Parameters']
 
 from itertools import chain
 from inspect import *
@@ -64,15 +64,15 @@ class attribdict(dict):
             raise AttributeError
 
     def __setattr__(self, name, val):
-        if name in dir(self) or (len(name) and name[0]=='_'):
+        if name in dir(self) or (len(name) and name[0] == '_'):
             dict.__setattr__(self, name, val)
             return
-        self[name]=val
+        self[name] = val
 
     def __repr__(self):
-        s='Attributes:'
+        s = 'Attributes:'
         for k, v in self.iteritems():
-            s+='\n    '+k+' = '+str(v)
+            s += '\n    ' + k + ' = ' + str(v)
         return s
 
 
@@ -138,15 +138,15 @@ class Parameters(attribdict):
         self._recompute()
 
     def _recompute(self):
-        cv=dict(self)
-        items=self.items()
+        cv = dict(self)
+        items = self.items()
         items.sort()
         for k, v in items:
-            if k[:9]=='computed_':
-                v='\n'.join([line.strip() for line in v.split('\n')])
+            if k[:9] == 'computed_':
+                v = '\n'.join([line.strip() for line in v.split('\n')])
                 exec v in cv
         for k in cv.keys():
-            if k[:1]=='_': # this is used to get rid of things like __builtins__ etc.
+            if k[:1] == '_': # this is used to get rid of things like __builtins__ etc.
                 cv.pop(k)
         for k in self.iterkeys():
             cv.pop(k)
@@ -164,12 +164,12 @@ class Parameters(attribdict):
         exec P.ascode('P')
         print x
         """
-        s=''
-        allvals=dict(**self)
+        s = ''
+        allvals = dict(**self)
         allvals.update(self._computed_values)
         for k in allvals.iterkeys():
-            if k[:9]!='computed_':
-                s+=k+'='+name+'.'+k+'\n'
+            if k[:9] != 'computed_':
+                s += k + '=' + name + '.' + k + '\n'
         return s
 
     def get_vars(self, *vars):
@@ -178,18 +178,18 @@ class Parameters(attribdict):
         
         vars can be a list of string names, or a single space separated string of names.
         '''
-        vars=[v.split(' ') for v in vars]
+        vars = [v.split(' ') for v in vars]
         return tuple(getattr(self, v) for v in chain(*vars))
 
     def __repr__(self):
-        s='Values:'
+        s = 'Values:'
         for k, v in self.iteritems():
-            if k[:9]!='computed_':
-                s+='\n    '+k+' = '+str(v)
+            if k[:9] != 'computed_':
+                s += '\n    ' + k + ' = ' + str(v)
         if len(self._computed_values):
-            s+='\n_computed values:'
+            s += '\n_computed values:'
             for k, v in self._computed_values.iteritems():
-                s+='\n    '+k+' = '+str(v)
+                s += '\n    ' + k + ' = ' + str(v)
         return s
 
     def __call__(self, **kwds):
@@ -201,7 +201,7 @@ class Parameters(attribdict):
         default_p = Parameters(x=1,y=2)
         specific_p = default_p(x=3)
         '''
-        p=Parameters(**self) # pylint: disable-msg=W0621
+        p = Parameters(**self) # pylint: disable-msg=W0621
         for k, v in kwds.iteritems():
             setattr(p, k, v)
         return p
@@ -212,10 +212,10 @@ class Parameters(attribdict):
 def _load_Parameters_from_pickle(items):
     return Parameters(**dict(items))
 
-if __name__=="__main__":
+if __name__ == "__main__":
     # turn off warning about attribute defined outside __init__
     # pylint: disable-msg=W0201
-    p=Parameters(
+    p = Parameters(
         a=5,
         b=6,
         computed_p1='''
@@ -224,7 +224,7 @@ if __name__=="__main__":
         computed_p2='''
         x = c**2
         ''')
-    q=Parameters(
+    q = Parameters(
         d=100,
         computed_q='''
         e = a+d
@@ -232,23 +232,23 @@ if __name__=="__main__":
         **p
         )
     print p.c
-    p.a=1
+    p.a = 1
     print p.c
     print p
     print
     print q
-    q.a=-50
+    q.a = -50
     print
     print q
     print
     try:
-        q.c=5
+        q.c = 5
     except AttributeError, e:
         print e
-    p.y=6
-    p.computed_p3='''
+    p.y = 6
+    p.computed_p3 = '''
                     w = a*b
                     '''
     print p
-    p.a=2
+    p.a = 2
     print p

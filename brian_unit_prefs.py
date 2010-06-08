@@ -17,11 +17,11 @@ turn_off_units(warn=False)
 class _unit_prefs():
     pass
 
-bup=_unit_prefs()
+bup = _unit_prefs()
 
-bup.use_units=True
-bup.warn_about_units=True
+bup.use_units = True
+bup.warn_about_units = True
 
 def turn_off_units(warn=True):
-    bup.use_units=False
-    bup.warn_about_units=warn
+    bup.use_units = False
+    bup.warn_about_units = warn

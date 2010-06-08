@@ -24,27 +24,27 @@ def Na_current_int(gmax, ENa, current_name=None):
      betah=5./(1.+exp(-(vm+28.*mV)/(10.*mV)))/ms : Hz
      ''', gmax=gmax, ENa=ENa, I=current_name)
 
-c=Clock(dt=.01*ms) # more precise
-El=-65*mV
-EK=-90*mV
-ENa=55*mV
-eqs=MembraneEquation(0.01*uF)+leak_current_int(.003*msiemens, El, current_name='Il')
-eqs+=K_current_int(0.36*msiemens, EK, current_name='IK')
-eqs+=Na_current_int(1.20*msiemens, ENa)
-eqs+=Current(I='Iapp:amp')
+c = Clock(dt=.01 * ms) # more precise
+El = -65 * mV
+EK = -90 * mV
+ENa = 55 * mV
+eqs = MembraneEquation(0.01 * uF) + leak_current_int(.003 * msiemens, El, current_name='Il')
+eqs += K_current_int(0.36 * msiemens, EK, current_name='IK')
+eqs += Na_current_int(1.20 * msiemens, ENa)
+eqs += Current(I='Iapp:amp')
 
-neuron=NeuronGroup(1, eqs)
+neuron = NeuronGroup(1, eqs)
 
-neuron.h=1.
-neuron.n=.1
-neuron.vm=-64*mV
+neuron.h = 1.
+neuron.n = .1
+neuron.vm = -64 * mV
 
-trace=StateMonitor(neuron, 'vm', record=True)
+trace = StateMonitor(neuron, 'vm', record=True)
 
-run(100*ms)
-neuron.Iapp=0.
+run(100 * ms)
+neuron.Iapp = 0.
 
-run(100*ms)
-print trace[0]/mV
-plot(trace.times/ms, trace[0]/mV)
+run(100 * ms)
+print trace[0] / mV
+plot(trace.times / ms, trace[0] / mV)
 show()
