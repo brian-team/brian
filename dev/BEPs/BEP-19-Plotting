@@ -1,0 +1,23 @@
+BEP-19: Plotting
+
+Abstract: It would be nice to have a few functions to create publication-ready figures.
+It seems to me that we currently duplicate a lot of code every time we need to create
+our figures. Some of this is Brian-specific, but most is probably not.
+
+Style options
+-------------
+* colors (BW default)
+* figure size: possibly choices for different publications (with choice of 1 or 2 columns)
+* fonts: could also be defined from publication styles
+* point size (line thickness) and symbol size (cross, dot, etc)
+
+General plotting functions
+--------------------------
+* add letters to panels (A, B, C...)
+* axis scales with horizontal/vertical segments
+* insets (e.g. zooms)
+* ticks (not too many etc)
+
+Brian-specific plotting functions
+---------------------------------
+* Add spikes to traces (uses a spike list and a state monitor)
