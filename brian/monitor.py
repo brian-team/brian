@@ -43,7 +43,9 @@ __all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter', 'FileSpikeM
 
 from units import *
 from connection import Connection, SparseConnectionVector
-from numpy import array, zeros, mean, histogram, linspace, tile, digitize, copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag
+from numpy import array, zeros, mean, histogram, linspace, tile, digitize,     \
+        copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, \
+        maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
@@ -574,8 +576,7 @@ class StateMonitor(NetworkOperation, Monitor):
         M[i]
     
     for the recorded values of neuron ``i`` (if it was specified with the
-    ``record`` keyword). It returns a :class:`QuantityArray` object with units. Downcast
-    to an array without units by writing ``asarray(M[i])``.
+    ``record`` keyword). It returns a numpy array.
     
     Methods:
     
@@ -650,8 +651,7 @@ class StateMonitor(NetworkOperation, Monitor):
             self._mu = zeros(len(P)) # sum
             self._sqr = zeros(len(P)) # sum of squares
         self.unit = 1.0 * P.unit(varname)
-        self._times = []
-        self._values = []
+        self.reinit()
 
     def __call__(self):
         '''
@@ -663,12 +663,7 @@ class StateMonitor(NetworkOperation, Monitor):
             self._sqr += V * V
         elif self.curtimestep == self.timestep:
             i = self._recordstep
-            if self._values is None:
-                #numrecord = len(self.get_record_indices())
-                #numtimesteps = (int(self.clock.get_duration()/self.clock.dt))/self.timestep + 1
-                self._values = []#zeros((numtimesteps,numrecord))
-                self._times = []#QuantityArray(zeros(numtimesteps))
-            if type(self.record) != types.BooleanType:
+            if not isinstance(self.record, bool):
                 self._values.append(V[self.record])
             elif self.record is True:
                 self._values.append(V.copy())
@@ -679,41 +674,43 @@ class StateMonitor(NetworkOperation, Monitor):
         self.N += 1
 
     def __getitem__(self, i):
-        """Returns the recorded values of the state of neuron i as a QuantityArray
+        """Returns the recorded values of the state of neuron i as an array
         """
-        # TODO: a cache for the array conversion
         if self.record is False:
             raise IndexError('Neuron ' + str(i) + ' was not recorded.')
         if self.record is not True:
             if isinstance(self.record, int) and self.record != i or (not isinstance(self.record, int) and i not in self.record):
                 raise IndexError('Neuron ' + str(i) + ' was not recorded.')
             try:
-                #return QuantityArray(self._values[:self._recordstep,self.recordindex[i]])*self.unit
-                return QuantityArray(array(self._values)[:, self.recordindex[i]]) * self.unit
+                return self.values[self.recordindex[i]]
             except:
                 if i == self.record:
-                    return QuantityArray(self._values) * self.unit
+                    return self.values[0]
                 else:
                     raise
         elif self.record is True:
-            return QuantityArray(array(self._values)[:, i]) * self.unit # We should have a cache for the array conversion
+            return self.values[i]
 
     def getvalues(self):
-        ri = self.get_record_indices()
-        values = safeqarray(zeros((len(ri), len(self._times))), units=self.unit)
-        for i, j in enumerate(ri):
-            values[i] = self[j]
+        if len(self._values):
+            newvalues = array(self._values)
+            if len(newvalues.shape)==1:
+                newvalues.shape = (1, newvalues.size)
+            else:
+                newvalues = newvalues.T
+            values = hstack((self._values_cache, newvalues))
+            self._values_cache = values
+            self._values = []
+        else:
+            values = self._values_cache    
         return values
-
-    def getvalues_(self):
-        ri = self.get_record_indices()
-        values = zeros((len(ri), len(self._times)))
-        for i, j in enumerate(ri):
-            values[i] = self[j]
-        return values
+    getvalues_ = getvalues
 
     def reinit(self):
-        self._values = None
+        self._values = []
+        self._times = []
+        ri = self.get_record_indices()
+        self._values_cache = zeros((len(ri), 0))
         self.N = 0
         self._recordstep = 0
         self._mu = zeros(len(self.P))
@@ -725,7 +722,7 @@ class StateMonitor(NetworkOperation, Monitor):
         if self.record is False:
             return []
         elif self.record is True:
-            return range(len(self.P))
+            return arange(len(self.P))
         elif isinstance(self.record, int):
             return [self.record]
         else:
