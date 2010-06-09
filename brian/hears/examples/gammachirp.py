@@ -51,6 +51,6 @@ plot(frequency_axis[:number_samples/4],frequency_response_gc[:number_samples/4])
 plot(frequency_axis[:number_samples/4],frequency_response_gt[:number_samples/4])
 title('Frequency response to an impulse')
 xlabel('(Hz)')
-ylabe('dB')
+ylabel('dB')
 show()
     

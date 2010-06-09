@@ -265,6 +265,8 @@ if use_gpu:
             self.fs=samplerate
             self.N=b.shape[0]
             n, m, p=b.shape
+            self.filt_b=b
+            self.filt_a=a
             filt_b_gpu=array(b, dtype=self.precision_dtype)
             filt_a_gpu=array(a, dtype=self.precision_dtype)
             filt_state=zeros((n, m-1, p), dtype=self.precision_dtype)
@@ -358,7 +360,7 @@ if use_gpu:
                     newx[:]=x
                     fx.set(newx)
                 else:
-                    drv.memcpy_dtod(fx.gpu_dev_alloc, x.gpu_dev_alloc)
+                    drv.memcpy_dtod(fx.gpudata, x.gpu_dev_alloc, fx.size*self.precision_dtype().nbytes)
             else:
                 if not isinstance(x, ndarray) or not len(x.shape) or x.shape==(1,):
                     # Current version of pycuda doesn't allow .fill(val) method on float64 gpuarrays
