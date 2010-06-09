@@ -40,6 +40,7 @@ soundproducer = SoundProducer(sound)
 gammatone = Gammatone(soundproducer)
 spikes = Spikes(gammatone)
 
+
 Linked variables
 ----------------
 Connecting var x in G to var y in H via function f optionally:
@@ -156,3 +157,11 @@ TODO
 * simplify
 * GPU -> split
 * compression etc -> apply user-defined function
+
+TODO: -cascade of similar filter
+      filter=Cascade(fb3,4)
+      -function filterbank with different parameter per frequency channel
+      -IIRfilterbank and butterworth: different parameter per frequency channel
+      
+      DONE: IIRfilterbank and butterworth changed the frequencies from Hz to radian
+ TODO: lyon?
