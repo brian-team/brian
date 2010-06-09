@@ -21,3 +21,4 @@ General plotting functions
 Brian-specific plotting functions
 ---------------------------------
 * Add spikes to traces (uses a spike list and a state monitor)
+* Remove reset lines from traces

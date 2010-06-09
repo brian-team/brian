@@ -43,7 +43,8 @@ Functions:
 
 __docformat__ = "restructuredtext en"
 
-__all__ = ['plot', 'show', 'figure', 'xlabel', 'ylabel', 'title', 'axis', 'raster_plot', 'hist_plot']
+__all__ = ['plot', 'show', 'figure', 'xlabel', 'ylabel', 'title', 'axis', 'raster_plot', 'hist_plot',
+           'insert_spikes']
 
 try:
     from pylab import plot, show, figure, xlabel, ylabel, title, axis
@@ -71,6 +72,19 @@ def _take_options(myopts, givenopts):
     for k in myopts.keys():
         if k in givenopts:
             myopts[k] = givenopts.pop(k)
+
+
+def insert_spikes(statemonitor,spikemonitor,value=0):
+    """
+    Inserts spikes into recorded traces (for plotting). State values
+    at spike times are replaced with the given value (peak value of spike).
+    """
+    # This could be a method of StateMonitor
+    dt=statemonitor.clock.dt
+    values=array(statemonitor._values) # traces
+    for i,neuron in enumerate(statemonitor.get_record_indices()):
+        values[array(spikemonitor[neuron]/dt,dtype=int),i]=value
+    statemonitor._values=values # or converted back to a list?
 
 
 def raster_plot(*monitors, **plotoptions):
