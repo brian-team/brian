@@ -35,7 +35,7 @@
 '''
 Neuron groups
 '''
-__all__ = ['NeuronGroup', 'PoissonGroup', 'OfflinePoissonGroup', 'linked_var']
+__all__ = ['NeuronGroup', 'linked_var']
 
 from numpy import *
 from scipy import rand, linalg, random
@@ -625,63 +625,3 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         # is messed up.
         import timedarray
         timedarray.set_group_var_by_array(self, var, arr, times=times, clock=clock, start=start, dt=dt)
-
-
-class PoissonGroup(NeuronGroup):
-    '''
-    A group that generates independent Poisson spike trains.
-    
-    **Initialised as:** ::
-    
-        PoissonGroup(N,rates[,clock])
-    
-    with arguments:
-    
-    ``N``
-        The number of neurons in the group
-    ``rates``
-        A scalar, array or function returning a scalar or array.
-        The array should have the same length as the number of
-        neurons in the group. The function should take one
-        argument ``t`` the current simulation time.
-    ``clock``
-        The clock which the group will update with, do not
-        specify to use the default clock.
-    '''
-    def __init__(self, N, rates=0 * hertz, clock=None):
-        '''
-        Initializes the group.
-        P.rates gives the rates.
-        '''
-        NeuronGroup.__init__(self, N, model=LazyStateUpdater(), threshold=PoissonThreshold(), \
-                             clock=clock)
-        if callable(rates): # a function is passed
-            self._variable_rate = True
-            self.rates = rates
-            self._S0[0] = self.rates(self.clock.t)
-        else:
-            self._variable_rate = False
-            self._S[0, :] = rates
-            self._S0[0] = rates
-        self.var_index = {'rate':0}
-
-    def update(self):
-        if self._variable_rate:
-            self._S[0, :] = self.rates(self.clock.t)
-        NeuronGroup.update(self)
-
-
-class OfflinePoissonGroup(object):
-    def __init__(self, N, rates, T):
-        """
-        Generates a Poisson group with N spike trains and given rates over the
-        time window [0,T].
-        """
-        if isscalar(rates):
-            rates = rates * ones(N)
-        totalrate = sum(rates)
-        isi = exponential(1 / totalrate, T * totalrate * 2)
-        spikes = cumsum(isi)
-        spikes = spikes[spikes <= T]
-        neurons = randint(0, N, len(spikes))
-        self.spiketimes = zip(neurons, spikes)
