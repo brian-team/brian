@@ -17,7 +17,7 @@ plot(t, i, '.')
 client.execute('stop()')
 '''
 
-from network import NetworkOperation
+from ..network import NetworkOperation
 try:
     import multiprocessing
     from multiprocessing.connection import Listener, Client

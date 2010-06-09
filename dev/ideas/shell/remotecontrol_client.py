@@ -1,5 +1,4 @@
 from brian import *
-from brian.experimental.remotecontrol import *
 import time
 
 client = RemoteControlClient()
