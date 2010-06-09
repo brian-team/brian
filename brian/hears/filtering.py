@@ -9,7 +9,7 @@ from scipy import signal
 from scipy import weave
 from scipy import random
 # NOTE TO BERTRAND:
-# DO NOT COMMENT THESE LINES OUT!
+# DO NOT COMMENT THESE LINES OUT!-> Ok :)
 try:
     import pycuda
     import pycuda.autoinit as autoinit
