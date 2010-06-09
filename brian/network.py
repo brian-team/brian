@@ -54,6 +54,7 @@ from units import second
 import time
 from utils.progressreporting import *
 from globalprefs import *
+import gc
 
 globally_stopped = False
 
@@ -865,6 +866,7 @@ def clear(erase=True):
         if erase:
             for k, v in o.__dict__.iteritems():
                 object.__setattr__(o, k, None)
+    gc.collect()
 
 def forget(*objs):
     '''
