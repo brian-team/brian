@@ -1,6 +1,7 @@
 from brian import *
 from brian.hears import*
 from brian.hears import filtering
+filtering.use_gpu = False 
 import scipy.signal as signal
 '''
 Compute the frequency response of a gammachirp, of its  asymmetric compensation filter, and  of its gammatone filter

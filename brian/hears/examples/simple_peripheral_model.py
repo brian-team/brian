@@ -6,8 +6,8 @@ followed by  half=wave rectification and compression
 
 from brian import *
 from brian.hears import*
-
-
+from brian.hears import filtering
+filtering.use_gpu = False
 samplerate=44*kHz
 defaultclock.dt = 1/samplerate
 simulation_duration=50*ms

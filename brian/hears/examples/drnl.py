@@ -8,7 +8,8 @@ Rate responses, JASA 2003
 
 from brian import *
 from brian.hears import*
-
+from brian.hears import filtering
+filtering.use_gpu = False 
 
 samplerate=44*kHz
 defaultclock.dt = 1/samplerate

@@ -525,7 +525,7 @@ class GammatoneFilterbank(ParallelLinearFilterbank):
         ERB = ((cf/EarQ)**order + minBW**order)**(1/order)
         B = 1.019*2*pi*ERB
         self.B = B
-        
+        self.order=order
         A0 = T
         A2 = 0
         B0 = 1
@@ -684,7 +684,7 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
             self.asymmetric_filt_a[:, :, k]=ap
         #print B.shape,A.shape,Btemp.shape,Atemp.shape    
         #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
-
+        print self.gammatone_filt_b,self.asymmetric_filt_b
         self.filt_b=concatenate([self.gammatone_filt_b, self.asymmetric_filt_b],axis=2)
         self.filt_a=concatenate([self.gammatone_filt_a, self.asymmetric_filt_a],axis=2)
 
