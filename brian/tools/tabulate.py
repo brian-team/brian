@@ -39,7 +39,6 @@ Tabulation of numerical functions.
 __all__ = ['Tabulate', 'TabulateInterp']
 
 from brian.units import get_unit, Quantity, is_dimensionless
-from brian.quantityarray import qarray, safeqarray
 from brian.unitsafefunctions import array, arange, zeros
 from numpy import NaN
 
@@ -125,7 +124,7 @@ class TabulateInterp(object):
             if is_dimensionless(x): # could be a problem if it is a Quantity with units=1
                 return self.f[ind] + self.df[ind] * (y - array(ind) * self.dx)
             else:
-                return safeqarray(self.f[ind] + self.df[ind] * (y - array(ind) * self.dx)) * self.unit
+                return array(self.f[ind] + self.df[ind] * (y - array(ind) * self.dx)) * self.unit
         except IndexError: # out of bounds
             return NaN * self.unit
 

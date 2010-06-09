@@ -55,7 +55,6 @@ import magic
 from itertools import count
 from equations import *
 from globalprefs import *
-from quantityarray import *
 import sys
 from brian_unit_prefs import bup
 import numpy

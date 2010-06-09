@@ -53,20 +53,10 @@ Dimensionless:
 With homogeneous dimensions:
 
 * dot
-
-Functions updated to return QuantityArray instead of numpy array
-----------------------------------------------------------------
-
-* ones, zeros, empty, tri, eye, identity
-* linspace, logspace
-* arange
-* beta, random_sample, uniform, standard_normal
-* rand, randn, vonmises, weibull, gumbel
 """
 
 from brian_unit_prefs import bup
 from units import *
-import quantityarray
 import numpy, math, scipy
 from numpy import *
 from numpy.random import *
@@ -76,7 +66,7 @@ import inspect
 __all__ = []
 
 # these functions are the ones that will work with the template immediately below, and
-# extend the numpy functions to know about Quantity objects (qarray dealt with automatically) 
+# extend the numpy functions to know about Quantity objects 
 quantity_versions = [
          'sqrt',
          'log', 'exp',

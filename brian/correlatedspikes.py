@@ -50,7 +50,7 @@ from scipy.optimize import newton, fmin_tnc
 from scipy import *
 from units import check_units, hertz, second
 from utils.circular import SpikeContainer
-from brian import poisson, binomial, rand, exponential, qarray
+from brian import poisson, binomial, rand, exponential
 from random import sample
 from numpy.random import rand
 

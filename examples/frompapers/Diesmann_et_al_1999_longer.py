@@ -157,7 +157,7 @@ def estimate_params(mon, time_est):
     # use leastsq algorithm from scipy.optimize.minpack to fit const+Gaussian
     # http://www.scipy.org/doc/api_docs/SciPy.optimize.minpack.html#leastsq
     i, times = zip(*mon.spikes)
-    times = qarray(times)
+    times = array(times)
     times = times[abs(times - time_est) < 15 * ms]
     if len(times) == 0:
         return (0, 0 * ms)

@@ -49,7 +49,6 @@ from numpy import array, zeros, mean, histogram, linspace, tile, digitize,     \
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
-from quantityarray import *
 from stdunits import ms, Hz
 from collections import defaultdict
 import types
@@ -102,7 +101,7 @@ class SpikeMonitor(Connection, Monitor):
     For ``M`` a :class:`SpikeMonitor`, you can also write:
     
     ``M[i]``
-        A qarray of the spike times of neuron ``i``.
+        An array of the spike times of neuron ``i``.
 
     Notes:
 
@@ -157,7 +156,7 @@ class SpikeMonitor(Connection, Monitor):
         pass
 
     def __getitem__(self, i):
-        return qarray([t for j, t in self.spikes if j == i])
+        return array([t for j, t in self.spikes if j == i])
 
     def getspiketimes(self):
         if self._newspikes:
@@ -314,12 +313,12 @@ class StateSpikeMonitor(SpikeMonitor):
     
     .. method:: times(i=None)
     
-        Returns a :class:`qarray` of the spike times for the whole monitored
+        Returns an array of the spike times for the whole monitored
         group, or just for neuron ``i`` if specified.
     
     .. method:: values(var, i=None)
     
-        Returns a :class:`qarray` of the values of variable ``var`` for the
+        Returns an array of the values of variable ``var`` for the
         whole monitored group, or just for neuron ``i`` if specified.
     '''
     def __init__(self, source, var):
@@ -342,17 +341,17 @@ class StateSpikeMonitor(SpikeMonitor):
     def times(self, i=None):
         '''Returns the spike times (of neuron ``i`` if specified)'''
         if i is not None:
-            return qarray([x[1] for x in self.spikes if x[0] == i])
+            return array([x[1] for x in self.spikes if x[0] == i])
         else:
-            return qarray([x[1] for x in self.spikes])
+            return array([x[1] for x in self.spikes])
 
     def values(self, var, i=None):
         '''Returns the recorded values of ``var`` (for spikes from neuron ``i`` if specified)'''
         v = self._varindex[var]
         if i is not None:
-            return qarray([x[v] for x in self.spikes if x[0] == i])
+            return array([x[v] for x in self.spikes if x[0] == i])
         else:
-            return qarray([x[v] for x in self.spikes])
+            return array([x[v] for x in self.spikes])
 
 
 class HistogramMonitorBase(SpikeMonitor):
@@ -465,16 +464,16 @@ class PopulationRateMonitor(SpikeMonitor):
     Properties:
     
     ``rate``, ``rate_``
-        A :class:`qarray` of the rates in Hz.    
+        An array of the rates in Hz.    
     ``times``, ``times_``
         The times of the bins.
     ``bin``
         The duration of a bin (in second).
     '''
-    times = property(fget=lambda self:qarray(self._times) * second)
-    times_ = property(fget=lambda self:array(self._times))
-    rate = property(fget=lambda self:qarray(self._rate) * hertz)
-    rate_ = property(fget=lambda self:array(self._rate))
+    times = property(fget=lambda self:array(self._times))
+    times_ = times
+    rate = property(fget=lambda self:array(self._rate))
+    rate_ = rate
 
     def __init__(self, source, bin=None):
         SpikeMonitor.__init__(self, source)
@@ -511,7 +510,7 @@ class PopulationRateMonitor(SpikeMonitor):
         width_dt = int(width / (self._bin * self._clock.dt))
         window = {'gaussian': exp(-arange(-2 * width_dt, 2 * width_dt + 1) ** 2 * 1. / (2 * (width_dt) ** 2)),
                 'flat': ones(width_dt)}[filter]
-        return qarray(convolve(self.rate_, window * 1. / sum(window), mode='same')) * hertz
+        return convolve(self.rate_, window * 1. / sum(window), mode='same')
 
 
 class StateMonitor(NetworkOperation, Monitor):
@@ -553,21 +552,18 @@ class StateMonitor(NetworkOperation, Monitor):
         Use the ``timestep`` parameter if you need recordings to be made at a
         precise point in the network update step.
 
-    The :class:`StateMonitor` object has the following properties (where names
-    without an underscore return :class:`QuantityArray` objects with appropriate
-    units and names with an underscore return ``array`` objects without
-    units):
+    The :class:`StateMonitor` object has the following properties:
 
-    ``times``, ``times_``
+    ``times``
         The times at which recordings were made
-    ``mean``, ``mean_``
+    ``mean``
         The mean value of the state variable for every neuron in the
         group (not just the ones specified in the ``record`` keyword)
-    ``var``, ``var_``
+    ``var``
         The unbiased estimate of the variances, as in ``mean``
-    ``std``, ``std_``
+    ``std``
         The square root of ``var``, as in ``mean``
-    ``values``, ``values_``
+    ``values``
         A 2D array of the values of all the recorded neurons, each row is a
         single neuron's values.
         
@@ -605,17 +601,17 @@ class StateMonitor(NetworkOperation, Monitor):
             
         You may need to experiment, try WXAgg, GTKAgg, QTAgg, TkAgg.
     '''
-    times = property(fget=lambda self:QuantityArray(self._times) * second)
-    mean = property(fget=lambda self:self.unit * QuantityArray(self._mu / self.N))
-    _mean = property(fget=lambda self:self._mu / self.N)
-    var = property(fget=lambda self:(self.unit * self.unit * QuantityArray(self._sqr - self.N * self._mean ** 2) / (self.N - 1)))
-    std = property(fget=lambda self:self.var ** .5)
+    mean = property(fget=lambda self:self._mu / self.N)
+    _mean = mean
     mean_ = _mean
-    var_ = property(fget=lambda self:(self._sqr - self.N * self.mean_ ** 2) / (self.N - 1))
-    std_ = property(fget=lambda self:self.var_ ** .5)
-    times_ = property(fget=lambda self:array(self._times))
+    var = property(fget=lambda self:(self._sqr - self.N * self.mean_ ** 2) / (self.N - 1))
+    var_ = var
+    std = property(fget=lambda self:self.var ** .5)
+    std_ = std
+    times = property(fget=lambda self:array(self._times))
+    times_ = times
     values = property(fget=lambda self:self.getvalues())
-    values_ = property(fget=lambda self:self.getvalues_())
+    values_ = values
 
     def __init__(self, P, varname, clock=None, record=False, timestep=1, when='end'):
         '''
@@ -866,14 +862,14 @@ class RecentStateMonitor(StateMonitor):
             if isinstance(self.record, int) and self.record != i or (not isinstance(self.record, int) and i not in self.record):
                 raise IndexError('Neuron ' + str(i) + ' was not recorded.')
             try:
-                return QuantityArray(self._values[timeinds, self.recordindex[i]]) * self.unit
+                return self._values[timeinds, self.recordindex[i]]
             except:
                 if i == self.record:
-                    return QuantityArray(self._values[timeinds, 0]) * self.unit
+                    return self._values[timeinds, 0]
                 else:
                     raise
         elif self.record is True:
-            return QuantityArray(self._values[timeinds, i]) * self.unit
+            return self._values[timeinds, i]
 
     def get_past_values(self, times):
         # probably mostly to be used internally by Brian itself
@@ -894,10 +890,8 @@ class RecentStateMonitor(StateMonitor):
             return [self._values[time_indices, self._arange] for times, time_indices in izip(times_seq, time_indices_seq)]
 
     def getvalues(self):
-        return safeqarray(self._values, units=self.unit)
-
-    def getvalues_(self):
         return self._values
+    getvalues_ = getvalues
 
     def sorted_times_indices(self):
         if not self.has_looped:
@@ -905,25 +899,21 @@ class RecentStateMonitor(StateMonitor):
         return argsort(self._times)
 
     def get_sorted_times(self):
-        return safeqarray(self._times[self.sorted_times_indices()], units=second)
-
-    def get_sorted_times_(self):
         return self._times[self.sorted_times_indices()]
+    get_sorted_times_ = get_sorted_times
 
     def get_sorted_values(self):
-        return safeqarray(self._values[self.sorted_times_indices(), :], units=self.unit)
-
-    def get_sorted_values_(self):
         return self._values[self.sorted_times_indices(), :]
+    get_sorted_values_ = get_sorted_values
 
     times = property(fget=get_sorted_times)
     times_ = property(fget=get_sorted_times_)
     values = property(fget=get_sorted_values)
     values_ = property(fget=get_sorted_values_)
-    unsorted_times = property(fget=lambda self:QuantityArray(self._times))
-    unsorted_times_ = property(fget=lambda self:array(self._times))
+    unsorted_times = property(fget=lambda self:array(self._times))
+    unsorted_times_ = unsorted_times
     unsorted_values = property(fget=getvalues)
-    unsorted_values_ = property(fget=getvalues_)
+    unsorted_values_ = unsorted_values
 
     def reinit(self):
         self._values[:] = 0

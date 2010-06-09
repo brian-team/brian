@@ -60,7 +60,6 @@ from threshold import *
 from units import *
 from tools import *
 from equations import *
-from quantityarray import *
 from globalprefs import *
 from unitsafefunctions import *
 from stdunits import *

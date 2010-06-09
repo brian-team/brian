@@ -174,7 +174,7 @@ xlabel('N')
 
 #time_multivar_linear_network = [ do_time(linear_network, N_multivar_linear_network, M) for M in vars_linear_network ]
 #fitcoeffs = polyfit(vars_linear_network, time_multivar_linear_network, 2)
-#qfitcoeffs = qarray(fitcoeffs)*second
+#qfitcoeffs = array(fitcoeffs)*second
 #perneuron_variableconst = slope*second
 #print 'Time per linear neuron as function of numstates=M:', qfitcoeffs[1]/N_multivar_linear_network, 'M +', qfitcoeffs[0]/N_multivar_linear_network, 'M^2' 
 #subplot(334)

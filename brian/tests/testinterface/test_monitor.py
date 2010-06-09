@@ -77,19 +77,16 @@ def test_spikemonitor():
         Use the timestep parameter if you need recordings to be made at a
         precise point in the network update step.
 
-    The :class:`StateMonitor` object has the following properties (where names
-    without an underscore return :class:`QuantityArray` objects with appropriate
-    units and names with an underscore return array objects without
-    units):
+    The :class:`StateMonitor` object has the following properties:
 
-    times, times_
+    times
         The times at which recordings were made
-    mean, mean_
+    mean
         The mean value of the state variable for every neuron in the
         group (not just the ones specified in the record keyword)
-    var, var_
+    var
         The unbiased estimate of the variances, as in mean
-    std, std_
+    std
         The square root of var, as in mean
         
     In addition, if M is a :class:`StateMonitor` object, you write::
@@ -97,8 +94,7 @@ def test_spikemonitor():
         M[i]
     
     for the recorded values of neuron i (if it was specified with the
-    record keyword). It returns a :class:`QuantityArray` object with units. Downcast
-    to an array without units by writing asarray(M[i]).
+    record keyword). It returns an array object.
     
     Others
     ~~~~~~
@@ -176,8 +172,8 @@ def test_spikemonitor():
     assert (is_within_absolute_tolerance(max(d), min(d)))
     assert (is_within_absolute_tolerance(float(max(d)), float(get_default_clock().dt)))
     # construct unbiased estimator from variances of recorded arrays
-    v = qarray([ var(M4[0]), var(M4[1]), var(M4[2]) ]) * float(len(M4[0])) / float(len(M4[0]) - 1)
-    m = qarray([0.5, 1.0, 1.5])
+    v = array([ var(M4[0]), var(M4[1]), var(M4[2]) ]) * float(len(M4[0])) / float(len(M4[0]) - 1)
+    m = array([0.5, 1.0, 1.5])
     assert (is_within_absolute_tolerance(abs(max(M1.mean - m)), 0.))
     assert (is_within_absolute_tolerance(abs(max(M1.var - v)), 0.))
     assert (is_within_absolute_tolerance(abs(max(M1.std - v ** 0.5)), 0.))
