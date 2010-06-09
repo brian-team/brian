@@ -264,12 +264,9 @@ if use_gpu:
             self.pagelocked_mem=pagelocked_mem
             self.fs=samplerate
             self.N=b.shape[0]
-            #print a,b
-            self.filt_bCPU=b
-            self.filt_aCPU=a
             n, m, p=b.shape
-            filt_b=array(b, dtype=self.precision_dtype)
-            filt_a=array(a, dtype=self.precision_dtype)
+            filt_b_gpu=array(b, dtype=self.precision_dtype)
+            filt_a_gpu=array(a, dtype=self.precision_dtype)
             filt_state=zeros((n, m-1, p), dtype=self.precision_dtype)
             if pagelocked_mem:
                 filt_y=drv.pagelocked_zeros((n,), dtype=self.precision_dtype)
@@ -278,8 +275,8 @@ if use_gpu:
                 filt_y=zeros(n, dtype=self.precision_dtype)
                 self.pre_x=zeros(n, dtype=self.precision_dtype)
             filt_x=zeros(n, dtype=self.precision_dtype)
-            self.filt_b=gpuarray.to_gpu(filt_b.T.flatten()) # transform to Fortran order for better GPU mem
-            self.filt_a=gpuarray.to_gpu(filt_a.T.flatten()) # access speeds
+            self.filt_b_gpu=gpuarray.to_gpu(filt_b_gpu.T.flatten()) # transform to Fortran order for better GPU mem
+            self.filt_a_gpu=gpuarray.to_gpu(filt_a_gpu.T.flatten()) # access speeds
             self.filt_state=gpuarray.to_gpu(filt_state.T.flatten())
             self.filt_x=gpuarray.to_gpu(filt_x)
             self.filt_y=GPUBufferedArray(filt_y)
@@ -348,8 +345,8 @@ if use_gpu:
         samplerate=property(fget=lambda self:self.fs)
 
         def timestep(self, input):
-            b=self.filt_b
-            a=self.filt_a
+            b=self.filt_b_gpu
+            a=self.filt_a_gpu
             x=input
             zi=self.filt_state
             y=self.filt_y
@@ -684,7 +681,7 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
             self.asymmetric_filt_a[:, :, k]=ap
         #print B.shape,A.shape,Btemp.shape,Atemp.shape    
         #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
-        print self.gammatone_filt_b,self.asymmetric_filt_b
+        #print self.gammatone_filt_b,self.asymmetric_filt_b
         self.filt_b=concatenate([self.gammatone_filt_b, self.asymmetric_filt_b],axis=2)
         self.filt_a=concatenate([self.gammatone_filt_a, self.asymmetric_filt_a],axis=2)
 

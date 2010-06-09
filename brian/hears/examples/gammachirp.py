@@ -38,18 +38,19 @@ time_axis=gc_mon.times
 number_samples=len(time_axis)
 frequency_axis=linspace(0,1,number_samples-1)*samplerate
 figure()
+subplot(211)
 plot(time_axis*1000,gc_mon[0])
 plot(time_axis*1000,gt_mon [0])
-
 xlabel('(ms)')
-figure()
+title('Time response to an impulse')
+
+subplot(212)
 frequency_response_gc=20*log10(abs(fft(gc_mon[0])))
 frequency_response_gt=20*log10(abs(fft(gt_mon[0])))
-
-
-
 plot(frequency_axis[:number_samples/4],frequency_response_gc[:number_samples/4])
 plot(frequency_axis[:number_samples/4],frequency_response_gt[:number_samples/4])
+title('Frequency response to an impulse')
 xlabel('(Hz)')
+ylabe('dB')
 show()
     
