@@ -11,6 +11,9 @@ Minor features:
 * New module tools.io
 * weight and sparseness can now both be functions in connect_random
 * New StateHistogramMonitor object
+* clear now has a new keyword all which allows you to destroy all Brian
+  objects regardless of whether or not they would be found by MagicNetwork.
+  In addition, garbage collection is called after a clear.
 
 Improvements
 

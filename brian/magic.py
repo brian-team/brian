@@ -44,18 +44,22 @@ function).
 Functions
 ---------
 
-get_instances(instancetype,level=1)
-    This function finds all instances at the given level in the sequence of calling frames
+get_instances(instancetype, level=1, all=False)
+    This function finds all instances at the given level in the sequence of
+    calling frames.
+    If all is True then levels will not be used and all instances will be found.
     
-find_instances(instancetype,startlevel=1)
+find_instances(instancetype, startlevel=1, all=False)
     This function searches the frames starting from the given startlevel until it finds at least
     one object of the required type, at which point it will return all objects of that type from
     that level
+    If all is True then levels will not be used and all instances will be found.
 
-find_all_instances(instancetype,startlevel=1):
+find_all_instances(instancetype,startlevel=1, all=False):
     This function searches the frames starting from the given startlevel, and returns all objects of
     the required type from all levels. Noe that includeglobals is set to False by default so as not
     to pick up multiple copies of objects
+    If all is True then levels will not be used and all instances will be found.
 
 Variables:
 
@@ -288,7 +292,7 @@ def magic_return(f):
     new_f.__doc__ = f.__doc__
     return new_f
 
-def get_instances(instancetype, level=1):
+def get_instances(instancetype, level=1, all=False):
     """Find all instances of a given class at a given level in the stack
     
     See documentation for module Brian.magic
@@ -298,24 +302,24 @@ def get_instances(instancetype, level=1):
     except AttributeError:
         raise InstanceTrackerError('Cannot track instances of type ', instancetype)
     target_frame = id(getouterframes(currentframe())[level + 1][0])
-    if not get_global_preference('magic_useframes'):
+    if all or not get_global_preference('magic_useframes'):
         target_frame = None
     objs = instancetype.__instancefollower__.get(instancetype, target_frame)
     return (objs, map(str, map(id, objs)))
 
-def find_instances(instancetype, startlevel=1):
+def find_instances(instancetype, startlevel=1, all=False):
     """Find first instances of a given class in the stack
     
     See documentation for module Brian.magic
     """
     # Note that we start from startlevel+1 because startlevel means from the calling function's point of view 
     for level in range(startlevel + 1, len(getouterframes(currentframe()))):
-        objs, names = get_instances(instancetype, level)
+        objs, names = get_instances(instancetype, level, all=all)
         if len(objs):
             return (objs, names)
     return ([], [])
 
-def find_all_instances(instancetype, startlevel=1):
+def find_all_instances(instancetype, startlevel=1, all=False):
     """Find all instances of a given class in the stack
     
     See documentation for module Brian.magic
@@ -324,7 +328,7 @@ def find_all_instances(instancetype, startlevel=1):
     names = []
     # Note that we start from startlevel+1 because startlevel means from the calling function's point of view 
     for level in range(startlevel + 1, len(getouterframes(currentframe()))):
-        newobjs, newnames = get_instances(instancetype, level)
+        newobjs, newnames = get_instances(instancetype, level, all=all)
         objs += newobjs
         names += newnames
     return (objs, names)

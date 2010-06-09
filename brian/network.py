@@ -849,7 +849,7 @@ def stop():
     global globally_stopped
     globally_stopped = True
 
-def clear(erase=True):
+def clear(erase=True, all=False):
     '''
     Clears all Brian objects.
     
@@ -858,10 +858,18 @@ def clear(erase=True):
     If ``erase`` is ``True`` then it will also delete all data from these objects.
     This is useful in, for example, ``ipython`` which stores persistent references
     to objects in any given session, stopping the data and memory from being freed
-    up.  See also :func:`forget`.
+    up.  If ``all=True`` then all Brian objects will be cleared. See also
+    :func:`forget`.
     '''
-    net = MagicNetwork(level=2)
-    for o in net.groups + net.connections + net.operations:
+    if all is False:
+        net = MagicNetwork(level=2)
+        objs = net.groups + net.connections + net.operations
+    else:
+        groups, _ = magic.find_instances(NeuronGroup, all=True)
+        connections, _ = magic.find_instances(Connection, all=True)
+        operations, _ = magic.find_instances(NetworkOperation, all=True)
+        objs = groups+connections+operations
+    for o in objs:
         o.set_instance_id(-1)
         if erase:
             for k, v in o.__dict__.iteritems():
