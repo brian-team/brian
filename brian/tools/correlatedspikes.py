@@ -42,17 +42,16 @@ but the implemented algorithms are simple ones.
 
 See brian.utils.statistics for correlograms.
 '''
-from threshold import PoissonThreshold, HomogeneousPoissonThreshold
-from neurongroup import NeuronGroup
-from equations import Equations
+from ..threshold import PoissonThreshold, HomogeneousPoissonThreshold
+from ..neurongroup import NeuronGroup
+from ..equations import Equations
 from scipy.special import erf
 from scipy.optimize import newton, fmin_tnc
 from scipy import *
-from units import check_units, hertz, second
-from utils.circular import SpikeContainer
-from brian import poisson, binomial, rand, exponential
+from ..units import check_units, hertz, second
+from ..utils.circular import SpikeContainer
+from numpy.random import poisson, binomial, rand, exponential
 from random import sample
-from numpy.random import rand
 
 __all__ = ['rectified_gaussian', 'inv_rectified_gaussian', 'HomogeneousCorrelatedSpikeTrains', \
          'MixtureHomogeneousCorrelatedSpikeTrains',

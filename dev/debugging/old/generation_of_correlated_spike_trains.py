@@ -8,7 +8,6 @@ Fig 8 in the paper.
 '''
 
 from brian import *
-from brian.correlatedspikes import *
 from time import time
 
 # Firing rate of an integrate-and-fire model with white noise input current

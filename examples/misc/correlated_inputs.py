@@ -3,7 +3,6 @@ An example with correlated spike trains
 From: Brette, R. (2007). Generation of correlated spike trains.
 '''
 from brian import *
-from brian.correlatedspikes import *
 
 input = HomogeneousCorrelatedSpikeTrains(1000, r=10 * Hz, c=0.1, tauc=10 * ms)
 
