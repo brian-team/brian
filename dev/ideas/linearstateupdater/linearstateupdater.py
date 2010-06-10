@@ -152,7 +152,7 @@ if __name__ == '__main__':
     epsilon = 1.
     while 1. + epsilon > 1.:
         epsilon /= 2
-    epsilon *= 2.
+    epsilon *= 2000.
 
     A = array([[0, -1], [1, 0]])
     D = len(A)
@@ -165,4 +165,8 @@ if __name__ == '__main__':
         nint *= 2
         btilde = compute_Ab(A, b, dt, nint)[1]
         print nint, max(abs(btilde - btilde2)), max(abs(btilde)) * epsilon
+        if max(abs(btilde - btilde2)) <= max(abs(btilde)) * epsilon: # or it's getting worse
+            break
         btilde2 = btilde
+
+        
