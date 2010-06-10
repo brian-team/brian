@@ -1,3 +1,4 @@
+import brian_no_units
 from brian import *
 import brian.optimiser as optimiser
 from scipy import weave
@@ -8,6 +9,7 @@ import pycuda.compiler as compiler
 from pycuda import gpuarray
 from buffering import *
 import time
+from brian.experimental.codegen.rewriting import rewrite_to_c_expression
 
 __all__ = ['GPUNonlinearStateUpdater', 'GPUNeuronGroup']
 
@@ -43,6 +45,8 @@ class GPUNonlinearStateUpdater(NonlinearStateUpdater):
         for j, name in enumerate(eqs._diffeq_names):
             namespace = eqs._namespace[name]
             expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
+            expr = rewrite_to_c_expression(expr)
+            print expr
             if name in eqs._diffeq_names_nonzero:
                 clines += '    SCALAR ' + name + '__tmp = ' + expr + ';\n'
         for name in eqs._diffeq_names_nonzero:
@@ -176,11 +180,11 @@ if __name__ == '__main__':
     #N = 1000
     #domonitor = False
 
-    duration = 100 * ms
-    N = 10000
+    duration = 1000 * ms
+    N = 100
     domonitor = False
     showfinal = False
-    forcesync = False
+    forcesync = True
     method = 'gpu' # methods are 'c', 'python' and 'gpu'
 
     if drv.get_version() == (2, 0, 0): # cuda version
@@ -193,17 +197,17 @@ if __name__ == '__main__':
     import buffering
     buffering.DEBUG_BUFFER_CACHE = False
 
-    eqs = Equations('''
-    #dV/dt = -V*V/(10*ms) : 1
-    dV/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
-    #dV/dt = -V*V*V*V*V/(100*ms) : 1
-    #dW/dt = -W*W*W*W*W/(100*ms) : 1
-    #dV/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
-    #dW/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
-    #dW2/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
-    #dV/dt = h/(10*ms) : 1
-    #h = -V*V : 1
-    ''')
+#    eqs = Equations('''
+#    #dV/dt = -V*V/(10*ms) : 1
+#    dV/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
+#    #dV/dt = -V*V*V*V*V/(100*ms) : 1
+#    #dW/dt = -W*W*W*W*W/(100*ms) : 1
+#    #dV/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
+#    #dW/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
+#    #dW2/dt = cos(2*pi*t/(100*ms))/(10*ms) : 1
+#    #dV/dt = h/(10*ms) : 1
+#    #h = -V*V : 1
+#    ''')
     #eqs = Equations('\n'.join('dv'+str(i)+'/dt=-v'+str(i)+'/second:1' for i in range(20))) #10 works 11 is too much
     #print eqs
 
@@ -219,6 +223,21 @@ if __name__ == '__main__':
 #    dge/dt = -ge/taue : volt
 #    dgi/dt = -gi/taui : volt
 #    ''')
+    
+    from brian.library.ionic_currents import *
+
+    El = 10.6 * mV
+    EK = -12 * mV
+    ENa = 120 * mV
+    eqs = MembraneEquation(1 * uF) + leak_current(.3 * msiemens, El)
+    eqs += K_current_HH(36 * msiemens, EK) + Na_current_HH(120 * msiemens, ENa)
+    eqs += Current('I:amp')
+    #eqs.prepare()
+    #
+    #for n in eqs._string.keys():
+    #    eqs._string[n] = rewrite_to_c_expression(eqs._string[n])
+    #print eqs
+
 
     if method == 'gpu':
         G = GPUNeuronGroup(N, eqs, precision=precision, maxblocksize=256, forcesync=forcesync)
