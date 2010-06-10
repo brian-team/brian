@@ -9,3 +9,9 @@ TODO for brian.hears
 * Check syntax is what we want
 * Documentation
 * Stereo sounds (e.g. Sound(x) where x is (2,N) array, or Sound(left=L,right=R))
+
+For FilterBank monitors:
+* __len__
+* unit(varname) # -> 1
+* state(varname) -> vector of values
+(varname = "output")
