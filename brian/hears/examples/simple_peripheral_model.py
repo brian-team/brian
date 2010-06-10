@@ -1,7 +1,7 @@
 
 '''
-Implemenation of a simple peripheral model consisting of a bank of gammatone filters
-followed by  half=wave rectification and compression
+Implementation of a simple peripheral model consisting of a bank of gammatone filters
+followed by  half-wave rectification and compression
 '''
 
 from brian import *
