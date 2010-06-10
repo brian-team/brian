@@ -19,7 +19,7 @@ try:
     from pycuda import gpuarray
     from brian.experimental.cuda.buffering import *
     import re
-    set_gpu_device(0)
+    #set_gpu_device(0)
 #    def set_gpu_device(n):
 #        global _gpu_context
 #        autoinit.context.pop()
