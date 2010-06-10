@@ -916,8 +916,12 @@ class RecentStateMonitor(StateMonitor):
     unsorted_values_ = unsorted_values
 
     def reinit(self):
-        self._values[:] = 0
-        self._times[:] = 0
+        # We check self._values is not None because the __init__ of this class
+        # calls the __init__ of StateMonitor which calls reinit, but this happens
+        # before self._values is set to be an array.
+        if self._values is not None:
+            self._values[:] = 0
+            self._times[:] = 0
         self.current_time_index = 0
         self.N = 0
         self._recordstep = 0
