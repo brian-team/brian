@@ -50,6 +50,7 @@ if __name__ == '__main__':
 
    # doit(0)
     print id(pycuda.context)
-    pool = multiprocessing.Pool(1)
-    result = pool.map(doit, [0])
+    filtering.close_cuda()
+    pool = multiprocessing.Pool(2)
+    result = pool.map(doit, [0, 0])
     #print result
