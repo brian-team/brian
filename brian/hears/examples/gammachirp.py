@@ -1,5 +1,5 @@
 '''
-Plot the response to a click of a gammatone filter and of a gammachirp filter
+Plot the response to a click of a gammatone filter and  a gammachirp filter
 '''
 
 from brian import *
@@ -39,8 +39,9 @@ number_samples=len(time_axis)
 frequency_axis=linspace(0,1,number_samples-1)*samplerate
 figure()
 subplot(211)
-plot(time_axis*1000,gc_mon[0])
-plot(time_axis*1000,gt_mon [0])
+plot(time_axis*1000,gc_mon[0], label='Gammachirp')
+plot(time_axis*1000,gt_mon [0],label='Gammatone')
+legend()
 xlabel('(ms)')
 title('Time response to an impulse')
 

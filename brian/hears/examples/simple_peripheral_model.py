@@ -1,7 +1,12 @@
 
 '''
+<<<<<<< .mine
+Implemenation of a simple peripheral model consisting of a bank of gammatone filters
+followed by  half wave rectification and compression
+=======
 Implementation of a simple peripheral model consisting of a bank of gammatone filters
 followed by  half-wave rectification and compression
+>>>>>>> .r2038
 '''
 
 from brian import *
@@ -38,6 +43,7 @@ run(simulation_duration)
 time_axis=peripheral_monitor.times
 
 figure()
+suptitle('Outputs of the peripheral model (per frequency channel)')
 for ifrequency in range((nbr_center_frequencies)):
     subplot(nbr_center_frequencies,1,ifrequency+1)
     plot(time_axis*1000,peripheral_monitor [ifrequency])

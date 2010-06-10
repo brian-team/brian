@@ -4,6 +4,16 @@ Implementation of the dual resonance nonlinear (DRNL) filter.
 The parameters are those fitted for guinea-pigs
 from Sumner et al., A nonlinear filter-bank model of the guinea-pig cochlear nerve:
 Rate responses, JASA 2003
+
+The entire pathway consists of the sum of a linear and a nonlinear pathway
+
+The linear path consists of a bandpass function (second order gammatone), a low pass function,
+and a gain/attenuation factor, g, in a cascade
+
+The nonlinear path is  a cascade consisting of a bandpass function, a
+compression function, a second bandpass function, and a low
+pass function, in that order.
+
 '''
 
 from brian import *
@@ -18,9 +28,7 @@ sound = whitenoise(simulation_duration,samplerate).ramp()
 nbr_center_frequencies=5
 center_frequencies=erbspace(100*Hz,1000*Hz, nbr_center_frequencies) 
 
-##########
-#The linear path consists of a bandpass function (second order gammatone), a low pass function,
-#and a gain/attenuation factor, g, in a cascade
+#Linear Pathway #########
 
 #linear gain
 g=10**(5.68-0.97*log10(center_frequencies))
@@ -44,10 +52,7 @@ linear_path=FilterbankChain([gain,bandpass_linear,lowpass_linear])
 
 
 
-##########
-#The nonlinear path is  a cascade consisting of a bandpass function, a
-#compression function, a second bandpass function, and a low
-#pass function, in that order.
+#Nonlinear Pathway#########
 
 #bandpass filter (third order gammatone filters)
 center_frequencies_nonlinear=center_frequencies

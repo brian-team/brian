@@ -3,11 +3,12 @@ from brian.hears import*
 from brian.hears import filtering
 filtering.use_gpu = False 
 import scipy.signal as signal
+
 '''
 Compute the frequency response of a gammachirp, of its  asymmetric compensation filter, and  of its gammatone filter
 at 2000Hz
 
-Reproduce figure 1 from Irino and Unoki, AN ANALYSIS/SYNTHESIS AUDITORY FILTERBANK BASED ON AN IIR GAMMACHIRP FILTER
+The script reproduces figure 1 from Irino and Unoki, AN ANALYSIS/SYNTHESIS AUDITORY FILTERBANK BASED ON AN IIR GAMMACHIRP FILTER
 but in the paper the figure is an FIR implementation (no error). The one presented here is the approximated IIR filter
 
 

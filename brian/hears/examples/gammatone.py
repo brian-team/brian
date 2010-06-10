@@ -27,6 +27,7 @@ run(simulation_duration)
 time_axis=gt_mon.times
 
 figure()
+suptitle('Outputs of the gammatone filterbank')
 for ifrequency in range((nbr_center_frequencies)):
     subplot(nbr_center_frequencies,1,ifrequency+1)
     plot(time_axis*1000,gt_mon [ifrequency])
