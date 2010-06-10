@@ -1,5 +1,5 @@
-from brian.hears import *
-import brian.hears.filtering as filtering
+#from brian.hears import *
+#import brian.hears.filtering as filtering
 from numpy import ones, int32
 import multiprocessing
 import pycuda
@@ -34,7 +34,7 @@ def close_cuda():
 atexit.register(close_cuda)
 
 def doit(x):
-
+    drv.init()
     print id(pycuda.context)
 
     set_gpu_device(x)
@@ -62,7 +62,7 @@ def doit(x):
     return y
 
 if __name__ == '__main__':
-
+    pycuda.context=None
     #import sys
 #    print 'A'
 #    set_gpu_device(0)
@@ -75,6 +75,6 @@ if __name__ == '__main__':
    # doit(0)
     print id(pycuda.context)
     #close_cuda()
-    pool = multiprocessing.Pool(1)
-    result = pool.map(doit, [0])
+    pool = multiprocessing.Pool(2)
+    result = pool.map(doit, [0,0])
     #print result
