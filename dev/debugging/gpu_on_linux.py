@@ -2,11 +2,15 @@ from brian.hears import *
 import brian.hears.filtering as filtering
 from numpy import ones, int32
 import multiprocessing
+
 import pycuda
 #import pycuda.autoinit as autoinit
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
+
+
+
 import os, sys
 import atexit
 
@@ -34,11 +38,14 @@ import atexit
 #atexit.register(close_cuda)
 
 def doit(x):
-#    drv.init()
+
+   # drv.init()
 #    print id(pycuda.context)
 
     filtering.set_gpu_device(x)
-
+#    print 'a'
+#    pycuda.context = drv.Device(0).make_context()
+#    print 'b'
     sys.stdin = file(os.devnull)
     sys.stdout = file(os.devnull)
 
@@ -72,12 +79,13 @@ if __name__ == '__main__':
 #    filtering.set_gpu_device(0)
 #    print 'D'
 
-#    drv.init()
-#    drv.init()
+    #drv.init()
+    #drv.init()
 
-   # doit(0)
+    #doit(0)
     #print id(pycuda.context)
     #close_cuda()
+
     pool = multiprocessing.Pool(2)
     result = pool.map(doit, [0,0])
-    print result
+    #print result
