@@ -11,6 +11,8 @@ import os, sys
 
 def doit(x):
 
+    print id(pycuda.context)
+
     filtering.set_gpu_device(x)
 
     sys.stdin = file(os.devnull)
@@ -37,7 +39,7 @@ def doit(x):
 
 if __name__ == '__main__':
 
-#    #import sys
+    #import sys
 #    print 'A'
 #    filtering.set_gpu_device(0)
 #    print 'B'
@@ -46,8 +48,8 @@ if __name__ == '__main__':
 #    filtering.set_gpu_device(0)
 #    print 'D'
 
-#    doit(0)
-
-    pool = multiprocessing.Pool(2)
-    result = pool.map(doit, [0, 1])
-    print result
+   # doit(0)
+    print id(pycuda.context)
+    pool = multiprocessing.Pool(1)
+    result = pool.map(doit, [0])
+    #print result
