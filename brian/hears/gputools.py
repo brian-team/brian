@@ -9,10 +9,10 @@ try:
     pycuda.context = None
     pycuda.isinitialised = False
     MAXGPU = 0 # drv.Device.count()
-    
+#    
     def initialise_cuda():
         global MAXGPU
-        if not pycuda.isinitialised:
+        if  not pycuda.isinitialised:
             drv.init()
             pycuda.isinitialised = True
             MAXGPU = drv.Device.count()
