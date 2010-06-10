@@ -33,7 +33,7 @@ __all__=['GammachirpFilterbankFIR', 'GammachirpFilterbankIIR', 'Filterbank', 'Fi
            'parallel_lfilter_step', 'GammatoneFilterbank',
            'IIRFilterbank' ,'MixFilterbank','TimeVaryingIIRFilterbank','MeddisGammatoneFilterbank','ButterworthFilterbank','CascadeFilterbank']
 
-#print get_global_preference('useweave')
+
 def parallel_lfilter_step(b, a, x, zi):
     '''
     Parallel version of scipy lfilter command for a bank of n sequences of length 1
@@ -61,6 +61,7 @@ if get_global_preference('useweave'):
     if _cpp_compiler=='gcc':
         _extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
     _old_parallel_lfilter_step=parallel_lfilter_step
+    
     def parallel_lfilter_step(b, a, x, zi):
         if zi.shape[2]>1:
             # we need to do this so as not to alter the values in x in the C code below
@@ -167,6 +168,7 @@ class FilterbankChain(Filterbank):
         self.filterbanks=filterbanks
         self.fs=filterbanks[0].fs
         self.N=filterbanks[0].N
+        
     def timestep(self, input):
         for fb in self.filterbanks:
             input=fb.timestep(input)
@@ -386,6 +388,7 @@ if use_gpu:
             return array([self.timestep(x).copy() for x in input])
 
 class FilterbankGroupStateUpdater(StateUpdater):
+    
     def __init__(self):
         pass
 
@@ -425,6 +428,7 @@ class FilterbankGroup(NeuronGroup):
     
         Loads the sound 
     '''
+    
     def __init__(self, filterbank, x=None):
         self.filterbank=filterbank
         fs=filterbank.samplerate
@@ -454,6 +458,7 @@ class MixFilterbank(Filterbank):
     '''  
     Mix filterbanks together with a given weight vectors
     '''
+    
     def __init__(self, *args, **kwargs):#weights=None,
 
         if kwargs.get('weights')==None:
@@ -482,6 +487,7 @@ class CascadeFilterbank(ParallelLinearFilterbank):
     '''
      cascade of a filterbank (nbr_cascade times)
     '''
+    
     def __init__(self, filterbank,nbr_cascade):
          b=filterbank.filt_b
          a=filterbank.filt_a
@@ -513,6 +519,7 @@ class GammatoneFilterbank(ParallelLinearFilterbank):
     EarQ=9.26449                #  Glasberg and Moore Parameters
     minBW=24.7
     order=1
+    
     @check_units(fs=Hz)
     def __init__(self, fs, cf):
 
@@ -692,11 +699,12 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
         ParallelLinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate*Hz)
 
 class GammachirpFilterbankFIR(ParallelLinearFilterbank):
-
-
-
-
-    def __init__(self, fs, fr,c=None,Tcst=None):
+    '''
+    Fit of a auditory filter (from a reverse correlation) at the NM of a barn owl at 4.6 kHz. The tap of the FIR filter
+    are the time response of the filter which is long. It is thus very slow
+    
+    '''
+    def __init__(self, fs, fr,c=None,time_constant=None):
         fr = array(fr)
         self.fr = fr
         self.N = len(fr)
@@ -706,11 +714,10 @@ class GammachirpFilterbankFIR(ParallelLinearFilterbank):
         if c==None:
             x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
 
-        if Tcst==None:
+        if time_constant==None:
             x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
         x[-1]=c
         fs=float(fs)
-        x[-1]=c
         t=arange(0, 4, 1./fs*1000)
         LenGC=len(t)
         filt_b=zeros((1, LenGC, 1))
@@ -718,13 +725,12 @@ class GammachirpFilterbankFIR(ParallelLinearFilterbank):
 
         g=4
         tmax=x[2]*(g-1)
-        G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[2])**2)+x[4])+x[5]
+        G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[1])**2)+x[4])+x[5]
 
         filt_b[0, :, 0]=G
         filt_a[0, 0, 0]=1
 
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
-
 
 
 class IIRFilterbank(ParallelLinearFilterbank):
@@ -759,6 +765,7 @@ class IIRFilterbank(ParallelLinearFilterbank):
     
     See the documentation for scipy.signal.iirdesign for more details.
     '''
+    
     def __init__(self, samplerate, N, passband, stopband, gpass, gstop, ftype):
         # passband can take form x or (a,b) in Hz and we need to convert to scipy's format
         try:
@@ -914,6 +921,7 @@ class TimeVaryingIIRFilterbank(Filterbank):
 #        self.b = b
 
         self.zi=zeros((self.b.shape[0], self.b.shape[1]-1, self.b.shape[2]))
+        
     def timestep(self, input):
         if isinstance(input, ndarray):
             input=input.flatten()
@@ -958,6 +966,7 @@ class TimeVaryingIIRFilterbank(Filterbank):
 
     def apply_single(self, input):
         pass
+    
     def __len__(self):
         return self.N
     samplerate=property(fget=lambda self:self.fs)
