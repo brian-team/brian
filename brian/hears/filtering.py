@@ -260,6 +260,7 @@ if use_gpu:
                 self.__class__=nongpu_ParallelLinearFilterbank
                 self.__init__(b, a, samplerate=samplerate)
                 return
+            initialise_cuda()
             self.precision=precision
             if self.precision=='double':
                 self.precision_dtype=float64

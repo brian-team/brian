@@ -1,5 +1,5 @@
-#from brian.hears import *
-#import brian.hears.filtering as filtering
+from brian.hears import *
+import brian.hears.filtering as filtering
 from numpy import ones, int32
 import multiprocessing
 import pycuda
@@ -10,34 +10,34 @@ from pycuda.compiler import SourceModule
 import os, sys
 import atexit
 
-def set_gpu_device(n):
-    """
-    This function makes pycuda use GPU number n in the system.
-    """
-    try:
-        pycuda.context.detach()
-    except:
-        pass
-    pycuda.context = drv.Device(n).make_context()
-
-def close_cuda():
-    """
-    Closes the current context. MUST be called at the end of the script.
-    """
-    if pycuda.context is not None:
-        try:
-            pycuda.context.pop()
-            pycuda.context = None
-        except:
-            pass
-
-atexit.register(close_cuda)
+#def set_gpu_device(n):
+#    """
+#    This function makes pycuda use GPU number n in the system.
+#    """
+#    try:
+#        pycuda.context.detach()
+#    except:
+#        pass
+#    pycuda.context = drv.Device(n).make_context()
+#
+#def close_cuda():
+#    """
+#    Closes the current context. MUST be called at the end of the script.
+#    """
+#    if pycuda.context is not None:
+#        try:
+#            pycuda.context.pop()
+#            pycuda.context = None
+#        except:
+#            pass
+#
+#atexit.register(close_cuda)
 
 def doit(x):
-    drv.init()
-    print id(pycuda.context)
+#    drv.init()
+#    print id(pycuda.context)
 
-    set_gpu_device(x)
+    filtering.set_gpu_device(x)
 
     sys.stdin = file(os.devnull)
     sys.stdout = file(os.devnull)
@@ -57,12 +57,12 @@ def doit(x):
     f(x, int32(100), block=(100, 1, 1))
     y = x.get()
     
-    close_cuda()
+    filtering.close_cuda()
     
     return y
 
 if __name__ == '__main__':
-    pycuda.context=None
+#    pycuda.context=None
     #import sys
 #    print 'A'
 #    set_gpu_device(0)
@@ -72,9 +72,12 @@ if __name__ == '__main__':
 #    filtering.set_gpu_device(0)
 #    print 'D'
 
+#    drv.init()
+#    drv.init()
+
    # doit(0)
-    print id(pycuda.context)
+    #print id(pycuda.context)
     #close_cuda()
     pool = multiprocessing.Pool(2)
     result = pool.map(doit, [0,0])
-    #print result
+    print result
