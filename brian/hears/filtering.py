@@ -189,6 +189,7 @@ class FunctionFilterbank(Filterbank):
         self.func=func
 
     def timestep(self, input):
+        # self.output[:]=self.func(input)
         return self.func(input)
 
     def __len__(self):
@@ -485,21 +486,21 @@ class MixFilterbank(Filterbank):
 
 class CascadeFilterbank(ParallelLinearFilterbank):
     '''
-     cascade of a filterbank (nbr_cascade times)
+    Cascade of a filterbank (nbr_cascade times)
     '''
     
     def __init__(self, filterbank,nbr_cascade):
-         b=filterbank.filt_b
-         a=filterbank.filt_a
-         self.fs=filterbank.fs
-         self.N=filterbank.N
-         self.filt_b=zeros((b.shape[0], b.shape[1],nbr_cascade))
-         self.filt_a=zeros((a.shape[0], a.shape[1],nbr_cascade))
-         for i in range((nbr_cascade)):
-             self.filt_b[:,:,i]=b[:,:,0]
-             self.filt_a[:,:,i]=a[:,:,0]
-             
-         ParallelLinearFilterbank.__init__(self, self.filt_b, self.filt_a, self.fs*Hz)
+        b=filterbank.filt_b
+        a=filterbank.filt_a
+        self.fs=filterbank.fs
+        self.N=filterbank.N
+        self.filt_b=zeros((b.shape[0], b.shape[1],nbr_cascade))
+        self.filt_a=zeros((a.shape[0], a.shape[1],nbr_cascade))
+        for i in range((nbr_cascade)):
+            self.filt_b[:,:,i]=b[:,:,0]
+            self.filt_a[:,:,i]=a[:,:,0]
+            
+        ParallelLinearFilterbank.__init__(self, self.filt_b, self.filt_a, self.fs*Hz)
 
 class GammatoneFilterbank(ParallelLinearFilterbank):
     '''
