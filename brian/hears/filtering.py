@@ -5,6 +5,7 @@ See docstrings for details. The faster gammatone filter is the GammatoneFB.
 '''
 
 from brian import *
+from gputools import *
 from scipy import signal
 from scipy import weave
 from scipy import random
@@ -12,16 +13,17 @@ from scipy import random
 # DO NOT COMMENT THESE LINES OUT!-> Ok :)
 try:
     import pycuda
-    import pycuda.autoinit as autoinit
+    #import pycuda.autoinit as autoinit
     import pycuda.driver as drv
     import pycuda.compiler
     from pycuda import gpuarray
     from brian.experimental.cuda.buffering import *
     import re
-    def set_gpu_device(n):
-        global _gpu_context
-        autoinit.context.pop()
-        _gpu_context = drv.Device(n).make_context()
+    set_gpu_device(0)
+#    def set_gpu_device(n):
+#        global _gpu_context
+#        autoinit.context.pop()
+#        _gpu_context = drv.Device(n).make_context()
     use_gpu = True
 except ImportError:
     use_gpu = False
