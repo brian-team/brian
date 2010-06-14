@@ -437,6 +437,7 @@ class Equations(object):
             for var in self._eq_names:
                 f = self._function[var]
                 old_func_globals = copy.copy(f.func_globals)
+                f.func_globals['xi'] = 0 * second ** -.5 # Noise
                 f.func_globals.update(namespace_replace_quantity_with_pure(f.func_globals))
                 units = namespace_replace_quantity_with_pure(self._units)
                 self.apply(var, units) + self._units[var] # Check that the two terms have the same dimension
