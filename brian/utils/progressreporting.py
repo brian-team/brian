@@ -124,10 +124,11 @@ class ProgressReporter(object):
 
     def update(self, complete):
         cur_time = time.time()
-        if cur_time > self.next_report_time or complete == 1.0 or complete == 1:
+        totalcomplete = self.subtask_complete + complete * self.subtask_size
+        if cur_time > self.next_report_time or totalcomplete == 1.0 or totalcomplete == 1:
             self.next_report_time = cur_time + self.period
             elapsed = time.time() - self.start_time
-            self.report(elapsed, self.subtask_complete + complete * self.subtask_size)
+            self.report(elapsed, totalcomplete)
 
 def get_reporter(report):
     if report == 'print' or report == 'text' or report == 'stdout':
