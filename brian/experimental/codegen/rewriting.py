@@ -1,6 +1,10 @@
-from sympy.printing.ccode import CCodePrinter
-from sympy.printing.precedence import precedence
-import sympy
+try:
+    from sympy.printing.ccode import CCodePrinter
+    from sympy.printing.precedence import precedence
+    import sympy
+except ImportError:
+    sympy = None
+    CCodePrinter = object
 from ...optimiser import symbolic_eval
 
 def boolean_printer(origop, newop, start=''):
@@ -18,7 +22,10 @@ class NewCCodePrinter(CCodePrinter):
 
 __all__ = ['rewrite_to_c_expression', 'sympy_rewrite', 'rewrite_pow', 'floatify_numbers']
 
-pow = sympy.Function('pow')
+if sympy is not None:
+    pow = sympy.Function('pow')
+else:
+    pow = None
 
 def rewrite_pow(e):
     if not len(e.args):
@@ -57,6 +64,8 @@ def sympy_rewrite(s, rewriters=None):
     return str(expr)
 
 def rewrite_to_c_expression(s):
+    if sympy is None:
+        raise ImportError('sympy package required for code generation.')
     e = symbolic_eval(s)
     return NewCCodePrinter().doprint(e)
 
