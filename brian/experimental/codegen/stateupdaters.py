@@ -30,14 +30,36 @@ class CStateUpdater(StateUpdater):
         self._extra_compile_args = ['-O3']
         if self._weave_compiler == 'gcc':
             self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+        self.namespace = {}
+        code_vars = re.findall(r'\b\w+\b', self.code_c)
+        self._arrays_to_check = []
+        for varname in code_vars:
+            if varname not in eqs._eq_names + eqs._diffeq_names + eqs._alias.keys() + ['t', 'dt', '_S', 'num_neurons']:
+                # this is kind of a hack, but since we're going to be writing a new
+                # and more sensible Equations module anyway, it can stand
+                for name in eqs._namespace:
+                    if varname in eqs._namespace[name]:
+                        varval = eqs._namespace[name][varname]
+                        if isinstance(varval, numpy.ndarray):
+                            self.namespace[varname] = varval
+                            self._arrays_to_check.append((varname, varval))
+                            self.code_c = re.sub(r'\b'+varname+r'\b', varname+'[_i]', self.code_c)
+                            break
 
     def __call__(self, P):
-        dt = P.clock._dt
-        t = P.clock._t
-        num_neurons = len(P)
-        _S = P._S
+        if self._arrays_to_check is not None:
+            N = len(P)
+            for name, X in self._arrays_to_check:
+                if len(X)!=N:
+                    raise ValueError('Array '+name+' has wrong size ('+str(len(X))+' instead of '+str(N)+')')
+            self._arrays_to_check = None
+        self.namespace['dt'] = P.clock._dt
+        self.namespace['t'] = P.clock._t
+        self.namespace['num_neurons'] = len(P)
+        self.namespace['_S'] = P._S
         try:
-            weave.inline(self.code_c, ['_S', 'num_neurons', 'dt', 't'],
+            weave.inline(self.code_c, self.namespace.keys(),#['_S', 'num_neurons', 'dt', 't'],
+                         local_dict = self.namespace,
                          support_code=c_support_code,
                          compiler=self._weave_compiler,
                          extra_compile_args=self._extra_compile_args)
