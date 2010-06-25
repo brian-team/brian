@@ -1,4 +1,9 @@
 
+"""
+This example uses as input a sound (white noise) which is generated online. This way very long simulations with small time step can be
+performed without running out of memory 
+"""
+
 from brian import *
 from brian.hears import*
 from brian.hears import filtering
