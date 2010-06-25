@@ -16,7 +16,7 @@ except (ImportError, ValueError):
     have_scikits_samplerate = False
 
 __all__ = ['Sound', 'play_stereo_sound', 'play_sound',
-           'whitenoise', 'tone', 'click', 'silent', 'sequence', 'mix_sounds']
+           'whitenoise', 'tone', 'click', 'silent', 'sequence', 'mix_sounds','OnlineSound','OnlineWhiteNoise','OnlineWhiteNoiseBuffered','OnlineWhiteNoiseShifted']
 
 
 class Sound(numpy.ndarray):
@@ -360,6 +360,46 @@ class Sound(numpy.ndarray):
 
     def __reduce__(self):
         return (_load_Sound_from_pickle, (asarray(self), float(self.rate)))
+
+class OnlineSound(object):
+    def __init__(self): 
+        pass
+        
+    def update(self):
+        pass
+    
+class OnlineWhiteNoise(OnlineSound):
+    def __init__(self,mu,sigma): 
+        self.mu=mu
+        self.sigma=sigma
+
+    def update(self):
+        return self.mu+self.sigma*randn(1)
+
+class OnlineWhiteNoiseBuffered(OnlineSound):
+    def __init__(self,rate,mu,sigma,max_abs_itd): 
+        self.rate 
+        self.length_buffer=int(max_abs_itd * rate)
+        self.mu=mu
+        self.sigma=sigma
+        print 2*self.length_buffer+1
+        self.buffer=[0]*(2*self.length_buffer+1)
+        
+    def update(self):
+        self.buffer.pop()
+        self.buffer.insert(0,self.mu+self.sigma*randn(1))
+        return buffer[self.length_buffer+1]
+    
+class OnlineWhiteNoiseShifted(OnlineSound):
+    def __init__(self,rate,online_white_noise_buffered,shift):  
+        self.shift=int(shift * rate)
+        self.length_buffer=online_white_noise_buffered.length_buffer
+        self.buffer=online_white_noise_buffered.buffer
+        
+    def update(self):
+        return buffer[self.length_buffer+1+self.shift]
+
+
 
 def _load_Sound_from_pickle(arr, rate):
     return Sound(arr, rate=rate * Hz)

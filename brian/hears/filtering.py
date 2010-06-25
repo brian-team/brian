@@ -9,6 +9,7 @@ from gputools import *
 from scipy import signal
 from scipy import weave
 from scipy import random
+from sounds import OnlineSound
 # NOTE TO BERTRAND:
 # DO NOT COMMENT THESE LINES OUT!-> Ok :)
 try:
@@ -396,12 +397,15 @@ class FilterbankGroupStateUpdater(StateUpdater):
         pass
 
     def __call__(self, P):
+
         if P._x_stilliter is not None:
             try:
                 P.input=P._x_iter.next()
             except StopIteration:
                 P.input=0
                 P._x_stilliter=False
+        else:
+            P.input=P._x.update()
         P.output[:]=P.filterbank.timestep(P.input)
 
 class FilterbankGroup(NeuronGroup):
@@ -446,13 +450,19 @@ class FilterbankGroup(NeuronGroup):
 
     def load_sound(self, x):
         self._x=x
-        if x is not None:
+        
+        if isinstance(x,OnlineSound):
+            self._x_iter=None
+            self._x_stilliter=None
+
+        elif x is not None:
             self._x_iter=iter(self._x)
             self._x_stilliter=True
         else:
             self._x_iter=None
             self._x_stilliter=False
 
+        
     def reinit(self):
         NeuronGroup.reinit(self)
         self.load_sound(self._x)
@@ -933,7 +943,7 @@ class TimeVaryingIIRFilterbank(Filterbank):
         #f0=8000*Hz+2000*Hz*sin(2*pi*10*Hz*self.t)
         #tau_i=100*ms
         mu_i=self.m_i/self.tau_i
-        sigma_i=2*self.s_i/sqrt(self.tau_i)
+        sigma_i=sqrt(2)*self.s_i/sqrt(self.tau_i)
         self.fc=self.fc-self.fc/self.tau_i*self.deltaT+mu_i*self.deltaT+sigma_i*random.randn(1)*sqrt(self.deltaT)
         BWhz=self.fc/self.Q
         #print self.fc,BWhz
