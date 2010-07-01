@@ -379,7 +379,8 @@ class OnlineWhiteNoise(OnlineSound):
 class OnlineWhiteNoiseBuffered(OnlineSound):
     def __init__(self,rate,mu,sigma,max_abs_itd): 
         self.rate=rate
-        self.length_buffer=int(max_abs_itd * rate)
+        self.length_buffer=int(max_abs_itd * self.rate)
+        
         self.mu=mu
         self.sigma=sigma
         self.buffer=[0]*(2*self.length_buffer+1)
@@ -387,29 +388,39 @@ class OnlineWhiteNoiseBuffered(OnlineSound):
     def update(self):
         self.buffer.pop()
         self.buffer.insert(0,self.mu+self.sigma*randn(1))
-        return self.buffer[self.length_buffer+1]
+        return self.buffer[self.length_buffer]
     
 class OnlineWhiteNoiseShifted(OnlineSound):
     def __init__(self,rate,online_white_noise_buffered,shift=lambda:randn(1)*ms,time_interval=-1*ms): 
         #self.shift_applied=[] 
         self.rate=rate
-        self.interval_in_sample= int(time_interval * rate)
-        print self.interval_in_sample 
+        self.interval_in_sample= int(time_interval *self.rate)
+        #print self.interval_in_sample 
         self.count=0
         self.shift=shift
-        self.shift_in_sample=int(shift()* self.rate)
-        self.reference=online_white_noise_buffered
         self.length_buffer=online_white_noise_buffered.length_buffer
+        self.shift_in_sample=int(shift()* self.rate)
+        if abs(self.shift_in_sample) > self.length_buffer:
+            self.shift_in_sample=sign(self.shift_in_sample)*self.length_buffer
+        self.ITDused=[]
+        self.ITDused.append(self.shift_in_sample/self.rate)
+        self.reference=online_white_noise_buffered
+        
         
     def update(self):
         if self.count ==self.interval_in_sample:
             self.shift_in_sample=int(self.shift()* self.rate)
-            print self.shift()
+            if abs(self.shift_in_sample) > self.length_buffer:
+                self.shift_in_sample=sign(self.shift_in_sample)*self.length_buffer
+            self.ITDused.append(self.shift_in_sample/self.rate)
+            #print self.shift()
             self.count=0
             
         self.count=self.count+1   
-
-        return self.reference.buffer[self.length_buffer+1+self.shift_in_sample]
+#        print self.length_buffer
+#        print self.shift_in_sample
+#        print self.length_buffer+1+self.shift_in_sample
+        return self.reference.buffer[self.length_buffer+self.shift_in_sample]
 
 
 

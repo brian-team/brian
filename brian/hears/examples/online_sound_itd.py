@@ -18,11 +18,11 @@ set_global_preferences(weavecompiler ='gcc')
 samplerate=44*kHz
 defaultclock.dt = 1/samplerate
 
-simulation_duration=50*ms
+simulation_duration=500*ms
 max_abs_itd=10*ms
 shift='variable' #1*ms
 time_interval=10*ms
-shift=lambda :randn(1)*ms
+shift=lambda :10*randn(1)*ms
 
 sound_left  = OnlineWhiteNoiseBuffered(samplerate,0,1,max_abs_itd)
 sound_right  = OnlineWhiteNoiseShifted(samplerate,sound_left,shift=shift,time_interval=time_interval)
