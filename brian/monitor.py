@@ -533,7 +533,7 @@ class PopulationRateMonitor(SpikeMonitor):
                 raise AttributeError,"Automatic width selection is not implemented yet!"
         else:
             width_dt = int(width / (self._bin * self._clock.dt)) # width in number of bins
-        print width_dt
+        #print width_dt
         window = {'gaussian': exp(-arange(-2 * width_dt, 2 * width_dt + 1) ** 2 * 1. / (2 * (width_dt) ** 2)),
                 'flat': ones(width_dt)}[filter]
         return convolve(self.rate_, window * 1. / sum(window), mode='same')
