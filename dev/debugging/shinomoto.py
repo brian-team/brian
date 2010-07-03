@@ -1,5 +1,6 @@
 '''
 Test of Shinomoto's automatic bin size selection
+Probably not working yet!
 '''
 from brian import *
 import time
@@ -49,5 +50,5 @@ duration = time.time() - start_time
 print "Simulation time:", duration, "seconds"
 print Me.nspikes, "excitatory spikes"
 print Mi.nspikes, "inhibitory spikes"
-plot(M.times / ms, M.smooth_rate(2 * ms, 'gaussian'))
+plot(M.times / ms, M.smooth_rate(filter='flat'))
 show()

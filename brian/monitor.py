@@ -45,7 +45,7 @@ from units import *
 from connection import Connection, SparseConnectionVector
 from numpy import array, zeros, mean, histogram, linspace, tile, digitize,     \
         copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, \
-        maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize
+        maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize, inf
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
@@ -506,32 +506,34 @@ class PopulationRateMonitor(SpikeMonitor):
         Returns a smoothed version of the vector of rates,
         convolving the rates with a filter (gaussian or flat)
         with the given width.
-        
-        If width is not given and the filter is flat, then the bin
-        size is automatically chosen using Shimazaki and Shinomoto's method:
-          Shimazaki and Shinomoto, A method for selecting the bin size of a time histogram
-          Neural Computation 19(6), 1503-1527, 2007
-          http://dx.doi.org/10.1162/neco.2007.19.6.1503
         """
         if width is None: # automatic with Shinomoto's algorithms
             if filter=='flat':
+                """ (Experimental)
+                If width is not given and the filter is flat, then the bin
+                size is automatically chosen using Shimazaki and Shinomoto's method:
+                  Shimazaki and Shinomoto, A method for selecting the bin size of a time histogram
+                  Neural Computation 19(6), 1503-1527, 2007
+                  http://dx.doi.org/10.1162/neco.2007.19.6.1503
+                """
                 # Shinomoto's method to find the optimal bin size. Adapted from:
                 # Shimazaki and Shinomoto, A method for selecting the bin size of a time histogram
                 # Neural Computation 19(6), 1503-1527, 2007
                 # http://dx.doi.org/10.1162/neco.2007.19.6.1503
                 K=mean(self._rate)/self._factor # average number of spikes per recording bin
                 best_value=inf
-                for nbins in range(2,50): # possible number of bins
+                for nbins in range(2,500): # possible number of bins
                     binsize=len(self._rate)/nbins
-                    x=resize(self._rate,(len(self._rate)/binsize,binsize))
+                    x=resize(self._rate,(len(self._rate)/binsize,binsize))-K
                     value=(2*K*binsize-mean(x.sum(1)**2))/binsize**2
                     if value<best_value:
                         best_value=value
-                        width_dt=nbins
+                        width_dt=binsize
             else:
                 raise AttributeError,"Automatic width selection is not implemented yet!"
         else:
             width_dt = int(width / (self._bin * self._clock.dt)) # width in number of bins
+        print width_dt
         window = {'gaussian': exp(-arange(-2 * width_dt, 2 * width_dt + 1) ** 2 * 1. / (2 * (width_dt) ** 2)),
                 'flat': ones(width_dt)}[filter]
         return convolve(self.rate_, window * 1. / sum(window), mode='same')
