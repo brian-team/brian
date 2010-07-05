@@ -10,6 +10,7 @@ from scipy import signal
 from scipy import weave
 from scipy import random
 from sounds import OnlineSound
+from numpy import intp
 # NOTE TO BERTRAND:
 # DO NOT COMMENT THESE LINES OUT!-> Ok :)
 try:
@@ -228,8 +229,6 @@ class ParallelLinearFilterbank(Filterbank):
         return parallel_lfilter_step(self.filt_b, self.filt_a, input, self.filt_state)
 
 if use_gpu:
-
-    from numpy import int32, uint32, uint64, intp
 
     nongpu_ParallelLinearFilterbank=ParallelLinearFilterbank
 
