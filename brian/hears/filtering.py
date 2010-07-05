@@ -229,6 +229,8 @@ class ParallelLinearFilterbank(Filterbank):
 
 if use_gpu:
 
+    from numpy import int32, uint32, uint64, intp
+
     nongpu_ParallelLinearFilterbank=ParallelLinearFilterbank
 
     class ParallelLinearFilterbank(Filterbank):
@@ -290,6 +292,7 @@ if use_gpu:
             self.filt_state=gpuarray.to_gpu(filt_state.T.flatten())
             self.filt_x=gpuarray.to_gpu(filt_x)
             self.filt_y=GPUBufferedArray(filt_y)
+            #self.filt_y=gpuarray.to_gpu(filt_y)
             code='''
             #define x(i) _x[i]
             #define y(i) _y[i]
@@ -343,7 +346,7 @@ if use_gpu:
                 gridsize=n/blocksize+1
             self.block=(blocksize, 1, 1)
             self.grid=(gridsize, 1)
-            self.gpu_filt_func.prepare(('i', 'i', 'i', 'i', 'i'), self.block)
+            self.gpu_filt_func.prepare((intp, intp, intp, intp, intp), self.block)
             self._has_run_once=False
 
         def reset(self):
@@ -380,8 +383,8 @@ if use_gpu:
             if self._has_run_once:
                 self.gpu_filt_func.launch_grid(*self.grid)
             else:
-                self.gpu_filt_func.prepared_call(self.grid, int(b.gpudata), int(a.gpudata), int(fx.gpudata),
-                                                 int(zi.gpudata), y.gpu_pointer)
+                self.gpu_filt_func.prepared_call(self.grid, intp(b.gpudata), intp(a.gpudata), intp(fx.gpudata),
+                                                 intp(zi.gpudata), y.gpu_pointer)
                 self._has_run_once=True
             y.changed_gpu_data()
             if self.forcesync:

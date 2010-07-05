@@ -7,6 +7,7 @@ from brian import *
 import pycuda
 import pycuda.gpuarray
 import numpy
+from numpy import intp
 
 __all__ = ['SynchronisationError', 'GPUBufferedArray']
 
@@ -359,7 +360,7 @@ class GPUBufferedArray(numpy.ndarray):
         raise TypeError('gpu_arr should be a DeviceAllocation or GPUArray.')
 
     def get_gpu_pointer(self):
-        return int(self.gpu_dev_alloc)
+        return intp(self.gpu_dev_alloc)
 
     cpu_array = property(fget=get_cpu_array)
     gpu_array = property(fget=get_gpu_array)
