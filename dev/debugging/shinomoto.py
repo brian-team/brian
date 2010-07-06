@@ -36,7 +36,7 @@ P.v = Vr + rand(len(P)) * (Vt - Vr)
 Me = PopulationSpikeCounter(Pe)
 Mi = PopulationSpikeCounter(Pi)
 # A population rate monitor
-M = PopulationRateMonitor(P)
+M = PopulationRateMonitor(P[:200])
 
 print "Network construction time:", time.time() - start_time, "seconds"
 print len(P), "neurons in the network"

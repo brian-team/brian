@@ -45,7 +45,7 @@ from units import *
 from connection import Connection, SparseConnectionVector
 from numpy import array, zeros, mean, histogram, linspace, tile, digitize,     \
         copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, \
-        maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize, inf
+        maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize, inf, var
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
@@ -520,15 +520,20 @@ class PopulationRateMonitor(SpikeMonitor):
                 # Shimazaki and Shinomoto, A method for selecting the bin size of a time histogram
                 # Neural Computation 19(6), 1503-1527, 2007
                 # http://dx.doi.org/10.1162/neco.2007.19.6.1503
-                K=mean(self._rate)/self._factor # average number of spikes per recording bin
+                counts=array(self._rate)/self._factor
                 best_value=inf
-                for nbins in range(2,500): # possible number of bins
-                    binsize=len(self._rate)/nbins
-                    x=resize(self._rate,(len(self._rate)/binsize,binsize))-K
-                    value=(2*K*binsize-mean(x.sum(1)**2))/binsize**2
+                for nbins in range(2,500): # possible number of bins (maybe a less brutal optimization?)
+                    binsize=len(counts)/nbins
+                    x=resize(counts,(len(counts)/binsize,binsize))
+                    #x.reshape((x.size,1))[len(counts):]=0 # unnecessary because smaller
+                    x=x.sum(1) # x is the histogram with nbins bins
+                    K=mean(x) # average number of spikes per recording bin
+                    value=(2*K-var(x))/binsize**2
                     if value<best_value:
                         best_value=value
                         width_dt=binsize
+                        nb=nbins
+                #print width_dt,nb
             else:
                 raise AttributeError,"Automatic width selection is not implemented yet!"
         else:
