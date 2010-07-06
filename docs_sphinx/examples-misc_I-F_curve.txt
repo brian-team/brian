@@ -25,27 +25,27 @@ which has the role of a spike counter.
     from brian import *
     from brian.library.IF import *
     
-    N=1000
-    eqs=Brette_Gerstner()+Current('I:amp')
+    N = 1000
+    eqs = Brette_Gerstner() + Current('I:amp')
     print eqs
-    group=NeuronGroup(N,model=eqs,threshold=-20*mV,reset=AdaptiveReset())
-    group.vm=-70*mV
-    group.I=linspace(0*nA,1*nA,N)
+    group = NeuronGroup(N, model=eqs, threshold= -20 * mV, reset=AdaptiveReset())
+    group.vm = -70 * mV
+    group.I = linspace(0 * nA, 1 * nA, N)
     
-    counter=NeuronGroup(N,model='n:1')
-    C=IdentityConnection(group,counter,'n')
+    counter = NeuronGroup(N, model='n:1')
+    C = IdentityConnection(group, counter, 'n')
     
-    i=N*8/10
-    trace=StateMonitor(group,'vm',record=i)
+    i = N * 8 / 10
+    trace = StateMonitor(group, 'vm', record=i)
     
-    duration=5*second
+    duration = 5 * second
     run(duration)
     subplot(211)
-    plot(group.I/nA,counter.n/duration)
+    plot(group.I / nA, counter.n / duration)
     xlabel('I (nA)')
     ylabel('Firing rate (Hz)')
     subplot(212)
-    plot(trace.times/ms,trace[i]/mV)
+    plot(trace.times / ms, trace[i] / mV)
     xlabel('Time (ms)')
     ylabel('Vm (mV)')
     show()

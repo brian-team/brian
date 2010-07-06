@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.2.1dev
+Version: 1.2.1
 Authors:
 	Romain Brette
 		http://audition.ens.fr/brette/
@@ -43,7 +43,70 @@ See the documentation in the extras download, or online:
 
 ==== Changes ===============================================================
 
-Version 1.1.3 to 1.2.0:
+Version 1.2.0 to 1.2.1
+----------------------
+
+Major features:
+
+* New remote controlling of running Brian scripts via RemoteControlServer
+  and RemoteControlClient.
+  
+Minor features:
+
+* New module tools.io
+* weight and sparseness can now both be functions in connect_random
+* New StateHistogramMonitor object
+* clear now has a new keyword all which allows you to destroy all Brian
+  objects regardless of whether or not they would be found by MagicNetwork.
+  In addition, garbage collection is called after a clear.
+* New method StateMonitor.insert_spikes to have spikes on voltage traces.
+
+Improvements
+
+* The sparseness keyword in connect_random can be a function
+* Added 'wmin' to STDP
+* You can now access STDP internal variables, e.g. stdp.A_pre, and monitor
+  them by doing e.g. StateMonitor(stdp.pre_group, 'A_pre')
+* STDP now supports nonlinear equations and parameters
+* refractory can now be a vector (see docstring for NeuronGroup) for constant
+  resets.
+* modelfitting now uses playdoh library
+* C++ compiled code is now much faster thanks to adding -ffast-math switch to
+  gcc, and there is an option which allows you to set your own
+  compiler switches, for example -march=native on gcc 4.2+.
+* SpikeGeneratorGroup now has a spiketimes attribute to reset the list of
+  spike times.
+* StateMonitor now caches values in an array, improving speed for M[i] operation
+  and resolving ticket #53
+
+Bug fixes
+
+* Sparse matrices with some versions of scipy
+* Weave now works on 64 bit platforms with 64 bit Python
+* Fixed bug introduced in 1.2.0 where dense DelayConnection structures would
+  not propagate any spikes
+* Fixed bug where connect* functions on DelayConnection didn't work with
+  subgroups but only with the whole group.
+* Fixed bug with linked_var from subgroups not working
+* Fixed bug with adding Equations objects together using a shared base equation
+  (ticket #9 on the trac)
+* unit_checking=False now works (didn't do anything before)
+* Fixed bug with using Equations object twice (for two different NeuronGroups)
+* Fixed unit checking bug and ZeroDivisionError (ticket #38)
+* Fixed rare problems with spikes being lost due to wrong size of SpikeContainer,
+  it now dynamically adapts to the number of spikes.
+* Fixed ticket #5, ionic_currents did not work with units off
+* Fixed ticket #6, Current+MembraneEquation now works
+* Fixed bug in modelfitting : the fitness was not computed right with CPUs.
+* Fixed bug in modelfitting with random seeds on Unix systems. 
+* brian.hears.filtering now works correctly on 64 bit systems
+
+Removed features
+
+* Model has now been removed from Brian (it was deprecated in 1.1).
+
+Version 1.1.3 to 1.2.0
+----------------------
 
 Major features:
 
@@ -84,7 +147,8 @@ New examples:
 * Added examples of using derived classes with Brian
 * Realtime plotting example
 
-Version 1.1.2 to 1.1.3:
+Version 1.1.2 to 1.1.3
+----------------------
 
 * STDP now works with DelayConnection
 * Added EventClock
@@ -99,18 +163,21 @@ Version 1.1.2 to 1.1.3:
 * Early version of brian.hears subpackage for auditory modelling
 * Various bug fixes
 
-Version 1.1.1 to 1.1.2:
+Version 1.1.1 to 1.1.2
+----------------------
 
 * Standard functions rand() and randn() can now be used in string resets.
 * New forget() function.
 * Major bugfix for STP
 
-Version 1.1.0 to 1.1.1:
+Version 1.1.0 to 1.1.1
+----------------------
 
 * New statistical function: vector_strength
 * Bugfix for one line string thresholds/resets
 
-Version 1.0.0 to 1.1.0:
+Version 1.0.0 to 1.1.0
+----------------------
 
 * STDP
 * Short-term plasticity (Tsodyks-Markram model)
@@ -129,6 +196,7 @@ Version 1.0.0 to 1.1.0:
 * UserComputed* classes removed for this version (they will return in another form).
 
 Version 1.0.0 RC5 to version 1.0.0
+----------------------------------
 
 * 2nd order Runge-Kutta method (use order=2)
 * Quantity arrays are disabled (units only for scalars)
@@ -136,23 +204,27 @@ Version 1.0.0 RC5 to version 1.0.0
 * UserComputedConnectionMatrix and UserComputedSparseConnectionMatrix
 * SimpleCustomRefractoriness, CustomRefractoriness
 
-Version 1.0.0 RC4 to version 1.0.0 RC5:
+Version 1.0.0 RC4 to version 1.0.0 RC5
+--------------------------------------
 
 * Bugfix of sparse matrix problems
 * Compiled version of spike propagation (much faster for
   networks with lots of spikes)
 * Assorted small improvements
 
-Version 1.0.0 RC3 to version 1.0.0 RC4:
+Version 1.0.0 RC3 to version 1.0.0 RC4
+--------------------------------------
 
 * Added StateSpikeMonitor
 * Changed QuantityArray behaviour to work better with numpy, scipy and pylab
 
-Version 1.0.0 RC2 to version 1.0.0 RC3:
+Version 1.0.0 RC2 to version 1.0.0 RC3
+--------------------------------------
 
 * Small bugfixes
 
-Version 1.0.0 RC1 to version 1.0.0 RC2:
+Version 1.0.0 RC1 to version 1.0.0 RC2
+--------------------------------------
 
 * Documentation system now much better, using Sphinx, includes
   cross references, index, etc.
@@ -161,7 +233,8 @@ Version 1.0.0 RC1 to version 1.0.0 RC2:
 * numpywrappers module added, but not in global namespace
 * Quantity comparison to zero doesn't check units (positivity/negativity)
 
-Version 1.0.0 beta to version 1.0.0 RC1:
+Version 1.0.0 beta to version 1.0.0 RC1
+---------------------------------------
 
 * Connection: connect_full allows a functional weight argument (like connect_random)
 * Short-term plasticity:

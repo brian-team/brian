@@ -631,6 +631,11 @@ class StateMonitor(NetworkOperation, Monitor):
             matplotlib.use('WXAgg')
             
         You may need to experiment, try WXAgg, GTKAgg, QTAgg, TkAgg.
+        
+    .. method:: insert_spikes(spikemonitor[, value=0])
+
+        Inserts spikes into recorded traces (for plotting). State values
+        at spike times are replaced with the given value (peak value of spike).
     '''
     mean = property(fget=lambda self:self._mu / self.N)
     _mean = mean
@@ -812,6 +817,17 @@ class StateMonitor(NetworkOperation, Monitor):
                     if redraw:
                         pylab.draw()
             self.contained_objects.append(refresh_state_monitor_plot)
+
+    def insert_spikes(self, spikemonitor, value=0):
+        """
+        Inserts spikes into recorded traces (for plotting). State values
+        at spike times are replaced with the given value (peak value of spike).
+        """
+        dt = self.clock.dt
+        values = self.values
+        for i, neuron in enumerate(self.get_record_indices()):
+            values[array(spikemonitor[neuron]/dt, dtype=int), i] = value
+        #self._values = values # or converted back to a list?
 
 
 class RecentStateMonitor(StateMonitor):

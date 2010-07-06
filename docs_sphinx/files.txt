@@ -4,14 +4,14 @@ File management
 ===============
 A few functions are provided to read files with common formats.
 
-The function :function:`read_neuron_dat` reads a Neuron .dat text file
+The function :func:`read_neuron_dat` reads a Neuron .dat text file
 and returns a vector of times and a vector of values. This is the format
 used by the Neuron simulator when saving the time-varying value of a variable
 from the GUI. For example::
 
-  t,v=read_neuron_dat('myfile.dat')
+  t, v = read_neuron_dat('myfile.dat')
 
-The function :function:`read_atf` reads an Axon .atf text file and
+The function :func:`read_atf` reads an Axon .atf text file and
 returns a vector of times and a vector of values. This is a format used
 to store data recorded with Axon amplifiers. Note that
 metadata stored in the file are not extracted.

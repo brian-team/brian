@@ -34,6 +34,9 @@
 + docs/_sources/examples-frompapers_diesmann_et_al_1999.txt
 + docs/_sources/examples-frompapers_diesmann_et_al_1999_longer.txt
 + docs/_sources/examples-frompapers_izhikevich_2006_polychronization.txt
++ docs/_sources/examples-frompapers_izhikevich_2006_polychronization_longer.txt
++ docs/_sources/examples-frompapers_masquelier_et_al_2008.txt
++ docs/_sources/examples-frompapers_rothman_manis_2003.txt
 + docs/_sources/examples-frompapers_sturzl_et_al_2000.txt
 + docs/_sources/examples-interface_interface.txt
 + docs/_sources/examples-misc_adaptive.txt
@@ -60,7 +63,7 @@
 + docs/_sources/examples-misc_multipleclocks.txt
 + docs/_sources/examples-misc_named_threshold.txt
 + docs/_sources/examples-misc_noisy_ring.txt
-+ docs/_sources/examples-misc_parallelpython.txt
+- docs/_sources/examples-misc_parallelpython.txt
 + docs/_sources/examples-misc_phase_locking.txt
 + docs/_sources/examples-misc_pickle_loadnet.txt
 + docs/_sources/examples-misc_pickle_savenet.txt
@@ -79,9 +82,10 @@
 + docs/_sources/examples-misc_transient_sync.txt
 + docs/_sources/examples-misc_two_neurons.txt
 + docs/_sources/examples-misc_using_classes.txt
-+ docs/_sources/examples-modelfitting_clusterexample_manager.txt
-+ docs/_sources/examples-modelfitting_clusterexample_worker.txt
+- docs/_sources/examples-modelfitting_clusterexample_manager.txt
+- docs/_sources/examples-modelfitting_clusterexample_worker.txt
 + docs/_sources/examples-modelfitting_modelfitting.txt
++ docs/_sources/examples-modelfitting_modelfitting2.txt
 + docs/_sources/examples-multiprocessing_multiple_runs_simple.txt
 + docs/_sources/examples-multiprocessing_multiple_runs_with_gui.txt
 + docs/_sources/examples-plasticity_short_term_plasticity.txt
@@ -94,6 +98,7 @@
 + docs/_sources/experimental.txt
 + docs/_sources/extending.txt
 + docs/_sources/extendinglibrary.txt
++ docs/_sources/files.txt
 + docs/_sources/index.txt
 + docs/_sources/inputs.txt
 + docs/_sources/installation.txt
@@ -191,6 +196,9 @@
 + docs/examples-frompapers_diesmann_et_al_1999.html
 + docs/examples-frompapers_diesmann_et_al_1999_longer.html
 + docs/examples-frompapers_izhikevich_2006_polychronization.html
++ docs/examples-frompapers_izhikevich_2006_polychronization_longer.html
++ docs/examples-frompapers_masquelier_et_al_2008.html
++ docs/examples-frompapers_rothman_manis_2003.html
 + docs/examples-frompapers_sturzl_et_al_2000.html
 + docs/examples-interface_interface.html
 + docs/examples-misc_adaptive.html
@@ -217,7 +225,7 @@
 + docs/examples-misc_multipleclocks.html
 + docs/examples-misc_named_threshold.html
 + docs/examples-misc_noisy_ring.html
-+ docs/examples-misc_parallelpython.html
+- docs/examples-misc_parallelpython.html
 + docs/examples-misc_phase_locking.html
 + docs/examples-misc_pickle_loadnet.html
 + docs/examples-misc_pickle_savenet.html
@@ -236,9 +244,10 @@
 + docs/examples-misc_transient_sync.html
 + docs/examples-misc_two_neurons.html
 + docs/examples-misc_using_classes.html
-+ docs/examples-modelfitting_clusterexample_manager.html
-+ docs/examples-modelfitting_clusterexample_worker.html
+- docs/examples-modelfitting_clusterexample_manager.html
+- docs/examples-modelfitting_clusterexample_worker.html
 + docs/examples-modelfitting_modelfitting.html
++ docs/examples-modelfitting_modelfitting2.html
 + docs/examples-multiprocessing_multiple_runs_simple.html
 + docs/examples-multiprocessing_multiple_runs_with_gui.html
 + docs/examples-plasticity_short_term_plasticity.html
@@ -251,6 +260,7 @@
 + docs/experimental.html
 + docs/extending.html
 + docs/extendinglibrary.html
++ docs/files.html
 + docs/genindex.html
 + docs/index.html
 + docs/inputs.html
@@ -328,7 +338,8 @@
 + examples/frompapers/diesmann_et_al_1999_longer.py
 + examples/frompapers/izhikevich_2006_polychronization.py
 + examples/frompapers/izhikevich_2006_polychronization_longer.py
-- examples/frompapers/rothman_manis_2003.py
++ examples/frompapers/masquelier_et_al_2008.py
++ examples/frompapers/rothman_manis_2003.py
 + examples/frompapers/sturzl_et_al_2000.py
 + examples/interface/index.html
 + examples/interface/interface.py
@@ -358,8 +369,6 @@
 + examples/misc/multipleclocks.py
 + examples/misc/named_threshold.py
 + examples/misc/noisy_ring.py
-+ examples/misc/parallelpython.py
-+ examples/misc/parallelpython_howmanyspikes_parallelpythonised.py
 + examples/misc/phase_locking.py
 + examples/misc/poisson.py
 + examples/misc/poissongroup.py
@@ -377,8 +386,6 @@
 + examples/misc/transient_sync.py
 + examples/misc/two_neurons.py
 + examples/misc/using_classes.py
-+ examples/modelfitting/clusterexample_manager.py
-+ examples/modelfitting/clusterexample_worker.py
 - examples/modelfitting/current.pickle
 + examples/modelfitting/current.txt
 + examples/modelfitting/modelfitting.py

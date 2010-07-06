@@ -4,7 +4,7 @@ Setup script for Brian
 
 from distutils.core import setup
 
-version = '1.2.1dev'
+version = '1.2.1'
 
 long_description = '''
 Brian is a simulator for spiking neural networks available on almost all platforms.
@@ -41,6 +41,7 @@ if __name__ == "__main__":
                         'brian.experimental.cuda',
                         'brian.experimental.codegen',
                     'brian.hears',
+                        'brian.hears.examples',
                     'brian.library',
                         'brian.library.modelfitting',
                     'brian.tests',

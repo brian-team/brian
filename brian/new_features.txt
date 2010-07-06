@@ -1,3 +1,6 @@
+New features since 1.2.1
+------------------------
+
 New features since 1.2.0
 ------------------------
 
@@ -14,6 +17,7 @@ Minor features:
 * clear now has a new keyword all which allows you to destroy all Brian
   objects regardless of whether or not they would be found by MagicNetwork.
   In addition, garbage collection is called after a clear.
+* New method StateMonitor.insert_spikes to have spikes on voltage traces.
 
 Improvements
 
@@ -30,8 +34,13 @@ Improvements
   compiler switches, for example -march=native on gcc 4.2+.
 * SpikeGeneratorGroup now has a spiketimes attribute to reset the list of
   spike times.
+* StateMonitor now caches values in an array, improving speed for M[i] operation
+  and resolving ticket #53
+* clear() now does a garbage collection after clearing, making memory buildups
+  less likely on repeated runs
 
 Bug fixes
+
 * Sparse matrices with some versions of scipy
 * Weave now works on 64 bit platforms with 64 bit Python
 * Fixed bug introduced in 1.2.0 where dense DelayConnection structures would
@@ -50,6 +59,7 @@ Bug fixes
 * Fixed ticket #6, Current+MembraneEquation now works
 * Fixed bug in modelfitting : the fitness was not computed right with CPUs.
 * Fixed bug in modelfitting with random seeds on Unix systems. 
+* brian.hears.filtering now works correctly on 64 bit systems
 
 Removed features
 

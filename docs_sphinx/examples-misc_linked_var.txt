@@ -23,12 +23,12 @@ differential equation, and then emit graded amounts of neurotransmitter
     from brian import *
     
     N = 5
-    f = 50*Hz
+    f = 50 * Hz
     a_min = 1.0
     a_max = 100.0
-    tau_haircell = 50*ms
-    tau = 10*ms
-    duration = 100*ms
+    tau_haircell = 50 * ms
+    tau = 10 * ms
+    duration = 100 * ms
     
     eqs_haircells = '''
     input = a*sin(2*pi*f*t) : 1

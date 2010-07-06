@@ -1,3 +1,7 @@
+'''
+A second example of the modelfitting toolbox.
+'''
+
 if __name__ == '__main__':
     from brian import *
     from modelfitting import *

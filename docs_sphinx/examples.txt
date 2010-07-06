@@ -39,9 +39,8 @@ modelfitting
 .. toctree::
    :maxdepth: 1
 
-   examples-modelfitting_clusterexample_manager
-   examples-modelfitting_clusterexample_worker
    examples-modelfitting_modelfitting
+   examples-modelfitting_modelfitting2
 
 misc
 ----
@@ -54,7 +53,6 @@ misc
    examples-misc_cable
    examples-misc_COBA
    examples-misc_COBAHH
-   examples-misc_cobahh_simplified
    examples-misc_correlated_inputs
    examples-misc_CUBA
    examples-misc_current_clamp
@@ -73,10 +71,7 @@ misc
    examples-misc_multipleclocks
    examples-misc_named_threshold
    examples-misc_noisy_ring
-   examples-misc_parallelpython
    examples-misc_phase_locking
-   examples-misc_pickle_loadnet
-   examples-misc_pickle_savenet
    examples-misc_poisson
    examples-misc_poissongroup
    examples-misc_pulsepacket
@@ -111,6 +106,9 @@ frompapers
    examples-frompapers_Diesmann_et_al_1999
    examples-frompapers_Diesmann_et_al_1999_longer
    examples-frompapers_Izhikevich_2006_Polychronization
+   examples-frompapers_Izhikevich_2006_Polychronization_longer
+   examples-frompapers_masquelier_et_al_2008
+   examples-frompapers_Rothman_Manis_2003
    examples-frompapers_Sturzl_et_al_2000
 
 electrophysiology

@@ -26,6 +26,7 @@ class object is added to the network).
 
     from brian import *
     
+    
     class PoissonDrivenGroup(NeuronGroup):
         '''
         This class is a group of leaky integrate-and-fire neurons driven by
@@ -33,7 +34,7 @@ class object is added to the network).
         connects them to itself. 
         '''
         def __init__(self, N, rate, weight):
-            tau = 10*ms
+            tau = 10 * ms
             eqs = '''
             dV/dt = -V/tau : 1
             '''
@@ -45,13 +46,13 @@ class object is added to the network).
             self.contained_objects += [self.poisson_group,
                                        self.conn]
     
-    G = PoissonDrivenGroup(100, 100*Hz, .3)
+    G = PoissonDrivenGroup(100, 100 * Hz, .3)
     
     M = SpikeMonitor(G)
     M_pg = SpikeMonitor(G.poisson_group)
     trace = StateMonitor(G, 'V', record=0)
     
-    run(1*second)
+    run(1 * second)
     
     subplot(311)
     raster_plot(M_pg)

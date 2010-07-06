@@ -1,11 +1,11 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum
-from brian.utils.statistics import firing_rate, get_gamma_factor
+from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
     from playdoh import maximize, printr, worker, PSO, GA
 except:
-    raise Exception("Playdoh must be installed (https://code.google.com/p/playdoh/)")
+    raise ImportError("Playdoh must be installed (https://code.google.com/p/playdoh/)")
 try:
     import pycuda
     from brian.library.modelfitting.gpu_modelfitting import GPUModelFitting
