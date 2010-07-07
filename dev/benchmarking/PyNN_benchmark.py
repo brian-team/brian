@@ -5,6 +5,8 @@ Benchmark adapted from a PyNN benchmark.
 from brian import *
 import time
 
+set_global_preferences(useweave=False, usecodegen=False, usenewpropagate=False)
+
 start_time = time.time()
 taum = 20 * ms
 taue = 5 * ms
