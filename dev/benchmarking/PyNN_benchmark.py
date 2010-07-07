@@ -43,7 +43,9 @@ Mi = PopulationSpikeCounter(Pi)
 print "Network construction time:", time.time() - start_time, "seconds"
 print len(P), "neurons in the network"
 print "Simulation running..."
+start_time = time.time()
 run(1 * msecond)
+print "Preparation time:", time.time()-start_time
 start_time = time.time()
 
 run(2 * second)

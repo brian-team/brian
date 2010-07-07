@@ -689,13 +689,21 @@ class SparseConnectionMatrix(ConnectionMatrix):
                 # this defines colind so that a[colind[i]:colind[i+1]] are the data
                 # indices where j==i
                 colind[:] = numpy.hstack(([0], cumsum(counts)))
-                # in this loop, I are the data indices where j==i
-                # and alli[I} are the corresponding i coordinates
+                # this computes the row index of each entry by first generating
+                # expanded_row_indices which gives the corresponding row index
+                # for each entry enumerated row-by-row, and then using the
+                # array allcoldataindices to index this array to convert into
+                # the corresponding row index for each entry enumerated
+                # col-by-col.
                 if len(a):
-                    colalli = digitize(a, rowind)
-                    colalli -= 1
+                    expanded_row_indices = empty(len(a), dtype=int)
+                    for k, (i, j) in enumerate(zip(rowind[:-1], rowind[1:])):
+                        expanded_row_indices[i:j] = k
+                    colalli = expanded_row_indices[a]
                 else:
                     colalli = numpy.zeros(nnz, dtype=int)
+                # in this loop, I are the data indices where j==i
+                # and alli[I} are the corresponding i coordinates
                 for i in xrange(len(colind) - 1):
                     D = a[colind[i]:colind[i + 1]]
                     I = colalli[colind[i]:colind[i + 1]]
