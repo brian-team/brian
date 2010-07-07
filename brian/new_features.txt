@@ -1,6 +1,10 @@
 New features since 1.2.1
 ------------------------
 
+Improvements
+
+* Speed improvement for pure Python version of sparse matrix preparation
+
 New features since 1.2.0
 ------------------------
 
