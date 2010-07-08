@@ -54,6 +54,7 @@ from log import *
 from numpy import *
 from scipy import sparse, stats, rand, weave, linalg
 import scipy
+import scipy.sparse
 import numpy
 from numpy.random import binomial, exponential
 import random as pyrandom
@@ -1811,7 +1812,7 @@ class DelayConnection(Connection):
             # responsibility to update them in sequence
             delayvec = self.delayvec
             # The delayvec[i,:] operation for sparse.lil_matrix format
-            # is VERY slow, but the CSR format is fine. 
+            # is VERY slow, but the CSR format is fine.
             if isinstance(delayvec, sparse.lil_matrix):
                 delayvec = delayvec.tocsr()
             self.delayvec = self.W.connection_matrix(copy=True)
