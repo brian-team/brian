@@ -4,6 +4,7 @@ New features since 1.2.1
 Improvements
 
 * Speed improvement for pure Python version of sparse matrix preparation
+* Speed improvements for spike propagation weave code (50-100% faster).
 
 New features since 1.2.0
 ------------------------
