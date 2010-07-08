@@ -1255,24 +1255,26 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                                     PyArrayObject* _row = convert_to_numpy(_rowind, "row");
                                     conversion_numpy_check_type(_row, PyArray_LONG, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
-                                    blitz::Array<long,1> row = convert_to_blitz<long,1>(_row,"row");
+                                    //blitz::Array<long,1> row = convert_to_blitz<long,1>(_row,"row");
+                                    long* row = (long*)_row->data;
                                     PyObject* _datasj = datas[j];
                                     PyArrayObject* _data = convert_to_numpy(_datasj, "data");
                                     conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
                                     conversion_numpy_check_size(_data, 1, "data");
-                                    blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
-                                    int m = row.numElements();
+                                    //blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
+                                    double* data = (double*)_data->data;
+                                    //int m = row.numElements();
+                                    int m = _row->dimensions[0];
                                     for(int k=0;k<m;k++)
-                                    {
-                                        sv(row(k)) += data(k);
-                                    }
+                                        //sv(row(k)) += data(k);
+                                        sv[row[k]] += data[k];
                                     Py_DECREF(_rowind);
                                     Py_DECREF(_datasj);
                                 }
                                 """
                         weave.inline(code, ['sv', 'rowinds', 'datas', 'spikes', 'nspikes'],
                                      compiler=self._cpp_compiler,
-                                     type_converters=weave.converters.blitz,
+                                     #type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
                     else:
                         nspikes = len(spikes)
@@ -1285,25 +1287,28 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                                     PyArrayObject* _row = convert_to_numpy(_rowind, "row");
                                     conversion_numpy_check_type(_row, PyArray_LONG, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
-                                    blitz::Array<long,1> row = convert_to_blitz<long,1>(_row,"row");
+                                    //blitz::Array<long,1> row = convert_to_blitz<long,1>(_row,"row");
+                                    long* row = (long*)_row->data;
                                     PyObject* _datasj = datas[j];
                                     PyArrayObject* _data = convert_to_numpy(_datasj, "data");
                                     conversion_numpy_check_type(_data, PyArray_DOUBLE, "data");
                                     conversion_numpy_check_size(_data, 1, "data");
-                                    blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
-                                    int m = row.numElements();
-                                    double mod = sv_pre(spikes(j));
+                                    //blitz::Array<double,1> data = convert_to_blitz<double,1>(_data,"data");
+                                    double* data = (double*)_data->data;
+                                    //int m = row.numElements();
+                                    int m = _row->dimensions[0];
+                                    //double mod = sv_pre(spikes(j));
+                                    double mod = sv_pre[spikes[j]];
                                     for(int k=0;k<m;k++)
-                                    {
-                                        sv(row(k)) += data(k)*mod;
-                                    }
+                                        //sv(row(k)) += data(k)*mod;
+                                        sv[row[k]] += data[k]*mod;
                                     Py_DECREF(_rowind);
                                     Py_DECREF(_datasj);
                                 }
                                 """
                         weave.inline(code, ['sv', 'sv_pre', 'rowinds', 'datas', 'spikes', 'nspikes'],
                                      compiler=self._cpp_compiler,
-                                     type_converters=weave.converters.blitz,
+                                     #type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
                 else:
                     if self._nstate_mod is None:
@@ -1318,15 +1323,17 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                                     PyArrayObject* _row = convert_to_numpy(_rowsj, "row");
                                     conversion_numpy_check_type(_row, PyArray_DOUBLE, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
-                                    blitz::Array<double,1> row = convert_to_blitz<double,1>(_row,"row");
+                                    //blitz::Array<double,1> row = convert_to_blitz<double,1>(_row,"row");
+                                    double *row = (double *)_row->data;
                                     for(int k=0;k<N;k++)
-                                        sv(k) += row(k);
+                                        //sv(k) += row(k);
+                                        sv[k] += row[k];
                                     Py_DECREF(_rowsj);
                                 }
                                 """
                         weave.inline(code, ['sv', 'spikes', 'nspikes', 'N', 'rows'],
                                      compiler=self._cpp_compiler,
-                                     type_converters=weave.converters.blitz,
+                                     #type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
                     else:
                         if not isinstance(spikes, numpy.ndarray):
@@ -1340,16 +1347,19 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                                     PyArrayObject* _row = convert_to_numpy(_rowsj, "row");
                                     conversion_numpy_check_type(_row, PyArray_DOUBLE, "row");
                                     conversion_numpy_check_size(_row, 1, "row");
-                                    blitz::Array<double,1> row = convert_to_blitz<double,1>(_row,"row");
-                                    double mod = sv_pre(spikes(j));
+                                    //blitz::Array<double,1> row = convert_to_blitz<double,1>(_row,"row");
+                                    //double mod = sv_pre(spikes(j));
+                                    double *row = (double *)_row->data;
+                                    double mod = sv_pre[spikes[j]];
                                     for(int k=0;k<N;k++)
-                                        sv(k) += row(k)*mod;
+                                        sv[k] += row[k]*mod;
+                                        //sv(k) += row(k)*mod;
                                     Py_DECREF(_rowsj);
                                 }
                                 """
                         weave.inline(code, ['sv', 'sv_pre', 'spikes', 'nspikes', 'N', 'rows'],
                                      compiler=self._cpp_compiler,
-                                     type_converters=weave.converters.blitz,
+                                     #type_converters=weave.converters.blitz,
                                      extra_compile_args=self._extra_compile_args)
 
     def compress(self):

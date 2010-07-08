@@ -199,7 +199,7 @@ def iterate_over_spikes(neuron_index, spikes, code):
     outcode = '''
     for(int _spike_index=0; _spike_index<%SPIKES_LEN%; _spike_index++)
     {
-        int %NEURON_INDEX% = %SPIKES%[_spike_index];
+        const int %NEURON_INDEX% = %SPIKES%[_spike_index];
         %CODE%
     }
     '''
@@ -262,9 +262,10 @@ def iterate_over_row(target_index, weight_variable, weight_matrix, source_index,
     vars.update(code.vars)
     if isinstance(weight_matrix, DenseConnectionMatrix):
         outcode = '''
+        double *_weight_arr_row = _weight_arr+%SOURCEINDEX%*_num_target_neurons;
         for(int %TARGETINDEX%=0; %TARGETINDEX%<_num_target_neurons; %TARGETINDEX%++)
         {
-            double &%WEIGHT% = _weight_arr[%TARGETINDEX%+%SOURCEINDEX%*_num_target_neurons];
+            double &%WEIGHT% = _weight_arr_row[%TARGETINDEX%];
             %EXTRAVARS%
             %CODE%
         }
@@ -324,9 +325,10 @@ def iterate_over_col(source_index, weight_variable, weight_matrix, target_index,
     vars.update(code.vars)
     if isinstance(weight_matrix, DenseConnectionMatrix):
         outcode = '''
+        double *_weight_arr_row = _weight_arr+%TARGETINDEX%*_num_target_neurons;
         for(int %SOURCEINDEX%=0; %SOURCEINDEX%<_num_source_neurons; %SOURCEINDEX%++)
         {
-            double &%WEIGHT% = _weight_arr[%SOURCEINDEX%+%TARGETINDEX%*_num_target_neurons];
+            double &%WEIGHT% = _weight_arr_row[%SOURCEINDEX%];
             %EXTRAVARS%
             %CODE%
         }
