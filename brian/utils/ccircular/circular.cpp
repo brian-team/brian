@@ -1,4 +1,5 @@
 #include "ccircular.h"
+#include<string.h>
 #include<sstream>
 
 CircularVector::CircularVector(int n)
@@ -15,7 +16,7 @@ CircularVector::CircularVector(int n)
 			delete [] this->retarray;
 			this->retarray = 0;
 		}
-		throw std::exception("Not enough memory in creating CircularVector.");
+		throw BrianException("Not enough memory in creating CircularVector.");
 	}
 	this->reinit();
 }
@@ -38,7 +39,7 @@ void CircularVector::expand(long n)
 	if(!new_X || !new_retarray){
 		if(new_X) delete [] new_X;
 		if(new_retarray) delete [] new_retarray;
-		throw std::exception("Not enough memory in expanding CircularVector.");
+		throw BrianException("Not enough memory in expanding CircularVector.");
 	}
 	// newS.X[:S.n-S.cursor] = S.X[S.cursor:]
 	memcpy((void *)new_X, (void *)(this->X+this->cursor), sizeof(long)*(orig_n-this->cursor));
@@ -183,7 +184,7 @@ SpikeContainer::SpikeContainer(int m)
 		this->remaining_space = 1;
 		if(m<2) m=2;
 		this->ind = new CircularVector(m+1);
-	} catch(std::exception &e) {
+	} catch(BrianException &e) {
 		if(this->S){
 			delete this->S;
 			this->S = 0;

@@ -8,6 +8,14 @@ using namespace std;
 
 #define neuron_value(group, neuron, state) group->S[neuron+state*(group->num_neurons)]
 
+struct BrianException : public std::exception
+{
+   std::string s;
+   BrianException(std::string ss) : s(ss) {}
+   ~BrianException() throw();
+   const char* what() const throw() { return s.c_str(); }
+};
+
 class CircularVector
 {
 private:
