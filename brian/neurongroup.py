@@ -567,6 +567,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         Tests if the two groups (subgroups) are of the same kind,
         i.e., if they can be added.
         This is not used at the moment.
+        OBSOLETE
         '''
         # Same class?
         if self.__class__ != Q.__class__:
