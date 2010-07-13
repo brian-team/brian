@@ -4,6 +4,8 @@
 
 CircularVector::CircularVector(int n)
 {
+	this->X = NULL;
+	this->retarray = NULL;
 	this->n = n;
 	this->X = new long[n]; // we don't worry about memory errors for the moment...
 	this->retarray = new long[n];
@@ -180,6 +182,8 @@ string CircularVector::__str__()
 SpikeContainer::SpikeContainer(int m)
 {
 	try{
+		this->S = NULL;
+		this->ind = NULL;
 		this->S = new CircularVector(2);
 		this->remaining_space = 1;
 		if(m<2) m=2;

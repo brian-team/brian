@@ -4,17 +4,14 @@
 #include<vector>
 #include<string>
 #include<list>
+#include<exception>
+#include<stdexcept>
+
 using namespace std;
 
 #define neuron_value(group, neuron, state) group->S[neuron+state*(group->num_neurons)]
 
-struct BrianException : public std::exception
-{
-   std::string s;
-   BrianException(std::string ss) : s(ss) {}
-   ~BrianException() throw();
-   const char* what() const throw() { return s.c_str(); }
-};
+#define BrianException std::runtime_error
 
 class CircularVector
 {
@@ -42,7 +39,8 @@ public:
 class SpikeContainer
 {
 public:
-	CircularVector *S, *ind;
+	CircularVector *S;
+	CircularVector *ind;
 	int remaining_space;
 	SpikeContainer(int m);
 	~SpikeContainer();

@@ -4,10 +4,13 @@
 %exception {
 	try {
 		$action
-	} catch( std::exception &e ) {
-		SWIG_exception(SWIG_RuntimeError, const_cast<char *>(e.what()));
+	} catch( std::runtime_error &e ) {
+		PyErr_SetString(PyExc_RuntimeError, const_cast<char *>(e.what()));
+		return NULL;
 	}
 }
+
+%allowexception;
 
 %{
 #define SWIG_FILE_WITH_INIT
@@ -16,7 +19,7 @@
 
 %include "numpy.i"
 %init %{
-import_array();
+	import_array();
 %}
 
 %apply (double* INPLACE_ARRAY2, int DIM1, int DIM2) {(double *S, int n, int m)};

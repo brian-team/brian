@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-setup.py file for SWIG example
+setup.py file for C++ version of circular spike container
 """
 
 from distutils.core import setup, Extension
@@ -15,13 +15,12 @@ ccircular_module = Extension('_ccircular',
                                     'circular.cpp',
                                     ],
                            include_dirs=[numpy_include_dir],
-                           extra_compile_args=['-O3']
                            )
 
 setup (name='ccircular',
        version='0.1',
        author="Dan Goodman",
-       description="""Simple swig example from docs""",
+       description="""C++ version of circular spike container""",
        ext_modules=[ccircular_module],
        py_modules=["ccircular"],
        )
