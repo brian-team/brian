@@ -1220,12 +1220,13 @@ class CoincidenceCounter(SpikeMonitor):
 
 class VanRossumMetric(StateMonitor):
     """
-
-    
     van Rossum spike train metric.
     from van Rossum M (2001) A novel spike distance Neural Computation 
     
-    TODO: doc
+    Compute the van Rossum distance between every spike trains from the source poupulation.
+    tau is the time constant of the kernel (low pass filter)
+    
+    attribute distance is a square matrix containg the distances
     
     """
     def __init__(self, source, tau=2 * ms):
@@ -1238,11 +1239,8 @@ class VanRossumMetric(StateMonitor):
         dv/dt=(-v)/tau: volt
         """
         kernel=NeuronGroup(self.N,model=eqs)
-        #NeuronGroup.__init__(self,self.N,model=eqs)
-        
         C = Connection(source, kernel, 'v')
         C.connect_one_to_one(source,kernel)
-        kernel.v=1
         StateMonitor.__init__(self,kernel, 'v', record=True)
         self.contained_objects=[kernel,C]
         
@@ -1256,12 +1254,9 @@ class VanRossumMetric(StateMonitor):
                 self.distance_matrix[neuron_idx1,neuron_idx2]=sum(self[neuron_idx1]**2-self[neuron_idx2]**2)
         return self.distance_matrix
             
-            
-
     distance = property(fget=get_distance)
 
-    def propagate(self, spiking_neurons):
-        pass
+
 
 class CoincidenceMatrixCounter(SpikeMonitor):
     """
