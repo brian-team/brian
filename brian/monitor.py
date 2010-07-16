@@ -1231,10 +1231,10 @@ class VanRossumMetric(StateMonitor):
     
     """
     def __init__(self, source, tau=2 * ms):
-
+        self.dt = source.clock.dt
         self.source = source
         self.nbr_neurons = len(source)
-
+        self.tau=tau
 
         eqs="""
         dv/dt=(-v)/tau: volt
@@ -1251,10 +1251,10 @@ class VanRossumMetric(StateMonitor):
 
     def get_distance(self):
         self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))
-        print self.nbr_neurons
+        #print self.nbr_neurons
         for neuron_idx1 in range(self.nbr_neurons):
             for neuron_idx2 in range((neuron_idx1+1)):
-                self.distance_matrix[neuron_idx1,neuron_idx2]=sum(abs(self[neuron_idx1]-self[neuron_idx2])**2)
+                self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*sum(abs(self[neuron_idx1]-self[neuron_idx2])**2)
         return tril(self.distance_matrix,k=0)+tril(self.distance_matrix,k=0).T
             
     distance = property(fget=get_distance)
