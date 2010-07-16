@@ -1218,7 +1218,7 @@ class CoincidenceCounter(SpikeMonitor):
                 self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
                 self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed
 
-class VanRossumMetric(StateMonitor,ObjectContainer):
+class VanRossumMetric(StateMonitor):
     """
 
     
@@ -1242,11 +1242,12 @@ class VanRossumMetric(StateMonitor,ObjectContainer):
         
         C = Connection(source, kernel, 'v')
         C.connect_one_to_one(source,kernel)
-        self.v=1
+        kernel.v=1
         StateMonitor.__init__(self,kernel, 'v', record=True)
-        self.reinit()
         self.contained_objects=[kernel,C]
+        
     def reinit(self):
+        StateMonitor.reinit(self)
         self.distance_matrix=zeros((self.N,self.N))
 
     def get_distance(self):
