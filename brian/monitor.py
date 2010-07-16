@@ -45,7 +45,7 @@ from units import *
 from connection import Connection, SparseConnectionVector
 from numpy import array, zeros, mean, histogram, linspace, tile, digitize,     \
         copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, \
-        maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize, inf, var
+        maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize, inf, var,tril
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
@@ -1224,21 +1224,21 @@ class VanRossumMetric(StateMonitor):
     from van Rossum M (2001) A novel spike distance Neural Computation 
     
     Compute the van Rossum distance between every spike trains from the source poupulation.
-    tau is the time constant of the kernel (low pass filter)
+    tau (in second) is the time constant of the kernel (low pass filter)
     
-    attribute distance is a square matrix containg the distances
+    attribute distance is a square symmetric matrix containg the distances
     
     """
     def __init__(self, source, tau=2 * ms):
 
         self.source = source
-        self.N = len(source)
+        self.nbr_neurons = len(source)
 
 
         eqs="""
         dv/dt=(-v)/tau: volt
         """
-        kernel=NeuronGroup(self.N,model=eqs)
+        kernel=NeuronGroup(self.nbr_neurons,model=eqs)
         C = Connection(source, kernel, 'v')
         C.connect_one_to_one(source,kernel)
         StateMonitor.__init__(self,kernel, 'v', record=True)
@@ -1246,13 +1246,15 @@ class VanRossumMetric(StateMonitor):
         
     def reinit(self):
         StateMonitor.reinit(self)
-        self.distance_matrix=zeros((self.N,self.N))
+        
 
     def get_distance(self):
-        for neuron_idx1 in range((self.N)):
-            for neuron_idx2 in range((neuron_idx1)):
-                self.distance_matrix[neuron_idx1,neuron_idx2]=sum(self[neuron_idx1]**2-self[neuron_idx2]**2)
-        return self.distance_matrix
+        self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))
+        print self.nbr_neurons
+        for neuron_idx1 in range(self.nbr_neurons):
+            for neuron_idx2 in range((neuron_idx1+1)):
+                self.distance_matrix[neuron_idx1,neuron_idx2]=sum(abs(self[neuron_idx1]-self[neuron_idx2])**2)
+        return tril(self.distance_matrix,k=0)+tril(self.distance_matrix,k=0).T
             
     distance = property(fget=get_distance)
 
