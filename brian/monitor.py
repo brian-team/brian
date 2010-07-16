@@ -56,6 +56,7 @@ from operator import isSequenceType
 from tools.statistics import firing_rate
 from neurongroup import NeuronGroup
 import bisect
+from base import *
 try:
     import pylab, matplotlib
 except:
@@ -1217,7 +1218,7 @@ class CoincidenceCounter(SpikeMonitor):
                 self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
                 self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed
 
-class VanRossumMetric(StateMonitor):
+class VanRossumMetric(StateMonitor,ObjectContainer):
     """
 
     
@@ -1244,7 +1245,7 @@ class VanRossumMetric(StateMonitor):
         self.v=1
         StateMonitor.__init__(self,kernel, 'v', record=True)
         self.reinit()
-
+        self.contained_objects=[kernel,C]
     def reinit(self):
         self.distance_matrix=zeros((self.N,self.N))
 
