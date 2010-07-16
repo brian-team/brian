@@ -1226,7 +1226,8 @@ class VanRossumMetric(StateMonitor):
     Compute the van Rossum distance between every spike trains from the source poupulation.
     tau (in second) is the time constant of the kernel (low pass filter)
     
-    attribute distance is a square symmetric matrix containg the distances
+    Has one attribute:
+    "distance" is a square symmetric matrix containg the distances
     
     """
     def __init__(self, source, tau=2 * ms):
