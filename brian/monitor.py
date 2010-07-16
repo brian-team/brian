@@ -38,7 +38,7 @@ Monitors (spikes and state variables).
 if properly coded.
 '''
 
-__all__ = ['SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter', 'FileSpikeMonitor', 'StateMonitor', 'ISIHistogramMonitor', 'Monitor',
+__all__ = ['VanRossumMetric','SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter', 'FileSpikeMonitor', 'StateMonitor', 'ISIHistogramMonitor', 'Monitor',
            'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter', 'CoincidenceMatrixCounter', 'StateHistogramMonitor']
 
 from units import *
@@ -54,6 +54,7 @@ from collections import defaultdict
 import types
 from operator import isSequenceType
 from tools.statistics import firing_rate
+from neurongroup import NeuronGroup
 import bisect
 try:
     import pylab, matplotlib
@@ -1216,12 +1217,55 @@ class CoincidenceCounter(SpikeMonitor):
                 self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
                 self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed
 
+class VanRossumMetric(StateMonitor):
+    """
+
+    
+    van Rossum spike train metric.
+    from van Rossum M (2001) A novel spike distance Neural Computation 
+    
+    TODO: doc
+    
+    """
+    def __init__(self, source, tau=2 * ms):
+
+        self.source = source
+        self.N = len(source)
+
+
+        eqs="""
+        dv/dt=(-v)/tau: volt
+        """
+        kernel=NeuronGroup(self.N,model=eqs)
+        #NeuronGroup.__init__(self,self.N,model=eqs)
+        
+        C = Connection(source, kernel, 'v')
+        C.connect_one_to_one(source,kernel)
+        self.v=1
+        StateMonitor.__init__(self,kernel, 'v', record=True)
+        self.reinit()
+
+    def reinit(self):
+        self.distance_matrix=zeros((self.N,self.N))
+
+    def get_distance(self):
+        for neuron_idx1 in range((self.N)):
+            for neuron_idx2 in range((neuron_idx1)):
+                self.distance_matrix[neuron_idx1,neuron_idx2]=sum(self[neuron_idx1]**2-self[neuron_idx2]**2)
+        return self.distance_matrix
+            
+            
+
+    distance = property(fget=get_distance)
+
+    def propagate(self, spiking_neurons):
+        pass
 
 class CoincidenceMatrixCounter(SpikeMonitor):
     """
-    TODO: update docs
+
     
-    Coincidence counter class.
+    Coincidence counter matrix class.
     
     Counts the number of coincidences between the spikes of the neurons in the network (model spikes). This yields a matrix
     with the coincidence counts between every pairs of neuron in the network
@@ -1240,12 +1284,7 @@ class CoincidenceMatrixCounter(SpikeMonitor):
         The half-width of the time window for the coincidence counting algorithm.
     
         
-    ``coincidence_count_algorithm``
-        If set to ``'exclusive'``, the algorithm cannot count more than one
-        coincidence for each model spike.
-        If set to ``'inclusive'``, the algorithm can count several coincidences
-        for a single model spike.
-    
+
     ``onset``
         A scalar value in seconds giving the start of the counting: no
         coincidences are counted before ``onset``.
