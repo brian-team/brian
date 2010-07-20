@@ -57,6 +57,7 @@ from tools.statistics import firing_rate
 from neurongroup import NeuronGroup
 import bisect
 from base import *
+from time import time
 try:
     import pylab, matplotlib
 except:
@@ -1244,17 +1245,31 @@ class VanRossumMetric(StateMonitor):
         C.connect_one_to_one(source,kernel)
         StateMonitor.__init__(self,kernel, 'v', record=True)
         self.contained_objects=[kernel,C]
-        
+        #self.contained_objects=[kernel,C]
+        self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))  
+        #self.define()
+               
     def reinit(self):
         StateMonitor.reinit(self)
         
-
+#    def define(self):
+#        @network_operation(clock=EventClock(dt=self.dt))
+#        def get_distance_online():
+#            tt=time()   
+#            for neuron_idx1 in range(self.nbr_neurons):
+#                for neuron_idx2 in range((neuron_idx1+1)):
+#                    self.distance_matrix[neuron_idx1,neuron_idx2]=self.distance_matrix[neuron_idx1,neuron_idx2]+self.dt/self.tau*abs(self[neuron_idx1][-1]-self[neuron_idx2][-1])**2
+#            print time()-tt
+#        self.contained_objects.append(get_distance_online)
+        
     def get_distance(self):
         self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))
-        #print self.nbr_neurons
+        tt=time()   
         for neuron_idx1 in range(self.nbr_neurons):
             for neuron_idx2 in range((neuron_idx1+1)):
                 self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*sum(abs(self[neuron_idx1]-self[neuron_idx2])**2)
+        print time()-tt
+                
         return tril(self.distance_matrix,k=0)+tril(self.distance_matrix,k=0).T
             
     distance = property(fget=get_distance)
