@@ -45,7 +45,8 @@ from units import *
 from connection import Connection, SparseConnectionVector
 from numpy import array, zeros, mean, histogram, linspace, tile, digitize,     \
         copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, \
-        maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize, inf, var,tril
+        maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize,\
+         inf, var,tril,empty,float64
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
@@ -1268,6 +1269,44 @@ class VanRossumMetric(StateMonitor):
 #        self.contained_objects.append(get_distance_online)
         
     def get_distance(self):
+
+#        if get_global_preference('useweave'):
+
+#            _cpp_compiler=get_global_preference('weavecompiler')
+#            _extra_compile_args=['-O3']
+#            if _cpp_compiler=='gcc':
+#                _extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']        
+#            nbr_neurons=int(self.nbr_neurons)
+#            M=empty((nbr_neurons,nbr_neurons))
+#            nbr_time_step=int(len(self[0]))
+#            dt=float(self.dt)
+#            print dt
+#            tau=float(self.tau)
+#            code='''
+#            printf("%f\\n",dt/tau);   
+#            '''
+##            code='''
+##            for(int k1=0;k1<nbr_neurons;k1++)
+##            {
+##            for(int k2=0;k2<k1;k2++)
+##            {
+##            for(int istep=0;istep<nbr_time_step;istep++)
+##            {
+##            distance_matrix(k1,k2)=1; 
+##            
+##            }
+##            distance_matrix(k1,k2)=distance_matrix(k1,k2);
+##            }
+##            }
+##            '''
+#            #/*distance_matrix[k1,k2]+abs(pow(self[k1]-self[k2],2)) dt/tau*
+#            weave.inline(code, ['nbr_time_step','nbr_neurons','dt','tau','M'],
+#                         compiler=_cpp_compiler,
+#                         type_converters=weave.converters.blitz,
+#                         extra_compile_args=_extra_compile_args)
+#    
+#            return tril(distance_matrix,k=0)+tril(distance_matrix,k=0).T
+ #       else:
         self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))
         tt=time()   
         for neuron_idx1 in range(self.nbr_neurons):
@@ -1279,40 +1318,6 @@ class VanRossumMetric(StateMonitor):
         print time()-tt
         return tril(self.distance_matrix,k=0)+tril(self.distance_matrix,k=0).T
 
-    if get_global_preference('useweave'):
-        pass
-#        _cpp_compiler=get_global_preference('weavecompiler')
-#        _extra_compile_args=['-O3']
-#        if _cpp_compiler=='gcc':
-#            _extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
-#        _old_parallel_lfilter_step=parallel_lfilter_step
-#        
-#        def get_distance(self):
-#            distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))
-#            nbr_neurons=self.nbr_neurons
-#            nbr_time_step=len(self[0])
-#            dt=self.dt
-#            tau=self.tau
-#            code='''
-#            for(int k1=0;k1<nbr_neurons;k1++)
-#            {
-#            for(int k2=0;k2<k1+1;k2++)
-#            {
-#            for(int istep=0;istep<nbr_time_step;istep++)
-#            {
-#            distance_matrix[k1,k2]=distance_matrix[k1,k2]+abs(pow(self[k1]-self[k2],2))
-#            
-#            {
-#            distance_matrix[k1,k2]=self.dt/self.tau*distance_matrix[k1,k2]
-#            }
-#            }
-#            '''
-#            weave.inline(code, ['distance_matrix', 'nbr_neurons', 'nbr_time_step', 'dt', 'tau', 'self'],
-#                         compiler=_cpp_compiler,
-#                         type_converters=weave.converters.blitz,
-#                         extra_compile_args=_extra_compile_args)
-#    
-#            return tril(distance_matrix,k=0)+tril(distance_matrix,k=0).T
             
     distance = property(fget=get_distance)
 
