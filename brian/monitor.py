@@ -64,6 +64,11 @@ except:
     pass
 
 
+import numexpr as ne
+from globalprefs import *
+from scipy import weave
+
+
 class Monitor(object):
     pass
 
@@ -1267,10 +1272,47 @@ class VanRossumMetric(StateMonitor):
         tt=time()   
         for neuron_idx1 in range(self.nbr_neurons):
             for neuron_idx2 in range((neuron_idx1+1)):
+                #a=self[neuron_idx1]
+                #b=self[neuron_idx2]
                 self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*sum(abs(self[neuron_idx1]-self[neuron_idx2])**2)
+                #self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*ne.evaluate('sum(abs(a-b)**2)')
         print time()-tt
-                
         return tril(self.distance_matrix,k=0)+tril(self.distance_matrix,k=0).T
+
+    if get_global_preference('useweave'):
+        pass
+#        _cpp_compiler=get_global_preference('weavecompiler')
+#        _extra_compile_args=['-O3']
+#        if _cpp_compiler=='gcc':
+#            _extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+#        _old_parallel_lfilter_step=parallel_lfilter_step
+#        
+#        def get_distance(self):
+#            distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))
+#            nbr_neurons=self.nbr_neurons
+#            nbr_time_step=len(self[0])
+#            dt=self.dt
+#            tau=self.tau
+#            code='''
+#            for(int k1=0;k1<nbr_neurons;k1++)
+#            {
+#            for(int k2=0;k2<k1+1;k2++)
+#            {
+#            for(int istep=0;istep<nbr_time_step;istep++)
+#            {
+#            distance_matrix[k1,k2]=distance_matrix[k1,k2]+abs(pow(self[k1]-self[k2],2))
+#            
+#            {
+#            distance_matrix[k1,k2]=self.dt/self.tau*distance_matrix[k1,k2]
+#            }
+#            }
+#            '''
+#            weave.inline(code, ['distance_matrix', 'nbr_neurons', 'nbr_time_step', 'dt', 'tau', 'self'],
+#                         compiler=_cpp_compiler,
+#                         type_converters=weave.converters.blitz,
+#                         extra_compile_args=_extra_compile_args)
+#    
+#            return tril(distance_matrix,k=0)+tril(distance_matrix,k=0).T
             
     distance = property(fget=get_distance)
 
