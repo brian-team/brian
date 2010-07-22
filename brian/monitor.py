@@ -46,7 +46,7 @@ from connection import Connection, SparseConnectionVector
 from numpy import array, zeros, mean, histogram, linspace, tile, digitize,     \
         copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, \
         maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize,\
-         inf, var,tril,empty,float64
+         inf, var,tril,empty,float64,array
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
@@ -65,7 +65,7 @@ except:
     pass
 
 
-import numexpr as ne
+##import numexpr as ne
 from globalprefs import *
 from scipy import weave
 
@@ -1251,9 +1251,7 @@ class VanRossumMetric(StateMonitor):
         C.connect_one_to_one(source,kernel)
         StateMonitor.__init__(self,kernel, 'v', record=True)
         self.contained_objects=[kernel,C]
-        #self.contained_objects=[kernel,C]
         self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))  
-        #self.define()
                
     def reinit(self):
         StateMonitor.reinit(self)
@@ -1270,53 +1268,52 @@ class VanRossumMetric(StateMonitor):
         
     def get_distance(self):
 
-#        if get_global_preference('useweave'):
+        if get_global_preference('useweave'):
 
-#            _cpp_compiler=get_global_preference('weavecompiler')
-#            _extra_compile_args=['-O3']
-#            if _cpp_compiler=='gcc':
-#                _extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']        
-#            nbr_neurons=int(self.nbr_neurons)
-#            M=empty((nbr_neurons,nbr_neurons))
-#            nbr_time_step=int(len(self[0]))
-#            dt=float(self.dt)
-#            print dt
-#            tau=float(self.tau)
-#            code='''
-#            printf("%f\\n",dt/tau);   
-#            '''
-##            code='''
-##            for(int k1=0;k1<nbr_neurons;k1++)
-##            {
-##            for(int k2=0;k2<k1;k2++)
-##            {
-##            for(int istep=0;istep<nbr_time_step;istep++)
-##            {
-##            distance_matrix(k1,k2)=1; 
-##            
-##            }
-##            distance_matrix(k1,k2)=distance_matrix(k1,k2);
-##            }
-##            }
-##            '''
-#            #/*distance_matrix[k1,k2]+abs(pow(self[k1]-self[k2],2)) dt/tau*
-#            weave.inline(code, ['nbr_time_step','nbr_neurons','dt','tau','M'],
-#                         compiler=_cpp_compiler,
-#                         type_converters=weave.converters.blitz,
-#                         extra_compile_args=_extra_compile_args)
-#    
-#            return tril(distance_matrix,k=0)+tril(distance_matrix,k=0).T
- #       else:
-        self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))
-        tt=time()   
-        for neuron_idx1 in range(self.nbr_neurons):
-            for neuron_idx2 in range((neuron_idx1+1)):
-                #a=self[neuron_idx1]
-                #b=self[neuron_idx2]
-                self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*sum(abs(self[neuron_idx1]-self[neuron_idx2])**2)
-                #self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*ne.evaluate('sum(abs(a-b)**2)')
-        print time()-tt
-        return tril(self.distance_matrix,k=0)+tril(self.distance_matrix,k=0).T
+            _cpp_compiler=get_global_preference('weavecompiler')
+            _extra_compile_args=['-O3']
+            if _cpp_compiler=='gcc':
+                _extra_compile_args+=get_global_preference('gcc_options') # ['-march=native', '-ffast-math']        
+            nbr_neurons=int(self.nbr_neurons)
+            distance_matrix=zeros((nbr_neurons,nbr_neurons),dtype=float64)
+            nbr_time_step=int(len(self[0]))
+            dt=float(self.dt)
+            traces=self.values
+            tau=float(self.tau)
+            
+            code='''
+            for(int k1=0;k1<nbr_neurons;k1++)
+            {
+            for(int k2=0;k2<k1;k2++)
+            {
+            for(int istep=0;istep<nbr_time_step;istep++)
+            {
+            distance_matrix(k1,k2)=distance_matrix(k1,k2)+pow(abs(traces(k1,istep)-traces(k2,istep)),2); 
+            
+            }
+            distance_matrix(k1,k2)=dt/tau*distance_matrix(k1,k2);
+            }
+            }
+            '''
+            tt=time() 
+            weave.inline(code, ['nbr_time_step','nbr_neurons','dt','tau','distance_matrix','traces'],
+                         compiler=_cpp_compiler,
+                         type_converters=weave.converters.blitz,
+                         extra_compile_args=_extra_compile_args)
+            print time()-tt
+            return tril(distance_matrix,k=0)+tril(distance_matrix,k=0).T
+        else:
+            self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))
+            tt=time()   
+            for neuron_idx1 in range(self.nbr_neurons):
+                for neuron_idx2 in range((neuron_idx1+1)):
+                    a=self[neuron_idx1]
+                    b=self[neuron_idx2]
+                    #self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*sum(abs(self[neuron_idx1]-self[neuron_idx2])**2)
+                    self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*ne.evaluate('sum(abs(a-b)**2)')
+            print time()-tt
+
+            return tril(self.distance_matrix,k=0)+tril(self.distance_matrix,k=0).T
 
             
     distance = property(fget=get_distance)
