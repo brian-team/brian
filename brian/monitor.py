@@ -46,7 +46,8 @@ from connection import Connection, SparseConnectionVector
 from numpy import array, zeros, mean, histogram, linspace, tile, digitize,     \
         copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, \
         maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize,\
-         inf, var,tril,empty,float64,array
+         inf, var,tril,empty,float64,array,sum
+from scipy.spatial.distance import sqeuclidean
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
 from network import NetworkOperation, network_operation
@@ -65,7 +66,6 @@ except:
     pass
 
 
-##import numexpr as ne
 from globalprefs import *
 from scipy import weave
 
@@ -1284,33 +1284,42 @@ class VanRossumMetric(StateMonitor):
             code='''
             for(int k1=0;k1<nbr_neurons;k1++)
             {
-            for(int k2=0;k2<k1;k2++)
-            {
-            for(int istep=0;istep<nbr_time_step;istep++)
-            {
-            distance_matrix(k1,k2)=distance_matrix(k1,k2)+pow(abs(traces(k1,istep)-traces(k2,istep)),2); 
-            
-            }
-            distance_matrix(k1,k2)=dt/tau*distance_matrix(k1,k2);
-            }
+                for(int k2=0;k2<k1;k2++)
+                {
+                    double &dm = distance_matrix[k1*nbr_neurons+k2];
+                    double *tr1 = traces+k1*nbr_time_step;
+                    double *tr2 = traces+k2*nbr_time_step;
+                    for(int istep=0;istep<nbr_time_step;istep++, tr1++, tr2++)
+                    {
+                        double diff = *tr1-*tr2;
+                        dm += diff*diff; 
+                    }
+                    dm *= dt/tau;
+                }
             }
             '''
             tt=time() 
             weave.inline(code, ['nbr_time_step','nbr_neurons','dt','tau','distance_matrix','traces'],
                          compiler=_cpp_compiler,
-                         type_converters=weave.converters.blitz,
                          extra_compile_args=_extra_compile_args)
             print time()-tt
             return tril(distance_matrix,k=0)+tril(distance_matrix,k=0).T
         else:
+            nbr_time_step=int(len(self[0]))
             self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))
-            tt=time()   
-            for neuron_idx1 in range(self.nbr_neurons):
-                for neuron_idx2 in range((neuron_idx1+1)):
-                    a=self[neuron_idx1]
-                    b=self[neuron_idx2]
-                    #self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*sum(abs(self[neuron_idx1]-self[neuron_idx2])**2)
-                    self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*ne.evaluate('sum(abs(a-b)**2)')
+            values = self.values
+            memsize_mb = float(self.nbr_neurons*nbr_time_step*8)/1024**2
+            tt=time()
+            if memsize_mb>200:
+                for neuron_idx1 in xrange(self.nbr_neurons):
+                    vidx1 = values[neuron_idx1]
+                    for neuron_idx2 in xrange((neuron_idx1+1)):
+                        self.distance_matrix[neuron_idx1,neuron_idx2]=self.dt/self.tau*sum((vidx1-values[neuron_idx2])**2)
+            else:
+                for neuron_idx1 in xrange(self.nbr_neurons):
+                    Vi = values[neuron_idx1].reshape((1, nbr_time_step))
+                    Vj = values.reshape((self.nbr_neurons, nbr_time_step))
+                    self.distance_matrix[neuron_idx1, :] = (self.dt/self.tau)*sum((Vi-Vj)**2, axis=1)                
             print time()-tt
 
             return tril(self.distance_matrix,k=0)+tril(self.distance_matrix,k=0).T
