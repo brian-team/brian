@@ -1298,18 +1298,18 @@ class VanRossumMetric(StateMonitor):
                 }
             }
             '''
-            tt=time() 
+            #tt=time() 
             weave.inline(code, ['nbr_time_step','nbr_neurons','dt','tau','distance_matrix','traces'],
                          compiler=_cpp_compiler,
                          extra_compile_args=_extra_compile_args)
-            print time()-tt
+           # print time()-tt
             return tril(distance_matrix,k=0)+tril(distance_matrix,k=0).T
         else:
             nbr_time_step=int(len(self[0]))
             self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))
             values = self.values
             memsize_mb = float(self.nbr_neurons*nbr_time_step*8)/1024**2
-            tt=time()
+           # tt=time()
             if memsize_mb>200:
                 for neuron_idx1 in xrange(self.nbr_neurons):
                     vidx1 = values[neuron_idx1]
@@ -1320,7 +1320,7 @@ class VanRossumMetric(StateMonitor):
                     Vi = values[neuron_idx1].reshape((1, nbr_time_step))
                     Vj = values.reshape((self.nbr_neurons, nbr_time_step))
                     self.distance_matrix[neuron_idx1, :] = (self.dt/self.tau)*sum((Vi-Vj)**2, axis=1)                
-            print time()-tt
+            #print time()-tt
 
             return tril(self.distance_matrix,k=0)+tril(self.distance_matrix,k=0).T
 
