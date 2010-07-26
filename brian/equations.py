@@ -939,9 +939,11 @@ class Equations(object):
     def __repr__(self):
         s = ''
         for var in self._diffeq_names:
-            s += 'd' + var + '/dt = ' + self._string[var] + '\n'
+            s += 'd' + var + '/dt = ' + self._string[var] + ' [diffeq]\n'
         for var in self._eq_names:
-            s += var + ' = ' + self._string[var] + '\n'
+            s += var + ' = ' + self._string[var] + ' [eq]\n'
+        for var in self._alias:
+            s += var + ' = ' + self._alias[var] + ' [alias]\n'
         return s
 
     def __reduce__(self):
