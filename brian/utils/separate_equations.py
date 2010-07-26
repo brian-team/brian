@@ -20,6 +20,7 @@ else:
     from ..equations import Equations
     from ..inspection import get_identifiers
 from collections import defaultdict
+from copy import copy
 
 __all__ = ['separate_equations']
 
@@ -50,59 +51,35 @@ def next_independent_subgraph(G):
                     assert target in nodes
     return nodes
 
-def separate_equations(eqs):
+def separate_equations(eqs, additional_dependencies=[]):
     eqs.prepare()
-    deps = defaultdict(set)
-    # don't need to worry about eqs and aliases because they have already been substituted
-    all_vars = set(eqs._diffeq_names)
-    # Construct a graph deps which indicates what variable depends on which
-    # other variables (or is depended on by other variables).
+    all_vars = eqs._string.keys()
+    # Construct a list of dependency sets, where each variable in each
+    # dependency set induces a dependency on each other variable in each
+    # dependency set
+    depsets = []
     for var in all_vars:
         ids = set(get_identifiers(eqs._string[var]))
         ids = ids.intersection(all_vars)
-        if var in ids:
-            ids.remove(var)
-        deps[var].update(ids)
-        for id in ids:
-            deps[id].add(var)
-#    for k, v in deps.iteritems():
-#        print k, ':', v
+        ids.add(var)
+        depsets.append(ids)
+    for expr in additional_dependencies:
+        ids = set(get_identifiers(expr))
+        ids = ids.intersection(all_vars)
+        depsets.append(ids)
+    # Construct a graph deps which indicates what variable depends on which
+    # other variables (or is depended on by other variables).
+    deps = defaultdict(set)
+    for ids in depsets:
+        for id1 in ids:
+            for id2 in ids:
+                deps[id1].add(id2)
     # Extract all the independent subgraphs
     ind_graphs = []
     while len(deps):
         ind_graphs.append(set(next_independent_subgraph(deps).keys()))
     if len(ind_graphs) == 1:
         return [eqs]
-#    for graph in ind_graphs:
-#        print graph
-    # So far, our graphs only contain the differential equations, not the
-    # equations and aliases, so we need to compute for each equation and alias
-    # which independent graph of differential equations it belongs to.
-    # We start by computing this for each differential equation
-    corr_graph = {}
-    for G in ind_graphs:
-        for var in G:
-            corr_graph[var] = G
-    # Now we add each equation and alias by looking at their strings, extracting
-    # the identifiers in this expression (which should consist only of constants
-    # and differential equations after equations have been prepared), checking
-    # that all these point to the same independent graph. We also update the
-    # independent graphs to include the equations and aliases as well
-    for var in eqs._eq_names + eqs._alias.keys():
-        if var not in corr_graph:
-            expr = eqs._string[var]
-            ids = set(get_identifiers(expr))
-            G = None
-            for id in ids:
-                if id in corr_graph:
-                    if G is None:
-                        G = corr_graph[id]
-                    assert G is corr_graph[id]
-            assert G is not None
-            corr_graph[var] = G
-            G.add(var)
-#    for k, v in corr_graph.iteritems():
-#        print k, ':', v
     # Finally, we construct an Equations object for each of the subgraphs
     ind_eqs = []
     for G in ind_graphs:

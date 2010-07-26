@@ -223,7 +223,10 @@ class STDP(NetworkOperation):
         # Additional check TODO: modification of presynaptic variables should not depend on postsynaptic
         #   variables
 
-        separated_equations = separate_equations(eqs_obj)
+        # additional dependencies on the set of equations are induced by the
+        # interactions in pre and post code
+        additional_deps = pre.split('\n')+post.split('\n')
+        separated_equations = separate_equations(eqs_obj, additional_deps)
         if not len(separated_equations) == 2:
             raise ValueError('Equations should separate into pre and postsynaptic variables.')
         sep_pre, sep_post = separated_equations

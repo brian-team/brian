@@ -58,7 +58,10 @@ class CSTDP(NetworkOperation):
         vars_pre = [var for var in vars if var in modified_variables(pre)]
         vars_post = [var for var in vars if var in modified_variables(post)]
 
-        separated_equations = separate_equations(eqs_obj)
+        # additional dependencies on the set of equations are induced by the
+        # interactions in pre and post code
+        additional_deps = pre.split('\n')+post.split('\n')
+        separated_equations = separate_equations(eqs_obj, additional_deps)
         if not len(separated_equations) == 2:
             raise ValueError('Equations should separate into pre and postsynaptic variables.')
         sep_pre, sep_post = separated_equations
@@ -66,6 +69,7 @@ class CSTDP(NetworkOperation):
             if v in sep_post._diffeq_names:
                 sep_pre, sep_post = sep_post, sep_pre
                 break
+
         index_pre = [i for i in range(len(vars)) if vars[i] in vars_pre or vars[i] in sep_pre._diffeq_names]
         index_post = [i for i in range(len(vars)) if vars[i] in vars_post or vars[i] in sep_post._diffeq_names]
 
