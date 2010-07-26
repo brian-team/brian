@@ -1,5 +1,7 @@
 from brian import *
 
+set_global_preferences(usecstdp=False)
+
 G = NeuronGroup(10, 'V:1')
 C = Connection(G, G, 'V')
 

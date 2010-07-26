@@ -81,6 +81,18 @@ class CSTDP(NetworkOperation):
         if shared_vars != set([]):
             raise Exception, str(list(shared_vars)) + " are both presynaptic and postsynaptic!"
 
+        # Substitute equations/aliases into pre/post code
+        def substitute_eqs(code):
+            for name in sep_pre._eq_names[-1::-1]+sep_post._eq_names[-1::-1]: # reverse order, as in equations.py
+                if name in sep_pre._eq_names:
+                    expr = sep_pre._string[name]
+                else:
+                    expr = sep_post._string[name]
+                code = re.sub("\\b" + name + "\\b", '(' + expr + ')', code)
+            return code
+        pre = substitute_eqs(pre)
+        post = substitute_eqs(post)
+
         # Create namespaces for pre and post codes
         pre_namespace = namespace(pre, level=level + 1)
         post_namespace = namespace(post, level=level + 1)
@@ -100,7 +112,7 @@ class CSTDP(NetworkOperation):
         per_neuron_pre, per_synapse_pre = splitcode(pre)
         per_neuron_post, per_synapse_post = splitcode(post)
 
-        all_vars = vars_pre + vars_post + ['w']
+        all_vars = vars_pre + vars_post + ['w']        
 
         per_neuron_pre = [c_single_statement(freeze(line, all_vars, pre_namespace)) for line in per_neuron_pre]
         per_neuron_post = [c_single_statement(freeze(line, all_vars, post_namespace)) for line in per_neuron_post]

@@ -245,6 +245,18 @@ class STDP(NetworkOperation):
         if shared_vars != set([]):
             raise Exception, str(list(shared_vars)) + " are both presynaptic and postsynaptic!"
 
+        # Substitute equations/aliases into pre/post code
+        def substitute_eqs(code):
+            for name in sep_pre._eq_names[-1::-1]+sep_post._eq_names[-1::-1]: # reverse order, as in equations.py
+                if name in sep_pre._eq_names:
+                    expr = sep_pre._string[name]
+                else:
+                    expr = sep_post._string[name]
+                code = re.sub("\\b" + name + "\\b", '(' + expr + ')', code)
+            return code
+        pre = substitute_eqs(pre)
+        post = substitute_eqs(post)
+
         # Create namespaces for pre and post codes
         pre_namespace = namespace(pre, level=level + 1)
         post_namespace = namespace(post, level=level + 1)
