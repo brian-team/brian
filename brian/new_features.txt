@@ -6,6 +6,10 @@ Improvements
 * Speed improvement for pure Python version of sparse matrix preparation
 * Speed improvements for spike propagation weave code (50-100% faster).
 
+Bug fixes
+
+* Equations/aliases now work correctly in STDP (ticket #56)
+
 New features since 1.2.0
 ------------------------
 

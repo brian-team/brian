@@ -168,6 +168,7 @@
 + brian/utils/fastexp/swigcompile.bat
 + brian/utils/fastexp/testfastexp.py
 + brian/utils/fastexp/testfastexp2.py
+- brian/utils/parameters.py
 + brian/utils/progressreporting.py
 + brian/utils/separate_equations.py
 + brian/utils/sparse_patch/0_6_0.py
