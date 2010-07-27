@@ -17,9 +17,14 @@ pass function, in that order.
 '''
 
 from brian import *
+set_global_preferences(useweave=True)
+
 from brian.hears import*
 from brian.hears import filtering
 filtering.use_gpu = False 
+
+
+
 
 samplerate=44*kHz
 defaultclock.dt = 1/samplerate
