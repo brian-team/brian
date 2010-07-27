@@ -369,12 +369,19 @@ class OnlineSound(object):
         pass
     
 class OnlineWhiteNoise(OnlineSound):
-    def __init__(self,mu,sigma): 
-        self.mu=mu
-        self.sigma=sigma
+    '''
+    Noise generator which produces one sample at a time online
+    input parameters are the mean mu and the variance sigma
+    default mu=0, sigma=1
+    '''
+    def __init__(self,mu=None,sigma=None): 
+        if mu==None:
+            self.mu=0
+        if sigma==None:
+            self.sigma=1
 
     def update(self):
-        return self.mu+self.sigma*randn(1)
+        return self.mu+sqrt(self.sigma)*randn(1)
 
 class OnlineWhiteNoiseBuffered(OnlineSound):
     def __init__(self,rate,mu,sigma,max_abs_itd): 
