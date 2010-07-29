@@ -245,7 +245,7 @@ if __name__ == '__main__':
         print 'GPU loop code:'
         print G._state_updater.code_gpu
         gf = G._state_updater.gpu_func
-        print '(lmem, smem, registers) = ', (gf.lmem, gf.smem, gf.registers)
+        print '(lmem, smem, registers) = ', (gf.local_size_bytes, gf.shared_size_bytes, gf.num_regs)
         devdata = pycuda.tools.DeviceData()
         orec = pycuda.tools.OccupancyRecord(devdata, 256)
         print 'tb_per_mp', orec.tb_per_mp
