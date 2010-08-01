@@ -46,7 +46,7 @@ from threshold import *
 from stateupdater import *
 from units import *
 import random as pyrandom
-from numpy import where, array, zeros, ones, inf
+from numpy import where, array, zeros, ones, inf, nonzero
 from copy import copy
 from clock import guess_clock
 from utils.approximatecomparisons import *
@@ -426,7 +426,7 @@ class EmptyGroup(object):
 
 
 class PoissonInputs(Connection):
-    def __init__(self, target, sameinputs=[], *inputs):
+    def __init__(self, target, sameinputs=[], *inputs, **kwds):
         """
         Adds Poisson inputs to a NeuronGroup.
         
@@ -452,6 +452,10 @@ class PoissonInputs(Connection):
         self.iscompressed = True
         self.W = zeros((len(inputs), self.N))
         self.sameinputs = sameinputs
+        if 'record' in kwds.keys():
+            self._record = kwds['record']
+            if type(self._record) is int:
+                self._record = [self._record]
 
         self.stateindex = dict()
         self.delays = None # delay to wait for the j-th synchronous spike to occur after the last sync event, for target neuron i
@@ -467,6 +471,7 @@ class PoissonInputs(Connection):
                 if w[0] == 'jitter':
                     self.delays = zeros((w[2], self.N))
         self.events = []
+        self.recorded_events = []
 
     def propagate(self, spikes):
         current = zeros(self.N)
@@ -480,7 +485,11 @@ class PoissonInputs(Connection):
                     if rnd > 0:
                         self.events.append(self.clock.t)
                 else:
-                    self.target._S[state, :] += w * binomial(n=n, p=f * self.clock.dt, size=(self.N))
+                    rnd = binomial(n=n, p=f * self.clock.dt, size=(self.N))
+                    self.target._S[state, :] += w * rnd
+                    ind = nonzero(rnd>0)[0]
+                    if i in self._record and len(ind)>0:
+                        self.recorded_events.append((ind[0], self.clock.t))
             else:
                 # if w is a tuple, it is ('synapse', w, pmax, alpha) and there are
                 # binomial(pmax, alpha) synchronous spikes then
