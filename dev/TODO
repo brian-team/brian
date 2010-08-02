@@ -1,12 +1,3 @@
-* Testing new svn
-* 'copy' keyword for turning delayed construction matrix to connection matrix
-
-* STDP should allow for parameters in equations, not just DEs (currently
-  raises LinAlgError). Also, should be able to access STDP variables
-  directly somehow - currently not possible. Ideally, this would be via
-  the STDP object, e.g. stdp.A_pre, etc. The separation code is basically written
-  now, see dev/ideas/separate_equations.py.
-
 * library.ionic_currents: might not work if units are off (looks for amp to recognize the current)
 * eqs = MembraneEquation(C=200*pF) + leak + K_current + Na_current
 works, but not eqs = leak + K_current + Na_current + MembraneEquation(C=200*pF).
@@ -15,14 +6,6 @@ Solution: have a new class that is a set of currents, or (easier) use a new vari
 * Better progress reporting: the estimated time should adapt, maybe use only the last few seconds rather the entire simulation.
 
 (* Modulation keyword with variables defined as functions)
-
-* Some problem with adding equations together using the same equation more than
-  once, e.g. something like (not tested):
-    eqs_base = Equations('...')
-    eqs_additional_1 = Equations('...')
-    eqs_additional_2 = Equations('...')
-    eqs_1 = eqs_base+eqs_additional_1
-    eqs_2 = eqs_base+eqs_additional_2
 
 * Clean NeuronGroup init, in particular S0 is strangely handled; remove the
 init keyword? (in fact S0 is used mostly for unit checking)
@@ -58,9 +41,6 @@ const tau : second
 '''
 At first this would only be used by MultiLinearStateUpdater
 but in principle could also be used by nonlinear mechanisms for better optimisation.
-
-(* refractory can be a vector)
-refractory shouldn't have to be a constant for the group.
 
 (* Why is t a vector?)
 Figure out why group.t is a vector. It might have to do with units.
