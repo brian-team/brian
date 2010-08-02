@@ -426,6 +426,8 @@ class EmptyGroup(object):
 
 
 class PoissonInputs(Connection):
+    _record = []
+    
     def __init__(self, target, sameinputs=[], *inputs, **kwds):
         """
         Adds Poisson inputs to a NeuronGroup.
