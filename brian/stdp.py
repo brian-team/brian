@@ -220,12 +220,10 @@ class STDP(NetworkOperation):
         vars_pre = [var for var in vars if var in modified_variables(pre)]
         vars_post = [var for var in vars if var in modified_variables(post)]
 
-        # Additional check TODO: modification of presynaptic variables should not depend on postsynaptic
-        #   variables
-
-        # additional dependencies on the set of equations are induced by the
-        # interactions in pre and post code
-        additional_deps = pre.split('\n')+post.split('\n')
+        # additional dependencies are used to ensure that if there are multiple
+        # pre/post separated equations they are grouped together as one
+        additional_deps = ['__pre_deps='+'+'.join(vars_pre),
+                           '__post_deps='+'+'.join(vars_post)]
         separated_equations = separate_equations(eqs_obj, additional_deps)
         if not len(separated_equations) == 2:
             raise ValueError('Equations should separate into pre and postsynaptic variables.')

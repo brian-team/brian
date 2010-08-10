@@ -9,6 +9,7 @@ Improvements
 Bug fixes
 
 * Equations/aliases now work correctly in STDP (ticket #56)
+* Bug in sparse matrices introduced in scipy 0.8.0 fixed
 
 New features since 1.2.0
 ------------------------

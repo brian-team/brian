@@ -61,8 +61,10 @@ class lil_matrix(sparse.lil_matrix):
             # this fixes a bug in scipy 0.7.1
             sparse.lil_matrix.__setitem__(self, index, [W] * len(xrange(*j.indices(self.shape[1]))))
         elif isinstance(i, slice) and isinstance(j, slice) and isNumberType(W):
-            n = len(xrange(*j.indices(self.shape[0])))
+            n = len(xrange(*i.indices(self.shape[0])))
             m = len(xrange(*j.indices(self.shape[1])))
+            print index
+            print n, m
             sparse.lil_matrix.__setitem__(self, index, W * numpy.ones((n, m)))
         else:
             sparse.lil_matrix.__setitem__(self, index, W)
