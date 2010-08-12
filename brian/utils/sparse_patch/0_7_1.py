@@ -63,8 +63,6 @@ class lil_matrix(sparse.lil_matrix):
         elif isinstance(i, slice) and isinstance(j, slice) and isNumberType(W):
             n = len(xrange(*i.indices(self.shape[0])))
             m = len(xrange(*j.indices(self.shape[1])))
-            print index
-            print n, m
             sparse.lil_matrix.__setitem__(self, index, W * numpy.ones((n, m)))
         else:
             sparse.lil_matrix.__setitem__(self, index, W)
