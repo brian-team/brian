@@ -1251,7 +1251,7 @@ class VanRossumMetric(StateMonitor):
         C.connect_one_to_one(source,kernel)
         StateMonitor.__init__(self,kernel, 'v', record=True)
         self.contained_objects=[kernel,C]
-        self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))  
+        #self.distance_matrix=zeros((self.nbr_neurons,self.nbr_neurons))  
                
     def reinit(self):
         StateMonitor.reinit(self)
@@ -1298,11 +1298,11 @@ class VanRossumMetric(StateMonitor):
                 }
             }
             '''
-            #tt=time() 
+            tt=time() 
             weave.inline(code, ['nbr_time_step','nbr_neurons','dt','tau','distance_matrix','traces'],
                          compiler=_cpp_compiler,
                          extra_compile_args=_extra_compile_args)
-           # print time()-tt
+            print time()-tt
             return tril(distance_matrix,k=0)+tril(distance_matrix,k=0).T
         else:
             nbr_time_step=int(len(self[0]))
