@@ -308,6 +308,7 @@ def mixture_process(nu, P, tauc, t):
                 else:
                     selection = sample(spikes, m)
                 result.extend(zip([i] * m, selection))
+    result = [(i,t*second) for i,t in result]
     return result
 
 if __name__ == '__main__':
