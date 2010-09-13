@@ -716,34 +716,48 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
 class GammachirpFilterbankFIR(ParallelLinearFilterbank):
     '''
     Fit of a auditory filter (from a reverse correlation) at the NM of a barn owl at 4.6 kHz. The tap of the FIR filter
-    are the time response of the filter which is long. It is thus very slow
+    are the time response of the filter which is long. It is thus very slow ( at least without GPU)
     
     '''
-    def __init__(self, fs, fr,c=None,time_constant=None):
-        fr = array(fr)
-        self.fr = fr
-        self.N = len(fr)
+    def __init__(self, fs, F0,c,time_constant):
+        try:
+            len(F0)
+            len(c)
+            len(time_constant)
+        except TypeError:
+            F0=array([F0])
+            c=array([c])
+            time_constant=array([time_constant])
+            
+        F0=F0/1000
+        c=c#/1000
+        time_constant=time_constant*1000
+        fs=float(fs)
+        F0 = array(F0)
+        self.F0 = F0
+        self.N = len(F0)
         self.fs = fs
 
         #%x = [amplitude, delay, time constant, frequency, phase, bias, IF glide slope]
-        if c==None:
-            x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
 
-        if time_constant==None:
-            x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
-        x[-1]=c
-        fs=float(fs)
+        x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
         t=arange(0, 4, 1./fs*1000)
+        
         LenGC=len(t)
-        filt_b=zeros((1, LenGC, 1))
-        filt_a=zeros((1, LenGC, 1))
-
+        filt_b=zeros((len(F0), LenGC, 1))
+        filt_a=zeros((len(F0), LenGC, 1))
         g=4
-        tmax=x[2]*(g-1)
-        G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[1])**2)+x[4])+x[5]
-
-        filt_b[0, :, 0]=G
-        filt_a[0, 0, 0]=1
+        for i_channel in xrange(len(F0)):  
+            
+            x[-1]=c[i_channel]
+            x[2]=time_constant[i_channel]
+            x[3]=F0[i_channel]
+            #x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
+            tmax=x[2]*(g-1)
+            G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[1])**2)+x[4])+x[5]
+            G=G*(t-x[1]+tmax>0)/40
+            filt_b[i_channel, :, 0]=G
+            filt_a[i_channel, 0, 0]=1
 
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
 

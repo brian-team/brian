@@ -1,5 +1,7 @@
 '''
 Plot the response to a click of a gammatone filter and  a gammachirp filter
+the gammachirp is a IIR implementation from Irino and Unoki, AN ANALYSIS/SYNTHESIS 
+AUDITORY FILTERBANK BASED ON AN IIR GAMMACHIRP FILTER
 '''
 
 from brian import *

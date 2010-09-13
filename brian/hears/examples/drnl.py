@@ -17,11 +17,11 @@ pass function, in that order.
 '''
 
 from brian import *
-set_global_preferences(useweave=True)
+#set_global_preferences(useweave=True)
 
 from brian.hears import*
 from brian.hears import filtering
-filtering.use_gpu = False 
+filtering.use_gpu = False
 
 
 
