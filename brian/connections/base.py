@@ -3,10 +3,10 @@ from itertools import izip
 import itertools
 from random import sample
 import bisect
-from ..units import *
+from ..units import second, msecond, check_units
 import types
 from .. import magic
-from ..log import *
+from ..log import log_warn, log_info, log_debug
 from numpy import *
 from scipy import sparse, stats, rand, weave, linalg
 import scipy
@@ -16,8 +16,8 @@ from numpy.random import binomial, exponential
 import random as pyrandom
 from scipy import random as scirandom
 from ..utils.approximatecomparisons import is_within_absolute_tolerance
-from ..globalprefs import *
-from ..base import *
+from ..globalprefs import get_global_preference
+from ..base import ObjectContainer
 from ..stdunits import ms
 from operator import isSequenceType
 
