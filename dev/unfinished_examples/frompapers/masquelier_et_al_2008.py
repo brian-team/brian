@@ -143,6 +143,9 @@ for i in range(repeats):
     reinit_default_clock()
     # Reinitialise these by hand because we don't want to reinitialise the
     # spike and state monitors
+    PG_start.reinit()
+    PG_end.reinit()
+    PG_all.reinit()
     G_pre.reinit()
     G_post.reinit()
     patgroup.reinit()
