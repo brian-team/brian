@@ -46,7 +46,7 @@ from threshold import *
 from stateupdater import *
 from units import *
 import random as pyrandom
-from numpy import where, array, zeros, ones, inf, nonzero
+from numpy import where, array, zeros, ones, inf, nonzero, tile, sum
 from copy import copy
 from clock import guess_clock
 from utils.approximatecomparisons import *
