@@ -374,14 +374,16 @@ class OnlineWhiteNoise(OnlineSound):
     input parameters are the mean mu and the variance sigma
     default mu=0, sigma=1
     '''
-    def __init__(self,mu=None,sigma=None): 
+    def __init__(self,mu=None,sigma=None,tomux=1): 
         if mu==None:
             self.mu=0
         if sigma==None:
             self.sigma=1
+        self.tomux=tomux
 
+        
     def update(self):
-        return self.mu+sqrt(self.sigma)*randn(1)
+        return (self.mu+sqrt(self.sigma)*randn(1))*self.tomux
 
 class OnlineWhiteNoiseBuffered(OnlineSound):
     def __init__(self,rate,mu,sigma,max_abs_itd): 
