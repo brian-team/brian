@@ -33,7 +33,7 @@ except ImportError:
 
 __all__=['GammachirpFilterbankFIR', 'GammachirpFilterbankIIR', 'Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step', 'GammatoneFilterbank',
-           'IIRFilterbank' ,'MixFilterbank','TimeVaryingIIRFilterbank','MeddisGammatoneFilterbank','ButterworthFilterbank','CascadeFilterbank']
+           'IIRFilterbank' ,'MixFilterbank','TimeVaryingIIRFilterbank','MeddisGammatoneFilterbank','ButterworthFilterbank','CascadeFilterbank','DoNothingFilterbank']
 
 
 def parallel_lfilter_step(b, a, x, zi):
@@ -55,7 +55,7 @@ def parallel_lfilter_step(b, a, x, zi):
         zi[:, i, curf]=b[:, i+1, curf]*x-a[:, i+1, curf]*y
         x=y
     return y
-
+    
 if get_global_preference('useweave'):
     # TODO: accelerate this even more using SWIG instead of weave
     _cpp_compiler=get_global_preference('weavecompiler')
@@ -516,6 +516,23 @@ class CascadeFilterbank(ParallelLinearFilterbank):
             
         ParallelLinearFilterbank.__init__(self, self.filt_b, self.filt_a, self.fs*Hz)
 
+class DoNothingFilterbank(ParallelLinearFilterbank):
+    '''
+    just pass the signal unprocessed
+    usefull when one wants to remove the auditory filters without having to rewrite everything
+    '''
+    @check_units(fs=Hz)
+    def __init__(self, fs, cf):
+        self.N = len(cf)
+        filt_a=zeros((self.N ,2,1))
+        filt_b=zeros((self.N ,2,1))
+
+        filt_a[:, 0, 0]=1
+        filt_b[:, 0, 0]=1
+
+        ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs)
+    
+    
 class GammatoneFilterbank(ParallelLinearFilterbank):
     '''
     Exact gammatone based on Slaney's Auditory Toolbox for Matlab
@@ -730,7 +747,7 @@ class GammachirpFilterbankFIR(ParallelLinearFilterbank):
             time_constant=array([time_constant])
             
         F0=F0/1000
-        c=c#/1000
+        c=c/1000000
         time_constant=time_constant*1000
         fs=float(fs)
         F0 = array(F0)
@@ -755,7 +772,10 @@ class GammachirpFilterbankFIR(ParallelLinearFilterbank):
             #x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
             tmax=x[2]*(g-1)
             G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[1])**2)+x[4])+x[5]
-            G=G*(t-x[1]+tmax>0)/40
+            G=G*(t-x[1]+tmax>0)/20
+#            plot(t,G)
+#            show()
+#            exit()
             filt_b[i_channel, :, 0]=G
             filt_a[i_channel, 0, 0]=1
 
