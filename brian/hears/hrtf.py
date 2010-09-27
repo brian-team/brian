@@ -503,8 +503,11 @@ class GerbilHRTFSet(HRTFSet):
                 if os.path.exists(filepath + '_L.txt'):
                     self.azim[counter], self.elev[counter] = mod(az, 360), el
                     #read the hrtf
-                    hrtf_left = loadtxt(filepath + '_L.txt')
-                    hrtf_right = loadtxt(filepath + '_R.txt')
+                    #for an unknown reason, coordinates have been switched in this database, i.e.
+                    #for a negative azimuth, signal at the left ear is larger than at the right one !
+                    #consequently, I switched the left and right ears... Boris
+                    hrtf_left = loadtxt(filepath + '_R.txt')
+                    hrtf_right = loadtxt(filepath + '_L.txt')
                     if counter == 0:
                         #initialize the hrtf database
                         # self.data has shape (num_ears=2, num_indices, hrir_length)
