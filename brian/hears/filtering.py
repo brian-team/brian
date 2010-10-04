@@ -734,6 +734,7 @@ class GammachirpFilterbankFIR(ParallelLinearFilterbank):
     '''
     Fit of a auditory filter (from a reverse correlation) at the NM of a barn owl at 4.6 kHz. The tap of the FIR filter
     are the time response of the filter which is long. It is thus very slow ( at least without GPU)
+    The response is normalized so that every parameter set give the same peak value
     
     '''
     def __init__(self, fs, F0,c,time_constant):
@@ -772,7 +773,8 @@ class GammachirpFilterbankFIR(ParallelLinearFilterbank):
             #x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
             tmax=x[2]*(g-1)
             G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[1])**2)+x[4])+x[5]
-            G=G*(t-x[1]+tmax>0)/20
+            G=G*(t-x[1]+tmax>0)
+            G=G/max(G)/10
 #            plot(t,G)
 #            show()
 #            exit()
