@@ -230,6 +230,28 @@ class Sound(numpy.ndarray):
         Returns intensity in dB SPL assuming array is in Pascals
         '''
         return 20.0 * log10(sqrt(mean(asarray(self) ** 2)) / 2e-5)
+    
+    def setintensity(self,dB,type='rms'): #replace atintensity
+        '''
+        Set the intensity (in dB) of a given signal
+        the dB scale can be with respect to the rms value (default) or peak value
+        by choosing type='rms' or type='peak'
+        note: the signal should be long enough to measure the rms value
+        '''
+        if type=='rms':
+            rms_value=sqrt(mean((asarray(self)-mean(asarray(self)))**2))
+            rms_dB=20.0 * log10(rms_value / 2e-5)
+            gain=10**((dB-rms_dB)/20)
+        elif type=='peak':
+            self.normalize()
+            gain=28e-6*10**(dB/20)
+        
+        return self*gain
+            
+    def normalize(self):
+        factor=1.01*max(max(asarray(self)),abs(min(asarray(self))))
+        return self/factor
+        
 
     def atintensity(self, db):
         '''
@@ -271,12 +293,16 @@ class Sound(numpy.ndarray):
         return target
 
     @staticmethod
-    def tone(freq, duration, rate=44.1 * kHz):
+    def tone(freq, duration, rate=44.1 * kHz,dB=None,dBtype='rms'):
         '''
         Returns a pure tone at the given frequency for the given duration
+        if dB not given, pure tone is between -1 and 1
         '''
         rate, x = make_puretone(freq, duration, rate)
-        return Sound(x, rate)
+        if dB is not None: 
+            return Sound(x, rate).setintensity(dB,type=dBtype)
+        else:
+            return Sound(x, rate)
 
     @staticmethod
     def whitenoise(duration, rate=44.1 * kHz):
@@ -537,6 +563,8 @@ def play_stereo_sound(sound_l, sound_r, sleep=False):
     x.play()
     if sleep:
         time.sleep(sound_l.duration)
+
+
 
 whitenoise = Sound.whitenoise
 tone = Sound.tone
