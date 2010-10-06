@@ -325,7 +325,7 @@ class Sound(numpy.ndarray):
         note that the dB can only be peak dB SPL
         '''
         if dB is not None:
-            amplitude=28e-6*10(dB/20)
+            amplitude=28e-6*10**(dB/20)
             
         rate, x = make_click(duration, amplitude, rate)
         return Sound(x, rate)
