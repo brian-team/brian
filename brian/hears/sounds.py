@@ -305,18 +305,28 @@ class Sound(numpy.ndarray):
             return Sound(x, rate)
 
     @staticmethod
-    def whitenoise(duration, rate=44.1 * kHz):
+    def whitenoise(duration, rate=44.1 * kHz,dB=None,dBtype='rms'):
         '''
         Returns a white noise for the given duration.
+        if dB not given, white noise with a variance of one
         '''
         rate, x = make_whitenoise(duration, rate)
-        return Sound(x, rate)
+        
+        if dB is not None: 
+            return Sound(x, rate).setintensity(dB,type=dBtype)
+        else:
+            return Sound(x, rate)
 
     @staticmethod
-    def click(duration, amplitude=1, rate=44.1 * kHz):
+    def click(duration, amplitude=1, rate=44.1 * kHz,dB=None):
         '''
         Returns a click with given parameters
+        if dB not given, click of amplitude given by the parameter amplitude
+        note that the dB can only be peak dB SPL
         '''
+        if dB is not None:
+            amplitude=28e-6*10(dB/20)
+            
         rate, x = make_click(duration, amplitude, rate)
         return Sound(x, rate)
 
