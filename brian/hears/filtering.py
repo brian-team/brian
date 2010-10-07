@@ -784,7 +784,7 @@ class GammachirpFilterbankFIR(ParallelLinearFilterbank):
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
 
 
-class IIRFilterbank(ParallelLinearFilterbank):
+class IIRFilterbank(ParallelLinearFilterbank):  
 
 
     '''
@@ -860,6 +860,7 @@ class IIRFilterbank(ParallelLinearFilterbank):
 
         ParallelLinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate)
 
+
 class ButterworthFilterbank(ParallelLinearFilterbank):
     '''
     Make a butterworth filterbank directly
@@ -883,48 +884,32 @@ class ButterworthFilterbank(ParallelLinearFilterbank):
     def __init__(self,samplerate, N, ord, Fn, btype='low'):
        # print Wn
         Wn=Fn.copy()
+        Wn=atleast_1d(Wn) #Scalar inputs are converted to 1-dimensional arrays
+        
         try:
-            len(Wn)
-        except TypeError:
-            Wn=array([Wn])
-            
-                
-        if len(Wn)==1:
-            try:
-                try:
-                    Wn1, Wn2 = Wn
-                    Wn = (Wn1/samplerate+0.0, Wn2/samplerate+0.0)
-                except TypeError,ValueError:
-                    Wn = Wn/samplerate+0.0
-            except DimensionMismatchError:
-                raise DimensionMismatchError('Wn must be in Hz')
-            self.filt_b, self.filt_a = signal.butter(ord, Wn, btype=btype)
-            
-            self.fs=samplerate
-            self.filt_b=kron(ones((N,1)),self.filt_b)
-            self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)
-            self.filt_a=kron(ones((N,1)),self.filt_a)
-            self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
-            
-            
+            Wn= Wn/samplerate+0.0   
+        except DimensionMismatchError:
+            raise DimensionMismatchError('Wn must be in Hz')
+        
+        self.filt_b=zeros((N,ord+1))
+        self.filt_a=zeros((N,ord+1))
+        
+        if btype=='low' or btype=='high':
+            if len(Wn)==1:     #if there is only one Wn value for all channel just repeat it
+                self.filt_b, self.filt_a = signal.butter(ord, Wn, btype=btype)
+                self.filt_b=kron(ones((N,1)),self.filt_b)
+                self.filt_a=kron(ones((N,1)),self.filt_a)
+            else:               #else make N different filters
+                for i in xrange((N)):
+                    self.filt_b[i,:], self.filt_a[i,:] = signal.butter(ord, Wn[i], btype=btype)
         else:
-# TODO: sort that out            
-#            try:
-#                try:
-#                    Wn1, Wn2 = Wn[i]
-#                    Wn = (Wn1/samplerate+0.0, Wn2/samplerate+0.0)
-#                except TypeError:
-#                 Wn[i] = Wn[i]/samplerate+0.0   
-#            except DimensionMismatchError:
-#                raise DimensionMismatchError('Wn must be in Hz')
-
-            self.filt_b=zeros((N,ord+1))
-            self.filt_a=zeros((N,ord+1))
-            for i in range((N)):
-                Wn[i] = Wn[i]/samplerate*Hz+0.0
-               # print Wn[i]
-                #print signal.butter(ord, Wn[i], btype=btype)
-                self.filt_b[i,:], self.filt_a[i,:] = signal.butter(ord, Wn[i], btype=btype)
+            if Wn.ndim==1:     #if there is only one Wn pair of values for all channel just repeat it
+                self.filt_b, self.filt_a = signal.butter(ord, Wn, btype=btype)
+                self.filt_b=kron(ones((N,1)),self.filt_b)
+                self.filt_a=kron(ones((N,1)),self.filt_a)
+            else:   
+                for i in xrange((N)):
+                    self.filt_b[i,:], self.filt_a[i,:] = signal.butter(ord, Wn[i,:], btype=btype)   
                 
         self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
         self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)    
