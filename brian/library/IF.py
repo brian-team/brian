@@ -50,10 +50,10 @@ def exp_IF(C, gL, EL, VT, DeltaT):
 def quadratic_IF(C, a, EL, VT):
     '''
     Quadratic integrate-and-fire model.
-    C*dvm/dt=a*(vm-El)*(vm-VT)
+    C*dvm/dt=a*(vm-EL)*(vm-VT)
     '''
     return MembraneEquation(C) + \
-           Current('Im=a*(vm-El)*(vm-VT):amp', \
+           Current('Im=a*(vm-EL)*(vm-VT):amp', \
                    a=a, EL=EL, exp=exp, VT=VT)
 
 """

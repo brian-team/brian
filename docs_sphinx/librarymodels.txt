@@ -68,7 +68,7 @@ All these functions return :class:`Equations` objects (more precisely, :class:`M
 
     eqs=perfect_IF(tau=10*ms)
 
-* Quadratic integrate-and-fire model (``C*dvm/dt=a*(vm-El)*(vm-VT) : volt``)::
+* Quadratic integrate-and-fire model (``C*dvm/dt=a*(vm-EL)*(vm-VT) : volt``)::
 
     eqs=quadratic_IF(C=200*pF,a=10*nS/mV,EL=-70*mV,VT=-50*mV)
 
