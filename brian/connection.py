@@ -7,4 +7,4 @@ at some point in the future
 from connections import *
 
 import log as _log
-log_warn('brian', 'Module "connection" in Brian is deprecated, use "brian.connections" instead.')
+_log.log_warn('brian', 'Module "connection" in Brian is deprecated, use "brian.connections" instead.')
