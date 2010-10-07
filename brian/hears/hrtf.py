@@ -153,13 +153,14 @@ class HRTFSet(object):
 
         try:
             I = cond(**ns)
+            I = I.nonzero()[0]
         except:
             I = False
         if type(I) == type(True): # vector-based calculation doesn't work
             n = len(ns[cond.func_code.co_varnames[0]])
             I = array([cond(**dict((name, ns[name][j]) for name in cond.func_code.co_varnames)) for j in range(n)])
             I = I.nonzero()[0]
-
+        print I
         hrtf = [self.hrtf[i] for i in I]
         coords = self.coordinates[I]
         data = self.data[:, I, :]
