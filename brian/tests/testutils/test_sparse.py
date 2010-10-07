@@ -1,4 +1,4 @@
-from brian.connection import SparseMatrix
+from brian.connections import SparseMatrix
 from numpy import zeros, array
 from nose.tools import *
 

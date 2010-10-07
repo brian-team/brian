@@ -39,7 +39,7 @@ __all__ = ['Network', 'MagicNetwork', 'NetworkOperation', 'network_operation', '
            'reinit', 'stop', 'clear', 'forget', 'recall']
 
 from Queue import Queue
-from connection import *
+from connections import *
 from neurongroup import NeuronGroup
 from clock import guess_clock, Clock
 import magic

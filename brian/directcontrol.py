@@ -55,7 +55,7 @@ from operator import itemgetter
 from log import *
 import numpy
 from numpy.random import exponential, randint, binomial
-from connection import Connection
+from connections import Connection
 
 class MultipleSpikeGeneratorGroup(NeuronGroup):
     """Emits spikes at given times

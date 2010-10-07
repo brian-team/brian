@@ -48,7 +48,7 @@ if 'x' in globals(): del x # for some reason x is defined as 'symlog' by pylab!
 if 'f' in globals(): del f
 
 from clock import *
-from connection import *
+from connections import *
 from directcontrol import *
 from stateupdater import *
 from monitor import *

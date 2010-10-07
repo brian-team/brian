@@ -89,7 +89,7 @@ if __name__ == '__main__':
     from brian.utils.documentation import *
     from brian.experimental.codegen.c_support_code import *
 else:
-    from ..connection import Connection, DelayConnection, MultiConnection, \
+    from ..connections import Connection, DelayConnection, MultiConnection, \
                 DenseConnectionMatrix, DenseConstructionMatrix, \
                 SparseConnectionMatrix, SparseConstructionMatrix, \
                 DynamicConnectionMatrix, DynamicConstructionMatrix

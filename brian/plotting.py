@@ -53,7 +53,7 @@ except:
     plot, show, figure, xlabel, ylabel, title, axis = (None,)*7
 from stdunits import *
 import magic
-from connection import *
+from connections import *
 from monitor import *
 from monitor import HistogramMonitorBase
 from network import network_operation

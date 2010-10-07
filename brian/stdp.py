@@ -11,7 +11,7 @@ from stateupdater import get_linear_equations, LinearStateUpdater
 from scipy.linalg import expm
 from scipy import dot, eye, zeros, array, clip, exp, Inf
 from stdunits import ms
-from connection import DelayConnection, DenseConstructionMatrix, SparseConnectionVector
+from connections import DelayConnection, DenseConstructionMatrix, SparseConnectionVector
 import re
 from utils.documentation import flattened_docstring
 from copy import copy

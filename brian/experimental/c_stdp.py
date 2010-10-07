@@ -10,7 +10,7 @@ if __name__ == '__main__':
 else:
     from ..utils.documentation import flattened_docstring
     from ..stdunits import ms
-    from ..connection import Connection, DelayConnection
+    from ..connections import Connection, DelayConnection
     from ..log import log_debug
     from ..monitor import RecentStateMonitor, SpikeMonitor
     from ..network import NetworkOperation

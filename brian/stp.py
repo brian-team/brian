@@ -23,7 +23,7 @@ from network import NetworkOperation
 from neurongroup import NeuronGroup
 from monitor import SpikeMonitor
 from scipy import zeros, exp, isscalar
-from connection import DelayConnection
+from connections import DelayConnection
 
 __all__ = ['STP']
 

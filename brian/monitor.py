@@ -42,7 +42,7 @@ __all__ = ['VanRossumMetric','SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCou
            'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter', 'CoincidenceMatrixCounter', 'StateHistogramMonitor']
 
 from units import *
-from connection import Connection, SparseConnectionVector
+from connections import Connection, SparseConnectionVector
 from numpy import array, zeros, mean, histogram, linspace, tile, digitize,     \
         copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, \
         maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize,\
