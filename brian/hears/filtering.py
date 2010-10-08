@@ -822,8 +822,8 @@ class IIRFilterbank(ParallelLinearFilterbank):
         try:
             try:
                 a, b=passband
-                a=a/samplerate
-                b=b/samplerate
+                a=a/samplerate*2+0.0    # wn=1 corresponding to half the sample rate 
+                b=b/samplerate*2+0.0     
                 passband=[a, b]
                 a+1
                 b+1
@@ -832,8 +832,8 @@ class IIRFilterbank(ParallelLinearFilterbank):
                 passband+1
             try:
                 a, b=stopband
-                a=a/samplerate
-                b=b/samplerate
+                a=a/samplerate*2+0.0 
+                b=b/samplerate*2+0.0    
                 stopband=[a, b]
                 a+1
                 b+1
@@ -887,7 +887,7 @@ class ButterworthFilterbank(ParallelLinearFilterbank):
         Wn=atleast_1d(Wn) #Scalar inputs are converted to 1-dimensional arrays
         
         try:
-            Wn= Wn/samplerate+0.0   
+            Wn= Wn/samplerate*2+0.0    # wn=1 corresponding to half the sample rate   
         except DimensionMismatchError:
             raise DimensionMismatchError('Wn must be in Hz')
         
