@@ -1,0 +1,133 @@
+Working in:
+
+~/src/brian-svn-trunk/dev/ideas/
+
+
+See also comments at top of:
+
+~/src/brian-svn-trunk/dev/ideas/cluster/cluster.py
+
+
+Working on 1st example:
+
+copy of examples/misc/expIF_network.py SVN r2146
+to:
+ ~/src/brian-svn-trunk/dev/ideas/cluster/expIF_network_mpi.py
+it would be useful to try both uniform and non-uniform delays for 
+this example.
+
+Strategy Proposal:
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+# Please ammend as we iterate on this
+
+NeuronGroup -> DistributedNeuronGroup
+
+size passed by user is treated as global_size, local_ids =
+scatter(global_ids, rank) ... which should be treatable using concepts
+of NeuronSubGroup ...  i.e. DistributedNeuronGroup.local_group returns
+a subgroup which is the local neurons, it would also be used
+extensivly internally.  -> DistributedNeuronGroup implicit try of
+import mpi4py, and getting of MPI.COMM_WORLD.size to determine
+distribution layout.  if size=1, warn the user.
+
+
+Connection calls would need to do runtime exchange of
+source,target,delay triplets, i.e. local network determines targets in
+the global_group for its local_group, and then an MPI.allgather
+exchange is performed.  Once delays have been gathered, connection
+determines its min_delay and informs its source
+DistributedNeuronGroup.  Since all DistributedNeuronGroup instances on
+all MPI processes should be included in same connection objects, the
+min_delays of all DistributedNeuronGroups would be thus synchronized.
+The DistributedNeuronGroup should have an external clock with ticks of
+min_delay/2, and an internal resolution dt.  The Network loop lets
+each DIstNeuronGroup update in jumps of min_delay/2.  At the start of
+each update(), the DistributedNeuronGroup issues an collection of
+MPI_Isend/Irecv pairs between each MPI_rank pair with spikes of the
+last update() as the message.  Prior to this send, it should block on
+the "request" objects of the Isend/Irecv messages of the previous
+timestep.  In this way, messaging is asynchronous, and arrives by
+time=min_delay.  This has the limitation that itmight not scale with
+the # of DistributedNeuronGroups per node ... but let's wait and see.
+
+The min_delay/2 approach could also be applied to GPUs but even
+internal to the kernel ... which can result in a significant
+impovement in compute density per neuron parameter fetch.
+
+
+How are spike routing and delays handled?
+
+connections/delayconnection.py
+	would need to be augmented with a min_delay ...
+
+    def do_propagate(self):
+        self.propagate(self.source.get_spikes(0))
+	
+	---> here 0->min_delay.
+
+connections/connection.py
+	treat delay as min_delay.
+
+
+DistributedNeuronGroup -> should be informed also about min_delay from the Connection object.
+
+
+The loop in Network.run() ->
+                self.update()
+                self.clock.tick()
+here the clock.tick should be configured to tick @ min_delay/2 ...  
+
+
+
+Connection -> docstring
+
+"""
+    ``propagate(spikes)``
+        Action to take when source neurons with indices in ``spikes``
+        fired.
+    ``do_propagate()``
+        The method called by the :class:`Network` ``update()`` step,
+        typically just propagates the spikes obtained by calling
+        the ``get_spikes`` method of the ``source`` :class:`NeuronGroup`.
+
+     
+"""
+
+***
+    def do_propagate(self):
+        self.propagate(self.source.get_spikes(self.delay))
+***
+So how is the delay used?
+~/src/brian-svn-trunk/brian/neurongroup.py
+NeuronGroup
+    def get_spikes(self, delay=0):
+        '''
+        Returns indexes of neurons that spiked at time t-delay*dt.
+        '''
+
+	-> return self.LS.get_spikes(delay, self._origin, len(self))
+
+OK, so delays are fixed for a Connection????
+
+	What is NeuronGroup.LS ?
+
+	self.LS = SpikeContainer(self._max_delay,
+            useweave=get_global_preference('useweave'),
+            compiler=get_global_preference('weavecompiler')) # Spike storage
+
+
+There's also connections/delayconnection.py
+	would need to be augmented with a min_delay ...
+
+    def do_propagate(self):
+        self.propagate(self.source.get_spikes(0))
+	
+	---> here 0->min_delay.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+
+
