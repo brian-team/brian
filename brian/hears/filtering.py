@@ -406,8 +406,12 @@ class FilterbankGroupStateUpdater(StateUpdater):
             except StopIteration:
                 P.input=0
                 P._x_stilliter=False
-        else:
-            P.input=P._x.update()
+        elif P._x_type==1:
+            P.input=P._x.update()   #for online sound
+        elif P._x_type==2:
+            P.input=P._x  
+        
+
         P.output[:]=P.filterbank.timestep(P.input)
 
 class FilterbankGroup(NeuronGroup):
@@ -445,7 +449,9 @@ class FilterbankGroup(NeuronGroup):
         output : 1
         input : 1
         '''
+
         NeuronGroup.__init__(self, len(filterbank), eqs, clock=Clock(dt=1/fs))
+        self.N=len(filterbank)
         self._state_updater=FilterbankGroupStateUpdater()
         fs=float(fs)
         self.load_sound(x)
@@ -455,12 +461,19 @@ class FilterbankGroup(NeuronGroup):
         
         if isinstance(x,OnlineSound):
             self._x_iter=None
-            self._x_stilliter=None
+            self._x_type=1        #type=1 for online sounds
 
-        elif x is not None:
-            self._x_iter=iter(self._x)
-            self._x_stilliter=True
+        elif x is not None:           #hack to be able to plug a 1d filterbankgroup in another
+            if len(self._x)==1:
+                self._x_iter=None
+                self._x_stilliter=None
+                self._x_type=2    #type=2 when the input is the output of a 1d filter chain
+            else:   
+                self._x_iter=iter(self._x)
+                self._x_stilliter=True
+                self._x_type=3    #type=3 when input is an array
         else:
+
             self._x_iter=None
             self._x_stilliter=False
 
