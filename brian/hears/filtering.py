@@ -462,7 +462,8 @@ class FilterbankGroup(NeuronGroup):
         if isinstance(x,OnlineSound):
             self._x_iter=None
             self._x_type=1        #type=1 for online sounds
-
+            self._x_stilliter=None
+            
         elif x is not None:           #hack to be able to plug a 1d filterbankgroup in another
             if len(self._x)==1:
                 self._x_iter=None
