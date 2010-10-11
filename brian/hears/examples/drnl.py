@@ -17,23 +17,38 @@ pass function, in that order.
 '''
 
 from brian import *
-#set_global_preferences(useweave=True)
+from time import  time
+
 
 from brian.hears import*
 from brian.hears import filtering
 filtering.use_gpu = False
+#set_global_preferences(useweave=True)
 
-
-
-
-samplerate=44*kHz
+samplerate=100*kHz
 defaultclock.dt = 1/samplerate
 simulation_duration=50*ms
-sound = whitenoise(simulation_duration,samplerate).ramp()
-nbr_center_frequencies=5
+dBlevel=50  # dB level in rms dB SPL
+sound = whitenoise(simulation_duration,samplerate,dB=dBlevel).ramp()
+nbr_center_frequencies=10
 center_frequencies=erbspace(100*Hz,1000*Hz, nbr_center_frequencies) 
 
-#Linear Pathway #########
+#### middle ear processing ####
+f_cut_off1=25*kHz/ ( ( 10**(0.1*10)-1)**(1.0/(2.0*2))) #Find the butterworth natural frequency W0 from the lower and higher cutt off 
+f_cut_off2=30*kHz/ ( ( 10**(0.1*10)-1)**(1.0/(2.0*2)))
+lp_l1=ButterworthFilterbank(samplerate, 1, 2,f_cut_off1, btype='low')
+lp_l2=ButterworthFilterbank(samplerate, 1, 3,f_cut_off2, btype='low')
+middle_ear=FilterbankChain([lp_l1,lp_l2])
+
+
+#### conversion from pressure (Pascal) in stapes velocity (in m/s)
+stape_scale=0.00014
+stape_scale=1./0.00014
+stapes_fun=lambda x:x*stape_scale
+stapes_conv=FunctionFilterbank(samplerate, 1, stapes_fun)
+
+
+#### Linear Pathway ####
 
 #linear gain
 g=10**(5.68-0.97*log10(center_frequencies))
@@ -56,8 +71,7 @@ lowpass_linear=CascadeFilterbank(lp_l,4)
 linear_path=FilterbankChain([gain,bandpass_linear,lowpass_linear])
 
 
-
-#Nonlinear Pathway#########
+#### Nonlinear Pathway ####
 
 #bandpass filter (third order gammatone filters)
 center_frequencies_nonlinear=center_frequencies
@@ -84,14 +98,22 @@ lowpass_nonlinear=CascadeFilterbank(lp_nl,4)
 #nonlinear pathway
 nonlinear_path=FilterbankChain([bandpass_nonlinear1,compression,bandpass_nonlinear2,lowpass_nonlinear])
 
-##########
-#adding the two pathways together
-dnrl_filter=linear_path+nonlinear_path
-dnrl= FilterbankGroup(dnrl_filter, sound)
 
+#### adding the two pathways together ####
+dnrl_filter=linear_path+nonlinear_path
+
+#### chaining everything ####
+filters_1dpath=FilterbankChain([middle_ear,stapes_conv])
+processing_1dpath= FilterbankGroup(filters_1dpath, sound)     #1d fu=ilter chain of middle ear
+
+dnrl= FilterbankGroup(dnrl_filter, processing_1dpath.output)
+
+#dnrl= FilterbankGroup(dnrl_filter, sound)
 dnrl_monitor = StateMonitor(dnrl, 'output', record=True)
 
+t1=time()
 run(simulation_duration)
+print 'the simulation took %f sec to run' %(time()-t1)
 
 time_axis=dnrl_monitor.times
 
