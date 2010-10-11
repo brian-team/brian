@@ -78,14 +78,15 @@ def make_Izhikevich_scheme():
     for(int i=0; i<N; i++){
         v[i] += (0.5*dt)*(c1*v[i]*v[i]+c2*v[i]+c3-u[i]+I[i]);
         v[i] += (0.5*dt)*(c1*v[i]*v[i]+c2*v[i]+c3-u[i]+I[i]);
-        u[i] += dt*a[i]*(b*v[i]-u[i]);
+        u[i] += dt*a[i]*(b*v[i]-u[i]); 
     }
     '''
     weave_vars = (G.a, G.v, G.u, G.I, c1, c2, c3)
     weave_compiler = get_global_preference('weavecompiler')
     extra_compile_args = ['-O3']
-    if weave_compiler == 'gcc':
-        extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+    #if weave_compiler == 'gcc':
+    #    extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+    #    extra_compile_args.remove('-march=native')
     def weave_Izhikevich_scheme(G):
         a, v, u, I, c1, c2, c3 = weave_vars
         weave.inline(weave_code, ['a', 'v', 'u', 'I', 'c1', 'c2', 'c3', 'b', 'dt', 'N'],
