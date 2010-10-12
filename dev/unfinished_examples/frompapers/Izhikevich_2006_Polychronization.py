@@ -46,7 +46,7 @@ N = Ne + Ni
 thalamic_input_weight = 20 * mV / ms
 
 eqs = Equations('''
-dv/dt = (0.04/ms/mV)*v**2+(5/ms)*v+140*mV/ms-u   : volt
+dv/dt = (0.04/ms/mV)*v**2+(5/ms)*v+140*mV/ms-u+I : volt
 du/dt = a*(b*v-u)                                : volt/second
 a                                                : 1/second
 d                                                : volt/second
@@ -88,10 +88,18 @@ Gi.d = d_i
 # so we insert the thalamic input after the numerical integration but before
 # the spike propagation, using the when='before_connections' setting.
 
-@network_operation(when='before_connections')
+change_every = int(1*ms/dt)
+change_time = 0
+@network_operation(when='before_connections',
+                   #clock=EventClock(dt=1*ms)
+                   )
 def thalamic_input():
+    global change_time
     G.I = 0 * mV / ms
-    G.I[randint(N)] = float(thalamic_input_weight)
+    if change_time==0:
+        change_time = change_every
+        G.I[randint(N)] = float(thalamic_input_weight*change_every)
+    change_time -= 1
 
 Ce = Connection(Ge, G, 'I', delay=True, max_delay=D)
 Ci = Connection(Gi, Ge, 'I', delay=D_i)
