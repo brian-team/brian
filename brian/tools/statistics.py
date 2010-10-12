@@ -16,12 +16,16 @@ def firing_rate(spikes):
     '''
     Rate of the spike train.
     '''
+    if spikes==[]:
+        return NaN
     return (len(spikes) - 1) / (spikes[-1] - spikes[0])
 
 def CV(spikes):
     '''
     Coefficient of variation.
     '''
+    if spikes==[]:
+        return NaN
     ISI = diff(spikes) # interspike intervals
     return std(ISI) / mean(ISI)
 
@@ -35,6 +39,8 @@ def correlogram(T1, T2, width=20 * ms, bin=1 * ms, T=None):
     N.B.: units are discarded.
     TODO: optimise?
     '''
+    if (T1==[]) or (T2==[]): # empty spike train
+        return NaN
     # Remove units
     width = float(width)
     T1 = array(T1)
@@ -122,6 +128,8 @@ def total_correlation(T1, T2, width=20 * ms, T=None):
     The result is a real (typically in [0,1]):
     total_correlation(T1,T2)=int(CCVF(T1,T2))/rate(T1)
     '''
+    if (T1==[]) or (T2==[]): # empty spike train
+        return NaN
     # Remove units
     width = float(width)
     T1 = array(T1)

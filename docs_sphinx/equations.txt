@@ -200,6 +200,26 @@ where ``sigma`` is in the same units as ``x``. We note the following two facts:
     dy/dt=-y/tau+sigmay*u/tau**.5 : volt
     u=xi : second**(-.5)
 
+Important notice
+^^^^^^^^^^^^^^^^
+It is not possible to modulate the noise term with a variable (e.g.
+``v*xi/tau**.5``). One reason is that, with multiplicative noise, there is
+an ambiguity between the Ito and the Stratonovich interpretation.
+Unfortunately, this limitation also applies to parameters, i.e.,
+``sigma*xi/tau**.5`` is not possible if sigma is a parameter, as in the
+following example::
+
+  eqs=Equations('''dx/dt=-x/tau + sigma*xi/tau**.5 : volt
+                   sigma : volt''')
+  group = NeuronGroup(1, eqs, threshold='x>vt')
+
+However, the problem can usually be solved by some rewriting::
+
+  eqs=Equations('''dy/dt=-y/tau + xi/tau**.5 : 1
+                    x=sigma*y : volt
+                    sigma : volt''')
+  group = NeuronGroup(1, eqs, threshold = 'x>vt')
+
 .. index::
 	pair: differential equations; non-autonomous
 	pair: differential equations; time-dependent

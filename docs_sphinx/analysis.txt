@@ -112,6 +112,8 @@ of spike trains, defined as ordered lists of spike times:
 * Gamma precision factor: ``gamma_factor(source, target, delta)`` returns the gamma precision 
   factor between source and target trains, with precision delta.
 
+These functions return NaN (not a number) when a spike train is empty.
+
 .. TODO: docs:histograms
 	Histograms
 	----------
