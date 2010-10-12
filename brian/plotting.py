@@ -44,13 +44,13 @@ Functions:
 __docformat__ = "restructuredtext en"
 
 __all__ = ['plot', 'show', 'figure', 'xlabel', 'ylabel', 'title', 'axis',
-           'raster_plot', 'hist_plot']
+           'raster_plot', 'raster_plot_spiketimes', 'hist_plot']
 
 try:
-    from pylab import plot, show, figure, xlabel, ylabel, title, axis
+    from pylab import plot, show, figure, xlabel, ylabel, title, axis, xlim
     import pylab, matplotlib
 except:
-    plot, show, figure, xlabel, ylabel, title, axis = (None,)*7
+    plot, show, figure, xlabel, ylabel, title, axis, xlim = (None,)*8
 from stdunits import *
 import magic
 from connections import *
@@ -219,6 +219,17 @@ def raster_plot(*monitors, **plotoptions):
                     if myopts['redraw']:
                         pylab.draw()
             monitors[0].contained_objects.append(refresh_raster_plot)
+
+
+def raster_plot_spiketimes(spiketimes):
+    """
+    Raster plot of a list of spike times
+    """
+    m = Monitor()
+    m.source = []
+    m.spikes = spiketimes
+    raster_plot(m)
+    t = array(spiketimes)[:,1]
 
 
 def hist_plot(histmon=None, **plotoptions):
