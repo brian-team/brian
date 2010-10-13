@@ -25,7 +25,7 @@ try:
 except IOError:
     imported_data = {}
 
-dt = defaultclock.dt = 1 * ms
+dt = defaultclock.dt = 0.1 * ms
 
 M = 100                # number of synapses per neuron
 D = 20 * ms              # maximal conduction delay
@@ -36,22 +36,22 @@ D_i = 1 * ms             # inhibitory neuron conduction delay
 Ne = 800
 a_e = 0.02 / ms
 d_e = 8 * mV / ms
-s_e = 6 * mV / ms
+s_e = 6 * mV / dt # ms
 # inhibitory neurons
 Ni = 200
 a_i = 0.1 / ms
 d_i = 2 * mV / ms
-s_i = -5 * mV / ms
+s_i = -5 * mV / dt # ms
 # all neurons
 b = 0.2 / ms
 c = -65 * mV
-sm = 10 * mV / ms             # maximal synaptic strength
+sm = 10 * mV / dt # ms             # maximal synaptic strength
 N = Ne + Ni
 
-thalamic_input_weight = 20 * mV / ms
+thalamic_input_weight = 20 * mV / dt # ms
 
 eqs = Equations('''
-dv/dt = (0.04/ms/mV)*v**2+(5/ms)*v+140*mV/ms-u   : volt
+dv/dt = (0.04/ms/mV)*v**2+(5/ms)*v+140*mV/ms-u+I : volt
 du/dt = a*(b*v-u)                                : volt/second
 a                                                : 1/second
 d                                                : volt/second
@@ -107,10 +107,19 @@ Gi.a = a_i
 Gi.d = d_i
 
 zeromVms = 0 * mV / ms
+change_every = int(1*ms/dt)
+change_time = 0
+thal_ind = 0
 @network_operation(when='before_connections')
 def thalamic_input():
+    global change_time, thal_ind
     G.I = zeromVms
-    G.I[randint(N)] = float(thalamic_input_weight)
+    #G.I[thal_ind] = float(thalamic_input_weight)
+    if change_time==0:
+        change_time = change_every
+        thal_ind = randint(N)
+        G.I[thal_ind] = float(thalamic_input_weight)
+    change_time -= 1
 
 if imported_data:
     G._S[:] = imported_data['G._S']

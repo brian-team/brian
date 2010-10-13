@@ -20,7 +20,9 @@ matplotlib.use('WXAgg') # You may need to experiment, try WXAgg, GTKAgg, QTAgg, 
 from brian import *
 import random
 
-dt = defaultclock.dt = 1 * ms
+dt = defaultclock.dt = .5 * ms
+
+I_factor = float((1*ms)/dt)
 
 M = 100                # number of synapses per neuron
 D = 20 * ms              # maximal conduction delay
@@ -31,19 +33,19 @@ D_i = 1 * ms             # inhibitory neuron conduction delay
 Ne = 800
 a_e = 0.02 / ms
 d_e = 8 * mV / ms
-s_e = 6 * mV / ms
+s_e = 6 * mV / ms * I_factor
 # inhibitory neurons
 Ni = 200
 a_i = 0.1 / ms
 d_i = 2 * mV / ms
-s_i = -5 * mV / ms
+s_i = -5 * mV / ms * I_factor
 # all neurons
 b = 0.2 / ms
 c = -65 * mV
-sm = 10 * mV / ms           # maximal synaptic strength
+sm = 10 * mV / ms * I_factor           # maximal synaptic strength
 N = Ne + Ni
 
-thalamic_input_weight = 20 * mV / ms
+thalamic_input_weight = 20 * mV / ms# * I_factor
 
 eqs = Equations('''
 dv/dt = (0.04/ms/mV)*v**2+(5/ms)*v+140*mV/ms-u+I : volt
@@ -90,15 +92,16 @@ Gi.d = d_i
 
 change_every = int(1*ms/dt)
 change_time = 0
-@network_operation(when='before_connections',
-                   #clock=EventClock(dt=1*ms)
-                   )
+thal_ind = 0
+@network_operation(when='before_connections')
 def thalamic_input():
-    global change_time
+    global change_time, thal_ind
     G.I = 0 * mV / ms
+    G.I[thal_ind] = float(thalamic_input_weight)
     if change_time==0:
         change_time = change_every
-        G.I[randint(N)] = float(thalamic_input_weight*change_every)
+        thal_ind = randint(N)
+        #G.I[randint(N)] = float(thalamic_input_weight*1*ms/dt)
     change_time -= 1
 
 Ce = Connection(Ge, G, 'I', delay=True, max_delay=D)
