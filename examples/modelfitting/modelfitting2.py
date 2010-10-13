@@ -24,7 +24,7 @@ if __name__ == '__main__':
     results = modelfitting(model=model, reset=reset, threshold=threshold,
                             data=spikes,
                             input=input, dt=.1 * ms,
-                            max_cpu=4,
+                            max_cpu=4, use_gpu=True, max_gpu=1,
                             particles=1000, iterations=3, delta=2 * ms,
                             R=[1.0e9, 8.0e9],
                             tau=[10 * ms, 40 * ms],

@@ -1,0 +1,23 @@
+On Linux, make sure not to call pycuda.autoinit before creating multiple processes.
+* brian.library.modelfitting.gpu_modelfitting.py does this (and references to autoinit.context need to be removed)
+* playdoh 0.2 clustertools too
+
+Playdoh 0.2 clustertools also has some other problems:
+
+In function cluster_worker:
+
+    if use_gpu:
+        try:
+            if True:#do_redirect:
+                sys.stdin = file(os.devnull, 'w')
+                sys.stdout = file(os.devnull, 'w')
+            set_gpu_device(2-process_number-1)
+                           #drv.Device.count()-process_number-1)
+        except Exception, e:
+            print e
+            warnings.warn("Problem when loading Cuda. use_gpu is now set to False.")
+            use_gpu = False
+
+do_redirect is never set to True as far as I can tell, but it needs to be on (some versions of) Linux.
+
+drv.Device.count() is computed in a couple of places, but this requires initialisation.

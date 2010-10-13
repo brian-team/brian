@@ -1,6 +1,7 @@
 from brian import *
+from gputools import *
 import brian.optimiser as optimiser
-import pycuda.autoinit as autoinit
+#import pycuda.autoinit as autoinit
 import pycuda.driver as drv
 import pycuda
 from pycuda.gpuarray import GPUArray
@@ -248,6 +249,8 @@ class GPUModelFitting(object):
                        delta, onset=0 * ms,
                        coincidence_count_algorithm='exclusive',
                        precision=default_precision):
+        if pycuda.context is None:
+            set_gpu_device(0)
         eqs.prepare()
         self.precision = precision
         if precision == 'double':
@@ -346,7 +349,8 @@ class GPUModelFitting(object):
         if stepsize is None:
             self.kernel_func(int32(0), int32(duration / self.dt),
                              *self.kernel_func_args, **self.kernel_func_kwds)
-            autoinit.context.synchronize()
+            #autoinit.context.synchronize()
+            pycuda.context.synchronize()
         else:
             stepsize = int(stepsize / self.dt)
             duration = int(duration / self.dt)
@@ -354,7 +358,8 @@ class GPUModelFitting(object):
                 Tend = Tstart + min(stepsize, duration - Tstart)
                 self.kernel_func(int32(Tstart), int32(Tend),
                                  *self.kernel_func_args, **self.kernel_func_kwds)
-                autoinit.context.synchronize()
+                #autoinit.context.synchronize()
+                pycuda.context.synchronize()
 
 
     def get_coincidence_count(self):
@@ -536,7 +541,8 @@ if __name__ == '__main__':
             for i in xrange(len(M.times)):
                 mf.kernel_func(int32(i), int32(i + 1),
                                  *mf.kernel_func_args, **mf.kernel_func_kwds)
-                autoinit.context.synchronize()
+                #autoinit.context.synchronize()
+                pycuda.context.synchronize()
                 allV.append(mf.state_vars['V'].get())
                 all_pst.append(mf.spiketimes.get()[mf.spiketime_indices.get()])
                 all_nst.append(mf.spiketimes.get()[mf.spiketime_indices.get() + 1])

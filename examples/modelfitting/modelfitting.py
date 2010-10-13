@@ -23,7 +23,7 @@ if __name__ == '__main__':
                                  data=spikes,
                                  input=input, dt=.1 * ms,
                                  particles=1000, iterations=10, delta=2 * ms,
-                                 use_gpu=False, max_cpu=4, max_gpu=1,
+                                 use_gpu=True, max_cpu=4, max_gpu=1,
                                  R=[1.0e9, 9.0e9], tau=[10 * ms, 40 * ms], optalg=GA, optinfo=optinfo)
 
     print_results(results)

@@ -88,4 +88,4 @@ if __name__ == '__main__':
 
     pool = multiprocessing.Pool(2)
     result = pool.map(doit, [0,0])
-    #print result
+    print result

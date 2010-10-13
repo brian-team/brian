@@ -4,7 +4,8 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
     from playdoh import maximize, printr, worker, PSO, GA
-except:
+except Exception, e:
+    print e
     raise ImportError("Playdoh must be installed (https://code.google.com/p/playdoh/)")
 try:
     import pycuda
