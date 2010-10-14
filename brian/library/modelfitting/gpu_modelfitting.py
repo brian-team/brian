@@ -11,8 +11,13 @@ try:
 except ImportError:
     from pycuda.driver import SourceModule
 from numpy import *
+from brian.experimental.codegen.integration_schemes import *
+from brian.experimental.codegen.codegen_gpu import *
+import re
 
-__all__ = ['GPUModelFitting']
+__all__ = ['GPUModelFitting',
+           'euler_scheme', 'rk2_scheme', 'exp_euler_scheme'
+           ]
 
 if drv.get_version() == (2, 0, 0): # cuda version
     default_precision = 'float'
@@ -20,6 +25,16 @@ elif drv.get_version() > (2, 0, 0):
     default_precision = 'double'
 else:
     raise Exception, "CUDA 2.0 required"
+
+class ModelfittingGPUCodeGenerator(GPUCodeGenerator):
+    def generate(self, eqs, scheme):
+        vartype = self.vartype()
+        code = ''
+        for line in self.scheme(eqs, scheme).split('\n'):
+            line = line.strip()
+            if line:
+                code += '    ' + line + '\n'
+        return code
 
 modelfitting_kernel_template = """
 __global__ void runsim(
@@ -133,7 +148,9 @@ coincidence_counting_algorithm_src = {
 def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons,
                                      delta,
                                      coincidence_count_algorithm='exclusive',
-                                     precision=default_precision):
+                                     precision=default_precision,
+                                     scheme=euler_scheme
+                                     ):
     eqs.prepare()
     src = modelfitting_kernel_template
     # Substitute state variable declarations
@@ -154,15 +171,20 @@ def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons,
     reset = '\n            '.join(line.strip() + ';' for line in reset.split('\n') if line.strip())
     src = src.replace('%RESET%', reset)
     # Substitute state update
-    sulines = ''
-    all_variables = eqs._eq_names + eqs._diffeq_names + eqs._alias.keys() + ['t']
-    for name in eqs._diffeq_names:
-        namespace = eqs._namespace[name]
-        expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
-        if name in eqs._diffeq_names_nonzero:
-            sulines += '        %SCALAR% ' + name + '__tmp = ' + expr + ';\n'
-    for name in eqs._diffeq_names_nonzero:
-        sulines += '        ' + name + ' += %DT%*' + name + '__tmp;\n'
+    sulines = ModelfittingGPUCodeGenerator(dtype=precision).generate(eqs, scheme)
+#    open('blah.txt','a').write(sulines)
+    sulines = re.sub(r'\bdt\b', '%DT%', sulines)
+#    open('blah.txt','a').write(sulines)
+#    open('blah.txt','a').write(sulines)
+#    sulines = ''
+#    all_variables = eqs._eq_names + eqs._diffeq_names + eqs._alias.keys() + ['t']
+#    for name in eqs._diffeq_names:
+#        namespace = eqs._namespace[name]
+#        expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
+#        if name in eqs._diffeq_names_nonzero:
+#            sulines += '        %SCALAR% ' + name + '__tmp = ' + expr + ';\n'
+#    for name in eqs._diffeq_names_nonzero:
+#        sulines += '        ' + name + ' += %DT%*' + name + '__tmp;\n'
     src = src.replace('%STATE_UPDATE%', sulines.strip())
     # Substitute coincidence counting algorithm
     ccalgo = coincidence_counting_algorithm_src[coincidence_count_algorithm]
@@ -176,6 +198,7 @@ def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons,
     src = src.replace('%NUM_NEURONS%', str(num_neurons))
     # Substitute delta, the coincidence window half-width
     src = src.replace('%DELTA%', str(int(rint(delta / dt))))
+#    open('blah.txt','a').write(src)
     return src, declarations_seq
 
 
@@ -248,7 +271,9 @@ class GPUModelFitting(object):
     def __init__(self, G, eqs, I, I_offset, spiketimes, spiketimes_offset, spikedelays,
                        delta, onset=0 * ms,
                        coincidence_count_algorithm='exclusive',
-                       precision=default_precision):
+                       precision=default_precision,
+                       scheme=euler_scheme
+                       ):
         if pycuda.context is None:
             set_gpu_device(0)
         eqs.prepare()
@@ -302,9 +327,10 @@ class GPUModelFitting(object):
             expr = optimiser.freeze(expr, all_variables, namespace)
             reset = expr
         self.reset = reset
-        self.kernel_src, self.declarations_seq = generate_modelfitting_kernel_src(eqs, threshold, reset, dt, N, delta,
-                                                                                  coincidence_count_algorithm=coincidence_count_algorithm,
-                                                                                  precision=precision)
+        self.kernel_src, self.declarations_seq = generate_modelfitting_kernel_src(
+                  eqs, threshold, reset, dt, N, delta,
+                  coincidence_count_algorithm=coincidence_count_algorithm,
+                  precision=precision, scheme=scheme)
         self.kernel_module = SourceModule(self.kernel_src)
         self.kernel_func = self.kernel_module.get_function('runsim')
         self.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)

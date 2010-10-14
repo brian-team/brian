@@ -13,6 +13,7 @@ try:
     can_use_gpu = True
 except ImportError:
     can_use_gpu = False
+from brian.experimental.codegen.integration_schemes import *
 
 __all__ = ['modelfitting', 'print_results', 'worker', 'get_spikes', 'predict', 'PSO', 'GA']
 
@@ -73,7 +74,7 @@ class ModelFitting(object):
         if self.use_gpu:
             self.mf = GPUModelFitting(self.group, self.model, self.input, self.I_offset,
                                       self.spiketimes, self.spiketimes_offset, zeros(self.neurons), self.delta,
-                                      precision=self.precision)
+                                      precision=self.precision, scheme=self.scheme)
         else:
             self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset,
                                         onset=self.onset, delta=self.delta)
@@ -204,6 +205,7 @@ def modelfitting(model=None, reset=None, threshold=None,
                  machines=[], named_pipe=None, port=None,
                  returninfo=False,
                  optalg=None, optinfo=None,
+                 scheme=euler_scheme,
                  **params):
     """
     Model fitting function.
@@ -348,6 +350,7 @@ def modelfitting(model=None, reset=None, threshold=None,
                        precision=precision,
                        stepsize=stepsize,
                        initial_values=initial_values,
+                       scheme=scheme,
                        onset=0 * ms)
 
     r = maximize(ModelFitting,

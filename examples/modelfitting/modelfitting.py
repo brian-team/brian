@@ -24,6 +24,7 @@ if __name__ == '__main__':
                                  input=input, dt=.1 * ms,
                                  particles=1000, iterations=10, delta=2 * ms,
                                  use_gpu=True, max_cpu=4, max_gpu=1,
+                                 scheme=rk2_scheme, # can use euler_scheme, exp_euler_scheme (for HH), or rk2_scheme
                                  R=[1.0e9, 9.0e9], tau=[10 * ms, 40 * ms], optalg=GA, optinfo=optinfo)
 
     print_results(results)
