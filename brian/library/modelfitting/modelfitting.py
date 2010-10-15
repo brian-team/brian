@@ -3,10 +3,11 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
                     reshape, sum
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
-    from playdoh import maximize, printr, worker, PSO, GA
+    from playdoh import maximize, printr, worker,PSO,GA,CMA_ES
 except Exception, e:
     print e
     raise ImportError("Playdoh must be installed (https://code.google.com/p/playdoh/)")
+
 try:
     import pycuda
     from brian.library.modelfitting.gpu_modelfitting import GPUModelFitting
@@ -15,7 +16,7 @@ except ImportError:
     can_use_gpu = False
 from brian.experimental.codegen.integration_schemes import *
 
-__all__ = ['modelfitting', 'print_results', 'worker', 'get_spikes', 'predict', 'PSO', 'GA']
+__all__ = ['modelfitting', 'print_results', 'worker', 'get_spikes', 'predict', 'PSO', 'GA','CMA_ES']
 
 
 class ModelFitting(object):
@@ -171,8 +172,10 @@ class ModelFitting(object):
             coincidence_count = self.mf.coincidence_count
             spike_count = self.mf.spike_count
         else:
+
             self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset,
                                         onset=self.onset, delta=self.delta)
+
             # Sets the spike delay values
             self.cc.spikedelays = delays
             # Reinitializes the simulation objects
@@ -180,7 +183,9 @@ class ModelFitting(object):
 #            self.cc.reinit()
             net = Network(self.group, self.cc)
             # LAUNCHES the simulation on the CPU
+
             net.run(self.duration)
+
             coincidence_count = self.cc.coincidences
             spike_count = self.cc.model_length
 
