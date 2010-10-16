@@ -562,12 +562,15 @@ def play_sound(rate, x):
     else:
         warnings.warn('Cannot play sound, no pygame module.')
 
-def play_stereo_sound(sound_l, sound_r, sleep=False):
+def play_stereo_sound(sound_l, sound_r, sleep=False, normalise=True):
     pygame.mixer.quit()
     pygame.mixer.init(int(sound_l.rate), -16, 2)
-    a = max(amax(abs(sound_l)), amax(abs(sound_r)))
-    xl = array(2 ** 15 * clip(sound_l / a, -1, 1), dtype=int16)
-    xr = array(2 ** 15 * clip(sound_r / a, -1, 1), dtype=int16)
+    if normalise:
+        a = max(amax(abs(sound_l)), amax(abs(sound_r)))
+    else:
+        a = 1
+    xl = array((2 ** 15 - 1) * clip(sound_l / a, -1, 1), dtype=int16)
+    xr = array((2 ** 15 - 1) * clip(sound_r / a, -1, 1), dtype=int16)
     x = vstack((xl, xr)).T.copy()
     x = pygame.sndarray.make_sound(x)
     x.play()
