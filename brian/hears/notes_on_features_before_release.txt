@@ -1,0 +1,36 @@
+Sound
+-----
+
+Currently derives from numpy.ndarray and is assumed to be 1D array. Allow
+stereo and multi-channel sounds by assuming it to be nD array. So for an N
+channel, M sample sound, the array shape should be (N, M). This has the property
+that if x is a multi-channel sound then x[0], x[1], ... are the channels. It
+also has the property that samples in a given channel are contiguous.
+
+Should we also allow that if x is 1D then it is assumed to be a 1-channel sound?
+
+Needs:
+
+* New methods for initialising N-channel sound.
+* Play should be in stereo if 2-channel
+* Extend existing methods to work with N-channel sounds
+* Stereo/N-channel sound manipulation methods
+* Extract single channel as new Sound object method
+
+Buffering:
+
+New buffering method for fetching the next K samples (or duration T). Buffering
+needs an init (e.g. buffer_init()), and a fetch (e.g. buffer_fetch()). Note
+that we need buffering to do 2 things, automatic buffering and explicit
+buffering. This doesn't much matter for the Sound class, but it will for online
+versions, and for filtering later on. With automatic buffering, we fetch the
+data sample by sample (or in buffered chunks), but the real buffering is handled
+internally by the class (possibly in larger chunks than requested). Maybe we
+can just assume that classes handle this by themselves though?
+
+OnlineSound
+-----------
+
+Works like Sound except it is not derived from ndarray, and buffering is
+enforced. Should we make it still derive from ndarray but using the buffer
+width as the sound? Advantages/disadvantages?
