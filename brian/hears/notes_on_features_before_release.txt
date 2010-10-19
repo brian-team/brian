@@ -110,7 +110,10 @@ So I propose:
 
 * New Filterbank objects which allow for different ways of combining channels.
   These could be, for example, InterleaveChannels(), SerialChannels(). One of
-  these could be chosen as a default if the user doesn't specify. 
+  these could be chosen as a default if the user doesn't specify. We could also
+  maybe have a new Filterbank method or init keyword 'duplicate' which allows
+  you to specify the parameters once and have them copied for each of the
+  channels.
   
 The class diagram would be something like:
 
