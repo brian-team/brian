@@ -34,3 +34,95 @@ OnlineSound
 Works like Sound except it is not derived from ndarray, and buffering is
 enforced. Should we make it still derive from ndarray but using the buffer
 width as the sound? Advantages/disadvantages?
+
+One technical solution is to have Sound derive from OnlineSound and ndarray.
+Filterbanks and other library objects would only use methods available to
+OnlineSound, and that way we could guarantee it would work for both without
+special casing it.
+
+Filterbank
+----------
+
+New methods for buffering, buffer_init() and buffer_fetch(), as for sound().
+All classes need to be updated to take buffering into account, although a
+default implementation can be included to start with which just repeatedly
+calls timestep(), this way we get backwards compatibility for free.
+
+In addition, we need to handle multi-channel input sounds. Consider a
+filterbank with M channels and an input of N channels. What should the output
+look like? At the moment, timestep(input) takes a 1D array input of length
+either 1 (in which case it is duplicated M times) or M. It returns an array
+of length M. Other possibilities:
+
+(N, M) -> N=M       if N=M                                               (1)
+          M         if N divides into M, where channels are interleaved
+                         in some way or another (e.g. alternate, or all
+                         of one and then all of the other)               (2)
+          (N, M/N)  if N divides into M, where output is 2D              (3)
+          N*M       in all cases                                         (4)
+          (N, M)    in all cases                                         (5)
+
+Option (1) is unproblematic, and option (2) agrees with the current
+implementation if N=1, so this would be the default assumption. The problem
+with it is that the way of interleaving the channels is not natural, you
+have to make a choice about how to do it, and that feels less nice. This can
+be mitigated by having some syntax for views of the output which corresponds
+to each of the original channels. In that system though, it looks more like
+(3) (and in fact, by reshaping the array without changing the contents of it,
+(2) and (3) can be equivalent). Finally, options (4-5) apply the whole
+filterbank to each channel separately. I think we may want to exclude this
+because sometimes we want different filter parameters for each input channel.
+
+None of these options seem particularly nice to me - maybe we need to think of
+some use cases? The way I use it in my code is to interleave stereo sounds by
+hand. So I have lines like:
+
+	y = repeat([xL, xR], N)
+	
+This y then gets fed into a standard length 2N filterbank.
+
+Here's an option: we require that the input to a Filterbank comes from another
+Filterbank, for all types of Filterbank except one which accepts input from
+a Sound class. This Filterbank would be in charge of controlling the way in
+which the channels were interleaved. We could either include a default option
+or require the user to specify in cases where there was more than one option.
+In other words, for more than 1 channel.
+
+While we're at it, Filterbank currently provides only timestep() and apply()
+methods. A Filterbank object on its own is not connected to anything, it's
+only the timestep() and apply() methods that establish a connection. Maybe we
+should change the architecture here so that every Filterbank has an input
+source that is unique to it, and that this input source should be another
+Filterbank or a Sound. In this case, timestep(input) would be replaced by just
+a timestep() method which would automatically fetch the input from its source.
+Thinking forward to the combined GPU implementation, I think we'll want this,
+because in order to combine multiple Filterbank objects into a single GPU
+kernel, we would need to know which Filterbank is connected to which other ones.
+
+So I propose:
+
+* Change Filterbank so that it is required to have a source attribute. This
+  source attribute can be either a Sound or a Filterbank. If we name the
+  methods the same for Sound and Filterbank (e.g. for buffered inputs it would
+  be buffer_fetch(), maybe for unbuffered inputs it would be just fetch()) we
+  only need to write the code once. We could even have a common base class
+  between Sound and Filterbank to make this explicit.
+
+* New Filterbank objects which allow for different ways of combining channels.
+  These could be, for example, InterleaveChannels(), SerialChannels(). One of
+  these could be chosen as a default if the user doesn't specify. 
+  
+The class diagram would be something like:
+
+AuditoryObject  ->  BaseSound  ->  Sound
+                               ->  OnlineSound
+                    Filterbank ->  InterleaveChannels
+                               ->  SerialChannels
+                               ->  ParallelLinearFilterbank  -> ...
+                               ...
+
+AuditoryObject methods: buffer_fetch(), buffer_init(): name can be changed!
+BaseSound does nothing, just so that Sound and OnlineSound can be detected
+Sound: derived from ndarray
+OnlineSound: not derived from ndarray
+Filterbank: now need to have a source object, and buffer stuff implemented
