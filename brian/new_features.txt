@@ -10,6 +10,8 @@ Bug fixes
 
 * Equations/aliases now work correctly in STDP (ticket #56)
 * Bug in sparse matrices introduced in scipy 0.8.0 fixed
+* Bug in TimedArray when dt keyword is used now fixed (thanks to Adrien
+  Wohrer for pointing out the bug).
 
 New features since 1.2.0
 ------------------------

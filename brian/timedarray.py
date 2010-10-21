@@ -41,6 +41,10 @@ class TimedArray(numpy.ndarray):
         because it doesn't create a :class:`Clock` object which can
         lead to ambiguity about which clock is the default. If dt is
         specified and start is not, start is assumed to be 0.
+        
+    Note that if the clock, or start time and dt, of the array should be the
+    default clock values, then you should not specify clock, start or dt (see
+    Technical notes below).
     
     Arbitrary slicing of the array is supported, but the clock will only
     be preserved where the intervals can be guaranteed to be fixed, that
@@ -66,6 +70,16 @@ class TimedArray(numpy.ndarray):
     
     See also :class:`TimedArraySetter`, :func:`set_group_var_by_array` and
     :class:`NeuronGroup`.
+    
+    **Technical notes**
+    
+    Note that specifying a new clock, or values of start and dt, will mean
+    that if you use this :class:`TimedArray` to set the value of a
+    :class:`NeuronGroup` variable, it will be updated on the schedule of this
+    clock, which can (due to floating point errors) induce some timing problems.
+    This rarely happens, but if an occasional inaccuracy of order dt might
+    conceivably be critical for your simulation, you should use
+    :class:`RegularClock` objects instead of :class:`Clock` objects.
     '''
     def __new__(subtype, arr, times=None, clock=None, start=None, dt=None):
         # All numpy.ndarray subclasses need something like this, see
@@ -102,6 +116,9 @@ class TimedArray(numpy.ndarray):
             raise ValueError('Specify times or clock but not both.')
         if times is None and clock is None:
             clock = guess_clock(clock)
+            self.guessed_clock = True
+        else:
+            self.guessed_clock = False
         self.clock = clock
         if clock is not None:
             self._t_init = int(clock._t / clock._dt) * clock._dt
@@ -236,7 +253,10 @@ class TimedArraySetter(NetworkOperation):
     '''
     def __init__(self, group, var, arr, times=None, clock=None, start=None, dt=None, when='start'):
         if clock is None:
-            self.clock = group.clock
+            if isinstance(arr, TimedArray):
+                self.clock = clock = arr.clock
+            else:
+                self.clock = clock = group.clock
         else:
             self.clock = clock
         self.when = when
