@@ -555,8 +555,10 @@ def mix_sounds(rate, *sounds):
 @check_units(rate=Hz)
 def play_sound(rate, x):
     if have_pygame:
+        pygame.mixer.quit()
         pygame.mixer.init(int(rate), -16, 1)
-        y = array((2 ** 15 - 1) * clip(x, -1, 1), dtype=int16)
+        # TODO: why does the sound crackle if I use 2**15-1 instead of 2**14-1???
+        y = array((2 ** 14 - 1) * clip(x, -1, 1), dtype=int16)
         s = pygame.sndarray.make_sound(y)
         s.play()
     else:
