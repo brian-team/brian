@@ -1,6 +1,6 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
-                    reshape, sum
+                    reshape, sum, log
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
     from playdoh import maximize, printr, worker,PSO,GA,CMA_ES
@@ -15,6 +15,7 @@ try:
 except ImportError:
     can_use_gpu = False
 from brian.experimental.codegen.integration_schemes import *
+import sys
 
 __all__ = ['modelfitting', 'print_results', 'worker', 'get_spikes', 'predict', 'PSO', 'GA','CMA_ES']
 
