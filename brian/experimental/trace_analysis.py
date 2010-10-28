@@ -3,7 +3,7 @@ Analysis of voltage traces (current-clamp experiments or HH models).
 '''
 from numpy import *
 #from brian.stdunits import mV
-from brian.utils.io import *
+from brian.tools.io import *
 from time import time
 from scipy import optimize
 from scipy import stats
