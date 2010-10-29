@@ -1,6 +1,8 @@
 TODO for brian.hears
 ====================
 
+*visulization function (impulse responses, fft... of individual filters)
+
 * Clean up GammatoneFilterbank and set up appropriate options,
   remove MeddisGammatone and HohmannGammatone.
 * Gammachirp filter
