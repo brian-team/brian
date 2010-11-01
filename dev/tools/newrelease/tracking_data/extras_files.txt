@@ -33,9 +33,7 @@
 + docs/_sources/examples-frompapers_brette_gerstner_2005.txt
 + docs/_sources/examples-frompapers_diesmann_et_al_1999.txt
 + docs/_sources/examples-frompapers_diesmann_et_al_1999_longer.txt
-+ docs/_sources/examples-frompapers_izhikevich_2006_polychronization.txt
-+ docs/_sources/examples-frompapers_izhikevich_2006_polychronization_longer.txt
-+ docs/_sources/examples-frompapers_masquelier_et_al_2008.txt
+- docs/_sources/examples-frompapers_izhikevich_2006_polychronization.txt
 + docs/_sources/examples-frompapers_rothman_manis_2003.txt
 + docs/_sources/examples-frompapers_sturzl_et_al_2000.txt
 + docs/_sources/examples-interface_interface.txt
@@ -195,9 +193,7 @@
 + docs/examples-frompapers_brette_gerstner_2005.html
 + docs/examples-frompapers_diesmann_et_al_1999.html
 + docs/examples-frompapers_diesmann_et_al_1999_longer.html
-+ docs/examples-frompapers_izhikevich_2006_polychronization.html
-+ docs/examples-frompapers_izhikevich_2006_polychronization_longer.html
-+ docs/examples-frompapers_masquelier_et_al_2008.html
+- docs/examples-frompapers_izhikevich_2006_polychronization.html
 + docs/examples-frompapers_rothman_manis_2003.html
 + docs/examples-frompapers_sturzl_et_al_2000.html
 + docs/examples-interface_interface.html
@@ -336,9 +332,6 @@
 + examples/frompapers/brette_gerstner_2005.py
 + examples/frompapers/diesmann_et_al_1999.py
 + examples/frompapers/diesmann_et_al_1999_longer.py
-+ examples/frompapers/izhikevich_2006_polychronization.py
-+ examples/frompapers/izhikevich_2006_polychronization_longer.py
-+ examples/frompapers/masquelier_et_al_2008.py
 + examples/frompapers/rothman_manis_2003.py
 + examples/frompapers/sturzl_et_al_2000.py
 + examples/interface/index.html
@@ -350,6 +343,7 @@
 + examples/misc/coba.py
 + examples/misc/cobahh.py
 + examples/misc/correlated_inputs.py
++ examples/misc/correlated_inputs2.py
 + examples/misc/cuba.py
 + examples/misc/current_clamp.py
 - examples/misc/data.pkl
@@ -386,6 +380,7 @@
 + examples/misc/transient_sync.py
 + examples/misc/two_neurons.py
 + examples/misc/using_classes.py
++ examples/misc/van_rossum_metric.py
 - examples/modelfitting/current.pickle
 + examples/modelfitting/current.txt
 + examples/modelfitting/modelfitting.py

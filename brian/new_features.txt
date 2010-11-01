@@ -12,6 +12,7 @@ Bug fixes
 * Bug in sparse matrices introduced in scipy 0.8.0 fixed
 * Bug in TimedArray when dt keyword is used now fixed (thanks to Adrien
   Wohrer for pointing out the bug).
+* Units now work correctly in STDP (ticket #60)
 
 New features since 1.2.0
 ------------------------

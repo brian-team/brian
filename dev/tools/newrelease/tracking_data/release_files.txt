@@ -3,6 +3,17 @@
 + brian/clock.py
 + brian/compartments.py
 + brian/connection.py
++ brian/connections/__init__.py
++ brian/connections/base.py
++ brian/connections/connection.py
++ brian/connections/connectionmatrix.py
++ brian/connections/connectionvector.py
++ brian/connections/construction.py
++ brian/connections/constructionmatrix.py
++ brian/connections/delayconnection.py
++ brian/connections/otherconnections.py
++ brian/connections/propagation_c_code.py
++ brian/connections/sparsematrix.py
 + brian/deprecated/__init__.py
 + brian/directcontrol.py
 + brian/equations.py
@@ -35,7 +46,7 @@
 - brian/experimental/mp_ma_40984_gc2.cng.swc
 + brian/experimental/multilinearstateupdater.py
 + brian/experimental/new_c_propagate.py
-+ brian/experimental/oi24rpy1.cng.swc
+- brian/experimental/oi24rpy1.cng.swc
 + brian/experimental/realtime_monitor.py
 + brian/experimental/spatialneuron.py
 + brian/experimental/trace_analysis.py
@@ -46,6 +57,7 @@
 + brian/hears/examples/drnl.py
 + brian/hears/examples/gammachirp.py
 + brian/hears/examples/gammachirp2.py
++ brian/hears/examples/gammachirpfir.py
 + brian/hears/examples/gammatone.py
 + brian/hears/examples/online_sound_itd.py
 + brian/hears/examples/online_sounds.py
@@ -53,6 +65,13 @@
 + brian/hears/filtering.py
 + brian/hears/gputools.py
 + brian/hears/hrtf.py
++ brian/hears/new/__init__.py
++ brian/hears/new/erb.py
++ brian/hears/new/filtering.py
++ brian/hears/new/gputools.py
++ brian/hears/new/hrtf.py
+- brian/hears/new/notes_on_features_before_release.txt
++ brian/hears/new/sounds.py
 - brian/hears/notes_for_brianhears_project.txt
 + brian/hears/sounds.py
 - brian/hears/todo.txt
@@ -64,6 +83,7 @@
 + brian/library/modelfitting/__init__.py
 - brian/library/modelfitting/current_long.txt
 + brian/library/modelfitting/gpu_modelfitting.py
++ brian/library/modelfitting/gputools.py
 + brian/library/modelfitting/modelfitting.py
 - brian/library/modelfitting/new/clusterfitting.py
 - brian/library/modelfitting/new/clustersplitting.py
@@ -122,6 +142,7 @@
 + brian/tests/testinterface/test_monitor.py
 + brian/tests/testinterface/test_neurongroup.py
 + brian/tests/testinterface/test_reset.py
++ brian/tests/testinterface/test_statistics.py
 + brian/tests/testinterface/test_threshold.py
 + brian/tests/testinterface/test_units.py
 + brian/tests/testinterface/test_unitsafefunctions.py
