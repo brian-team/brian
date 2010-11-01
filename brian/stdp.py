@@ -23,6 +23,7 @@ from units import second
 from utils.separate_equations import separate_equations
 from log import *
 from globalprefs import *
+from optimiser import freeze
 
 __all__ = ['STDP', 'ExponentialSTDP']
 
@@ -263,6 +264,11 @@ class STDP(NetworkOperation):
         pre_namespace['enumerate'] = enumerate
         post_namespace['enumerate'] = enumerate
 
+        # freeze pre and post (otherwise units will cause problems)
+        all_vars = list(vars_pre) + list(vars_post) + ['w']
+        pre = '\n'.join(freeze(line.strip(), all_vars, pre_namespace) for line in pre.split('\n'))
+        post = '\n'.join(freeze(line.strip(), all_vars, post_namespace) for line in post.split('\n'))
+
         # Neuron groups
         G_pre = NeuronGroup(len(C.source), model=sep_pre, clock=self.clock)
         G_post = NeuronGroup(len(C.target), model=sep_post, clock=self.clock)
@@ -361,7 +367,6 @@ class STDP(NetworkOperation):
             # or actual code? (rather than compiled string)
             pre += '\n    w[_i,:]=clip(w[_i,:],%(min)f,%(max)f)' % {'min':wmin, 'max':wmax}
             post += '\n    w[:,_i]=clip(w[:,_i],%(min)f,%(max)f)' % {'min':wmin, 'max':wmax}
-
             # Compile code
             pre_code = compile(pre, "Presynaptic code", "exec")
             post_code = compile(post, "Postsynaptic code", "exec")

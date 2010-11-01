@@ -151,6 +151,13 @@ define_global_preference(
          ''')
 set_global_preferences(usecstdp=False)
 
+define_global_preference(
+    'usenewbrianhears', 'False',
+    desc='''
+         Whether or not to use new version of Brian hears.
+         ''')
+set_global_preferences(usenewbrianhears=False)
+
 # check if we were run from a file or some other source, and set the default
 # behaviour for magic functions accordingly
 import inspect as _inspect
