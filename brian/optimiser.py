@@ -77,7 +77,7 @@ def freeze(expr, vars, namespace={}, safe=False):
             value[id] = float(value[id]) # downcast Quantity to float
     # Substitute
     for id in ids:
-        expr = re.sub("\\b" + id + "\\b", str(value[id]), expr)
+        expr = re.sub("\\b" + id + "\\b", repr(value[id]), expr)
     # Clean (changes -- to +)
     expr = re.sub("--", "+", expr)
     #print "freezing:",expr
