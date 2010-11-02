@@ -70,6 +70,11 @@ class DataManager(object):
     ``get_flat_matching(match)``
         Returns a straight list of every value session[key] for all sessions
         and all keys matching match.
+    ``iteritems()``
+        Returns all ``(key, value)`` pairs, for each Shelf file, as an iterator
+        (useful for large files with too much data to be loaded into memory).
+    ``itemcount()``
+        Returns the total number of items across all the Shelf files.
     ``keys()``
         A list of all the keys across all sessions.
     ``session()``
@@ -194,6 +199,16 @@ class DataManager(object):
     
     def make_unique_key(self):
         return str(uuid4())
+    
+    def iteritems(self):
+        allfiles = self.session_filenames()
+        for name in allfiles:
+            shelf = shelve.open(name, protocol=2)
+            for key, value in shelf.iteritems():
+                yield key, value
+    
+    def itemcount(self):
+        return sum(len(shelve.open(name, protocol=2)) for name in self.session_filenames())
 
 if __name__ == '__main__':
     d = DataManager('test/testing')
