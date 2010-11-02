@@ -84,6 +84,9 @@ class DataManager(object):
         operation, making it safe for concurrent access.
     ``session_filenames()``
         A list of all the shelf filenames for all sessions.
+    ``make_unique_key()``
+        Generates a unique key for inserting an element into a session without
+        overwriting data, uses uuid4.
         
     Attributes:
     
@@ -188,6 +191,9 @@ class DataManager(object):
         for name in self.session_filenames():
             allkeys.update(set(shelve.open(name, protocol=2).keys()))
         return list(allkeys)
+    
+    def make_unique_key(self):
+        return str(uuid4())
 
 if __name__ == '__main__':
     d = DataManager('test/testing')
