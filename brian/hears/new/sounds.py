@@ -14,14 +14,21 @@ try:
     have_scikits_samplerate = True
 except (ImportError, ValueError):
     have_scikits_samplerate = False
+from bufferable import Bufferable
 
 __all__ = ['Sound', 'play_stereo_sound', 'play_sound',
            'whitenoise', 'tone', 'click', 'silent', 'sequence', 'mix_sounds','OnlineSound','OnlineWhiteNoise','OnlineWhiteNoiseBuffered','OnlineWhiteNoiseShifted']
 
+class BaseSound(Bufferable):
+    '''
+    Base class for Sound and OnlineSound
+    '''
+    pass
 
-class Sound(numpy.ndarray):
+class Sound(BaseSound, numpy.ndarray):
     duration = property(fget=lambda self:len(self) / self.rate)
     times = property(fget=lambda self:arange(len(self), dtype=float) / self.rate)
+    nchannels = property(fget=lambda self:self.shape[1])
 
     @check_units(rate=Hz, duration=second)
     def __new__(cls, data, rate=None, duration=None):
@@ -45,6 +52,8 @@ class Sound(numpy.ndarray):
             x = data(t)
         else:
             raise TypeError('Cannot initialise Sound with data of class ' + str(data.__class__))
+        if len(x.shape)==1:
+            x.shape = (len(x), 1)
         x = x.view(cls)
         x.rate = rate
         return x
@@ -92,9 +101,12 @@ class Sound(numpy.ndarray):
         if L == len(self):
             return self
         elif L < len(self):
-            return Sound(self[:L], rate=self.rate)
+            return Sound(self[:L, :], rate=self.rate)
         else:
-            return Sound(concatenate((self, zeros(L - len(self)))), rate=self.rate)
+            padding = zeros((L - len(self), self.nchannels))
+            return Sound(concatenate((self, padding)), rate=self.rate)
+
+    ### TODO: update remaining methods to use multiple channels
 
     @check_units(onset=second)
     def shift(self, onset):
@@ -397,7 +409,7 @@ class Sound(numpy.ndarray):
     def __reduce__(self):
         return (_load_Sound_from_pickle, (asarray(self), float(self.rate)))
 
-class OnlineSound(object):
+class OnlineSound(BaseSound):
     def __init__(self): 
         pass
         

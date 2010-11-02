@@ -11,8 +11,6 @@ from scipy import weave
 from scipy import random
 from sounds import OnlineSound
 from numpy import intp
-# NOTE TO BERTRAND:
-# DO NOT COMMENT THESE LINES OUT!-> Ok :)
 try:
     import pycuda
     #import pycuda.autoinit as autoinit
@@ -30,6 +28,7 @@ try:
 except ImportError:
     use_gpu = False
 #use_gpu=False
+from bufferable import Bufferable
 
 __all__=['GammachirpFilterbankFIR', 'GammachirpFilterbankIIR', 'Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step', 'GammatoneFilterbank',
@@ -105,7 +104,7 @@ if get_global_preference('useweave'):
 def factorial(n):
     return prod(arange(1, n+1))
 
-class Filterbank(object):
+class Filterbank(Bufferable):
     '''
     Generalised filterbank object
     

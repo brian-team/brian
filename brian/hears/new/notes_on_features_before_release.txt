@@ -3,9 +3,11 @@ Sound
 
 Currently derives from numpy.ndarray and is assumed to be 1D array. Allow
 stereo and multi-channel sounds by assuming it to be nD array. So for an N
-channel, M sample sound, the array shape should be (N, M). This has the property
-that if x is a multi-channel sound then x[0], x[1], ... are the channels. It
-also has the property that samples in a given channel are contiguous.
+channel, M sample sound, the array shape should be (M, N). This has the property
+that if x is a multi-channel sound then x[:, 0], x[:, 1], ... are the channels.
+It does not have the property that samples in a given channel are contiguous,
+and so code should be written to loop over channels before samples (however
+this works nicely in the case of Filterbanks on the GPU for example).
 
 Should we also allow that if x is 1D then it is assumed to be a 1-channel sound?
 
@@ -99,6 +101,9 @@ Thinking forward to the combined GPU implementation, I think we'll want this,
 because in order to combine multiple Filterbank objects into a single GPU
 kernel, we would need to know which Filterbank is connected to which other ones.
 
+Dan's proposal
+--------------
+
 So I propose:
 
 * Change Filterbank so that it is required to have a source attribute. This
@@ -117,14 +122,14 @@ So I propose:
   
 The class diagram would be something like:
 
-AuditoryObject  ->  BaseSound  ->  Sound
+Bufferable      ->  BaseSound  ->  Sound
                                ->  OnlineSound
                     Filterbank ->  InterleaveChannels
                                ->  SerialChannels
                                ->  ParallelLinearFilterbank  -> ...
                                ...
 
-AuditoryObject methods: buffer_fetch(), buffer_init(): name can be changed!
+Bufferable methods: buffer_fetch(), buffer_init(): name can be changed!
 BaseSound does nothing, just so that Sound and OnlineSound can be detected
 Sound: derived from ndarray
 OnlineSound: not derived from ndarray
