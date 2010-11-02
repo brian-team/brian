@@ -1,6 +1,10 @@
 New features since 1.2.1
 ------------------------
 
+Minor features:
+
+* Added new brian.tools.datamanager.DataManager, moved from brian.experimental
+
 Improvements
 
 * Speed improvement for pure Python version of sparse matrix preparation

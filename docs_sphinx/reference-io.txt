@@ -1,0 +1,18 @@
+.. currentmodule:: brian
+
+.. _reference-io:
+
+Input/output
+============
+
+.. autoclass:: brian.tools.datamanager.DataManager
+
+.. index::
+	pair: Neuron; dat file
+
+.. autofunction:: read_neuron_dat
+
+.. index::
+	pair: Axon; atf file
+
+.. autofunction:: read_atf

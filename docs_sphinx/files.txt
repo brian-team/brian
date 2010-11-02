@@ -16,3 +16,5 @@ returns a vector of times and a vector of values. This is a format used
 to store data recorded with Axon amplifiers. Note that
 metadata stored in the file are not extracted.
 Binary .abf files are currently not supported.
+
+See also :ref:`reference-io`.

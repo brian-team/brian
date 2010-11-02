@@ -21,6 +21,7 @@ For an overview of Brian, see the :ref:`user-manual` section.
     reference-plotting
     reference-variableupdating
     reference-analysis
+    reference-io
     reference-remotecontrol
     reference-progressreporting
     reference-modelfitting
