@@ -33,7 +33,7 @@ except ImportError:
 
 __all__=['GammachirpFilterbankFIR', 'GammachirpFilterbankIIR', 'Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step', 'GammatoneFilterbank',
-           'IIRFilterbank' ,'MixFilterbank','TimeVaryingIIRFilterbank','MeddisGammatoneFilterbank','ButterworthFilterbank','CascadeFilterbank','DoNothingFilterbank']
+           'IIRFilterbank' ,'MixFilterbank','TimeVaryingIIRFilterbank','MeddisGammatoneFilterbank','ButterworthFilterbank','CascadeFilterbank','DoNothingFilterbank','TimeVaryingIIRFilterbank2']
 
 
 def parallel_lfilter_step(b, a, x, zi):
@@ -185,14 +185,25 @@ class FunctionFilterbank(Filterbank):
     '''
     Filterbank that just applies a given function
     '''
-    def __init__(self, samplerate, N, func):
+    def __init__(self, samplerate, N, func,func_init=None,*params):
         self.fs=samplerate
         self.N=N
         self.func=func
+        if params is not None:
+            if func_init is not None:
+                self.param_fun=func_init(self.fs,*params)
+            else:
+                self.param_fun=params
+        else:
+            if func_init is not None:
+                self.param_fun=func_init()
+            else:
+                self.param_fun=[]
+            
 
     def timestep(self, input):
         # self.output[:]=self.func(input)
-        return self.func(input)
+        return self.func(input,*self.param_fun)
 
     def __len__(self):
         return self.N
@@ -411,7 +422,7 @@ class FilterbankGroupStateUpdater(StateUpdater):
         elif P._x_type==2:
             P.input=P._x  
         
-
+        #print P.output
         P.output[:]=P.filterbank.timestep(P.input)
 
 class FilterbankGroup(NeuronGroup):
@@ -897,7 +908,7 @@ class ButterworthFilterbank(ParallelLinearFilterbank):
     
     def __init__(self,samplerate, N, ord, Fn, btype='low'):
        # print Wn
-        Wn=Fn.copy()
+        Wn=Fn
         Wn=atleast_1d(Wn) #Scalar inputs are converted to 1-dimensional arrays
         
         try:
@@ -955,7 +966,7 @@ class TimeVaryingIIRFilterbank(Filterbank):
         w0=2*pi*m_i/self.fs
         self.fc=m_i
         alpha=sin(w0)*sinh(log(2)/2*self.BW*w0/sin(w0))
-
+        
         self.b[:, 0, 0]=sin(w0)/2
         self.b[:, 1, 0]=0
         self.b[:, 2, 0]=-sin(w0)/2
@@ -982,6 +993,9 @@ class TimeVaryingIIRFilterbank(Filterbank):
         mu_i=self.m_i/self.tau_i
         sigma_i=sqrt(2)*self.s_i/sqrt(self.tau_i)
         self.fc=self.fc-self.fc/self.tau_i*self.deltaT+mu_i*self.deltaT+sigma_i*random.randn(1)*sqrt(self.deltaT)
+        
+        #print 'b',self.fc,'b'
+        
         BWhz=self.fc/self.Q
         #print self.fc,BWhz
         if self.fc<=50*Hz:
@@ -1005,11 +1019,12 @@ class TimeVaryingIIRFilterbank(Filterbank):
         self.b[:, 0, 0]=sin(w0)/2
         self.b[:, 1, 0]=0
         self.b[:, 2, 0]=-sin(w0)/2
-
+        #print w0,alpha
         #self.a=array([1 + alpha,-2*cos(w0),1 - alpha])
         self.a[:, 0, 0]=1+alpha
         self.a[:, 1, 0]=-2*cos(w0)
         self.a[:, 2, 0]=1-alpha
+        #print 'a',self.b, self.a,'a'
         #y=parallel_lfilter_step(self.b, self.a, input, self.zi)
         #y, self.zi = signal.lfilter(self.b, self.a, input, zi=self.zi)
         return parallel_lfilter_step(self.b, self.a, input, self.zi)
@@ -1021,6 +1036,38 @@ class TimeVaryingIIRFilterbank(Filterbank):
         return self.N
     samplerate=property(fget=lambda self:self.fs)
 
+
+class TimeVaryingIIRFilterbank2(Filterbank):
+    ''' IIR fliterbank where the coefficients vary. It is a bandpass filter
+    of which the center frequency vary follwoing a OrnsteinUhlenbeck process
+    '''
+
+    @check_units(samplerate=Hz)
+    def __init__(self, samplerate,N,func_init,func,*params):
+        self.fs=samplerate
+        self.params=params
+        self.func=func
+        self.N=N
+        self.t=0*ms
+        
+        self.b,self.a,self.param_fun=func_init(self.fs,*params)
+        
+        self.zi=zeros((self.b.shape[0], self.b.shape[1]-1, self.b.shape[2]))
+        
+    def timestep(self, input):
+        if isinstance(input, ndarray):
+            input=input.flatten()
+
+        self.b,self.a=self.func(self.fs,self.N,*self.param_fun)
+        #print 'b',self.b, self.a,'b'
+        return parallel_lfilter_step(self.b, self.a, input, self.zi)
+
+    def apply_single(self, input):
+        pass
+    
+    def __len__(self):
+        return self.N
+    samplerate=property(fget=lambda self:self.fs)
 
 
 if __name__=='__main__':
