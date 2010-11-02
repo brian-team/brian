@@ -9,7 +9,7 @@ from gputools import *
 from scipy import signal
 from scipy import weave
 from scipy import random
-from sounds import OnlineSound
+from onlinesounds import OnlineSound
 from numpy import intp
 try:
     import pycuda

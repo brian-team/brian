@@ -1,11 +1,33 @@
 from brian import *
+set_global_preferences(usenewbrianhears=True)
 from brian.hears import *
 
 x = Sound(randn(100,2), rate=100*Hz)
-y = Sound(0.1*randn(200,3), rate=100*Hz)
+y = Sound(0.1*randn(200,2), rate=100*Hz)
 
 x = x+y
+x = x.shift(500*ms)
+x = Sound.sequence((x, x))
+#x = x.repeat(2)
+#x.copy_from(y)
 
-plot(x.times, x[:, 0])
-plot(x.times, x[:, 1])
+#x = Sound.tone(500*Hz, 500*ms)
+#y = Sound.tone(5000*Hz, 500*ms)
+#x, y = y, x
+#z = Sound(array([x.flatten(), y.flatten()]).T, rate=x.rate)
+#z.play(True, True)
+#x=z
+
+#x = Sound([lambda t:sin(2*pi*t*50),
+#           lambda t:cos(2*pi*t*100)], rate=10000*Hz, duration=1*second)
+
+#x = Sound(randn(100,2), rate=100*Hz).ramped(duration=200*ms)
+#x = Sound.tone(500*Hz, 500*ms)
+
+for i in xrange(x.nchannels):
+    plot(x.times, x.channel(i))
 show()
+
+#x = Sound(randn(44100,2), rate=44100*Hz)
+#x.left.spectrogram()
+#show()

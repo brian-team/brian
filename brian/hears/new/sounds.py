@@ -16,8 +16,9 @@ except (ImportError, ValueError):
     have_scikits_samplerate = False
 from bufferable import Bufferable
 
-__all__ = ['Sound', 'play_stereo_sound', 'play_sound',
-           'whitenoise', 'tone', 'click', 'silent', 'sequence', 'mix_sounds','OnlineSound','OnlineWhiteNoise','OnlineWhiteNoiseBuffered','OnlineWhiteNoiseShifted']
+__all__ = ['Sound',
+           'whitenoise', 'tone', 'click', 'silent', 'sequence',
+           ]
 
 class BaseSound(Bufferable):
     '''
@@ -26,9 +27,14 @@ class BaseSound(Bufferable):
     pass
 
 class Sound(BaseSound, numpy.ndarray):
+    '''
+    TODO: documentation for Sound
+    '''
     duration = property(fget=lambda self:len(self) / self.rate)
     times = property(fget=lambda self:arange(len(self), dtype=float) / self.rate)
     nchannels = property(fget=lambda self:self.shape[1])
+    left = property(fget=lambda self:self.channel(0))
+    right = property(fget=lambda self:self.channel(1))
 
     @check_units(rate=Hz, duration=second)
     def __new__(cls, data, rate=None, duration=None):
@@ -41,7 +47,8 @@ class Sound(BaseSound, numpy.ndarray):
         elif isinstance(data, str):
             if duration is not None:
                 raise ValueError('Cannot specify duration when initialising Sound from file.')
-            rate, x = get_wav(data, rate)
+            x = Sound.load(data, rate=rate)
+            rate = x.rate
         elif callable(data):
             if rate is None:
                 raise ValueError('Must specify rate to initialise Sound with function.')
@@ -50,6 +57,10 @@ class Sound(BaseSound, numpy.ndarray):
             L = int(duration * rate)
             t = arange(L, dtype=float) / rate
             x = data(t)
+        elif isinstance(data, (list, tuple)):
+            channels = tuple(Sound(c, rate=rate, duration=duration) for c in data)
+            x = hstack(channels)
+            rate = channels[0].rate
         else:
             raise TypeError('Cannot initialise Sound with data of class ' + str(data.__class__))
         if len(x.shape)==1:
@@ -67,6 +78,9 @@ class Sound(BaseSound, numpy.ndarray):
             ufunc = context[0]
             args = context[1]
         return x
+
+    def channel(self, n):
+        return Sound(self[:, n], self.rate)
 
     def __add__(self, other):
         if isinstance(other, Sound):
@@ -106,30 +120,35 @@ class Sound(BaseSound, numpy.ndarray):
             padding = zeros((L - len(self), self.nchannels))
             return Sound(concatenate((self, padding)), rate=self.rate)
 
-    ### TODO: update remaining methods to use multiple channels
-
     @check_units(onset=second)
     def shift(self, onset):
         '''
         Returns the sound played at time onset.
         '''
-        _, x = mix_sounds(self.rate, (self, onset))
-        return Sound(x, rate=self.rate)
+        onset = int(onset*self.rate)
+        y = vstack((zeros((onset, self.nchannels)), self))
+        return Sound(y, rate=self.rate)
 
     def repeat(self, n):
         '''
         Repeats the sound n times
         '''
-        x = hstack((self,)*n)
+        x = vstack((self,)*n)
         return Sound(x, rate=self.rate)
 
+    ### TODO: test this - I haven't installed scikits.samplerate on windows
+    # it should work, according to the documentation 2D arrays are acceptable
+    # in the format we use fof sounds here
     @check_units(rate=Hz)
     def resample(self, rate, resample_type='sinc_best'):
         '''
         Returns a resampled version of the sound.
         '''
-        rate, x = resample_sound(self, self.rate, rate, resample_type=resample_type)
-        return Sound(x, rate=rate)
+        if not have_scikits_samplerate:
+            raise ImportError('Need scikits.samplerate package for resampling')
+        y = array(resample(self, float(rate / self.rate), resample_type),
+                  dtype=float64)
+        return Sound(y, rate=rate)
 
     def copy_from(self, other):
         '''
@@ -139,16 +158,25 @@ class Sound(BaseSound, numpy.ndarray):
             raise TypeError('Must copy from a Sound object.')
         if int(other.rate) != int(self.rate):
             other = other.resample(self.rate)
-        self[:min(len(other), len(self))] = other[:min(len(other), len(self))]
+        self[:min(len(other), len(self)), :] = other[:min(len(other), len(self)), :]
 
     def play(self, normalise=False, sleep=False):
         '''
         Plays the sound (normalised to avoid clipping if required).
         '''
+        if self.nchannels>2:
+            raise ValueError("Can only play sounds with 1 or 2 channels.")
+        pygame.mixer.quit()
+        pygame.mixer.init(int(self.rate), -16, self.nchannels)
         if normalise:
-            play_sound(self.rate, self / amax(abs(self)))
+            a = amax(abs(self))
         else:
-            play_sound(self.rate, self)
+            a = 1
+        x = array((2 ** 15 - 1) * clip(self / a, -1, 1), dtype=int16)
+        if self.nchannels==1:
+            x.shape = x.size
+        x = pygame.sndarray.make_sound(x)
+        x.play()
         if sleep:
             time.sleep(self.duration)
 
@@ -167,7 +195,10 @@ class Sound(BaseSound, numpy.ndarray):
         where pxx is a 2D array of powers, freqs is the corresponding frequences, bins
         are the time bins, and im is the image axis.
         '''
-        pxx, freqs, bins, im = specgram(self, Fs=self.rate, **kwds)
+        if self.nchannels>1:
+            raise ValueError('Can only plot spectrograms for mono sounds.')
+        x = self.flatten()
+        pxx, freqs, bins, im = specgram(x, Fs=self.rate, **kwds)
         if frequency_range is not None:
             I = logical_and(frequency_range[0] <= freqs, freqs <= frequency_range[1])
             I2 = where(I)[0]
@@ -202,6 +233,8 @@ class Sound(BaseSound, numpy.ndarray):
         where Z is a 1D array of powers, freqs is the corresponding frequencies,
         phase if the unwrapped phase of spectrum.
         '''
+        if self.nchannels>1:
+            raise ValueError('Can only plot spectrum for mono sounds.')
         sp = numpy.fft.fft(array(self))
         freqs = array(range(len(sp)), dtype=float64) / len(sp) * float64(self.rate)
         pxx = abs(sp) ** 2
@@ -237,47 +270,63 @@ class Sound(BaseSound, numpy.ndarray):
             show()
         return (Z, freqs, phase)
 
+    ### TODO: update to use multiple channels
     def intensity(self):
         '''
-        Returns intensity in dB SPL assuming array is in Pascals
+        Returns intensity in dB SPL assuming array is in Pascals        
         '''
         return 20.0 * log10(sqrt(mean(asarray(self) ** 2)) / 2e-5)
     
-    def setintensity(self,dB,type='rms'): #replace atintensity
+    ### TODO: update to use multiple channels
+    def setintensity(self, dB, type='rms'): #replace atintensity
         '''
         Set the intensity (in dB) of a given signal
         the dB scale can be with respect to the rms value (default) or peak value
         by choosing type='rms' or type='peak'
         note: the signal should be long enough to measure the rms value
         '''
+        # TODO: what does the comment "replace atintensity mean?" - does it mean
+        # that there is a problem with the atintensity function? If so, let's
+        # replace it with this one.
+        # TODO: grammatical point: a method named setintensity should change the
+        # values of this sound, not return a new one, which is why I called the
+        # original one atintensity.
         if type=='rms':
-            rms_value=sqrt(mean((asarray(self)-mean(asarray(self)))**2))
-            rms_dB=20.0 * log10(rms_value / 2e-5)
-            gain=10**((dB-rms_dB)/20)
+            rms_value = sqrt(mean((asarray(self)-mean(asarray(self)))**2))
+            rms_dB = 20.0*log10(rms_value/2e-5)
+            gain = 10**((dB-rms_dB)/20.)
         elif type=='peak':
+            # TODO: do you want to normalise here, or return a normalised
+            # version of this? At the moment, this does nothing (see comments
+            # for normalize function below).
             self.normalize()
-            gain=28e-6*10**(dB/20)
+            gain = 28e-6*10**(dB/20.)
         
         return self*gain
             
     def normalize(self):
-        factor=1.01*max(max(asarray(self)),abs(min(asarray(self))))
+        # TODO: what should this function do? As it is, it should be called
+        # something like normalized because it doesn't change the sound itself,
+        # it just returns a normalised version of it. So either the name
+        # should change or the behaviour. We should probably have both. And
+        # let's have both US and UK spellings too (normalise/normalize).
+        factor = max(max(asarray(self)),abs(min(asarray(self))))
         return self/factor
         
-
     def atintensity(self, db):
         '''
         Returns sound in Pascals at various intensities (in RMS dB SPL)
         '''
         return self.amplified(db - self.intensity())
 
+    # TODO: rename/remove?
     def amplified(self, db):
         '''
         Returns sound amplified by a given amount in dB pressure.
         '''
         return self * 10.0 ** (db / 20.0)
 
-    def ramp(self, when='both', duration=10 * ms, func=None, inplace=False):
+    def ramp(self, when='both', duration=10*ms, func=None, inplace=True):
         '''
         Adds a ramp on/off to the sound
         
@@ -293,36 +342,43 @@ class Sound(BaseSound, numpy.ndarray):
         when = when.lower().strip()
         if func is None: func = lambda t:sin(pi * t / 2) ** 2
         sz = int(duration * self.rate)
-        multiplier = func(linspace(0.0, 1.0, sz))
+        multiplier = func(reshape(linspace(0.0, 1.0, sz), (sz, 1)))
         if inplace:
             target = self
         else:
             target = Sound(copy(self), self.rate)
         if when == 'on' or when == 'both':
-            target[:sz] *= multiplier
+            target[:sz, :] *= multiplier
         if when == 'off' or when == 'both':
-            target[-sz:] *= multiplier[::-1]
+            target[-sz:, :] *= multiplier[::-1]
         return target
+    
+    def ramped(self, when='both', duration=10*ms, func=None, inplace=False):
+        return self.ramp(when=when, duration=duration, func=func, inplace=inplace)
 
     @staticmethod
-    def tone(freq, duration, rate=44.1 * kHz,dB=None,dBtype='rms'):
+    def tone(freq, duration, rate=44.1*kHz, dB=None, dBtype='rms'):
+        # TODO: do we want to include the dB and dBtype options here? I would
+        # tend to say no because you can set the intensity yourself elsewhere,
+        # and this duplicates the functionality?
         '''
         Returns a pure tone at the given frequency for the given duration
         if dB not given, pure tone is between -1 and 1
         '''
-        rate, x = make_puretone(freq, duration, rate)
+        x = sin(2.0*pi*freq*arange(0*ms, duration, 1/sound_rate))
         if dB is not None: 
-            return Sound(x, rate).setintensity(dB,type=dBtype)
+            return Sound(x, rate).setintensity(dB, type=dBtype)
         else:
             return Sound(x, rate)
 
     @staticmethod
-    def whitenoise(duration, rate=44.1 * kHz,dB=None,dBtype='rms'):
+    def whitenoise(duration, rate=44.1*kHz, dB=None, dBtype='rms'):
+        # TODO: same comment as for tone about dB/dBtype
         '''
         Returns a white noise for the given duration.
         if dB not given, white noise with a variance of one
         '''
-        rate, x = make_whitenoise(duration, rate)
+        x = randn(int(rate*duration))
         
         if dB is not None: 
             return Sound(x, rate).setintensity(dB,type=dBtype)
@@ -330,36 +386,67 @@ class Sound(BaseSound, numpy.ndarray):
             return Sound(x, rate)
 
     @staticmethod
-    def click(duration, amplitude=1, rate=44.1 * kHz,dB=None):
+    def click(duration, amplitude=1, rate=44.1*kHz, dB=None):
+        # TODO: similar comment to tone/whitenoise
         '''
         Returns a click with given parameters
         if dB not given, click of amplitude given by the parameter amplitude
         note that the dB can only be peak dB SPL
         '''
         if dB is not None:
-            amplitude=28e-6*10**(dB/20)
-            
-        rate, x = make_click(duration, amplitude, rate)
+            amplitude = 28e-6*10**(dB/20.)
+        
+        x = amplitude*ones(int(duration*rate))
         return Sound(x, rate)
 
     @staticmethod
-    def silent(duration, rate=44.1 * kHz):
+    def silent(duration, rate=44.1*kHz):
         '''
         Returns a silent, zero sound for the given duration.
         '''
-        x = numpy.zeros(int(duration * rate))
+        x = numpy.zeros(int(duration*rate))
         return Sound(x, rate)
 
     @staticmethod
-    def sequence(sounds, rate):
+    def sequence(sounds, rate=None):
         '''
         Returns the sequence of sounds in the list sounds joined together
         '''
-        sounds = tuple(s.resample(rate) for s in sounds)
-        x = hstack(sounds)
+        if rate is None:
+            rate = max(s.rate for s in sounds)
+            rates = unique([int(s.rate) for s in sounds])
+            if len(rates)>1:
+                sounds = tuple(s.resample(rate) for s in sounds)
+        x = vstack(sounds)
         return Sound(x, rate)
 
-    def save(self, filename, normalise=False, sampwidth=1, stereo=None):
+    ### TODO: update to use multiple channels
+    @staticmethod
+    def load(filename, rate=rate):
+        '''
+        Currently, 8 and 16 bit mono sounds are handled correctly.
+        Specify rate to resample to a given rate.
+        '''
+        forced_rate = rate
+        f = wave.open(filename, 'r')
+        sampwidth = f.getsampwidth()
+        typecode = {2:'h', 1:'B'}[sampwidth]
+        scale = {2:2 ** 14, 1:2 ** 7}[sampwidth]
+        meanval = {2:0, 1:1}[sampwidth]
+        rate = f.getframerate()
+        x = f.readframes(f.getnframes())
+        x = pyarray.array(typecode, x)
+        x = array(x, dtype=float)
+        x = x / scale
+        x = x - meanval
+        f.close()
+        rate = rate * Hz
+        if forced_rate is not None:
+            rate, x = resample_sound(x, rate, forced_rate)
+        return (rate, x)
+
+    ### TODO: update to use multiple channels, without the stereo keyword
+    def save(self, filename, normalise=False, sampwidth=2, stereo=None):
         '''
         Save the sound as a WAV file.
         
@@ -409,188 +496,9 @@ class Sound(BaseSound, numpy.ndarray):
     def __reduce__(self):
         return (_load_Sound_from_pickle, (asarray(self), float(self.rate)))
 
-class OnlineSound(BaseSound):
-    def __init__(self): 
-        pass
-        
-    def update(self):
-        pass
-    
-class OnlineWhiteNoise(OnlineSound):
-    '''
-    Noise generator which produces one sample at a time online
-    input parameters are the mean mu and the variance sigma
-    default mu=0, sigma=1
-    '''
-    def __init__(self,mu=None,sigma=None,tomux=1): 
-        if mu==None:
-            self.mu=0
-        if sigma==None:
-            self.sigma=1
-        self.tomux=tomux
-
-        
-    def update(self):
-        return (self.mu+sqrt(self.sigma)*randn(1))*self.tomux
-
-class OnlineWhiteNoiseBuffered(OnlineSound):
-    def __init__(self,rate,mu,sigma,max_abs_itd): 
-        self.rate=rate
-        self.length_buffer=int(max_abs_itd * self.rate)
-        
-        self.mu=mu
-        self.sigma=sigma
-        self.buffer=[0]*(2*self.length_buffer+1)
-        
-    def update(self):
-        self.buffer.pop()
-        self.buffer.insert(0,self.mu+self.sigma*randn(1))
-        return self.buffer[self.length_buffer]
-    
-class OnlineWhiteNoiseShifted(OnlineSound):
-    def __init__(self,rate,online_white_noise_buffered,shift=lambda:randn(1)*ms,time_interval=-1*ms): 
-        #self.shift_applied=[] 
-        self.rate=rate
-        self.interval_in_sample= int(time_interval *self.rate)
-        #print self.interval_in_sample 
-        self.count=0
-        self.shift=shift
-        self.length_buffer=online_white_noise_buffered.length_buffer
-        self.shift_in_sample=int(shift()* self.rate)
-        if abs(self.shift_in_sample) > self.length_buffer:
-            self.shift_in_sample=sign(self.shift_in_sample)*self.length_buffer
-        self.ITDused=[]
-        self.ITDused.append(self.shift_in_sample/self.rate)
-        self.reference=online_white_noise_buffered
-        
-        
-    def update(self):
-        if self.count ==self.interval_in_sample:
-            self.shift_in_sample=int(self.shift()* self.rate)
-            if abs(self.shift_in_sample) > self.length_buffer:
-                self.shift_in_sample=sign(self.shift_in_sample)*self.length_buffer
-            self.ITDused.append(self.shift_in_sample/self.rate)
-            #print self.shift()
-            self.count=0
-            
-        self.count=self.count+1   
-#        print self.length_buffer
-#        print self.shift_in_sample
-#        print self.length_buffer+1+self.shift_in_sample
-        return self.reference.buffer[self.length_buffer+self.shift_in_sample]
-
-
 
 def _load_Sound_from_pickle(arr, rate):
-    return Sound(arr, rate=rate * Hz)
-
-
-def get_wav(filename, forced_rate=None):
-    '''
-    get_wav(filename) returns (rate, data)
-    
-    Data is a numpy float array with values between -1 and 1.
-    Currently, 8 and 16 bit mono sounds are handled correctly.
-    Specify forced_rate to resample to a given rate (in a very crude
-    way).
-    '''
-    f = wave.open(filename, 'r')
-    sampwidth = f.getsampwidth()
-    typecode = {2:'h', 1:'B'}[sampwidth]
-    scale = {2:2 ** 14, 1:2 ** 7}[sampwidth]
-    meanval = {2:0, 1:1}[sampwidth]
-    rate = f.getframerate()
-    x = f.readframes(f.getnframes())
-    x = pyarray.array(typecode, x)
-    x = array(x, dtype=float)
-    x = x / scale
-    x = x - meanval
-    f.close()
-    rate = rate * Hz
-    if forced_rate is not None:
-        rate, x = resample_sound(x, rate, forced_rate)
-    return (rate, x)
-
-@check_units(duration=second, sound_rate=Hz)
-def make_whitenoise(duration, sound_rate=44100 * Hz):
-    '''
-    Make a white noise signal with unit variance, returns (rate, x)
-    '''
-    sound_x = randn(int(sound_rate * duration))
-    return (sound_rate, sound_x)
-
-@check_units(tonefreq=Hz, duration=second, sound_rate=Hz)
-def make_puretone(tonefreq, duration, sound_rate=44100 * Hz):
-    '''
-    Make a pure tone signal, returns (rate, x)
-    '''
-    sound_x = sin(2.0 * pi * tonefreq * arange(0 * ms, duration, 1 / sound_rate))
-    return (sound_rate, sound_x)
-
-@check_units(duration=second, sound_rate=Hz)
-def make_click(duration, amplitude=1, sound_rate=44100 * Hz):
-    '''
-    Make a click signal, returns (rate, x)
-    '''
-    sound_x = amplitude * ones(int(duration * sound_rate))
-    return (sound_rate, sound_x)
-
-@check_units(oldrate=Hz, newrate=Hz)
-def resample_sound(x, oldrate, newrate, resample_type='sinc_best'):
-    if not have_scikits_samplerate:
-        raise ImportError('Need scikits.samplerate package for resampling')
-    y = array(resample(x, float(newrate / oldrate), resample_type), dtype=float64)
-    return (newrate, y)
-
-@check_units(rate=Hz)
-def mix_sounds(rate, *sounds):
-    '''
-    Mixes sound sources
-    
-    All the sounds must have the same sampling rate, call as::
-    
-        rate, x = mix_sounds(rate,
-                    (sound1, offset1),
-                    (sound2, offset2),
-                    ...)
-    '''
-    duration = max(len(x) + offset * rate for x, offset in sounds)
-    y = zeros(int(duration) + 1)
-    for x, offset in sounds:
-        o = int(offset * rate)
-        if o < 0:
-            x = x[-o:]
-            o = 0
-        y[o:o + len(x)] += x
-    return (rate, y)
-
-@check_units(rate=Hz)
-def play_sound(rate, x):
-    if have_pygame:
-        pygame.mixer.quit()
-        pygame.mixer.init(int(rate), -16, 1)
-        # TODO: why does the sound crackle if I use 2**15-1 instead of 2**14-1???
-        y = array((2 ** 14 - 1) * clip(x, -1, 1), dtype=int16)
-        s = pygame.sndarray.make_sound(y)
-        s.play()
-    else:
-        warnings.warn('Cannot play sound, no pygame module.')
-
-def play_stereo_sound(sound_l, sound_r, sleep=False, normalise=True):
-    pygame.mixer.quit()
-    pygame.mixer.init(int(sound_l.rate), -16, 2)
-    if normalise:
-        a = max(amax(abs(sound_l)), amax(abs(sound_r)))
-    else:
-        a = 1
-    xl = array((2 ** 15 - 1) * clip(sound_l / a, -1, 1), dtype=int16)
-    xr = array((2 ** 15 - 1) * clip(sound_r / a, -1, 1), dtype=int16)
-    x = vstack((xl, xr)).T.copy()
-    x = pygame.sndarray.make_sound(x)
-    x.play()
-    if sleep:
-        time.sleep(sound_l.duration)
-
+    return Sound(arr, rate=rate*Hz)
 
 
 whitenoise = Sound.whitenoise
@@ -598,39 +506,3 @@ tone = Sound.tone
 click = Sound.click
 silent = Sound.silent
 sequence = Sound.sequence
-
-if __name__ == '__main__':
-    import time
-    x = tone(500 * Hz, 1 * second).atintensity(db=60.)
-    print amax(x)
-    print 20 * log10(sqrt(mean(x ** 2)) / 2e-5)
-    print x.intensity()
-    x.spectrum(frequency_range=[100, 2000], display=True)
-    #x.save('tone.wav', sampwidth=2)
-    #x.play()
-    #time.sleep(x.duration)
-
-#    x = Sound('../sounds/downloads/terminator.wav')
-#    y = Sound('../sounds/ens/Bassoon.A3.wav')
-#    z = x + y + 10*y.shift(1*second) + Sound.tone(500*Hz, 1*second) + 0.1*Sound.whitenoise(1.5*second).shift(1.5*second)
-#    x = x.shift(-1*second)
-#    x += 0.1*Sound.whitenoise(x.duration, x.rate)
-#    x = x.repeat(10)
-#    x.play()
-#    import time
-#    time.sleep(x.duration)
-
-#    from __builtin__ import sum
-#    z = sum(Sound.tone(20*Hz+10*kHz*rand(), 1*second*rand()).shift(10*second*rand()) for _ in range(10))
-
-#    z = Sound(lambda t:sin(2*pi*200*t), duration=1*second, rate=44.1*kHz)
-
-#    z.play(True)
-#    subplot(311)
-#    plot(z.times, z)
-#    axis(xmax=float(z.duration))
-#    subplot(312)
-#    z.spectrogram()
-#    subplot(313)
-#    z.spectrogram(frequency_range=(5*kHz,10*kHz))
-#    show()
