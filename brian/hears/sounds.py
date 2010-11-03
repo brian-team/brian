@@ -16,7 +16,8 @@ except (ImportError, ValueError):
     have_scikits_samplerate = False
 
 __all__ = ['Sound', 'play_stereo_sound', 'play_sound',
-           'whitenoise', 'tone', 'click', 'silent', 'sequence', 'mix_sounds','OnlineSound','OnlineWhiteNoise','OnlineWhiteNoiseBuffered','OnlineWhiteNoiseShifted']
+           'whitenoise', 'tone', 'click', 'silent', 'sequence', 'mix_sounds','OnlineSound','OnlineWhiteNoise',
+           'OnlineWhiteNoiseBuffered','OnlineWhiteNoiseShifted']
 
 
 class Sound(numpy.ndarray):
@@ -303,6 +304,20 @@ class Sound(numpy.ndarray):
             return Sound(x, rate).setintensity(dB,type=dBtype)
         else:
             return Sound(x, rate)
+        
+    @staticmethod
+    def hyp_sweep(start_freq,end_freq, duration, rate=44.1 * kHz,dB=None,dBtype='rms'):
+        
+        '''
+        Returns a pure tone at the given frequency for the given duration
+        if dB not given, pure tone is between -1 and 1
+        '''
+        pass
+#        rate, x = make_hyp_sweep(start_freq,end_freq, duration, rate)
+#        if dB is not None: 
+#            return Sound(x, rate).setintensity(dB,type=dBtype)
+#        else:
+#            return Sound(x, rate)
 
     @staticmethod
     def whitenoise(duration, rate=44.1 * kHz,dB=None,dBtype='rms'):
@@ -515,6 +530,20 @@ def make_puretone(tonefreq, duration, sound_rate=44100 * Hz):
     sound_x = sin(2.0 * pi * tonefreq * arange(0 * ms, duration, 1 / sound_rate))
     return (sound_rate, sound_x)
 
+@check_units(tonefreq=Hz, duration=second, sound_rate=Hz)
+def make_hyp_sweep(start_freq,end_freq, duration, sound_rate=44100 * Hz):
+    '''
+    Make a hyperbolic sweep, returns (rate, x)
+    '''
+    t=arange(0 * ms, duration, 1 / sound_rate)
+    #vector with the modulated frequencies (the frequency is hyperbolic modulated ie the
+    #period is linearly modulated)
+    ft=1./(1/f_start+t*(1/f_end-1/f_start)/duration);
+    sound_x = sin(2*pi*(duration/(1/f_end-1/f_start))*(log(1/f_start+t*(1/f_end-1/f_start)/duration)-log(1/f_start)))
+    return (sound_rate, sound_x)
+
+
+
 @check_units(duration=second, sound_rate=Hz)
 def make_click(duration, amplitude=1, sound_rate=44100 * Hz):
     '''
@@ -589,7 +618,8 @@ sequence = Sound.sequence
 
 if __name__ == '__main__':
     import time
-    x = tone(500 * Hz, 1 * second).atintensity(db=60.)
+    #x = tone(500 * Hz, 1 * second).atintensity(db=60.)
+    x = hyp_sweep(80*kHz,60*kHz, 2*ms, rate=200 * kHz)
     print amax(x)
     print 20 * log10(sqrt(mean(x ** 2)) / 2e-5)
     print x.intensity()
