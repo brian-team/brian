@@ -17,7 +17,7 @@ except (ImportError, ValueError):
 
 __all__ = ['Sound', 'play_stereo_sound', 'play_sound',
            'whitenoise', 'tone', 'click', 'silent', 'sequence', 'mix_sounds','OnlineSound','OnlineWhiteNoise',
-           'OnlineWhiteNoiseBuffered','OnlineWhiteNoiseShifted']
+           'OnlineWhiteNoiseBuffered','OnlineWhiteNoiseShifted','hyp_sweep']
 
 
 class Sound(numpy.ndarray):
@@ -312,12 +312,12 @@ class Sound(numpy.ndarray):
         Returns a pure tone at the given frequency for the given duration
         if dB not given, pure tone is between -1 and 1
         '''
-        pass
-#        rate, x = make_hyp_sweep(start_freq,end_freq, duration, rate)
-#        if dB is not None: 
-#            return Sound(x, rate).setintensity(dB,type=dBtype)
-#        else:
-#            return Sound(x, rate)
+#        pass
+        rate, x = make_hyp_sweep(start_freq,end_freq, duration, rate)
+        if dB is not None: 
+            return Sound(x, rate).setintensity(dB,type=dBtype)
+        else:
+            return Sound(x, rate)
 
     @staticmethod
     def whitenoise(duration, rate=44.1 * kHz,dB=None,dBtype='rms'):
@@ -358,7 +358,8 @@ class Sound(numpy.ndarray):
         '''
         Returns the sequence of sounds in the list sounds joined together
         '''
-        sounds = tuple(s.resample(rate) for s in sounds)
+        sounds = tuple(s for s in sounds)
+        #sounds = tuple(s.resample(rate) for s in sounds)
         x = hstack(sounds)
         return Sound(x, rate)
 
@@ -531,7 +532,7 @@ def make_puretone(tonefreq, duration, sound_rate=44100 * Hz):
     return (sound_rate, sound_x)
 
 @check_units(tonefreq=Hz, duration=second, sound_rate=Hz)
-def make_hyp_sweep(start_freq,end_freq, duration, sound_rate=44100 * Hz):
+def make_hyp_sweep(f_start,f_end, duration, sound_rate=44100 * Hz):
     '''
     Make a hyperbolic sweep, returns (rate, x)
     '''
@@ -615,6 +616,7 @@ tone = Sound.tone
 click = Sound.click
 silent = Sound.silent
 sequence = Sound.sequence
+hyp_sweep=Sound.hyp_sweep
 
 if __name__ == '__main__':
     import time
