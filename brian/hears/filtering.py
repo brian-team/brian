@@ -801,7 +801,9 @@ class GammachirpFilterbankFIR(ParallelLinearFilterbank):
             tmax=x[2]*(g-1)
             G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[1])**2)+x[4])+x[5]
             G=G*(t-x[1]+tmax>0)
-            G=G/max(G)/26
+#            gfft=max(abs(fft(G)))
+            G=G/sqrt(sum(G**2))/15
+            #G=G/max(G)/26
 #            plot(t,G)
 #            show()
 #            exit()
