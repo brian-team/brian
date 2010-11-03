@@ -2,7 +2,7 @@ import brian as _brian
 if _brian.get_global_preference('usenewbrianhears'):
     import warnings as _warnings
     _warnings.warn('Using new version of Brian hears')
-    from .new import *
+    from .newversion import *
 else:
     from .sounds import *
     from .erb import *
