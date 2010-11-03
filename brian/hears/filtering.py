@@ -185,25 +185,27 @@ class FunctionFilterbank(Filterbank):
     '''
     Filterbank that just applies a given function
     '''
-    def __init__(self, samplerate, N, func,func_init=None,*params):
+    def __init__(self, samplerate, N, func):
+#    def __init__(self, samplerate, N, func,func_init=None,*params):
         self.fs=samplerate
         self.N=N
         self.func=func
-        if params is not None:
-            if func_init is not None:
-                self.param_fun=func_init(self.fs,*params)
-            else:
-                self.param_fun=params
-        else:
-            if func_init is not None:
-                self.param_fun=func_init()
-            else:
-                self.param_fun=[]
+#        if params is not None:
+#            if func_init is not None:
+#                self.param_fun=func_init(self.fs,*params)
+#            else:
+#                self.param_fun=params
+#        else:
+#            if func_init is not None:
+#                self.param_fun=func_init()
+#            else:
+#                self.param_fun=[]
             
 
     def timestep(self, input):
         # self.output[:]=self.func(input)
-        return self.func(input,*self.param_fun)
+        return self.func(input)
+        #return self.func(input,*self.param_fun)
 
     def __len__(self):
         return self.N
@@ -1043,14 +1045,17 @@ class TimeVaryingIIRFilterbank2(Filterbank):
     '''
 
     @check_units(samplerate=Hz)
-    def __init__(self, samplerate,N,func_init,func,*params):
+    def __init__(self, samplerate,N,vary_filter_class):
+    #def __init__(self, samplerate,N,func_init,func,*params):
         self.fs=samplerate
-        self.params=params
-        self.func=func
+#        self.params=params
+        #self.func=func
+        self.vary_filter_class=vary_filter_class
         self.N=N
-        self.t=0*ms
+
         
-        self.b,self.a,self.param_fun=func_init(self.fs,*params)
+        #self.b,self.a,self.param_fun=func_init(self.fs,*params)
+        self.b,self.a=self.vary_filter_class.b,self.vary_filter_class.a
         
         self.zi=zeros((self.b.shape[0], self.b.shape[1]-1, self.b.shape[2]))
         
@@ -1058,7 +1063,9 @@ class TimeVaryingIIRFilterbank2(Filterbank):
         if isinstance(input, ndarray):
             input=input.flatten()
 
-        self.b,self.a=self.func(self.fs,self.N,*self.param_fun)
+#        self.b,self.a=self.func(self.fs,self.N,*self.param_fun)
+        self.vary_filter_class()
+        self.b,self.a=self.vary_filter_class.b,self.vary_filter_class.a
         #print 'b',self.b, self.a,'b'
         return parallel_lfilter_step(self.b, self.a, input, self.zi)
 
