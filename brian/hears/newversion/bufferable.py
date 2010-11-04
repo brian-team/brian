@@ -8,7 +8,7 @@ class Bufferable(object):
     
     Defines a buffering interface.
     '''
-    def buffer_fetch(self, samples=None, duration=None):
+    def buffer_fetch(self, samples):
         raise NotImplementedError
     
     def buffer_init(self):

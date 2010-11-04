@@ -3,11 +3,15 @@ set_global_preferences(usenewbrianhears=True)
 from brian.hears import *
 
 x = Sound(randn(100,2), rate=100*Hz)
-y = Sound(0.1*randn(200,2), rate=100*Hz)
 
-x = x+y
-x = x.shift(500*ms)
-x = Sound.sequence((x, x))
+print x.buffer_fetch(10)
+
+#y = Sound(0.1*randn(200,2), rate=100*Hz)
+#
+#x = x+y
+#x = x.shift(500*ms)
+#x = Sound.sequence((x, x))
+#print x.intensity('peak')
 #x = x.repeat(2)
 #x.copy_from(y)
 
@@ -24,9 +28,9 @@ x = Sound.sequence((x, x))
 #x = Sound(randn(100,2), rate=100*Hz).ramped(duration=200*ms)
 #x = Sound.tone(500*Hz, 500*ms)
 
-for i in xrange(x.nchannels):
-    plot(x.times, x.channel(i))
-show()
+#for i in xrange(x.nchannels):
+#    plot(x.times, x.channel(i))
+#show()
 
 #x = Sound(randn(44100,2), rate=44100*Hz)
 #x.left.spectrogram()

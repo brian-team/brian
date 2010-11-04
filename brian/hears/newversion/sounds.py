@@ -67,6 +67,7 @@ class Sound(BaseSound, numpy.ndarray):
             x.shape = (len(x), 1)
         x = x.view(cls)
         x.rate = rate
+        x.buffer_init()
         return x
 
     def __array_wrap__(self, obj, context=None):
@@ -78,6 +79,16 @@ class Sound(BaseSound, numpy.ndarray):
             ufunc = context[0]
             args = context[1]
         return x
+    
+    def buffer_init(self):
+        self.buffer_pointer = 0
+        
+    def buffer_fetch(self, samples):
+        X = asarray(self)[self.buffer_pointer:self.buffer_pointer+samples, :]
+        if X.shape[0]<samples:
+            X = vstack((X, zeros((samples-X.shape[0], X.shape[1]))))
+        self.buffer_pointer += samples
+        return X
 
     def channel(self, n):
         return Sound(self[:, n], self.rate)
@@ -270,12 +281,33 @@ class Sound(BaseSound, numpy.ndarray):
             show()
         return (Z, freqs, phase)
 
-    ### TODO: update to use multiple channels
-    def intensity(self):
+    def intensities(self, type='rms'):
         '''
-        Returns intensity in dB SPL assuming array is in Pascals        
+        Returns intensity in dB SPL assuming array is in Pascals
+        Returns an array of intensities for each channel, even if there is
+        only one channel.
         '''
-        return 20.0 * log10(sqrt(mean(asarray(self) ** 2)) / 2e-5)
+        if type=='rms':
+            return 20.0*log10(sqrt(mean(asarray(self)**2, axis=0))/2e-5)
+        elif type=='peak':
+            # TODO: where does this number come from? Maybe we should make it
+            # a named constant? Probably for 2e-5 above too (can't remember
+            # where that comes from, but I'm sure it's very sensible).
+            return 28e-6*10**(amax(asarray(self), axis=0)/20.)
+        else:
+            raise ValueError('Intensity type must be rms or peak')
+
+    def intensity(self, type='rms'):
+        '''
+        Returns intensity in dB SPL assuming array is in Pascals
+        In the case of multi-channel sounds, returns a tuple of intensities
+        for each channel, otherwise returns a float.
+        '''
+        I = self.intensities(type=type)
+        if self.nchannels==1:
+            return I[0]
+        else:
+            return tuple(I) 
     
     ### TODO: update to use multiple channels
     def setintensity(self, dB, type='rms'): #replace atintensity
@@ -421,6 +453,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, rate)
 
     ### TODO: update to use multiple channels
+    # TODO: remove the rate keyword from load? redundant.
     @staticmethod
     def load(filename, rate=rate):
         '''
