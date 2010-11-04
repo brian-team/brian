@@ -835,7 +835,7 @@ class StateMonitor(NetworkOperation, Monitor):
         dt = self.clock.dt
         values = self.values
         for i, neuron in enumerate(self.get_record_indices()):
-            values[array(spikemonitor[neuron]/dt, dtype=int), i] = value
+            values[i,array(spikemonitor[neuron]/dt, dtype=int)] = value
         #self._values = values # or converted back to a list?
 
 
