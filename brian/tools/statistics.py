@@ -55,7 +55,7 @@ def correlogram(T1, T2, width=20 * ms, bin=1 * ms, T=None):
         while j < len(T2) and T2[j] < t + width:
             j += 1
         l.extend(T2[i:j] - t)
-    H, _ = histogram(l, bins=arange(2 * n + 1) * bin - n * bin)
+    H, _ = histogram(l, bins=arange(2 * n + 1) * bin - n * bin, new = True)
 
     # Divide by time to get rate
     if T is None:

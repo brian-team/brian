@@ -43,6 +43,7 @@ Me = PopulationSpikeCounter(Pe)
 Mi = PopulationSpikeCounter(Pi)
 # A population rate monitor
 #M = PopulationRateMonitor(P)
+M=StateMonitor(P,True)
 
 print "Network construction time:", time.time() - start_time, "seconds"
 print len(P), "neurons in the network"
