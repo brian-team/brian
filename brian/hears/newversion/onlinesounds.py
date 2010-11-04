@@ -1,3 +1,5 @@
+# TODO: update all of this with the new interface/buffering mechanism
+
 from brian import *
 from numpy import *
 import numpy

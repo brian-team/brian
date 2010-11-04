@@ -2,9 +2,12 @@ from brian import *
 set_global_preferences(usenewbrianhears=True)
 from brian.hears import *
 
-x = Sound(randn(100,2), rate=100*Hz)
+x = Sound(randn(15,2), rate=100*Hz)
 
-print x.buffer_fetch(10)
+print x
+print x.buffer_fetch(0, 10)
+print x.buffer_fetch(5, 15)
+print x.buffer_fetch(10, 20)
 
 #y = Sound(0.1*randn(200,2), rate=100*Hz)
 #

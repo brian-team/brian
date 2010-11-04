@@ -30,6 +30,13 @@ data sample by sample (or in buffered chunks), but the real buffering is handled
 internally by the class (possibly in larger chunks than requested). Maybe we
 can just assume that classes handle this by themselves though?
 
+Issue with buffering: if two filterbanks have the same source, they should both
+request the same buffer. We could do this by introducing a BufferCache or
+something like that, but maybe it would be better to have a buffer mechanism
+that does buffer_fetch(start, end) rather than buffer_fetch(samples)? This
+method could raise an error if the start/end were outside the range which were
+possible to return.
+
 OnlineSound
 -----------
 
