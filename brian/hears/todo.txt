@@ -17,3 +17,7 @@ For FilterBank monitors:
 * unit(varname) # -> 1
 * state(varname) -> vector of values
 (varname = "output")
+
+
+
+It would be nice to plot 2d cochleaogram
