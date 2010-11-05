@@ -1,9 +1,9 @@
 
 '''
+http://www.freesound.org
 Implementation of the dual resonance nonlinear (DRNL) filter.
-The parameters are those fitted for guinea-pigs
-from Sumner et al., A nonlinear filter-bank model of the guinea-pig cochlear nerve:
-Rate responses, JASA 2003
+The parameters are those fitted for human
+from Lopez-Paveda, E. and Meddis, R.., A human nonlinear cochlear filterbank, JASA 2001
 
 The entire pathway consists of the sum of a linear and a nonlinear pathway
 
@@ -25,21 +25,33 @@ from brian.hears import filtering
 filtering.use_gpu = False
 #set_global_preferences(useweave=True)
 
-samplerate=100*kHz
-defaultclock.dt = 1/samplerate
+samplerate=40*kHz
+
 simulation_duration=50*ms
 dBlevel=50  # dB level in rms dB SPL
-sound = whitenoise(simulation_duration,samplerate,dB=dBlevel).ramp()
+
+samplerate,sound=get_wav('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
+sound=Sound(sound,samplerate)
+#sound.atintensity(dBlevel)
+print 'fs=',samplerate,'duration=',len(sound)/samplerate
+simulation_duration=len(sound)/samplerate
+defaultclock.dt = 1/samplerate
+#plot(sound)
+#show()
+#exit()
+
+#sound = whitenoise(simulation_duration,samplerate,dB=dBlevel).ramp()
+
 nbr_center_frequencies=500
-center_frequencies=erbspace(100*Hz,1000*Hz, nbr_center_frequencies) 
+center_frequencies=erbspace(20*Hz,1000*Hz, nbr_center_frequencies) 
 
 #### middle ear processing ####
 f_cut_off1=25*kHz/ ( ( 10**(0.1*10)-1)**(1.0/(2.0*2))) #Find the butterworth natural frequency W0 from the lower and higher cutt off 
 f_cut_off2=30*kHz/ ( ( 10**(0.1*10)-1)**(1.0/(2.0*2)))
 lp_l1=ButterworthFilterbank(samplerate, 1, 2,f_cut_off1, btype='low')
 lp_l2=ButterworthFilterbank(samplerate, 1, 3,f_cut_off2, btype='low')
-middle_ear=FilterbankChain([lp_l1,lp_l2])
-
+#middle_ear=FilterbankChain([lp_l1,lp_l2])
+middle_ear=DoNothingFilterbank(samplerate, 1)
 
 #### conversion from pressure (Pascal) in stapes velocity (in m/s)
 stape_scale=0.00014
@@ -51,13 +63,13 @@ stapes_conv=FunctionFilterbank(samplerate, 1, stapes_fun)
 #### Linear Pathway ####
 
 #linear gain
-g=10**(5.68-0.97*log10(center_frequencies))
+g=10**(4.20405-0.47909*log10(center_frequencies))
 func_gain=lambda x:g*x
 gain=FunctionFilterbank(samplerate, nbr_center_frequencies, func_gain)
 
 #bandpass filter (second order  gammatone filter)
-center_frequencies_linear=10**(0.339+0.895*log10(center_frequencies))
-bandwidth_linear=10**(1.3+0.53*log10(center_frequencies))
+center_frequencies_linear=10**(-0.06762+1.01679*log10(center_frequencies))
+bandwidth_linear=10**(0.03728+0.78563*log10(center_frequencies))
 order_linear=2
 bandpass_linear =MeddisGammatoneFilterbank(samplerate, center_frequencies_linear, order_linear, bandwidth_linear)
 
@@ -74,15 +86,15 @@ linear_path=FilterbankChain([gain,bandpass_linear,lowpass_linear])
 #### Nonlinear Pathway ####
 
 #bandpass filter (third order gammatone filters)
-center_frequencies_nonlinear=center_frequencies
-bandwidth_nonlinear=10**(0.8+0.58*log10(center_frequencies))
+center_frequencies_nonlinear=10**(-0.05252+1.0165*log10(center_frequencies))
+bandwidth_nonlinear=10**(-0.03193+0.77426*log10(center_frequencies))
 order_nonlinear=3
 bandpass_nonlinear1=MeddisGammatoneFilterbank(samplerate, center_frequencies_nonlinear, order_nonlinear, bandwidth_nonlinear)
 
 #compression (linear at low level, compress at high level)
-a=10**(1.87+0.45*log10(center_frequencies))  #linear gain
-b=10**(-5.65+0.875*log10(center_frequencies))  
-v=0.1  #compression exponent
+a=10**(1.40298+0.81916*log10(center_frequencies))  #linear gain
+b=10**(1.61912-0.81867*log10(center_frequencies))  
+v=0.25  #compression exponent
 func_compression=lambda x:sign(x)*minimum(a*abs(x),b*abs(x)**v)
 compression=FunctionFilterbank(samplerate, nbr_center_frequencies, func_compression)
 
@@ -118,10 +130,13 @@ print 'the simulation took %f sec to run' %(time()-t1)
 time_axis=dnrl_monitor.times
 
 figure()
-for ifrequency in range((nbr_center_frequencies)):
-    subplot(nbr_center_frequencies,1,ifrequency+1)
-    plot(time_axis*1000,dnrl_monitor [ifrequency])
-    xlabel('(ms)')
+
+imshow(flipud(dnrl_monitor.getvalues()),aspect='auto')
+
+#for ifrequency in range((nbr_center_frequencies)):
+#    subplot(nbr_center_frequencies,1,ifrequency+1)
+#    plot(time_axis*1000,dnrl_monitor [ifrequency])
+#    xlabel('(ms)')
     
 show()
 

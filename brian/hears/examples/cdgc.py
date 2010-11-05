@@ -1,21 +1,4 @@
 
-'''
-Implementation of the dual resonance nonlinear (DRNL) filter.
-The parameters are those fitted for guinea-pigs
-from Sumner et al., A nonlinear filter-bank model of the guinea-pig cochlear nerve:
-Rate responses, JASA 2003
-
-The entire pathway consists of the sum of a linear and a nonlinear pathway
-
-The linear path consists of a bandpass function (second order gammatone), a low pass function,
-and a gain/attenuation factor, g, in a cascade
-
-The nonlinear path is  a cascade consisting of a bandpass function, a
-compression function, a second bandpass function, and a low
-pass function, in that order.
-
-'''
-
 from brian import *
 from time import  time
 
@@ -31,35 +14,24 @@ simulation_duration=50*ms
 dBlevel=50  # dB level in rms dB SPL
 sound = whitenoise(simulation_duration,samplerate,dB=dBlevel).ramp()
 nbr_cf=500
-center_frequencies=erbspace(100*Hz,1000*Hz, nbr_cf) 
+cf=erbspace(100*Hz,1000*Hz, nbr_cf) 
+order=4
+c1=-2.96
+b1=1.81
+c2=2.2
+b2=2.17
 
-#### middle ear processing ####
-f_cut_off1=25*kHz/ ( ( 10**(0.1*10)-1)**(1.0/(2.0*2))) #Find the butterworth natural frequency W0 from the lower and higher cutt off 
-f_cut_off2=30*kHz/ ( ( 10**(0.1*10)-1)**(1.0/(2.0*2)))
-lp_l1=ButterworthFilterbank(samplerate, 1, 2,f_cut_off1, btype='low')
-lp_l2=ButterworthFilterbank(samplerate, 1, 3,f_cut_off2, btype='low')
-middle_ear=FilterbankChain([lp_l1,lp_l2])
+ERBrate= 21.4*log10(4.37*cf/1000+1)
+ERBwidth= 24.7*(4.37*cf/1000 + 1)
 
-
-#### conversion from pressure (Pascal) in stapes velocity (in m/s)
-stape_scale=0.00014
-stape_scale=1./0.00014
-stapes_fun=lambda x:x*stape_scale
-stapes_conv=FunctionFilterbank(samplerate, 1, stapes_fun)
+fp1 = cf + c1*ERBwidth*b1/order
 
 
 #### Control Path ####
 
 #bandpass filter (second order  gammatone filter)
-cf_pgc_control=10**(0.339+0.895*log10(center_frequencies))
-glide_slope_control
-time_cst_control
+pGc= GammachirpFilterbankIIR(samplerate, fr, c=c1,b=b1)
 
-bandpass_control= GammachirpFilterbankFIR(samplerate,cf_pgc_control,glide_slope_control,time_cst_control)
-
-# level measurement site 1
-func_level1=lambda x:g*x
-level1=FunctionFilterbank(samplerate, nbr_center_frequencies, func_level1)
 
 #low pass filter(cascade of 4 second order lowpass butterworth filters)
 cutoff_frequencies_control=cf_pgc_control
@@ -67,25 +39,28 @@ order_lowpass_linear=2
 lp_l=ButterworthFilterbank(samplerate, nbr_cf, order_lowpass_linear, cutoff_frequencies_linear, btype='low')
 lowpass_linear=CascadeFilterbank(lp_l,4)
 
-# level measurement site 2
-func_level2=lambda x:g*x
-level2=FunctionFilterbank(samplerate, nbr_center_frequencies, func_level2)
-
 #signal pathway
+class FilterCoeffUpdate:
+    def __init__(self, fs,nbr_channel,s1,s2,):
+  
+    def __call__(self):
+
+
+
 signal_path=FilterbankChain([bandpass_linear,lowpass_linear])
 
 
 #### Signal Path ####
 
 #bandpass filter (third order gammatone filters)
-cf_pgc_signal=10**(0.339+0.895*log10(center_frequencies))
+cf_pgc_signal=10**(0.339+0.895*log10(cf))
 glide_slope_signal
 time_cst_signal
 
 bandpass_signal= GammachirpFilterbankFIR(samplerate,cf_pgc_signal,glide_slope_signal,time_cst_signal)
 
 #high pass filter
-cutoff_frequencies_nonlinear=center_frequencies_nonlinear
+cutoff_frequencies_nonlinear=cf_nonlinear
 order_highpass_nonlinear=2
 def level_dep_hp_filter(level1,level2):
     pass
