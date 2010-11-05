@@ -128,11 +128,12 @@ import sys
 # decorators, but it has the unfortunate side effect of messing up the tracebacks
 # because it uses eval, so we only use it when we want to generate documentation,
 # i.e. if 'sphinx' or 'docutils' or 'epydoc' are loaded.
-try:
-    import decorator
-    use_decorator = 'sphinx' in sys.modules or 'docutils' in sys.modules or 'epydoc' in sys.modules
-except:
-    use_decorator = False
+# TODO: this has stopped working anyway, so it's now removed
+#try:
+#    import decorator
+#    use_decorator = 'sphinx' in sys.modules or 'docutils' in sys.modules or 'epydoc' in sys.modules
+#except:
+#    use_decorator = False
 
 # SI dimensions (see table at end of file) and various descriptions,
 # each description maps to an index i, and the power of each dimension
@@ -1439,12 +1440,12 @@ def check_units(**au):
         return new_f
     return do_check_units
 
-# Note: do not normally call this, see note on importing of decorator module at the top of this module
-if use_decorator:
-    old_check_units = check_units
-    def check_units(**au):
-        return lambda f : decorator.new_wrapper(old_check_units(**au)(f), f)
-    check_units.__doc__ = old_check_units.__doc__
+## Note: do not normally call this, see note on importing of decorator module at the top of this module
+#if use_decorator:
+#    old_check_units = check_units
+#    def check_units(**au):
+#        return lambda f : decorator.new_wrapper(old_check_units(**au)(f), f)
+#    check_units.__doc__ = old_check_units.__doc__
 
 def _check_nounits(**au):
     """Don't bother checking units decorator
