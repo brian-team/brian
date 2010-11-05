@@ -550,6 +550,7 @@ class DoNothingFilterbank(ParallelLinearFilterbank):
     '''
     @check_units(fs=Hz)
     def __init__(self, fs, cf):
+        cf=atleast_1d(cf)
         self.N = len(cf)
         filt_a=zeros((self.N ,2,1))
         filt_b=zeros((self.N ,2,1))
