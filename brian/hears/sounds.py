@@ -17,7 +17,7 @@ except (ImportError, ValueError):
 
 __all__ = ['Sound', 'play_stereo_sound', 'play_sound',
            'whitenoise', 'tone', 'click', 'silent', 'sequence', 'mix_sounds','OnlineSound','OnlineWhiteNoise',
-           'OnlineWhiteNoiseBuffered','OnlineWhiteNoiseShifted','hyp_sweep']
+           'OnlineWhiteNoiseBuffered','OnlineWhiteNoiseShifted','hyp_sweep','get_wav']
 
 
 class Sound(numpy.ndarray):
