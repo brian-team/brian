@@ -208,6 +208,9 @@ class HRTFDatabase(object):
 ############# COORDINATE SYSTEMS ###############################################
 
 class Coordinates(ndarray):
+    '''
+    TODO: documentation
+    '''
     names = None
 
     def convert_to(self, target):
@@ -228,6 +231,9 @@ class Coordinates(ndarray):
 
 
 class CartesianCoordinates(Coordinates):
+    '''
+    TODO: documentation
+    '''
     names = ('x', 'y', 'z')
 
     def convert_to(self, target):
@@ -238,10 +244,16 @@ class CartesianCoordinates(Coordinates):
 
 
 class SphericalCoordinates(Coordinates):
+    '''
+    TODO: documentation
+    '''
     names = ('r', 'theta', 'phi')
 
 
 class AzimElev(Coordinates):
+    '''
+    TODO: documentation
+    '''
     names = ('azim', 'elev')
 
     def convert_to(self, target):
@@ -283,6 +295,9 @@ class AzimElev(Coordinates):
 
 
 class AzimElevDegrees(Coordinates):
+    '''
+    TODO: documentation
+    '''
     names = ('azim', 'elev')
 
     def convert_to(self, target):
@@ -306,6 +321,9 @@ class AzimElevDegrees(Coordinates):
 
 
 class AzimElevDistDegrees(Coordinates):
+    '''
+    TODO: documentation
+    '''
     names = ('azim', 'elev', 'dist')
 
     def convert_to(self, target):
@@ -338,6 +356,9 @@ class AzimElevDistDegrees(Coordinates):
 ############# IRCAM HRTF DATABASE ##############################################
 
 class IRCAM_HRTFSet(HRTFSet):
+    '''
+    TODO: documentation
+    '''
     def load(self, filename, samplerate=None, coordsys=None, name=None):
         # TODO: check samplerate
         if name is None:

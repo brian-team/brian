@@ -18,6 +18,7 @@ For example, to import electrophysiology models::
    randomprocesses
    electrophysiology
    modelfitting
+   hears
 
 ..    extendinglibrary
    

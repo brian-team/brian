@@ -93,7 +93,7 @@ class LinearFilterbank(Filterbank):
     '''
     Generalised linear filterbank
     
-    Initialisation arguments::
+    Initialisation arguments:
 
     ``source``
         The input to the filterbank, must have the same number of channels or

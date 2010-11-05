@@ -1,7 +1,0 @@
-This is makeindex, version 2.14 [02-Oct-2002] (kpathsea + Thai support).
-Scanning style file D:/Dan Goodman/Documents/Python/Brian/docs_sphinx/_latexbuild/python.ist......done (6 attributes redefined, 0 ignored).
-Scanning input file Brian.idx.....done (1056 entries accepted, 0 rejected).
-Sorting entries...........done (11554 comparisons).
-Generating output file Brian.ind....done (621 lines written, 0 warnings).
-Output written in Brian.ind.
-Transcript written in Brian.ilg.
