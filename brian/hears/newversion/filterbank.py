@@ -2,11 +2,8 @@ from brian import *
 from scipy import signal, weave, random
 from bufferable import Bufferable
 
-__all__ = ['Filterbank',
-           'ChainedFilterbank',
-           'FunctionFilterbank',
-           'MixFilterbank',
-           ]
+__all__ = ['Filterbank', 'FunctionFilterbank', 'SumFilterbank',
+           'DoNothingFilterbank']
 
 class Filterbank(Bufferable):
     '''
@@ -14,97 +11,152 @@ class Filterbank(Bufferable):
     
     This class is a base class not designed to be instantiated. A Filterbank
     object should define the interface of :class:`Bufferable`, as well as
-    defining a ``source`` attribute giving the source :class:`Bufferable`
-    object.
+    defining a ``source`` attribute. This is normally a :class:`Bufferable`
+    object, but could be an iterable of sources (for example, for filterbanks
+    that mix or add multiple inputs).
     
-    The class in addition defines some operator methods for adding, multiplying,
-    etc. of filterbanks.
+    The ``buffer_fetch_next(samples)`` method has a default implementation
+    that fetches the next input, and calls the ``buffer_apply(input)``
+    method on it, which can be overridden by a derived class. This is typically
+    the easiest way to implement a new filterbank. Filterbanks with multiple
+    sources will need to override this default implementation.
+    
+    There is a default ``__init__`` method that can be called by a derived class
+    that sets the ``source``, ``nchannels`` and ``samplerate`` from that of the
+    ``source`` object. For multiple sources, the default implementation will
+    check that each source has the same number of channels and samplerate and
+    will raise an error if not.
+    
+    There is a default ``buffer_init()`` method that calls ``buffer_init()`` on
+    the ``source`` (or list of sources).
+    
+    Also defines arithmetical operations for +, -, *, / where the other
+    operand can be a filterbank or scalar. TODO: add more arithmetical ops?
+    e.g. could have **, __abs__.
     '''
     
     source = NotImplemented
     
-    def __add__ (fb1, fb2):
-        return MixFilterbank(fb1, fb2)
-        
-    def __sub__ (fb1, fb2):
-        return MixFilterbank(fb1, fb2, array([1, -1]))  
-        
-    def __rmul__(fb, scalar):
-        func = lambda x: scalar*x
-        return FilterbankChain([fb, FunctionFilterbank(fb.fs, fb.N, func)])
+    def __init__(self, source):
+        if isinstance(source, Bufferable):
+            self.source = source
+            self.nchannels = source.nchannels
+            self.samplerate = source.samplerate
+        else:
+            self.nchannels = source[0].nchannels
+            self.samplerate = source[0].samplerate
+            for s in source:
+                if s.nchannels!=self.nchannels:
+                    raise ValueError('All sources must have the same number of channels.')
+                if int(s.samplerate)!=int(self.samplerate):
+                    raise ValueERror('All sources must have the same samplerate.')
+            self.source = source            
 
-### TODO: Update to work with new interface
-class ChainedFilterbank(Filterbank):
-    '''
-    Chains multiple filterbanks together
+    def buffer_init(self):
+        Bufferable.buffer_init(self)
+        if isinstance(self.source, Bufferable):
+            self.source.buffer_init()
+        else:
+            for s in self.source:
+                s.buffer_init()
+
+    def buffer_apply(self, input):
+        raise NotImplementedError
+
+    def buffer_fetch_next(self, samples):
+        start = self.cached_buffer_end
+        end = start+samples
+        input = self.source.buffer_fetch(start, end)
+        return self.buffer_apply(input)
     
-    Usage::
-    
-        ChainedFilterbank(filterbanks)
+    def __add__ (self, other):
+        if isinstance(other, Bufferable):
+            return SumFilterbank((self, other))
+        else:
+            func = lambda x: other+x
+            return FunctionFilterbank(self, func)
+    __radd__ = __add__
         
-    Where ``filterbanks`` is a list of filters. The signal is fed into the first in
-    this list, and then the output of that is fed into the next, and so on.
-    '''
-    def __init__(self, filterbanks):
-        self.filterbanks=filterbanks
-        self.fs=filterbanks[0].fs
-        self.N=filterbanks[0].N
+    def __sub__ (self, other):
+        if isinstance(other, Bufferable):
+            return SumFilterbank((self, other), (1, -1))
+        else:
+            func = lambda x: x-other
+            return FunctionFilterbank(self, func)
         
-    def timestep(self, input):
-        for fb in self.filterbanks:
-            input=fb.timestep(input)
-        return input
+    def __rsub__ (self, other):
+        # Note that __rsub__ should return other-self
+        if isinstance(other, Bufferable):
+            return SumFilterbank((self, other), (-1, 1))
+        else:
+            func = lambda x: other-x
+            return FunctionFilterbank(self, func)
 
-    def __len__(self):
-        return len(self.filterbanks[0])
+    def __mul__(self, other):
+        if isinstance(other, Bufferable):
+            func = lambda x, y: x*y
+            return FunctionFilterbank((self, other), func)
+        else:
+            func = lambda x: x*other
+            return FunctionFilterbank(self, func)        
+    __rmul__ = __mul__
 
-    samplerate=property(fget=lambda self:self.filterbanks[0].samplerate)
+    def __div__(self, other):
+        if isinstance(other, Bufferable):
+            func = lambda x, y: x/y
+            return FunctionFilterbank((self, other), func)
+        else:
+            func = lambda x: x/other
+            return FunctionFilterbank(self, func)        
 
-# TODO: update all of this with the new interface/buffering mechanism
+    def __rdiv__(self, other):
+        # Note __rdiv__ returns other/self
+        if isinstance(other, Bufferable):
+            func = lambda x, y: x/y
+            return FunctionFilterbank((other, self), func)
+        else:
+            func = lambda x: other/x
+            return FunctionFilterbank(self, func)        
+
+
 class FunctionFilterbank(Filterbank):
     '''
-    Filterbank that just applies a given function
+    Filterbank that just applies a given function. The function should take
+    as many arguments as there are sources.
     '''
-    def __init__(self, samplerate, N, func):
-        self.fs=samplerate
-        self.N=N
-        self.func=func
+    def __init__(self, source, func):
+        if isinstance(source, Bufferable):
+            source = (source,)
+        Filterbank.__init__(self, source)
+        self.func = func
 
-    def timestep(self, input):
-        # self.output[:]=self.func(input)
-        return self.func(input)
+    def buffer_fetch_next(self, samples):
+        start = self.cached_buffer_end
+        end = start+samples
+        inputs = tuple(s.buffer_fetch(start, end) for s in self.source)
+        return self.func(*inputs)
 
-    def __len__(self):
-        return self.N
 
-    samplerate=property(fget=lambda self:self.fs)
-
-# TODO: update all of this with the new interface/buffering mechanism
-class MixFilterbank(Filterbank):
+class SumFilterbank(FunctionFilterbank):
     '''  
-    Mix filterbanks together with a given weight vectors
+    Sum filterbanks together with a given weight vectors
     '''
+    def __init__(self, source, weights=None):
+        if weights is None:
+            weights = ones(len(source))
+        self.weights = weights
+        func = lambda *inputs: sum(input*w for input, w in zip(inputs, weights))
+        FunctionFilterbank.__init__(self, source, func)
+
+
+class DoNothingFilterbank(Filterbank):
+    '''
+    Filterbank that does nothing to its input.
     
-    def __init__(self, *args, **kwargs):#weights=None,
+    Useful for removing a set of filters without having to rewrite your code.
+    '''
+    def buffer_apply(self, input):
+        return input
 
-        if kwargs.get('weights')==None:
-            weights=ones((len(args)))
-        else:
-            weights=kwargs.get('weights')
-        self.filterbanks=args
-        #print  args
-        self.fs=args[0].fs
-        self.nbr_fb=len(self.filterbanks)
-        self.N=args[0].N
-        self.output=zeros(self.N)
-        self.weights=weights
-
-    def timestep(self, input):
-        self.output=zeros(self.N)
-        for ind, fb in zip(range((self.nbr_fb)), self.filterbanks):
-            self.output+=self.weights[ind]*fb.timestep(input)
-        return self.output
-
-    def __len__(self):
-        return self.N
-    samplerate=property(fget=lambda self:self.fs)
+#TODO: InterleaveChannels
+#TODO: SerialChannels 

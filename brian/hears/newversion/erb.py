@@ -10,12 +10,12 @@ def erbspace(low, high, N, earQ=9.26449, minBW=24.7, order=1):
     '''
     Returns the centre frequencies on an ERB scale.
     
-    low, high
+    ``low``, ``high``
         Lower and upper frequencies
-    N
+    ``N``
         Number of channels
-    earQ, minBW, order
-        Glasberg and Moore Parameters
+    ``earQ=9.26449``, ``minBW=24.7``, ``order=1``
+        Default Glasberg and Moore parameters.
     '''
     low = float(low)
     high = float(high)

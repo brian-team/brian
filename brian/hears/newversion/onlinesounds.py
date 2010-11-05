@@ -1,4 +1,5 @@
 # TODO: update all of this with the new interface/buffering mechanism
+# TODO: decide on a good interface for online sounds, that is general
 
 from brian import *
 from numpy import *

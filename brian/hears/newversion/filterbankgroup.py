@@ -1,96 +1,67 @@
-# TODO: update all of this with the new interface/buffering mechanism
-
-from filterbank import Filterbank
-from brian import StateUpdater, NeuronGroup
+from brian import StateUpdater, NeuronGroup, Equations, Clock, network_operation
 
 __all__ = ['FilterbankGroup']
-
-class FilterbankGroupStateUpdater(StateUpdater):
-    
-    def __init__(self):
-        pass
-
-    def __call__(self, P):
-
-        if P._x_stilliter is not None:
-            try:
-                P.input=P._x_iter.next()
-            except StopIteration:
-                P.input=0
-                P._x_stilliter=False
-        elif P._x_type==1:
-            P.input=P._x.update()   #for online sound
-        elif P._x_type==2:
-            P.input=P._x  
-        
-
-        P.output[:]=P.filterbank.timestep(P.input)
 
 class FilterbankGroup(NeuronGroup):
     '''
     Allows a Filterbank object to be used as a NeuronGroup
     
-    Initialised with variables:
+    Initialised as a standard :class:`NeuronGroup` object, but with two
+    additional arguments at the beginning, and no ``N`` (number of neurons)
+    argument.  The number of neurons in the group will be the number of
+    channels in the filterbank. (TODO: add reference to interleave/serial
+    channel stuff here.)
     
     ``filterbank``
-        The Filterbank object to be used by the group.
-    ``x``
-        The sound which the Filterbank will act on. If you don't specify
-        this then you are in charge of updating the ``inp`` variable of
-        the group each time step via a network operation.
+        The Filterbank object to be used by the group. In fact, any Bufferable
+        object can be used.
+    ``targetvar``
+        The target variable to put the filterbank output into.
+        
+    One additional keyword is available beyond that of :class:`NeuronGroup`:
     
-    The variables of the group are:
-    
-    ``output``
-        The output of the filterbank, multiple names are provided but they all
-        do the same thing.
-    ``input``
-        The input to the filterbank.
-    
-    Has one additional method:
-    
-    .. method:: load_sound(x)
-    
-        Loads the sound 
+    ``buffersize=1024``
+        The size of the buffered segments to fetch each time. The larger this
+        value is, the more efficient (particularly if you are using the GPU
+        for filtering), but memory may be an issue. A filterbank with 1000
+        channels and a buffer size of 1024 will take around 8MB RAM.
+        
+    Note that if you specify your own :class:`Clock`, it should have
+    1/dt=samplerate.
     '''
     
-    def __init__(self, filterbank, x=None):
-        self.filterbank=filterbank
-        fs=filterbank.samplerate
-        eqs='''
-        output : 1
-        input : 1
-        '''
+    def __init__(self, filterbank, targetvar, *args, **kwds):
+        self.targetvar = targetvar
+        self.filterbank = filterbank
+        filterbank.buffer_init()
 
-        NeuronGroup.__init__(self, len(filterbank), eqs, clock=Clock(dt=1/fs))
-        self.N=len(filterbank)
-        self._state_updater=FilterbankGroupStateUpdater()
-        fs=float(fs)
-        self.load_sound(x)
-
-    def load_sound(self, x):
-        self._x=x
-        
-        if isinstance(x,OnlineSound):
-            self._x_iter=None
-            self._x_type=1        #type=1 for online sounds
-            self._x_stilliter=None
-            
-        elif x is not None:           #hack to be able to plug a 1d filterbankgroup in another
-            if len(self._x)==1:
-                self._x_iter=None
-                self._x_stilliter=None
-                self._x_type=2    #type=2 when the input is the output of a 1d filter chain
-            else:   
-                self._x_iter=iter(self._x)
-                self._x_stilliter=True
-                self._x_type=3    #type=3 when input is an array
+        # update level keyword
+        kwds['level'] = kwds.get('level', 0)+1
+    
+        # Sanitize the clock - does it have the right dt value?
+        if 'clock' in kwds:
+            if int(1/kwds['clock'].dt)!=int(filterbank.samplerate):
+                raise ValueError('Clock should have 1/dt=samplerate')
         else:
-
-            self._x_iter=None
-            self._x_stilliter=False
-
+            kwds['clock'] = Clock(dt=1/filterbank.samplerate)        
+        
+        self.buffersize = buffersize = kwds.get('buffersize', 1024)
+        self.buffer_pointer = buffersize
+        self.buffer_start = -buffersize
+        
+        NeuronGroup.__init__(self, filterbank.nchannels, *args, **kwds)
+        
+        @network_operation(when='start')
+        def apply_filterbank_output():
+            if self.buffer_pointer>=self.buffersize:
+                self.buffer_pointer = 0
+                self.buffer_start += self.buffersize
+                self.buffer = self.filterbank.buffer_fetch(self.buffer_start, self.buffer_start+self.buffersize)
+            setattr(self, targetvar, self.buffer[self.buffer_pointer, :])
+            self.buffer_pointer += 1
+        
+        self.contained_objects.append(apply_filterbank_output)
         
     def reinit(self):
         NeuronGroup.reinit(self)
-        self.load_sound(self._x)
+        self.filterbank.buffer_init()

@@ -34,7 +34,8 @@ def apply_linear_filterbank(b, a, x, zi):
             x = y
         output[sample] = y
     return output
-    
+
+
 # TODO: accelerate this even more using SWIG instead of weave?
 if get_global_preference('useweave'):
     _cpp_compiler = get_global_preference('weavecompiler')
@@ -87,6 +88,7 @@ if get_global_preference('useweave'):
         return y
     apply_linear_filterbank.__doc__ = _old_apply_linear_filterbank.__doc__
 
+
 class LinearFilterbank(Filterbank):
     '''
     Generalised linear filterbank
@@ -103,33 +105,28 @@ class LinearFilterbank(Filterbank):
         chain (first you apply ``[:, :, 0]``, then ``[:, :, 1]``, etc.).    
     '''
     def __init__(self, source, b, a):
-        self.source = source
+        Filterbank.__init__(self, source)
+        self.nchannels = b.shape[0]
         self.filt_b = b
         self.filt_a = a
-        self.samplerate = source.samplerate
-        self.nchannels = b.shape[0]
         self.filt_state = zeros((b.shape[0], b.shape[1]-1, b.shape[2]))
-        self.buffer_init()
 
     def reset(self):
         self.buffer_init()
         
     def buffer_init(self):
-        Bufferable.buffer_init(self)
+        Filterbank.buffer_init(self)
         self.filt_state[:] = 0
-        self.source.buffer_init()
     
-    def buffer_fetch_next(self, samples):
-        start = self.cached_buffer_end
-        end = start+samples
-        input = self.source.buffer_fetch(start, end)
+    def buffer_apply(self, input):
         return apply_linear_filterbank(self.filt_b, self.filt_a, input,
                                        self.filt_state)
 
-# Use the GPU version if available
-try:
-    import pycuda
-    from gpulinearfilterbank import LinearFilterbank
-    use_gpu = True
-except ImportError:
-    use_gpu = False
+# TODO: uncomment this when the GPU version is ready
+## Use the GPU version if available
+#try:
+#    import pycuda
+#    from gpulinearfilterbank import LinearFilterbank
+#    use_gpu = True
+#except ImportError:
+#    use_gpu = False

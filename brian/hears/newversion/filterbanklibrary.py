@@ -7,7 +7,6 @@ from filterbank import Filterbank
 from linearfilterbank import LinearFilterbank
 
 __all__ = ['CascadeFilterbank',
-           'DoNothingFilterbank',
            'GammatoneFilterbank',
            'MeddisGammatoneFilterbank',
            'GammachirpIIRFilterbank',
@@ -20,6 +19,9 @@ __all__ = ['CascadeFilterbank',
 def factorial(n):
     return prod(arange(1, n+1))
 
+# TODO: in the new version, this filterbank should replace the one it is applied
+# to, meaning that its source should be the source of the filterbank it is being
+# applied to.
 class CascadeFilterbank(LinearFilterbank):
     '''
     Cascade of a filterbank (nbr_cascade times)
@@ -37,22 +39,6 @@ class CascadeFilterbank(LinearFilterbank):
             self.filt_a[:,:,i]=a[:,:,0]
             
         LinearFilterbank.__init__(self, self.filt_b, self.filt_a, self.fs*Hz)
-
-class DoNothingFilterbank(LinearFilterbank):
-    '''
-    just pass the signal unprocessed
-    usefull when one wants to remove the auditory filters without having to rewrite everything
-    '''
-    @check_units(fs=Hz)
-    def __init__(self, fs, cf):
-        self.N = len(cf)
-        filt_a=zeros((self.N ,2,1))
-        filt_b=zeros((self.N ,2,1))
-
-        filt_a[:, 0, 0]=1
-        filt_b[:, 0, 0]=1
-
-        LinearFilterbank.__init__(self, filt_b, filt_a, fs)
     
     
 class GammatoneFilterbank(LinearFilterbank):
@@ -67,6 +53,8 @@ class GammatoneFilterbank(LinearFilterbank):
         List or array of center frequencies.
     
     The ERBs are computed based on parameters in the Auditory Toolbox.
+    
+    TODO: improve documentation.
     '''
     # Change the following three parameters if you wish to use a different
     # ERB scale.  Must change in ERBSpace too.
@@ -306,9 +294,7 @@ class GammachirpFIRFilterbank(LinearFilterbank):
         LinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
 
 
-class IIRFilterbank(LinearFilterbank):  
-
-
+class IIRFilterbank(LinearFilterbank):
     '''
     Filterbank using scipy.signal.iirdesign
     

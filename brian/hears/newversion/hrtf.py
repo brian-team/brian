@@ -36,7 +36,7 @@ HRTFSet
 * Simultaneous calculations (all directions): ITD, etc
 '''
 
-# TODO: add some docstrings!
+# TODO: documentation!
 
 from brian import *
 from brian.hears.filtering import *
@@ -76,7 +76,7 @@ class HRTF(object):
         The sample rate of the HRTFs.
     '''
     def __init__(self, hrir_l, hrir_r):
-        self.samplerate = hrir_l.rate
+        self.samplerate = hrir_l.samplerate
         self.left = hrir_l
         self.right = hrir_r
 
