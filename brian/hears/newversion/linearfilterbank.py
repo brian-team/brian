@@ -1,6 +1,6 @@
 from brian import *
 from scipy import signal, weave, random
-from filterbank import Filterbank
+from filterbank import Filterbank, RestructureFilterbank
 from bufferable import Bufferable
 
 # TODO: test all the buffered version of apply_linear_filterbank here
@@ -105,8 +105,12 @@ class LinearFilterbank(Filterbank):
         chain (first you apply ``[:, :, 0]``, then ``[:, :, 1]``, etc.).    
     '''
     def __init__(self, source, b, a):
+        # Automatically duplicate mono input to fit the desired output shape
+        if b.shape[0]!=source.nchannels:
+            if source.nchannels!=1:
+                raise ValueError('Can only automatically duplicate source channels for mono sources, use RestructureFilterbank.')
+            source = RestructureFilterbank(source, b.shape[0])
         Filterbank.__init__(self, source)
-        self.nchannels = b.shape[0]
         self.filt_b = b
         self.filt_a = a
         self.filt_state = zeros((b.shape[0], b.shape[1]-1, b.shape[2]))
