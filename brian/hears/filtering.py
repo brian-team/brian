@@ -33,7 +33,8 @@ except ImportError:
 
 __all__=['GammachirpFilterbankFIR', 'GammachirpFilterbankIIR', 'Filterbank', 'FilterbankChain', 'FilterbankGroup', 'FunctionFilterbank', 'ParallelLinearFilterbank',
            'parallel_lfilter_step', 'GammatoneFilterbank',
-           'IIRFilterbank' ,'MixFilterbank','TimeVaryingIIRFilterbank','MeddisGammatoneFilterbank','ButterworthFilterbank','CascadeFilterbank','DoNothingFilterbank','TimeVaryingIIRFilterbank2']
+           'IIRFilterbank' ,'MixFilterbank','TimeVaryingIIRFilterbank','MeddisGammatoneFilterbank','ButterworthFilterbank','CascadeFilterbank','DoNothingFilterbank','TimeVaryingIIRFilterbank2',
+           'Asym_Comp_Filterbank','Asym_Comp_Coeff']
 
 
 def parallel_lfilter_step(b, a, x, zi):
@@ -678,6 +679,103 @@ class MeddisGammatoneFilterbank(ParallelLinearFilterbank):
         self.order = order
         
         ParallelLinearFilterbank.__init__(self, b, a, fs*Hz)
+
+def Asym_Comp_Coeff(samplerate,fr,filt_b,filt_a,b,c,order,p0,p1,p2,p3,p4):
+    '''
+     overhead if passing dico
+     better pass filterb a or initiliaze the here
+     better put his function inside the __call__
+    give the coefficients of an asymmetric compensation filter
+    It is optimized to be used as coefficients of a time varying filter
+    as all the parameters that does not change are given as arguments
+    '''
+    ERBw=24.7*(4.37e-3*fr+1.)
+    nbr_cascade=4
+    for k in arange(nbr_cascade):
+
+        r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/samplerate) #k instead of k-1 because range 0 N-1
+
+        Dfr=(p0*p4)**(k)*p2*c*b*ERBw
+
+        phi=2*pi*maximum((fr+Dfr), 0)/samplerate
+        psy=2*pi*maximum((fr-Dfr), 0)/samplerate
+
+        ap=vstack((ones(r.shape),-2*r*cos(phi), r**2)).T
+        bz=vstack((ones(r.shape),-2*r*cos(psy), r**2)).T
+
+        
+
+        vwr=exp(1j*2*pi*fr/samplerate)
+        vwrs=vstack((ones(vwr.shape), vwr, vwr**2)).T
+
+        ##normilization stuff
+        nrm=abs(sum(vwrs*ap, 1)/sum(vwrs*bz, 1))
+        bz=bz*tile(nrm,[3,1]).T
+
+        filt_b[:, :, k]=bz
+        filt_a[:, :, k]=ap
+
+    return filt_b,filt_a
+
+class Asym_Comp_Filterbank(ParallelLinearFilterbank):
+
+     
+    def __init__(self, samplerate, fr, c=None,asym_comp_order=None,b=None):
+        fr = array(fr)
+        ''' 
+        TODO difference between order and cascade
+        '''
+        
+        self.fr = fr
+        self.N = len(fr)
+        print self.N
+        self.fs= samplerate
+        if c==None:
+            c=1*ones((fr.shape))
+        if b==None:
+            b=1.019*ones((fr.shape))
+        if asym_comp_order==None:
+            order=3
+        compensation_filter_order=4
+        ERBw=24.7*(4.37e-3*fr+1.)
+        nbr_cascade=4
+        order=1
+        p0=2
+        p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
+        p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
+        p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
+        p4=1.0724
+
+        self.filt_b=zeros((len(fr), 2*order+1, nbr_cascade))
+        self.filt_a=zeros((len(fr), 2*order+1, nbr_cascade))
+
+        for k in arange(nbr_cascade):
+
+            r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/samplerate) #k instead of k-1 because range 0 N-1
+
+            Dfr=(p0*p4)**(k)*p2*c*b*ERBw
+
+            phi=2*pi*maximum((fr+Dfr), 0)/samplerate
+            psy=2*pi*maximum((fr-Dfr), 0)/samplerate
+
+            ap=vstack((ones(r.shape),-2*r*cos(phi), r**2)).T
+            bz=vstack((ones(r.shape),-2*r*cos(psy), r**2)).T
+
+            fn=fr#+ compensation_filter_order* p3 *c *b *ERBw/4;
+
+            vwr=exp(1j*2*pi*fn/samplerate)
+            vwrs=vstack((ones(vwr.shape), vwr, vwr**2)).T
+
+            ##normilization stuff
+            nrm=abs(sum(vwrs*ap, 1)/sum(vwrs*bz, 1))
+            
+            bz=bz*tile(nrm,[3,1]).T
+            self.filt_b[:, :, k]=bz
+            self.filt_a[:, :, k]=ap
+
+        ParallelLinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate)
+        
+       
             
 class GammachirpFilterbankIIR(ParallelLinearFilterbank):
     '''
@@ -691,8 +789,7 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
      fr is the center frequency of the gamma tone (note: it is note the peak frequency of the gammachirp)
      '''
      
-     
-    def __init__(self, samplerate, fr, c=None):
+    def __init__(self, samplerate, fr, c=None,asym_comp_order=None,b=None):
         fr = array(fr)
 
         self.fr = fr
@@ -702,6 +799,10 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
 
         if c==None:
             c=1*ones((fr.shape))
+        if b==None:
+            b=1.019*ones((fr.shape))
+        if asym_comp_order==None:
+            compensation_filter_order=4
             
         self.c=c
         gammatone=GammatoneFilterbank(samplerate, fr)
@@ -712,15 +813,14 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
         self.gammatone_filt_a=gammatone.filt_a
 
         ERBw=24.7*(4.37e-3*fr+1.)
-        compensation_filter_order=4
-        b=1.019*ones((fr.shape))
+        
+        
 
         p0=2
         p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
         p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
         p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
         p4=1.0724
-
         self.asymmetric_filt_b=zeros((len(fr), 2*order+1, 4))
         self.asymmetric_filt_a=zeros((len(fr), 2*order+1, 4))
 
@@ -743,10 +843,7 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
 
             ##normilization stuff
             nrm=abs(sum(vwrs*ap, 1)/sum(vwrs*bz, 1))
-            temp=ones((bz.shape))
-            for i in range((len(nrm))):
-                temp[i, :]=nrm[i]
-            bz=bz*temp
+            bz=bz*tile(nrm,[3,1]).T
 
             self.asymmetric_filt_b[:, :, k]=bz
             self.asymmetric_filt_a[:, :, k]=ap
@@ -803,8 +900,8 @@ class GammachirpFilterbankFIR(ParallelLinearFilterbank):
             G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[1])**2)+x[4])+x[5]
             G=G*(t-x[1]+tmax>0)
 #            gfft=max(abs(fft(G)))
-            G=G/sqrt(sum(G**2))/15
-            #G=G/max(G)/26
+            G=G/sqrt(sum(G**2))/10
+            #G=G#/max(G)/26
 #            plot(t,G)
 #            show()
 #            exit()
@@ -1058,7 +1155,7 @@ class TimeVaryingIIRFilterbank2(Filterbank):
 
         
         #self.b,self.a,self.param_fun=func_init(self.fs,*params)
-        self.b,self.a=self.vary_filter_class.b,self.vary_filter_class.a
+        self.b,self.a=self.vary_filter_class.filt_b,self.vary_filter_class.filt_a
         
         self.zi=zeros((self.b.shape[0], self.b.shape[1]-1, self.b.shape[2]))
         
@@ -1068,7 +1165,7 @@ class TimeVaryingIIRFilterbank2(Filterbank):
 
 #        self.b,self.a=self.func(self.fs,self.N,*self.param_fun)
         self.vary_filter_class()
-        self.b,self.a=self.vary_filter_class.b,self.vary_filter_class.a
+        self.b,self.a=self.vary_filter_class.filt_b,self.vary_filter_class.filt_a
         #print 'b',self.b, self.a,'b'
         return parallel_lfilter_step(self.b, self.a, input, self.zi)
 
