@@ -1,9 +1,9 @@
 from brian import *
 from numpy import *
 import numpy
-import wave
 import array as pyarray
 import time
+import struct
 try:
     import pygame
     have_pygame = True
@@ -399,7 +399,7 @@ class Sound(BaseSound, numpy.ndarray):
         Returns a pure tone at the given frequency for the given duration
         if dB not given, pure tone is between -1 and 1
         '''
-        x = sin(2.0*pi*freq*arange(0*ms, duration, 1/sound_rate))
+        x = sin(2.0*pi*freq*arange(0*ms, duration, 1/rate))
         if dB is not None: 
             return Sound(x, rate).setintensity(dB, type=dBtype)
         else:
@@ -454,79 +454,83 @@ class Sound(BaseSound, numpy.ndarray):
         x = vstack(sounds)
         return Sound(x, rate)
 
-    ### TODO: update to use multiple channels
-    # TODO: remove the rate keyword from load? redundant.
-    @staticmethod
-    def load(filename, rate=rate):
+    def save(self, filename, normalise=False, sampwidth=2):
         '''
-        Currently, 8 and 16 bit mono sounds are handled correctly.
-        Specify rate to resample to a given rate.
-        '''
-        forced_rate = rate
-        f = wave.open(filename, 'r')
-        sampwidth = f.getsampwidth()
-        typecode = {2:'h', 1:'B'}[sampwidth]
-        scale = {2:2 ** 14, 1:2 ** 7}[sampwidth]
-        meanval = {2:0, 1:1}[sampwidth]
-        rate = f.getframerate()
-        x = f.readframes(f.getnframes())
-        x = pyarray.array(typecode, x)
-        x = array(x, dtype=float)
-        x = x / scale
-        x = x - meanval
-        f.close()
-        rate = rate * Hz
-        if forced_rate is not None:
-            rate, x = resample_sound(x, rate, forced_rate)
-        return (rate, x)
-
-    ### TODO: update to use multiple channels, without the stereo keyword
-    def save(self, filename, normalise=False, sampwidth=2, stereo=None):
-        '''
-        Save the sound as a WAV file.
-        
+        Save the sound as a WAV, depending on the extension.
         If the normalise keyword is set to True, the amplitude of the sound will be
         normalised to 1. The sampwidth keyword can be 1 or 2 to save the data as
-        8 or 16 bit samples. If the stereo keyword is set, it should be the
-        right hand channel (and the original instance should be the left hand
-        channel).
+        8 or 16 bit samples.
         '''
+        ext=filename.split('.')[-1]
+        if ext=='wav':
+            import wave as sndmodule
+        elif ext=='aiff' or ext=='aifc':
+            raise NotImplementedError('Can only save as wav soundfiles')
+            import aifc as sndmodule
+        else:
+            raise NotImplementedError('Can only save as wav soundfiles')
+        
         if sampwidth != 1 and sampwidth != 2:
             raise ValueError('Sample width must be 1 or 2 bytes.')
-        typecode = {2:'h', 1:'B'}[sampwidth]
-        scale = {2:2 ** 14, 1:2 ** 7}[sampwidth]
-        meanval = {2:0, 1:1}[sampwidth]
-        dtype = {2:int16, 1:uint8}[sampwidth]
-        w = wave.open(filename, 'wb')
-        if stereo is None:
-            w.setnchannels(1)
+        
+        scale = {2:2 ** 15, 1:2 ** 7-1}[sampwidth]
+        if ext=='wav':
+            meanval = {2:0, 1:2**7}[sampwidth]
+            dtype = {2:int16, 1:uint8}[sampwidth]
+            typecode = {2:'h', 1:'B'}[sampwidth]
         else:
-            w.setnchannels(2)
+            meanval = {2:0, 1:2**7}[sampwidth]
+            dtype = {2:int16, 1:uint8}[sampwidth]
+            typecode = {2:'h', 1:'B'}[sampwidth]
+        w = sndmodule.open(filename, 'wb')
+        w.setnchannels(self.nchannels)
         w.setsampwidth(sampwidth)
         w.setframerate(int(self.samplerate))
-        x = asarray(self)
-        if normalise and stereo is None:
-            x /= amax(x)
-        if stereo is not None:
-            y = asarray(stereo)
+        x = array(self,copy=True)
+        am=amax(x)
+        z = zeros(x.shape[0]*self.nchannels, dtype=x.dtype)
+        x.shape=(x.shape[0],self.nchannels)
+        for i in range(self.nchannels):
+            print i
             if normalise:
-                am = max(amax(x), amax(y))
-                x /= am
-                y /= am
-            x = (x + meanval) * scale
-            y = (y + meanval) * scale
-            z = zeros(len(x) + len(y), dtype=x.dtype)
-            z[0::2] = x
-            z[1::2] = y
-            data = array(z, dtype=dtype)
-            data = pyarray.array(typecode, data)
-            w.writeframes(data.tostring())
-        else:
-            x = (x + meanval) * scale
-            data = array(x, dtype=dtype)
-            data = pyarray.array(typecode, data)
-            w.writeframes(data.tostring())
+                x[:,i] /= am
+            x[:,i] = (x[:,i]) * scale + meanval
+            z[i::self.nchannels] = x[::1,i]
+        data = array(z, dtype=dtype)
+        data = pyarray.array(typecode, data)
+        w.writeframes(data.tostring())
         w.close()
+    
+    @staticmethod
+    def load(filename):
+        '''
+        Load the file given by 'filename' and returns a Sound object. 
+        Sound file can be either a .wav or a .aif file.
+        '''
+        ext=filename.split('.')[-1]
+        if ext=='wav':
+            import wave as sndmodule
+        elif ext=='aif' or ext=='aiff':
+            import aifc as sndmodule
+        else:
+            raise NotImplementedError('Can only load aif or wav soundfiles')
+        def everyOther (v, offset=0, channels=2):
+            return [v[i] for i in range(offset, len(v), channels)]
+        wav = sndmodule.open (filename, "r")
+        (nchannels, sampwidth, framerate, nframes, comptype, compname) = wav.getparams ()
+        print str(wav.getparams())
+        frames = wav.readframes (nframes * nchannels)
+        typecode = {2:'h', 1:'B'}[sampwidth]
+        out = struct.unpack_from ("%d%s" % (nframes * nchannels,typecode), frames)
+        scale = {2:2 ** 15, 1:2 ** 7-1}[sampwidth]
+        meanval = {2:0, 1:2**7}[sampwidth]
+        
+        data=zeros((nframes,nchannels))
+        for i in range(nchannels):
+            data[:,i]=array(everyOther(out,offset=i,channels=nchannels))
+            data[:,i]/=scale
+            data[:,i]-=meanval
+        return Sound(data,framerate*Hz)
 
     def __reduce__(self):
         return (_load_Sound_from_pickle, (asarray(self), float(self.samplerate)))
