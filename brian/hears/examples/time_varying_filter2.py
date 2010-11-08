@@ -39,8 +39,9 @@ oup_generator = FilterbankGroup(oup_generatorFB, sound)
 class FilterCoeffUpdate:
     def __init__(self,fs,coeff,fc_init,tau_i,oup):
         N=len(tau_i)
-        self.b=zeros((N, 3, 1))
-        self.a=zeros((N, 3, 1))
+        self.filt_b=zeros((N, 3, 1))
+        self.filt_a=zeros((N, 3, 1))
+        
         self.fc=fc_init
         self.fs=fs
         self.deltaT=1./fs
@@ -52,13 +53,13 @@ class FilterCoeffUpdate:
         w0=2*pi*self.fc/fs
         alpha=sin(w0)*sinh(log(2)/2*self.BW*w0/sin(w0))
         
-        self.b[:, 0, 0]=sin(w0)/2
-        self.b[:, 1, 0]=0
-        self.b[:, 2, 0]=-sin(w0)/2
+        self.filt_b[:, 0, 0]=sin(w0)/2
+        self.filt_b[:, 1, 0]=0
+        self.filt_b[:, 2, 0]=-sin(w0)/2
     
-        self.a[:, 0, 0]=1+alpha
-        self.a[:, 1, 0]=-2*cos(w0)
-        self.a[:, 2, 0]=1-alpha
+        self.filt_a[:, 0, 0]=1+alpha
+        self.filt_a[:, 1, 0]=-2*cos(w0)
+        self.filt_a[:, 2, 0]=1-alpha
           
     def __call__(self):
     
@@ -67,13 +68,13 @@ class FilterCoeffUpdate:
         w0=2*pi*self.fc/self.fs
     
         alpha=sin(w0)*sinh(log(2)/2*self.BW*w0/sin(w0))
-        self.b[:, 0, 0]=sin(w0)/2
-        self.b[:, 1, 0]=0
-        self.b[:, 2, 0]=-sin(w0)/2
+        self.filt_b[:, 0, 0]=sin(w0)/2
+        self.filt_b[:, 1, 0]=0
+        self.filt_b[:, 2, 0]=-sin(w0)/2
     
-        self.a[:, 0, 0]=1+alpha
-        self.a[:, 1, 0]=-2*cos(w0)
-        self.a[:, 2, 0]=1-alpha
+        self.filt_a[:, 0, 0]=1+alpha
+        self.filt_a[:, 1, 0]=-2*cos(w0)
+        self.filt_a[:, 2, 0]=1-alpha
 
 FilterCoeffUpdate_class=FilterCoeffUpdate(sound.rate,coeff,fc_init,tau_i*ones((nbr_channel)),oup_generator.output)
 fb2= TimeVaryingIIRFilterbank2(sound.rate,nbr_channel,FilterCoeffUpdate_class)

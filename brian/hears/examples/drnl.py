@@ -42,7 +42,7 @@ defaultclock.dt = 1/samplerate
 
 #sound = whitenoise(simulation_duration,samplerate,dB=dBlevel).ramp()
 
-nbr_center_frequencies=500
+nbr_center_frequencies=50
 center_frequencies=erbspace(20*Hz,1000*Hz, nbr_center_frequencies) 
 
 #### middle ear processing ####
