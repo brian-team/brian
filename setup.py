@@ -43,7 +43,7 @@ if __name__ == "__main__":
                         'brian.experimental.codegen',
                     'brian.hears',
                         'brian.hears.examples',
-                        'brian.hears.new',
+                        'brian.hears.newversion',
                     'brian.library',
                         'brian.library.modelfitting',
                     'brian.tests',
