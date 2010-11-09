@@ -58,7 +58,12 @@ class Sound(BaseSound, numpy.ndarray):
             t = arange(L, dtype=float) / rate
             x = data(t)
         elif isinstance(data, (list, tuple)):
-            channels = tuple(Sound(c, rate=rate, duration=duration) for c in data)
+            kwds = {}
+            if rate is not None:
+                kwds['rate'] = rate
+            if duration is not None:
+                kwds['duration'] = duration
+            channels = tuple(Sound(c, **kwds) for c in data)
             x = hstack(channels)
             rate = channels[0].samplerate
         else:
