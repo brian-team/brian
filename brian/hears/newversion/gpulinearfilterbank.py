@@ -1,5 +1,7 @@
-# TODO: update all of this with the new interface/buffering mechanism
-
+'''
+'''
+# TODO: support for GPUBufferedArray?
+from numpy import *
 import pycuda
 #import pycuda.autoinit as autoinit
 import pycuda.driver as drv
@@ -7,7 +9,7 @@ import pycuda.compiler
 from pycuda import gpuarray
 from brian.experimental.cuda.buffering import *
 import re
-from filterbank import Filterbank
+from filterbank import Filterbank, RestructureFilterbank
 from gputools import *
 
 __all__ = ['LinearFilterbank']
@@ -19,7 +21,7 @@ class LinearFilterbank(Filterbank):
     This filterbank allows you to construct a chain of linear filters in
     a bank so that each channel in the bank has its own filters. You pass
     the (b,a) parameters for the filter in the format specified in the
-    function ``parallel_lfilter_step``.
+    function ``apply_linear_filterbank``.
     
     Note that there are additional GPU specific options:
     
@@ -36,12 +38,19 @@ class LinearFilterbank(Filterbank):
         Whether or not to unroll the loop for the filter order, normally
         this should be done but not for very large filter orders.
     '''
-    def __init__(self, b, a, samplerate=None,
+    def __init__(self, source, b, a, samplerate=None,
                  precision='double', forcesync=True, pagelocked_mem=True, unroll_filterorder=True):
-        if not use_gpu:
-            self.__class__=nongpu_LinearFilterbank
-            self.__init__(b, a, samplerate=samplerate)
-            return
+        # TODO: handle use_gpu = False here
+#        if not use_gpu:
+#            self.__class__=nongpu_LinearFilterbank
+#            self.__init__(b, a, samplerate=samplerate)
+#            return
+        # Automatically duplicate mono input to fit the desired output shape
+        if b.shape[0]!=source.nchannels:
+            if source.nchannels!=1:
+                raise ValueError('Can only automatically duplicate source channels for mono sources, use RestructureFilterbank.')
+            source = RestructureFilterbank(source, b.shape[0])
+        Filterbank.__init__(self, source)
         if pycuda.context is None:
             set_gpu_device(0)
         self.precision=precision
@@ -51,8 +60,6 @@ class LinearFilterbank(Filterbank):
             self.precision_dtype=float32
         self.forcesync=forcesync
         self.pagelocked_mem=pagelocked_mem
-        self.fs=samplerate
-        self.N=b.shape[0]
         n, m, p=b.shape
         self.filt_b=b
         self.filt_a=a
@@ -65,48 +72,53 @@ class LinearFilterbank(Filterbank):
         else:
             filt_y=zeros(n, dtype=self.precision_dtype)
             self.pre_x=zeros(n, dtype=self.precision_dtype)
-        filt_x=zeros(n, dtype=self.precision_dtype)
+        #filt_x=zeros(n, dtype=self.precision_dtype)
         self.filt_b_gpu=gpuarray.to_gpu(filt_b_gpu.T.flatten()) # transform to Fortran order for better GPU mem
         self.filt_a_gpu=gpuarray.to_gpu(filt_a_gpu.T.flatten()) # access speeds
         self.filt_state=gpuarray.to_gpu(filt_state.T.flatten())
-        self.filt_x=gpuarray.to_gpu(filt_x)
-        self.filt_y=GPUBufferedArray(filt_y)
+        #self.filt_x=gpuarray.to_gpu(filt_x)
+        #self.filt_y=GPUBufferedArray(filt_y)
         #self.filt_y=gpuarray.to_gpu(filt_y)
+        
+        # TODO: improve code, check memory access patterns, maybe use local memory
         code='''
-        #define x(i) _x[i]
-        #define y(i) _y[i]
+        #define x(s,i) _x[(s)*n+(i)]
+        #define y(s,i) _y[(s)*n+(i)]
         #define a(i,j,k) _a[(i)+(j)*n+(k)*n*m]
         #define b(i,j,k) _b[(i)+(j)*n+(k)*n*m]
         #define zi(i,j,k) _zi[(i)+(j)*n+(k)*n*(m-1)]
-        __global__ void filt(SCALAR *_b, SCALAR *_a, SCALAR *_x, SCALAR *_zi, SCALAR *_y)
+        __global__ void filt(SCALAR *_b, SCALAR *_a, SCALAR *_x, SCALAR *_zi, SCALAR *_y, int numsamples)
         {
             int j = blockIdx.x * blockDim.x + threadIdx.x;
             if(j>=n) return;
+            for(int s=0; s<numsamples; s++)
+            {
         '''
         for k in range(p):
             loopcode='''
-            y(j) = b(j,0,k)*x(j) + zi(j,0,k);
+            y(s,j) = b(j,0,k)*x(s,j) + zi(j,0,k);
             '''
             if unroll_filterorder:
                 for i in range(m-2):
                     loopcode+=re.sub('\\bi\\b', str(i), '''
-                    zi(j,i,k) = b(j,i+1,k)*x(j) + zi(j,i+1,k) - a(j,i+1,k)*y(j);
+                    zi(j,i,k) = b(j,i+1,k)*x(s,j) + zi(j,i+1,k) - a(j,i+1,k)*y(s,j);
                     ''')
             else:
                 loopcode+='''
                 for(int i=0;i<m-2;i++)
-                    zi(j,i,k) = b(j,i+1,k)*x(j) + zi(j,i+1,k) - a(j,i+1,k)*y(j);
+                    zi(j,i,k) = b(j,i+1,k)*x(s,j) + zi(j,i+1,k) - a(j,i+1,k)*y(s,j);
                 '''
             loopcode+='''
-            zi(j,m-2,k) = b(j,m-1,k)*x(j) - a(j,m-1,k)*y(j);
+            zi(j,m-2,k) = b(j,m-1,k)*x(s,j) - a(j,m-1,k)*y(s,j);
             '''
             if k<p-1:
                 loopcode+='''
-                x(j) = y(j);
+                x(s,j) = y(s,j);
                 '''
             loopcode=re.sub('\\bk\\b', str(k), loopcode)
             code+=loopcode
         code+='''
+            }
         }
         '''
         code=code.replace('SCALAR', self.precision)
@@ -125,50 +137,67 @@ class LinearFilterbank(Filterbank):
             gridsize=n/blocksize+1
         self.block=(blocksize, 1, 1)
         self.grid=(gridsize, 1)
-        self.gpu_filt_func.prepare((intp, intp, intp, intp, intp), self.block)
+        self.gpu_filt_func.prepare((intp, intp, intp, intp, intp, int32), self.block)
         self._has_run_once=False
 
     def reset(self):
+        self.buffer_init()
+
+    def buffer_init(self):
+        Filterbank.buffer_init(self)
         self.filt_state.set(zeros(self.filt_state.shape, dtype=self.filt_state.dtype))
-
-    def __len__(self):
-        return self.N
-
-    samplerate=property(fget=lambda self:self.fs)
-
-    def timestep(self, input):
-        b=self.filt_b_gpu
-        a=self.filt_a_gpu
-        x=input
-        zi=self.filt_state
-        y=self.filt_y
-        fx=self.filt_x
-        if isinstance(x, GPUBufferedArray):
-            if not len(x.shape) or x.shape==(1,):
-                x.sync_to_cpu()
-                newx=empty(self.N, dtype=b.dtype)
-                newx[:]=x
-                fx.set(newx)
+    
+    def buffer_apply(self, input):
+        b = self.filt_b_gpu
+        a = self.filt_a_gpu
+        zi = self.filt_state
+        if not hasattr(self, 'filt_x_gpu') or input.shape[0]!=self.filt_x_gpu.shape[0]:
+            self._has_run_once = False
+            self.filt_x_gpu = gpuarray.to_gpu(input)
+            self.filt_y_gpu = gpuarray.empty_like(self.filt_x_gpu)
+            if self.pagelocked_mem:
+                self.filt_y = drv.pagelocked_zeros(input.shape, dtype=self.precision_dtype)
             else:
-                drv.memcpy_dtod(fx.gpudata, x.gpu_dev_alloc, fx.size*self.precision_dtype().nbytes)
-        else:
-            if not isinstance(x, ndarray) or not len(x.shape) or x.shape==(1,):
-                # Current version of pycuda doesn't allow .fill(val) method on float64 gpuarrays
-                # because it assumed float32 only, so we have to do our own copying here
-                px=self.pre_x
-                px[:]=x
-                x=px
-            fx.set(x)
+                self.filt_y = zeros(input.shape, dtype=self.precision_dtype) 
+        filt_x_gpu = self.filt_x_gpu
+        filt_y_gpu = self.filt_y_gpu
+        filt_y = self.filt_y
         if self._has_run_once:
             self.gpu_filt_func.launch_grid(*self.grid)
         else:
-            self.gpu_filt_func.prepared_call(self.grid, intp(b.gpudata), intp(a.gpudata), intp(fx.gpudata),
-                                             intp(zi.gpudata), y.gpu_pointer)
-            self._has_run_once=True
-        y.changed_gpu_data()
-        if self.forcesync:
-            y.sync_to_cpu()#might need to turn this on although it slows everything down
-        return y
-
-    def apply(self, input):
-        return array([self.timestep(x).copy() for x in input])
+            self.gpu_filt_func.prepared_call(self.grid, intp(b.gpudata),
+                    intp(a.gpudata), intp(filt_x_gpu.gpudata),
+                    intp(zi.gpudata), intp(filt_y_gpu.gpudata), int32(input.shape[0]))
+            self._has_run_once = True
+        filt_y_gpu.get(filt_y)
+        return filt_y
+        #y=self.filt_y
+        #fx=self.filt_x
+        # For the moment, assume that input is a CPU array and has shape (numsamples, nchannels)
+        
+#        if isinstance(x, GPUBufferedArray):
+#            if not len(x.shape) or x.shape==(1,):
+#                x.sync_to_cpu()
+#                newx=empty(self.N, dtype=b.dtype)
+#                newx[:]=x
+#                fx.set(newx)
+#            else:
+#                drv.memcpy_dtod(fx.gpudata, x.gpu_dev_alloc, fx.size*self.precision_dtype().nbytes)
+#        else:
+#            if not isinstance(x, ndarray) or not len(x.shape) or x.shape==(1,):
+#                # Current version of pycuda doesn't allow .fill(val) method on float64 gpuarrays
+#                # because it assumed float32 only, so we have to do our own copying here
+#                px=self.pre_x
+#                px[:]=x
+#                x=px
+#            fx.set(x)
+#        if self._has_run_once:
+#            self.gpu_filt_func.launch_grid(*self.grid)
+#        else:
+#            self.gpu_filt_func.prepared_call(self.grid, intp(b.gpudata), intp(a.gpudata), intp(fx.gpudata),
+#                                             intp(zi.gpudata), y.gpu_pointer)
+#            self._has_run_once=True
+#        y.changed_gpu_data()
+#        if self.forcesync:
+#            y.sync_to_cpu()#might need to turn this on although it slows everything down
+#        return y

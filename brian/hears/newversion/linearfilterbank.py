@@ -127,10 +127,10 @@ class LinearFilterbank(Filterbank):
                                        self.filt_state)
 
 # TODO: uncomment this when the GPU version is ready
-## Use the GPU version if available
-#try:
-#    import pycuda
-#    from gpulinearfilterbank import LinearFilterbank
-#    use_gpu = True
-#except ImportError:
-#    use_gpu = False
+# Use the GPU version if available
+try:
+    import pycuda
+    from gpulinearfilterbank import LinearFilterbank
+    use_gpu = True
+except ImportError:
+    use_gpu = False
