@@ -1,6 +1,7 @@
 '''
 '''
 # TODO: support for GPUBufferedArray?
+#import ensure_failure # import this in order to temporarily disable GPU
 from numpy import *
 import pycuda
 #import pycuda.autoinit as autoinit
@@ -36,10 +37,11 @@ class LinearFilterbank(Filterbank):
         copy rate).
     ``unroll_filterorder``
         Whether or not to unroll the loop for the filter order, normally
-        this should be done but not for very large filter orders.
+        this should be done for small filter orders. By default, it is done
+        if the filter order is less than or equal to 32.
     '''
     def __init__(self, source, b, a, samplerate=None,
-                 precision='double', forcesync=True, pagelocked_mem=True, unroll_filterorder=True):
+                 precision='double', forcesync=True, pagelocked_mem=True, unroll_filterorder=None):
         # TODO: handle use_gpu = False here
 #        if not use_gpu:
 #            self.__class__=nongpu_LinearFilterbank
@@ -79,7 +81,11 @@ class LinearFilterbank(Filterbank):
         #self.filt_x=gpuarray.to_gpu(filt_x)
         #self.filt_y=GPUBufferedArray(filt_y)
         #self.filt_y=gpuarray.to_gpu(filt_y)
-        
+        if unroll_filterorder is None:
+            if m<=32:
+                unroll_filterorder = True
+            else:
+                unroll_filterorder = False
         # TODO: improve code, check memory access patterns, maybe use local memory
         code='''
         #define x(s,i) _x[(s)*n+(i)]
@@ -148,6 +154,8 @@ class LinearFilterbank(Filterbank):
         self.filt_state.set(zeros(self.filt_state.shape, dtype=self.filt_state.dtype))
     
     def buffer_apply(self, input):
+        # TODO: buffer apply to a large input may cause a launch timeout, need to buffer in
+        # smaller chunks if this is the case
         b = self.filt_b_gpu
         a = self.filt_a_gpu
         zi = self.filt_state
