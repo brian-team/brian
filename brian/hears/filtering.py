@@ -582,7 +582,7 @@ class GammatoneFilterbank(ParallelLinearFilterbank):
     order=1
     
     @check_units(fs=Hz)
-    def __init__(self, fs, cf):
+    def __init__(self, fs, cf,b=None):
 
         cf = array(cf)
         self.cf = cf
@@ -592,7 +592,14 @@ class GammatoneFilterbank(ParallelLinearFilterbank):
         EarQ, minBW, order = self.EarQ, self.minBW, self.order
         T = 1/fs
         ERB = ((cf/EarQ)**order + minBW**order)**(1/order)
-        B = 1.019*2*pi*ERB
+#        print ERB
+        ERB    = 24.7*(4.37*cf/1000 + 1)
+#        print ERB
+        if b==None:
+            B = 1.019*2*pi*ERB
+        else:
+            B = b*2*pi*ERB
+        
         self.B = B
         self.order=order
         A0 = T
@@ -639,7 +646,6 @@ class GammatoneFilterbank(ParallelLinearFilterbank):
                          array([A0*ones(len(cf)), A12, zeros(len(cf))]).T,
                          array([A0*ones(len(cf)), A13, zeros(len(cf))]).T,
                          array([A0*ones(len(cf)), A14, zeros(len(cf))]).T))
-
         ParallelLinearFilterbank.__init__(self, filt_b, filt_a, fs*Hz)
 
 class MeddisGammatoneFilterbank(ParallelLinearFilterbank):
@@ -805,7 +811,7 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
             compensation_filter_order=4
             
         self.c=c
-        gammatone=GammatoneFilterbank(samplerate, fr)
+        gammatone=GammatoneFilterbank(samplerate, fr,b=b)
         samplerate=float(samplerate)
         order=gammatone.order
 
@@ -821,8 +827,8 @@ class GammachirpFilterbankIIR(ParallelLinearFilterbank):
         p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
         p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
         p4=1.0724
-        self.asymmetric_filt_b=zeros((len(fr), 2*order+1, 4))
-        self.asymmetric_filt_a=zeros((len(fr), 2*order+1, 4))
+        self.asymmetric_filt_b=zeros((len(fr), 2*order+1, compensation_filter_order))
+        self.asymmetric_filt_a=zeros((len(fr), 2*order+1, compensation_filter_order))
 
         for k in arange(compensation_filter_order):
 
