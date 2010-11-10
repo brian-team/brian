@@ -41,8 +41,8 @@ HRTFSet
 # TODO: HRTFFilterbank?
 
 from brian import *
-from brian.hears.filtering import *
-from brian.hears.sounds import *
+from filtering import *
+from sounds import *
 from scipy.signal import lfilter
 from scipy.io import loadmat # NOTE: this requires scipy 0.7+
 from glob import glob
@@ -89,13 +89,15 @@ class HRTF(object):
         self.left = hrir.left
         self.right = hrir.right
 
-    # TODO: test this function rewritten to use FFTs and stereo sounds
     def apply(self, sound):
+        # Note we use an FFT based method for applying HRTFs that is
+        # mathematically equivalent to using convolution (accurate to 1e-15
+        # in practice) and around 100x faster.
         if not sound.nchannels==1:
             raise ValueError('HRTF can only be applied to mono sounds')
-        sound = asarray(sound).flatten()
-        if not len(unique(array([self.samplerate, sound.samplerate], dtype=int)))>1:
+        if len(unique(array([self.samplerate, sound.samplerate], dtype=int)))>1:
             raise ValueError('HRTF and sound samplerates do not match.')
+        sound = asarray(sound).flatten()
         # Pad left/right/sound with zeros of length max(impulse response length)
         # at the beginning, and at the end so that they are all the same length
         # which should be a power of 2 for efficiency. The reason to pad at
@@ -104,16 +106,18 @@ class HRTF(object):
         # exactly equalise after the length of the impulse response, so we just
         # zero pad. The reason for padding at the end is so that for the FFT we
         # can just multiply the arrays, which should have the same shape.
-        ir_nmax = max(len(self.left), len(self.right))
+        left = asarray(self.left).flatten()
+        right = asarray(self.right).flatten()
+        ir_nmax = max(len(left), len(right))
         nmax = max(ir_nmax, len(sound))+ir_nmax
         nmax = 2**int(ceil(log2(nmax)))
-        leftpad = hstack((zeros(ir_nmax), self.left, zeros(nmax-ir_nmax-len(self.left))))
-        rightpad = hstack((zeros(ir_nmax), self.right, zeros(nmax-ir_nmax-len(self.right))))
+        leftpad = hstack((left, zeros(nmax-len(left))))
+        rightpad = hstack((right, zeros(nmax-len(right))))
         soundpad = hstack((zeros(ir_nmax), sound, zeros(nmax-ir_nmax-len(sound))))
         # Compute FFTs, multiply and compute IFFT
-        left_fft = fft(leftpad)
-        right_fft = fft(rightpad)
-        sound_fft = fft(soundpad)
+        left_fft = fft(leftpad, n=nmax)
+        right_fft = fft(rightpad, n=nmax)
+        sound_fft = fft(soundpad, n=nmax)
         left_sound_fft = left_fft*sound_fft
         right_sound_fft = right_fft*sound_fft
         left_sound = ifft(left_sound_fft)
@@ -121,13 +125,7 @@ class HRTF(object):
         # finally, we take only the unpadded parts of these
         left_sound = left_sound[ir_nmax:ir_nmax+len(sound)]
         right_sound = right_sound[ir_nmax:ir_nmax+len(sound)]
-        # and return the value as stereo Sound object
-        return Sound((left_sound, right_sound), samplerate=self.samplerate)
-        # OLD VERSION using lfilter, much slower
-        #sound_l = Sound(lfilter(self.left, 1, sound), rate=self.samplerate)
-        #sound_r = Sound(lfilter(self.right, 1, sound), rate=self.samplerate)
-        #return (sound_l, sound_r)
-        
+        return Sound((left_sound, right_sound), samplerate=self.samplerate)        
 
 
 class HRTFSet(object):
