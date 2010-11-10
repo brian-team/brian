@@ -1,7 +1,7 @@
 from brian import *
 from scipy import signal, weave, random
 from filterbank import Filterbank, RestructureFilterbank
-from bufferable import Bufferable
+from ..bufferable import Bufferable
 
 # TODO: test all the buffered version of apply_linear_filterbank here
 # So far, they seem to more or less work, but probably need more thorough

@@ -120,7 +120,7 @@ class GammatoneFilterbank(LinearFilterbank):
                          array([A0*ones(len(cf)), A12, zeros(len(cf))]).T,
                          array([A0*ones(len(cf)), A13, zeros(len(cf))]).T,
                          array([A0*ones(len(cf)), A14, zeros(len(cf))]).T))
-
+    
         LinearFilterbank.__init__(self, source, filt_b, filt_a)
 
 class MeddisGammatoneFilterbank(LinearFilterbank):

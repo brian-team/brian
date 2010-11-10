@@ -1,6 +1,6 @@
 from brian import *
 from scipy import signal, weave, random
-from bufferable import Bufferable
+from ..bufferable import Bufferable
 
 __all__ = ['Filterbank',
            'RestructureFilterbank',
