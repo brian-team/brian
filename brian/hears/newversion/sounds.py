@@ -36,49 +36,49 @@ class Sound(BaseSound, numpy.ndarray):
     left = property(fget=lambda self:self.channel(0))
     right = property(fget=lambda self:self.channel(1))
 
-    @check_units(rate=Hz, duration=second)
-    def __new__(cls, data, rate=None, duration=None):
+    @check_units(samplerate=Hz, duration=second)
+    def __new__(cls, data, samplerate=None, duration=None):
         if isinstance(data, numpy.ndarray):
-            if rate is None:
-                raise ValueError('Must specify rate to initialise Sound with array.')
+            if samplerate is None:
+                raise ValueError('Must specify samplerate to initialise Sound with array.')
             if duration is not None:
                 raise ValueError('Cannot specify duration when initialising Sound with array.')
             x = array(data, dtype=float)
         elif isinstance(data, str):
             if duration is not None:
                 raise ValueError('Cannot specify duration when initialising Sound from file.')
-            x = Sound.load(data, rate=rate)
-            rate = x.samplerate
+            x = Sound.load(data, samplerate=samplerate)
+            samplerate = x.samplerate
         elif callable(data):
-            if rate is None:
-                raise ValueError('Must specify rate to initialise Sound with function.')
+            if samplerate is None:
+                raise ValueError('Must specify samplerate to initialise Sound with function.')
             if duration is None:
                 raise ValueError('Must specify duration to initialise Sound with function.')
-            L = int(duration * rate)
-            t = arange(L, dtype=float) / rate
+            L = int(duration * samplerate)
+            t = arange(L, dtype=float) / samplerate
             x = data(t)
         elif isinstance(data, (list, tuple)):
             kwds = {}
-            if rate is not None:
-                kwds['rate'] = rate
+            if samplerate is not None:
+                kwds['samplerate'] = samplerate
             if duration is not None:
                 kwds['duration'] = duration
             channels = tuple(Sound(c, **kwds) for c in data)
             x = hstack(channels)
-            rate = channels[0].samplerate
+            samplerate = channels[0].samplerate
         else:
             raise TypeError('Cannot initialise Sound with data of class ' + str(data.__class__))
         if len(x.shape)==1:
             x.shape = (len(x), 1)
         x = x.view(cls)
-        x.samplerate = rate
+        x.samplerate = samplerate
         x.buffer_init()
         return x
 
     def __array_wrap__(self, obj, context=None):
         handled = False
         x = numpy.ndarray.__array_wrap__(self, obj, context)
-        if not hasattr(x, 'rate') and hasattr(self, 'rate'):
+        if not hasattr(x, 'samplerate') and hasattr(self, 'samplerate'):
             x.samplerate = self.samplerate
         if context is not None:
             ufunc = context[0]
@@ -112,7 +112,7 @@ class Sound(BaseSound, numpy.ndarray):
             elif len(self) < len(other):
                 self = self.extend_length(len(other))
 
-            return Sound(numpy.ndarray.__add__(self, other), rate=self.samplerate)
+            return Sound(numpy.ndarray.__add__(self, other), samplerate=self.samplerate)
         else:
             x = numpy.ndarray.__add__(self, other)
             return Sound(x, self.samplerate)
@@ -133,10 +133,10 @@ class Sound(BaseSound, numpy.ndarray):
         if L == len(self):
             return self
         elif L < len(self):
-            return Sound(self[:L, :], rate=self.samplerate)
+            return Sound(self[:L, :], samplerate=self.samplerate)
         else:
             padding = zeros((L - len(self), self.nchannels))
-            return Sound(concatenate((self, padding)), rate=self.samplerate)
+            return Sound(concatenate((self, padding)), samplerate=self.samplerate)
 
     @check_units(onset=second)
     def shift(self, onset):
@@ -145,28 +145,28 @@ class Sound(BaseSound, numpy.ndarray):
         '''
         onset = int(onset*self.samplerate)
         y = vstack((zeros((onset, self.nchannels)), self))
-        return Sound(y, rate=self.samplerate)
+        return Sound(y, samplerate=self.samplerate)
 
     def repeat(self, n):
         '''
         Repeats the sound n times
         '''
         x = vstack((self,)*n)
-        return Sound(x, rate=self.samplerate)
+        return Sound(x, samplerate=self.samplerate)
 
     ### TODO: test this - I haven't installed scikits.samplerate on windows
     # it should work, according to the documentation 2D arrays are acceptable
     # in the format we use fof sounds here
-    @check_units(rate=Hz)
-    def resample(self, rate, resample_type='sinc_best'):
+    @check_units(samplerate=Hz)
+    def resample(self, samplerate, resample_type='sinc_best'):
         '''
         Returns a resampled version of the sound.
         '''
         if not have_scikits_samplerate:
             raise ImportError('Need scikits.samplerate package for resampling')
-        y = array(resample(self, float(rate / self.samplerate), resample_type),
+        y = array(resample(self, float(samplerate / self.samplerate), resample_type),
                   dtype=float64)
-        return Sound(y, rate=rate)
+        return Sound(y, samplerate=samplerate)
 
     def copy_from(self, other):
         '''
@@ -396,7 +396,7 @@ class Sound(BaseSound, numpy.ndarray):
         return self.ramp(when=when, duration=duration, func=func, inplace=inplace)
 
     @staticmethod
-    def tone(freq, duration, rate=44.1*kHz, dB=None, dBtype='rms'):
+    def tone(freq, duration, samplerate=44.1*kHz, dB=None, dBtype='rms'):
         # TODO: do we want to include the dB and dBtype options here? I would
         # tend to say no because you can set the intensity yourself elsewhere,
         # and this duplicates the functionality?
@@ -404,28 +404,28 @@ class Sound(BaseSound, numpy.ndarray):
         Returns a pure tone at the given frequency for the given duration
         if dB not given, pure tone is between -1 and 1
         '''
-        x = sin(2.0*pi*freq*arange(0*ms, duration, 1/rate))
+        x = sin(2.0*pi*freq*arange(0*ms, duration, 1/samplerate))
         if dB is not None: 
-            return Sound(x, rate).setintensity(dB, type=dBtype)
+            return Sound(x, samplerate).setintensity(dB, type=dBtype)
         else:
-            return Sound(x, rate)
+            return Sound(x, samplerate)
 
     @staticmethod
-    def whitenoise(duration, rate=44.1*kHz, dB=None, dBtype='rms'):
+    def whitenoise(duration, samplerate=44.1*kHz, dB=None, dBtype='rms'):
         # TODO: same comment as for tone about dB/dBtype
         '''
         Returns a white noise for the given duration.
         if dB not given, white noise with a variance of one
         '''
-        x = randn(int(rate*duration))
+        x = randn(int(samplerate*duration))
         
         if dB is not None: 
-            return Sound(x, rate).setintensity(dB,type=dBtype)
+            return Sound(x, samplerate).setintensity(dB,type=dBtype)
         else:
-            return Sound(x, rate)
+            return Sound(x, samplerate)
 
     @staticmethod
-    def click(duration, amplitude=1, rate=44.1*kHz, dB=None):
+    def click(duration, amplitude=1, samplerate=44.1*kHz, dB=None):
         # TODO: similar comment to tone/whitenoise
         '''
         Returns a click with given parameters
@@ -435,29 +435,29 @@ class Sound(BaseSound, numpy.ndarray):
         if dB is not None:
             amplitude = 28e-6*10**(dB/20.)
         
-        x = amplitude*ones(int(duration*rate))
-        return Sound(x, rate)
+        x = amplitude*ones(int(duration*samplerate))
+        return Sound(x, samplerate)
 
     @staticmethod
-    def silent(duration, rate=44.1*kHz):
+    def silent(duration, samplerate=44.1*kHz):
         '''
         Returns a silent, zero sound for the given duration.
         '''
-        x = numpy.zeros(int(duration*rate))
-        return Sound(x, rate)
+        x = numpy.zeros(int(duration*samplerate))
+        return Sound(x, samplerate)
 
     @staticmethod
-    def sequence(sounds, rate=None):
+    def sequence(sounds, samplerate=None):
         '''
         Returns the sequence of sounds in the list sounds joined together
         '''
-        if rate is None:
-            rate = max(s.samplerate for s in sounds)
+        if samplerate is None:
+            samplerate = max(s.samplerate for s in sounds)
             rates = unique([int(s.samplerate) for s in sounds])
             if len(rates)>1:
-                sounds = tuple(s.resample(rate) for s in sounds)
+                sounds = tuple(s.resample(samplerate) for s in sounds)
         x = vstack(sounds)
-        return Sound(x, rate)
+        return Sound(x, samplerate)
 
     def save(self, filename, normalise=False, sampwidth=2):
         '''
@@ -541,8 +541,8 @@ class Sound(BaseSound, numpy.ndarray):
         return (_load_Sound_from_pickle, (asarray(self), float(self.samplerate)))
 
 
-def _load_Sound_from_pickle(arr, rate):
-    return Sound(arr, rate=rate*Hz)
+def _load_Sound_from_pickle(arr, samplerate):
+    return Sound(arr, samplerate=samplerate*Hz)
 
 
 whitenoise = Sound.whitenoise

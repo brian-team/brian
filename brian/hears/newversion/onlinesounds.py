@@ -50,9 +50,9 @@ class OnlineWhiteNoise(OnlineSound):
         return (self.mu+sqrt(self.sigma)*randn(1))*self.tomux
 
 class OnlineWhiteNoiseBuffered(OnlineSound):
-    def __init__(self,rate,mu,sigma,max_abs_itd): 
-        self.rate=rate
-        self.length_buffer=int(max_abs_itd * self.rate)
+    def __init__(self,samplerate,mu,sigma,max_abs_itd): 
+        self.samplerate=samplerate
+        self.length_buffer=int(max_abs_itd * self.samplerate)
         
         self.mu=mu
         self.sigma=sigma
@@ -64,28 +64,28 @@ class OnlineWhiteNoiseBuffered(OnlineSound):
         return self.buffer[self.length_buffer]
     
 class OnlineWhiteNoiseShifted(OnlineSound):
-    def __init__(self,rate,online_white_noise_buffered,shift=lambda:randn(1)*ms,time_interval=-1*ms): 
+    def __init__(self,samplerate,online_white_noise_buffered,shift=lambda:randn(1)*ms,time_interval=-1*ms): 
         #self.shift_applied=[] 
-        self.rate=rate
-        self.interval_in_sample= int(time_interval *self.rate)
+        self.samplerate=samplerate
+        self.interval_in_sample= int(time_interval *self.samplerate)
         #print self.interval_in_sample 
         self.count=0
         self.shift=shift
         self.length_buffer=online_white_noise_buffered.length_buffer
-        self.shift_in_sample=int(shift()* self.rate)
+        self.shift_in_sample=int(shift()* self.samplerate)
         if abs(self.shift_in_sample) > self.length_buffer:
             self.shift_in_sample=sign(self.shift_in_sample)*self.length_buffer
         self.ITDused=[]
-        self.ITDused.append(self.shift_in_sample/self.rate)
+        self.ITDused.append(self.shift_in_sample/self.samplerate)
         self.reference=online_white_noise_buffered
         
         
     def update(self):
         if self.count ==self.interval_in_sample:
-            self.shift_in_sample=int(self.shift()* self.rate)
+            self.shift_in_sample=int(self.shift()* self.samplerate)
             if abs(self.shift_in_sample) > self.length_buffer:
                 self.shift_in_sample=sign(self.shift_in_sample)*self.length_buffer
-            self.ITDused.append(self.shift_in_sample/self.rate)
+            self.ITDused.append(self.shift_in_sample/self.samplerate)
             #print self.shift()
             self.count=0
             

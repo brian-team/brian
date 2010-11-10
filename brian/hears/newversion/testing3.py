@@ -3,7 +3,7 @@ set_global_preferences(usenewbrianhears=True,
                        useweave=False)
 from brian.hears import *
 
-x = Sound(randn(1000, 2), rate=44100*Hz)
+x = Sound(randn(1000, 2), samplerate=44100*Hz)
 
 gfb = GammatoneFilterbank(x, [1*kHz, 2*kHz])
 

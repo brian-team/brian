@@ -4,7 +4,7 @@ set_global_preferences(usenewbrianhears=True,
 from brian.hears import *
 #from brian.hears.filtering import GammatoneFilterbank as oldGFB
 
-x = Sound(randn(1000, 1), rate=44100*Hz)
+x = Sound(randn(1000, 1), samplerate=44100*Hz)
 
 gfb = GammatoneFilterbank(x, [1*kHz, 1.01*kHz])
 print gfb.nchannels

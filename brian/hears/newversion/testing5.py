@@ -3,7 +3,7 @@ set_global_preferences(usenewbrianhears=True,
                        useweave=False)
 from brian.hears import *
 
-x = Sound(randn(1000, 10), rate=44100*Hz)
+x = Sound(randn(1000, 10), samplerate=44100*Hz)
 
 class AccumulateFilterbank(Filterbank):
     def __init__(self, source):

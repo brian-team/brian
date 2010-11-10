@@ -72,15 +72,22 @@ class HRTF(object):
     
     Has attributes:
     
+    ``impulseresponse``
+        The pair of impulse responses (as stereo :class:`Sound` objects)
     ``left``, ``right``
-        The two HRTFs (``Sound`` objects)
+        The two HRTFs (mono :class:`Sound` objects)
     ``samplerate``
         The sample rate of the HRTFs.
     '''
-    def __init__(self, hrir_l, hrir_r):
-        self.samplerate = hrir_l.samplerate
-        self.left = hrir_l
-        self.right = hrir_r
+    def __init__(self, hrir_l, hrir_r=None):
+        if hrir_r is None:
+            hrir = hrir_l
+        else:
+            hrir = Sound((hrir_l, hrir_r), samplerate=hrir_l.samplerate)
+        self.samplerate = hrir.samplerate
+        self.impulseresponse = hrir
+        self.left = hrir.left
+        self.right = hrir.right
 
     # TODO: test this function rewritten to use FFTs and stereo sounds
     def apply(self, sound):
@@ -115,7 +122,7 @@ class HRTF(object):
         left_sound = left_sound[ir_nmax:ir_nmax+len(sound)]
         right_sound = right_sound[ir_nmax:ir_nmax+len(sound)]
         # and return the value as stereo Sound object
-        return Sound((left_sound, right_sound), rate=self.samplerate)
+        return Sound((left_sound, right_sound), samplerate=self.samplerate)
         # OLD VERSION using lfilter, much slower
         #sound_l = Sound(lfilter(self.left, 1, sound), rate=self.samplerate)
         #sound_r = Sound(lfilter(self.right, 1, sound), rate=self.samplerate)
@@ -179,8 +186,8 @@ class HRTFSet(object):
         L, R = self.data
         self.hrtf = []
         for i in xrange(self.num_indices):
-            l = Sound(self.data[0, i, :], rate=self.samplerate)
-            r = Sound(self.data[1, i, :], rate=self.samplerate)
+            l = Sound(self.data[0, i, :], samplerate=self.samplerate)
+            r = Sound(self.data[1, i, :], samplerate=self.samplerate)
             self.hrtf.append(HRTF(l, r))
 
     def subset(self, cond):
