@@ -26,16 +26,17 @@ defaultclock.dt = 1/samplerate
 
 #sound = whitenoise(simulation_duration,samplerate).ramp()
 
+b1=1.81
 nbr_center_frequencies=50
 #center_frequencies=erbspace(100*Hz, 1000*Hz, nbr_center_frequencies)
 center_frequencies=log_space(100*Hz, 1000*Hz, nbr_center_frequencies)
-print center_frequencies
+
 bw=10**(0.03728+0.78563*log10(center_frequencies))
 
 
-gammatone=MeddisGammatoneFilterbank(samplerate, center_frequencies, 3,bw)
+#gammatone=MeddisGammatoneFilterbank(samplerate, center_frequencies, 3,bw)
 
-#gammatone =GammatoneFilterbank(samplerate,center_frequencies )
+gammatone =GammatoneFilterbank(samplerate,center_frequencies,b=b1 )
 gammatone_group = FilterbankGroup(gammatone, sound)
 
 gt_mon = StateMonitor(gammatone_group, 'output', record=True)
@@ -49,7 +50,7 @@ brian_hears=gt_mon.getvalues()
 data=dict()
 data['out']=brian_hears
 savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/gT_goldberg_BH.mat',data)
-savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/gT_meddis_BH.mat',data)
+#savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/gT_meddis_BH.mat',data)
 
 figure()
 imshow(flipud(gt_mon.getvalues()),aspect='auto')

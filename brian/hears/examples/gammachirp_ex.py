@@ -24,7 +24,7 @@ print 'fs=',samplerate,'duration=',len(sound)/samplerate
 simulation_duration=len(sound)/samplerate
 defaultclock.dt = 1/samplerate
 #plot(sound)
-c1=0#-2.96
+c1=-2.96
 b1=1.81
 #sound = whitenoise(simulation_duration,samplerate).ramp()
 
