@@ -10,7 +10,8 @@ hrtf = hrtfset.hrtf[0]
 x = Sound(randn(10000, 1), samplerate=44100*Hz)
 y = hrtf.apply(x)
 
-fb = FIRFilterbank(x, hrtf.impulseresponse.T)
+#fb = FIRFilterbank(x, hrtf.impulseresponse.T)
+fb = hrtf.filterbank(x)
 fb.buffer_init()
 print 'First fetch'
 import time

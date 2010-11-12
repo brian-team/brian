@@ -1,5 +1,6 @@
 from brian import *
 from ..sounds import *
+from ..filtering import FIRFilterbank
 from copy import copy
 
 __all__ = ['HRTF', 'HRTFSet', 'HRTFDatabase']
@@ -12,10 +13,22 @@ class HRTF(object):
     
     ``impulseresponse``
         The pair of impulse responses (as stereo :class:`Sound` objects)
+    ``fir``
+        The impulse responses in a format suitable for using with
+        :class:`FIRFilterbank` (the transpose of ``impulseresponse``).
     ``left``, ``right``
         The two HRTFs (mono :class:`Sound` objects)
     ``samplerate``
         The sample rate of the HRTFs.
+        
+    Has methods:
+    
+    ``apply(sound)``
+        Returns a stereo :class:`Sound` object formed by applying the pair of
+        HRTFs to the mono ``sound`` input.
+        
+    ``filterbank(source, **kwds)``
+        Returns an :class:`FIRFilterbank` object.
     '''
     def __init__(self, hrir_l, hrir_r=None):
         if hrir_r is None:
@@ -65,6 +78,12 @@ class HRTF(object):
         right_sound = right_sound[ir_nmax:ir_nmax+len(sound)]
         return Sound((left_sound, right_sound), samplerate=self.samplerate)        
 
+    def get_fir(self):
+        return array(self.impulseresponse.T, copy=True)
+    fir = property(fget=get_fir)
+
+    def filterbank(self, source, **kwds):
+        return FIRFilterbank(source, self.fir, **kwds)
 
 class HRTFSet(object):
     '''
@@ -102,6 +121,10 @@ class HRTFSet(object):
         The number of HRTF locations.
     ``num_samples``
         The sample length of each HRTF.
+    ``fir_serial``, ``fir_interleaved``
+        The impulse responses in a format suitable for using with
+        :class:`FIRFilterbank`, in serial (LLLLL...RRRRR....) or interleaved
+        (LRLRLR...).
     
     Has methods:
     
@@ -110,6 +133,11 @@ class HRTFSet(object):
         the condition cond. cond should be a function whose argument names are
         names of the parameters of the coordinate system, e.g. for AzimElev you
         might do cond=lambda azim:azim<pi/2.
+        
+    ``filterbank(source, interleaved=False, **kwds)``
+        Returns an :class:`FIRFilterbank` object. If ``interleaved=False`` then
+        the channels are arranged in the order LLLL...RRRR..., otherwise they
+        are arranged in the order LRLRLR....
     '''
     def __init__(self, *args, **kwds):
         self.load(*args, **kwds)
@@ -127,9 +155,7 @@ class HRTFSet(object):
             self.hrtf.append(HRTF(l, r))
 
     def subset(self, cond):
-
         ns = dict((name, self.coordinates[name]) for name in cond.func_code.co_varnames)
-
         try:
             I = cond(**ns)
             I = I.nonzero()[0]
@@ -147,12 +173,32 @@ class HRTFSet(object):
         obj.coordinates = coords
         obj.data = data
         return obj
+    
     @property
     def num_indices(self):
         return self.data.shape[1]
+    
     @property
     def num_samples(self):
         return self.data.shape[2]
+    
+    @property
+    def fir_serial(self):
+        return reshape(self.data, (self.num_indices*2, self.num_samples))
+    
+    @property
+    def fir_interleaved(self):
+        fir = empty((self.num_indices*2, self.num_samples))
+        fir[::2, :] = self.data[0, :, :]
+        fir[1::2, :] = self.data[1, :, :]
+        return fir
+    
+    def filterbank(self, source, interleaved=False, **kwds):
+        if interleaved:
+            fir = self.fir_interleaved
+        else:
+            fir = self.fir_serial
+        return FIRFilterbank(source, fir, **kwds)
 
 
 class HRTFDatabase(object):
