@@ -36,7 +36,14 @@ class Bufferable(object):
     The default methods for ``buffer_init()`` and ``buffer_fetch()`` will
     define a buffer cache which will get larger if it needs to to accommodate
     a ``buffer_fetch(start, end)`` where ``end-start`` is larger than the
-    current cache. The following attributes will automatically be maintained:
+    current cache. If the filterbank has a ``minimum_buffer_size`` attribute,
+    the internal cache will always have at least this size, and the
+    ``buffer_fetch_next(samples)`` method will always get called with
+    ``samples>=minimum_buffer_size``. This can be useful to ensure that the
+    buffering is done efficiently internally, even if the user request
+    buffered chunks that are too small.
+    
+    The following attributes will automatically be maintained:
     
     ``self.cached_buffer_start``, ``self.cached_buffer_end``
         The start and end of the cached segment of the buffer
@@ -69,7 +76,14 @@ class Bufferable(object):
             bend = end-self.cached_buffer_start
             return self.cached_buffer_output[bstart:bend, :]
         # Otherwise we need to fetch some new samples.
+        # in case of minimum_buffer_size, we need to remember what the
+        # requested end point was, because with a minimum buffer size we need
+        # to extend the end point
+        req_end = end 
         samples = end-self.cached_buffer_end
+        if hasattr(self, 'minimum_buffer_size'):
+            samples = max(samples, self.minimum_buffer_size)
+            end = self.cached_buffer_end+samples
         newsegment = self.buffer_fetch_next(samples)
         # otherwise we have an overlap situation - I guess this won't really
         # happen very often but it has to be handled correctly in case.
@@ -79,12 +93,14 @@ class Bufferable(object):
         new_start = min(new_end-self.cached_buffer_output.shape[0], start)
         new_size = new_end-new_start
         new_output = empty((new_size, self.nchannels))
-        new_output[:new_size-samples, :] = self.cached_buffer_output[samples-new_size:, :]
+        if samples!=new_size:
+            new_output[:new_size-samples, :] = self.cached_buffer_output[samples-new_size:, :]
         new_output[new_size-samples:, :] = newsegment
         self.cached_buffer_output = new_output
         self.cached_buffer_start = new_start
         self.cached_buffer_end = new_end
-        return new_output[start-self.cached_buffer_start:, :]
+        # return only those values up to the requested end point
+        return new_output[start-self.cached_buffer_start:req_end-self.cached_buffer_start, :]
     
     def buffer_init(self):
         self.cached_buffer_output = zeros((0, self.nchannels))

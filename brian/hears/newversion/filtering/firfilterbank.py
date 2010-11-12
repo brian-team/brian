@@ -12,7 +12,7 @@ from linearfilterbank import *
 __all__ = ['FIRFilterbank', 'LinearFIRFilterbank', 'FFTFIRFilterbank']
 
 class LinearFIRFilterbank(LinearFilterbank):
-    def __init__(self, source, impulseresponse):
+    def __init__(self, source, impulseresponse, minimum_buffer_size=None):
         # if a 1D impulse response is given we apply it to every channel
         # Note that because we are using LinearFilterbank at the moment, this
         # means duplicating the impulse response. However, it could be stored
@@ -31,9 +31,11 @@ class LinearFIRFilterbank(LinearFilterbank):
         a = zeros_like(b)
         a[:, 0, :] = 1
         LinearFilterbank.__init__(self, source, b, a)
+        if minimum_buffer_size is not None:
+            self.minimum_buffer_size = minimum_buffer_size
 
 class FFTFIRFilterbank(Filterbank):
-    def __init__(self, source, impulseresponse):
+    def __init__(self, source, impulseresponse, minimum_buffer_size=None):
         # if a 1D impulse response is given we apply it to every channel
         # Note that because we are using LinearFilterbank at the moment, this
         # means duplicating the impulse response. However, it could be stored
@@ -52,6 +54,9 @@ class FFTFIRFilterbank(Filterbank):
         self.input_cache = zeros((impulseresponse.shape[1], self.nchannels))
         self.impulseresponse = impulseresponse
         self.fftcache_nmax = -1
+        if minimum_buffer_size is None:
+            minimum_buffer_size = 3*impulseresponse.shape[1]
+        self.minimum_buffer_size = minimum_buffer_size
 
     def buffer_init(self):
         Filterbank.buffer_init(self)
@@ -111,10 +116,19 @@ class FIRFilterbank(Filterbank):
         ``ir_length`` the number of samples in the impulse response. Note that
         if you are using a multichannel sound ``x`` as a set of impulse responses,
         the array should be ``impulseresponse=array(x.T)``.
+    ``minimum_buffer_size=None``
+        If specified, gives a minimum size to the buffer. By default, for the
+        FFT convolution based implementation of ``FIRFilterbank``, the minimum
+        buffer size will be ``3*ir_length``. For maximum efficiency with FFTs,
+        ``buffer_size+ir_length`` should be a power of 2 (otherwise there will
+        be some zero padding), and ``buffer_size`` should be as large as
+        possible.
     '''
-    def __init__(self, source, impulseresponse, use_linearfilterbank=False):
+    def __init__(self, source, impulseresponse, use_linearfilterbank=False,
+                 minimum_buffer_size=None):
         if use_linearfilterbank:
             self.__class__ = LinearFIRFilterbank
         else:
             self.__class__ = FFTFIRFilterbank
-        self.__init__(source, impulseresponse)
+        self.__init__(source, impulseresponse,
+                      minimum_buffer_size=minimum_buffer_size)
