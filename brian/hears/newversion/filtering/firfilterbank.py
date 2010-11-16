@@ -87,7 +87,7 @@ class FFTFIRFilterbank(Filterbank):
             curoutput = ifft(curoutput_fft)
             # unpad
             curoutput = curoutput[len(previnput):len(previnput)+len(curinput)]
-            output[:, i] = curoutput
+            output[:, i] = curoutput.real
         if self.fftcache_nmax!=nmax:
             self.fftcache_nmax = nmax
         # update input cache
