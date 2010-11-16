@@ -3,8 +3,8 @@
 
 from brian import *
 from scipy import signal, weave, random
-from filterbank import Filterbank
-from linearfilterbank import LinearFilterbank
+from filterbank import Filterbank,RestructureFilterbank
+from linearfilterbank import *
 
 __all__ = ['CascadeFilterbank',
            'GammatoneFilterbank',
@@ -14,6 +14,9 @@ __all__ = ['CascadeFilterbank',
            'IIRFilterbank',
            'ButterworthFilterbank',
            'TimeVaryingIIRFilterbank',
+           'Asym_Comp_Filterbank',
+           'LowPassFilterbank',
+           'Asym_Comp_Coeff',
            ]
 
 def factorial(n):
@@ -27,10 +30,10 @@ class CascadeFilterbank(LinearFilterbank):
     Cascade of a filterbank (nbr_cascade times)
     '''
     
-    def __init__(self, filterbank,nbr_cascade):
+    def __init__(self,source, filterbank,nbr_cascade):
         b=filterbank.filt_b
         a=filterbank.filt_a
-        self.fs=filterbank.fs
+        self.fs = fs = source.samplerate
         self.N=filterbank.N
         self.filt_b=zeros((b.shape[0], b.shape[1],nbr_cascade))
         self.filt_a=zeros((a.shape[0], a.shape[1],nbr_cascade))
@@ -38,7 +41,7 @@ class CascadeFilterbank(LinearFilterbank):
             self.filt_b[:,:,i]=b[:,:,0]
             self.filt_a[:,:,i]=a[:,:,0]
             
-        LinearFilterbank.__init__(self, self.filt_b, self.filt_a, self.fs*Hz)
+        LinearFilterbank.__init__(self, source,self.filt_b, self.filt_a)
     
     
 class GammatoneFilterbank(LinearFilterbank):
@@ -63,7 +66,7 @@ class GammatoneFilterbank(LinearFilterbank):
     order=1
     
     @check_units(fs=Hz)
-    def __init__(self, source, cf):
+    def __init__(self, source, cf,b=None):
 
         cf = array(cf)
         self.cf = cf
@@ -73,7 +76,10 @@ class GammatoneFilterbank(LinearFilterbank):
         EarQ, minBW, order = self.EarQ, self.minBW, self.order
         T = 1/fs
         ERB = ((cf/EarQ)**order + minBW**order)**(1/order)
-        B = 1.019*2*pi*ERB
+        if b==None:
+            B = 1.019*2*pi*ERB
+        else:
+            B = b*2*pi*ERB
         self.B = B
         self.order=order
         A0 = T
@@ -115,13 +121,13 @@ class GammatoneFilterbank(LinearFilterbank):
         self.A0, self.A11, self.A12, self.A13, self.A14, self.A2, self.B0, self.B1, self.B2, self.gain=\
             A0*allfilts, A11, A12, A13, A14, A2*allfilts, B0*allfilts, B1, B2, gain
 
-        filt_a=dstack((array([ones(len(cf)), B1, B2]).T,)*4)
-        filt_b=dstack((array([A0/gain, A11/gain, A2/gain]).T,
+        self.filt_a=dstack((array([ones(len(cf)), B1, B2]).T,)*4)
+        self.filt_b=dstack((array([A0/gain, A11/gain, A2/gain]).T,
                          array([A0*ones(len(cf)), A12, zeros(len(cf))]).T,
                          array([A0*ones(len(cf)), A13, zeros(len(cf))]).T,
                          array([A0*ones(len(cf)), A14, zeros(len(cf))]).T))
     
-        LinearFilterbank.__init__(self, source, filt_b, filt_a)
+        LinearFilterbank.__init__(self, source, self.filt_b, self.filt_a)
 
 class MeddisGammatoneFilterbank(LinearFilterbank):
     '''
@@ -132,12 +138,12 @@ class MeddisGammatoneFilterbank(LinearFilterbank):
     minBW = 24.7
     
     @check_units(fs=Hz)
-    def __init__(self, fs, cf, order, bw):  
+    def __init__(self, source, cf, order, bw):  
         cf = array(cf)
         bw = array(bw)
         self.cf = cf
         self.N = len(cf)
-        self.fs = fs
+        self.fs = fs = source.samplerate
         fs = float(fs)
         dt = 1/fs
         phi = 2 * pi * bw * dt
@@ -155,11 +161,87 @@ class MeddisGammatoneFilterbank(LinearFilterbank):
         a0 = abs(tf)
         a1 = alpha * a0   
         # we apply the same filters order times so we just duplicate them in the 3rd axis for the parallel_lfilter_step command
-        a = dstack((array([b0, b1, b2]).T,)*order)
-        b = dstack((array([a0, a1, zeros(len(cf))]).T,)*order)
+        self.filt_a = dstack((array([b0, b1, b2]).T,)*order)
+        self.filt_b = dstack((array([a0, a1, zeros(len(cf))]).T,)*order)
         self.order = order
         
-        LinearFilterbank.__init__(self, b, a, fs*Hz)
+        LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a)
+        
+        
+class Asym_Comp_Filterbank(LinearFilterbank):
+
+     
+    def __init__(self, source, fr, c=None,asym_comp_order=None,b=None):
+        fr = array(fr)
+        ''' 
+        TODO difference between order and cascade
+        '''
+        
+        self.fr = fr
+        self.N = len(fr)
+     
+        self.fs = fs = source.samplerate
+        if c==None:
+            c=1*ones((fr.shape))
+        if b==None:
+            b=1.019*ones((fr.shape))
+        if asym_comp_order==None:
+            order=3
+        compensation_filter_order=4
+        ERBw=24.7*(4.37e-3*fr+1.)
+        nbr_cascade=4
+        order=1
+        p0=2
+        p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
+        p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
+        p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
+        p4=1.0724
+
+        self.filt_b=zeros((len(fr), 2*order+1, nbr_cascade))
+        self.filt_a=zeros((len(fr), 2*order+1, nbr_cascade))
+
+        for k in arange(nbr_cascade):
+
+            r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/self.fs) #k instead of k-1 because range 0 N-1
+
+            Dfr=(p0*p4)**(k)*p2*c*b*ERBw
+
+            phi=2*pi*maximum((fr+Dfr), 0)/self.fs
+            psy=2*pi*maximum((fr-Dfr), 0)/self.fs
+
+            ap=vstack((ones(r.shape),-2*r*cos(phi), r**2)).T
+            bz=vstack((ones(r.shape),-2*r*cos(psy), r**2)).T
+
+            fn=fr#+ compensation_filter_order* p3 *c *b *ERBw/4;
+
+            vwr=exp(1j*2*pi*fn/self.fs)
+            vwrs=vstack((ones(vwr.shape), vwr, vwr**2)).T
+
+            ##normilization stuff
+            nrm=abs(sum(vwrs*ap, 1)/sum(vwrs*bz, 1))
+            
+            bz=bz*tile(nrm,[3,1]).T
+            self.filt_b[:, :, k]=bz
+            self.filt_a[:, :, k]=ap
+
+        LinearFilterbank.__init__(self, source, self.filt_b, self.filt_a)
+
+class LowPassFilterbank(LinearFilterbank):
+   
+    def __init__(self,source, N,cutOffFrequency):
+        self.N=N
+        self.fs = fs = source.samplerate
+        dt=1./self.fs
+        self.filt_b=zeros((self.N, 3, 1))
+        self.filt_a=zeros((self.N, 3, 1))
+        tau=1/(2*pi*cutOffFrequency)
+        self.filt_b[:,0,0]=dt/tau*ones(N)
+        self.filt_b[:,1,0]=0*ones(N)
+        self.filt_a[:,0,0]=1*ones(N)
+        self.filt_a[:,1,0]=-(1-dt/tau)*ones(N)
+        LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
+        
+ 
             
 class GammachirpIIRFilterbank(LinearFilterbank):
     '''
@@ -247,7 +329,7 @@ class GammachirpFIRFilterbank(LinearFilterbank):
     The response is normalized so that every parameter set give the same peak value
     
     '''
-    def __init__(self, fs, F0,c,time_constant):
+    def __init__(self,source, fs, F0,c,time_constant):
         try:
             len(F0)
             len(c)
@@ -424,93 +506,86 @@ class ButterworthFilterbank(LinearFilterbank):
         self.N = N    
         LinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate) 
         
-           
+ 
 class TimeVaryingIIRFilterbank(Filterbank):
     ''' IIR fliterbank where the coefficients vary. It is a bandpass filter
     of which the center frequency vary follwoing a OrnsteinUhlenbeck process
     '''
 
     @check_units(samplerate=Hz)
-    def __init__(self, samplerate, coeff, m_i, s_i, tau_i):
-        self.fs=samplerate
-        self.N=len(m_i)
-        self.b=zeros((self.N, 3, 1))
-        self.a=zeros((self.N, 3, 1))
-        self.t=0*ms
-        self.coeff=coeff
-        self.deltaT=1./self.fs
-        self.m_i=m_i
-        self.s_i=s_i
-        self.tau_i=tau_i
-        self.Q=1./coeff
-
-        self.BW=2*arcsinh(1./2/self.Q)*1.44269 ## bandwidth in octave
-        #print self.Q,self.BW
-        w0=2*pi*m_i/self.fs
-        self.fc=m_i
-        alpha=sin(w0)*sinh(log(2)/2*self.BW*w0/sin(w0))
-
-        self.b[:, 0, 0]=sin(w0)/2
-        self.b[:, 1, 0]=0
-        self.b[:, 2, 0]=-sin(w0)/2
-
-        #self.a=array([1 + alpha,-2*cos(w0),1 - alpha])
-        self.a[:, 0, 0]=1+alpha
-        self.a[:, 1, 0]=-2*cos(w0)
-        self.a[:, 2, 0]=1-alpha
-
-        #self.t=0
-       ## print self.a.shape
-#        self.a = a
-#        self.b = b
-
+    def __init__(self, source,interval_change,vary_filter_class):
+        
+        
+        self.fs = fs = source.samplerate
+        self.vary_filter_class=vary_filter_class
+                
+        self.sub_buffer_length=interval_change
+        self.buffer_start=-self.sub_buffer_length
+        self.vary_filter_class.sub_buffer_length=self.sub_buffer_length
+        self.vary_filter_class.buffer_start=self.buffer_start
+        self.b,self.a=self.vary_filter_class.filt_b,self.vary_filter_class.filt_a
+        
+        self.N=self.b.shape[0]
+        if self.N!=source.nchannels:
+            if source.nchannels!=1:
+                raise ValueError('Can only automatically duplicate source channels for mono sources, use RestructureFilterbank.')
+            source = RestructureFilterbank(source,self.N)
+            
+        self.source=source
+        Filterbank.__init__(self, source)
         self.zi=zeros((self.b.shape[0], self.b.shape[1]-1, self.b.shape[2]))
         
-    def timestep(self, input):
-        if isinstance(input, ndarray):
-            input=input.flatten()
+    def buffer_apply(self, input):
+#        if isinstance(input, ndarray):
+#            input=input.flatten()
 
-        #self.t=self.t+self.deltaT
-        #f0=8000*Hz+2000*Hz*sin(2*pi*10*Hz*self.t)
-        #tau_i=100*ms
-        mu_i=self.m_i/self.tau_i
-        sigma_i=sqrt(2)*self.s_i/sqrt(self.tau_i)
-        self.fc=self.fc-self.fc/self.tau_i*self.deltaT+mu_i*self.deltaT+sigma_i*random.randn(1)*sqrt(self.deltaT)
-        BWhz=self.fc/self.Q
-        #print self.fc,BWhz
-        if self.fc<=50*Hz:
-            self.fc=50*Hz
+#        self.vary_filter_class()
+#        self.b,self.a=self.vary_filter_class.filt_b,self.vary_filter_class.filt_a
+#        print input.shape
+#        return apply_linear_filterbank(self.b, self.a,input, self.zi)
+        buffer_length=input.shape[0]
+        response=zeros((buffer_length,self.N))
+        for isub_buffer in xrange(buffer_length/self.sub_buffer_length):
+            self.vary_filter_class()
+            self.b,self.a=self.vary_filter_class.filt_b,self.vary_filter_class.filt_a
+#            print input[isub_buffer*self.sub_buffer_length:(isub_buffer+1)*self.sub_buffer_length,:].shape
+            response[isub_buffer*self.sub_buffer_length:(isub_buffer+1)*self.sub_buffer_length,:]=apply_linear_filterbank(self.b, self.a,input[isub_buffer*self.sub_buffer_length:(isub_buffer+1)*self.sub_buffer_length,:], self.zi)
 
-        if self.fc+BWhz/2>=self.fs/2:
-            self.fc=self.fs/2-1000*Hz
-
-#        if self.fc-BWhz/2<=0:
-#            self.fc=BWhz/2+20*Hz
-#        if self.fc+BWhz/2>=self.fs/2:
-#            self.fc=self.fs/2-BWhz/2-20*Hz
-#        self.fcvstime[self.t]=self.fc
-#        self.t=self.t+1
-        #print self.fc
-
-
-        w0=2*pi*self.fc/self.fs
-        alpha=sin(w0)*sinh(log(2)/2*self.BW*w0/sin(w0))
-
-        self.b[:, 0, 0]=sin(w0)/2
-        self.b[:, 1, 0]=0
-        self.b[:, 2, 0]=-sin(w0)/2
-
-        #self.a=array([1 + alpha,-2*cos(w0),1 - alpha])
-        self.a[:, 0, 0]=1+alpha
-        self.a[:, 1, 0]=-2*cos(w0)
-        self.a[:, 2, 0]=1-alpha
-        #y=parallel_lfilter_step(self.b, self.a, input, self.zi)
-        #y, self.zi = signal.lfilter(self.b, self.a, input, zi=self.zi)
-        return parallel_lfilter_step(self.b, self.a, input, self.zi)
-
-    def apply_single(self, input):
-        pass
+        return response
     
-    def __len__(self):
-        return self.N
-    samplerate=property(fget=lambda self:self.fs)
+def Asym_Comp_Coeff(samplerate,fr,filt_b,filt_a,b,c,order,p0,p1,p2,p3,p4):
+    '''
+     overhead if passing dico
+     better pass filterb a or initiliaze the here
+     better put his function inside the __call__
+    give the coefficients of an asymmetric compensation filter
+    It is optimized to be used as coefficients of a time varying filter
+    as all the parameters that does not change are given as arguments
+    '''
+    ERBw=24.7*(4.37e-3*fr+1.)
+    nbr_cascade=4
+    for k in arange(nbr_cascade):
+
+        r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/samplerate) #k instead of k-1 because range 0 N-1
+
+        Dfr=(p0*p4)**(k)*p2*c*b*ERBw
+
+        phi=2*pi*maximum((fr+Dfr), 0)/samplerate
+        psy=2*pi*maximum((fr-Dfr), 0)/samplerate
+
+        ap=vstack((ones(r.shape),-2*r*cos(phi), r**2)).T
+        bz=vstack((ones(r.shape),-2*r*cos(psy), r**2)).T
+
+        
+
+        vwr=exp(1j*2*pi*fr/samplerate)
+        vwrs=vstack((ones(vwr.shape), vwr, vwr**2)).T
+
+        ##normilization stuff
+        nrm=abs(sum(vwrs*ap, 1)/sum(vwrs*bz, 1))
+        bz=bz*tile(nrm,[3,1]).T
+
+        filt_b[:, :, k]=bz
+        filt_a[:, :, k]=ap
+
+    return filt_b,filt_a
