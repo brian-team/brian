@@ -7,7 +7,7 @@ from ..bufferable import Bufferable
 # So far, they seem to more or less work, but probably need more thorough
 # testing.
 
-__all__ = ['LinearFilterbank']
+__all__ = ['LinearFilterbank','apply_linear_filterbank']
 
 def apply_linear_filterbank(b, a, x, zi):
     '''
