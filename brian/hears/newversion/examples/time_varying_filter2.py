@@ -90,7 +90,7 @@ class FilterCoeffUpdate:
         self.filt_a[:, 2, 0]=1-alpha
 
 FilterCoeffUpdate_class=FilterCoeffUpdate(samplerate,nbr_channel,fc_init,fc_generator,coeff)
-G2= TimeVaryingIIRFilterbank(sound,nbr_channel,interval_change,FilterCoeffUpdate_class)
+G2= TimeVaryingIIRFilterbank(sound,interval_change,FilterCoeffUpdate_class)
 
 
 G2.buffer_init()
