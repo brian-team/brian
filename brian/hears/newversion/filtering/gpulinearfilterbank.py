@@ -1,7 +1,7 @@
 '''
 '''
 # TODO: support for GPUBufferedArray?
-import ensure_failure # import this in order to temporarily disable GPU
+#import ensure_failure # import this in order to temporarily disable GPU
 from numpy import *
 import pycuda
 #import pycuda.autoinit as autoinit
@@ -12,6 +12,7 @@ from brian.experimental.cuda.buffering import *
 import re
 from filterbank import Filterbank, RestructureFilterbank
 from gputools import *
+import gc
 
 __all__ = ['LinearFilterbank']
 
@@ -134,7 +135,7 @@ class LinearFilterbank(Filterbank):
         #print code
         self.gpu_mod=pycuda.compiler.SourceModule(code)
         self.gpu_filt_func=self.gpu_mod.get_function("filt")
-        blocksize=512#self.maxblocksize
+        blocksize=256
         if n<blocksize:
             blocksize=n
         if n%blocksize==0:

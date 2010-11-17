@@ -1,6 +1,5 @@
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
+set_global_preferences(usenewbrianhears=True)
 from brian.hears import *
 
 x = Sound(randn(1000, 2), samplerate=44100*Hz)

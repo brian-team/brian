@@ -5,7 +5,7 @@ from brian.hears import *
 from plot_count import ircam_plot_count
 import time
 
-hrtfdb = IRCAM_LISTEN(r'F:\HRTF\IRCAM')
+hrtfdb = IRCAM_LISTEN(r'D:\HRTF\IRCAM')
 subject = 1002
 hrtfset = hrtfdb.load_subject(subject)
 index = randint(hrtfset.num_indices)

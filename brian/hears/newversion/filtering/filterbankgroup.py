@@ -45,7 +45,7 @@ class FilterbankGroup(NeuronGroup):
         else:
             kwds['clock'] = Clock(dt=1/filterbank.samplerate)        
         
-        self.buffersize = buffersize = kwds.get('buffersize', 1024)
+        self.buffersize = buffersize = kwds.pop('buffersize', 1024)
         self.buffer_pointer = buffersize
         self.buffer_start = -buffersize
         
