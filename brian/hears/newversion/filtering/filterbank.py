@@ -43,12 +43,12 @@ class Filterbank(Bufferable):
     The following class takes N input channels and sums them to a single output
     channel::
     
-    class AccumulateFilterbank(Filterbank):
-        def __init__(self, source):
-            Filterbank.__init__(self, source)
-            self.nchannels = 1
-        def buffer_apply(self, input):
-            return reshape(sum(input, axis=1), (input.shape[0], 1))
+        class AccumulateFilterbank(Filterbank):
+            def __init__(self, source):
+                Filterbank.__init__(self, source)
+                self.nchannels = 1
+            def buffer_apply(self, input):
+                return reshape(sum(input, axis=1), (input.shape[0], 1))
             
     Note that the default ``Filterbank.__init__`` will set the number of
     channels equal to the number of source channels, but we want to change it
