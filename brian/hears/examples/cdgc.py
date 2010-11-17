@@ -1,8 +1,8 @@
 
 from brian import *
 from time import  time
-
-
+#c06194a991
+from scipy.io import savemat
 from brian.hears import*
 from brian.hears import filtering
 filtering.use_gpu = False
@@ -11,11 +11,11 @@ filtering.use_gpu = False
 samplerate=100*kHz
 defaultclock.dt = 1/samplerate
 simulation_duration=50*ms
-dBlevel=50  # dB level in rms dB SPL
+dBlevel=60  # dB level in rms dB SPL
 
 samplerate,sound=get_wav('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
 sound=Sound(sound,samplerate)
-sound=sound/max(sound)*0.8
+sound=sound.setintensity(dBlevel)
 #sound.atintensity(dBlevel)
 print 'fs=',samplerate,'duration=',len(sound)/samplerate
 simulation_duration=len(sound)/samplerate
@@ -25,6 +25,7 @@ defaultclock.dt = 1/samplerate
 #sound = whitenoise(simulation_duration,samplerate,dB=dBlevel).ramp()
 nbr_cf=50
 cf=erbspace(100*Hz,1000*Hz, nbr_cf) 
+cf=log_space(100*Hz, 1000*Hz, nbr_cf)
 
 order=4
 c1=-2.96
@@ -37,13 +38,20 @@ ERBwidth= 24.7*(4.37*cf/1000 + 1)
 ERBspace = mean(diff(ERBrate))
 
 fp1 = cf + c1*ERBwidth*b1/order
-
+print fp1
 #print fp1,cf
 #### Control Path ####
 
 #bandpass filter (second order  gammatone filter)
-pGc= GammachirpFilterbankIIR(samplerate, cf, c=c1,b=b1)
-level1_fb=FilterbankGroup(pGc, sound)   
+pgammatone =GammatoneFilterbank(samplerate,cf,b=b1 )
+pasym_comp=Asym_Comp_Filterbank(samplerate, cf, c=c1,asym_comp_order=4,b=b1)
+pGc=FilterbankChain([pgammatone,pasym_comp])
+
+pgammatone2 =GammatoneFilterbank(samplerate,cf,b=b1 )
+pasym_comp2=Asym_Comp_Filterbank(samplerate, cf, c=c1,asym_comp_order=4,b=b1)
+pGc2=FilterbankChain([pgammatone2,pasym_comp2])
+
+level1_fb=FilterbankGroup(pGc2, sound)   
 # control
 lct_ERB=1.5
 n_ch_shift  = round(lct_ERB/ERBspace);
@@ -54,8 +62,8 @@ fp1_control = fp1[indch_control]
 frat_control=1.08
 fr2_control = frat_control*fp1_control
 
-asym_comp_control=Asym_Comp_Filterbank(samplerate, fr2_control, c=c2,asym_comp_order=4,b=b2)
-control_path=FilterbankChain([pGc,asym_comp_control])
+asym_comp_control3=Asym_Comp_Filterbank(samplerate, fr2_control, c=c2,asym_comp_order=4,b=b2)
+control_path=FilterbankChain([pGc2,asym_comp_control3])
 level2_fb=FilterbankGroup(control_path,sound)   
 
 param=dict()
@@ -120,16 +128,18 @@ class AsymCompUpdate:
          self.filt_b, self.filt_a=Asym_Comp_Coeff(samplerate,fr2,self.filt_b,self.filt_a,self.b,self.c,self.order,self.p0,self.p1,self.p2,self.p3,self.p4)
                  
 
-
 #### Signal Path ####
-
 asym_signal= TimeVaryingIIRFilterbank2(sound.rate,nbr_cf,AsymCompUpdate(samplerate,fp1,level1_fb.output,level2_fb.output,param))
 
+#asym_signal= TimeVaryingIIRFilterbank2(sound.rate,nbr_cf,AsymCompUpdate(samplerate,fp1,level1_fb.output,level2_fb.output,param))
+#asym_signal=Asym_Comp_Filterbank(samplerate, fp1, c=c2,asym_comp_order=4,b=b2)
 
 
-##nonlinear pathway
+#nonlinear pathway
 signal_path_fb=FilterbankChain([pGc,asym_signal])
+
 #
+##signal_path= FilterbankGroup(pGc,sound)
 signal_path= FilterbankGroup(signal_path_fb,sound)
 #
 ##dnrl= FilterbankGroup(dnrl_filter, sound)
@@ -139,6 +149,10 @@ t1=time()
 run(simulation_duration)
 print 'the simulation took %f sec to run' %(time()-t1)
 
+brian_hears=signal_monitor.getvalues()
+data=dict()
+data['out']=brian_hears
+savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/cdgc_BH.mat',data)
 
 
 

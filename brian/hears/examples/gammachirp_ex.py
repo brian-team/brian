@@ -32,10 +32,16 @@ nbr_center_frequencies=50
 cf=erbspace(100*Hz, 1000*Hz, nbr_center_frequencies)
 cf=log_space(100*Hz, 1000*Hz, nbr_center_frequencies)
 
+gammatone =GammatoneFilterbank(samplerate,cf,b=b1 )
+asym_comp=Asym_Comp_Filterbank(samplerate, cf, c=c1,asym_comp_order=4,b=b1)
+pGc=FilterbankChain([gammatone,asym_comp])
 
-
-pGc= GammachirpFilterbankIIR(samplerate, cf, c=c1,b=b1)
+#asym_comp2=Asym_Comp_Filterbank(samplerate, cf, c=2.17,asym_comp_order=4,b=2.2)
+#pGc=FilterbankChain([gammatone,asym_comp,asym_comp2]) 
+#pGc= GammachirpFilterbankIIR(samplerate, cf, c=c1,b=b1)
 gammachirp_group = FilterbankGroup(pGc, sound)
+
+
 
 gc_mon = StateMonitor(gammachirp_group, 'output', record=True)
 
