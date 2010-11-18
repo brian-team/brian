@@ -85,6 +85,10 @@ class Sound(BaseSound, numpy.ndarray):
             args = context[1]
         return x
     
+    def __array_finalize__(self,obj):
+        if obj is None: return
+        self.samplerate = getattr(obj,'samplerate',None)
+    
     def buffer_init(self):
         pass
         
@@ -470,8 +474,8 @@ class Sound(BaseSound, numpy.ndarray):
         if ext=='wav':
             import wave as sndmodule
         elif ext=='aiff' or ext=='aifc':
-            raise NotImplementedError('Can only save as wav soundfiles')
             import aifc as sndmodule
+            raise NotImplementedError('Can only save as wav soundfiles')
         else:
             raise NotImplementedError('Can only save as wav soundfiles')
         
@@ -535,7 +539,7 @@ class Sound(BaseSound, numpy.ndarray):
             data[:,i]=array(everyOther(out,offset=i,channels=nchannels))
             data[:,i]/=scale
             data[:,i]-=meanval
-        return Sound(data,framerate*Hz)
+        return Sound(data,samplerate=framerate*Hz)
 
     def __reduce__(self):
         return (_load_Sound_from_pickle, (asarray(self), float(self.samplerate)))
