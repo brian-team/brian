@@ -14,10 +14,177 @@ are designed to be modular and easily extendable. Typically, a model will
 consist of a chain starting with a sound which is plugged into a chain of
 filter banks, which are then plugged into a neuron model. 
 
+The two main classes in Brian hears are :class:`Sound` and :class:`Filterbank`,
+which function very similarly. Each consists of multiple channels (typically
+just 1 or 2 in the case of sounds, and many in the case of filterbanks,
+but in principle any number of channels is possible for either). The difference
+is that a filterbank has an input source, which can be either a sound or
+another filterbank.
+
+All scripts using Brian hears should start by importing the Brian and Brian
+hears packages as follows::
+
+	from brian import *
+	from brian.hears import *
+
+.. seealso:: Reference documentation for :ref:`brian-hears-reference`.
+
+Sounds
+------
+
+Sounds can be loaded from a WAV or AIFF file with the :meth:`Sound.load`
+method (and saved with the :meth:`Sound.save`) method, or by initialising
+with a filename::
+
+	sound = Sound.load('test.wav')
+	sound = Sound('test.aif')
+	sound.save('test.wav')
+	
+Various standard types of sounds can also be constructed, e.g. pure tones,
+white noise, clicks and silence::
+
+	sound = Sound.tone(1*kHz, 1*second, samplerate=44.1*kHz)
+	sound = Sound.whitenoise(1*second, samplerate=44.1*kHz)
+	sound = Sound.click(1*second, samplerate=44.1*kHz)
+	sound = Sound.silent(1*kHz, 1*second, samplerate=44.1*kHz)
+
+You can pass a function of time or an array to initialise a sound::
+
+	# Equivalent to Sound.tone
+	sound = Sound(lambda t:sin(50*Hz*2*pi*t), duration=1*second)
+	
+	# Equivalent to Sound.whitenoise
+	sound = Sound(randn(int(1*second*44.1*kHz)), samplerate=44.1*kHz)
+
+Multiple channel sounds can be passed as a list or tuple of filenames,
+arrays or :class:`Sound` objects::
+
+	sound = Sound(('left.wav', 'right.wav'))
+	sound = Sound((randn(44100), randn(44100)), samplerate=44.1*kHz)
+	sound = Sound((Sound.tone(1*kHz, 1*second),
+	               Sound.tone(2*kHz, 1*second)))
+	               
+A multi-channel sound is also a numpy array of shape ``(nsamples, nchannels)``,
+and can be initialised as this (or converted to a standard numpy array)::
+
+	sound = Sound(randn(44100, 2), samplerate=44.1*kHz)
+	arr = array(sound)
+
+Sounds can be added and multiplied::
+
+	sound = Sound.tone(1*kHz, 1*second)+0.1*Sound.whitenoise(1*second)
+	
+For more details on combining and operating on sounds, including shifting them
+in time, repeating them, resampling them, ramping them, finding and setting
+intensities, plotting spectrograms, etc., see :class:`Sound`.
+
+Sounds can be played using the :meth:`Sound.play` method::
+
+	sound.play()
+
+The number of channels in a sound can be found using the ``nchannels``
+attribute, and individual channels can be extracted using the
+:meth:`Sound.channel` method, or using the ``left`` and ``right`` attributes
+in the case of stereo sounds::
+
+	print sound.nchannels
+	print amax(abs(sound.left-sound.channel(0)))
+
+As an example of usage, the following swaps the channels in a stereo sound::
+
+	sound = Sound('test_stereo.wav')
+	swappedsound = Sound((sound.right, sound.left))
+	swappedsound.play()
+
 Filter chains
 -------------
 
-The standard way to 
+The standard way to set up a model based on filterbanks is to start with a 
+sound and then construct a chain of filterbanks that modify it, for example
+a common model of cochlear filtering is to apply a bank of gammatone filters,
+and then half wave rectify and compress it (for example, with a 1/3 power law).
+This can be achieved in Brian hears as follows (for 3000 channels in the
+human hearing range from 20 Hz to 20 kHz)::
+
+	cfmin, cfmax, cfN = 20*Hz, 20*kHz, 3000
+	cf = erbspace(cfmin, cfmax, cfN)
+	sound = Sound('test.wav')
+	gfb = GammatoneFilterbank(sound, cf)
+	ihc = FunctionFilterbank(gfb, lambda x: clip(x, 0, Inf)**(1.0/3.0))
+	
+The :func:`erbspace` function constructs an array of centre frequencies on the
+ERB scale. The ``GammatoneFilterbak(source, cf)`` class creates a bank
+of gammatone filters with inputs coming from ``source`` and the centre
+frequencies in the array ``cf``. The ``FunctionFilterbank(source, func)``
+creates a bank of filters that applies the given function ``func`` to the inputs
+in ``source``.
+
+Filterbanks can be added and multiplied, for example for creating a linear and
+nonlinear path, e.g.::
+
+	sum_path_fb = 0.1*linear_path_fb+0.2*nonlinear_path_fb
+
+A filterbank must have an input with either a single channel or an equal number
+of channels. In the former case, the single channel is duplicated for each of
+the output channels. However, you might want to apply gammatone filters to a
+stereo sound, for example, but in this case it's not clear how to duplicate
+the channels and you have to specify it explicitly. You do this using
+:class:`RestructureFilterbank`. For example, if the input is a stereo sound
+with channels LR then you can get an output with channels LLLRRR or LRLRLR
+by writing (respectively)::
+
+	fb = RestructureFilterbank(sound, 3)
+	fb = RestructureFilterbank(sound, 3, 'interleave')
+	
+This class can also be used to combine multiple filterbanks into one, either
+joining them in series or interleaving them, as follows::
+
+	fb = RestructureFilterbank((source1, source2))
+	fb = RestructureFilterbank((source1, source2), type='interleave')
+	
+In fact, this class has a lot more options, see the reference documentation for
+all the details.
+
+Two of the most important generic filterbanks (upon which many of the others
+are based) are :class:`LinearFilterbank` and :class:`FIRFilterbank`. The former
+is a generic digital filter for FIR and IIR filters. The latter is specifically
+for FIR filters. These can be implemented with the former, but the
+implementation is optimised using FFTs with the latter (which can often be
+hundreds of times faster, particularly for long impulse responses). IIR filter
+banks can be designed using :class:`IIRFilterbank` which is based on the
+syntax of the ``iirdesign`` scipy function.
+
+Connecting with Brian
+---------------------
+
+To create spiking neuron models based on filter chains, you use the
+:class:`FilterbankGroup` class. This acts exactly like a standard Brian
+:class:`NeuronGroup` except that you give a source filterbank and choose a
+state variable in the target equations for the output of the filterbank.
+A simple auditory nerve fibre model would take the inner hair cell model from
+earlier, and feed it into a noisy leaky integrate-and-fire model as follows::
+
+	# Inner hair cell model as before
+	cfmin, cfmax, cfN = 20*Hz, 20*kHz, 3000
+	cf = erbspace(cfmin, cfmax, cfN)
+	sound = Sound.whitenoise(100*ms)
+	gfb = GammatoneFilterbank(sound, cf)
+	ihc = FunctionFilterbank(gfb, lambda x: 3*clip(x, 0, Inf)**(1.0/3.0))
+	# Leaky integrate-and-fire model with noise and refractoriness
+	eqs = '''
+	dv/dt = (I-v)/(1*ms)+0.2*xi*(2/(1*ms))**.5 : 1
+	I : 1
+	'''
+	G = FilterbankGroup(ihc, 'I', eqs, reset=0, threshold=1, refractory=5*ms)
+	# Run, and raster plot of the spikes
+	M = SpikeMonitor(G)
+	run(sound.duration)
+	raster_plot(M)
+	show()
+
+And here's the output (after 6 seconds of computation on a 2GHz laptop):
+
+.. image:: images/auditory-nerve-fibre-rasterplot.png
 
 Buffering interface
 -------------------
@@ -29,7 +196,8 @@ multiple channels in buffers. Rather than precomputing the application of
 filters to all channels (which for large numbers of channels or long sounds
 would not fit in memory), we process small chunks at a time. The entire design
 of these classes is based on the idea of buffering, as defined by the base
-class :class:`Bufferable` (see section `Class diagram`_ below). Each class
+class :class:`Bufferable` (see section :ref:`brian-hears-class-diagram` below).
+Each class
 has two methods, ``buffer_init()`` to initialise the buffer, and
 ``buffer_fetch(start, end)`` to fetch the portion of the buffer from samples
 with indices from ``start`` to ``end`` (not including ``end`` as standard for
@@ -47,67 +215,14 @@ To extend :class:`Filterbank`, it is often sufficient just to implement the
 ``buffer_apply(input)`` method. See the documentation for :class:`Filterbank`
 for more details.
 
-Reference
-=========
+Library
+-------
 
-Sounds
-------
+TODO: Bertrand
 
-.. autoclass:: Sound
+.. index:: HRTF
 
-Filterbanks
------------
+Head-related transfer functions
+-------------------------------
 
-.. autoclass:: LinearFilterbank
-.. autoclass:: FunctionFilterbank
-.. autoclass:: SumFilterbank
-.. autoclass:: DoNothingFilterbank
-
-Filterbank library
-------------------
-
-.. autoclass:: GammatoneFilterbank
-
-Filterbank group
-----------------
-
-.. autoclass:: FilterbankGroup
-
-Functions
----------
-
-.. autofunction:: erbspace
-
-HRTFs
------
-
-Coordinates
------------
-
-Base classes
-------------
-
-Useful for understanding more about the internals.
-
-.. autoclass:: brian.hears.newversion.bufferable.Bufferable
-
-.. autoclass:: Filterbank
-
-.. autoclass:: brian.hears.newversion.sounds.BaseSound
-
-.. autoclass:: OnlineSound
-
-.. autoclass:: HRTFDatabase
-.. autoclass:: HRTFSet
-.. autoclass:: HRTF
-
-.. autoclass:: brian.hears.newversion.hrtf.Coordinates
-
-Class diagram
--------------
-
-.. inheritance-diagram:: Sound OnlineSound Filterbank LinearFilterbank
-						 RestructureFilterbank FunctionFilterbank
-						 SumFilterbank DoNothingFilterbank
-						 FIRFilterbank GammatoneFilterbank
-	:parts: 1
+TODO: after the design is finalised

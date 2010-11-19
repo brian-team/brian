@@ -1,0 +1,72 @@
+.. currentmodule:: brian.hears.newversion
+
+.. _brian-hears-reference:
+
+Brian hears
+===========
+
+.. seealso:: User guide for :ref:`brianhears`.
+
+Sounds
+------
+
+.. autoclass:: Sound
+
+Filterbanks
+-----------
+
+.. autoclass:: LinearFilterbank
+.. autoclass:: FunctionFilterbank
+.. autoclass:: SumFilterbank
+.. autoclass:: DoNothingFilterbank
+
+Filterbank library
+------------------
+
+.. autoclass:: GammatoneFilterbank
+
+Filterbank group
+----------------
+
+.. autoclass:: FilterbankGroup
+
+Functions
+---------
+
+.. autofunction:: erbspace
+
+HRTFs
+-----
+
+Coordinates
+-----------
+
+Base classes
+------------
+
+Useful for understanding more about the internals.
+
+.. autoclass:: brian.hears.newversion.bufferable.Bufferable
+
+.. autoclass:: Filterbank
+
+.. autoclass:: brian.hears.newversion.sounds.BaseSound
+
+.. autoclass:: OnlineSound
+
+.. autoclass:: HRTFDatabase
+.. autoclass:: HRTFSet
+.. autoclass:: HRTF
+
+.. autoclass:: brian.hears.newversion.hrtf.Coordinates
+
+.. _brian-hears-class-diagram:
+
+Class diagram
+-------------
+
+.. inheritance-diagram:: Sound OnlineSound Filterbank LinearFilterbank
+						 RestructureFilterbank FunctionFilterbank
+						 SumFilterbank DoNothingFilterbank
+						 FIRFilterbank GammatoneFilterbank
+	:parts: 1
