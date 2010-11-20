@@ -39,7 +39,7 @@ gammatone=Asym_Comp_Filterbank(samplerate, center_frequencies, c=c1,asym_comp_or
 #print gammatone.filt_a.shape
 #print gammatone.filt_b.shape
 #print gammatone.filt_a
-print gammatone.filt_b
+
 gammatone_group = FilterbankGroup(gammatone, sound)
 
 gt_mon = StateMonitor(gammatone_group, 'output', record=True)

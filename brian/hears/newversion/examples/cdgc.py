@@ -108,7 +108,8 @@ class AsymCompUpdate:
         self.p2=0.5689*(1-0.1620*self.b)*(1-0.0857*abs(self.c))
         self.p3=0.2523*(1-0.0244*self.b)*(1+0.0574*abs(self.c))
         self.p4=1.0724
-        
+#        self.filt_b, self.filt_a=Asym_Comp_Coeff(samplerate,self.fp1,self.filt_b,self.filt_a,self.b,self.c,self.order,self.p0,self.p1,self.p2,self.p3,self.p4)
+
     def __call__(self):
          self.buffer_start += self.sub_buffer_length
          #print self.buffer_start,self.buffer_start+self.sub_buffer_length

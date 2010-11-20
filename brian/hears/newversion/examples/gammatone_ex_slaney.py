@@ -1,7 +1,8 @@
 from brian import *
 set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
+                       useweave=False,use_gpu = False)
 from brian.hears import *
+
 from scipy.io import savemat
 from time import time
 
