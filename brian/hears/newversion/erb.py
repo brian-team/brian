@@ -16,6 +16,10 @@ def erbspace(low, high, N, earQ=9.26449, minBW=24.7, order=1):
         Number of channels
     ``earQ=9.26449``, ``minBW=24.7``, ``order=1``
         Default Glasberg and Moore parameters.
+        
+    TODO: This function doesn't return high as one of the parameters, introduce
+    a new keyword endpoint to say whether or not to include the high end?
+    What should a -space function do? e.g. linspace/logspace?
     '''
     low = float(low)
     high = float(high)
