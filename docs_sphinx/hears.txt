@@ -159,8 +159,8 @@ Connecting with Brian
 
 To create spiking neuron models based on filter chains, you use the
 :class:`FilterbankGroup` class. This acts exactly like a standard Brian
-:class:`NeuronGroup` except that you give a source filterbank and choose a
-state variable in the target equations for the output of the filterbank.
+:class:`~brian.NeuronGroup` except that you give a source filterbank and choose
+a state variable in the target equations for the output of the filterbank.
 A simple auditory nerve fibre model would take the inner hair cell model from
 earlier, and feed it into a noisy leaky integrate-and-fire model as follows::
 
@@ -196,8 +196,8 @@ multiple channels in buffers. Rather than precomputing the application of
 filters to all channels (which for large numbers of channels or long sounds
 would not fit in memory), we process small chunks at a time. The entire design
 of these classes is based on the idea of buffering, as defined by the base
-class :class:`Bufferable` (see section :ref:`brian-hears-class-diagram` below).
-Each class
+class :class:`Bufferable` (see section :ref:`brian-hears-class-diagram`).
+Each class 
 has two methods, ``buffer_init()`` to initialise the buffer, and
 ``buffer_fetch(start, end)`` to fetch the portion of the buffer from samples
 with indices from ``start`` to ``end`` (not including ``end`` as standard for
@@ -226,3 +226,56 @@ Head-related transfer functions
 -------------------------------
 
 TODO: after the design is finalised
+
+Some notes on the current design:
+
+The basic design is simply as follows: we  have objects corresponding to a
+particular HRTF at a particular location (:class:`HRTF`), a set of HRTFs for
+many locations for a single individual (:class:`HRTFSet`), and a database of
+different individuals (:class:`HRTFDatabase`). This hierarchy was designed
+with the IRCAM LISTEN database in mind, but seems to apply reasonably well to
+some other HRTF databases. In addition,
+we have a :class:`Coordinates` object which is attached to HRTFSet giving the
+coordinates associated to each location. The design of this isn't quite so
+nice at the moment, and could almost certainly be improved.
+
+At the moment, adding a new database involves writing an HRTFDatabase derived
+class, as well as an HRTFSet derived class and occasionally a new Coordinates
+class. [TODO: Redesign so that HRTFSet doesn't need to be changed, only
+HRTFDatabase? Is probably more coherent.]
+
+An HRTF corresponding to a particular
+location is specified by the :class:`HRTF` class, which has a pair of HRIRs
+[TODO: rename class as HRIR?] for the left and right ears, for that location.
+This object has a method :meth:`~HRTF.apply`, or it can be used as an input
+to an :class:`FIRFilterbank` (via the ``fir`` attribute, or the
+:meth:`~HRTF.filterbank` method). [TODO: Make HRTF a subclass of Sound?]
+[TODO: Make HRTF a subclass of generalised multi-channel transfer function
+class?] [TODO: Something to do with time/frequency representations?]
+
+See docs for :class:`HRTFSet` and :class:`HRTFDatabase`.
+
+There is also a system for coordinates, starting from the base class
+:class:`Coordinates`. This should almost certainly be redesigned, but here is
+a description of how it works at the moment. The Coordinates class derives from
+ndarray, and the idea is that it is a 
+`numpy record array <http://www.scipy.org/RecordArrays>`__ with named fields
+the variables of the coordinates (e.g. azim, elev or theta, phi). These names
+are given in the ``names`` class attribute. In addition, each Coordinates
+object has a method ``convert_to`` and ``convert_from`` allowing conversion
+into other coordinate types. The idea is you give the class with the coordinates
+you want to convert to/from and it's handled automatically. The class can
+do a direct conversion if possible, or if not, it will try to convert first
+to CartesianCoordinates and from there to the desired coordinates, so as long
+as every new coordinate system gives a way to convert to/from cartesian
+coordinates this system works. Issues:
+
+ * This is OK for 3D spatial coordinate systems, but we might imagine having
+   more general coordinate systems that cannot be converted to/from cartesian
+   coordinates. For example, with the Shinn-Cunningham reverberant room
+   stuff, at the moment we have four different individuals corresponding to
+   the different locations in the room, but maybe it would make more sense to
+   have a 4D coordinate set with the 2D location in the room and the 2D
+   direction and distance of the source?
+ * The way it's implemented with convert_to and convert_from is ugly at the
+   moment.

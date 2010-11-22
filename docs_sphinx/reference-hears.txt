@@ -16,6 +16,8 @@ Filterbanks
 -----------
 
 .. autoclass:: LinearFilterbank
+.. autoclass:: FIRFilterbank
+.. autoclass:: RestructureFilterbank
 .. autoclass:: FunctionFilterbank
 .. autoclass:: SumFilterbank
 .. autoclass:: DoNothingFilterbank
@@ -38,6 +40,8 @@ Functions
 HRTFs
 -----
 
+.. autoclass:: HRTF
+
 Coordinates
 -----------
 
@@ -46,19 +50,18 @@ Base classes
 
 Useful for understanding more about the internals.
 
-.. autoclass:: brian.hears.newversion.bufferable.Bufferable
+.. autoclass:: Bufferable
 
 .. autoclass:: Filterbank
 
-.. autoclass:: brian.hears.newversion.sounds.BaseSound
+.. autoclass:: BaseSound
 
 .. autoclass:: OnlineSound
 
 .. autoclass:: HRTFDatabase
 .. autoclass:: HRTFSet
-.. autoclass:: HRTF
 
-.. autoclass:: brian.hears.newversion.hrtf.Coordinates
+.. autoclass:: Coordinates
 
 .. _brian-hears-class-diagram:
 

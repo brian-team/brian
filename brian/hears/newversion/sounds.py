@@ -16,7 +16,7 @@ except (ImportError, ValueError):
     have_scikits_samplerate = False
 from bufferable import Bufferable
 
-__all__ = ['Sound',
+__all__ = ['BaseSound', 'Sound',
            'whitenoise', 'tone', 'click', 'silent', 'sequence',
            ]
 
