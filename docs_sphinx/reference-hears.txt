@@ -7,10 +7,18 @@ Brian hears
 
 .. seealso:: User guide for :ref:`brianhears`.
 
+.. autofunction:: set_default_samplerate
+
 Sounds
 ------
 
 .. autoclass:: Sound
+
+.. autofunction:: whitenoise
+.. autofunction:: tone
+.. autofunction:: click
+.. autofunction:: silent
+.. autofunction:: sequence
 
 Filterbanks
 -----------

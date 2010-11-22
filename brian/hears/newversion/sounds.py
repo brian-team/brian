@@ -15,6 +15,7 @@ try:
 except (ImportError, ValueError):
     have_scikits_samplerate = False
 from bufferable import Bufferable
+from prefs import get_samplerate
 
 __all__ = ['BaseSound', 'Sound',
            'whitenoise', 'tone', 'click', 'silent', 'sequence',
@@ -39,8 +40,9 @@ class Sound(BaseSound, numpy.ndarray):
     @check_units(samplerate=Hz, duration=second)
     def __new__(cls, data, samplerate=None, duration=None):
         if isinstance(data, numpy.ndarray):
-            if samplerate is None:
-                raise ValueError('Must specify samplerate to initialise Sound with array.')
+            samplerate = get_samplerate(samplerate)
+#            if samplerate is None:
+#                raise ValueError('Must specify samplerate to initialise Sound with array.')
             if duration is not None:
                 raise ValueError('Cannot specify duration when initialising Sound with array.')
             x = array(data, dtype=float)
@@ -50,8 +52,9 @@ class Sound(BaseSound, numpy.ndarray):
             x = Sound.load(data, samplerate=samplerate)
             samplerate = x.samplerate
         elif callable(data):
-            if samplerate is None:
-                raise ValueError('Must specify samplerate to initialise Sound with function.')
+            samplerate = get_samplerate(samplerate)
+#            if samplerate is None:
+#                raise ValueError('Must specify samplerate to initialise Sound with function.')
             if duration is None:
                 raise ValueError('Must specify duration to initialise Sound with function.')
             L = int(duration * samplerate)
@@ -87,7 +90,7 @@ class Sound(BaseSound, numpy.ndarray):
     
     def __array_finalize__(self,obj):
         if obj is None: return
-        self.samplerate = getattr(obj,'samplerate',None)
+        self.samplerate = getattr(obj, 'samplerate', None)
     
     def buffer_init(self):
         pass
@@ -400,7 +403,7 @@ class Sound(BaseSound, numpy.ndarray):
         return self.ramp(when=when, duration=duration, func=func, inplace=inplace)
 
     @staticmethod
-    def tone(freq, duration, samplerate=44.1*kHz, dB=None, dBtype='rms'):
+    def tone(freq, duration, samplerate=None, dB=None, dBtype='rms'):
         # TODO: do we want to include the dB and dBtype options here? I would
         # tend to say no because you can set the intensity yourself elsewhere,
         # and this duplicates the functionality?
@@ -408,6 +411,7 @@ class Sound(BaseSound, numpy.ndarray):
         Returns a pure tone at the given frequency for the given duration
         if dB not given, pure tone is between -1 and 1
         '''
+        samplerate = get_samplerate(samplerate)
         x = sin(2.0*pi*freq*arange(0*ms, duration, 1/samplerate))
         if dB is not None: 
             return Sound(x, samplerate).setintensity(dB, type=dBtype)
@@ -415,12 +419,13 @@ class Sound(BaseSound, numpy.ndarray):
             return Sound(x, samplerate)
 
     @staticmethod
-    def whitenoise(duration, samplerate=44.1*kHz, dB=None, dBtype='rms'):
+    def whitenoise(duration, samplerate=None, dB=None, dBtype='rms'):
         # TODO: same comment as for tone about dB/dBtype
         '''
         Returns a white noise for the given duration.
         if dB not given, white noise with a variance of one
         '''
+        samplerate = get_samplerate(samplerate)
         x = randn(int(samplerate*duration))
         
         if dB is not None: 
@@ -429,13 +434,14 @@ class Sound(BaseSound, numpy.ndarray):
             return Sound(x, samplerate)
 
     @staticmethod
-    def click(duration, amplitude=1, samplerate=44.1*kHz, dB=None):
+    def click(duration, amplitude=1, samplerate=None, dB=None):
         # TODO: similar comment to tone/whitenoise
         '''
         Returns a click with given parameters
         if dB not given, click of amplitude given by the parameter amplitude
         note that the dB can only be peak dB SPL
         '''
+        samplerate = get_samplerate(samplerate)
         if dB is not None:
             amplitude = 28e-6*10**(dB/20.)
         
@@ -443,10 +449,11 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
-    def silent(duration, samplerate=44.1*kHz):
+    def silent(duration, samplerate=None):
         '''
         Returns a silent, zero sound for the given duration.
         '''
+        samplerate = get_samplerate(samplerate)
         x = numpy.zeros(int(duration*samplerate))
         return Sound(x, samplerate)
 

@@ -1,3 +1,4 @@
+from .prefs import *
 from .bufferable import *
 from .sounds import *
 from .onlinesounds import *
