@@ -1,0 +1,28 @@
+Notes about Brian hears
+=======================
+(from reading the docs)
+
+Generally : are all attributes named? (they should be; e.g. tone(frequency=1*kHz)).
+Some missing docs (HRTFs, OnlineSound, library models).
+How about GPU support?
+
+Sounds
+------
+Is there a default samplerate? (which could be 1/dt).
+Sound.tone -> tone?
+What’s the default level? (and its units)
+play(sound)?
+Some missing docs (corresponding to "For more details").
+
+Filter chains
+-------------
+What do you do if you want to change the input sound?
+
+Random notes
+------------
+Could we have a dB object?
+i.e., 10*dB = 2
+and we overload multiplication on the left to make it behave as it should
+(that is:x*dB = dB**x)
+So could write:
+sum_path_fb = (5*dB)*linear_path_fb+(-3*dB)*nonlinear_path_fb
