@@ -3,20 +3,69 @@ Notes about Brian hears
 (from reading the docs)
 
 Generally : are all attributes named? (they should be; e.g. tone(frequency=1*kHz)).
+	[Dan] I think yes, but this is worth checking.
 Some missing docs (HRTFs, OnlineSound, library models).
+	[Dan] Yep, in the case of HRTFs it's because I didn't want to start writing
+	      the docs until we'd come up with a design we were happy with. In the
+	      case of OnlineSound and library models, I'm waiting on Bertrand for
+	      that.
 How about GPU support?
+	[Dan] At the moment, GPU support isn't particularly efficient, I realised.
+	      The only case where GPU support was giving us a big speed advantage
+	      was for the the parallel filterbanks involved in long HRIRs. Now
+	      that I've implemented the FFT based filtering, the GPU isn't much
+	      quicker. I think the GPU can be and should be much quicker than the
+	      CPU, but at the moment it is only about 50% faster. Making it
+	      quicker will be a non-trivial task, I think, and involve thinking
+	      carefully about memory access patterns, using shared memory, and
+	      possibly using a library for doing FFT on GPU (there is an extension
+	      to pycuda for this). It seems unlikely that we'll get big speed
+	      improvements ready for a first release of Brian hears, so I was
+	      thinking for this release we could play down GPU support (it'll be
+	      there but not a big deal), and in a second release we can make a
+	      bigger deal about the GPU stuff.
 
 Sounds
 ------
 Is there a default samplerate? (which could be 1/dt).
+	[Dan] There is, it's 44.1 kHz. However, this isn't documented at the
+	      moment. I was thinking about having a set_default_samplerate()
+	      function which would change this. I think this would be a good idea
+	      because it's annoying to have to specify the samplerate repeatedly.
+	      We could tie it to defaultclock.dt as an alternative.
 Sound.tone -> tone?
+	[Dan] Yes, we had this before but I haven't included it in the new version
+	      yet. (Also whitenoise, etc.)
 What’s the default level? (and its units)
+	[Dan] Right, for tone and click it is amplitude=1, for whitenoise it is
+		  sigma=1, for wav files it is normalised between -1 and 1. I don't
+		  think we want to change the wav file behaviour because there is no
+		  unit for wav files and people will normally normalise between -1 and
+		  1 for maximum precision. It's also standard that it should be
+		  between -1 and 1. One thing we do assume, for the moment, in the
+		  intensity() method is that the unit of the sound is Pascals.
 play(sound)?
+	[Dan] I think I prefer sound.play().
 Some missing docs (corresponding to "For more details").
+	[Dan] Some of these actually are written (look at the docstrings) but
+	      don't appear in Sphinx for some reason. (Seems to be something to
+	      do with the hack that I've used to allow the new and old versions
+	      of Brian hears to coexist, so shouldn't be a problem once we remove
+	      the old version.)
 
 Filter chains
 -------------
 What do you do if you want to change the input sound?
+	[Dan] This is a good point. At the moment, it's sufficient to change the
+		  .source attribute of the first filterbank. However, this might cause
+		  problems with some of the other ideas we have for optimising things
+		  on the GPU. Still, we can get around those problems I think. I suggest
+		  we do one of:
+		  (1) document the .source attribute and suggest people change that,
+		  (2) suggest they have a sound x as input and if they want to change it
+		      they do x[:] = y
+		  (3) introduce a new SoundSource object which allows you to change the
+		      Sound at runtime.
 
 Random notes
 ------------
@@ -26,3 +75,17 @@ and we overload multiplication on the left to make it behave as it should
 (that is:x*dB = dB**x)
 So could write:
 sum_path_fb = (5*dB)*linear_path_fb+(-3*dB)*nonlinear_path_fb
+	[Dan] I think that although this would be cool, there are some serious
+	      potential problems with it. Problems:
+	      (1) Issues with dB measured via intensity vs amplitude
+	      (2) Issues with order of operations, e.g. (5*dB)*fb versus 5*dB*fb
+	          or fb*5*dB or fb*(5*dB) - some of these will cause problems and
+	          it feels artificial to restrict this.
+	      (3) Different ways you want to use dB quantities, e.g. for (5*dB)*fb
+	          you want (5*dB) to be a single value (10**(5/20)), whereas for
+	          sound.setintensity(5*dB) you want the setintensity function to
+	          receive the value 5.
+		  We could do it, but we'd need to think very carefully about how to
+		  implement it, and I'm nervous that there would be some problems in
+		  the future that we didn't think of. Basically, dB is a complicated
+		  unit - too complicated to wrap up in a simple Python object like this.
