@@ -21,7 +21,7 @@ from brian.clock import Clock
 __all__ = ['electrode', 'current_clamp', 'voltage_clamp', 'DCC', 'SEVC',
          'AcquisitionBoard', 'AEC', 'VC_AEC', 'full_kernel', 'full_kernel_from_step',
          'electrode_kernel_soma', 'electrode_kernel_dendrite', 'solve_convolution',
-         'electrode_kernel']
+         'electrode_kernel', 'AEC_compensate']
 
 '''
 ------------
