@@ -1,6 +1,7 @@
 from brian import *
 set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
+                       useweave=False,
+                       )
 from brian.hears import *
 #from brian.hears.filtering import GammatoneFilterbank as oldGFB
 

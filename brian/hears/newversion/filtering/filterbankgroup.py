@@ -20,11 +20,11 @@ class FilterbankGroup(NeuronGroup):
         
     One additional keyword is available beyond that of :class:`NeuronGroup`:
     
-    ``buffersize=1024``
-        The size of the buffered segments to fetch each time. The larger this
-        value is, the more efficient (particularly if you are using the GPU
-        for filtering), but memory may be an issue. A filterbank with 1000
-        channels and a buffer size of 1024 will take around 8MB RAM.
+    ``buffersize=32``
+        The size of the buffered segments to fetch each time. The efficiency
+        depends on this in an unpredictable way, larger values mean more time
+        spent in optimised code, but are worse for the cache. In many cases,
+        the default value is a good tradeoff.
         
     Note that if you specify your own :class:`Clock`, it should have
     1/dt=samplerate.
@@ -45,7 +45,7 @@ class FilterbankGroup(NeuronGroup):
         else:
             kwds['clock'] = Clock(dt=1/filterbank.samplerate)        
         
-        self.buffersize = buffersize = kwds.pop('buffersize', 1024)
+        self.buffersize = buffersize = kwds.pop('buffersize', 32)
         self.buffer_pointer = buffersize
         self.buffer_start = -buffersize
         

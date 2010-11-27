@@ -2,6 +2,10 @@ from brian import *
 from scipy import signal, weave, random
 from filterbank import Filterbank, RestructureFilterbank
 from ..bufferable import Bufferable
+try:
+    import numexpr
+except ImportError:
+    numexpr = None
 
 # TODO: test all the buffered version of apply_linear_filterbank here
 # So far, they seem to more or less work, but probably need more thorough
@@ -35,6 +39,37 @@ def apply_linear_filterbank(b, a, x, zi):
         output[sample] = y
     return output
 
+if numexpr is not None and False:
+    def apply_linear_filterbank(b, a, x, zi):
+        X = x
+        output = empty_like(X)
+        for sample in xrange(X.shape[0]):
+            x = X[sample]
+            for curf in xrange(zi.shape[2]):
+                #y = b[:, 0, curf]*x+zi[:, 0, curf]
+                y = numexpr.evaluate('b*x+zi', local_dict={
+                        'b':b[:, 0, curf],
+                        'x':x,
+                        'zi':zi[:, 0, curf]})
+                for i in xrange(b.shape[1]-2):
+                    #zi[:, i, curf] = b[:, i+1, curf]*x+zi[:, i+1, curf]-a[:, i+1, curf]*y
+                    zi[:, i, curf] = numexpr.evaluate('b*x+zi-a*y', local_dict={
+                                            'b':b[:, i+1, curf],
+                                            'x':x,
+                                            'zi':zi[:, i+1, curf],
+                                            'a':a[:, i+1, curf],
+                                            'y':y})
+                i = b.shape[1]-2
+                #zi[:, i, curf] = b[:, i+1, curf]*x-a[:, i+1, curf]*y
+                zi[:, i, curf] = numexpr.evaluate('b*x-a*y', local_dict={
+                                        'b':b[:, i+1, curf],
+                                        'x':x,
+                                        'a':a[:, i+1, curf],
+                                        'y':y})
+                x = y
+            output[sample] = y
+        return output
+    
 
 # TODO: accelerate this even more using SWIG instead of weave?
 if get_global_preference('useweave'):
@@ -44,46 +79,47 @@ if get_global_preference('useweave'):
         _extra_compile_args += get_global_preference('gcc_options')
     _old_apply_linear_filterbank = apply_linear_filterbank
     
-    # TODO: improve C code (very inefficient at the moment using blitz,
-    # instead do it with pointers).
     def apply_linear_filterbank(b, a, x, zi):
         if zi.shape[2]>1:
             # we need to do this so as not to alter the values in x in the C code below
             # but if zi.shape[2] is 1 there is only one filter in the chain and the
             # copy operation at the end of the C code will never happen.
             x = array(x, copy=True)
-#        if not isinstance(x, ndarray) or not len(x.shape) or x.shape==(1,):
-#            newx=empty(b.shape[0])
-#            newx[:]=x
-#            x=newx
         y = empty_like(x)
         n, m, p = b.shape
         n1, m1, p1 = a.shape
         numsamples = x.shape[0]
-        assert n1==n and m1==m and p1==p
-        assert x.shape==(numsamples, n), str(x.shape)
-        assert zi.shape==(n, m-1, p)
+        if n1!=n or m1!=m or p1!=p or x.shape!=(numsamples, n) or zi.shape!=(n, m-1, p):
+            raise ValueError('Data has wrong shape.')
+        if not x.flags['C_CONTIGUOUS']:
+            raise ValueError('Input data must be C_CONTIGUOUS')
+        if not b.flags['F_CONTIGUOUS'] or not a.flags['F_CONTIGUOUS'] or not zi.flags['F_CONTIGUOUS']:
+            raise ValueError('Filter parameters must be F_CONTIGUOUS')
         code = '''
+        #define X(s,i) x[(s)*n+(i)]
+        #define Y(s,i) y[(s)*n+(i)]
+        #define A(i,j,k) a[(i)+(j)*n+(k)*n*m]
+        #define B(i,j,k) b[(i)+(j)*n+(k)*n*m]
+        #define Zi(i,j,k) zi[(i)+(j)*n+(k)*n*(m-1)]
         for(int s=0; s<numsamples; s++)
         {
             for(int k=0; k<p; k++)
             {
                 for(int j=0; j<n; j++)
-                             y(s,j) =   b(j,0,k)*x(s,j) + zi(j,0,k);
+                             Y(s,j) =   B(j,0,k)*X(s,j) + Zi(j,0,k);
                 for(int i=0; i<m-2; i++)
                     for(int j=0;j<n;j++)
-                        zi(j,i,k) = b(j,i+1,k)*x(s,j) + zi(j,i+1,k) - a(j,i+1,k)*y(s,j);
+                        Zi(j,i,k) = B(j,i+1,k)*X(s,j) + Zi(j,i+1,k) - A(j,i+1,k)*Y(s,j);
                 for(int j=0; j<n; j++)
-                      zi(j,m-2,k) = b(j,m-1,k)*x(s,j)               - a(j,m-1,k)*y(s,j);
+                      Zi(j,m-2,k) = B(j,m-1,k)*X(s,j)               - A(j,m-1,k)*Y(s,j);
                 if(k<p-1)
                     for(int j=0; j<n; j++)
-                        x(s,j) = y(s,j);
+                        X(s,j) = Y(s,j);
             }
         }
         '''
         weave.inline(code, ['b', 'a', 'x', 'zi', 'y', 'n', 'm', 'p', 'numsamples'],
                      compiler=_cpp_compiler,
-                     type_converters=weave.converters.blitz,
                      extra_compile_args=_extra_compile_args)
         return y
     apply_linear_filterbank.__doc__ = _old_apply_linear_filterbank.__doc__
@@ -111,9 +147,10 @@ class LinearFilterbank(Filterbank):
                 raise ValueError('Can only automatically duplicate source channels for mono sources, use RestructureFilterbank.')
             source = RestructureFilterbank(source, b.shape[0])
         Filterbank.__init__(self, source)
-        self.filt_b = b
-        self.filt_a = a
-        self.filt_state = zeros((b.shape[0], b.shape[1]-1, b.shape[2]))
+        # Weave version of filtering requires Fortran ordering of filter params
+        self.filt_b = array(b, order='F')
+        self.filt_a = array(a, order='F')
+        self.filt_state = zeros((b.shape[0], b.shape[1]-1, b.shape[2]), order='F')
 
     def reset(self):
         self.buffer_init()
@@ -126,7 +163,6 @@ class LinearFilterbank(Filterbank):
         return apply_linear_filterbank(self.filt_b, self.filt_a, input,
                                        self.filt_state)
 
-# TODO: uncomment this when the GPU version is ready
 # Use the GPU version if available
 try:
     import pycuda
