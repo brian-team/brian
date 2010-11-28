@@ -19,6 +19,7 @@ from prefs import get_samplerate
 
 __all__ = ['BaseSound', 'Sound',
            'whitenoise', 'tone', 'click', 'silent', 'sequence',
+           'load'
            ]
 
 class BaseSound(Bufferable):
@@ -124,6 +125,56 @@ class Sound(BaseSound, numpy.ndarray):
             x = numpy.ndarray.__add__(self, other)
             return Sound(x, self.samplerate)
     __radd__ = __add__
+
+
+    def __getitem__(self,key):
+        if isinstance(key,int):
+            return np.ndarray.__getitem__(self,key)
+        if isinstance(key,Quantity):
+            return np.ndarray.__getitem(self,round(key*samplerate))
+        
+        sliceattr=[key.__getattribute__(flag) for flag in ['start','step','stop'] if key.__getattribute__(flag) is not None]
+        slicedims=array([units.have_same_dimensions(flag,second) for flag in sliceattr])
+        if not slicedims.any():
+            return np.ndarray.__getitem__(self,key)
+        if not slicedims.all():
+            raise DimensionMismatchError('Slicing',*[units.get_unit(d) for d in sliceattr])
+        
+        if key.__getattribute__('step') is not None:
+            # resampling?
+            raise NotImplementedError
+        start = key.start or 0*msecond
+        stop = key.stop or self.duration
+        start = round(start*self.samplerate)
+        stop = round(stop*self.samplerate)
+        return Sound(np.ndarray.__getitem__(self,slice(start,stop)),self.samplerate)
+    
+    def __setitem__(self,key,value):
+        if isinstance(key,int):
+            return np.ndarray.__setitem__(self,key,value)
+        if isinstance(key,Quantity):
+            return np.ndarray.__setitem__(self,round(key*self.samplerate),value)
+
+        sliceattr=[key.__getattribute__(flag) for flag in ['start','step','stop'] if key.__getattribute__(flag) is not None]
+        slicedims=array([units.have_same_dimensions(flag,second) for flag in sliceattr])
+        if not slicedims.any():
+            return np.ndarray.__setitem__(self,key,value)
+        if not slicedims.all():
+            raise DimensionMismatchError('Slicing',*[units.get_unit(d) for d in sliceattr])
+
+        if key.__getattribute__('step') is not None:
+            # resampling?
+            raise NotImplementedError
+
+        start = key.start or 0*msecond
+        stop = key.stop or self.duration
+        start = round(start*self.samplerate)
+        stop = round(stop*self.samplerate)
+        return np.ndarray.__setitem__(self,slice(start,stop),value)
+
+    def __delitem__(self,key):
+        # Don't know what to do here, I guess we don't want people to delete items in a sound
+        print 'Why do you want to delete part of a sound object?'
 
     @check_units(duration=second)
     def extend(self, duration):
