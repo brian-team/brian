@@ -79,18 +79,6 @@ class Sound(numpy.ndarray):
     __radd__ = __add__
 
 
-    def __getitem__(self,key):
-        print 'pff'
-        sliceattr=[a.getattr(flag) for flag in ['start','step','stop'] if a.hasattr(flag)]
-        print sliceattr
-        print 'get'
-    
-    def __setitem__(self,key):
-        print 'set'
-
-    def __delitem__(self,key):
-        print 'del'
-
     @check_units(duration=second)
     def extend(self, duration):
         '''
