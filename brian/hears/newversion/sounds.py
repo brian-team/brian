@@ -128,7 +128,7 @@ class Sound(BaseSound, numpy.ndarray):
 
 
     def __getitem__(self,key):
-        channel=0
+        channel=None
         if isinstance(key,tuple):
             channel=key[1]
             key=key[0]
@@ -189,9 +189,6 @@ class Sound(BaseSound, numpy.ndarray):
             raise IndexError('Slice bigger than Sound object')
         if start is not None: start = int(round(start*self.samplerate))
         stop = int(round(stop*self.samplerate))
-        print 'self',(slice(start,stop),channel)
-        print self.shape
-        print value.shape
         return self.__setitem__((slice(start,stop),channel),value)
 
     def __delitem__(self,key):
