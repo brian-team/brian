@@ -163,23 +163,19 @@ class Sound(BaseSound, numpy.ndarray):
             channel=key[1]
             key=key[0]
         
-        if isinstance(key,int):
+        if isinstance(key,int) or isinstance(key,float):
+            print 'int'
             return np.ndarray.__setitem__(self,(key,channel),value)
         if isinstance(key,Quantity):
+            print 'Quantity'
             return np.ndarray.__setitem__(self,(round(key*self.samplerate),channel),value)
 
         sliceattr=[key.__getattribute__(flag) for flag in ['start','step','stop'] if key.__getattribute__(flag) is not None]
         slicedims=array([units.have_same_dimensions(flag,second) for flag in sliceattr])
         if not slicedims.any():
-            ## ugly hack, or else it doesn't work right with channels
-            # for some reason though it works if no channels
-            # this may be a big problem
-           start=key.start or 0
-           stop=key.stop or len(self)
-           for i in range(start,stop):
-               self.__setitem__((i,channel),value[i])
-#            np.ndarray.__setitem__(self,(key,channel),value)
-           return 
+            if isinstance(value,Sound) and value.shape[1]==1:
+                value=value.squeeze()
+            return asarray(self).__setitem__((key,channel),value)
         if not slicedims.all():
             raise DimensionMismatchError('Slicing',*[units.get_unit(d) for d in sliceattr])
 
@@ -187,12 +183,15 @@ class Sound(BaseSound, numpy.ndarray):
             # resampling?
             raise NotImplementedError
         
-        start = key.start or 0*msecond
+        start = key.start
         stop = key.stop or self.duration
-        if start<0*ms or stop > self.duration:
+        if (start is not None and start<0*ms) or stop > self.duration:
             raise IndexError('Slice bigger than Sound object')
-        start = round(start*self.samplerate)
-        stop = round(stop*self.samplerate)
+        if start is not None: start = int(round(start*self.samplerate))
+        stop = int(round(stop*self.samplerate))
+        print 'self',(slice(start,stop),channel)
+        print self.shape
+        print value.shape
         return self.__setitem__((slice(start,stop),channel),value)
 
     def __delitem__(self,key):
