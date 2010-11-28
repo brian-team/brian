@@ -131,7 +131,7 @@ class Sound(BaseSound, numpy.ndarray):
         if isinstance(key,int):
             return np.ndarray.__getitem__(self,key)
         if isinstance(key,Quantity):
-            return np.ndarray.__getitem(self,round(key*samplerate))
+            return np.ndarray.__getitem__(self,round(key*self.samplerate))
         
         sliceattr=[key.__getattribute__(flag) for flag in ['start','step','stop'] if key.__getattribute__(flag) is not None]
         slicedims=array([units.have_same_dimensions(flag,second) for flag in sliceattr])
@@ -145,6 +145,8 @@ class Sound(BaseSound, numpy.ndarray):
             raise NotImplementedError
         start = key.start or 0*msecond
         stop = key.stop or self.duration
+        if start<0*ms or stop > self.duration:
+            raise IndexError('Slice bigger than Sound object')
         start = round(start*self.samplerate)
         stop = round(stop*self.samplerate)
         return Sound(np.ndarray.__getitem__(self,slice(start,stop)),self.samplerate)
@@ -168,6 +170,8 @@ class Sound(BaseSound, numpy.ndarray):
 
         start = key.start or 0*msecond
         stop = key.stop or self.duration
+        if start<0*ms or stop > self.duration:
+            raise IndexError('Slice bigger than Sound object')
         start = round(start*self.samplerate)
         stop = round(stop*self.samplerate)
         return np.ndarray.__setitem__(self,slice(start,stop),value)
