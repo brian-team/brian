@@ -164,10 +164,8 @@ class Sound(BaseSound, numpy.ndarray):
             key=key[0]
         
         if isinstance(key,int) or isinstance(key,float):
-            print 'int'
             return np.ndarray.__setitem__(self,(key,channel),value)
         if isinstance(key,Quantity):
-            print 'Quantity'
             return np.ndarray.__setitem__(self,(round(key*self.samplerate),channel),value)
 
         sliceattr=[key.__getattribute__(flag) for flag in ['start','step','stop'] if key.__getattribute__(flag) is not None]
