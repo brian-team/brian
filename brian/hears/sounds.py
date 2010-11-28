@@ -18,7 +18,7 @@ except (ImportError, ValueError):
 __all__ = ['Sound', 'play_stereo_sound', 'play_sound',
            'whitenoise', 'tone', 'click', 'silent', 'sequence', 'mix_sounds','OnlineSound','OnlineWhiteNoise',
            'OnlineWhiteNoiseBuffered','OnlineWhiteNoiseShifted','hyp_sweep','get_wav']
-
+ 
 
 class Sound(numpy.ndarray):
     duration = property(fget=lambda self:len(self) / self.rate)
@@ -77,6 +77,19 @@ class Sound(numpy.ndarray):
             x = numpy.ndarray.__add__(self, other)
             return Sound(x, self.rate)
     __radd__ = __add__
+
+
+    def __getitem__(self,key):
+        print 'pff'
+        sliceattr=[a.getattr(flag) for flag in ['start','step','stop'] if a.hasattr(flag)]
+        print sliceattr
+        print 'get'
+    
+    def __setitem__(self,key):
+        print 'set'
+
+    def __delitem__(self,key):
+        print 'del'
 
     @check_units(duration=second)
     def extend(self, duration):
