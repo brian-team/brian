@@ -23,8 +23,10 @@ nbr_center_frequencies=50
 cf=erbspace(100*Hz, 1000*Hz, nbr_center_frequencies)
 cf=log_space(100*Hz, 1000*Hz, nbr_center_frequencies)
 
-gammatone =GammatoneFilterbank(sound,cf,b=b1 )
-asym_comp=Asym_Comp_Filterbank(gammatone, cf, c=c1,asym_comp_order=4,b=b1)
+asym_comp=GammachirpIIRFilterbank(sound,cf, c=c1,asym_comp_order=4,b=b1)
+
+#gammatone =GammatoneFilterbank(sound,cf,b=b1 )
+#asym_comp=Asym_Comp_Filterbank(gammatone, cf, c=c1,asym_comp_order=4,b=b1)
 
 asym_comp.buffer_init()
 t1=time()

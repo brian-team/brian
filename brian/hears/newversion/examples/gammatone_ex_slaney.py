@@ -1,6 +1,6 @@
 from brian import *
 set_global_preferences(usenewbrianhears=True,
-                       useweave=False,use_gpu = False)
+                       useweave=True,use_gpu = False)
 from brian.hears import *
 
 from scipy.io import savemat
@@ -17,7 +17,7 @@ print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
 simulation_duration=len(sound)/sound.samplerate
 
 b1=1.81
-nbr_center_frequencies=50
+nbr_center_frequencies=500
 #center_frequencies=erbspace(100*Hz, 1000*Hz, nbr_center_frequencies)
 center_frequencies=log_space(100*Hz, 1000*Hz, nbr_center_frequencies)
 gammatone =GammatoneFilterbank(sound,center_frequencies,b=b1 )

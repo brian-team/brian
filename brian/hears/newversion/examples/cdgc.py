@@ -5,11 +5,15 @@ from brian.hears import *
 from scipy.io import savemat
 from time import time
 
-dBlevel=60  # dB level in rms dB SPL
+dBlevel=10  # dB level in rms dB SPL
 sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
 samplerate=sound.samplerate
 sound=sound.atintensity(dBlevel)
 sound.samplerate=samplerate
+
+data=dict()
+data['input']=sound
+savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/stimulus.mat',data)
 
 print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
 
@@ -42,7 +46,7 @@ fp1 = cf + c1*ERBwidth*b1/order
 #bandpass filter (second order  gammatone filter)
 pgammatone =GammatoneFilterbank(sound,cf,b=b1 )
 pGc=Asym_Comp_Filterbank(pgammatone, cf, c=c1,asym_comp_order=4,b=b1)
-
+#pGc=GammachirpIIRFilterbank(sound,cf, c=c1,asym_comp_order=4,b=b1)
    
 # control
 lct_ERB=1.5
