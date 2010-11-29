@@ -52,7 +52,7 @@ class GammatoneFilterbank(LinearFilterbank):
     
     ``source``
         Source of the filterbank.
-    ``fc``
+    ``cf``
         List or array of center frequencies.
     
     The ERBs are computed based on parameters in the Auditory Toolbox.
@@ -65,9 +65,7 @@ class GammatoneFilterbank(LinearFilterbank):
     minBW=24.7
     order=1
     
-    @check_units(fs=Hz)
     def __init__(self, source, cf,b=None):
-
         cf = array(cf)
         self.cf = cf
         self.N = len(cf)
@@ -133,12 +131,9 @@ class MeddisGammatoneFilterbank(LinearFilterbank):
     '''
     Parallel version of Ray Meddis' UTIL_gammatone.m
     '''
-    # These consts from Hohmann gammatone code
-    EarQ = 9.26449                #  Glasberg and Moore Parameters
-    minBW = 24.7
-    
+   
     @check_units(fs=Hz)
-    def __init__(self, source, cf, order, bw):  
+    def __init__(self, source, cf, order, bw):
         cf = array(cf)
         bw = array(bw)
         self.cf = cf
@@ -247,8 +242,7 @@ class LowPassFilterbank(LinearFilterbank):
             self.filt_a[:,0,icascade ]=1*ones(N)
             self.filt_a[:,1,0]=-(1-dt/tau)*ones(N)
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
-        
- 
+       
             
 class GammachirpIIRFilterbank(LinearFilterbank):
     '''
@@ -269,7 +263,6 @@ class GammachirpIIRFilterbank(LinearFilterbank):
         self.fr = fr
         self.N = len(fr)
 
-
         self.fs = fs = source.samplerate
         if c==None:
             c=1*ones((fr.shape))
@@ -288,7 +281,6 @@ class GammachirpIIRFilterbank(LinearFilterbank):
 
         ERBw=24.7*(4.37e-3*fr+1.)
         compensation_filter_order=4
-
 
         p0=2
         p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
@@ -314,7 +306,6 @@ class GammachirpFIRFilterbank(LinearFilterbank):
     Fit of a auditory filter (from a reverse correlation) at the NM of a barn owl at 4.6 kHz. The tap of the FIR filter
     are the time response of the filter which is long. It is thus very slow ( at least without GPU)
     The response is normalized so that every parameter set give the same peak value
-    
     '''
     def __init__(self,source, fs, F0,c,time_constant):
         try:
@@ -452,14 +443,14 @@ class ButterworthFilterbank(LinearFilterbank):
         Number of filters in the bank.
     ``ord``
         Order of the filter.
-    ``Wn``
+    ``Fn``
         Cutoff parameter(s) in Hz, either a single value or pair for band filters.
     ``btype``
-        One of 'lowpass', 'highpass', 'bandpass' or 'bandstop'.
+        One of 'low', 'high', 'bandpass' or 'bandstop'.
     '''
 
     def __init__(self,source, N, ord, Fn, btype='low'):
-       # print Wn
+        # print Wn
         Wn=Fn.copy()
         Wn=atleast_1d(Wn) #Scalar inputs are converted to 1-dimensional arrays
         self.fs = fs = source.samplerate
@@ -495,14 +486,9 @@ class ButterworthFilterbank(LinearFilterbank):
         
  
 class TimeVaryingIIRFilterbank(Filterbank):
-    ''' IIR fliterbank where the coefficients vary. It is a bandpass filter
-    of which the center frequency vary follwoing a OrnsteinUhlenbeck process
+    ''' IIR filterbank where the coefficients vary. 
     '''
-
-    @check_units(samplerate=Hz)
     def __init__(self, source,interval_change,vary_filter_class):
-        
-        
         self.fs = fs = source.samplerate
         self.vary_filter_class=vary_filter_class
                 
@@ -543,7 +529,7 @@ class TimeVaryingIIRFilterbank(Filterbank):
 def Asym_Comp_Coeff(samplerate,fr,filt_b,filt_a,b,c,order,p0,p1,p2,p3,p4):
     '''
      overhead if passing dico
-     better pass filterb a or initiliaze the here
+     better pass filterb a or initialize the here
      better put his function inside the __call__
     give the coefficients of an asymmetric compensation filter
     It is optimized to be used as coefficients of a time varying filter
@@ -562,8 +548,6 @@ def Asym_Comp_Coeff(samplerate,fr,filt_b,filt_a,b,c,order,p0,p1,p2,p3,p4):
 
         ap=vstack((ones(r.shape),-2*r*cos(phi), r**2)).T
         bz=vstack((ones(r.shape),-2*r*cos(psy), r**2)).T
-
-        
 
         vwr=exp(1j*2*pi*fr/samplerate)
         vwrs=vstack((ones(vwr.shape), vwr, vwr**2)).T
