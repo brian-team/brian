@@ -24,6 +24,7 @@ How about GPU support?
 	      thinking for this release we could play down GPU support (it'll be
 	      there but not a big deal), and in a second release we can make a
 	      bigger deal about the GPU stuff.
+	[Romain] Absolutely, no need to talk about the GPU right now.
 
 Sounds
 ------
@@ -33,6 +34,10 @@ Is there a default samplerate? (which could be 1/dt).
 	      function which would change this. I think this would be a good idea
 	      because it's annoying to have to specify the samplerate repeatedly.
 	      We could tie it to defaultclock.dt as an alternative.
+	[Romain] Yeah defaultclock.dt makes sense, it's probably the most common
+	         case. But it would be also good to change the default rate. How
+	         about soundclock.dt=... (to mirror defaultclock.dt=...), or something
+	         like that ?
 Sound.tone -> tone?
 	[Dan] Yes, we had this before but I haven't included it in the new version
 	      yet. (Also whitenoise, etc.)
@@ -44,8 +49,12 @@ What’s the default level? (and its units)
 		  1 for maximum precision. It's also standard that it should be
 		  between -1 and 1. One thing we do assume, for the moment, in the
 		  intensity() method is that the unit of the sound is Pascals.
+	[Romain] Not entirely clear to me. Shouldn't there be a level attached to
+	         the sound (i.e., how many dBs is 1)?
 play(sound)?
 	[Dan] I think I prefer sound.play().
+	[Romain] It's not contradictory, we could have both. In some cases I think
+	         it's more natural (e.g. play(sound1+sound2)). 
 Some missing docs (corresponding to "For more details").
 	[Dan] Some of these actually are written (look at the docstrings) but
 	      don't appear in Sphinx for some reason. (Seems to be something to
@@ -62,6 +71,7 @@ What do you do if you want to change the input sound?
 		  on the GPU. Still, we can get around those problems I think. I suggest
 		  we do one of:
 		  (1) document the .source attribute and suggest people change that,
+		  [Romain] This is probably good enough.
 		  (2) suggest they have a sound x as input and if they want to change it
 		      they do x[:] = y
 		  (3) introduce a new SoundSource object which allows you to change the
@@ -78,14 +88,21 @@ sum_path_fb = (5*dB)*linear_path_fb+(-3*dB)*nonlinear_path_fb
 	[Dan] I think that although this would be cool, there are some serious
 	      potential problems with it. Problems:
 	      (1) Issues with dB measured via intensity vs amplitude
+	      [R] It would make sense to choose amplitude, with the multiplicative syntax
 	      (2) Issues with order of operations, e.g. (5*dB)*fb versus 5*dB*fb
 	          or fb*5*dB or fb*(5*dB) - some of these will cause problems and
 	          it feels artificial to restrict this.
+	      [R] Yes I agree that's an issue.
 	      (3) Different ways you want to use dB quantities, e.g. for (5*dB)*fb
 	          you want (5*dB) to be a single value (10**(5/20)), whereas for
 	          sound.setintensity(5*dB) you want the setintensity function to
 	          receive the value 5.
+	      [R] Well, only if the argument is assumed to be units of dB.
 		  We could do it, but we'd need to think very carefully about how to
 		  implement it, and I'm nervous that there would be some problems in
 		  the future that we didn't think of. Basically, dB is a complicated
 		  unit - too complicated to wrap up in a simple Python object like this.
+		  [R] OK, I would say the most problematic aspect is non associativity
+		  (issue #2). But there should be at least functions to do the
+		  conversions (e.g. dB(x)).
+		  
