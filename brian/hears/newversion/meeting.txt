@@ -1,0 +1,121 @@
+Brian hears meeting 29 Nov 2010
+===============================
+sounds
+------
+* Docs for tone, whitenoise etc
+* (Doc) Units of sound is Pa
+* Intensities in dB(SPL) (rms) (dB always in pressure rather than power)
+* Remove dB peak (setintensity)
+* intensity -> level (tuple for multiple channels)
+* sound.level=... (tuple for multiple channels)
+* sound.atlevel() (tuple for multiple channels)
+* suppress normalize
+* dB...(x) -> factor 10.0 ** (x / 20.0)
+  gain(x*dB)*mysound
+* dB = special unit
+* play(...)
+* (doc) to change the input sound: x.source=
+* explicit keywords (freq -> frequency in tone)
+* remove dB in tones etc
+* click(duration,peak=None) (peak = peak dB)
+* clicks(duration,interval,peak=None) (sequence of clicks)
+* shift(duration)
+* extend_length->resized (for example)
+* extended(duration) (adds silence at the end)
+* mysound[1*second:2*second] (zero-pad if outside length of sound)
+  (get and set)
+* remove sound.extend
+* remove __delitem__
+* remove copy_from
+* spectrogram(log_spectrogram -> log_power)
+  display = False
+  frequency_range -> low=0*Hz, high=samplerate/2
+* same things for spectrum
+* check dB units in spectrum (dB/Hz?)
+* ramp: on -> onset, off -> offset
+  func -> envelope
+  document func
+* ramped: remove inplace
+* save: sampwidth -> samplewidth
+* load_sound, save_sound
+
+Examples
+--------
+* have one wav file or generate one (artificial vowel?)
+
+FilterBank
+----------
+RestructureFilterbank:
+ABC		AABBCC	Repeat
+		ABCABC	Tile
+		
+ABC		ABCDEF	Join
+DEF		ADBECF	Interleave
+
+Restructure(AB=s1,CD=s2,'ACBD'*3)
+Restructure(AB=s1,'A'*3+'B'*3)
+
+Think about it!
+
+Library
+-------
+* CascadeFilterbank
+	nbr... -> n
+* remove fs everywhere
+* Gammatone: document b; EarQ,minBW,order: parameters in init (with default)
+* MeddisGammatoneFilterbank -> ApproximateGammatoneFilterbank; bw -> bandwidth
+* Asym_Comp_Filterbank -> AsymmetricCompensationFilterbank
+	fr -> f
+	asym_comp_order -> order
+	order and compensation_filter_order are unused
+* LowPassFilterbank:
+	remove N
+	cutOffFrequency fc
+	nbr_cascade ncascade
+* LogGammachirpFilterbank(method='FIR' or 'IIR') and LinearGammachirpFilterbank
+  (see in FIRFilterbank)
+* GammaChirpIIR:
+	fr -> f
+	asym_comp_order -> order
+* GammachirpFIRFilterbank:
+	remove fs
+	F0 -> f
+	time_constant -> tau
+	implement as FFT filter
+	optional keywords
+* ButterworthFilterbank
+	check low/lowpass etc
+	ord -> order
+	Fn -> fc
+* TimeVaryingIIRFilterbank
+	interval_change -> interval
+	vary_filter_class -> updater
+* Asym_Comp_Coeff -> asymmetric_compensation_coefs
+
+Others
+------
+* erbspace: include endpoint
+* LinearFilterbank: docs a,b; allow implicit p=1 (2D matrices)
+* impulseresponse -> impulse_response
+* FIRFilterBank: remove use_linearfilterbank (use FFT)
+* turn off GPU by default
+
+---------
+FOR LATER
+---------
+* resample: reimplement?
+* think about frequency-domain sounds
+* onlinesounds: later
+
+HRTFs
+-----
+* HRTF: ITD (grpdelay), IPD, ILD
+* coordinates should be dict or record array
+* hrtfset(azim=,elev=)
+  hrtfset[coord or tuple]
+* remove HRTFSet.load
+* HRTFSet.subset(cond -> condition
+* num_indices -> __len__
+* __len__(HRTF) -> number of samples
+* HRTFDatabase: get rid of coordsys
+* coordinate conversions -> move to functions

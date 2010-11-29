@@ -51,6 +51,8 @@ What’s the default level? (and its units)
 		  intensity() method is that the unit of the sound is Pascals.
 	[Romain] Not entirely clear to me. Shouldn't there be a level attached to
 	         the sound (i.e., how many dBs is 1)?
+	         Units = Pa
+	         (Dynamic range = 1e6)
 play(sound)?
 	[Dan] I think I prefer sound.play().
 	[Romain] It's not contradictory, we could have both. In some cases I think
@@ -82,7 +84,7 @@ Random notes
 Could we have a dB object?
 i.e., 10*dB = 2
 and we overload multiplication on the left to make it behave as it should
-(that is:x*dB = dB**x)
+(that is:x*dB = 10.0 ** (x / 20.0))
 So could write:
 sum_path_fb = (5*dB)*linear_path_fb+(-3*dB)*nonlinear_path_fb
 	[Dan] I think that although this would be cool, there are some serious

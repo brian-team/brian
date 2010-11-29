@@ -147,7 +147,6 @@ class HRTFSet(object):
         raise NotImplementedError
 
     def prepare(self):
-        L, R = self.data
         self.hrtf = []
         for i in xrange(self.num_indices):
             l = Sound(self.data[0, i, :], samplerate=self.samplerate)
