@@ -228,17 +228,24 @@ class Asym_Comp_Filterbank(LinearFilterbank):
 
 class LowPassFilterbank(LinearFilterbank):
    
-    def __init__(self,source, N,cutOffFrequency):
+    def __init__(self,source, N,cutOffFrequency,nbr_cascade=None):
         self.N=N
         self.fs = fs = source.samplerate
         dt=1./self.fs
-        self.filt_b=zeros((self.N, 3, 1))
-        self.filt_a=zeros((self.N, 3, 1))
+        if nbr_cascade==None:
+            self.filt_b=zeros((self.N, 2, 1))
+            self.filt_a=zeros((self.N, 2, 1))
+            nbr_cascade=1
+        else:
+            self.filt_b=zeros((self.N, 2, nbr_cascade))
+            self.filt_a=zeros((self.N, 2, nbr_cascade))
+            
         tau=1/(2*pi*cutOffFrequency)
-        self.filt_b[:,0,0]=dt/tau*ones(N)
-        self.filt_b[:,1,0]=0*ones(N)
-        self.filt_a[:,0,0]=1*ones(N)
-        self.filt_a[:,1,0]=-(1-dt/tau)*ones(N)
+        for icascade in xrange(nbr_cascade):
+            self.filt_b[:,0,icascade ]=dt/tau*ones(N)
+            self.filt_b[:,1,icascade ]=0*ones(N)
+            self.filt_a[:,0,icascade ]=1*ones(N)
+            self.filt_a[:,1,0]=-(1-dt/tau)*ones(N)
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
         
  
@@ -256,20 +263,24 @@ class GammachirpIIRFilterbank(LinearFilterbank):
      '''
      
      
-    def __init__(self, samplerate, fr, c=None):
+    def __init__(self, source, fr, c=None,asym_comp_order=None,b=None):
         fr = array(fr)
 
         self.fr = fr
         self.N = len(fr)
-        self.fs= samplerate
 
 
+        self.fs = fs = source.samplerate
         if c==None:
             c=1*ones((fr.shape))
+        if b==None:
+            b=1.019*ones((fr.shape))
+        if asym_comp_order==None:
+            order=3
             
         self.c=c
-        gammatone=GammatoneFilterbank(samplerate, fr)
-        samplerate=float(samplerate)
+        self.b=b
+        gammatone=GammatoneFilterbank(source, fr,b)
         order=gammatone.order
 
         self.gammatone_filt_b=gammatone.filt_b
@@ -277,7 +288,7 @@ class GammachirpIIRFilterbank(LinearFilterbank):
 
         ERBw=24.7*(4.37e-3*fr+1.)
         compensation_filter_order=4
-        b=1.019*ones((fr.shape))
+
 
         p0=2
         p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
@@ -288,39 +299,15 @@ class GammachirpIIRFilterbank(LinearFilterbank):
         self.asymmetric_filt_b=zeros((len(fr), 2*order+1, 4))
         self.asymmetric_filt_a=zeros((len(fr), 2*order+1, 4))
 
-        for k in arange(compensation_filter_order):
+        self.asymmetric_filt_b,self.asymmetric_filt_a=Asym_Comp_Coeff(self.fs,fr,self.asymmetric_filt_b,self.asymmetric_filt_a,b,c,order,p0,p1,p2,p3,p4)
 
-            r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/samplerate) #k instead of k-1 because range 0 N-1
-
-            Dfr=(p0*p4)**(k)*p2*c*b*ERBw
-
-            phi=2*pi*maximum((fr+Dfr), 0)/samplerate
-            psy=2*pi*maximum((fr-Dfr), 0)/samplerate
-
-            ap=vstack((ones(r.shape),-2*r*cos(phi), r**2)).T
-            bz=vstack((ones(r.shape),-2*r*cos(psy), r**2)).T
-
-            fn=fr+ compensation_filter_order* p3 *c *b *ERBw/4;
-
-            vwr=exp(1j*2*pi*fn/samplerate)
-            vwrs=vstack((ones(vwr.shape), vwr, vwr**2)).T
-
-            ##normilization stuff
-            nrm=abs(sum(vwrs*ap, 1)/sum(vwrs*bz, 1))
-            temp=ones((bz.shape))
-            for i in range((len(nrm))):
-                temp[i, :]=nrm[i]
-            bz=bz*temp
-
-            self.asymmetric_filt_b[:, :, k]=bz
-            self.asymmetric_filt_a[:, :, k]=ap
         #print B.shape,A.shape,Btemp.shape,Atemp.shape    
         #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
         #print self.gammatone_filt_b,self.asymmetric_filt_b
         self.filt_b=concatenate([self.gammatone_filt_b, self.asymmetric_filt_b],axis=2)
         self.filt_a=concatenate([self.gammatone_filt_a, self.asymmetric_filt_a],axis=2)
 
-        LinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate*Hz)
+        LinearFilterbank.__init__(self, source,self.filt_b, self.filt_a)
 
 class GammachirpFIRFilterbank(LinearFilterbank):
     '''
@@ -470,14 +457,14 @@ class ButterworthFilterbank(LinearFilterbank):
     ``btype``
         One of 'lowpass', 'highpass', 'bandpass' or 'bandstop'.
     '''
-    
-    def __init__(self,samplerate, N, ord, Fn, btype='low'):
+
+    def __init__(self,source, N, ord, Fn, btype='low'):
        # print Wn
         Wn=Fn.copy()
         Wn=atleast_1d(Wn) #Scalar inputs are converted to 1-dimensional arrays
-        
+        self.fs = fs = source.samplerate
         try:
-            Wn= Wn/samplerate*2+0.0    # wn=1 corresponding to half the sample rate   
+            Wn= Wn/self.fs*2+0.0    # wn=1 corresponding to half the sample rate   
         except DimensionMismatchError:
             raise DimensionMismatchError('Wn must be in Hz')
         
@@ -504,7 +491,7 @@ class ButterworthFilterbank(LinearFilterbank):
         self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
         self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)    
         self.N = N    
-        LinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate) 
+        LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
         
  
 class TimeVaryingIIRFilterbank(Filterbank):
