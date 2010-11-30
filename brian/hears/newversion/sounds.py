@@ -141,7 +141,14 @@ class Sound(BaseSound, numpy.ndarray):
         slicedims=array([units.have_same_dimensions(flag,second) for flag in sliceattr])
 
         if not slicedims.any():
-            return Sound(np.ndarray.__getitem__(self,(key,channel)),self.samplerate)
+            start= key.start or 0
+            stop= key.stop or self.shape[0]
+            if start>=0 and stop <= self.shape[0]:
+                return Sound(np.ndarray.__getitem__(self,(key,channel)),self.samplerate)
+            else:
+                bpad=Sound(zeros((-start,self.shape[1])))
+                apad=Sound(zeros((stop-self.shape[0],self.shape[1])))
+                return Sound(vstack((bpad,asarray(self),apad)),self.samplerate)
         if not slicedims.all():
             raise DimensionMismatchError('Slicing',*[units.get_unit(d) for d in sliceattr])
         
@@ -150,8 +157,6 @@ class Sound(BaseSound, numpy.ndarray):
             raise NotImplementedError
         start = key.start or 0*msecond
         stop = key.stop or self.duration
-        if start<0*ms or stop > self.duration:
-            raise IndexError('Slice bigger than Sound object')
         start = int(start*self.samplerate)
         stop = int(stop*self.samplerate)
         return self.__getitem__((slice(start,stop),channel))
