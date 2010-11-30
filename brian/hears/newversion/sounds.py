@@ -501,6 +501,56 @@ class Sound(BaseSound, numpy.ndarray):
             return Sound(x, samplerate)
 
     @staticmethod
+    def powerlawnoise(duration, alpha, samplerate=44100*Hz):
+        '''
+        Returns a power-law noise for the given duration. Spectral density per unit of bandwidth scales as 1/(f**alpha).
+        
+        Sample usage::
+        
+            noise=powerlawnoise(200*ms,1,samplerate=44100*Hz)
+        
+        Arguments:
+        
+        ``duration`` 
+            Duration of the desired output.
+        ``alpha``
+            Power law exponent.
+        ``samplerate``
+            Desired output samplerate
+        '''
+        # Adapted from http:/+/www.eng.ox.ac.uk/samp/software/powernoise/powernoise.m
+        # Little MA et al. (2007), "Exploiting nonlinear recurrence and fractal
+        # scaling properties for voice disorder detection", Biomed Eng Online, 6:23
+        n=duration*samplerate
+        n2=floor(n/2)
+        f=fftfreq(int(n),d=1*second/samplerate)
+    
+        a2=1/(f[1:n2]**(alpha/2))
+        p2=(rand(n2-1)-0.5)*2*pi
+        d2=a2*exp(1j*p2)
+        
+        d=hstack((1,d2,1/f[-1]**alpha,flipud(conj(d2))))
+        
+        x=real(ifft(d))
+        x.shape=(n,1)
+        x = ((x - min(x))/(max(x) - min(x)) - 0.5) * 2;
+        return Sound(x,samplerate)
+    
+    @staticmethod
+    def pinknoise(duration,samplerate=44100*Hz):
+        '''
+        Returns pink noise, i.e power law noise with alpha equals to 1
+        '''
+        return Sound.powerlawnoise(duration,1,samplerate=samplerate)
+    
+    @staticmethod
+    def brownnoise(duration,samplerate=44100*Hz):
+        '''
+        Returns brown noise, i.e power law noise with alpha equals to 2
+        '''
+        return Sound.powerlawnoise(duration,2,samplerate=samplerate)
+
+    @staticmethod
     def click(duration, amplitude=1, samplerate=None, dB=None):
         # TODO: similar comment to tone/whitenoise
         '''
@@ -624,7 +674,11 @@ def _load_Sound_from_pickle(arr, samplerate):
 
 
 whitenoise = Sound.whitenoise
+powerlawnoise = Sound.powerlawnoise
+pinknoise = Sound.pinknoise
+brownnoise = Sound.brownnoise
 tone = Sound.tone
 click = Sound.click
 silent = Sound.silent
 sequence = Sound.sequence
+
