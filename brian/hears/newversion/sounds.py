@@ -127,7 +127,7 @@ class Sound(BaseSound, numpy.ndarray):
     __radd__ = __add__
 
     def __getitem__(self,key):
-        channel=None
+        channel=slice(None)
         if isinstance(key,tuple):
             channel=key[1]
             key=key[0]
@@ -137,7 +137,7 @@ class Sound(BaseSound, numpy.ndarray):
         if isinstance(key,Quantity):
             return np.ndarray.__getitem__(self,round(key*self.samplerate))
 
-        sliceattr=[key.__getattribute__(flag) for flag in ['start','step','stop'] if key.__getattribute__(flag) is not None]
+        sliceattr = [v for v in [key.start, key.step, key.stop] if v is not None]
         slicedims=array([units.have_same_dimensions(flag,second) for flag in sliceattr])
 
         if not slicedims.any():
@@ -145,19 +145,19 @@ class Sound(BaseSound, numpy.ndarray):
         if not slicedims.all():
             raise DimensionMismatchError('Slicing',*[units.get_unit(d) for d in sliceattr])
         
-        if key.__getattribute__('step') is not None:
+        if key.step is not None:
             # resampling?
             raise NotImplementedError
         start = key.start or 0*msecond
         stop = key.stop or self.duration
         if start<0*ms or stop > self.duration:
             raise IndexError('Slice bigger than Sound object')
-        start = round(start*self.samplerate)
-        stop = round(stop*self.samplerate)
+        start = int(start*self.samplerate)
+        stop = int(stop*self.samplerate)
         return self.__getitem__((slice(start,stop),channel))
     
     def __setitem__(self,key,value):
-        channel=0
+        channel=slice(None)
         if isinstance(key,tuple):
             channel=key[1]
             key=key[0]
@@ -167,12 +167,20 @@ class Sound(BaseSound, numpy.ndarray):
         if isinstance(key,Quantity):
             return np.ndarray.__setitem__(self,(round(key*self.samplerate),channel),value)
 
-        sliceattr=[key.__getattribute__(flag) for flag in ['start','step','stop'] if key.__getattribute__(flag) is not None]
+        sliceattr = [v for v in [key.start, key.step, key.stop] if v is not None]
         slicedims=array([units.have_same_dimensions(flag,second) for flag in sliceattr])
         if not slicedims.any():
-            if isinstance(value,Sound) and value.shape[1]==1:
+            # If value is a mono sound its shape will be (N, 1) but the numpy
+            # setitem will have shape (N,) so in this case it's a shape mismatch
+            # so we squeeze the arrya to make sure this doesn't happen.
+            if isinstance(value,Sound) and channel!=slice(None):
                 value=value.squeeze()
             return asarray(self).__setitem__((key,channel),value)
+#            print value.shape
+#            print self.shape
+#            print np.ndarray.__getitem__(self, (key, channel)).shape
+#            print key, channel
+#            return np.ndarray.__setitem__(self, (key, channel), value)
         if not slicedims.all():
             raise DimensionMismatchError('Slicing',*[units.get_unit(d) for d in sliceattr])
 
@@ -185,12 +193,8 @@ class Sound(BaseSound, numpy.ndarray):
         if (start is not None and start<0*ms) or stop > self.duration:
             raise IndexError('Slice bigger than Sound object')
         if start is not None: start = int(round(start*self.samplerate))
-        stop = int(round(stop*self.samplerate))
+        stop = int(stop*self.samplerate)
         return self.__setitem__((slice(start,stop),channel),value)
-
-    def __delitem__(self,key):
-        # Don't know what to do here, I guess we don't want people to delete items in a sound
-        print 'Why do you want to delete part of a sound object?'
 
     @check_units(duration=second)
     def extend(self, duration):
