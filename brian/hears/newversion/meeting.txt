@@ -106,6 +106,7 @@ FOR LATER
 * resample: reimplement?
 * think about frequency-domain sounds
 * onlinesounds: later
+* monaural distance cues: level and spectrum change with distance
 
 HRTFs
 -----
