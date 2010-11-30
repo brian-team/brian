@@ -6,7 +6,7 @@ from scipy.io import savemat
 from scipy.signal import zpk2tf,bilinear
 from time import time
 
-dBlevel=60  # dB level in rms dB SPL
+#dBlevel=60  # dB level in rms dB SPL
 #sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
 #samplerate=sound.samplerate
 #sound=sound.atintensity(dBlevel)
@@ -18,8 +18,8 @@ dBlevel=60  # dB level in rms dB SPL
 
 simulation_duration=50*ms
 samplerate=50*kHz
-sound = whitenoise(simulation_duration,samplerate).ramp()
-#simulation_duration=50*ms+0*ms
+sound = whitenoise(simulation_duration,samplerate)#.ramp()
+simulation_duration=50*ms+0*ms
 data=dict()
 data['input']=sound
 savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/noise.mat',data)
@@ -34,13 +34,11 @@ print interval_change
 
     
 class BP_control_update: 
-    def __init__(self, fs,cf,control):
+    def __init__(self, fs,cf):
         self.fs=fs
         self.cf=atleast_1d(cf)
         self.N=len(self.cf)
         self.iteration=0
-        self.control=control
-        self.control.buffer_init()
         x_cf=11.9*log10(0.8+cf/456)
 
         self.f_shift=(10**((x_cf+1.2)/11.9)-0.8)*456-cf
@@ -69,30 +67,28 @@ class BP_control_update:
             self.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
         self.filt_b[:,:,2]=self.filt_b[:,:,2]/gain_norm
 
-
-   
+    def init_control(self,control):
+        self.control=control
+        self.control.buffer_init()
 
     def __call__(self):
         
          self.buffer_start += self.sub_buffer_length
-         control_signal=zeros((1,self.N))#self.control.buffer_fetch(self.buffer_start, self.buffer_start+self.sub_buffer_length)
-         t1=time()  
+         control_signal=self.control.buffer_fetch(self.buffer_start, self.buffer_start+self.sub_buffer_length)#zeros((1,self.N))#
+#         t1=time()  
 #         wbw=-(real(self.poles[:,0] -control_signal[-1,:]))/2.0/pi
 #
-#         self.poles[:,0:3]=tile(-2*pi*self.wbw+1j*2*pi*(self.cf+self.f_shift),[3,1]).T          
-#         self.poles=(1+self.poles/(2*self.fs))/(1-self.poles/(2*self.fs))
+#         self.poles[:,0:3]=tile(-2*pi*self.wbw+1j*2*pi*(self.cf+self.f_shift),[3,1]).T   
+#                
 #         for iorder in xrange(3):
 #             self.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
-
-         print time()-t1
+#         self.filt_b[:,:,2]=self.filt_b[:,:,2]/gain_norm1
 
 ##### Control Path ####
-#### low pass filter for feedback to control band pass
-fc_LP_fb=500*Hz
-LP_fb= LowPassFilterbank(sound, nbr_cf,fc_LP_fb)
+
 
 #### wide band pass control
-vary_coeff_BP_control=BP_control_update(samplerate,cf,LP_fb)
+vary_coeff_BP_control=BP_control_update(samplerate,cf)
 BP_control= TimeVaryingIIRFilterbank(sound,interval_change,vary_coeff_BP_control)
 
 ##### first non linearity of control path
@@ -118,7 +114,10 @@ fc_LP_control=800*Hz
 LP_control=ButterworthFilterbank(NL2_control, nbr_cf, 3, fc_LP_control, btype='low')
 
 
-
+#### low pass filter for feedback to control band pass
+fc_LP_fb=500*Hz
+LP_fb= ButterworthFilterbank(NL2_control, nbr_cf, 3, fc_LP_control, btype='low')
+vary_coeff_BP_control.init_control(LP_fb)
 
 
     
