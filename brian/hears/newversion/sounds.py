@@ -18,6 +18,7 @@ from bufferable import Bufferable
 from prefs import get_samplerate
 
 __all__ = ['BaseSound', 'Sound',
+           'pinknoise','brownnoise','powerlawnoise',
            'whitenoise', 'tone', 'click', 'silent', 'sequence',
            'load'
            ]
@@ -31,6 +32,17 @@ class BaseSound(Bufferable):
 class Sound(BaseSound, numpy.ndarray):
     '''
     TODO: documentation for Sound
+
+    Slicing:
+       One can slice sound objects in various ways:
+    ``s[start:stop:step,channel]``
+       Returns another Sound object that corresponds to the slice imposed. 
+       ``start`` and ``stop`` values can be specified in samples or durations (e.g. 100*ms). 
+       ``step`` is only implemented for integer values (no resampling). 
+       Still one can use step to reverse the signal (e.g. using s[100*ms:50*ms:-1]).
+       ``channel`` can be a slice for multi channel sounds, that is s[10*ms:50*ms,:] is equivalent to s[10*ms:50*ms].
+       One can also specify start and stop values outside the Sound range (start<0 or stop> duration), in this case the Sound is zero-padded to fit the desired duration.
+       
     '''
     duration = property(fget=lambda self:len(self) / self.samplerate)
     times = property(fget=lambda self:arange(len(self), dtype=float) / self.samplerate)
@@ -137,29 +149,33 @@ class Sound(BaseSound, numpy.ndarray):
         if isinstance(key,Quantity):
             return np.ndarray.__getitem__(self,round(key*self.samplerate))
 
-        sliceattr = [v for v in [key.start, key.step, key.stop] if v is not None]
-        slicedims=array([units.have_same_dimensions(flag,second) for flag in sliceattr])
+        sliceattr = [v for v in [key.start, key.stop] if v is not None]
+        slicedims = array([units.have_same_dimensions(flag,second) for flag in sliceattr])
 
         if not slicedims.any():
-            start= key.start or 0
-            stop= key.stop or self.shape[0]
-            if start>=0 and stop <= self.shape[0]:
+            start = key.start or 0
+            stop = key.stop or self.shape[0]
+            step = key.step or 1
+            if start >= 0 and stop <= self.shape[0]:
                 return Sound(np.ndarray.__getitem__(self,(key,channel)),self.samplerate)
             else:
-                bpad=Sound(zeros((-start,self.shape[1])))
-                apad=Sound(zeros((stop-self.shape[0],self.shape[1])))
+                bpad = Sound(zeros((-start,self.shape[1])))
+                apad = Sound(zeros((stop-self.shape[0],self.shape[1])))
+                if step==-1:
+                    return Sound(vstack((apad,flipud(asarray(self)),bpad)),self.samplerate)
                 return Sound(vstack((bpad,asarray(self),apad)),self.samplerate)
         if not slicedims.all():
             raise DimensionMismatchError('Slicing',*[units.get_unit(d) for d in sliceattr])
         
-        if key.step is not None:
-            # resampling?
-            raise NotImplementedError
         start = key.start or 0*msecond
         stop = key.stop or self.duration
+        step = key.step or 1
+        if int(step)!=step:
+            #resampling
+            raise NotImplementedError
         start = int(start*self.samplerate)
         stop = int(stop*self.samplerate)
-        return self.__getitem__((slice(start,stop),channel))
+        return self.__getitem__((slice(start,stop,step),channel))
     
     def __setitem__(self,key,value):
         channel=slice(None)
