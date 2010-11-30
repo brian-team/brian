@@ -1,12 +1,14 @@
 from brian import *
 from scipy import signal, weave, random
 from ..bufferable import Bufferable
+from operator import isSequenceType
 
 __all__ = ['Filterbank',
            'RestructureFilterbank',
            'FunctionFilterbank',
            'SumFilterbank',
            'DoNothingFilterbank',
+           'ControlFilterbank',
            ]
 
 class Filterbank(Bufferable):
@@ -334,3 +336,133 @@ class DoNothingFilterbank(Filterbank):
     '''
     def buffer_apply(self, input):
         return input
+
+
+class ControlFilterbank(Filterbank):
+    '''
+    Filterbank that can be used for controlling behaviour at runtime
+    
+    Typically, this class is used to implement a control path in an auditory
+    model, modifying some filterbank parameters based on the output of other
+    filterbanks (or the same ones).
+    
+    The controller has a set of input filterbanks whose output values are used
+    to modify a set of output filterbanks. The update is done by a user specified
+    function or class which is passed these output values. The controller should
+    be inserted as the last bank in a chain.
+    
+    Initialisation arguments:
+    
+    ``source``
+        The source filterbank, the values from this are used unmodified as the
+        output of this filterbank.
+    ``inputs``
+        Either a single filterbank, or sequence of filterbanks which are used
+        as inputs to the ``updater``.
+    ``targets``
+        The filterbank or sequence of filterbanks that are modified by the
+        updater.
+    ``updater``
+        The function or class which does the updating, see below.
+    ``max_interval``
+        If specified, ensures that the updater is called at least as often
+        as this interval (but it may be called more often). Can be specified
+        as a time or a number of samples.
+    
+    **The updater**
+    
+    The ``updater`` argument can be either a function or class instance. If it
+    is a function, it should have a form like::
+    
+        # A single input
+        def updater(input):
+            ...
+        
+        # Two inputs
+        def updater(input1, input2):
+            ...
+        
+        # Arbitrary number of inputs
+        def updater(*inputs):
+            ...
+            
+    Each argument ``input`` to the function is a numpy array of shape
+    ``(numsamples, numchannels)`` where ``numsamples`` is the number of samples
+    just computed, and ``numchannels`` is the number of channels in the
+    corresponding filterbank. The function is not restricted in what it can
+    do with these inputs.
+    
+    Functions can be used to implement relatively simple controllers, but for
+    more complicated situations you may want to maintain some state variables
+    for example, and in this case you can use a class. The object ``updater``
+    should be an instance of a class that defines the ``__call__`` method
+    (with the same syntax as above for functions). In addition, you can
+    define an initialisation method ``init(inputs, targets, max_interval)``
+    which will be called on creation of the filterbank, although this is
+    entirely optional.
+    
+    **Example**
+    
+    The following will do a simple form of gain control, where the gain
+    parameter will drift exponentially towards target_rms/rms with a given time
+    constant::
+    
+        # This class implements the gain (see Filterbank for details)
+        class GainFilterbank(Filterbank):
+            def __init__(self, source, gain=1.0):
+                Filterbank.__init__(self, source)
+                self.gain = gain
+            def buffer_apply(self, input):
+                return self.gain*input
+        
+        # This is the class for the updater object
+        class GainController(object):
+            def __init__(self, target_rms, time_constant):
+                self.target_rms = target_rms
+                self.time_constant = time_constant
+            def init(self, input, target, max_interval):
+                self.target = target
+                self.sumsquare = 0
+                self.numsamples = 0
+            def __call__(self, input):
+                T = input.shape[0]/self.target.samplerate
+                self.sumsquare += sum(input**2)
+                self.numsamples += input.size
+                rms = sqrt(self.sumsquare/self.numsamples)
+                g = self.target.gain
+                g_tgt = self.target_rms/rms
+                tau = self.time_constant
+                self.target.gain = g_tgt+exp(-T/tau)*(g-g_tgt)
+    
+    And an example of using this with an input ``source``, a target RMS of 0.2
+    and a time constant of 50 ms, updating every 10 ms::
+    
+        gain_fb = GainFilterbank(source)
+        updater = GainController(0.2, 50*ms)
+        control = ControlFilterbank(gain_fb, source, gain_fb, updater, 10*ms)            
+    '''
+    def __init__(self, source, inputs, targets, updater, max_interval=None):
+        Filterbank.__init__(self, source)
+        if hasattr(updater, 'init'):
+            updater.init(inputs, targets, max_interval)
+        if not isinstance(inputs, (list, tuple)):
+            inputs = [inputs]
+        if not isinstance(targets, (list, tuple)):
+            targets = [targets]
+        self.inputs = inputs
+        self.updater = updater
+        if max_interval is not None:
+            if not isinstance(max_interval, int):
+                max_interval = int(max_interval*source.samplerate)
+            for x in inputs+targets:
+                x.maximum_buffer_size = max_interval
+            self.maximum_buffer_size = max_interval
+    
+    def buffer_fetch_next(self, samples):
+        start = self.next_sample
+        self.next_sample += samples
+        end = start+samples
+        source_input = self.source.buffer_fetch(start, end)
+        input_buffers = [x.buffer_fetch(start, end) for x in self.inputs]
+        self.updater(*input_buffers)
+        return source_input
