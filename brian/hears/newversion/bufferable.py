@@ -1,7 +1,7 @@
 '''
 The Bufferable class serves as a base for all the other Brian.hears classes
 '''
-from numpy import zeros, empty
+from numpy import zeros, empty, hstack, vstack, arange, diff
 
 class Bufferable(object):
     '''
@@ -41,7 +41,12 @@ class Bufferable(object):
     ``buffer_fetch_next(samples)`` method will always get called with
     ``samples>=minimum_buffer_size``. This can be useful to ensure that the
     buffering is done efficiently internally, even if the user request
-    buffered chunks that are too small.
+    buffered chunks that are too small. If the filterbank has a
+    ``maximum_buffer_size`` attribute then ``buffer_fetch_next(samples)`` will
+    always be called with ``samples<=maximum_buffer_size`` - this can be useful
+    for either memory consumption reasons or for implementing time varying
+    filters that need to update on a shorter time window than the overall
+    buffer size.
     
     The following attributes will automatically be maintained:
     
@@ -54,13 +59,15 @@ class Bufferable(object):
         change size.
     '''
     def buffer_fetch(self, start, end):
+        if not hasattr(self, 'cached_buffer_start'):
+            self.buffer_init()
         # optimisations for the most typical cases, which are when start:end is
         # the current cached segment, or when start:end is the next cached
         # segment of the same size as the current one
         if start==self.cached_buffer_start and end==self.cached_buffer_end:
             return self.cached_buffer_output
         if start==self.cached_buffer_end and end-start==self.cached_buffer_output.shape[0]:
-            self.cached_buffer_output = self.buffer_fetch_next(end-start)
+            self.cached_buffer_output = self._buffer_fetch_next(end-start)
             self.cached_buffer_start = start
             self.cached_buffer_end = end
             return self.cached_buffer_output
@@ -84,7 +91,7 @@ class Bufferable(object):
         if hasattr(self, 'minimum_buffer_size'):
             samples = max(samples, self.minimum_buffer_size)
             end = self.cached_buffer_end+samples
-        newsegment = self.buffer_fetch_next(samples)
+        newsegment = self._buffer_fetch_next(samples)
         # otherwise we have an overlap situation - I guess this won't really
         # happen very often but it has to be handled correctly in case.
         new_end = end
@@ -101,6 +108,16 @@ class Bufferable(object):
         self.cached_buffer_end = new_end
         # return only those values up to the requested end point
         return new_output[start-self.cached_buffer_start:req_end-self.cached_buffer_start, :]
+    
+    def _buffer_fetch_next(self, samples):
+        # This method checks if there is a maximum buffer size, and if so
+        # splits the buffer_fetch_next into multiple pieces of at most this size
+        if not hasattr(self, 'maximum_buffer_size'):
+            return self.buffer_fetch_next(samples)
+        bufsize = self.maximum_buffer_size
+        endpoints = hstack((arange(0, samples, bufsize), samples))
+        sizes = diff(endpoints)
+        return vstack(tuple(self.buffer_fetch_next(size) for size in sizes))
     
     def buffer_init(self):
         self.cached_buffer_output = zeros((0, self.nchannels))

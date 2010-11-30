@@ -75,7 +75,8 @@ class Filterbank(Bufferable):
                     raise ValueError('All sources must have the same number of channels.')
                 if int(s.samplerate)!=int(self.samplerate):
                     raise ValueError('All sources must have the same samplerate.')
-            self.source = source            
+            self.source = source
+        self.next_sample = 0
 
     def buffer_init(self):
         Bufferable.buffer_init(self)
@@ -89,7 +90,8 @@ class Filterbank(Bufferable):
         raise NotImplementedError
 
     def buffer_fetch_next(self, samples):
-        start = self.cached_buffer_end
+        start = self.next_sample
+        self.next_sample += samples
         end = start+samples
         input = self.source.buffer_fetch(start, end)
         return self.buffer_apply(input)
