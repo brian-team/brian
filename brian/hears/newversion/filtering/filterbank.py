@@ -2,9 +2,11 @@ from brian import *
 from scipy import signal, weave, random
 from ..bufferable import Bufferable
 from operator import isSequenceType
+from __builtin__ import all
 
 __all__ = ['Filterbank',
            'RestructureFilterbank',
+                'Repeat', 'Tile', 'Join', 'Interleave',
            'FunctionFilterbank',
            'SumFilterbank',
            'DoNothingFilterbank',
@@ -243,6 +245,33 @@ class RestructureFilterbank(Filterbank):
             indexmapping = tile(indexmapping, numtile)
         if not isinstance(indexmapping, ndarray):
             indexmapping = array(indexmapping, dtype=int)
+        # optimisation to reduce multiple RestructureFilterbanks into a single
+        # one, by collating the sources and reconstructing the indexmapping
+        # from the individual indexmappings
+        if all(isinstance(s, RestructureFilterbank) for s in source):
+            newsource = ()
+            newsourcesizes = ()
+            for s in source:
+                newsource += s.source
+                inputsourcesize = sum(inpsource.nchannels for inpsource in s.source)
+                newsourcesizes += (inputsourcesize,)
+            newsourcesizes = array(newsourcesizes)
+            newsourceoffsets = hstack((0, cumsum(newsourcesizes)))
+            new_indexmapping = zeros_like(indexmapping)
+            sourcesizes = array(tuple(s.nchannels for s in source))
+            sourceoffsets = hstack((0, cumsum(sourcesizes)))
+            # gives the index of the source of each element of indexmapping
+            sourceindices = digitize(indexmapping, cumsum(sourcesizes))
+            for i in xrange(len(indexmapping)):
+                source_index = sourceindices[i]
+                s = source[source_index]
+                relative_index = indexmapping[i]-sourceoffsets[source_index]
+                source_relative_index = s.indexmapping[relative_index]
+                new_index = source_relative_index+newsourceoffsets[source_index]
+                new_indexmapping[i] = new_index
+            source = newsource
+            indexmapping = new_indexmapping
+                
         self.indexmapping = indexmapping
         self.nchannels = len(indexmapping)
         self.samplerate = source[0].samplerate
@@ -258,6 +287,40 @@ class RestructureFilterbank(Filterbank):
         input = hstack(inputs)
         input = input[:, self.indexmapping]
         return input
+
+class Repeat(RestructureFilterbank):
+    '''
+    Filterbank that repeats each channel from its input, e.g. with 3 repeats
+    channels ABC would map to AAABBBCCC.
+    '''
+    def __init__(self, source, numrepeat):
+        RestructureFilterbank.__init__(self, source, numrepeat)
+
+class Tile(RestructureFilterbank):
+    '''
+    Filterbank that tiles the channels from its input, e.g. with 3 tiles
+    channels ABC would map to ABCABCABC.
+    '''
+    def __init__(self, source, numtile):
+        RestructureFilterbank.__init__(self, source, numtile=numtile)
+        
+class Join(RestructureFilterbank):
+    '''
+    Filterbank that joins the channels of its inputs in series, e.g. with two
+    input sources with channels AB and CD respectively, the output would have
+    channels ABCD.
+    '''
+    def __init__(self, source):
+        RestructureFilterbank.__init__(self, source, type='serial')
+        
+class Interleave(RestructureFilterbank):
+    '''
+    Filterbank that interleaves the channels of its inputs, e.g. with two
+    input sources with channels AB and CD respectively, the output would have
+    channels ACBD.
+    '''
+    def __init__(self, source):
+        RestructureFilterbank.__init__(self, source, type='interleave')
 
 class FunctionFilterbank(Filterbank):
     '''
