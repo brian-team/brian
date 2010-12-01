@@ -158,6 +158,13 @@ define_global_preference(
          ''')
 set_global_preferences(usenewbrianhears=False)
 
+define_global_preference(
+    'brianhears_usegpu', 'False',
+    desc='''
+         Whether or not to use the GPU (if available) in Brian.hears.
+         ''')
+set_global_preferences(brianhears_usegpu=False)
+
 # check if we were run from a file or some other source, and set the default
 # behaviour for magic functions accordingly
 import inspect as _inspect

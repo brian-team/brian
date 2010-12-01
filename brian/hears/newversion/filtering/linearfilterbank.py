@@ -165,8 +165,11 @@ class LinearFilterbank(Filterbank):
 
 # Use the GPU version if available
 try:
-    import pycuda
-    from gpulinearfilterbank import LinearFilterbank
-    use_gpu = True
+    if get_global_preference('brianhears_usegpu'):
+        import pycuda
+        from gpulinearfilterbank import LinearFilterbank
+        use_gpu = True
+    else:
+        use_gpu = False
 except ImportError:
     use_gpu = False

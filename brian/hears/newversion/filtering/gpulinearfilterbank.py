@@ -1,7 +1,6 @@
 '''
 '''
 # TODO: support for GPUBufferedArray?
-#import ensure_failure # import this in order to temporarily disable GPU
 from numpy import *
 import pycuda
 #import pycuda.autoinit as autoinit

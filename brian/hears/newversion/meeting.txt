@@ -66,11 +66,9 @@ Library
 
 Others
 ------
-* erbspace: include endpoint
 * LinearFilterbank: docs a,b; allow implicit p=1 (2D matrices)
 * impulseresponse -> impulse_response
 * FIRFilterBank: remove use_linearfilterbank (use FFT)
-* turn off GPU by default
 
 ---------
 FOR LATER
