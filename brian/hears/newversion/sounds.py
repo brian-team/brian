@@ -16,11 +16,12 @@ except (ImportError, ValueError):
     have_scikits_samplerate = False
 from bufferable import Bufferable
 from prefs import get_samplerate
+from db import dB, dB_type, dB_error, gain
 
 __all__ = ['BaseSound', 'Sound',
            'pinknoise','brownnoise','powerlawnoise',
-           'whitenoise', 'tone', 'click', 'silent', 'sequence',
-           'load'
+           'whitenoise', 'tone', 'click', 'clicks', 'silence', 'sequence',
+           'loadsound', 'savesound', 'playsound',
            ]
 
 class BaseSound(Bufferable):
@@ -128,9 +129,9 @@ class Sound(BaseSound, numpy.ndarray):
                 other = other.resample(self.samplerate)
 
             if len(self) > len(other):
-                other = other.extend_length(len(self))
+                other = other.resized(len(self))
             elif len(self) < len(other):
-                self = self.extend_length(len(other))
+                self = self.resized(len(other))
 
             return Sound(numpy.ndarray.__add__(self, other), samplerate=self.samplerate)
         else:
@@ -218,14 +219,15 @@ class Sound(BaseSound, numpy.ndarray):
         return self.__setitem__((slice(start,stop),channel),value)
 
     @check_units(duration=second)
-    def extend(self, duration):
+    def extended(self, duration):
         '''
-        Returns the Sound with length extended (or contracted) to have the given duration.
+        Returns the Sound with length extended by the given duration.
         '''
-        L = int(duration * self.samplerate)
-        return self.extend_length(L)
+        if not isinstance(duration, int):
+            duration = int(duration * self.samplerate)
+        return self[:self.duration+duration]
 
-    def extend_length(self, L):
+    def resized(self, L):
         '''
         Returns the Sound with length extended (or contracted) to have L samples.
         '''
@@ -237,13 +239,14 @@ class Sound(BaseSound, numpy.ndarray):
             padding = zeros((L - len(self), self.nchannels))
             return Sound(concatenate((self, padding)), samplerate=self.samplerate)
 
-    @check_units(onset=second)
-    def shift(self, onset):
+    @check_units(duration=second)
+    def shift(self, duration):
         '''
-        Returns the sound played at time onset.
+        Returns the sound delayed by duration.
         '''
-        onset = int(onset*self.samplerate)
-        y = vstack((zeros((onset, self.nchannels)), self))
+        if not isinstance(duration, int):
+            duration = int(duration*self.samplerate)
+        y = vstack((zeros((duration, self.nchannels)), self))
         return Sound(y, samplerate=self.samplerate)
 
     def repeat(self, n):
@@ -267,19 +270,11 @@ class Sound(BaseSound, numpy.ndarray):
                   dtype=float64)
         return Sound(y, samplerate=samplerate)
 
-    def copy_from(self, other):
-        '''
-        Copies values from the given sound (resampled if necessary).
-        '''
-        if not isinstance(other, Sound):
-            raise TypeError('Must copy from a Sound object.')
-        if int(other.samplerate) != int(self.samplerate):
-            other = other.resample(self.samplerate)
-        self[:min(len(other), len(self)), :] = other[:min(len(other), len(self)), :]
-
     def play(self, normalise=False, sleep=False):
         '''
-        Plays the sound (normalised to avoid clipping if required).
+        Plays the sound (normalised to avoid clipping if required). If
+        sleep=True then the function will wait until the sound has finished
+        playing before returning.
         '''
         if self.nchannels>2:
             raise ValueError("Can only play sounds with 1 or 2 channels.")
@@ -387,152 +382,118 @@ class Sound(BaseSound, numpy.ndarray):
             show()
         return (Z, freqs, phase)
 
-    def intensities(self, type='rms'):
+    def get_level(self):
         '''
-        Returns intensity in dB SPL assuming array is in Pascals
-        Returns an array of intensities for each channel, even if there is
-        only one channel.
-        '''
-        if type=='rms':
-            return 20.0*log10(sqrt(mean(asarray(self)**2, axis=0))/2e-5)
-        elif type=='peak':
-            # TODO: where does this number come from? Maybe we should make it
-            # a named constant? Probably for 2e-5 above too (can't remember
-            # where that comes from, but I'm sure it's very sensible).
-            return 28e-6*10**(amax(asarray(self), axis=0)/20.)
-        else:
-            raise ValueError('Intensity type must be rms or peak')
-
-    def intensity(self, type='rms'):
-        '''
-        Returns intensity in dB SPL assuming array is in Pascals
-        In the case of multi-channel sounds, returns a tuple of intensities
+        Returns level in dB SPL (RMS) assuming array is in Pascals.
+        In the case of multi-channel sounds, returns an array of levels
         for each channel, otherwise returns a float.
         '''
-        I = self.intensities(type=type)
         if self.nchannels==1:
-            return I[0]
-        else:
-            return tuple(I) 
-    
-    ### TODO: update to use multiple channels
-    def setintensity(self, dB, type='rms'): #replace atintensity
-        '''
-        Set the intensity (in dB) of a given signal
-        the dB scale can be with respect to the rms value (default) or peak value
-        by choosing type='rms' or type='peak'
-        note: the signal should be long enough to measure the rms value
-        '''
-        # TODO: what does the comment "replace atintensity mean?" - does it mean
-        # that there is a problem with the atintensity function? If so, let's
-        # replace it with this one.
-        # TODO: grammatical point: a method named setintensity should change the
-        # values of this sound, not return a new one, which is why I called the
-        # original one atintensity.
-        if type=='rms':
             rms_value = sqrt(mean((asarray(self)-mean(asarray(self)))**2))
             rms_dB = 20.0*log10(rms_value/2e-5)
-            gain = 10**((dB-rms_dB)/20.)
-        elif type=='peak':
-            # TODO: do you want to normalise here, or return a normalised
-            # version of this? At the moment, this does nothing (see comments
-            # for normalize function below).
-            self.normalize()
-            gain = 28e-6*10**(dB/20.)
-        
-        return self*gain
+            return rms_dB*dB
+        else:
+            return array(tuple(self.channel(i).get_level() for i in xrange(self.nchannels)))
+
+    def set_level(self, level):
+        '''
+        Sets level in dB SPL (RMS) assuming array is in Pascals. ``level``
+        should be a value in dB, or a tuple of levels, one for each channel.
+        '''
+        rms_dB = self.get_level()
+        if self.nchannels>1:
+            level = array(level)
+            if level.size==1:
+                level = level.repeat(self.nchannels)
+            level = reshape(level, (1, self.nchannels))
+            rms_dB = reshape(rms_dB, (1, self.nchannels))
+        else:
+            if not isinstance(level, dB_type):
+                raise dB_error('Must specify level in dB')
+            rms_dB = float(rms_dB)
+            level = float(level)
+        gain = 10**((level-rms_dB)/20.)
+        self *= gain
+
+    level = property(fget=get_level, fset=set_level)
+    
+    def atlevel(self, level):
+        '''
+        Returns the sound at the given level in dB SPL (RMS) assuming array is
+        in Pascals. ``level`` should be a value in dB, or a tuple of levels,
+        one for each channel.
+        '''
+        newsound = self.copy()
+        newsound.level = level
+        return newsound
             
-    def normalize(self):
-        # TODO: what should this function do? As it is, it should be called
-        # something like normalized because it doesn't change the sound itself,
-        # it just returns a normalised version of it. So either the name
-        # should change or the behaviour. We should probably have both. And
-        # let's have both US and UK spellings too (normalise/normalize).
-        factor = max(max(asarray(self)),abs(min(asarray(self))))
-        return self/factor
-        
-    def atintensity(self, db):
-        '''
-        Returns sound in Pascals at various intensities (in RMS dB SPL)
-        '''
-        return self.amplified(db - self.intensity())
-
-    # TODO: rename/remove?
-    def amplified(self, db):
-        '''
-        Returns sound amplified by a given amount in dB pressure.
-        '''
-        return self * 10.0 ** (db / 20.0)
-
-    def ramp(self, when='both', duration=10*ms, func=None, inplace=True):
+    def ramp(self, when='onset', duration=10*ms, envelope=None, inplace=True):
         '''
         Adds a ramp on/off to the sound
         
-        ``when='on'``
-            Can take values 'on', 'off' or 'both'
+        ``when='onset'``
+            Can take values 'onset', 'offset' or 'both'
         ``duration=10*ms``
             The time over which the ramping happens
-        ``func``
-            A ramping function, if not specified uses ``sin(pi*t/2)**2``
+        ``envelope``
+            A ramping function, if not specified uses ``sin(pi*t/2)**2``. The
+            function should be a function of one variable ``t`` ranging from
+            0 to 1, and should increase from ``f(0)=0`` to ``f(0)=1``. The
+            reverse is applied for the offset ramp.
         ``inplace``
             Whether to apply ramping to current sound or return a new array.
         '''
         when = when.lower().strip()
-        if func is None: func = lambda t:sin(pi * t / 2) ** 2
-        sz = int(duration * self.samplerate)
-        multiplier = func(reshape(linspace(0.0, 1.0, sz), (sz, 1)))
+        if envelope is None: envelope = lambda t:sin(pi * t / 2) ** 2
+        if not isinstance(duration, int):
+            sz = int(duration * self.samplerate)
+        else:
+            sz = duration
+        multiplier = envelope(reshape(linspace(0.0, 1.0, sz), (sz, 1)))
         if inplace:
             target = self
         else:
             target = Sound(copy(self), self.samplerate)
-        if when == 'on' or when == 'both':
+        if when == 'onset' or when == 'both':
             target[:sz, :] *= multiplier
-        if when == 'off' or when == 'both':
+        if when == 'offset' or when == 'both':
             target[-sz:, :] *= multiplier[::-1]
         return target
     
-    def ramped(self, when='both', duration=10*ms, func=None, inplace=False):
-        return self.ramp(when=when, duration=duration, func=func, inplace=inplace)
+    def ramped(self, when='onset', duration=10*ms, envelope=None):
+        '''
+        Returns a ramped version of the sound (see :meth:`Sound.ramp`).
+        '''
+        return self.ramp(when=when, duration=duration, envelope=envelope, inplace=False)
 
     @staticmethod
-    def tone(freq, duration, samplerate=None, dB=None, dBtype='rms'):
-        # TODO: do we want to include the dB and dBtype options here? I would
-        # tend to say no because you can set the intensity yourself elsewhere,
-        # and this duplicates the functionality?
+    def tone(frequency, duration, samplerate=None):
         '''
-        Returns a pure tone at the given frequency for the given duration
-        if dB not given, pure tone is between -1 and 1
+        Returns a pure tone at frequency for duration, using the default
+        samplerate or the given one.
         '''
         samplerate = get_samplerate(samplerate)
         x = sin(2.0*pi*freq*arange(0*ms, duration, 1/samplerate))
-        if dB is not None: 
-            return Sound(x, samplerate).setintensity(dB, type=dBtype)
-        else:
-            return Sound(x, samplerate)
+        return Sound(x, samplerate)
 
     @staticmethod
-    def whitenoise(duration, samplerate=None, dB=None, dBtype='rms'):
-        # TODO: same comment as for tone about dB/dBtype
+    def whitenoise(duration, samplerate=None):
         '''
-        Returns a white noise for the given duration.
-        if dB not given, white noise with a variance of one
+        Returns a white noise. If the samplerate is not specified, the global
+        default value will be used.
         '''
         samplerate = get_samplerate(samplerate)
         x = randn(int(samplerate*duration))
-        
-        if dB is not None: 
-            return Sound(x, samplerate).setintensity(dB,type=dBtype)
-        else:
-            return Sound(x, samplerate)
+        return Sound(x, samplerate)
 
     @staticmethod
-    def powerlawnoise(duration, alpha, samplerate=44100*Hz):
+    def powerlawnoise(duration, alpha, samplerate=None):
         '''
         Returns a power-law noise for the given duration. Spectral density per unit of bandwidth scales as 1/(f**alpha).
         
         Sample usage::
         
-            noise=powerlawnoise(200*ms,1,samplerate=44100*Hz)
+            noise = powerlawnoise(200*ms, 1, samplerate=44100*Hz)
         
         Arguments:
         
@@ -543,6 +504,7 @@ class Sound(BaseSound, numpy.ndarray):
         ``samplerate``
             Desired output samplerate
         '''
+        samplerate = get_samplerate(samplerate)
         # Adapted from http:/+/www.eng.ox.ac.uk/samp/software/powernoise/powernoise.m
         # Little MA et al. (2007), "Exploiting nonlinear recurrence and fractal
         # scaling properties for voice disorder detection", Biomed Eng Online, 6:23
@@ -562,36 +524,46 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x,samplerate)
     
     @staticmethod
-    def pinknoise(duration,samplerate=44100*Hz):
+    def pinknoise(duration, samplerate=None):
         '''
-        Returns pink noise, i.e power law noise with alpha equals to 1
+        Returns pink noise, i.e :func:`powerlawnoise` with alpha=1
         '''
         return Sound.powerlawnoise(duration,1,samplerate=samplerate)
     
     @staticmethod
-    def brownnoise(duration,samplerate=44100*Hz):
+    def brownnoise(duration, samplerate=None):
         '''
-        Returns brown noise, i.e power law noise with alpha equals to 2
+        Returns brown noise, i.e :func:`powerlawnoise` with alpha=2
         '''
         return Sound.powerlawnoise(duration,2,samplerate=samplerate)
 
     @staticmethod
-    def click(duration, amplitude=1, samplerate=None, dB=None):
-        # TODO: similar comment to tone/whitenoise
+    def click(duration, peak=None, samplerate=None):
         '''
-        Returns a click with given parameters
-        if dB not given, click of amplitude given by the parameter amplitude
-        note that the dB can only be peak dB SPL
+        Returns a click of the given duration.
+        
+        If ``peak`` is not specified, the amplitude will be 1, otherwise
+        ``peak`` refers to the peak dB SPL of the click, according to the
+        formula ``28e-6*10**(peak/20.)``.
         '''
         samplerate = get_samplerate(samplerate)
-        if dB is not None:
-            amplitude = 28e-6*10**(dB/20.)
-        
+        if peak is not None:
+            if not isinstance(peak, dB_type):
+                raise dB_error('Peak must be given in dB')
+            amplitude = 28e-6*10**(peak/20.)
         x = amplitude*ones(int(duration*samplerate))
         return Sound(x, samplerate)
+    
+    @staticmethod
+    def clicks(duration, n, interval, peak=None, samplerate=None):
+        '''
+        Returns a series of n clicks (see :func:`click`) separated by interval.
+        '''
+        oneclick = Sound.click(duration, peak=peak, samplerate=samplerate)
+        return oneclick[:interval].repeat(n)
 
     @staticmethod
-    def silent(duration, samplerate=None):
+    def silence(duration, samplerate=None):
         '''
         Returns a silent, zero sound for the given duration.
         '''
@@ -612,11 +584,12 @@ class Sound(BaseSound, numpy.ndarray):
         x = vstack(sounds)
         return Sound(x, samplerate)
 
-    def save(self, filename, normalise=False, sampwidth=2):
+    def save(self, filename, normalise=False, samplewidth=2):
         '''
-        Save the sound as a WAV, depending on the extension.
+        Save the sound as a WAV.
+        
         If the normalise keyword is set to True, the amplitude of the sound will be
-        normalised to 1. The sampwidth keyword can be 1 or 2 to save the data as
+        normalised to 1. The samplewidth keyword can be 1 or 2 to save the data as
         8 or 16 bit samples.
         '''
         ext=filename.split('.')[-1]
@@ -662,7 +635,7 @@ class Sound(BaseSound, numpy.ndarray):
     @staticmethod
     def load(filename):
         '''
-        Load the file given by 'filename' and returns a Sound object. 
+        Load the file given by filename and returns a Sound object. 
         Sound file can be either a .wav or a .aif file.
         '''
         ext=filename.split('.')[-1]
@@ -697,6 +670,13 @@ class Sound(BaseSound, numpy.ndarray):
 def _load_Sound_from_pickle(arr, samplerate):
     return Sound(arr, samplerate=samplerate*Hz)
 
+def playsound(sound, normalise=False, sleep=False):
+    sound.play(normalise=normalise, sleep=sleep)
+playsound.__doc__ = Sound.play.__doc__
+
+def savesound(sound, filename, normalise=False, samplewidth=2):
+    sound.save(filename, normalise=normalise, samplewidth=samplewidth)
+savesound.__doc__ = Sound.save.__doc__
 
 whitenoise = Sound.whitenoise
 powerlawnoise = Sound.powerlawnoise
@@ -704,6 +684,7 @@ pinknoise = Sound.pinknoise
 brownnoise = Sound.brownnoise
 tone = Sound.tone
 click = Sound.click
-silent = Sound.silent
+clicks = Sound.clicks
+silence = Sound.silence
 sequence = Sound.sequence
-
+loadsound = Sound.load

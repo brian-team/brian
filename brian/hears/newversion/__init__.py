@@ -5,5 +5,4 @@ from .onlinesounds import *
 from .erb import *
 from .filtering import *
 from .hrtf import *
-
-dB = 1.
+from .db import *

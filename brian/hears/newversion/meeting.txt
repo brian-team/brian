@@ -4,40 +4,12 @@ sounds
 ------
 * Docs for tone, whitenoise etc
 * (Doc) Units of sound is Pa
-* Intensities in dB(SPL) (rms) (dB always in pressure rather than power)
-* Remove dB peak (setintensity)
-* intensity -> level (tuple for multiple channels)
-* sound.level=... (tuple for multiple channels)
-* sound.atlevel() (tuple for multiple channels)
-* suppress normalize
-* dB...(x) -> factor 10.0 ** (x / 20.0)
-  gain(x*dB)*mysound
-* dB = special unit
-* play(...)
 * (doc) to change the input sound: x.source=
-* explicit keywords (freq -> frequency in tone)
-* remove dB in tones etc
-* click(duration,peak=None) (peak = peak dB)
-* clicks(duration,interval,peak=None) (sequence of clicks)
-* shift(duration)
-* extend_length->resized (for example)
-* extended(duration) (adds silence at the end)
-* mysound[1*second:2*second] (zero-pad if outside length of sound)
-  (get and set)
-* remove sound.extend
-* remove __delitem__
-* remove copy_from
 * spectrogram(log_spectrogram -> log_power)
   display = False
   frequency_range -> low=0*Hz, high=samplerate/2
 * same things for spectrum
 * check dB units in spectrum (dB/Hz?)
-* ramp: on -> onset, off -> offset
-  func -> envelope
-  document func
-* ramped: remove inplace
-* save: sampwidth -> samplewidth
-* load_sound, save_sound
 
 Examples
 --------
