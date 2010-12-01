@@ -2,7 +2,6 @@ Brian hears meeting 29 Nov 2010
 ===============================
 sounds
 ------
-* Docs for tone, whitenoise etc
 * (Doc) Units of sound is Pa
 * (doc) to change the input sound: x.source=
 * spectrogram(log_spectrogram -> log_power)
@@ -11,23 +10,12 @@ sounds
 * same things for spectrum
 * check dB units in spectrum (dB/Hz?)
 
-Examples
---------
-* have one wav file or generate one (artificial vowel?)
-
 FilterBank
 ----------
-RestructureFilterbank:
-ABC		AABBCC	Repeat
-		ABCABC	Tile
-		
-ABC		ABCDEF	Join
-DEF		ADBECF	Interleave
-
-Restructure(AB=s1,CD=s2,'ACBD'*3)
-Restructure(AB=s1,'A'*3+'B'*3)
-
-Think about it!
+Alternative idea:
+	Restructure(AB=s1,CD=s2,'ACBD'*3)
+	Restructure(AB=s1,'A'*3+'B'*3)
+	Think about it!
 
 Library
 -------
@@ -64,18 +52,6 @@ Library
 	vary_filter_class -> updater
 * Asym_Comp_Coeff -> asymmetric_compensation_coefs
 
-Others
-------
-* FIRFilterBank: remove use_linearfilterbank (use FFT)
-
----------
-FOR LATER
----------
-* resample: reimplement?
-* think about frequency-domain sounds
-* onlinesounds: later
-* monaural distance cues: level and spectrum change with distance
-
 HRTFs
 -----
 * HRTF: ITD (grpdelay), IPD, ILD
@@ -88,3 +64,11 @@ HRTFs
 * __len__(HRTF) -> number of samples
 * HRTFDatabase: get rid of coordsys
 * coordinate conversions -> move to functions
+
+---------
+FOR LATER
+---------
+* resample: reimplement?
+* think about frequency-domain sounds
+* onlinesounds: later
+* monaural distance cues: level and spectrum change with distance

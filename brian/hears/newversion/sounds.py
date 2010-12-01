@@ -608,28 +608,27 @@ class Sound(BaseSound, numpy.ndarray):
         else:
             raise NotImplementedError('Can only save as wav soundfiles')
         
-        if sampwidth != 1 and sampwidth != 2:
+        if samplewidth != 1 and samplewidth != 2:
             raise ValueError('Sample width must be 1 or 2 bytes.')
         
-        scale = {2:2 ** 15, 1:2 ** 7-1}[sampwidth]
+        scale = {2:2 ** 15, 1:2 ** 7-1}[samplewidth]
         if ext=='wav':
-            meanval = {2:0, 1:2**7}[sampwidth]
-            dtype = {2:int16, 1:uint8}[sampwidth]
-            typecode = {2:'h', 1:'B'}[sampwidth]
+            meanval = {2:0, 1:2**7}[samplewidth]
+            dtype = {2:int16, 1:uint8}[samplewidth]
+            typecode = {2:'h', 1:'B'}[samplewidth]
         else:
-            meanval = {2:0, 1:2**7}[sampwidth]
-            dtype = {2:int16, 1:uint8}[sampwidth]
-            typecode = {2:'h', 1:'B'}[sampwidth]
+            meanval = {2:0, 1:2**7}[samplewidth]
+            dtype = {2:int16, 1:uint8}[samplewidth]
+            typecode = {2:'h', 1:'B'}[samplewidth]
         w = sndmodule.open(filename, 'wb')
         w.setnchannels(self.nchannels)
-        w.setsampwidth(sampwidth)
+        w.setsampwidth(samplewidth)
         w.setframerate(int(self.samplerate))
         x = array(self,copy=True)
         am=amax(x)
         z = zeros(x.shape[0]*self.nchannels, dtype=x.dtype)
         x.shape=(x.shape[0],self.nchannels)
         for i in range(self.nchannels):
-            print i
             if normalise:
                 x[:,i] /= am
             x[:,i] = (x[:,i]) * scale + meanval
@@ -656,7 +655,6 @@ class Sound(BaseSound, numpy.ndarray):
             return [v[i] for i in range(offset, len(v), channels)]
         wav = sndmodule.open (filename, "r")
         (nchannels, sampwidth, framerate, nframes, comptype, compname) = wav.getparams ()
-        print str(wav.getparams())
         frames = wav.readframes (nframes * nchannels)
         typecode = {2:'h', 1:'B'}[sampwidth]
         out = struct.unpack_from ("%d%s" % (nframes * nchannels,typecode), frames)
