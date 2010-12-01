@@ -33,23 +33,87 @@ class BaseSound(Bufferable):
 class Sound(BaseSound, numpy.ndarray):
     '''
     TODO: documentation for Sound
+    
+    TODO: Initialisation
+    
+    TODO: overview
+  
+    **Loading, saving and playing**
+    
+    .. automethod:: load
+    .. automethod:: save
+    .. automethod:: play
 
-    Slicing:
-       One can slice sound objects in various ways:
-    ``s[start:stop:step,channel]``
-       Returns another Sound object that corresponds to the slice imposed. 
-       ``start`` and ``stop`` values can be specified in samples or durations (e.g. 100*ms). 
-       ``step`` is only implemented for integer values (no resampling). 
-       Still one can use step to reverse the signal (e.g. using s[100*ms:50*ms:-1]).
-       ``channel`` can be a slice for multi channel sounds, that is s[10*ms:50*ms,:] is equivalent to s[10*ms:50*ms].
-       One can also specify start and stop values outside the Sound range (start<0 or stop> duration), in this case the Sound is zero-padded to fit the desired duration.
-       
+    **Properties**
+    
+    .. autoattribute:: duration
+    .. autoattribute:: nchannels
+    .. autoattribute:: times
+    .. autoattribute:: left
+    .. autoattribute:: right
+    .. automethod:: channel
+    
+    **Generating sounds**
+    
+    .. automethod:: tone
+    .. automethod:: whitenoise
+    .. automethod:: powerlawnoise
+    .. automethod:: brownnoise
+    .. automethod:: pinknoise
+    .. automethod:: silence
+    .. automethod:: click
+    .. automethod:: clicks
+    
+    **Timing and sequencing**
+    
+    .. automethod:: sequence
+    .. automethod:: repeat
+    .. automethod:: extended
+    .. automethod:: shifted
+    .. automethod:: resized
+
+    **Slicing**
+    
+    One can slice sound objects in various ways, for example ``sound[100*ms:200*ms]``
+    returns the part of the sound between 100 ms and 200 ms (not including the
+    right hand end point). If the sound is less than 200 ms long it will be
+    zero padded. You can also set values using slicing, e.g.
+    ``sound[:50*ms] = 0`` will silence the first 50 ms of the sound. The syntax
+    is the same as usual for Python slicing. In addition, you can select a
+    subset of the channels by doing, for example, ``sound[:, -5:]`` would be
+    the last 5 channels. For time indices, either times or samples can be given,
+    e.g. ``sound[:100]`` gives the first 100 samples. In addition, steps can
+    be used for example to reverse a sound as ``sound[::-1]``.
+    
+    **Arithmetic operations**
+    
+    TODO:
+    
+    **Level**
+    
+    .. autoattribute:: level
+    .. automethod:: atlevel
+    
+    **Ramping**
+    
+    .. automethod:: ramp
+    .. automethod:: ramped
+    
+    **Plotting**
+    
+    .. automethod:: spectrogram
+    .. automethod:: spectrum
     '''
-    duration = property(fget=lambda self:len(self) / self.samplerate)
-    times = property(fget=lambda self:arange(len(self), dtype=float) / self.samplerate)
-    nchannels = property(fget=lambda self:self.shape[1])
-    left = property(fget=lambda self:self.channel(0))
-    right = property(fget=lambda self:self.channel(1))
+    duration = property(fget=lambda self:len(self) / self.samplerate,
+                        doc='The length of the sound in seconds.')
+    times = property(fget=lambda self:arange(len(self), dtype=float) / self.samplerate,
+                     doc='An array of times (in seconds) corresponding to each sample.')
+    nchannels = property(fget=lambda self:self.shape[1],
+                         doc='The number of channels in the sound.')
+    left = property(fget=lambda self:self.channel(0),
+                    doc='The left channel for a stereo sound.')
+    right = property(fget=lambda self:self.channel(1),
+                     doc='The right channel for a stereo sound.')
 
     @check_units(samplerate=Hz, duration=second)
     def __new__(cls, data, samplerate=None, duration=None):
@@ -119,6 +183,9 @@ class Sound(BaseSound, numpy.ndarray):
         return X
 
     def channel(self, n):
+        '''
+        Returns the nth channel of the sound.
+        '''
         return Sound(self[:, n], self.samplerate)
 
     def __add__(self, other):
@@ -247,7 +314,7 @@ class Sound(BaseSound, numpy.ndarray):
             return Sound(concatenate((self, padding)), samplerate=self.samplerate)
 
     @check_units(duration=second)
-    def shift(self, duration):
+    def shifted(self, duration):
         '''
         Returns the sound delayed by duration.
         '''
@@ -422,7 +489,12 @@ class Sound(BaseSound, numpy.ndarray):
         gain = 10**((level-rms_dB)/20.)
         self *= gain
 
-    level = property(fget=get_level, fset=set_level)
+    level = property(fget=get_level, fset=set_level, doc='''
+        Can be used to get or set the level of a sound, which should be in dB.
+        For single channel sounds a value in dB is used, for multiple channel
+        sounds a value in dB can be used for setting the level (all channels
+        will be set to the same level), or a list/tuple/array of levels.
+        ''')
     
     def atlevel(self, level):
         '''
