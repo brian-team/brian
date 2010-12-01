@@ -139,6 +139,13 @@ class Sound(BaseSound, numpy.ndarray):
             return Sound(x, self.samplerate)
     __radd__ = __add__
 
+
+    def __rshift__(self,other):
+        return Sound(vstack((self,other)))
+    
+    def __lshift__(self,other):
+        return Sound(vstack((self,other)))
+
     def __getitem__(self,key):
         channel=slice(None)
         if isinstance(key,tuple):
