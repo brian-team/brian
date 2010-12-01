@@ -14,10 +14,17 @@ Sounds
 
 .. autoclass:: Sound
 
+.. autofunction:: savesound
+.. autofunction:: loadsound
+.. autofunction:: playsound
 .. autofunction:: whitenoise
+.. autofunction:: powerlawnoise
+.. autofunction:: brownnoise
+.. autofunction:: pinknoise
 .. autofunction:: tone
 .. autofunction:: click
-.. autofunction:: silent
+.. autofunction:: clicks
+.. autofunction:: silence
 .. autofunction:: sequence
 
 Filterbanks
@@ -26,6 +33,10 @@ Filterbanks
 .. autoclass:: LinearFilterbank
 .. autoclass:: FIRFilterbank
 .. autoclass:: RestructureFilterbank
+.. autoclass:: Join
+.. autoclass:: Interleave
+.. autoclass:: Repeat
+.. autoclass:: Tile
 .. autoclass:: FunctionFilterbank
 .. autoclass:: SumFilterbank
 .. autoclass:: DoNothingFilterbank

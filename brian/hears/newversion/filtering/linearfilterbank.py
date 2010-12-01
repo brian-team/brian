@@ -136,9 +136,41 @@ class LinearFilterbank(Filterbank):
         just a single channel. In the latter case, the channels will be
         replicated.
     ``b``, ``a``
-        The coeffs b, a must be of shape ``(nchannels, m, p)``. Here ``m`` is
+        The coeffs b, a must be of shape ``(nchannels, m)`` or
+        ``(nchannels, m, p)``. Here ``m`` is
         the order of the filters, and ``p`` is the number of filters in a
-        chain (first you apply ``[:, :, 0]``, then ``[:, :, 1]``, etc.).    
+        chain (first you apply ``[:, :, 0]``, then ``[:, :, 1]``, etc.).
+        
+    **Notes**
+    
+    These notes adapted from scipy's :func:`~scipy.signal.lfilter` function.
+    
+    The filterbank is implemented as a direct II transposed structure.
+    This means that for a single channel and element of the filter cascade,
+    the output y for an input x is defined by::
+
+        a[0]*y[m] = b[0]*x[m] + b[1]*x[m-1] + ... + b[m]*x[0]
+                              - a[1]*y[m-1] - ... - a[m]*y[0]
+
+    using the following difference equations::
+
+        y[i] = b[0]*x[i] + z[0,i-1]
+        z[0,i] = b[1]*x[i] + z[1,i-1] - a[1]*y[i]
+        ...
+        z[m-3,i] = b[m-2]*x[i] + z[m-2,i-1] - a[m-2]*y[i]
+        z[m-2,i] = b[m-1]*x[i] - a[m-1]*y[i]
+
+    where i is the output sample number.
+
+    The rational transfer function describing this filter in the
+    z-transform domain is::
+    
+                                -1              -nb
+                    b[0] + b[1]z  + ... + b[m] z
+            Y(z) = --------------------------------- X(z)
+                                -1              -na
+                    a[0] + a[1]z  + ... + a[m] z
+        
     '''
     def __init__(self, source, b, a):
         # Automatically duplicate mono input to fit the desired output shape
@@ -148,6 +180,9 @@ class LinearFilterbank(Filterbank):
             source = RestructureFilterbank(source, b.shape[0])
         Filterbank.__init__(self, source)
         # Weave version of filtering requires Fortran ordering of filter params
+        if len(b.shape)==2 and len(a.shape)==2:
+            b = reshape(b, b.shape+(1,))
+            a = reshape(a, a.shape+(1,))
         self.filt_b = array(b, order='F')
         self.filt_a = array(a, order='F')
         self.filt_state = zeros((b.shape[0], b.shape[1]-1, b.shape[2]), order='F')

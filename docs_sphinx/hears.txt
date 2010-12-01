@@ -46,7 +46,7 @@ white noise, clicks and silence::
 	sound = Sound.tone(1*kHz, 1*second, samplerate=44.1*kHz)
 	sound = Sound.whitenoise(1*second, samplerate=44.1*kHz)
 	sound = Sound.click(1*second, samplerate=44.1*kHz)
-	sound = Sound.silent(1*kHz, 1*second, samplerate=44.1*kHz)
+	sound = Sound.silence(1*kHz, 1*second, samplerate=44.1*kHz)
 
 You can pass a function of time or an array to initialise a sound::
 

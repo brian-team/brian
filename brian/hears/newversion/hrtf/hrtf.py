@@ -11,11 +11,11 @@ class HRTF(object):
     
     Has attributes:
     
-    ``impulseresponse``
+    ``impulse_response``
         The pair of impulse responses (as stereo :class:`Sound` objects)
     ``fir``
         The impulse responses in a format suitable for using with
-        :class:`FIRFilterbank` (the transpose of ``impulseresponse``).
+        :class:`FIRFilterbank` (the transpose of ``impulse_response``).
     ``left``, ``right``
         The two HRTFs (mono :class:`Sound` objects)
     ``samplerate``
@@ -36,7 +36,7 @@ class HRTF(object):
         else:
             hrir = Sound((hrir_l, hrir_r), samplerate=hrir_l.samplerate)
         self.samplerate = hrir.samplerate
-        self.impulseresponse = hrir
+        self.impulse_response = hrir
         self.left = hrir.left
         self.right = hrir.right
 
@@ -79,7 +79,7 @@ class HRTF(object):
         return Sound((left_sound, right_sound), samplerate=self.samplerate)        
 
     def get_fir(self):
-        return array(self.impulseresponse.T, copy=True)
+        return array(self.impulse_response.T, copy=True)
     fir = property(fget=get_fir)
 
     def filterbank(self, source, **kwds):
