@@ -12,6 +12,8 @@ print gfb.nchannels
 #old_gfb = oldGFB(44100*Hz, [1*kHz, 2*kHz])
 #y2 = old_gfb.apply(asarray(x))
 
+gfb.source = x*10000
+
 ff = FunctionFilterbank(gfb, lambda input:clip(input, 0, Inf))
 
 sfb = SumFilterbank((gfb, ff), (1, -1))

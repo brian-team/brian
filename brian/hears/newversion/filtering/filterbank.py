@@ -39,8 +39,19 @@ class Filterbank(Bufferable):
     the ``source`` (or list of sources).
     
     Also defines arithmetical operations for +, -, *, / where the other
-    operand can be a filterbank or scalar. TODO: add more arithmetical ops?
-    e.g. could have **, __abs__.
+    operand can be a filterbank or scalar.
+    
+    **Attributes**
+    
+    .. autoattribute:: source
+    
+    .. attribute:: nchannels
+    
+        The number of channels.
+        
+    .. attribute:: samplerate
+    
+        The sample rate.
     
     **Example of deriving a class**
     
@@ -63,9 +74,7 @@ class Filterbank(Bufferable):
     output so that it has shape ``(bufsize, outputnchannels)`` so that it can
     be used as the input to subsequent filterbanks.
     '''
-    
-    source = NotImplemented
-    
+       
     def __init__(self, source):
         if isinstance(source, Bufferable):
             self.source = source
@@ -81,6 +90,40 @@ class Filterbank(Bufferable):
                     raise ValueError('All sources must have the same samplerate.')
             self.source = source
         self.next_sample = 0
+
+    def change_source(self, source):
+        if not hasattr(self, '_source') or self._source is None:
+            self._source = source
+            return
+        if isinstance(source, tuple):
+            for s in source:
+                if int(s.samplerate)!=int(self.samplerate):
+                    raise ValueError('source samplerate is wrong.')
+            for news, olds in zip(source, self._source):
+                if news.nchannels!=olds.nchannels:
+                    raise ValueError('New sources have different numbers of channels to old sources.')
+            self._source = source
+            return
+        if source.nchannels==self.nchannels:
+            self._source = source
+            return
+        if source.nchannels==1:
+            self._source = Repeat(source, self.nchannels)
+        else:
+            raise ValueError('New source must have the same number of channels as old source.')
+
+    source = property(fget=lambda self:self._source,
+                      fset=lambda self, source:self.change_source(source),
+                      doc='''
+        The source of the filterbank, a :class:`Bufferable` object, e.g. another
+        :class:`Filterbank` or a :class:`Sound`. It can also be a tuple of 
+        sources. Can be changed after the object
+        is created, although note that for some filterbanks this may cause
+        problems if they do make assumptions about the input based on the first
+        source object they were passed. If this is causing problems, you can
+        insert a dummy filterbank (:class:`DoNothingFilterbank`) which is
+        guaranteed to work if you change the source.
+        ''')
 
     def buffer_init(self):
         Bufferable.buffer_init(self)
@@ -218,12 +261,20 @@ class RestructureFilterbank(Filterbank):
         two sources, each consisting of a stereo sound, say source 0 was
         ``AB`` and source 1 was ``CD`` then ``indexmapping=[1, 0, 3, 2]`` would
         swap the left and right of each source, but leave the order of the
-        sources the same, i.e. the output would be ``BADC``.
-        
-    TODO: is this documentation clear enough?
+        sources the same, i.e. the output would be ``BADC``.        
     '''
     def __init__(self, source, numrepeat=1, type='serial', numtile=1,
                  indexmapping=None):
+        self._has_been_optimised = False
+        self._reinit(source, numrepeat, type, numtile, indexmapping)
+    
+    def _do_reinit(self):
+        self._reinit(*self._original_init_arguments)
+        if self._has_been_optimised:
+            self._optimisation_target._do_reinit()
+    
+    def _reinit(self, source, numrepeat, type, numtile, indexmapping):
+        self._original_init_arguments = (source, numrepeat, type, numtile, indexmapping)
         if isinstance(source, Bufferable):
             source = (source,)
         if indexmapping is None:
@@ -252,6 +303,8 @@ class RestructureFilterbank(Filterbank):
             newsource = ()
             newsourcesizes = ()
             for s in source:
+                s._has_been_optimised = True
+                s._optimisation_target = self
                 newsource += s.source
                 inputsourcesize = sum(inpsource.nchannels for inpsource in s.source)
                 newsourcesizes += (inputsourcesize,)
@@ -278,7 +331,7 @@ class RestructureFilterbank(Filterbank):
         for s in source:
             if int(s.samplerate)!=int(self.samplerate):
                 raise ValueError('All sources must have the same samplerate.')
-        self.source = source            
+        self._source = source
 
     def buffer_fetch_next(self, samples):
         start = self.cached_buffer_end
@@ -287,6 +340,18 @@ class RestructureFilterbank(Filterbank):
         input = hstack(inputs)
         input = input[:, self.indexmapping]
         return input
+
+    def change_source(self, source):
+        if not hasattr(self, '_source') or self._source is None:
+            self._source = source
+            return
+        oldsource, numrepeat, type, numtile, indexmapping = self._original_init_arguments
+        self._original_init_arguments = source, numrepeat, type, numtile, indexmapping
+        self._do_reinit()
+#        self._reinit(source, numrepeat, type, numtile, indexmapping)
+#        if self._has_been_optimised:
+#            target = self._optimisation_target
+#            target._reinit(*target._original_init_arguments)
 
 class Repeat(RestructureFilterbank):
     '''
@@ -308,19 +373,33 @@ class Join(RestructureFilterbank):
     '''
     Filterbank that joins the channels of its inputs in series, e.g. with two
     input sources with channels AB and CD respectively, the output would have
-    channels ABCD.
+    channels ABCD. You can initialise with multiple sources separated by
+    commas, or by passing a list of sources.
     '''
-    def __init__(self, source):
-        RestructureFilterbank.__init__(self, source, type='serial')
+    def __init__(self, *sources):
+        source = []
+        for s in sources:
+            if isinstance(s, Bufferable):
+                source.append(s)
+            else:
+                source.extend(s)
+        RestructureFilterbank.__init__(self, tuple(source), type='serial')
         
 class Interleave(RestructureFilterbank):
     '''
     Filterbank that interleaves the channels of its inputs, e.g. with two
     input sources with channels AB and CD respectively, the output would have
-    channels ACBD.
+    channels ACBD. You can initialise with multiple sources separated by
+    commas, or by passing a list of sources.
     '''
-    def __init__(self, source):
-        RestructureFilterbank.__init__(self, source, type='interleave')
+    def __init__(self, *sources):
+        source = []
+        for s in sources:
+            if isinstance(s, Bufferable):
+                source.append(s)
+            else:
+                source.extend(s)
+        RestructureFilterbank.__init__(self, tuple(source), type='interleave')
 
 class FunctionFilterbank(Filterbank):
     '''

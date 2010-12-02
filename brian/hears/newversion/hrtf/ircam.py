@@ -15,11 +15,11 @@ class IRCAM_LISTEN(HRTFDatabase):
     For details on the database, see the
     `website <http://recherche.ircam.fr/equipes/salles/listen/>`__.
     
-    The database object can be initialised with the following arguments::
+    The database object can be initialised with the following arguments:
     
     ``basedir``
         The directory where the database has been downloaded and extracted,
-        e.g. r'D:\HRTF\IRCAM'.
+        e.g. ``r'D:\HRTF\IRCAM'``.
     ``compensated=False``
         Whether to use the raw or compensated impulse responses.
     ``samplerate=None``

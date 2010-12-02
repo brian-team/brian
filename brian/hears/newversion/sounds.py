@@ -32,11 +32,27 @@ class BaseSound(Bufferable):
 
 class Sound(BaseSound, numpy.ndarray):
     '''
-    TODO: documentation for Sound
+    Class for working with sounds, including loading/saving, manipulating and playing.
+
+    For an overview, see :ref:`sounds_overview`.
     
-    TODO: Initialisation
+    **Initialisation**
     
-    TODO: overview
+    The following arguments are used to initialise a sound object
+    
+    ``data``
+        Can be a filename, an array, a function or a sequence (list or tuple).
+        If its a filename, the sound file (WAV or AIFF) will be loaded. If its
+        an array, it should have shape ``(nsamples, nchannels)``. If its a
+        function, it should be a function f(t). If its a sequence, the items
+        in the sequence can be filenames, functions, arrays or Sound objects.
+        The output will be a multi-channel sound with channels the corresponding
+        sound for each element of the sequence. 
+    ``samplerate=None``
+        The samplerate, if necessary, will use the default (for an array or
+        function) or the samplerate of the data (for a filename).
+    ``duration=None``
+        The duration of the sound, if initialising with a function.
   
     **Loading, saving and playing**
     
@@ -66,7 +82,7 @@ class Sound(BaseSound, numpy.ndarray):
     
     **Timing and sequencing**
     
-    .. automethod:: sequence
+    .. automethod:: sequence(*sounds, samplerate=None)
     .. automethod:: repeat
     .. automethod:: extended
     .. automethod:: shifted
@@ -87,7 +103,8 @@ class Sound(BaseSound, numpy.ndarray):
     
     **Arithmetic operations**
     
-    TODO:
+    Standard arithemetical operations and numpy functions work as you would
+    expect with sounds, e.g. ``sound1+sound2``, ``3*sound`` or ``abs(sound)``.
     
     **Level**
     
@@ -204,7 +221,7 @@ class Sound(BaseSound, numpy.ndarray):
         else:
             x = numpy.ndarray.__add__(self, other)
             return Sound(x, self.samplerate)
-    __radd__ = __add_
+    __radd__ = __add__
     
     def __getitem__(self,key):
         channel=slice(None)
@@ -285,10 +302,10 @@ class Sound(BaseSound, numpy.ndarray):
         stop = int(stop*self.samplerate)
         return self.__setitem__((slice(start,stop),channel),value)
 
-    @check_units(duration=second)
     def extended(self, duration):
         '''
-        Returns the Sound with length extended by the given duration.
+        Returns the Sound with length extended by the given duration, which
+        can be the number of samples or a length of time in seconds.
         '''
         if not isinstance(duration, int):
             duration = int(duration * self.samplerate)
@@ -306,10 +323,10 @@ class Sound(BaseSound, numpy.ndarray):
             padding = zeros((L - len(self), self.nchannels))
             return Sound(concatenate((self, padding)), samplerate=self.samplerate)
 
-    @check_units(duration=second)
     def shifted(self, duration):
         '''
-        Returns the sound delayed by duration.
+        Returns the sound delayed by duration, which can be the number of
+        samples or a length of time in seconds.
         '''
         if not isinstance(duration, int):
             duration = int(duration*self.samplerate)
@@ -359,37 +376,47 @@ class Sound(BaseSound, numpy.ndarray):
         if sleep:
             time.sleep(self.duration)
 
-    def spectrogram(self, frequency_range=None, log_spectrogram=True, **kwds):
+    def spectrogram(self, low=None, high=None, log_power=True, **kwds):
         '''
         Plots a spectrogram of the sound
         
-        If frequency_range=None it shows the full spectrogram, otherwise
-        frequency_range=(minfreq, maxfreq).
+        Arguments:
         
-        If log_spectrogram=True it shows log power, otherwise not.
+        ``low=None``, ``high=None``
+            If these are left unspecified, it shows the full spectrogram,
+            otherwise it shows only between ``low`` and ``high`` in Hz.
+        ``log_power=True``
+            If True the colour represents the log of the power.
+        ``**kwds``
+            Are passed to Pylab's ``specgram`` command.
         
-        kwds are passed to pylab's specgram command.
-        
-        Returns the values returned by pylab's specgram, namely pxx, freqs, bins, im
-        where pxx is a 2D array of powers, freqs is the corresponding frequences, bins
-        are the time bins, and im is the image axis.
+        Returns the values returned by pylab's ``specgram``, namely
+        ``(pxx, freqs, bins, im)`` where ``pxx`` is a 2D array of powers,
+        ``freqs`` is the corresponding frequencies, ``bins`` are the time bins,
+        and ``im`` is the image axis.
         '''
         if self.nchannels>1:
             raise ValueError('Can only plot spectrograms for mono sounds.')
         x = self.flatten()
         pxx, freqs, bins, im = specgram(x, Fs=self.samplerate, **kwds)
-        if frequency_range is not None:
-            I = logical_and(frequency_range[0] <= freqs, freqs <= frequency_range[1])
+        if low is not None or high is not None:
+            restricted = True
+            if low is None:
+                low = 0*Hz
+            if high is None:
+                high = amax(freqs)*Hz
+            I = logical_and(low <= freqs, freqs <= high)
             I2 = where(I)[0]
             I2 = [max(min(I2) - 1, 0), min(max(I2) + 1, len(freqs) - 1)]
             Z = pxx[I2[0]:I2[-1], :]
         else:
+            restricted = False
             Z = pxx
-        if log_spectrogram:
+        if log_power:
             Z[Z < 1e-20] = 1e-20 # no zeros because we take logs
             Z = 10 * log10(Z)
         Z = flipud(Z)
-        if frequency_range is not None:
+        if restricted:
             imshow(Z, extent=(0, amax(bins), freqs[I2[0]], freqs[I2[-1]]), aspect='auto')
         else:
             imshow(Z, extent=(0, amax(bins), freqs[0], freqs[-1]), aspect='auto')
@@ -397,20 +424,23 @@ class Sound(BaseSound, numpy.ndarray):
         ylabel('Frequency (Hz)')
         return (pxx, freqs, bins, im)
 
-    def spectrum(self, frequency_range=None, log_spectrum=True, display=False):
+    def spectrum(self, low=None, high=None, log_power=True, display=False):
         '''
-        Plots and returns the spectrum of the sound
+        Returns the spectrum of the sound and optionally plots it.
         
-        If frequency_range=None it shows the full spectrum, otherwise
-        frequency_range=(minfreq, maxfreq).
+        Arguments:
         
-        If log_spectrogram=True it shows log power, otherwise not.
+        ``low``, ``high`` 
+            If these are left unspecified, it shows the full spectrum,
+            otherwise it shows only between ``low`` and ``high`` in Hz.
+        ``log_power=True``
+            If True it returns the log of the power.
+        ``display=False``
+            Whether to plot the output.
         
-        If display=True it plots the spectrum and phase, otherwise not.
-        
-        Returns the values Z, freqs, phase
-        where Z is a 1D array of powers, freqs is the corresponding frequencies,
-        phase if the unwrapped phase of spectrum.
+        Returns ``(Z, freqs, phase)``
+        where ``Z`` is a 1D array of powers, ``freqs`` is the corresponding
+        frequencies, ``phase`` is the unwrapped phase of spectrum.
         '''
         if self.nchannels>1:
             raise ValueError('Can only plot spectrum for mono sounds.')
@@ -418,15 +448,21 @@ class Sound(BaseSound, numpy.ndarray):
         freqs = array(range(len(sp)), dtype=float64) / len(sp) * float64(self.samplerate)
         pxx = abs(sp) ** 2
         phase = unwrap(mod(angle(sp), 2 * pi))
-        if frequency_range is not None:
-            I = logical_and(frequency_range[0] <= freqs, freqs <= frequency_range[1])
+        if low is not None or high is not None:
+            restricted = True
+            if low is None:
+                low = 0*Hz
+            if high is None:
+                high = amax(freqs)*Hz
+            I = logical_and(low <= freqs, freqs <= high)
             I2 = where(I)[0]
             Z = pxx[I2]
             freqs = freqs[I2]
             phase = phase[I2]
         else:
+            restricted = False
             Z = pxx
-        if log_spectrum:
+        if log_power:
             Z[Z < 1e-20] = 1e-20 # no zeros because we take logs
             Z = 10 * log10(Z)
         if display:
@@ -437,7 +473,7 @@ class Sound(BaseSound, numpy.ndarray):
             grid()
             xlim((freqs[0], freqs[-1]))
             xlabel('Frequency (Hz)')
-            ylabel('Power (dB)') if log_spectrum else ylabel('Power')
+            ylabel('Power (dB/Hz)') if log_power else ylabel('Power')
             subplot(212)
             semilogx(freqs, phase)
             ticks_freqs = 32000 * 2 ** -array(range(18), dtype=float64)
@@ -486,7 +522,8 @@ class Sound(BaseSound, numpy.ndarray):
         Can be used to get or set the level of a sound, which should be in dB.
         For single channel sounds a value in dB is used, for multiple channel
         sounds a value in dB can be used for setting the level (all channels
-        will be set to the same level), or a list/tuple/array of levels.
+        will be set to the same level), or a list/tuple/array of levels. It
+        is assumed that the unit of the sound is Pascals.
         ''')
     
     def atlevel(self, level):

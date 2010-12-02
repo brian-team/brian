@@ -29,6 +29,8 @@ hears packages as follows::
 
 .. seealso:: Reference documentation for :ref:`brian-hears-reference`.
 
+.. _sounds_overview:
+
 Sounds
 ------
 
@@ -133,22 +135,23 @@ A filterbank must have an input with either a single channel or an equal number
 of channels. In the former case, the single channel is duplicated for each of
 the output channels. However, you might want to apply gammatone filters to a
 stereo sound, for example, but in this case it's not clear how to duplicate
-the channels and you have to specify it explicitly. You do this using
-:class:`RestructureFilterbank`. For example, if the input is a stereo sound
+the channels and you have to specify it explicitly. You can do this using the
+:class:`Repeat`, :class:`Tile`, :class:`Join` and :class:`Interleave`
+filterbanks. For example, if the input is a stereo sound
 with channels LR then you can get an output with channels LLLRRR or LRLRLR
 by writing (respectively)::
 
-	fb = RestructureFilterbank(sound, 3)
-	fb = RestructureFilterbank(sound, 3, 'interleave')
+	fb = Repeat(sound, 3)
+	fb = Tile(sound, 3)
 	
-This class can also be used to combine multiple filterbanks into one, either
-joining them in series or interleaving them, as follows::
+To combine multiple filterbanks into one, you can either
+join them in series or interleave them, as follows::
 
-	fb = RestructureFilterbank((source1, source2))
-	fb = RestructureFilterbank((source1, source2), type='interleave')
-	
-In fact, this class has a lot more options, see the reference documentation for
-all the details.
+	fb = Join(source1, source2)
+	fb = Interleave(source1, source2)
+
+For a more general (but more complicated) approach, see
+:class:`RestructureFilterbank`.	
 
 Two of the most important generic filterbanks (upon which many of the others
 are based) are :class:`LinearFilterbank` and :class:`FIRFilterbank`. The former
@@ -158,6 +161,14 @@ implementation is optimised using FFTs with the latter (which can often be
 hundreds of times faster, particularly for long impulse responses). IIR filter
 banks can be designed using :class:`IIRFilterbank` which is based on the
 syntax of the ``iirdesign`` scipy function.
+
+You can change the input source to a :class:`Filterbank` by modifying its
+``source`` attribute, e.g. to change the input sound of a filterbank ``fb``
+you might do::
+
+	fb.source = newsound
+	
+Note that the new source should have the same number of channels.
 
 Connecting with Brian
 ---------------------
@@ -210,9 +221,7 @@ Python). The ``buffer_fetch(start, end)`` method should return a 2D array of
 shape ``(end-start, nchannels)`` with the buffered values.
 
 From the user point of view, all you need to do, having set up a chain of
-:class:`Sound` and :class:`Filterbank` objects, is to first call
-``buffer_init()`` on the final object in the chain (it will initialise the
-buffers of all the earlier objects), and then call ``buffer_fetch(start, end)``
+:class:`Sound` and :class:`Filterbank` objects, is to call ``buffer_fetch(start, end)``
 repeatedly. If the output of a :class:`Filterbank` is being plugged into a
 :class:`FilterbankGroup` object, everything is handled automatically.
 

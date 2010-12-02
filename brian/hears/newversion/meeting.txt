@@ -1,21 +1,5 @@
 Brian hears meeting 29 Nov 2010
 ===============================
-sounds
-------
-* (Doc) Units of sound is Pa
-* (doc) to change the input sound: x.source=
-* spectrogram(log_spectrogram -> log_power)
-  display = False
-  frequency_range -> low=0*Hz, high=samplerate/2
-* same things for spectrum
-* check dB units in spectrum (dB/Hz?)
-
-FilterBank
-----------
-Alternative idea:
-	Restructure(AB=s1,CD=s2,'ACBD'*3)
-	Restructure(AB=s1,'A'*3+'B'*3)
-	Think about it!
 
 Library
 -------
