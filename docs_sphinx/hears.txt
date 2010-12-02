@@ -223,7 +223,9 @@ for more details.
 Library
 -------
 
-TODO: Bertrand
+Brian hears comes with a package of predefined filter classes to be used as basic blocks by the user. They consit of classes of standard filters used 
+in DSP such as generic IIR, Butterworth filters, 2nd order lowpass filters, etc implemented as filterbanks. Also, classes of basic auditory filters
+such as gammatones and gammachirps are provided. 
 
 Test equation: :math:`\tau \frac{\mathrm{d}V}{\mathrm{d}t} = -(V-V_r)`.
 
