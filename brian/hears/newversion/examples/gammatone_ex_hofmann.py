@@ -24,7 +24,7 @@ bw=10**(0.037+0.785*log10(center_frequencies))
 center_frequencies=10**(-0.067+1.016*log10(center_frequencies))
 
 
-gammatone=MeddisGammatoneFilterbank(sound, center_frequencies, 3,bw)
+gammatone=ApproximateGammatoneFilterbank(sound, center_frequencies, 3,bw)
 
 gammatone.buffer_init()
 t1=time()

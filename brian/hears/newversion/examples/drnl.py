@@ -51,7 +51,7 @@ center_frequencies=log_space(100*Hz, 1000*Hz, nbr_center_frequencies)
 center_frequencies_linear=10**(-0.067+1.016*log10(center_frequencies))
 bandwidth_linear=10**(0.037+0.785*log10(center_frequencies))
 order_linear=3
-gammatone=MeddisGammatoneFilterbank(sound, center_frequencies_linear, order_linear, bandwidth_linear)
+gammatone=ApproximateGammatoneFilterbank(sound, center_frequencies_linear, order_linear, bandwidth_linear)
 
 #linear gain
 g=10**(4.2-0.48*log10(center_frequencies))
@@ -72,7 +72,7 @@ lowpass_linear=CascadeFilterbank(gain,lp_l,4)
 center_frequencies_nonlinear=center_frequencies#10**(-0.05252+1.0165*log10(center_frequencies))
 bandwidth_nonlinear=10**(-0.031+0.774*log10(center_frequencies))
 order_nonlinear=3
-bandpass_nonlinear1=MeddisGammatoneFilterbank(sound, center_frequencies_nonlinear, order_nonlinear, bandwidth_nonlinear)
+bandpass_nonlinear1=ApproximateGammatoneFilterbank(sound, center_frequencies_nonlinear, order_nonlinear, bandwidth_nonlinear)
 
 #compression (linear at low level, compress at high level)
 a=10**(1.402+0.819*log10(center_frequencies))  #linear gain
@@ -82,7 +82,7 @@ func_compression=lambda x:sign(x)*minimum(a*abs(x),b*abs(x)**v)
 compression=FunctionFilterbank(bandpass_nonlinear1,  func_compression)
 
 #bandpass filter (third order gammatone filters)
-bandpass_nonlinear2=MeddisGammatoneFilterbank(compression, center_frequencies_nonlinear, order_nonlinear, bandwidth_nonlinear)
+bandpass_nonlinear2=ApproximateGammatoneFilterbank(compression, center_frequencies_nonlinear, order_nonlinear, bandwidth_nonlinear)
 
 #low pass filter
 cutoff_frequencies_nonlinear=center_frequencies_nonlinear
