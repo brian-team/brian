@@ -32,21 +32,21 @@ hears packages as follows::
 Sounds
 ------
 
-Sounds can be loaded from a WAV or AIFF file with the :meth:`Sound.load`
-method (and saved with the :meth:`Sound.save`) method, or by initialising
-with a filename::
+Sounds can be loaded from a WAV or AIFF file with the :func:`loadsound`
+function (and saved with the :func:`savesound` function or :meth:`Sound.save`
+method), or by initialising with a filename::
 
-	sound = Sound.load('test.wav')
+	sound = loadsound('test.wav')
 	sound = Sound('test.aif')
 	sound.save('test.wav')
 	
 Various standard types of sounds can also be constructed, e.g. pure tones,
 white noise, clicks and silence::
 
-	sound = Sound.tone(1*kHz, 1*second, samplerate=44.1*kHz)
-	sound = Sound.whitenoise(1*second, samplerate=44.1*kHz)
-	sound = Sound.click(1*second, samplerate=44.1*kHz)
-	sound = Sound.silence(1*kHz, 1*second, samplerate=44.1*kHz)
+	sound = tone(1*kHz, 1*second)
+	sound = whitenoise(1*second)
+	sound = click(1*ms)
+	sound = silence(1*second)
 
 You can pass a function of time or an array to initialise a sound::
 
@@ -78,9 +78,14 @@ For more details on combining and operating on sounds, including shifting them
 in time, repeating them, resampling them, ramping them, finding and setting
 intensities, plotting spectrograms, etc., see :class:`Sound`.
 
-Sounds can be played using the :meth:`Sound.play` method::
+Sounds can be played using the :func:`play` function or :meth:`Sound.play` method::
 
+	play(sound)
 	sound.play()
+	
+Sequences of sounds can be played as::
+
+	play(sound1, sound2, sound3)
 
 The number of channels in a sound can be found using the ``nchannels``
 attribute, and individual channels can be extracted using the

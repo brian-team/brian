@@ -21,7 +21,7 @@ from db import dB, dB_type, dB_error, gain
 __all__ = ['BaseSound', 'Sound',
            'pinknoise','brownnoise','powerlawnoise',
            'whitenoise', 'tone', 'click', 'clicks', 'silence', 'sequence',
-           'loadsound', 'savesound', 'playsound',
+           'loadsound', 'savesound', 'play',
            ]
 
 class BaseSound(Bufferable):
@@ -552,7 +552,7 @@ class Sound(BaseSound, numpy.ndarray):
         samplerate or the given one.
         '''
         samplerate = get_samplerate(samplerate)
-        x = sin(2.0*pi*freq*arange(0*ms, duration, 1/samplerate))
+        x = sin(2.0*pi*frequency*arange(0*ms, duration, 1/samplerate))
         return Sound(x, samplerate)
 
     @staticmethod
@@ -651,10 +651,19 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
-    def sequence(sounds, samplerate=None):
+    def sequence(*args, **kwds):
         '''
         Returns the sequence of sounds in the list sounds joined together
         '''
+        samplerate = kwds.pop('samplerate', None)
+        if len(kwds):
+            raise TypeError('Unexpected keywords to function sequence()')
+        sounds = []
+        for arg in args:
+            if isinstance(arg, (list, tuple)):
+                sounds.extend(arg)
+            else:
+                sounds.append(arg)
         if samplerate is None:
             samplerate = max(s.samplerate for s in sounds)
             rates = unique([int(s.samplerate) for s in sounds])
@@ -747,9 +756,25 @@ class Sound(BaseSound, numpy.ndarray):
 def _load_Sound_from_pickle(arr, samplerate):
     return Sound(arr, samplerate=samplerate*Hz)
 
-def playsound(sound, normalise=False, sleep=False):
+def play(*sounds, **kwds):
+    '''
+    Plays a sound or sequence of sounds. For example::
+    
+        play(sound)
+        play(sound1, sound2)
+        play([sound1, sound2, sound3])
+        
+    If ``normalise=True``, the sequence of sounds will be normalised to the
+    maximum range (-1 to 1), and if ``sleep=True`` the function will wait
+    until the sounds have finished playing before returning.
+    '''
+    normalise = kwds.pop('normalise', False)
+    sleep = kwds.pop('sleep', False)
+    if len(kwds):
+        raise TypeError('Unexpected keyword arguments to function play()')
+    sound = sequence(*sounds)
     sound.play(normalise=normalise, sleep=sleep)
-playsound.__doc__ = Sound.play.__doc__
+play.__doc__ = Sound.play.__doc__
 
 def savesound(sound, filename, normalise=False, samplewidth=2):
     sound.save(filename, normalise=normalise, samplewidth=samplewidth)

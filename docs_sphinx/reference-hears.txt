@@ -16,7 +16,7 @@ Sounds
 
 .. autofunction:: savesound
 .. autofunction:: loadsound
-.. autofunction:: playsound
+.. autofunction:: play(*sounds, normalise=False, sleep=False)
 .. autofunction:: whitenoise
 .. autofunction:: powerlawnoise
 .. autofunction:: brownnoise
@@ -25,7 +25,7 @@ Sounds
 .. autofunction:: click
 .. autofunction:: clicks
 .. autofunction:: silence
-.. autofunction:: sequence
+.. autofunction:: sequence(*sounds, samplerate=None)
 
 Filterbanks
 -----------
