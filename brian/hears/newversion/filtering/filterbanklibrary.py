@@ -8,35 +8,47 @@ from linearfilterbank import *
 
 __all__ = ['CascadeFilterbank',
            'GammatoneFilterbank',
-           'MeddisGammatoneFilterbank',
+           'ApproximateGammatoneFilterbank',
            'GammachirpIIRFilterbank',
            'GammachirpFIRFilterbank',
            'IIRFilterbank',
            'ButterworthFilterbank',
            'TimeVaryingIIRFilterbank',
-           'Asym_Comp_Filterbank',
+           'Asymmetric_Compensation_Filterbank',
            'LowPassFilterbank',
-           'Asym_Comp_Coeff',
+           'asymmetric_compensation_coefs',
            ]
 
 def factorial(n):
     return prod(arange(1, n+1))
 
-# TODO: in the new version, this filterbank should replace the one it is applied
-# to, meaning that its source should be the source of the filterbank it is being
-# applied to.
+
 class CascadeFilterbank(LinearFilterbank):
     '''
-    Cascade of a filterbank (nbr_cascade times)
+    Cascade of a filterbank (n times). 
+    
+    This function concatenates n times the coefficient filt_b (numerator) and filt_a (denominator)
+    of a given filterbank and return another filterbank.
+    
+    Initialised with arguments:
+    
+    ``source``
+        Source of the new filterbank.
+        
+    ``filterbank``
+        Filterbank object to be put in cascade
+        
+    ``n``
+        Number of cascades
     '''
     
-    def __init__(self,source, filterbank,nbr_cascade):
+    def __init__(self,source, filterbank,n):
         b=filterbank.filt_b
         a=filterbank.filt_a
-        self.fs = fs = source.samplerate
-        self.N=filterbank.N
-        self.filt_b=zeros((b.shape[0], b.shape[1],nbr_cascade))
-        self.filt_a=zeros((a.shape[0], a.shape[1],nbr_cascade))
+        self.samplerate =  source.samplerate
+        self.nchannels=filterbank.nchannels
+        self.filt_b=zeros((b.shape[0], b.shape[1],n))
+        self.filt_a=zeros((a.shape[0], a.shape[1],n))
         for i in range((nbr_cascade)):
             self.filt_b[:,:,i]=b[:,:,0]
             self.filt_a[:,:,i]=a[:,:,0]
@@ -46,45 +58,43 @@ class CascadeFilterbank(LinearFilterbank):
     
 class GammatoneFilterbank(LinearFilterbank):
     '''
-    Exact gammatone based on Slaney's Auditory Toolbox for Matlab
+    Bank of 4th-order gammatone filters.
+    
+    Exact gammatone based on Slaney's implementation (Slaney, M., 1993, "An Efficient Implementation of the Patterson-Holdsworth 
+    Auditory Filter Bank". Apple Computer Technical Report #35). The code is based on  Slaney's matlab implementation 
+    (http://cobweb.ecn.purdue.edu/~malcolm/interval/1998-010/)
     
     Initialised with arguments:
     
     ``source``
         Source of the filterbank.
+        
     ``cf``
         List or array of center frequencies.
+        
+    ``b=1.019``
+        parameters which determines the duration of the impulse response (therefore its bandwidth as well, which decreases when b decreases). 
+        The default value comes from fits (Holdsworth et al., 1988)
     
-    The ERBs are computed based on parameters in the Auditory Toolbox.
-    
-    TODO: improve documentation.
+        
+    ``order=1``, ``EarQ=9.26449`` and ``minBW=24.7`` are parameters used to compute the ERB bandwidth. (ERB = ((cf/EarQ)^order + minBW^order)^(1/order)) 
+        Their default values are taken from Glasberg and Moore, 1990 
+
     '''
-    # Change the following three parameters if you wish to use a different
-    # ERB scale.  Must change in ERBSpace too.
-    EarQ=9.26449                #  Glasberg and Moore Parameters
-    minBW=24.7
-    order=1
-    
-    def __init__(self, source, cf,b=None):
-        cf = array(cf)
+
+    def __init__(self, source, cf,b=1.019,order=1,EarQ=9.26449,minBW=24.7):
+        cf = atleast_1d(cf)
         self.cf = cf
-        self.N = len(cf)
-        self.fs = fs = source.samplerate
-        fs = float(fs)
-        EarQ, minBW, order = self.EarQ, self.minBW, self.order
-        T = 1/fs
+        self.samplerate =  source.samplerate
+        T = 1/self.samplerate
+        self.b,self.order,self.EarQ,self.minBW=b,order,EarQ,minBW
         ERB = ((cf/EarQ)**order + minBW**order)**(1/order)
-        if b==None:
-            B = 1.019*2*pi*ERB
-        else:
-            B = b*2*pi*ERB
-        self.B = B
-        self.order=order
+        self.B,B = b*2*pi*ERB
         A0 = T
         A2 = 0
         B0 = 1
-        B1 = -2*cos(2*cf*pi*T)/exp(B*T)
-        B2 = exp(-2*B*T)
+        B1 = -2*cos(2*cf*pi*T)/exp(b*T)
+        B2 = exp(-2*b*T)
         
         A11 = -(2*T*cos(2*cf*pi*T)/exp(B*T) + 2*sqrt(3+2**1.5)*T*sin(2*cf*pi*T) / \
 
@@ -127,21 +137,36 @@ class GammatoneFilterbank(LinearFilterbank):
     
         LinearFilterbank.__init__(self, source, self.filt_b, self.filt_a)
 
-class MeddisGammatoneFilterbank(LinearFilterbank):
+class ApproximateGammatoneFilterbank(LinearFilterbank):
     '''
-    Parallel version of Ray Meddis' UTIL_gammatone.m
-    '''
+    Bank of nth-order approximate gammatone filters implemented as a cascade of n 1st-order gammatone filters..
+    
+    The design is based on the Hohmann implementation (hohmann, V., 2002, Frequency analysis and synthesis using a Gammatone filterbank,
+    Acta Acustica United with Acustica). The code is based on the matlab gammatone implementation from the Meddis'toolbox (http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm) 
+    
+    Initialised with arguments:
+    
+    ``source``
+        Source of the filterbank.
+        
+    ``cf``
+        List or array of center frequencies.
+        
+    ``bandwidth``
+        List or array of filters bandwidth corresponding, one for each cf.
+        
+    ``order``
+        order is the number of 1st-order gammatone filters put in cascade and is therefore the order the resulting gammatone filters.
+    
+     '''
    
-    @check_units(fs=Hz)
-    def __init__(self, source, cf, order, bw):
-        cf = array(cf)
-        bw = array(bw)
+    def __init__(self, source, cf, order, bandwidth):
+        cf = atleast_1d(cf)
+        bandwidth = atleast_1d(bandwidth)
         self.cf = cf
-        self.N = len(cf)
-        self.fs = fs = source.samplerate
-        fs = float(fs)
-        dt = 1/fs
-        phi = 2 * pi * bw * dt
+        self.samplerate =  source.samplerate
+        dt = 1/self.samplerate 
+        phi = 2 * pi * bandwidth * dt
         theta = 2 * pi * cf * dt
         cos_theta = cos(theta)
         sin_theta = sin(theta)
@@ -163,53 +188,66 @@ class MeddisGammatoneFilterbank(LinearFilterbank):
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a)
         
         
-class Asym_Comp_Filterbank(LinearFilterbank):
+class Asymmetric_Compensation_Filterbank(LinearFilterbank):
+    '''
+    Bank of asymmetric compensation fitlers
+    
+    Those filters are meant to be used in cascade with gammatone filters to approximate gammachirp filters (Unoki et al., 2001, Improvement of an IIR asymmetric compensation 
+    gammachirp filter, Acoust. Sci. & Tech.). They are implemented a a cascade of low order filters
 
-     
-    def __init__(self, source, fr, c=None,asym_comp_order=None,b=None):
-        fr = array(fr)
-        ''' 
-        TODO difference between order and cascade
-        '''
+    Initialised with arguments:
+    
+    ``source``
+        Source of the filterbank.
         
-        self.fr = fr
-        self.N = len(fr)
+    ``f``
+        List or array of the cut of frequencies
+        
+    ``b=1.019``
+        parameters which determines the duration of the impulse response
+        
+    ``c=1``
+        c is the glide slope when this filter is used to implement a gammachirp
+        
+    ``order=2``
+        order is the order of the basic filters to be further put in cascade
+        
+     ``ncascades=4``
+        ncascades is the number of time the basic fitler is put in cascade. The order of the resulting filters is therefore  order x ncascades
+    
+     '''
      
-        self.fs = fs = source.samplerate
-        if c==None:
-            c=1*ones((fr.shape))
-        if b==None:
-            b=1.019*ones((fr.shape))
-        if asym_comp_order==None:
-            order=3
-        compensation_filter_order=4
-        ERBw=24.7*(4.37e-3*fr+1.)
-        nbr_cascade=4
-        order=1
+    def __init__(self, source, f,b=1.019, c=1,order=2,ncascades=4):
+        
+        f = atleast_1d(f)
+        self.f = f
+        self.samplerate =  source.samplerate
+        c=b*ones((f.shape))
+        b=b*ones((f.shape))        
+        ERBw=24.7*(4.37e-3*f+1.)
         p0=2
         p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
         p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
         p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
         p4=1.0724
 
-        self.filt_b=zeros((len(fr), 2*order+1, nbr_cascade))
-        self.filt_a=zeros((len(fr), 2*order+1, nbr_cascade))
+        self.filt_b=zeros((len(f), order+1, nbr_cascade))
+        self.filt_a=zeros((len(f), order+1, nbr_cascade))
 
         for k in arange(nbr_cascade):
 
-            r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/self.fs) #k instead of k-1 because range 0 N-1
+            r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/self.samplerate) #k instead of k-1 because range 0 N-1
+            Df=(p0*p4)**(k)*p2*c*b*ERBw
 
-            Dfr=(p0*p4)**(k)*p2*c*b*ERBw
-
-            phi=2*pi*maximum((fr+Dfr), 0)/self.fs
-            psy=2*pi*maximum((fr-Dfr), 0)/self.fs
+            phi=2*pi*maximum((f+Df), 0)/self.samplerate
+            psy=2*pi*maximum((f-Df), 0)/self.samplerate
 
             ap=vstack((ones(r.shape),-2*r*cos(phi), r**2)).T
             bz=vstack((ones(r.shape),-2*r*cos(psy), r**2)).T
 
-            fn=fr#+ compensation_filter_order* p3 *c *b *ERBw/4;
+            fn=f#+ compensation_filter_order* p3 *c *b *ERBw/4;
 
-            vwr=exp(1j*2*pi*fn/self.fs)
+            vwr=exp(1j*2*pi*fn/self.samplerate)
             vwrs=vstack((ones(vwr.shape), vwr, vwr**2)).T
 
             ##normilization stuff
@@ -221,28 +259,67 @@ class Asym_Comp_Filterbank(LinearFilterbank):
 
         LinearFilterbank.__init__(self, source, self.filt_b, self.filt_a)
 
+
 class LowPassFilterbank(LinearFilterbank):
-   
-    def __init__(self,source, N,cutOffFrequency,nbr_cascade=None):
-        self.N=N
-        self.fs = fs = source.samplerate
-        dt=1./self.fs
-        if nbr_cascade==None:
-            self.filt_b=zeros((self.N, 2, 1))
-            self.filt_a=zeros((self.N, 2, 1))
-            nbr_cascade=1
-        else:
-            self.filt_b=zeros((self.N, 2, nbr_cascade))
-            self.filt_a=zeros((self.N, 2, nbr_cascade))
-            
-        tau=1/(2*pi*cutOffFrequency)
-        for icascade in xrange(nbr_cascade):
-            self.filt_b[:,0,icascade ]=dt/tau*ones(N)
-            self.filt_b[:,1,icascade ]=0*ones(N)
-            self.filt_a[:,0,icascade ]=1*ones(N)
-            self.filt_a[:,1,0]=-(1-dt/tau)*ones(N)
+    '''
+    Bank of 1st-order lowpass filters
+    
+    The code is based on the code found in the Meddis'toolbox (http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm). 
+    It was implemented here to be used in the DRNL cochlear model implementation.
+
+    Initialised with arguments:
+    
+    ``source``
+        Source of the filterbank.
+        
+    ``fc``
+        List or array (with length = number of channels) of cutoff frequencies
+    '''
+    def __init__(self,source,fc):
+        nchannels=len(fc)
+        self.samplerate= source.samplerate
+        dt=1./self.samplerate
+
+        self.filt_b=zeros((nchannels, 2, 1))
+        self.filt_a=zeros((snchannels, 2, 1))
+        tau=1/(2*pi*fc)
+        self.filt_b[:,0,0]=dt/tau
+        self.filt_b[:,1,0]=0*ones(nchannels)
+        self.filt_a[:,0,0]=1*ones(nchannels)
+        self.filt_a[:,1,0]=-(1-dt/tau)
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
-       
+
+class LogGammachirpFilterbank(Filterbank):
+    '''
+    Bank of gammachirp filters with a logarithmic frequency sweep
+    
+    Initialisation parameters:
+    
+    ``source``
+        Source sound or filterbank.
+    ``b``
+        Either a 1D array providing a single impulse response applied to every
+        input channel, or a 2D array of shape ``(nchannels, ir_length)`` for
+        ``ir_length`` the number of samples in the impulse response. Note that
+        if you are using a multichannel sound ``x`` as a set of impulse responses,
+        the array should be ``impulseresponse=array(x.T)``.
+    ``c``
+        If specified, gives a minimum size to the buffer. By default, for the
+        FFT convolution based implementation of ``FIRFilterbank``, the minimum
+        buffer size will be ``3*ir_length``. For maximum efficiency with FFTs,
+        ``buffer_size+ir_length`` should be a power of 2 (otherwise there will
+        be some zero padding), and ``buffer_size`` should be as large as
+        possible.
+    '''
+    def __init__(self, source, impulseresponse, use_linearfilterbank=False,
+                 minimum_buffer_size=None):
+        if use_IIRimplementation:
+            self.__class__ = GammachirpIIRFilterbank
+        else:
+            self.__class__ = FFTFIRFilterbank
+        self.__init__(source, impulseresponse,
+                      minimum_buffer_size=minimum_buffer_size)
+
             
 class GammachirpIIRFilterbank(LinearFilterbank):
     '''
@@ -250,7 +327,6 @@ class GammachirpIIRFilterbank(LinearFilterbank):
     and a 4 second orders asymmetric compensation filters
     From Unoki et al. 2001, Improvement of an IIR asymmetric compensation gammachirp filter,  
      
-     comment: no GPU implementation so far... because
      c determines the rate of the frequency modulation or the chirp rate
      center_frequency 
      fr is the center frequency of the gamma tone (note: it is note the peak frequency of the gammachirp)
@@ -263,7 +339,8 @@ class GammachirpIIRFilterbank(LinearFilterbank):
         self.fr = fr
         self.N = len(fr)
 
-        self.fs = fs = source.samplerate
+        self.samplerate= source.samplerate
+        
         if c==None:
             c=1*ones((fr.shape))
         if b==None:
@@ -291,11 +368,9 @@ class GammachirpIIRFilterbank(LinearFilterbank):
         self.asymmetric_filt_b=zeros((len(fr), 2*order+1, 4))
         self.asymmetric_filt_a=zeros((len(fr), 2*order+1, 4))
 
-        self.asymmetric_filt_b,self.asymmetric_filt_a=Asym_Comp_Coeff(self.fs,fr,self.asymmetric_filt_b,self.asymmetric_filt_a,b,c,order,p0,p1,p2,p3,p4)
+        self.asymmetric_filt_b,self.asymmetric_filt_a=asymmetric_compensation_coefs(self.samplerate,fr,self.asymmetric_filt_b,self.asymmetric_filt_a,b,c,order,p0,p1,p2,p3,p4)
 
-        #print B.shape,A.shape,Btemp.shape,Atemp.shape    
         #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
-        #print self.gammatone_filt_b,self.asymmetric_filt_b
         self.filt_b=concatenate([self.gammatone_filt_b, self.asymmetric_filt_b],axis=2)
         self.filt_a=concatenate([self.gammatone_filt_a, self.asymmetric_filt_a],axis=2)
 
@@ -385,7 +460,7 @@ class IIRFilterbank(LinearFilterbank):
     See the documentation for scipy.signal.iirdesign for more details.
     '''
     
-    def __init__(self, samplerate, N, passband, stopband, gpass, gstop, ftype):
+    def __init__(self, source, N, passband, stopband, gpass, gstop, ftype):
         # passband can take form x or (a,b) in Hz and we need to convert to scipy's format
         try:
             try:
@@ -413,7 +488,7 @@ class IIRFilterbank(LinearFilterbank):
 
         # now design filterbank
 
-        self.fs=samplerate
+        self.samplerate=source.samplerate
         self.filt_b, self.filt_a = signal.iirdesign(passband, stopband, gpass, gstop, ftype=ftype)
         self.filt_b=kron(ones((N,1)),self.filt_b)
         self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)
@@ -453,9 +528,9 @@ class ButterworthFilterbank(LinearFilterbank):
         # print Wn
         Wn=Fn.copy()
         Wn=atleast_1d(Wn) #Scalar inputs are converted to 1-dimensional arrays
-        self.fs = fs = source.samplerate
+        self.samplerate = source.samplerate
         try:
-            Wn= Wn/self.fs*2+0.0    # wn=1 corresponding to half the sample rate   
+            Wn= Wn/self.samplerate *2+0.0    # wn=1 corresponding to half the sample rate   
         except DimensionMismatchError:
             raise DimensionMismatchError('Wn must be in Hz')
         
@@ -489,7 +564,7 @@ class TimeVaryingIIRFilterbank(Filterbank):
     ''' IIR filterbank where the coefficients vary. 
     '''
     def __init__(self, source,interval_change,vary_filter_class):
-        self.fs = fs = source.samplerate
+        self.samplerate  = source.samplerate
         self.vary_filter_class=vary_filter_class
                 
         self.sub_buffer_length=interval_change
@@ -526,7 +601,7 @@ class TimeVaryingIIRFilterbank(Filterbank):
 
         return response
     
-def Asym_Comp_Coeff(samplerate,fr,filt_b,filt_a,b,c,order,p0,p1,p2,p3,p4):
+def asymmetric_compensation_coefs(samplerate,fr,filt_b,filt_a,b,c,order,p0,p1,p2,p3,p4):
     '''
      overhead if passing dico
      better pass filterb a or initialize the here
