@@ -60,9 +60,11 @@ HRTFs
 -----
 
 .. autoclass:: HRTF
+.. autoclass:: HRTFSet
+.. autoclass:: HRTFDatabase
+.. autofunction:: make_coordinates
 
-Coordinates
------------
+.. autoclass:: IRCAM_LISTEN
 
 Base classes
 ------------
@@ -76,11 +78,6 @@ Useful for understanding more about the internals.
 .. autoclass:: BaseSound
 
 .. autoclass:: OnlineSound
-
-.. autoclass:: HRTFDatabase
-.. autoclass:: HRTFSet
-
-.. autoclass:: Coordinates
 
 .. _brian-hears-class-diagram:
 

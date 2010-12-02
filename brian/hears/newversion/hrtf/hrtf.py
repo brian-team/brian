@@ -3,14 +3,15 @@ from ..sounds import *
 from ..filtering import FIRFilterbank
 from copy import copy
 
-__all__ = ['HRTF', 'HRTFSet', 'HRTFDatabase']
+__all__ = ['HRTF', 'HRTFSet', 'HRTFDatabase',
+           'make_coordinates']
 
 class HRTF(object):
     '''
-    HRTF class
+    Head related transfer function.
     
-    Has attributes:
-    
+    **Attributes**
+
     ``impulse_response``
         The pair of impulse responses (as stereo :class:`Sound` objects)
     ``fir``
@@ -21,14 +22,12 @@ class HRTF(object):
     ``samplerate``
         The sample rate of the HRTFs.
         
-    Has methods:
+    **Methods**
     
-    ``apply(sound)``
-        Returns a stereo :class:`Sound` object formed by applying the pair of
-        HRTFs to the mono ``sound`` input.
-        
-    ``filterbank(source, **kwds)``
-        Returns an :class:`FIRFilterbank` object.
+    .. automethod:: apply
+    .. automethod:: filterbank
+    
+    You can get the number of samples in the impulse response with ``len(hrtf)``.        
     '''
     def __init__(self, hrir_l, hrir_r=None):
         if hrir_r is None:
@@ -41,6 +40,10 @@ class HRTF(object):
         self.right = hrir.right
 
     def apply(self, sound):
+        '''
+        Returns a stereo :class:`Sound` object formed by applying the pair of
+        HRTFs to the mono ``sound`` input.
+        '''
         # Note we use an FFT based method for applying HRTFs that is
         # mathematically equivalent to using convolution (accurate to 1e-15
         # in practice) and around 100x faster.
@@ -83,42 +86,45 @@ class HRTF(object):
     fir = property(fget=get_fir)
 
     def filterbank(self, source, **kwds):
+        '''
+        Returns an :class:`FIRFilterbank` object that can be used to apply
+        the HRTF as part of a chain of filterbanks.
+        '''
         return FIRFilterbank(source, self.fir, **kwds)
+    
+    def __len__(self):
+        return self.impulse_response.shape[0]
+
+def make_coordinates(**kwds):
+    '''
+    Creates a numpy record array from the keywords passed to the function.
+    Each keyword/value pair should be the name of the coordinate the array of
+    values of that coordinate for each location.
+    Returns a numpy record array. For example::
+    
+        coords = make_coordinates(azimuth=[0, 30, 60, 0, 30, 60],
+                                  elevation=[0, 0, 0, 30, 30, 30])
+        print coords['azimuth']
+    '''
+    dtype = [(name, float) for name in kwds.keys()]
+    n = len(kwds.values()[0])
+    x = zeros(n, dtype=dtype)
+    for name, values in kwds.items():
+        x[name] = values
+    return x
 
 class HRTFSet(object):
     '''
-    Base class for a collection of HRTFs for one individual
+    A collection of HRTFs, typically for a single individual.
     
-    Should have attributes:
-    
-    ``name``
-        A unique string identifying this individual.
-    ``data``
-        An array of shape (2, num_indices, num_samples) where data[0,:,:] is
-        the left ear and data[1,:,:] is the right ear, num_indices is the number
-        of HRTFs for each ear, and num_samples is the length of the HRTF.
-    ``samplerate``
-        The sample rate for the HRTFs (should have units of Hz).
-    ``coordinates``
-        The record array of length num_indices of coordinates.
-    
-    Derived classes should override the ``load(...)`` method which should create
-    the attributes above. The ``load`` method should have the following optional
-    keywords:
-    
-    ``samplerate``
-        The intended samplerate (resampling will be used if it is wrong). If
-        left unset, the natural samplerate of the data set will be used.        
-    ``coordsys``
-        The intended coordinate system (conversion will be performed if it is
-        different).
-    
-    Automatically generates the attributes:
+    Normally this object is created automatically by an :class:`HRTFDatabase`.
+        
+    **Attributes**
     
     ``hrtf``
         A list of ``HRTF`` objects for each index.
     ``num_indices``
-        The number of HRTF locations.
+        The number of HRTF locations. You can also use ``len(hrtfset)``.
     ``num_samples``
         The sample length of each HRTF.
     ``fir_serial``, ``fir_interleaved``
@@ -126,44 +132,77 @@ class HRTFSet(object):
         :class:`FIRFilterbank`, in serial (LLLLL...RRRRR....) or interleaved
         (LRLRLR...).
     
-    Has methods:
+    **Methods**
     
-    ``subset(cond)``
-        Generates the subset of the set of HRTFs whose coordinates satisfy
-        the condition cond. cond should be a function whose argument names are
-        names of the parameters of the coordinate system, e.g. for AzimElev you
-        might do cond=lambda azim:azim<pi/2.
-        
-    ``filterbank(source, interleaved=False, **kwds)``
-        Returns an :class:`FIRFilterbank` object. If ``interleaved=False`` then
-        the channels are arranged in the order LLLL...RRRR..., otherwise they
-        are arranged in the order LRLRLR....
+    .. automethod:: subset
+    .. automethod:: filterbank
+    
+    You can access an HRTF by index via ``hrtfset[index]``, or
+    by its coordinates via ``hrtfset(coord1=val1, coord2=val2)``.
+    
+    **Initialisation**
+    
+    ``data``
+        An array of shape (2, num_indices, num_samples) where data[0,:,:] is
+        the left ear and data[1,:,:] is the right ear, num_indices is the number
+        of HRTFs for each ear, and num_samples is the length of the HRTF.
+    ``samplerate``
+        The sample rate for the HRTFs (should have units of Hz).
+    ``coordinates``
+        A record array of length ``num_indices`` giving the coordinates of each
+        HRTF. You can use :func:`make_coordinates` to help with this.
     '''
-    def __init__(self, *args, **kwds):
-        self.load(*args, **kwds)
-        self.prepare()
-
-    def load(self, *args, **kwds):
-        raise NotImplementedError
-
-    def prepare(self):
+    def __init__(self, data, samplerate, coordinates):
+        self.data = data
+        self.samplerate = samplerate
+        self.coordinates = coordinates
         self.hrtf = []
         for i in xrange(self.num_indices):
             l = Sound(self.data[0, i, :], samplerate=self.samplerate)
             r = Sound(self.data[1, i, :], samplerate=self.samplerate)
             self.hrtf.append(HRTF(l, r))
+            
+    def __getitem__(self, key):
+        return self.hrtf[key]
+    
+    def __call__(self, **kwds):
+        I = ones(self.num_indices, dtype=bool)
+        for key, value in kwds.items():
+            I = logical_and(I, abs(self.coordinates[key]-value)<1e-10)
+        indices = I.nonzero()[0]
+        if len(indices)==0:
+            raise IndexError('No HRTF exists with those coordinates')
+        if len(indices)>1:
+            raise IndexError('More than one HRTF exists with those coordinates')
+        return self.hrtf[indices[0]]
 
-    def subset(self, cond):
-        ns = dict((name, self.coordinates[name]) for name in cond.func_code.co_varnames)
-        try:
-            I = cond(**ns)
-            I = I.nonzero()[0]
-        except:
-            I = False
-        if type(I) == type(True): # vector-based calculation doesn't work
-            n = len(ns[cond.func_code.co_varnames[0]])
-            I = array([cond(**dict((name, ns[name][j]) for name in cond.func_code.co_varnames)) for j in range(n)])
-            I = I.nonzero()[0]
+    def subset(self, condition):
+        '''
+        Generates the subset of the set of HRTFs whose coordinates satisfy
+        the ``condition``. This should be one of: a boolean array of
+        length the number of HRTFs in the set, with values
+        of True/False to indicate if the corresponding HRTF should be included
+        or not; an integer array with the indices of the HRTFs to keep; or a
+        function whose argument names are
+        names of the parameters of the coordinate system, e.g.
+        ``condition=lambda azim:azim<pi/2``.
+        '''
+        if callable(condition):
+            ns = dict((name, self.coordinates[name]) for name in condition.func_code.co_varnames)
+            try:
+                I = condition(**ns)
+                I = I.nonzero()[0]
+            except:
+                I = False
+            if isinstance(I, bool): # vector-based calculation doesn't work
+                n = len(ns[condition.func_code.co_varnames[0]])
+                I = array([condition(**dict((name, ns[name][j]) for name in condition.func_code.co_varnames)) for j in range(n)])
+                I = I.nonzero()[0]
+        else:
+            if condition.dtype==bool:
+                I = condition.nonzero()[0]
+            else:
+                I = condition
         hrtf = [self.hrtf[i] for i in I]
         coords = self.coordinates[I]
         data = self.data[:, I, :]
@@ -172,6 +211,9 @@ class HRTFSet(object):
         obj.coordinates = coords
         obj.data = data
         return obj
+    
+    def __len__(self):
+        return self.num_indices
     
     @property
     def num_indices(self):
@@ -193,6 +235,12 @@ class HRTFSet(object):
         return fir
     
     def filterbank(self, source, interleaved=False, **kwds):
+        '''
+        Returns an :class:`FIRFilterbank` object which applies all of the HRTFs
+        in the set. If ``interleaved=False`` then
+        the channels are arranged in the order LLLL...RRRR..., otherwise they
+        are arranged in the order LRLRLR....
+        '''
         if interleaved:
             fir = self.fir_interleaved
         else:
@@ -212,18 +260,9 @@ class HRTFDatabase(object):
     
     ``samplerate``
         The intended samplerate (resampling will be used if it is wrong). If
-        left unset, the natural samplerate of the data set will be used.
-    ``coordsys``
-        The intended coordinate system (conversion will be performed if it is
-        different).
-    
-    Should have a method:
-    
-    ``subject_name(subject)``
-        Which returns a unique string id for the database and subject within
-        the database.
+        left unset, the natural samplerate of the data set will be used.    
     '''
-    def __init__(self, samplerate=None, coordsys=None):
+    def __init__(self, samplerate=None):
         raise NotImplementedError
 
     def load_subject(self, subject):

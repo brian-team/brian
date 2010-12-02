@@ -55,14 +55,6 @@ Library
 HRTFs
 -----
 * HRTF: ITD (grpdelay), IPD, ILD
-* coordinates should be dict or record array
-* hrtfset(azim=,elev=)
-  hrtfset[coord or tuple]
-* remove HRTFSet.load
-* HRTFSet.subset(cond -> condition
-* num_indices -> __len__
-* __len__(HRTF) -> number of samples
-* HRTFDatabase: get rid of coordsys
 * coordinate conversions -> move to functions
 
 ---------
