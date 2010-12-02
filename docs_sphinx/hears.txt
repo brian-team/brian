@@ -225,62 +225,87 @@ Library
 
 TODO: Bertrand
 
+Test equation: :math:`\tau \frac{\mathrm{d}V}{\mathrm{d}t} = -(V-V_r)`.
+
+Test equation 2: :math:`\tau=3`.
+
+Test equation 3: :math:`\tau \mathrm{d}V/\mathrm{d}t = -(V-V_r)`.
+
+Test equation 4: :math:`\frac{\mathrm{d}V}{\mathrm{d}t}`
+
+Test equation 5: :math:`a+b+c+d+e+f+g+h+i+j+k+l^{l^{l^l}}-(V-V_r)`
+
+Test equation: :math:`\tau \frac{\mathrm{d}V}{\mathrm{d}t} = -V`.
+
+Test equation: 
+
+.. math::
+
+	\tau \frac{\mathrm{d}V}{\mathrm{d}t} = -(V-V_r)
+
 .. index:: HRTF
 
 Head-related transfer functions
 -------------------------------
 
-TODO: after the design is finalised
+You can work with head-related transfer functions (HRTFs) using the three
+classes :class:`HRTF` (a single pair of left/right ear HRTFs),
+:class:`HRTFSet` (a set of HRTFs, typically for a single individual), and
+:class:`HRTFDatabase` (for working with databases of individuals). At the
+moment, we have included only one HRTF database, the :class:`IRCAM_LISTEN`
+public HRTF database. However, we will add support for the CIPIC and MIT-KEMAR
+databases in a subsequent release.
 
-Some notes on the current design:
+An example of loading the IRCAM database, selecting a subject and plotting
+the pair of impulse responses for a particular direction::
 
-The basic design is simply as follows: we  have objects corresponding to a
-particular HRTF at a particular location (:class:`HRTF`), a set of HRTFs for
-many locations for a single individual (:class:`HRTFSet`), and a database of
-different individuals (:class:`HRTFDatabase`). This hierarchy was designed
-with the IRCAM LISTEN database in mind, but seems to apply reasonably well to
-some other HRTF databases. In addition,
-we have a :class:`Coordinates` object which is attached to HRTFSet giving the
-coordinates associated to each location. The design of this isn't quite so
-nice at the moment, and could almost certainly be improved.
+	hrtfdb = IRCAM_LISTEN(r'F:\HRTF\IRCAM')
+	hrtfset = hrtfdb.load_subject(1002)
+	hrtf = hrtfset(azim=30, elev=15)
+	plot(hrtf.left)
+	plot(hrtf.right)
+	show()
 
-At the moment, adding a new database involves writing an HRTFDatabase derived
-class, as well as an HRTFSet derived class and occasionally a new Coordinates
-class. [TODO: Redesign so that HRTFSet doesn't need to be changed, only
-HRTFDatabase? Is probably more coherent.]
+:class:`HRTFSet` has a set of coordinates, which can be
+accessed via the ``coordinates`` attribute, e.g.::
 
-An HRTF corresponding to a particular
-location is specified by the :class:`HRTF` class, which has a pair of HRIRs
-[TODO: rename class as HRIR?] for the left and right ears, for that location.
-This object has a method :meth:`~HRTF.apply`, or it can be used as an input
-to an :class:`FIRFilterbank` (via the ``fir`` attribute, or the
-:meth:`~HRTF.filterbank` method). [TODO: Make HRTF a subclass of Sound?]
-[TODO: Make HRTF a subclass of generalised multi-channel transfer function
-class?] [TODO: Something to do with time/frequency representations?]
+	print hrtfset.coordinates['azim']
+	print hrtfset.coordinates['elev']
 
-See docs for :class:`HRTFSet` and :class:`HRTFDatabase`.
+You can also generated filterbanks associated either to an :class:`HRTF` or
+an entire :class:`HRTFSet`. Here is an example of doing this with the IRCAM
+database, and applying this filterbank to some white noise and plotting the
+response as an image::
 
-There is also a system for coordinates, starting from the base class
-:class:`Coordinates`. This should almost certainly be redesigned, but here is
-a description of how it works at the moment. The Coordinates class derives from
-ndarray, and the idea is that it is a 
-`numpy record array <http://www.scipy.org/RecordArrays>`__ with named fields
-the variables of the coordinates (e.g. azim, elev or theta, phi). These names
-are given in the ``names`` class attribute. In addition, each Coordinates
-object has a method ``convert_to`` and ``convert_from`` allowing conversion
-into other coordinate types. The idea is you give the class with the coordinates
-you want to convert to/from and it's handled automatically. The class can
-do a direct conversion if possible, or if not, it will try to convert first
-to CartesianCoordinates and from there to the desired coordinates, so as long
-as every new coordinate system gives a way to convert to/from cartesian
-coordinates this system works. Issues:
+	# Load database
+	hrtfdb = IRCAM_LISTEN(r'D:\HRTF\IRCAM')
+	hrtfset = hrtfdb.load_subject(1002)
+	# Select only the horizontal plane
+	hrtfset = hrtfset.subset(lambda elev: elev==0)
+	# Set up a filterbank
+	sound = whitenoise(10*ms)
+	fb = hrtfset.filterbank(sound)
+	# Extract the filtered response and plot
+	img = fb.buffer_fetch(0, len(sound)).T
+	img_left = img[:img.shape[0]/2, :]
+	img_right = img[img.shape[0]/2:, :]
+	subplot(121)
+	imshow(img_left, origin='lower left', aspect='auto',
+	       extent=(0, sound.duration/ms, 0, 360))
+	xlabel('Time (ms)')
+	ylabel('Azimuth')
+	title('Left ear')
+	subplot(122)
+	imshow(img_right, origin='lower left', aspect='auto',
+	       extent=(0, sound.duration/ms, 0, 360))
+	xlabel('Time (ms)')
+	ylabel('Azimuth')
+	title('Right ear')
+	show()
 
- * This is OK for 3D spatial coordinate systems, but we might imagine having
-   more general coordinate systems that cannot be converted to/from cartesian
-   coordinates. For example, with the Shinn-Cunningham reverberant room
-   stuff, at the moment we have four different individuals corresponding to
-   the different locations in the room, but maybe it would make more sense to
-   have a 4D coordinate set with the 2D location in the room and the 2D
-   direction and distance of the source?
- * The way it's implemented with convert_to and convert_from is ugly at the
-   moment.
+This generates the following output:
+
+.. image:: images/hrtfset_response_plot.png
+
+For more details, see the reference documentation for :class:`HRTF`,
+:class:`HRTFSet`, :class:`HRTFDatabase` and :class:`IRCAM_LISTEN`.
