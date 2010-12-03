@@ -5,7 +5,7 @@ from brian import *
 from scipy import signal, weave, random
 from filterbank import Filterbank,RestructureFilterbank
 from linearfilterbank import *
-
+from firfilterbank import *
 __all__ = ['CascadeFilterbank',
            'GammatoneFilterbank',
            'ApproximateGammatoneFilterbank',
@@ -363,7 +363,7 @@ class LinGammachirpFilterbank(FIRFilterbank):
     Those filters are implemented as FIR filters using the truncrated time representation of the gammachirp function as the impulse response. The impulse responses,
     which need to have the same length for every channel, have a duration of 15 times the biggest time constant. The length of the impulse response is therefore 
     15.max(time_constant).sampling_rate. The envelope can either be a gamma function or a gaussian function (Gabor filter). In the case of the gabor filter, the duration
-    of the impulse response is only 12 times the biggest time constant
+    of the impulse response is only 12 times the biggest time constant. The impulse responses are normalized with respect to the tranmitted power, i.e. their rms =1
     
     Initialisation parameters:
     
@@ -396,33 +396,44 @@ class LinGammachirpFilterbank(FIRFilterbank):
         array of shape ``nchannels``X``length_impulse_response`` with each row being an impulse response for the  corresponding channel
     
     '''
-    def __init__(self,source,  f,time_constant,c,phase=0):
+    def __init__(self,source,  f,time_constant,c,phase=0,env='gamma'):
         
         self.f=f=atleast_1d(f)
         self.c=c=atleast_1d(c)
-        self.time_constant=time_constant=atleast_1d(time_constant)     
+        self.phase=phase=atleast_1d(phase)
+        self.time_constant=time_constant=atleast_1d(time_constant) 
+        if len(time_constant)==1:
+            time_constant=time_constant*ones(len(f))
+        if len(c)==1:
+            c=c*ones(len(f))
+        if len(phase)==1:
+            phase=phase*ones(len(f))
         self.samplerate= source.samplerate
-
-        Tcst_max=time_constant
+        
+        
+        
+        Tcst_max=max(time_constant)
         if env=='gamma':
-            t_start=-Tcst_max*3
-            t=arange(t_start,-4*t_start,1./rate)
+            t_start=-Tcst_max*3*second
+            t=arange(t_start,-4*t_start,1./self.samplerate)
 
         if env=='gabor':
-            t_start=-Tcst*6
-            t=arange(t_start,-t_start,1./rate)
-
+            t_start=-Tcst*6*second
+            t=arange(t_start,-t_start,1./self.samplerate)
+            
+        self.impulse_response=zeros((len(f),len(t)))
+                                    
         for ich in xrange(len(f)):
             if env=='gamma':
-                env=(t-t_start)**3*exp(-(t-t_start)/time_constant)
+                env=(t-t_start)**3*exp(-(t-t_start)/time_constant[ich])
             if env=='gabor':  
-                env=exp(-(t/(2*time_constant))**2)
+                env=exp(-(t/(2*time_constant[ich]))**2)
                 
-            impulse_response[ich,:]=env*cos(2*pi*(fr*t+c/2*t**2)+phase)
-            impulse_response[ich,:]=impulse_response[ich,:]/sqrt(sum(impulse_response[ich,:]**2))    
+            self.impulse_response[ich,:]=env*cos(2*pi*(f[ich]*t+c[ich]/2*t**2)+phase[ich])
+            self.impulse_response[ich,:]=self.impulse_response[ich,:]/sqrt(sum(self.impulse_response[ich,:]**2))    
 
 
-        FIRFilterbank.__init__(self,source, filt_b, filt_a)
+        FIRFilterbank.__init__(self,source, self.impulse_response)
 
 
 class IIRFilterbank(LinearFilterbank):
