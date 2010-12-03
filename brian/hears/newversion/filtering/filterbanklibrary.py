@@ -307,18 +307,17 @@ class LogGammachirpFilterbank(LinearFilterbank):
         Source sound or filterbank.
         
     ``f``
-        List or array of the sweep starting frequencies (F0)
+        List or array of the sweep ending frequencies. (f_inst=f+c/t)
         
-    ``cf``
-        List or array of center frequencies.
         
     ``b=1.019``
         parameters which determines the duration of the impulse response
-        ``b`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
+        ``b`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
         
     ``c=1``
-        c is the glide slope 
-        ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
+        c is the glide slope (or sweep rate) given in Hertz/second. The trajectory of the instantaneous frequency towards f is an upchirp when c<0 and a 
+        downchirp when c>0
+        ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
         
     ``ncascade=4``
         number of times the asymmetric compensation filter is put in cascade; The default value comes from Unoki et al. 2001. This parameters is only used in the IIR implementation.
@@ -357,55 +356,73 @@ class LogGammachirpFilterbank(LinearFilterbank):
         LinearFilterbank.__init__(self, source, self.filt_b,self.filt_a)
 
 
-class LinGammachirpFilterbank(LinearFilterbank):
+class LinGammachirpFilterbank(FIRFilterbank):
     '''
-    Bank of gammachirp filters witha linear frequency sweep
+    Bank of gammachirp filters with linear frequency sweeps
     
-    Those filters are implemented as FIR filters using the truncrated time representation of the gammachirp function as the impulse response.
+    Those filters are implemented as FIR filters using the truncrated time representation of the gammachirp function as the impulse response. The impulse responses,
+    which need to have the same length for every channel, have a duration of 15 times the biggest time constant. The length of the impulse response is therefore 
+    15.max(time_constant).sampling_rate. The envelope can either be a gamma function or a gaussian function (Gabor filter). In the case of the gabor filter, the duration
+    of the impulse response is only 12 times the biggest time constant
+    
+    Initialisation parameters:
+    
+    ``source``
+        Source sound or filterbank.
+        
+    ``f``
+        List or array of the sweep starting frequencies (f_inst=f+c*t)
+
+        
+    ``time_constant``
+        determines the duration of the envelope and consequently the length of the impluse response
+        
+    ``c=1``
+        c is the glide slope (or sweep rate) given ins Hertz/second. The time-dependent instantaneous frequency is f+c*t and is therefore going upward when c>0 and downward when c<0
+        ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
+        
+    ``phase=0``
+        phase shift of the carrier
+    
+    ``env='gamma'``
+        the envelope can either be a gamma function (env='gamma') or a gaussian function (env='gabor')
+        
+    Has attributes:
+    
+    ``length_impulse_response`` 
+        number of sample if the impulse responses
+        
+    ``impulse_response``
+        array of shape ``nchannels``X``length_impulse_response`` with each row being an impulse response for the  corresponding channel
+    
     '''
-    def __init__(self,source,  f,c,time_constant,t_delay=0,phase=0):
+    def __init__(self,source,  f,time_constant,c,phase=0):
         
-        f=atleast_1d(f)
-        c=atleast_1d(c)
-        time_constant=atleast_1d(time_constant)
-        
+        self.f=f=atleast_1d(f)
+        self.c=c=atleast_1d(c)
+        self.time_constant=time_constant=atleast_1d(time_constant)     
         self.samplerate= source.samplerate
-        
-        F0=F0/1000
-        c=c/1000000
-        time_constant=time_constant*1000
-        fs=float(fs)
-        F0 = array(F0)
-        self.F0 = F0
-        self.N = len(F0)
-        self.fs = fs
 
-        #%x = [delay, time constant, frequency, phase, IF glide slope]
+        Tcst_max=time_constant
+        if env=='gamma':
+            t_start=-Tcst_max*3
+            t=arange(t_start,-4*t_start,1./rate)
 
-        x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
-        t=arange(0, 4, 1./fs*1000)
-        
-        LenGC=len(t)
-        filt_b=zeros((len(F0), LenGC, 1))
-        filt_a=zeros((len(F0), LenGC, 1))
-        g=4
-        for i_channel in xrange(len(F0)):  
-            
-            x[-1]=c[i_channel]
-            x[2]=time_constant[i_channel]
-            x[3]=F0[i_channel]
-            #x=array([0.8932, 0.7905 , 0.3436  , 4.6861  ,-4.4308 ,-0.0010  , 0.3453])
-            tmax=x[2]*(g-1)
-            G=x[0]/(tmax**(g-1)*exp(1-g))*(t-x[1]+tmax)**(g-1)*exp(-(t-x[1]+tmax)/x[2])*cos(2*pi*(x[3]*(t-x[1])+x[6]/2*(t-x[1])**2)+x[4])+x[5]
-            G=G*(t-x[1]+tmax>0)
-            G=G/max(G)/26
-#            plot(t,G)
-#            show()
-#            exit()
-            filt_b[i_channel, :, 0]=G
-            filt_a[i_channel, 0, 0]=1
+        if env=='gabor':
+            t_start=-Tcst*6
+            t=arange(t_start,-t_start,1./rate)
 
-        LinearFilterbank.__init__(self,source, filt_b, filt_a)
+        for ich in xrange(len(f)):
+            if env=='gamma':
+                env=(t-t_start)**3*exp(-(t-t_start)/time_constant)
+            if env=='gabor':  
+                env=exp(-(t/(2*time_constant))**2)
+                
+            impulse_response[ich,:]=env*cos(2*pi*(fr*t+c/2*t**2)+phase)
+            impulse_response[ich,:]=impulse_response[ich,:]/sqrt(sum(impulse_response[ich,:]**2))    
+
+
+        FIRFilterbank.__init__(self,source, filt_b, filt_a)
 
 
 class IIRFilterbank(LinearFilterbank):
