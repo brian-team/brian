@@ -360,10 +360,10 @@ class LinGammachirpFilterbank(FIRFilterbank):
     '''
     Bank of gammachirp filters with linear frequency sweeps
     
-    Those filters are implemented as FIR filters using the truncrated time representation of the gammachirp function as the impulse response. The impulse responses,
+    Those filters are implemented as FIR filters using  truncated time representations of  gammachirp functions as the impulse response. The impulse responses,
     which need to have the same length for every channel, have a duration of 15 times the biggest time constant. The length of the impulse response is therefore 
     15.max(time_constant).sampling_rate. The envelope can either be a gamma function or a gaussian function (Gabor filter). In the case of the gabor filter, the duration
-    of the impulse response is only 12 times the biggest time constant. The impulse responses are normalized with respect to the tranmitted power, i.e. their rms =1
+    of the impulse response is only 12 times the biggest time constant. The impulse responses are normalized with respect to the transmitted power, i.e. their rms =1
     
     Initialisation parameters:
     
