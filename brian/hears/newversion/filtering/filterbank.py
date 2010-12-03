@@ -539,8 +539,8 @@ class ControlFilterbank(Filterbank):
     for example, and in this case you can use a class. The object ``updater``
     should be an instance of a class that defines the ``__call__`` method
     (with the same syntax as above for functions). In addition, you can
-    define an initialisation method ``init(inputs, targets, max_interval)``
-    which will be called on creation of the filterbank, although this is
+    define a reinitialisation method ``reinit()`` which will be called when
+    the ``buffer_init()`` method is called on the filterbank, although this is
     entirely optional.
     
     **Example**
@@ -559,11 +559,11 @@ class ControlFilterbank(Filterbank):
         
         # This is the class for the updater object
         class GainController(object):
-            def __init__(self, target_rms, time_constant):
+            def __init__(self, target, target_rms, time_constant):
+                self.target = target
                 self.target_rms = target_rms
                 self.time_constant = time_constant
-            def init(self, input, target, max_interval):
-                self.target = target
+            def reinit(self):
                 self.sumsquare = 0
                 self.numsamples = 0
             def __call__(self, input):
@@ -580,13 +580,11 @@ class ControlFilterbank(Filterbank):
     and a time constant of 50 ms, updating every 10 ms::
     
         gain_fb = GainFilterbank(source)
-        updater = GainController(0.2, 50*ms)
+        updater = GainController(gain_fb, 0.2, 50*ms)
         control = ControlFilterbank(gain_fb, source, gain_fb, updater, 10*ms)            
     '''
     def __init__(self, source, inputs, targets, updater, max_interval=None):
         Filterbank.__init__(self, source)
-        if hasattr(updater, 'init'):
-            updater.init(inputs, targets, max_interval)
         if not isinstance(inputs, (list, tuple)):
             inputs = [inputs]
         if not isinstance(targets, (list, tuple)):
@@ -599,6 +597,11 @@ class ControlFilterbank(Filterbank):
             for x in inputs+targets:
                 x.maximum_buffer_size = max_interval
             self.maximum_buffer_size = max_interval
+            
+    def buffer_init(self):
+        Filterbank.buffer_init(self)
+        if hasattr(self.updater, 'reinit'):
+            self.updater.reinit()
     
     def buffer_fetch_next(self, samples):
         start = self.next_sample

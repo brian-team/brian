@@ -15,11 +15,11 @@ class GainFilterbank(Filterbank):
 
 # This is the class for the updater object
 class GainController(object):
-    def __init__(self, target_rms, time_constant):
+    def __init__(self, target, target_rms, time_constant):
         self.target_rms = target_rms
         self.time_constant = time_constant
-    def init(self, input, target, max_interval):
         self.target = target
+    def reinit(self):
         self.sumsquare = 0
         self.numsamples = 0
     def __call__(self, input):
@@ -34,7 +34,7 @@ class GainController(object):
 
 fb = GainFilterbank(x)
 
-updater = GainController(0.2, 50*ms)
+updater = GainController(fb, 0.2, 50*ms)
 
 control = ControlFilterbank(fb, x, fb, updater, 10*ms)
 
