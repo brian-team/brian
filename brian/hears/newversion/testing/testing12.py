@@ -60,7 +60,7 @@ control = ControlFilterbank(fb, x, fb, updater, 10*ms)
 
 #x[:] *= 10.0
 
-y = control.buffer_fetch(0, len(x))
+y = control.fetch(x.duration)
 
 subplot(211)
 plot(x)

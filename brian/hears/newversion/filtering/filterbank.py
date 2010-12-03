@@ -41,6 +41,13 @@ class Filterbank(Bufferable):
     Also defines arithmetical operations for +, -, *, / where the other
     operand can be a filterbank or scalar.
     
+    In addition to the ``buffer_fetch()`` mechanism, Filterbanks have a simpler
+    method for fetching the whole output, which should only be used in the case
+    where the entire output fits in memory (i.e. short sounds or a low number
+    of channels).
+    
+    .. automethod:: fetch
+    
     **Attributes**
     
     .. autoattribute:: source
@@ -124,6 +131,26 @@ class Filterbank(Bufferable):
         insert a dummy filterbank (:class:`DoNothingFilterbank`) which is
         guaranteed to work if you change the source.
         ''')
+
+    def fetch(self, duration, buffersize=32):
+        '''
+        Returns the output of the filterbank for the given duration.
+        
+        ``duration``
+            The length of time (in seconds) or number of samples to return.
+        ``buffersize=32``
+            The size of the buffered segments to fetch, as a length of time or
+            number of samples. 32 samples typically gives reasonably good
+            performance.
+        '''
+        if not isinstance(duration, int):
+            duration = int(duration*self.samplerate)
+        if not isinstance(buffersize, int):
+            buffersize = int(buffersize*self.samplerate)
+        self.buffer_init()
+        endpoints = hstack((arange(0, duration, buffersize), duration))
+        sizes = diff(endpoints)
+        return vstack(tuple(self.buffer_fetch_next(size) for size in sizes))
 
     def buffer_init(self):
         Bufferable.buffer_init(self)

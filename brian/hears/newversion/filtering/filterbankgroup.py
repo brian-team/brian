@@ -24,7 +24,8 @@ class FilterbankGroup(NeuronGroup):
         The size of the buffered segments to fetch each time. The efficiency
         depends on this in an unpredictable way, larger values mean more time
         spent in optimised code, but are worse for the cache. In many cases,
-        the default value is a good tradeoff.
+        the default value is a good tradeoff. Values can be given as a number
+        of samples, or a length of time in seconds.
         
     Note that if you specify your own :class:`Clock`, it should have
     1/dt=samplerate.
@@ -45,7 +46,10 @@ class FilterbankGroup(NeuronGroup):
         else:
             kwds['clock'] = Clock(dt=1/filterbank.samplerate)        
         
-        self.buffersize = buffersize = kwds.pop('buffersize', 32)
+        buffersize = kwds.pop('buffersize', 32)
+        if not isinstance(buffersize, int):
+            buffersize = int(buffersize*self.samplerate)
+        self.buffersize = buffersize
         self.buffer_pointer = buffersize
         self.buffer_start = -buffersize
         
