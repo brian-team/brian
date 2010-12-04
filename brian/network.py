@@ -520,7 +520,11 @@ class Network(object):
         Sets the clock and checks that clocks of all groups are synchronized.
         '''
         if self.same_clocks():
-            self.clock = self.groups[0].clock # would not work if no group!
+            groups_and_operations=self.groups + self.operations
+            if len(groups_and_operations)>0:
+                self.clock = groups_and_operations[0].clock
+            else:
+                self.clock = guess_clock()
         else:
             raise TypeError, 'Clocks are not synchronized!' # other error type?
 
