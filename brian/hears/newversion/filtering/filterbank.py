@@ -96,7 +96,6 @@ class Filterbank(Bufferable):
                 if int(s.samplerate)!=int(self.samplerate):
                     raise ValueError('All sources must have the same samplerate.')
             self.source = source
-        self.next_sample = 0
 
     def change_source(self, source):
         if not hasattr(self, '_source') or self._source is None:
@@ -159,6 +158,7 @@ class Filterbank(Bufferable):
         else:
             for s in self.source:
                 s.buffer_init()
+        self.next_sample = 0
 
     def buffer_apply(self, input):
         raise NotImplementedError
@@ -361,7 +361,8 @@ class RestructureFilterbank(Filterbank):
         self._source = source
 
     def buffer_fetch_next(self, samples):
-        start = self.cached_buffer_end
+        start = self.next_sample
+        self.next_sample += samples
         end = start+samples
         inputs = tuple(s.buffer_fetch(start, end) for s in self.source)
         input = hstack(inputs)
