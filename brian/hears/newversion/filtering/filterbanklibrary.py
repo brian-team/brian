@@ -77,9 +77,9 @@ class GammatoneFilterbank(LinearFilterbank):
     ``b=1.019``
         parameter which determines the  bandwidth of the filters (and reciprocally the duration of its impulse response). 
         In particular, the bandwdith = b.ERB(cf), where ERB(cf) is the equivalent bandwidth at frequency ``cf``.
-        The default value of ``b`` comes from Patterson et al., 1992.
+        The default value of ``b`` to a best fit (Patterson et al., 1992).
         ``b`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
-    
+        
         
     ``erb_order=1``, ``ear_Q=9.26449`` and ``min_bw=24.7`` are parameters used to compute the ERB bandwidth. (ERB = ((cf/ear_Q)^erb_order + min_bw^erb_order)^(1/erb_order)).
     Their default values are the one recommended in Glasberg and Moore, 1990 
@@ -231,10 +231,10 @@ class Asymmetric_Compensation_Filterbank(LinearFilterbank):
         p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
         p4=1.0724
 
-        self.filt_b=zeros((len(f), 3, nbr_cascade))
-        self.filt_a=zeros((len(f), 3, nbr_cascade))
+        self.filt_b=zeros((len(f), 3, ncascades))
+        self.filt_a=zeros((len(f), 3, ncascades))
 
-        for k in arange(nbr_cascade):
+        for k in arange(ncascades):
 
             r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/self.samplerate) #k instead of k-1 because range 0 N-1
             Df=(p0*p4)**(k)*p2*c*b*ERBw
@@ -297,7 +297,7 @@ class LogGammachirpFilterbank(LinearFilterbank):
     Bank of gammachirp filters with a logarithmic frequency sweep
     
     The implementation  is a cascade of 4 2nd-order IIR gammatone filter 
-    followed by a cascade of  ncascade 2nd-order asymmetric compensation filters as introduced in " Unoki et al. 2001, Improvement of an IIR asymmetric 
+    followed by a cascade of  ncascades 2nd-order asymmetric compensation filters as introduced in " Unoki et al. 2001, Improvement of an IIR asymmetric 
     compensation gammachirp filter". 
     
 
@@ -319,12 +319,12 @@ class LogGammachirpFilterbank(LinearFilterbank):
         downchirp when c>0
         ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
         
-    ``ncascade=4``
+    ``ncascades=4``
         number of times the asymmetric compensation filter is put in cascade; The default value comes from Unoki et al. 2001. This parameters is only used in the IIR implementation.
         
     '''
       
-    def __init__(self, source, f,b=1.019,c=1,ncascade=4):
+    def __init__(self, source, f,b=1.019,c=1,ncascades=4):
         f = atleast_1d(f)
         self.f = f
         self.samplerate= source.samplerate
@@ -344,8 +344,8 @@ class LogGammachirpFilterbank(LinearFilterbank):
         p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
         p4=1.0724
 
-        self.asymmetric_filt_b=zeros((len(f),3, ncascade))
-        self.asymmetric_filt_a=zeros((len(f),3, ncascade))
+        self.asymmetric_filt_b=zeros((len(f),3, ncascades))
+        self.asymmetric_filt_a=zeros((len(f),3, ncascades))
 
         self.asymmetric_filt_b,self.asymmetric_filt_a=asymmetric_compensation_coefs(self.samplerate,f,self.asymmetric_filt_b,self.asymmetric_filt_a,b,c,p0,p1,p2,p3,p4)
 
