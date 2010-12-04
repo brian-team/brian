@@ -1,163 +1,205 @@
+
 from brian import *
 set_global_preferences(usenewbrianhears=True,
                        useweave=False)
 from brian.hears import *
 from scipy.io import savemat
+from scipy.signal import zpk2tf,bilinear
 from time import time
 
-dBlevel=10  # dB level in rms dB SPL
-sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
-samplerate=sound.samplerate
-sound=sound.atintensity(dBlevel)
-sound.samplerate=samplerate
+#dBlevel=60  # dB level in rms dB SPL
+#sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
+#samplerate=sound.samplerate
+#sound=sound.atintensity(dBlevel)
+#sound.samplerate=samplerate
 
+#print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
+
+#simulation_duration=len(sound)/sound.samplerate 
+
+simulation_duration=50*ms
+samplerate=50*kHz
+sound = whitenoise(simulation_duration,samplerate)#.ramp()
+simulation_duration=50*ms+0*ms
 data=dict()
 data['input']=sound
-savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/stimulus.mat',data)
+savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/noise.mat',data)
 
-print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
-
-simulation_duration=len(sound)/sound.samplerate 
-
-
-#sound = whitenoise(simulation_duration,samplerate,dB=dBlevel).ramp()
-nbr_cf=50
+nbr_cf=1
 cf=erbspace(100*Hz,1000*Hz, nbr_cf) 
-cf=log_space(100*Hz, 1000*Hz, nbr_cf)
+cf=atleast_1d(1000.)#log_space(500*Hz, 1000*Hz, nbr_cf)#atleast_1d(1000)#
 
-order=4
-c1=-2.96
-b1=1.81
-c2=2.2
-b2=2.17
+interval_change=len(sound)
+print interval_change
 
-ERBrate= 21.4*log10(4.37*cf/1000+1)
-ERBwidth= 24.7*(4.37*cf/1000 + 1)
-ERBspace = mean(diff(ERBrate))
-#print ERBspace
 
-interval_change=1
-
-fp1 = cf + c1*ERBwidth*b1/order
-
-#print fp1,cf
-#### Control Path ####
-
-#bandpass filter (second order  gammatone filter)
-pgammatone =GammatoneFilterbank(sound,cf,b=b1 )
-pGc=Asym_Comp_Filterbank(pgammatone, cf, c=c1,asym_comp_order=4,b=b1)
-#pGc=GammachirpIIRFilterbank(sound,cf, c=c1,asym_comp_order=4,b=b1)
-   
-# control
-lct_ERB=1.5
-n_ch_shift  = round(lct_ERB/ERBspace);
-indch1_control = minimum(maximum(1, arange(1,nbr_cf+1)+n_ch_shift),nbr_cf).astype(int)-1
-fp1_control = fp1[indch1_control]
-
-pGc_control=RestructureFilterbank(pGc,indexmapping=indch1_control)
-frat_control=1.08
-fr2_control = frat_control*fp1_control
-
-asym_comp_control=Asym_Comp_Filterbank(pGc_control, fr2_control, c=c2,asym_comp_order=4,b=b2)
-  
-
-param=dict()
-param['indch1_control'] =indch1_control
-param['decay_tcst'] =.5*ms
-param['b']=b2
-param['c']=c2
-param['order']=1.
-param['lev_weight']=.5
-param['level_ref']=50.
-param['level_pwr1']=1.5
-param['level_pwr2']=.5
-param['RMStoSPL']=30.
-param['frat0']=.2330
-param['frat1']=.005
-
-#signal pathway
-class AsymCompUpdate: 
-    def __init__(self, fs,fp1,s1,s2,param):
-        fp1=atleast_1d(fp1)
-
+    
+class BP_control_update: 
+    def __init__(self, fs,cf):
+        self.fs=fs
+        self.cf=atleast_1d(cf)
+        self.N=len(self.cf)
         self.iteration=0
-        self.s1=s1
-        self.s2=s2
-        self.s1.buffer_init()
-        self.s2.buffer_init()
-        self.fp1=fp1             
-        self.exp_deca_val = exp(-1/(param['decay_tcst'] *fs)*log(2))
-        self.level_min = 10**(- param['RMStoSPL']/20)
-        self.level_ref  = 10**(( param['level_ref'] - param['RMStoSPL'])/20) 
+        x_cf=11.9*log10(0.8+cf/456)
+
+        self.f_shift=(10**((x_cf+1.2)/11.9)-0.8)*456-cf
+
+        self.wbw=cf/4
         
-#        self.indch1_control=param['indch1_control'] 
-        self.b=param['b']
-        self.c=param['c']
-        self.order=param['order']
-        self.lev_weight=param['lev_weight']
-        self.level_ref=param['level_ref']
-        self.level_pwr1=param['level_pwr1']
-        self.level_pwr2=param['level_pwr2']
-        self.RMStoSPL=param['RMStoSPL']
-        self.frat0=param['frat0']
-        self.frat1=param['frat1']
-        self.level1_prev=-100
-        self.level2_prev=-100
+        self.filt_b=zeros((len(self.cf), 3, 3))
+        self.filt_a=zeros((len(self.cf), 3, 3))
+        self.poles=zeros((len(self.cf),3),dtype='complex')
+
+        self.poles[:,0:3]=tile(-2*pi*self.wbw+1j*2*pi*(self.cf+self.f_shift),[3,1]).T  
+        self.poles=(1+self.poles/(2*fs))/(1-self.poles/(2*fs))
+        self.zeroa=1
         
-        self.filt_b=zeros((len(fp1), 2*self.order+1, 4))
-        self.filt_a=zeros((len(fp1), 2*self.order+1, 4))
-        #self.level_dB=zeros((self.filt_b.shape[0],100000))
-        self.p0=2
-        self.p1=1.7818*(1-0.0791*self.b)*(1-0.1655*abs(self.c))
-        self.p2=0.5689*(1-0.1620*self.b)*(1-0.0857*abs(self.c))
-        self.p3=0.2523*(1-0.0244*self.b)*(1+0.0574*abs(self.c))
-        self.p4=1.0724
-#        self.filt_b, self.filt_a=Asym_Comp_Coeff(samplerate,self.fp1,self.filt_b,self.filt_a,self.b,self.c,self.order,self.p0,self.p1,self.p2,self.p3,self.p4)
+        self.bfp=2*pi*self.cf
+        gain_norm=1
+        zz=exp(1j*self.bfp/fs)
+
+        gain_norm=abs((zz**2+2*zz+1)/(zz**2-zz*(self.poles[:,0]+conj(self.poles[:,0]))+self.poles[:,0]*conj(self.poles[:,0])))**3*2
+
+        self.filt_b[:,:,0]=vstack([ones(self.N),2*ones(self.N),ones(self.N)]).T
+        self.filt_b[:,:,1]=vstack([ones(self.N),2*ones(self.N),ones(self.N)]).T
+        self.filt_b[:,:,2]=vstack([ones(self.N),zeros(self.N),-ones(self.N)]).T
+        
+        for iorder in xrange(3):
+            self.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
+        self.filt_b[:,:,2]=self.filt_b[:,:,2]/gain_norm
+
+    def init_control(self,control):
+        self.control=control
+        self.control.buffer_init()
 
     def __call__(self):
+        
          self.buffer_start += self.sub_buffer_length
-         #print self.buffer_start,self.buffer_start+self.sub_buffer_length
-         value1=self.s1.buffer_fetch(self.buffer_start, self.buffer_start+self.sub_buffer_length)
-         value2=self.s2.buffer_fetch(self.buffer_start, self.buffer_start+self.sub_buffer_length)#array([[1,2],[1,2]])#
+         control_signal=self.control.buffer_fetch(self.buffer_start, self.buffer_start+self.sub_buffer_length)#zeros((1,self.N))#
+#         t1=time()  
+#         wbw=-(real(self.poles[:,0] -control_signal[-1,:]))/2.0/pi
+#
+#         self.poles[:,0:3]=tile(-2*pi*self.wbw+1j*2*pi*(self.cf+self.f_shift),[3,1]).T   
+#                
+#         for iorder in xrange(3):
+#             self.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
+#         self.filt_b[:,:,2]=self.filt_b[:,:,2]/gain_norm1
 
-         level1 = maximum(maximum(value1[-1,:],0),self.level1_prev*self.exp_deca_val)
-         level2 = maximum(maximum(value2[-1,:],0),self.level2_prev*self.exp_deca_val)
+##### Control Path ####
 
-         self.level1_prev=level1
-         self.level2_prev=level2
-         level_total=self.lev_weight*self.level_ref*(level1/self.level_ref)**self.level_pwr1+(1-self.lev_weight)*self.level_ref*(level2/self.level_ref)**self.level_pwr2
-         level_dB=20*log10(maximum(level_total,self.level_min))+self.RMStoSPL
-                                        
-         
-#         self.level_dB=level_dB
-         frat = self.frat0 + self.frat1*level_dB
-         #print level_dB,frat
-         fr2 = self.fp1*frat
+
+#### wide band pass control
+vary_coeff_BP_control=BP_control_update(samplerate,cf)
+BP_control= TimeVaryingIIRFilterbank(sound,interval_change,vary_coeff_BP_control)
+
+##### first non linearity of control path
+Acp,Bcp,Ccp=100.,2.5,0.60 
+func_NL1_control=lambda x:sign(x)*Bcp*log(1.+Acp*abs(x)**Ccp)
+NL1_control=FunctionFilterbank(BP_control,func_NL1_control)
+
+### second non linearity of control path
+asym,s0,x1,s1=7.,8.,5.,3. 
+shift = 1./(1.+asym)
+x0 = s0*log((1.0/shift-1)/(1+exp(x1/s1)))
+gain80=10**(log10(cf)*0.5732 + 1.5220)
+rgain=  10**( log10(cf)*0.4 + 1.9)
+average_control=0.3357
+nlgain= (gain80 - rgain)/average_control
+func_NL2_control=lambda x:(1.0/(1.0+exp(-(x-x0)/s0)*(1.0+exp(-(x-x1)/s1)))-shift)*nlgain
+NL2_control=FunctionFilterbank(NL1_control,func_NL2_control)
+#
+
+#### control low pass filter
+fc_LP_control=800*Hz
+#LP_control= LowPassFilterbank(NL2_control, nbr_cf,fc_LP_control)
+LP_control=ButterworthFilterbank(NL2_control, nbr_cf, 3, fc_LP_control, btype='low')
+
+
+#### low pass filter for feedback to control band pass
+fc_LP_fb=500*Hz
+LP_fb= ButterworthFilterbank(NL2_control, nbr_cf, 3, fc_LP_control, btype='low')
+vary_coeff_BP_control.init_control(LP_fb)
+
+
+    
+class BP_signal_update: 
+    def __init__(self, fs,cf,control):
+        self.fs=fs
+        self.cf=atleast_1d(cf)
+        self.N=len(self.cf)
+        self.control=control
+        self.control.buffer_init()
+        
+        self.rgain=10**(log10(cf)*0.4 + 1.9)
+        self.fp1=1.0854*cf-106.0034
+        self.ta=10**(log10(cf)*1.0230 + 0.1607)
+        self.tb=10**(log10(cf)*1.4292 - 1.1550) - 1000
+        
+        self.filt_b=zeros((len(self.fp1), 3, 10))
+        self.filt_a=zeros((len(self.fp1), 3, 10))
+        self.poles=zeros((len(self.fp1),10),dtype='complex')
+        
+        a=-self.rgain+1j*self.fp1*2*pi
+
+        
+        self.poles[:,0:4]=tile(-self.rgain+1j*self.fp1*2*pi,[4,1]).T
+        self.poles[:,4:8]=tile(real(self.poles[:,0])- self.ta+1j*(imag(self.poles[:,0])- self.tb),[4,1]).T
+        self.poles[:,8:10]=tile((real(self.poles[:,0])+real(self.poles[:,4]))*.5+1j*(imag(self.poles[:,0])+imag(self.poles[:,4]))*.5,[2,1]).T
+        self.zeroa=array(-10**( log10(cf)*1.5-0.9 ))
+
+        self.poles=(1+self.poles/(2*fs))/(1-self.poles/(2*fs))
+        self.zeroa=(1+self.zeroa/(2*fs))/(1-self.zeroa/(2*fs))
+        
+        self.bfp=2*pi*self.cf
+        gain_norm=1
+        zz=exp(1j*self.bfp/fs)
+        for ii in xrange(10):
+            gain_norm=gain_norm*abs((zz**2-zz*(-1+self.zeroa)-self.zeroa)/(zz**2-zz*(self.poles[:,ii]+conj(self.poles[:,ii]))+self.poles[:,ii]*conj(self.poles[:,ii])))
+
+        for iorder in xrange(10):
+            self.filt_b[:,:,iorder]=vstack([ones(len(self.cf)),-(-1+self.zeroa),-self.zeroa]).T
+            self.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
+        
+        self.filt_b[:,:,9]=self.filt_b[:,:,9]/tile(gain_norm,[3,1]).T
    
-         #self.level_dB[:,self.iteration]=frat
-         self.iteration+=1
-         self.filt_b, self.filt_a=Asym_Comp_Coeff(samplerate,fr2,self.filt_b,self.filt_a,self.b,self.c,self.order,self.p0,self.p1,self.p2,self.p3,self.p4)
-                 
+
+    def __call__(self):
+        
+         self.buffer_start += self.sub_buffer_length
+         control_signal=zeros((1,len(self.fp1)))#self.control.buffer_fetch(self.buffer_start, self.buffer_start+self.sub_buffer_length)
+         t1=time()
+         
+         self.poles[:,0:4]=tile(-(self.rgain-control_signal[-1,:])+1j*self.fp1*2*pi,[4,1]).T
+         self.poles[:,4:8]=tile(real(self.poles[:,0])- self.ta+1j*(imag(self.poles[:,0])- self.tb),[4,1]).T
+         self.poles[:,8:10]=tile((real(self.poles[:,0])+real(self.poles[:,4]))*.5+1j*(imag(self.poles[:,0])+imag(self.poles[:,4]))*.5,[2,1]).T
+         self.poles=(1+self.poles/(2*self.fs))/(1-self.poles/(2*self.fs))
+         for iorder in xrange(10):
+            self.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
+         print time()-t1
 
 #### Signal Path ####
-vary_filter_coeff=AsymCompUpdate(samplerate,fp1,pGc_control,asym_comp_control,param)
-signal_path= TimeVaryingIIRFilterbank(pGc,interval_change,vary_filter_coeff)
+vary_coeff_BP_signal=BP_signal_update(samplerate,cf,LP_control)
+BP_signal= TimeVaryingIIRFilterbank(sound,interval_change,vary_coeff_BP_signal)
 
-#pGc_control.buffer_init()
-#signal=pGc_control.buffer_fetch(0, len(sound))
-#pGc.buffer_init()
-#signal=pGc.buffer_fetch(0, len(sound))
 
-signal_path.buffer_init()
+#NL2_control.buffer_init()
+#signal=NL2_control.buffer_fetch(0, len(sound))
+
+#BP_control.buffer_init()
+#signal=BP_control.buffer_fetch(0, len(sound))
+
+LP_control.buffer_init()
+signal=LP_control.buffer_fetch(0, len(sound))
 t1=time()
-signal=signal_path.buffer_fetch(0, len(sound))
+#signal=signal_path.buffer_fetch(0, len(sound))
 print 'the simulation took',time()-t1,' seconds to run'
 #signal=vary_filter_coeff.level_dB[:,:len(sound)].T
 #print signal.shape
 data=dict()
 data['out']=signal.T
-savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/cdgc_BH.mat',data)
+savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/pmfr_BH.mat',data)
 
 figure()
-imshow(flipud(signal.T),aspect='auto')    
+plot(signal)
+#imshow(flipud(signal.T),aspect='auto')    
 show()
