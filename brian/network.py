@@ -508,8 +508,12 @@ class Network(object):
         '''
         Returns True if the clocks of all groups and operations are the same.
         '''
-        clock = self.groups[0].clock
-        return all([obj.clock == clock for obj in self.groups + self.operations])
+        groups_and_operations=self.groups + self.operations
+        if len(groups_and_operations)>0:
+            clock = groups_and_operations[0]
+            return all([obj.clock == clock for obj in groups_and_operations])
+        else:
+            return True
 
     def set_clock(self):
         '''
