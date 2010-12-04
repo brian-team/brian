@@ -510,7 +510,7 @@ class Network(object):
         '''
         groups_and_operations=self.groups + self.operations
         if len(groups_and_operations)>0:
-            clock = groups_and_operations[0]
+            clock = groups_and_operations[0].clock
             return all([obj.clock == clock for obj in groups_and_operations])
         else:
             return True
@@ -520,7 +520,7 @@ class Network(object):
         Sets the clock and checks that clocks of all groups are synchronized.
         '''
         if self.same_clocks():
-            self.clock = self.groups[0].clock
+            self.clock = self.groups[0].clock # would not work if no group!
         else:
             raise TypeError, 'Clocks are not synchronized!' # other error type?
 
