@@ -49,6 +49,5 @@ Figure out why group.t is a vector. It might have to do with units.
 
 (* Finish autocorrelogram object )
 
-(* Use the GPU: complete project with TechX to use GPU accelerated versions of code.)
 (* Meaningful error messages: Improve catching of errors and usefulness of error messages,
    also look into logging which is very inconsistent at the moment.)
