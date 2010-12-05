@@ -9,6 +9,7 @@ from brian import *
 import socket
 from struct import *
 from time import time,sleep
+from brian.experimental.neuromorphic import *
 
 def extract_retina_event(addr):
     '''
@@ -45,20 +46,8 @@ sock.setblocking(0) # non-blocking
 
 defaultclock.dt=1*ms # so that it's fast enough
 
-# This is real-time Brian!
-first_time=True
-@network_operation(EventClock(dt=50*ms))
-def catch_up(cl):
-    global start_time,first_time
-    # First time: synchronize Brian and real time
-    if first_time:
-        start_time=time()
-        first_time=False
-    real_time=time()-start_time
-    #print cl.t,real_time
-    if cl._t>real_time:
-        sleep(cl._t-real_time)
-    
+R=RealtimeController(dt=100*ms)
+   
 retina=SpikeGeneratorGroup(128,[])
     
 # Listen to AER

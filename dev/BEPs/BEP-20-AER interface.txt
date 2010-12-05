@@ -1,4 +1,4 @@
-BEP-19: AER interface
+BEP-20: AER interface
 
 Abstract: Address Event Representation is a format used to communicate to and
 from neuromorphic chips with timed events (spikes). The goal is to be able
@@ -104,7 +104,8 @@ Real-time Brian
 ---------------
 If we want to do it online, then Brian has to run in real time. So first of all,
 the timestep must be large enough so that it's possible.
-Here's the idea that is implemented in brianRT.py.
+Here's the idea that is implemented in brianRT.py and in
+experimental/neuromorphic/realtime.py.
 To ensure reliable processing, Brian must have a processing latency. That is,
 all AER events are postponed by a fixed latency. During the simulation, we
 measure the real time (time()) and try to synchronize the Brian clock more or

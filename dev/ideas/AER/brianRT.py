@@ -2,19 +2,12 @@
 Realtime Brian
 
 Pauses are inserted so that Brian runs always between real time and
-about 150 ms ahead of it (probably a bit more).
+about 50 ms ahead of it (probably a bit more).
 Principle: every 50 ms, we check whether Brian is ahead by more than
-100 ms, and if so we insert a 100 ms sleep().
-
-Perhaps we could make this a Clock object?
-(= a Clock with a contained network operation)
-Or some other object.
-Note that only one clock can be synchronized with real time.
+100 ms, and if so we insert a sleep() to synchronize.
 
 NB: of course Brian needs to be faster than real time!
 (so use a large timestep)
-
-Next thing for AER: listen to UDP port and schedule events 200 ms later
 
 Other features of this real time stuff:
 * set the offset of the real time clock (reference time)
