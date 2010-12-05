@@ -91,6 +91,8 @@ http://jaer.svn.sourceforge.net/viewvc/jaer/trunk/host/matlab/saveaerdat.m?revis
 If we don't want real-time, this should the easiest way: just load a previously
 recorded AER file and use Brian to play it as an input (SpikeGeneratorGroup).
 
+An example is given in loadAER.py (seems to work).
+
 Feeding Brian with AER events
 =============================
 One simple possibility is to do it offline: record an AER file with jAERviewer,
