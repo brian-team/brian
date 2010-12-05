@@ -307,7 +307,7 @@ class STDP(NetworkOperation):
                     else:
                         outcode_immediate += '    ' + line + '\n'
                 outcode_delayed = re.sub(r'\bw\b', wreplacement, outcode_delayed)
-                outcode_delayed += '\n    %(w)s = clip(%(w)s, %(min)f, %(max)f)' % {'min':wmin, 'max':wmax, 'w':wreplacement}
+                outcode_delayed += '\n    %(w)s = clip(%(w)s, %(min)e, %(max)e)' % {'min':wmin, 'max':wmax, 'w':wreplacement}
                 return (outcode_immediate, outcode_delayed)
 
             pre_immediate, pre_delayed = gencode(pre, vars_pre, vars_post, 'w[_i,:]')
@@ -365,8 +365,8 @@ class STDP(NetworkOperation):
 
             # Bounds: add one line to pre/post code (clip(w,min,max,w))
             # or actual code? (rather than compiled string)
-            pre += '\n    w[_i,:]=clip(w[_i,:],%(min)f,%(max)f)' % {'min':wmin, 'max':wmax}
-            post += '\n    w[:,_i]=clip(w[:,_i],%(min)f,%(max)f)' % {'min':wmin, 'max':wmax}
+            pre += '\n    w[_i,:]=clip(w[_i,:],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
+            post += '\n    w[:,_i]=clip(w[:,_i],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
             # Compile code
             pre_code = compile(pre, "Presynaptic code", "exec")
             post_code = compile(post, "Postsynaptic code", "exec")

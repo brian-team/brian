@@ -129,7 +129,8 @@ run(realtime=myclock) # e.g. defaultclock
 This would just add an object to the network.
 There is an important parameter to set, which is T. But since the synchronizing
 operation is a small overhead, it could simply be set by default to a fixed
-value, perhaps a few ms. Then the only possibly remaining parameter is the
+value, perhaps a few ms. A global preference could be used to set it.
+Then the only possibly remaining parameter is the
 starting point of the clock. In principle, when the simulation runs, the
 real time clock should be offset so that it matches the simulation clock.
 
