@@ -3,8 +3,13 @@ Simulation principles
 
 The following paper outlines the principles of Brian simulation: Goodman, D and
 Brette R (2008),
-`Brian: a simulator for spiking neural networks in Python <http://www.frontiersin.org/neuroinformatics/paper/10.3389/neuro.11/005.2008/>`__
+`Brian: a simulator for spiking neural networks in Python <http://www.frontiersin.org/neuroinformatics/paper/10.3389/neuro.11/005.2008/>`__,
 Front. Neuroinform. doi:10.3389/neuro.11.005.2008.
+
+This one describes the simulation algorithms, which are based on vectorisation:
+Brette R and Goodman, DF,
+`Vectorised algorithms for spiking neural network simulation <http://www.briansimulator.org/WordPress/wp-content/uploads/2010/10/algorithms-preprint.pdf>`__,
+Neural Computation (in press).
 
 Sample script
 ~~~~~~~~~~~~~
