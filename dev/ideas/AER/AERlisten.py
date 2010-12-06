@@ -13,28 +13,7 @@ from scipy import *
 import socket
 from struct import *
 from time import time
-
-def extract_retina_event(addr):
-    '''
-    Extract retina event from an address
-    
-    Returns: x, y, polarity (ON/OFF: 1/-1)
-    TODO: vectorise
-    '''
-    retina_size=128
-    xmask = 0xfE # x are 7 bits (64 cols) ranging from bit 1-8
-    ymask = 0x7f00 # y are also 7 bits
-    xshift=1 # bits to shift x to right
-    yshift=8 # bits to shift y to right
-    polmask=1 # polarity bit is LSB
-
-    if addr<0:
-        print "negative address!"
-
-    x=retina_size-1-((addr & xmask) >> xshift)
-    y=(addr & ymask) >> yshift
-    pol=1-2*(addr & polmask) # 1 for ON, -1 for OFF
-    return x,y,pol
+from brian.experimental.neuromorphic import *
 
 UDP_IP="localhost"
 UDP_PORT=8991
