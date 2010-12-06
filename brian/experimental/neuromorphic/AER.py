@@ -3,7 +3,7 @@ Module to deal with the AER (Address Event Representation) format.
 """
 from struct import *
 
-__all__=['load_AER','extract_retina_event']
+__all__=['load_AER','extract_DVS_event']
 
 def load_AER(filename):
     '''
@@ -38,9 +38,12 @@ def load_AER(filename):
 
     return events
 
-def extract_retina_event(addr):
+def extract_DVS_event(addr):
     '''
     Extracts retina event from an address
+    
+    Chip: Digital Vision Sensor (DVS)
+    http://siliconretina.ini.uzh.ch/wiki/index.php
     
     Returns: x, y, polarity (ON/OFF: 1/-1)
     

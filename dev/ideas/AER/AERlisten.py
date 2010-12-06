@@ -38,6 +38,6 @@ while time()-t0<5.: # run for 5 s
             ts0=events[0][1]
         ts=events[0][1]-ts0
         # Show first timestamp, clock time, first event
-        print ts*1e-6,time()-t0,extract_retina_event(events[0][0])
+        print ts*1e-6,time()-t0,extract_DVS_event(events[0][0])
     
 sock.close()

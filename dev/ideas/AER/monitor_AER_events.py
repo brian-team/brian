@@ -46,7 +46,7 @@ def listen():
                     t0=time()-start_time
                     ts0=events[0][1]*1e-6
                     offset=t0-ts0
-                spikelist=[(pixel_to_neuron(*extract_retina_event(event)),(t*1e-6+offset)*second+latency)\
+                spikelist=[(pixel_to_neuron(*extract_DVS_event(event)),(t*1e-6+offset)*second+latency)\
                            for (event,t) in events[:1]] #only first event because it's so slow!
                 retina.spiketimes+=spikelist
     except: # no more events (can we do this in a cleaner way?)
