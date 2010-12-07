@@ -3,11 +3,10 @@ Hodgkin-Huxley model
 Assuming area 1*cm**2
 '''
 
-#import brian_no_units
 from brian import *
 from brian.library.ionic_currents import *
 
-#c=Clock(dt=.01*ms) # more precise
+#defaultclock.dt=.01*ms # more precise
 El = 10.6 * mV
 EK = -12 * mV
 ENa = 120 * mV
