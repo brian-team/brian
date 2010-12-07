@@ -29,7 +29,7 @@ def load_AER(filename):
         #nevents=len(line)/6
         #for n in range(nevents):
         #    events.append(unpack('>HI',line[n*6:(n+1)*6])) # address,timestamp
-        x=fromstring(line,dtype=int16)
+        x=fromstring(line,dtype=int16) # or uint16?
         x=x.reshape((len(x)/3,3))
         addr=x[:,0].newbyteorder('>')
         timestamp=x[:,1:].copy()
