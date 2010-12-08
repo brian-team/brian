@@ -8,14 +8,13 @@ Version:
 from brian import *
 from brian.experimental.neuromorphic import *
 
-def pixel_to_neuron(x,y,pol):
-    return y+0*x # let's just have 128 neurons, one per row for now
-
 path=r'C:\Users\Romain\Desktop\jaerSampleData\DVS128'
 filename=r'\Tmpdiff128-2006-02-03T14-39-45-0800-0 tobi eye.dat'
 
 addr,timestamp=load_AER(path+filename)
-spikes=[(pixel_to_neuron(*extract_DVS_event(ad)),t*1e-6*second) for (ad,t) in zip(addr,timestamp)]
+#spikes=[(pixel_to_neuron(*extract_DVS_event(ad)),t*1e-6*second) for (ad,t) in zip(addr,timestamp)]
+x,y,pol=extract_DVS_event(addr)
+spikes=[(yy,t*1e-6*second) for (yy,t) in zip(y,timestamp)]
 # assuming microsecs
 print spikes[-1]
 

@@ -55,7 +55,6 @@ def extract_DVS_event(addr):
     Returns: x, y, polarity (ON/OFF: 1/-1)
     
     TODO:
-    * vectorise
     * maybe this should in a "chip" module?
     '''
     retina_size=128
@@ -64,9 +63,6 @@ def extract_DVS_event(addr):
     xshift=1 # bits to shift x to right
     yshift=8 # bits to shift y to right
     polmask=1 # polarity bit is LSB
-
-    if addr<0:
-        print "negative address!"
 
     x=retina_size-1-((addr & xmask) >> xshift)
     y=(addr & ymask) >> yshift
