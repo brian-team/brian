@@ -1,205 +1,144 @@
-
 from brian import *
 set_global_preferences(usenewbrianhears=True,
                        useweave=False)
 from brian.hears import *
 from scipy.io import savemat
-from scipy.signal import zpk2tf,bilinear
 from time import time
 
-#dBlevel=60  # dB level in rms dB SPL
-#sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
-#samplerate=sound.samplerate
-#sound=sound.atintensity(dBlevel)
-#sound.samplerate=samplerate
+dBlevel=50*dB  # dB level in rms dB SPL
+sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
+sound=sound.atlevel(dBlevel)
+samplerate=sound.samplerate
 
-#print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
-
-#simulation_duration=len(sound)/sound.samplerate 
-
-simulation_duration=50*ms
-samplerate=50*kHz
-sound = whitenoise(simulation_duration,samplerate)#.ramp()
-simulation_duration=50*ms+0*ms
 data=dict()
 data['input']=sound
-savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/noise.mat',data)
+savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/stimulus.mat',data)
 
-nbr_cf=1
+print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
+
+simulation_duration=len(sound)/sound.samplerate 
+
+
+#sound = whitenoise(simulation_duration,samplerate,dB=dBlevel).ramp()
+nbr_cf=50
 cf=erbspace(100*Hz,1000*Hz, nbr_cf) 
-cf=atleast_1d(1000.)#log_space(500*Hz, 1000*Hz, nbr_cf)#atleast_1d(1000)#
+cf=log_space(100*Hz, 1000*Hz, nbr_cf)
 
-interval_change=len(sound)
-print interval_change
+order=4
+c1=-2.96
+b1=1.81
+c2=2.2
+b2=2.17
+
+ERBrate= 21.4*log10(4.37*cf/1000+1)
+ERBwidth= 24.7*(4.37*cf/1000 + 1)
+ERBspace = mean(diff(ERBrate))
+#print ERBspace
+
+interval=1
 
 
-    
-class BP_control_update: 
-    def __init__(self, fs,cf):
-        self.fs=fs
-        self.cf=atleast_1d(cf)
-        self.N=len(self.cf)
+#bank of passive gammachirp filters. As the control path uses the same passive filterbank than the signal path (buth shifted in frequency)
+#this filterbanl is used by both pathway.
+pGc=LogGammachirpFilterbank(sound,cf,b=b1, c=c1)
+
+fp1 = cf + c1*ERBwidth*b1/order
+
+#### Control Path ####
+
+lct_ERB=1.5  #value of the shift in ERB frequencies
+n_ch_shift  = round(lct_ERB/ERBspace); #value of the shift in channels
+indch1_control = minimum(maximum(1, arange(1,nbr_cf+1)+n_ch_shift),nbr_cf).astype(int)-1
+fp1_control = fp1[indch1_control]
+
+pGc_control=RestructureFilterbank(pGc,indexmapping=indch1_control)
+frat_control=1.08
+fr2_control = frat_control*fp1_control
+
+asym_comp_control=Asymmetric_Compensation_Filterbank(pGc_control, fr2_control,b=b2, c=c2)
+  
+
+param=dict()
+param['decay_tcst'] =.5*ms
+param['b']=b2
+param['c']=c2
+param['order']=1.
+param['lev_weight']=.5
+param['level_ref']=50.
+param['level_pwr1']=1.5
+param['level_pwr2']=.5
+param['RMStoSPL']=30.
+param['frat0']=.2330
+param['frat1']=.005
+
+#signal pathway
+class AsymCompUpdate: 
+    def __init__(self, target,fs,fp1,param):
+        fp1=atleast_1d(fp1)
+
         self.iteration=0
-        x_cf=11.9*log10(0.8+cf/456)
-
-        self.f_shift=(10**((x_cf+1.2)/11.9)-0.8)*456-cf
-
-        self.wbw=cf/4
+        self.target=target
+        self.fp1=fp1             
+        self.exp_deca_val = exp(-1/(param['decay_tcst'] *fs)*log(2))
+        self.level_min = 10**(- param['RMStoSPL']/20)
+        self.level_ref  = 10**(( param['level_ref'] - param['RMStoSPL'])/20) 
         
-        self.filt_b=zeros((len(self.cf), 3, 3))
-        self.filt_a=zeros((len(self.cf), 3, 3))
-        self.poles=zeros((len(self.cf),3),dtype='complex')
+        self.b=param['b']
+        self.c=param['c']
+        self.order=param['order']
+        self.lev_weight=param['lev_weight']
+        self.level_ref=param['level_ref']
+        self.level_pwr1=param['level_pwr1']
+        self.level_pwr2=param['level_pwr2']
+        self.RMStoSPL=param['RMStoSPL']
+        self.frat0=param['frat0']
+        self.frat1=param['frat1']
+        self.level1_prev=-100
+        self.level2_prev=-100
+        self.p0=2
+        self.p1=1.7818*(1-0.0791*self.b)*(1-0.1655*abs(self.c))
+        self.p2=0.5689*(1-0.1620*self.b)*(1-0.0857*abs(self.c))
+        self.p3=0.2523*(1-0.0244*self.b)*(1+0.0574*abs(self.c))
+        self.p4=1.0724
+    def __call__(self,*input):
+         value1=input[0][-1,:]
+         value2=input[1][-1,:]
+         level1 = maximum(maximum(value1,0),self.level1_prev*self.exp_deca_val)
+         level2 = maximum(maximum(value2,0),self.level2_prev*self.exp_deca_val)
 
-        self.poles[:,0:3]=tile(-2*pi*self.wbw+1j*2*pi*(self.cf+self.f_shift),[3,1]).T  
-        self.poles=(1+self.poles/(2*fs))/(1-self.poles/(2*fs))
-        self.zeroa=1
-        
-        self.bfp=2*pi*self.cf
-        gain_norm=1
-        zz=exp(1j*self.bfp/fs)
-
-        gain_norm=abs((zz**2+2*zz+1)/(zz**2-zz*(self.poles[:,0]+conj(self.poles[:,0]))+self.poles[:,0]*conj(self.poles[:,0])))**3*2
-
-        self.filt_b[:,:,0]=vstack([ones(self.N),2*ones(self.N),ones(self.N)]).T
-        self.filt_b[:,:,1]=vstack([ones(self.N),2*ones(self.N),ones(self.N)]).T
-        self.filt_b[:,:,2]=vstack([ones(self.N),zeros(self.N),-ones(self.N)]).T
-        
-        for iorder in xrange(3):
-            self.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
-        self.filt_b[:,:,2]=self.filt_b[:,:,2]/gain_norm
-
-    def init_control(self,control):
-        self.control=control
-        self.control.buffer_init()
-
-    def __call__(self):
-        
-         self.buffer_start += self.sub_buffer_length
-         control_signal=self.control.buffer_fetch(self.buffer_start, self.buffer_start+self.sub_buffer_length)#zeros((1,self.N))#
-#         t1=time()  
-#         wbw=-(real(self.poles[:,0] -control_signal[-1,:]))/2.0/pi
-#
-#         self.poles[:,0:3]=tile(-2*pi*self.wbw+1j*2*pi*(self.cf+self.f_shift),[3,1]).T   
-#                
-#         for iorder in xrange(3):
-#             self.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
-#         self.filt_b[:,:,2]=self.filt_b[:,:,2]/gain_norm1
-
-##### Control Path ####
-
-
-#### wide band pass control
-vary_coeff_BP_control=BP_control_update(samplerate,cf)
-BP_control= TimeVaryingIIRFilterbank(sound,interval_change,vary_coeff_BP_control)
-
-##### first non linearity of control path
-Acp,Bcp,Ccp=100.,2.5,0.60 
-func_NL1_control=lambda x:sign(x)*Bcp*log(1.+Acp*abs(x)**Ccp)
-NL1_control=FunctionFilterbank(BP_control,func_NL1_control)
-
-### second non linearity of control path
-asym,s0,x1,s1=7.,8.,5.,3. 
-shift = 1./(1.+asym)
-x0 = s0*log((1.0/shift-1)/(1+exp(x1/s1)))
-gain80=10**(log10(cf)*0.5732 + 1.5220)
-rgain=  10**( log10(cf)*0.4 + 1.9)
-average_control=0.3357
-nlgain= (gain80 - rgain)/average_control
-func_NL2_control=lambda x:(1.0/(1.0+exp(-(x-x0)/s0)*(1.0+exp(-(x-x1)/s1)))-shift)*nlgain
-NL2_control=FunctionFilterbank(NL1_control,func_NL2_control)
-#
-
-#### control low pass filter
-fc_LP_control=800*Hz
-#LP_control= LowPassFilterbank(NL2_control, nbr_cf,fc_LP_control)
-LP_control=ButterworthFilterbank(NL2_control, nbr_cf, 3, fc_LP_control, btype='low')
-
-
-#### low pass filter for feedback to control band pass
-fc_LP_fb=500*Hz
-LP_fb= ButterworthFilterbank(NL2_control, nbr_cf, 3, fc_LP_control, btype='low')
-vary_coeff_BP_control.init_control(LP_fb)
-
-
-    
-class BP_signal_update: 
-    def __init__(self, fs,cf,control):
-        self.fs=fs
-        self.cf=atleast_1d(cf)
-        self.N=len(self.cf)
-        self.control=control
-        self.control.buffer_init()
-        
-        self.rgain=10**(log10(cf)*0.4 + 1.9)
-        self.fp1=1.0854*cf-106.0034
-        self.ta=10**(log10(cf)*1.0230 + 0.1607)
-        self.tb=10**(log10(cf)*1.4292 - 1.1550) - 1000
-        
-        self.filt_b=zeros((len(self.fp1), 3, 10))
-        self.filt_a=zeros((len(self.fp1), 3, 10))
-        self.poles=zeros((len(self.fp1),10),dtype='complex')
-        
-        a=-self.rgain+1j*self.fp1*2*pi
-
-        
-        self.poles[:,0:4]=tile(-self.rgain+1j*self.fp1*2*pi,[4,1]).T
-        self.poles[:,4:8]=tile(real(self.poles[:,0])- self.ta+1j*(imag(self.poles[:,0])- self.tb),[4,1]).T
-        self.poles[:,8:10]=tile((real(self.poles[:,0])+real(self.poles[:,4]))*.5+1j*(imag(self.poles[:,0])+imag(self.poles[:,4]))*.5,[2,1]).T
-        self.zeroa=array(-10**( log10(cf)*1.5-0.9 ))
-
-        self.poles=(1+self.poles/(2*fs))/(1-self.poles/(2*fs))
-        self.zeroa=(1+self.zeroa/(2*fs))/(1-self.zeroa/(2*fs))
-        
-        self.bfp=2*pi*self.cf
-        gain_norm=1
-        zz=exp(1j*self.bfp/fs)
-        for ii in xrange(10):
-            gain_norm=gain_norm*abs((zz**2-zz*(-1+self.zeroa)-self.zeroa)/(zz**2-zz*(self.poles[:,ii]+conj(self.poles[:,ii]))+self.poles[:,ii]*conj(self.poles[:,ii])))
-
-        for iorder in xrange(10):
-            self.filt_b[:,:,iorder]=vstack([ones(len(self.cf)),-(-1+self.zeroa),-self.zeroa]).T
-            self.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
-        
-        self.filt_b[:,:,9]=self.filt_b[:,:,9]/tile(gain_norm,[3,1]).T
+         self.level1_prev=level1
+         self.level2_prev=level2
+         level_total=self.lev_weight*self.level_ref*(level1/self.level_ref)**self.level_pwr1+(1-self.lev_weight)*self.level_ref*(level2/self.level_ref)**self.level_pwr2
+         level_dB=20*log10(maximum(level_total,self.level_min))+self.RMStoSPL
+                                        
+         frat = self.frat0 + self.frat1*level_dB
+         fr2 = self.fp1*frat
    
-
-    def __call__(self):
-        
-         self.buffer_start += self.sub_buffer_length
-         control_signal=zeros((1,len(self.fp1)))#self.control.buffer_fetch(self.buffer_start, self.buffer_start+self.sub_buffer_length)
-         t1=time()
-         
-         self.poles[:,0:4]=tile(-(self.rgain-control_signal[-1,:])+1j*self.fp1*2*pi,[4,1]).T
-         self.poles[:,4:8]=tile(real(self.poles[:,0])- self.ta+1j*(imag(self.poles[:,0])- self.tb),[4,1]).T
-         self.poles[:,8:10]=tile((real(self.poles[:,0])+real(self.poles[:,4]))*.5+1j*(imag(self.poles[:,0])+imag(self.poles[:,4]))*.5,[2,1]).T
-         self.poles=(1+self.poles/(2*self.fs))/(1-self.poles/(2*self.fs))
-         for iorder in xrange(10):
-            self.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
-         print time()-t1
+         self.iteration+=1
+         self.target.filt_b, self.target.filt_a=asymmetric_compensation_coefs(samplerate,fr2,self.target.filt_b,self.target.filt_a,self.b,self.c,self.p0,self.p1,self.p2,self.p3,self.p4)
+                 
 
 #### Signal Path ####
-vary_coeff_BP_signal=BP_signal_update(samplerate,cf,LP_control)
-BP_signal= TimeVaryingIIRFilterbank(sound,interval_change,vary_coeff_BP_signal)
+
+fr1=fp1*param['frat0']
+signal_path= Asymmetric_Compensation_Filterbank(pGc, fr1,b=b2, c=c2)
+
+updater = AsymCompUpdate(signal_path,samplerate,fp1,param)   #the updater
+control = ControlFilterbank(signal_path, [pGc_control,asym_comp_control], signal_path, updater, interval)  
 
 
-#NL2_control.buffer_init()
-#signal=NL2_control.buffer_fetch(0, len(sound))
-
-#BP_control.buffer_init()
-#signal=BP_control.buffer_fetch(0, len(sound))
-
-LP_control.buffer_init()
-signal=LP_control.buffer_fetch(0, len(sound))
 t1=time()
-#signal=signal_path.buffer_fetch(0, len(sound))
+
+signal=control.buffer_fetch(0, len(sound))
+#pGc_control=signal_path.buffer_fetch(0, len(sound))
+
 print 'the simulation took',time()-t1,' seconds to run'
 #signal=vary_filter_coeff.level_dB[:,:len(sound)].T
 #print signal.shape
 data=dict()
 data['out']=signal.T
-savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/pmfr_BH.mat',data)
+savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/cdgc_BH.mat',data)
 
 figure()
-plot(signal)
-#imshow(flipud(signal.T),aspect='auto')    
+imshow(flipud(signal.T),aspect='auto')    
 show()

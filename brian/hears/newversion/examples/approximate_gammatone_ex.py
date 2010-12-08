@@ -5,11 +5,11 @@ from brian.hears import *
 from scipy.io import savemat
 from time import time
 
-dBlevel=50  # dB level in rms dB SPL
+dBlevel=50*dB  # dB level in rms dB SPL
 sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
 samplerate=sound.samplerate
-sound=sound.atintensity(dBlevel)
-sound.samplerate=samplerate
+sound=sound.atlevel(dBlevel)
+
 
 print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
 
@@ -24,7 +24,7 @@ bw=10**(0.037+0.785*log10(center_frequencies))
 center_frequencies=10**(-0.067+1.016*log10(center_frequencies))
 
 
-gammatone=ApproximateGammatoneFilterbank(sound, center_frequencies, 3,bw)
+gammatone=ApproximateGammatoneFilterbank(sound, center_frequencies, bw,order=3)
 
 gammatone.buffer_init()
 t1=time()
