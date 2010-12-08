@@ -38,16 +38,19 @@ def listen():
     try:
         while True:
             data= sock.recvfrom( 63000 )[0]
-            packet_number=unpack('>I',data[:4]) # not very useful
-            events=[unpack('>II',data[(8*n+4):(8*n+12)]) for n in range(len(data)/8-1)]
+            #packet_number=unpack('>I',data[:4]) # not very useful
+            #events=[unpack('>II',data[(8*n+4):(8*n+12)]) for n in range(len(data)/8-1)]
+            events=fromstring(data[4:],int32).newbyteorder('>')
             if (len(events)>0):
+                addr=events[::2]
+                timestamp=events[1::2]
                 if first_event: # Synchronize event timestamps and clock
                     first_event=False
                     t0=time()-start_time
-                    ts0=events[0][1]*1e-6
+                    ts0=timestamp[0]*1e-6
                     offset=t0-ts0
                 spikelist=[(pixel_to_neuron(*extract_DVS_event(event)),(t*1e-6+offset)*second+latency)\
-                           for (event,t) in events[:1]] #only first event because it's so slow!
+                           for (event,t) in zip(addr,timestamp)[:1]] #only first event because it's so slow!
                 retina.spiketimes+=spikelist
     except: # no more events (can we do this in a cleaner way?)
         pass

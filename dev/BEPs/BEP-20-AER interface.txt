@@ -23,7 +23,8 @@ First steps with jAERviewer:
   communications through it).
 * You may also change the buffer size (size of packets).
 * We probably want to check useLocalTimestampsEnabled, it seems to output
-  timestamps in microseconds.
+  timestamps in microseconds (but there are some weird problems, sign problems,
+  maybe it's little endian in this case).
 * Drag and drop or open a file with AER events
 
 Now jAERviewer plays the events and send them as packets through the UDP port.

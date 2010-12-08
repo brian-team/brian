@@ -14,8 +14,8 @@ def pixel_to_neuron(x,y,pol):
 path=r'C:\Users\Romain\Desktop\jaerSampleData\DVS128'
 filename=r'\Tmpdiff128-2006-02-03T14-39-45-0800-0 tobi eye.dat'
 
-events=load_AER(path+filename)
-spikes=[(pixel_to_neuron(*extract_DVS_event(addr)),t*1e-6*second) for (addr,t) in events]
+addr,timestamp=load_AER(path+filename)
+spikes=[(pixel_to_neuron(*extract_DVS_event(ad)),t*1e-6*second) for (ad,t) in zip(addr,timestamp)]
 # assuming microsecs
 print spikes[-1]
 
