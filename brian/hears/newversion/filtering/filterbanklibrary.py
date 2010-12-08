@@ -13,7 +13,6 @@ __all__ = ['CascadeFilterbank',
            'LinGammachirpFilterbank',
            'IIRFilterbank',
            'ButterworthFilterbank',
-           'TimeVaryingIIRFilterbank',
            'Asymmetric_Compensation_Filterbank',
            'LowPassFilterbank',
            'asymmetric_compensation_coefs',
@@ -49,7 +48,7 @@ class CascadeFilterbank(LinearFilterbank):
         self.nchannels=filterbank.nchannels
         self.filt_b=zeros((b.shape[0], b.shape[1],n))
         self.filt_a=zeros((a.shape[0], a.shape[1],n))
-        for i in range((nbr_cascade)):
+        for i in range((n)):
             self.filt_b[:,:,i]=b[:,:,0]
             self.filt_a[:,:,i]=a[:,:,0]
             
@@ -281,7 +280,7 @@ class LowPassFilterbank(LinearFilterbank):
         dt=1./self.samplerate
 
         self.filt_b=zeros((nchannels, 2, 1))
-        self.filt_a=zeros((snchannels, 2, 1))
+        self.filt_a=zeros((nchannels, 2, 1))
         tau=1/(2*pi*fc)
         self.filt_b[:,0,0]=dt/tau
         self.filt_b[:,1,0]=0*ones(nchannels)
@@ -564,49 +563,9 @@ class ButterworthFilterbank(LinearFilterbank):
         self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
         self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)    
         self.N = N    
+        
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
         
- 
-class TimeVaryingIIRFilterbank(Filterbank):
-    ''' IIR filterbank where the coefficients vary. 
-    '''
-    def __init__(self, source,interval_change,vary_filter_class):
-        self.samplerate  = source.samplerate
-        self.vary_filter_class=vary_filter_class
-                
-        self.sub_buffer_length=interval_change
-        self.buffer_start=-self.sub_buffer_length
-        self.vary_filter_class.sub_buffer_length=self.sub_buffer_length
-        self.vary_filter_class.buffer_start=self.buffer_start
-        self.b,self.a=self.vary_filter_class.filt_b,self.vary_filter_class.filt_a
-        
-        self.N=self.b.shape[0]
-        if self.N!=source.nchannels:
-            if source.nchannels!=1:
-                raise ValueError('Can only automatically duplicate source channels for mono sources, use RestructureFilterbank.')
-            source = RestructureFilterbank(source,self.N)
-            
-        self.source=source
-        Filterbank.__init__(self, source)
-        self.zi=zeros((self.b.shape[0], self.b.shape[1]-1, self.b.shape[2]))
-        
-    def buffer_apply(self, input):
-#        if isinstance(input, ndarray):
-#            input=input.flatten()
-
-#        self.vary_filter_class()
-#        self.b,self.a=self.vary_filter_class.filt_b,self.vary_filter_class.filt_a
-#        print input.shape
-#        return apply_linear_filterbank(self.b, self.a,input, self.zi)
-        buffer_length=input.shape[0]
-        response=zeros((buffer_length,self.N))
-        for isub_buffer in xrange(buffer_length/self.sub_buffer_length):
-            self.vary_filter_class()
-            self.b,self.a=self.vary_filter_class.filt_b,self.vary_filter_class.filt_a
-#            print input[isub_buffer*self.sub_buffer_length:(isub_buffer+1)*self.sub_buffer_length,:].shape
-            response[isub_buffer*self.sub_buffer_length:(isub_buffer+1)*self.sub_buffer_length,:]=apply_linear_filterbank(self.b, self.a,input[isub_buffer*self.sub_buffer_length:(isub_buffer+1)*self.sub_buffer_length,:], self.zi)
-
-        return response
     
 def asymmetric_compensation_coefs(samplerate,fr,filt_b,filt_a,b,c,p0,p1,p2,p3,p4):
     '''
