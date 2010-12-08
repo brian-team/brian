@@ -1330,13 +1330,11 @@ class VanRossumMetric(StateMonitor):
 
 
 class CoincidenceMatrixCounter(SpikeMonitor):
-    """
-
-    
+    """ 
     Coincidence counter matrix class.
     
     Counts the number of coincidences between the spikes of the neurons in the network (model spikes). This yields a matrix
-    with the coincidence counts between every pairs of neuron in the network
+    with the coincidence counts between every pair of neurons in the network
     
     Initialised as::
     
@@ -1346,12 +1344,9 @@ class CoincidenceMatrixCounter(SpikeMonitor):
     
     ``source``
         A :class:`NeuronGroup` object which neurons are being monitored.
-    
-    
-    ``delta=4*ms``
-        The half-width of the time window for the coincidence counting algorithm.
-    
         
+    ``delta=4*ms``
+        The half-width of the time window for the coincidence counting algorithm.      
 
     ``onset``
         A scalar value in seconds giving the start of the counting: no
@@ -1383,7 +1378,7 @@ class CoincidenceMatrixCounter(SpikeMonitor):
         self.reinit()
 
     def reinit(self):
-        dt = self.source.clock.dt
+        dt = self.source.clock.dt # does not seem to be used
         # Number of spikes for each neuron
         self.model_length = zeros(self.N, dtype='int')
         self.target_length = zeros(self.N, dtype='int')

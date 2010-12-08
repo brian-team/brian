@@ -1,19 +1,16 @@
-
 '''
-Example of how the use of the van Rossum metric. 
-
+Example of how to use the van Rossum metric. 
 
 The VanRossumMetric function, which is defined as a monitor and therefore works online, 
 computes  the metric between every neuron in a given population. The present example show 
 the concept of phase locking:  N neurons  are driven by  sinusoidal inputs with different amplitude.
-
 
  Use: output=VanRossumMetric(source, tau=4 * ms)
  
  source is a NeuronGroup of N neurons
  tau is the time constant of the kernel used in the metric
  
- output is a monitor whith attribute distance which is the distance matrix between the neuron in source
+ output is a monitor with attribute distance which is the distance matrix between the neurons in source
 '''
 from brian import *
 from time import time
@@ -39,17 +36,11 @@ van_rossum_metric=VanRossumMetric(neurons, tau=4 * ms)
 
 run(1000*ms)
 
-
-
-
 raster_plot(S)
-title('raster plot')
+title('Raster plot')
 
 figure()
-title('distance matrix between spike trains')
+title('Distance matrix between spike trains')
 imshow(van_rossum_metric.distance)
-#
 colorbar()
-
-
 show()
