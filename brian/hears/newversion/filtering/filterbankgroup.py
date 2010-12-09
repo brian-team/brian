@@ -55,7 +55,7 @@ class FilterbankGroup(NeuronGroup):
         
         NeuronGroup.__init__(self, filterbank.nchannels, *args, **kwds)
         
-        @network_operation(when='start')
+        @network_operation(when='start', clock=self.clock)
         def apply_filterbank_output():
             if self.buffer_pointer>=self.buffersize:
                 self.buffer_pointer = 0
@@ -69,3 +69,5 @@ class FilterbankGroup(NeuronGroup):
     def reinit(self):
         NeuronGroup.reinit(self)
         self.filterbank.buffer_init()
+        self.buffer_pointer = self.buffersize
+        self.buffer_start = -self.buffersize

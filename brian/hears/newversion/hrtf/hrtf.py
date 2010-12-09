@@ -75,8 +75,8 @@ class HRTF(object):
         sound_fft = fft(soundpad, n=nmax)
         left_sound_fft = left_fft*sound_fft
         right_sound_fft = right_fft*sound_fft
-        left_sound = ifft(left_sound_fft)
-        right_sound = ifft(right_sound_fft)
+        left_sound = ifft(left_sound_fft).real
+        right_sound = ifft(right_sound_fft).real
         # finally, we take only the unpadded parts of these
         left_sound = left_sound[ir_nmax:ir_nmax+len(sound)]
         right_sound = right_sound[ir_nmax:ir_nmax+len(sound)]

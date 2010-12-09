@@ -70,5 +70,5 @@ class IRCAM_LISTEN(HRTFDatabase):
         # self.data has shape (num_ears=2, num_indices, hrir_length)
         data = vstack((reshape(l, (1,) + l.shape), reshape(r, (1,) + r.shape)))
         hrtfset = HRTFSet(data, samplerate, coords)
-        hrtfset.name = subject
+        hrtfset.name = 'IRCAM_'+subject
         return hrtfset
