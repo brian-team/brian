@@ -59,8 +59,6 @@ Using the socket module, it's very simple to listen to these events.
 There's still a little bit of work to make it more efficient.
 
 TODO:
-* vectorise the conversion of packets to addresses and timestamps
-* vectorise extract_retina_event
 * check the units of timestamp (and that local option)
 * perhaps write other functions for different chips, we probably just need to
   adapt Matlab functions:
@@ -172,3 +170,9 @@ NeuronGroup, we just need to redefine init() and push_spikes(), and the rest
 comes from NeuronGroup.
 (Actually it could be the default behavior when it is initialized with spike times
 rather than a generator).
+
+In fact, this numpy command should be used:
+u, indices = unique(timestamp, return_index=True)
+Then the idea would be to use a SpikeContainer which would not necessarily store
+all timesteps but only non-empty ones (there would also be circular vector
+storing the timestamps).
