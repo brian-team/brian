@@ -38,7 +38,8 @@ Library
 
 HRTFs
 -----
-* HRTF: ITD (grpdelay), IPD, ILD
+* HRTF: ITD (grpdelay), IPD, ILD [actually we could have group_delay for sounds
+ (seen as impulse responses)]
 * coordinate conversions -> move to functions
 
 ---------

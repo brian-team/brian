@@ -1,7 +1,12 @@
 """
 SpikeQueue
+
+We need to find better names.
+This is really a sketch.
 """
 from brian.utils.circular import SpikeContainer
+from brian.neurongroup import NeuronGroup
+from brian.directcontrol import SpikeGeneratorGroup
 
 class SpikeQueue(SpikeContainer):
     '''
@@ -39,3 +44,24 @@ class SpikeQueue(SpikeContainer):
         return self.S.get_conditional(self.ind[-delay - 1] - self.S.cursor+self._offset, \
                                      self.ind[-delay] - self.S.cursor +self._offset+ self.S.n, \
                                      origin, origin + N, origin)
+
+class SpikeQueueGroup(NeuronGroup):
+    '''
+    A group that sends spikes like SpikeGeneratorGroup, but in a vectorised
+    way.
+    '''
+    def __init__(self, N, spiketimes, clock=None, period=None):
+        clock = guess_clock(clock)
+        self.period = period
+        NeuronGroup.__init__(self, N, model=LazyStateUpdater(), clock=clock)
+
+    def reinit(self):
+        super(SpikeQueueGroup, self).reinit()
+        self._threshold.reinit()
+
+    def update(self):
+        # We implement it here because we reimplement LS
+        pass
+
+    #spiketimes = property(fget=lambda self:self._threshold.spiketimes,
+    #                      fset=lambda self, value: self._threshold.set_spike_times(self._threshold.N, value, self._threshold.period))
