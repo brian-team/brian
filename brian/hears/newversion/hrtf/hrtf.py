@@ -42,7 +42,8 @@ class HRTF(object):
     def apply(self, sound):
         '''
         Returns a stereo :class:`Sound` object formed by applying the pair of
-        HRTFs to the mono ``sound`` input.
+        HRTFs to the mono ``sound`` input. Equivalently, you can write
+        ``hrtf(sound)`` for ``hrtf`` an :class:`HRTF` object.
         '''
         # Note we use an FFT based method for applying HRTFs that is
         # mathematically equivalent to using convolution (accurate to 1e-15
@@ -80,6 +81,7 @@ class HRTF(object):
         left_sound = left_sound[ir_nmax:ir_nmax+len(sound)]
         right_sound = right_sound[ir_nmax:ir_nmax+len(sound)]
         return Sound((left_sound, right_sound), samplerate=self.samplerate)        
+    __call__ = apply
 
     def get_fir(self):
         return array(self.impulse_response.T, copy=True)
