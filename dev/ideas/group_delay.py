@@ -45,7 +45,9 @@ h = h.subset(lambda azim,elev:azim==45 and elev==0)
 freq,xL=group_delay(h.hrtf[0].left)
 _,xR=group_delay(h.hrtf[0].right)
 print mean((xL-xR)[:len(xL)/4])*1e6 # in usec
-plot(freq,(xL-xR)*1e6)
+ITD=(xR-xL)*1e6 # in microsec
+smooth=lambda x:(x[1:]+x[:-1])/2
+plot(smooth(smooth(smooth(smooth(freq)))),smooth(smooth(smooth(smooth(ITD)))))
 
 #plot(h.hrtf[0].left)
 #plot(h.hrtf[0].right)
