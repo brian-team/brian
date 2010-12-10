@@ -4,9 +4,10 @@ SpikeQueue
 We need to find better names.
 This is really a sketch.
 """
-from brian.utils.circular import SpikeContainer
-from brian.neurongroup import NeuronGroup
-from brian.directcontrol import SpikeGeneratorGroup
+#from brian.utils.circular import SpikeContainer
+#from brian.neurongroup import NeuronGroup
+#from brian.directcontrol import SpikeGeneratorGroup
+from brian import *
 
 class SpikeQueue(SpikeContainer):
     '''
@@ -45,12 +46,39 @@ class SpikeQueue(SpikeContainer):
                                      self.ind[-delay] - self.S.cursor +self._offset+ self.S.n, \
                                      origin, origin + N, origin)
 
+class VectorisedSpikeGeneratorGroup(NeuronGroup):
+    '''
+    A SpikeGeneratorGroup with fixed spike times (cannot be modified during
+    the simulation), and vectorised output spiking.
+    Initialised with a vector of spike times and a vector of corresponding
+    neuron indices.
+    '''
+    def __init__(self, N, spiketimes, neurons, clock=None, period=None):
+        clock = guess_clock(clock)
+        self.period = period
+        NeuronGroup.__init__(self, N, model=LazyStateUpdater(), clock=clock)
+        times=array(spiketimes*1e-6/clock._dt,dtype=int) # in units of dt
+        u,indices=unique(times,return_index=True) # split over timesteps
+
+    def reinit(self):
+        super(SpikeQueueGroup, self).reinit()
+        self._threshold.reinit()
+
+    def update(self):
+        # We implement it here because we reimplement LS
+        pass
+
+    #spiketimes = property(fget=lambda self:self._threshold.spiketimes,
+    #                      fset=lambda self, value: self._threshold.set_spike_times(self._threshold.N, value, self._threshold.period))
+
 class SpikeQueueGroup(NeuronGroup):
     '''
     A group that sends spikes like SpikeGeneratorGroup, but in a vectorised
     way.
+    Initialised with a vector of spike times and a vector of corresponding
+    neuron indices.
     '''
-    def __init__(self, N, spiketimes, clock=None, period=None):
+    def __init__(self, N, spiketimes, neurons, clock=None, period=None):
         clock = guess_clock(clock)
         self.period = period
         NeuronGroup.__init__(self, N, model=LazyStateUpdater(), clock=clock)

@@ -170,6 +170,9 @@ NeuronGroup, we just need to redefine init() and push_spikes(), and the rest
 comes from NeuronGroup.
 (Actually it could be the default behavior when it is initialized with spike times
 rather than a generator).
+Another (perhaps simpler) option is to allow the next spike iterator in
+SpikeGeneratorGroup to return vectors of neurons (for the same timing)
+(actually this might already work).
 
 In fact, this numpy command should be used:
 u, indices = unique(timestamp, return_index=True)

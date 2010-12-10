@@ -16,6 +16,7 @@ dt=defaultclock.dt
 #multiplier=int(dt/(1e-6*second)) # number of ticks per dt
 timestamp_dt=array(timestamp*1e-6/dt,dtype=int) # in units of dt
 u,indices=unique(timestamp_dt,return_index=True) # split over timesteps
+# Maybe make a sparse matrix?
 #=SpikeContainer(100) # number of bins
 #spikes=[(pixel_to_neuron(*extract_DVS_event(ad)),t*1e-6*second) for (ad,t) in zip(addr,timestamp)]
 x,y,pol=extract_DVS_event(addr)
