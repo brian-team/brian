@@ -660,6 +660,8 @@ class Sound(BaseSound, numpy.ndarray):
             if not isinstance(peak, dB_type):
                 raise dB_error('Peak must be given in dB')
             amplitude = 28e-6*10**(peak/20.)
+        else:
+            amplitude=1
         x = amplitude*ones(int(duration*samplerate))
         return Sound(x, samplerate)
     
