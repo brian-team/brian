@@ -5,8 +5,13 @@ Group delay of filters.
 This gives really noisy outputs. I added a Gaussian filter.
 
 I have a doubt: is group delay the same as narrow band ITD?
-(I think it is)
+No! It's the characteristic delay!
 
+Actually, group delay computes the characteristic delay, not the ITD.
+* I think the ITD is the delay with phase consistent with IPD that
+is closest to the group delay. *
+
+[WRONG REMARKS BELOW!]
 A simple observation:
 * characteristic delay is just the mean ITD in a frequency band
 * characteristic phase is?
@@ -18,6 +23,8 @@ CP = IPD(f) - dphi/df * f (phase at 0 freq)
 Other idea:
 * linear regression of IPD vs frequency in S1, with frequency windows in
   log or ERB space (e.g. 1/3 octave)
+  Trick: nonlinear least square regression on vector (sin(phi),cos(phi)) (same as regression
+  in complex plane) (could done recursively)
 * could be weighted by power at that frequency (or thresholded, e.g., only
   include 50% best frequencies)
 """
@@ -97,7 +104,7 @@ def IPD(fL,fR,threshold=0.1):
     unwrapped=unwrap(angle(x[ind]))
     y=zeros(n/2-1)
     y[ind]=unwrapped
-    # Fill blanks (here: consider IPD constant; could consider ITD constant)
+    # Fill blanks (assumes linear phase + constant ITD on boundaries)
     ind=find(ind)
     breaks=find(diff(ind)>1)
     for i in range(len(breaks)):
@@ -105,9 +112,9 @@ def IPD(fL,fR,threshold=0.1):
         end=ind[breaks[i]+1] # not included
         y[start:end]=linspace(y[start-1],y[end],end-start)
     if ind[0]>0:
-        y[:ind[0]]=y[ind[0]]
+        y[:ind[0]]=freq[:ind[0]]*y[ind[0]]/freq[ind[0]]
     if ind[-1]<len(y):
-        y[ind[-1]+1:]=y[ind[-1]]
+        y[ind[-1]+1:]=freq[ind[-1]+1:]*y[ind[-1]]/freq[ind[-1]]
     #subplot(211)
     #plot(freq,abs(fft(fL)[:n/2]))
     #plot(freq,abs(fft(fR)[:n/2]))
@@ -133,7 +140,7 @@ def ITD3(fL,fR,threshold=0.1):
     # Smoothing (ITD rather than IPD is smoothed, i.e., assuming small variations in ITD)
     # Width should be in ERB space
     # Differentiation could be done without the blank filling
-    width_dt=50
+    width_dt=10
     filter='flat'
     window = {'gaussian': exp(-arange(-2 * width_dt, 2 * width_dt + 1) ** 2 * 1. / (2 * (width_dt) ** 2)),
                 'flat': ones(width_dt)}[filter]
@@ -166,24 +173,25 @@ if found == 0:
 
 ircam = IRCAM_LISTEN(path)
 h = ircam.load_subject(1002)
-h = h.subset(lambda azim,elev:azim==30 and elev==30)
+h = h.subset(lambda azim,elev:azim==90 and elev==0)
 
 #freq,xL=group_delay(h.hrtf[0].left)
 #_,xR=group_delay(h.hrtf[0].right)
 #itd=(xR-xL)
 left=h.hrtf[0].left
 right=h.hrtf[0].right
-freq,itd=ITD3(left,right)
-_,ipd=IPD(left,right)
+freq,itd=ITD3(left,right,threshold=0.05)
+_,ipd=IPD(left,right,threshold=0.05)
 #ind=(freq>200) & (freq<3000)
 #freq=freq[ind]
 #itd=itd[ind]
 #subplot(211)
 #plot(freq,itd*1e6)
 subplot(312)
-ind=(freq<3000) & (freq>150)
-plot(freq[ind],itd[ind]*1e6) # CD
-ylim(0,1500)
+ind=(freq<10000) & (freq>180)
+plot(freq[ind],itd[ind]*1e6,'r') # CD
+plot(freq[ind],-ipd[ind]/(2*pi*freq[ind])*1e6,'b') # ITD
+#ylim(0,1500)
 subplot(311)
 plot(freq[ind],ipd[ind]) # IPD
 subplot(313)
