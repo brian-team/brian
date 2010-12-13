@@ -43,21 +43,25 @@ def group_delay(f):
     x=array(f).flatten()
     #x+=max(x)*(1e-20*rand(len(x))-.5*1e-20) # avoid divisions by 0
     dt=1./f.samplerate
-    freq=fftfreq(len(x),dt)[:len(x)/2]
+    freq=fftfreq(len(x),dt)[1:len(x)/2]
+
     a=fft(x*arange(len(x)))
     b=fft(x)
-    grpd=dt*(a/b).real[:len(x)/2] # group delay
-    # Selection
-    ind=(freq>200) & (freq<3000)
-    freq=freq[ind]
-    grpd=grpd[ind]
+
+    grpd=dt*(a/b).real[1:len(x)/2] # group delay
+
     # Smoothing
-    width_dt=20
-    filter='gaussian'
+    width_dt=30
+    filter='flat'
     window = {'gaussian': exp(-arange(-2 * width_dt, 2 * width_dt + 1) ** 2 * 1. / (2 * (width_dt) ** 2)),
                 'flat': ones(width_dt)}[filter]
-    y=convolve(grpd, window * 1. / sum(window), mode='same')
-    return freq,y # only positive frequencies
+    grpd=convolve(grpd, window * 1. / sum(window), mode='same')   
+    
+    # Selection
+    #ind=(freq>200) & (freq<3000)
+    #freq=freq[ind]
+    #grpd=grpd[ind]
+    return freq,grpd
 
 def ITD(fL,fR):
     '''
@@ -156,6 +160,20 @@ def ITD3(fL,fR,threshold=0.1):
 
     return freq,y
 
+def ITD4(fL,fR):
+    '''
+    ITD closest to group delay consistent with IPD
+    '''
+    freq,gR=group_delay(fR)
+    _,gL=group_delay(fL)
+    grpd=gR-gL
+    grpd_phase=(grpd % (1/freq))*2*pi*freq - pi
+    _,ipd=IPD_raw(fL,fR) # could filter this too (-pi..pi)
+    ipd[(ipd-grpd_phase)>pi]-=2*pi
+    ipd[(ipd-grpd_phase)<pi]+=2*pi
+    itd=grpd+(ipd-(grpd_phase+pi))/(2*pi*freq)
+    return itd
+
 choice='IRCAM'
 hrtf_locations = [
         r'C:\HRTF\\' + choice,
@@ -173,23 +191,28 @@ if found == 0:
 
 ircam = IRCAM_LISTEN(path)
 h = ircam.load_subject(1002)
-h = h.subset(lambda azim,elev:azim==90 and elev==0)
+h = h.subset(lambda azim,elev:azim==45 and elev==0)
 
 #freq,xL=group_delay(h.hrtf[0].left)
 #_,xR=group_delay(h.hrtf[0].right)
 #itd=(xR-xL)
 left=h.hrtf[0].left
 right=h.hrtf[0].right
+print len(left)
 freq,itd=ITD3(left,right,threshold=0.05)
-_,ipd=IPD(left,right,threshold=0.05)
+itd2=group_delay(right)[1]-group_delay(left)[1]
+itd4=ITD4(left,right)
+_,ipd=IPD_raw(left,right)#,threshold=0.0)
 #ind=(freq>200) & (freq<3000)
 #freq=freq[ind]
 #itd=itd[ind]
 #subplot(211)
 #plot(freq,itd*1e6)
 subplot(312)
-ind=(freq<10000) & (freq>180)
-plot(freq[ind],itd[ind]*1e6,'r') # CD
+ind=(freq<5000) & (freq>180)
+#plot(freq[ind],itd[ind]*1e6,'r') # CD
+#plot(freq[ind],itd2[ind]*1e6,'b')
+plot(freq[ind],itd4[ind]*1e6,'r')
 plot(freq[ind],-ipd[ind]/(2*pi*freq[ind])*1e6,'b') # ITD
 #ylim(0,1500)
 subplot(311)
