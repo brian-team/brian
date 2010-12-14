@@ -26,7 +26,7 @@ except IOError:
     all_ilds = []
     for j in xrange(num_indices):
         hrirset = Sound(hrtfset.hrtf[j].fir.T, samplerate=hrtfset.samplerate)
-        fb = GammatoneFilterbank(RestructureFilterbank(hrirset, cfN),
+        fb = GammatoneFilterbank(Repeat(hrirset, cfN),
                                  hstack((cf, cf)))
         fb.buffer_init()
         filtered_hrirset = fb.buffer_fetch(0, hrtfset.num_samples)
@@ -62,6 +62,8 @@ gains = reshape(gains, (1, len(gains)))
 delays_L = where(d>=0, zeros(len(d)), -d)
 delays_R = where(d>=0, d, zeros(len(d)))
 delay_max = max(amax(delays_L), amax(delays_R))*second
+
+# The following actually defines the filters and neurons
 
 hrtf_fb = hrtf.filterbank(sound)
 gfb = GammatoneFilterbank(
