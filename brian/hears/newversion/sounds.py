@@ -90,6 +90,7 @@ class Sound(BaseSound, numpy.ndarray):
 
     **Slicing**
     
+
     One can slice sound objects in various ways, for example ``sound[100*ms:200*ms]``
     returns the part of the sound between 100 ms and 200 ms (not including the
     right hand end point). If the sound is less than 200 ms long it will be
@@ -152,7 +153,7 @@ class Sound(BaseSound, numpy.ndarray):
 #                raise ValueError('Must specify samplerate to initialise Sound with function.')
             if duration is None:
                 raise ValueError('Must specify duration to initialise Sound with function.')
-            L = int(duration * samplerate)
+            L = int(rint(duration * samplerate))
             t = arange(L, dtype=float) / samplerate
             x = data(t)
         elif isinstance(data, (list, tuple)):
@@ -258,8 +259,8 @@ class Sound(BaseSound, numpy.ndarray):
         if int(step)!=step:
             #resampling
             raise NotImplementedError
-        start = int(start*self.samplerate)
-        stop = int(stop*self.samplerate)
+        start = int(rint(start*self.samplerate))
+        stop = int(rint(stop*self.samplerate))
         return self.__getitem__((slice(start,stop,step),channel))
     
     def __setitem__(self,key,value):
@@ -271,7 +272,7 @@ class Sound(BaseSound, numpy.ndarray):
         if isinstance(key,int) or isinstance(key,float):
             return np.ndarray.__setitem__(self,(key,channel),value)
         if isinstance(key,Quantity):
-            return np.ndarray.__setitem__(self,(round(key*self.samplerate),channel),value)
+            return np.ndarray.__setitem__(self,(int(rint(key*self.samplerate)),channel),value)
 
         sliceattr = [v for v in [key.start, key.step, key.stop] if v is not None]
         slicedims=array([units.have_same_dimensions(flag,second) for flag in sliceattr])
@@ -282,8 +283,7 @@ class Sound(BaseSound, numpy.ndarray):
             if isinstance(value,Sound) and channel!=slice(None):
                 value=value.squeeze()
             return asarray(self).__setitem__((key,channel),value)
-#            print value.shape
-#            print self.shape
+
 #            print np.ndarray.__getitem__(self, (key, channel)).shape
 #            print key, channel
 #            return np.ndarray.__setitem__(self, (key, channel), value)
@@ -298,8 +298,9 @@ class Sound(BaseSound, numpy.ndarray):
         stop = key.stop or self.duration
         if (start is not None and start<0*ms) or stop > self.duration:
             raise IndexError('Slice bigger than Sound object')
-        if start is not None: start = int(round(start*self.samplerate))
-        stop = int(stop*self.samplerate)
+        if start is not None: start = int(rint(start*self.samplerate))
+        #if (stop is not None) and (not stop=self.duration): stop = int(stop*self.samplerate)
+        stop = int(rint(stop*self.samplerate))
         return self.__setitem__((slice(start,stop),channel),value)
 
     def extended(self, duration):
@@ -308,7 +309,7 @@ class Sound(BaseSound, numpy.ndarray):
         can be the number of samples or a length of time in seconds.
         '''
         if not isinstance(duration, int):
-            duration = int(duration * self.samplerate)
+            duration = int(rint(duration * self.samplerate))
         return self[:self.duration+duration]
 
     def resized(self, L):
@@ -329,7 +330,7 @@ class Sound(BaseSound, numpy.ndarray):
         samples or a length of time in seconds.
         '''
         if not isinstance(duration, int):
-            duration = int(duration*self.samplerate)
+            duration = int(rint(duration*self.samplerate))
         y = vstack((zeros((duration, self.nchannels)), self))
         return Sound(y, samplerate=self.samplerate)
 
@@ -555,7 +556,7 @@ class Sound(BaseSound, numpy.ndarray):
         when = when.lower().strip()
         if envelope is None: envelope = lambda t:sin(pi * t / 2) ** 2
         if not isinstance(duration, int):
-            sz = int(duration * self.samplerate)
+            sz = int(rint(duration * self.samplerate))
         else:
             sz = duration
         multiplier = envelope(reshape(linspace(0.0, 1.0, sz), (sz, 1)))
@@ -662,7 +663,7 @@ class Sound(BaseSound, numpy.ndarray):
             amplitude = 28e-6*10**(peak/20.)
         else:
             amplitude=1
-        x = amplitude*ones(int(duration*samplerate))
+        x = amplitude*ones(int(rint(duration*samplerate)))
         return Sound(x, samplerate)
     
     @staticmethod
@@ -674,12 +675,12 @@ class Sound(BaseSound, numpy.ndarray):
         return oneclick[:interval].repeat(n)
 
     @staticmethod
-    def silence(duration, samplerate=None):
+    def silence(duration, samplerate=None, nchannels=1):
         '''
-        Returns a silent, zero sound for the given duration.
+        Returns a silent, zero sound for the given duration. Set nchannels to set the number of channels.
         '''
         samplerate = get_samplerate(samplerate)
-        x = numpy.zeros(int(duration*samplerate))
+        x = numpy.zeros((int(rint(duration*samplerate)),nchannels))
         return Sound(x, samplerate)
 
     @staticmethod
