@@ -40,7 +40,7 @@ nbr_cf=50
 cf=erbspace(100*Hz,1000*Hz, nbr_cf) 
 #cf=atleast_1d(1000.)#log_space(500*Hz, 1000*Hz, nbr_cf)#atleast_1d(1000)#
 
-interval=1#len(sound)/2
+interval=33#len(sound)/2
 
 ##### Control Path ####
 
@@ -185,7 +185,7 @@ class BP_signal_update:
     def __call__(self,input):
         
          control_signal=input[-1,:]
-         print -self.rgain-control_signal
+         #print -self.rgain-control_signal
          self.poles[:,0:4]=tile(-self.rgain-control_signal+1j*self.fp1*2*pi,[4,1]).T
          self.poles[:,4:8]=tile(real(self.poles[:,0])- self.ta+1j*(imag(self.poles[:,0])- self.tb),[4,1]).T
          self.poles[:,8:10]=tile((real(self.poles[:,0])+real(self.poles[:,4]))*.5+1j*(imag(self.poles[:,0])+imag(self.poles[:,4]))*.5,[2,1]).T
@@ -209,8 +209,8 @@ control2 = ControlFilterbank(control1,  LP_control, signal_path,updater_signal_p
 #BP_control.buffer_init()
 #signal=BP_control.buffer_fetch(0, len(sound))
 
-
-signal=control1.buffer_fetch(0, len(sound))
+signal=control2.fetch(len(sound))
+#signal=control2.buffer_fetch(0, len(sound))
 t1=time()
 #signal=signal_path.buffer_fetch(0, len(sound))
 print 'the simulation took',time()-t1,' seconds to run'
