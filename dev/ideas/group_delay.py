@@ -51,7 +51,7 @@ def group_delay(f):
     grpd=dt*(a/b).real[1:len(x)/2] # group delay
 
     # Smoothing
-    width_dt=30
+    width_dt=20
     filter='flat'
     window = {'gaussian': exp(-arange(-2 * width_dt, 2 * width_dt + 1) ** 2 * 1. / (2 * (width_dt) ** 2)),
                 'flat': ones(width_dt)}[filter]
@@ -86,7 +86,7 @@ def IPD_raw(fL,fR):
     xR,xL=fft(fR)[1:n/2],fft(fL)[1:n/2]
     x=xR/xL
     freq=fftfreq(n,dt)[1:n/2]
-    return freq,angle(x)
+    return freq,-angle(x) # is it?
 
 def IPD(fL,fR,threshold=0.1):
     '''
@@ -167,11 +167,11 @@ def ITD4(fL,fR):
     freq,gR=group_delay(fR)
     _,gL=group_delay(fL)
     grpd=gR-gL
-    grpd_phase=(grpd % (1/freq))*2*pi*freq - pi
+    grpd_phase=(((grpd*freq+.5) % 1) -.5)*2*pi
     _,ipd=IPD_raw(fL,fR) # could filter this too (-pi..pi)
     ipd[(ipd-grpd_phase)>pi]-=2*pi
-    ipd[(ipd-grpd_phase)<pi]+=2*pi
-    itd=grpd+(ipd-(grpd_phase+pi))/(2*pi*freq)
+    ipd[(ipd-grpd_phase)<-pi]+=2*pi
+    itd=grpd+(ipd-grpd_phase)/(2*pi*freq)
     return itd
 
 choice='IRCAM'
@@ -191,7 +191,7 @@ if found == 0:
 
 ircam = IRCAM_LISTEN(path)
 h = ircam.load_subject(1002)
-h = h.subset(lambda azim,elev:azim==45 and elev==0)
+h = h.subset(lambda azim,elev:azim==120 and elev==30)
 
 #freq,xL=group_delay(h.hrtf[0].left)
 #_,xR=group_delay(h.hrtf[0].right)
@@ -212,8 +212,9 @@ subplot(312)
 ind=(freq<5000) & (freq>180)
 #plot(freq[ind],itd[ind]*1e6,'r') # CD
 #plot(freq[ind],itd2[ind]*1e6,'b')
-plot(freq[ind],itd4[ind]*1e6,'r')
-plot(freq[ind],-ipd[ind]/(2*pi*freq[ind])*1e6,'b') # ITD
+#plot(freq[ind],itd4[ind]*1e6,'r')
+plot(freq[ind],unwrap(ipd[ind])/(2*pi*freq[ind])*1e6,'b') # ITD
+#plot(freq[ind],(group_delay(right)[1][ind]-group_delay(left)[1][ind])*1e6,'k')
 #ylim(0,1500)
 subplot(311)
 plot(freq[ind],ipd[ind]) # IPD
