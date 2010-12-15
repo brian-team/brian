@@ -115,10 +115,11 @@ def IPD(fL,fR,threshold=0.1):
         start=ind[breaks[i]]+1
         end=ind[breaks[i]+1] # not included
         y[start:end]=linspace(y[start-1],y[end],end-start)
-    if ind[0]>0:
-        y[:ind[0]]=freq[:ind[0]]*y[ind[0]]/freq[ind[0]]
-    if ind[-1]<len(y):
-        y[ind[-1]+1:]=freq[ind[-1]+1:]*y[ind[-1]]/freq[ind[-1]]
+    if len(ind)>0:
+        if ind[0]>0:
+            y[:ind[0]]=freq[:ind[0]]*y[ind[0]]/freq[ind[0]]
+        if ind[-1]<len(y):
+            y[ind[-1]+1:]=freq[ind[-1]+1:]*y[ind[-1]]/freq[ind[-1]]
     #subplot(211)
     #plot(freq,abs(fft(fL)[:n/2]))
     #plot(freq,abs(fft(fR)[:n/2]))
@@ -196,9 +197,8 @@ h = h.subset(lambda azim,elev:azim==120 and elev==30)
 #freq,xL=group_delay(h.hrtf[0].left)
 #_,xR=group_delay(h.hrtf[0].right)
 #itd=(xR-xL)
-left=h.hrtf[0].left
-right=h.hrtf[0].right
-print len(left)
+left=h.hrtf[0].left.flatten()
+right=h.hrtf[0].right.flatten()
 freq,itd=ITD3(left,right,threshold=0.05)
 itd2=group_delay(right)[1]-group_delay(left)[1]
 itd4=ITD4(left,right)
@@ -211,7 +211,7 @@ _,ipd=IPD_raw(left,right)#,threshold=0.0)
 subplot(312)
 ind=(freq<5000) & (freq>180)
 #plot(freq[ind],itd[ind]*1e6,'r') # CD
-#plot(freq[ind],itd2[ind]*1e6,'b')
+plot(freq[ind],itd2[ind]*1e6,'r')
 #plot(freq[ind],itd4[ind]*1e6,'r')
 plot(freq[ind],unwrap(ipd[ind])/(2*pi*freq[ind])*1e6,'b') # ITD
 #plot(freq[ind],(group_delay(right)[1][ind]-group_delay(left)[1][ind])*1e6,'k')
