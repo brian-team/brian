@@ -34,7 +34,7 @@ def load_AER(filename):
         addr=x[:,0].newbyteorder('>')
         timestamp=x[:,1:].copy()
         timestamp.dtype=int32
-        timestamp=timestamp.newbyteorder('>')
+        timestamp=timestamp.newbyteorder('>').flatten()
     else: # version==2
         #nevents=len(line)/8
         #for n in range(nevents):

@@ -8,32 +8,19 @@ Version:
 from brian import *
 from brian.experimental.neuromorphic import *
 
+#defaultclock.dt=1*ms
+
 path=r'C:\Users\Romain\Desktop\jaerSampleData\DVS128'
 filename=r'\Tmpdiff128-2006-02-03T14-39-45-0800-0 tobi eye.dat'
 
 addr,timestamp=load_AER(path+filename)
+print len(addr),"events"
 x,y,pol=extract_DVS_event(addr)
-dt=defaultclock.dt
-#multiplier=int(dt/(1e-6*second)) # number of ticks per dt
-timestamp_dt=array(timestamp*1e-6/dt,dtype=int) # in units of dt
-u,indices=unique(timestamp_dt,return_index=True) # split over timesteps
-spiketimes=[]
-for i in range(len(u)-1):
-    spiketimes.append((y[indices[i]:indices[i+1]],float(u[i])*dt))
+spiketimes=array((y,timestamp*1e-6)).T
 
-# Maybe make a sparse matrix?
-#=SpikeContainer(100) # number of bins
-#spikes=[(pixel_to_neuron(*extract_DVS_event(ad)),t*1e-6*second) for (ad,t) in zip(addr,timestamp)]
-
-#spikes=[(yy,t*1e-6*second) for (yy,t) in zip(y,timestamp)]
-# assuming microsecs
-#print spikes[-1]
-print spiketimes[0]
-
-P=SpikeGeneratorGroup(128,spiketimes) # warning must be disabled
+P=SpikeGeneratorGroup(128,spiketimes,gather=True)
 M=SpikeMonitor(P)
 
-print "starting"
 run(1*second)
 
 raster_plot(M)

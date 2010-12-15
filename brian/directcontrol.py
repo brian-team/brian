@@ -182,10 +182,12 @@ class SpikeGeneratorGroup(NeuronGroup):
         An object specifying which neurons should fire and when. It can be a container
         such as a ``list``, containing tuples ``(i,t)`` meaning neuron ``i`` fires at
         time ``t``, or a callable object which returns such a container (which
-        allows you to use generator objects, see below). If ``spiketimes`` is not
-        a list or tuple, the pairs ``(i,t)`` need to be sorted in time. You can
-        also pass a numpy array ``spiketimes`` where the first column of the
-        array is the neuron indices, and the second column is the times in
+        allows you to use generator objects, see below). ``i`` can be an integer
+        or an array (list of neurons that spike at the same time).
+        If ``spiketimes`` is not a list or tuple, the pairs ``(i,t)`` need to be
+        sorted in time. You can also pass a numpy array
+        ``spiketimes`` where the first column of the array
+        is the neuron indices, and the second column is the times in
         seconds. WARNING: units are not checked in this case, and you need to
         ensure that the spikes are sorted.
     ``clock``
@@ -200,6 +202,13 @@ class SpikeGeneratorGroup(NeuronGroup):
     ``spiketimes``
         This can be used to reset the list of spike times, however the values of
         ``N``, ``clock`` and ``period`` cannot be changed. 
+    
+    Options:
+    ``gather`` (default False)
+        Set to True if you want to gather spike events that fall in the same
+        timestep (makes the simulation faster if you have many events).
+    ``sort`` (default True)
+        Set to False if your spike events are already sorted.
     
     **Sample usages**
     
@@ -238,11 +247,28 @@ class SpikeGeneratorGroup(NeuronGroup):
     Whenever P is reinitialised, it will call ``nextspike()`` to create the required spike
     container.
     """
-    def __init__(self, N, spiketimes, clock=None, period=None):
+    def __init__(self, N, spiketimes, clock=None, period=None, gather=False, sort=True):
         clock = guess_clock(clock)
-        thresh = SpikeGeneratorThreshold(N, spiketimes, period=period)
+        if gather: # assumes spike times are sorted
+            spiketimes=self.gather(spiketimes,clock.dt)
+            sort=False
+        thresh = SpikeGeneratorThreshold(N, spiketimes, period=period, sort=sort)
         self.period = period
         NeuronGroup.__init__(self, N, model=LazyStateUpdater(), threshold=thresh, clock=clock)
+
+    def gather(self,spiketimes,dt):
+        # Gathers spike events in the same timestep
+        # Assumes spikes are sorted
+        if isinstance(spiketimes, (list, tuple)):
+            spiketimes=array(spiketimes)
+        times=array(spiketimes[:,1]/dt,dtype=int) # in units of dt
+        neurons=array(spiketimes[:,0],dtype=int)
+        u,indices=numpy.unique(times,return_index=True) # split over timesteps
+        new_spiketimes=[]
+        for i in range(len(u)-1):
+            new_spiketimes.append((neurons[indices[i]:indices[i+1]],float(u[i])*dt))
+        new_spiketimes.append((neurons[indices[-1]:],float(u[-1])*dt))
+        return new_spiketimes
 
     def reinit(self):
         super(SpikeGeneratorGroup, self).reinit()
@@ -256,8 +282,8 @@ class SpikeGeneratorGroup(NeuronGroup):
 
 
 class SpikeGeneratorThreshold(Threshold):
-    def __init__(self, N, spiketimes, period=None):
-        self.set_spike_times(N, spiketimes, period=period)
+    def __init__(self, N, spiketimes, period=None, sort=True):
+        self.set_spike_times(N, spiketimes, period=period, sort=sort)
 
     def reinit(self):
         def makeiter(obj):
@@ -271,17 +297,17 @@ class SpikeGeneratorThreshold(Threshold):
             self.nextspikenumber = 0
         self.curperiod = -1
 
-    def set_spike_times(self, N, spiketimes, period=None):
+    def set_spike_times(self, N, spiketimes, period=None, sort=True):
         # N is the number of neurons, spiketimes is an iterable object of tuples (i,t) where
         # t is the spike time, and i is the neuron number. If spiketimes is a list or tuple,
         # then it will be sorted here.
-        if isinstance(spiketimes, (list, tuple)):
+        if isinstance(spiketimes, (list, tuple)) and sort:
             spiketimes = sorted(spiketimes, key=itemgetter(1))
         self.spiketimes = spiketimes
         self.N = N
         self.period = period
         self.reinit()
-
+        
     def __call__(self, P):
         firing = zeros(self.N)
         t = P.clock.t
@@ -294,7 +320,7 @@ class SpikeGeneratorThreshold(Threshold):
         if isinstance(self.spiketimes, numpy.ndarray):
             t = float(t)
         while self.nextspiketime is not None and is_approx_less_than_or_equal(self.nextspiketime, t):
-            if firing[self.nextspikenumber]:
+            if type(self.nextspikenumber)==int and firing[self.nextspikenumber]:
                 log_warn('brian.SpikeGeneratorThreshold', 'Discarding multiple overlapping spikes')
             firing[self.nextspikenumber] = 1
             try:
