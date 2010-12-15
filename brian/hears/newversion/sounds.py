@@ -24,6 +24,10 @@ __all__ = ['BaseSound', 'Sound',
            'loadsound', 'savesound', 'play',
            ]
 
+
+
+_mixer_status = [-1,-1]
+
 class BaseSound(Bufferable):
     '''
     Base class for Sound and OnlineSound
@@ -355,6 +359,13 @@ class Sound(BaseSound, numpy.ndarray):
                   dtype=float64)
         return Sound(y, samplerate=samplerate)
 
+    def _init_mixer(self):
+        global _mixer_status
+        if _mixer_status==[-1,-1] or _mixer_status[0]!=self.nchannels or _mixer_status != self.samplerate:
+            pygame.mixer.quit()
+            pygame.mixer.init(int(self.samplerate), -16, self.nchannels)
+            _mixer_status=[self.nchannels,self.samplerate]
+    
     def play(self, normalise=False, sleep=False):
         '''
         Plays the sound (normalised to avoid clipping if required). If
@@ -363,8 +374,7 @@ class Sound(BaseSound, numpy.ndarray):
         '''
         if self.nchannels>2:
             raise ValueError("Can only play sounds with 1 or 2 channels.")
-        pygame.mixer.quit()
-        pygame.mixer.init(int(self.samplerate), -16, self.nchannels)
+        self._init_mixer()
         if normalise:
             a = amax(abs(self))
         else:
@@ -587,13 +597,13 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
-    def whitenoise(duration, samplerate=None):
+    def whitenoise(duration, samplerate=None, nchannels=1):
         '''
         Returns a white noise. If the samplerate is not specified, the global
         default value will be used.
         '''
         samplerate = get_samplerate(samplerate)
-        x = randn(int(samplerate*duration))
+        x = randn(int(samplerate*duration),nchannels)
         return Sound(x, samplerate)
 
     @staticmethod
@@ -615,20 +625,35 @@ class Sound(BaseSound, numpy.ndarray):
             Desired output samplerate
         '''
         samplerate = get_samplerate(samplerate)
-        # Adapted from http:/+/www.eng.ox.ac.uk/samp/software/powernoise/powernoise.m
+        # Adapted from http://www.eng.ox.ac.uk/samp/software/powernoise/powernoise.m
         # Little MA et al. (2007), "Exploiting nonlinear recurrence and fractal
         # scaling properties for voice disorder detection", Biomed Eng Online, 6:23
-        n=duration*samplerate
+        
+        n=int(rint(duration*samplerate))
+
         n2=floor(n/2)
-        f=fftfreq(int(n),d=1*second/samplerate)
-    
-        a2=1/(f[1:n2]**(alpha/2))
-        p2=(rand(n2-1)-0.5)*2*pi
+        f=fftfreq(n)*samplerate
+        if n%2==1:
+            a2=1/(f[1:(n2+1)]**(alpha/2.0))
+        else:
+            a2=1/(f[1:n2]**(alpha/2.0))
+        p2=(rand(len(a2))-0.5)*2*pi
         d2=a2*exp(1j*p2)
         
-        d=hstack((1,d2,1/f[-1]**alpha,flipud(conj(d2))))
+        print n
+        print n2
+        print len(a2)
+        
+        if n%2==1:
+            # n impair, pas de pb
+            d=hstack((1,d2,flipud(conj(d2))))
+            print len(d)
+        else:
+            # n pair, il faut rajouter une valeur
+            d=hstack((1,d2,1/(abs(f[n2])**(alpha/2.0)),flipud(conj(d2))))
         
         x=real(ifft(d))
+        print x.shape
         x.shape=(n,1)
         x = ((x - min(x))/(max(x) - min(x)) - 0.5) * 2;
         return Sound(x,samplerate)
@@ -638,14 +663,14 @@ class Sound(BaseSound, numpy.ndarray):
         '''
         Returns pink noise, i.e :func:`powerlawnoise` with alpha=1
         '''
-        return Sound.powerlawnoise(duration,1,samplerate=samplerate)
+        return Sound.powerlawnoise(duration,1.0,samplerate=samplerate)
     
     @staticmethod
     def brownnoise(duration, samplerate=None):
         '''
         Returns brown noise, i.e :func:`powerlawnoise` with alpha=2
         '''
-        return Sound.powerlawnoise(duration,2,samplerate=samplerate)
+        return Sound.powerlawnoise(duration,2.0,samplerate=samplerate)
 
     @staticmethod
     def click(duration, peak=None, samplerate=None):
