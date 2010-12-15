@@ -27,7 +27,7 @@ defaultclock.dt=1*ms # so that it's fast enough
 R=RealtimeController(dt=100*ms)
    
 retina=SpikeGeneratorGroup(128,[])
-    
+
 # Listen to AER
 first_event=True
 offset=0.
@@ -42,6 +42,7 @@ def listen():
             #events=[unpack('>II',data[(8*n+4):(8*n+12)]) for n in range(len(data)/8-1)]
             events=fromstring(data[4:],int32).newbyteorder('>')
             if (len(events)>0):
+                events=events[:32] # a small selection
                 addr=events[::2]
                 timestamp=events[1::2]
                 if first_event: # Synchronize event timestamps and clock
@@ -49,9 +50,10 @@ def listen():
                     t0=time()-start_time
                     ts0=timestamp[0]*1e-6
                     offset=t0-ts0
-                spikelist=[(pixel_to_neuron(*extract_DVS_event(event)),(t*1e-6+offset)*second+latency)\
-                           for (event,t) in zip(addr,timestamp)[:1]] #only first event because it's so slow!
-                retina.spiketimes+=spikelist
+                _,addr,_=extract_DVS_event(addr)
+                spiketimes=array((addr,timestamp*1e-6+offset+float(latency))).T
+                spiketimes=retina.gather(spiketimes,defaultclock.dt)
+                retina.spiketimes+=spiketimes
     except: # no more events (can we do this in a cleaner way?)
         pass
 
