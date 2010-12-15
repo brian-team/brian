@@ -7,6 +7,7 @@ Minor features:
 
 Improvements
 
+* SpikeGeneratorGroup is faster for large number of events ("gather" option).
 * Speed improvement for pure Python version of sparse matrix preparation
 * Speed improvements for spike propagation weave code (50-100% faster).
 
