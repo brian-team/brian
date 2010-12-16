@@ -75,6 +75,8 @@ class Sound(BaseSound, numpy.ndarray):
     
     **Generating sounds**
     
+    All sound generating methods can be used with durations arguments in samples (int) or units (e.g. 500*ms). One can also set the number of channels by setting the keyword argument nchannels to the desired value. Notice that for noise the channels will be generated independantly.
+    
     .. automethod:: tone
     .. automethod:: whitenoise
     .. automethod:: powerlawnoise
