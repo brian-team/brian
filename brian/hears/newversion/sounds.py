@@ -312,8 +312,7 @@ class Sound(BaseSound, numpy.ndarray):
         Returns the Sound with length extended by the given duration, which
         can be the number of samples or a length of time in seconds.
         '''
-        if not isinstance(duration, int):
-            duration = int(rint(duration * self.samplerate))
+        duration=get_duration(duration,self.samplerate)
         return self[:self.duration+duration]
 
     def resized(self, L):
@@ -587,13 +586,15 @@ class Sound(BaseSound, numpy.ndarray):
         return self.ramp(when=when, duration=duration, envelope=envelope, inplace=False)
 
     @staticmethod
-    def tone(frequency, duration, samplerate=None):
+    def tone(frequency, duration, samplerate=None, nchannels=1):
         '''
         Returns a pure tone at frequency for duration, using the default
         samplerate or the given one.
         '''
         samplerate = get_samplerate(samplerate)
-        x = sin(2.0*pi*frequency*arange(0*ms, duration, 1/samplerate))
+        duration = get_duration(duration,samplerate)
+        print duration
+        x = sin(2.0*pi*frequency*tile(arange(0, duration, 1)/samplerate,(nchannels,1))).T
         return Sound(x, samplerate)
 
     @staticmethod
@@ -603,11 +604,12 @@ class Sound(BaseSound, numpy.ndarray):
         default value will be used.
         '''
         samplerate = get_samplerate(samplerate)
-        x = randn(int(samplerate*duration),nchannels)
+        duration = get_duration(duration,samplerate)
+        x = randn(duration,nchannels)
         return Sound(x, samplerate)
 
     @staticmethod
-    def powerlawnoise(duration, alpha, samplerate=None):
+    def powerlawnoise(duration, alpha, samplerate=None, nchannels=1):
         '''
         Returns a power-law noise for the given duration. Spectral density per unit of bandwidth scales as 1/(f**alpha).
         
@@ -629,44 +631,51 @@ class Sound(BaseSound, numpy.ndarray):
         # Little MA et al. (2007), "Exploiting nonlinear recurrence and fractal
         # scaling properties for voice disorder detection", Biomed Eng Online, 6:23
         
-        n=int(rint(duration*samplerate))
-
+        duration=get_duration(duration,samplerate)
+        n=duration
         n2=floor(n/2)
         f=fftfreq(n)*samplerate
         if n%2==1:
             a2=1/(f[1:(n2+1)]**(alpha/2.0))
         else:
             a2=1/(f[1:n2]**(alpha/2.0))
-        p2=(rand(len(a2))-0.5)*2*pi
+        a2=tile(a2,(nchannels,1)).T
+        
+        p2=(rand(len(a2),nchannels)-0.5)*2*pi
+        print p2.shape
+        print a2.shape
         d2=a2*exp(1j*p2)
         
         if n%2==1:
-            d=hstack((1,d2,flipud(conj(d2))))
+            d=vstack((ones((1,nchannels)),d2,
+                      flipud(conj(d2))))
         else:
-            d=hstack((1,d2,1/(abs(f[n2])**(alpha/2.0)),flipud(conj(d2))))
+            print flipud(conj(d2)).shape
+            d=vstack((ones((1,nchannels)),d2,
+                      1/(abs(f[n2])**(alpha/2.0))*ones((1,nchannels)),
+                      flipud(conj(d2))))
         
         x=real(ifft(d))
-        print x.shape
-        x.shape=(n,1)
-        x = ((x - min(x))/(max(x) - min(x)) - 0.5) * 2;
+        x.shape=(n,nchannels)
+        x = ((x - amin(x))/(amax(x) - amin(x)) - 0.5) * 2;
         return Sound(x,samplerate)
     
     @staticmethod
-    def pinknoise(duration, samplerate=None):
+    def pinknoise(duration, samplerate=None, nchannels=1):
         '''
         Returns pink noise, i.e :func:`powerlawnoise` with alpha=1
         '''
         return Sound.powerlawnoise(duration,1.0,samplerate=samplerate)
     
     @staticmethod
-    def brownnoise(duration, samplerate=None):
+    def brownnoise(duration, samplerate=None, nchannels=1):
         '''
         Returns brown noise, i.e :func:`powerlawnoise` with alpha=2
         '''
         return Sound.powerlawnoise(duration,2.0,samplerate=samplerate)
 
     @staticmethod
-    def click(duration, peak=None, samplerate=None):
+    def click(duration, peak=None, samplerate=None, nchannels=1):
         '''
         Returns a click of the given duration.
         
@@ -675,17 +684,18 @@ class Sound(BaseSound, numpy.ndarray):
         formula ``28e-6*10**(peak/20.)``.
         '''
         samplerate = get_samplerate(samplerate)
+        duration = get_duration(duration,samplerate)
         if peak is not None:
             if not isinstance(peak, dB_type):
                 raise dB_error('Peak must be given in dB')
             amplitude = 28e-6*10**(peak/20.)
         else:
-            amplitude=1
-        x = amplitude*ones(int(rint(duration*samplerate)))
+            amplitude = 1
+        x = amplitude*ones((duration,nchannels))
         return Sound(x, samplerate)
     
     @staticmethod
-    def clicks(duration, n, interval, peak=None, samplerate=None):
+    def clicks(duration, n, interval, peak=None, samplerate=None, nchannels=1):
         '''
         Returns a series of n clicks (see :func:`click`) separated by interval.
         '''
@@ -698,7 +708,8 @@ class Sound(BaseSound, numpy.ndarray):
         Returns a silent, zero sound for the given duration. Set nchannels to set the number of channels.
         '''
         samplerate = get_samplerate(samplerate)
-        x = numpy.zeros((int(rint(duration*samplerate)),nchannels))
+        duration = get_duration(duration,samplerate)
+        x=numpy.zeros((duration,nchannels))
         return Sound(x, samplerate)
 
     @staticmethod
@@ -830,6 +841,12 @@ play.__doc__ = Sound.play.__doc__
 def savesound(sound, filename, normalise=False, samplewidth=2):
     sound.save(filename, normalise=normalise, samplewidth=samplewidth)
 savesound.__doc__ = Sound.save.__doc__
+
+def get_duration(duration,samplerate):
+    if not isinstance(duration, int):
+        duration = int(rint(duration * samplerate))
+    return duration
+
 
 whitenoise = Sound.whitenoise
 powerlawnoise = Sound.powerlawnoise
