@@ -283,7 +283,7 @@ class Sound(BaseSound, numpy.ndarray):
         if not slicedims.any():
             # If value is a mono sound its shape will be (N, 1) but the numpy
             # setitem will have shape (N,) so in this case it's a shape mismatch
-            # so we squeeze the arrya to make sure this doesn't happen.
+            # so we squeeze the array to make sure this doesn't happen.
             if isinstance(value,Sound) and channel!=slice(None):
                 value=value.squeeze()
             return asarray(self).__setitem__((key,channel),value)
@@ -640,16 +640,9 @@ class Sound(BaseSound, numpy.ndarray):
         p2=(rand(len(a2))-0.5)*2*pi
         d2=a2*exp(1j*p2)
         
-        print n
-        print n2
-        print len(a2)
-        
         if n%2==1:
-            # n impair, pas de pb
             d=hstack((1,d2,flipud(conj(d2))))
-            print len(d)
         else:
-            # n pair, il faut rajouter une valeur
             d=hstack((1,d2,1/(abs(f[n2])**(alpha/2.0)),flipud(conj(d2))))
         
         x=real(ifft(d))
