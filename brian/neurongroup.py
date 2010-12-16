@@ -293,6 +293,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                                                                  compile=compile, freeze=freeze,
                                                                  method=method)
             Group.__init__(self, model, N, unit_checking=unit_checking)
+            self._all_units = model._units
             # Converts S0 from dictionary to tuple
             if self._S0 == None: # No initialization: 0 with units
                 S0 = {}
@@ -527,8 +528,12 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         '''
         Returns the unit of variable name
         '''
-        if name in self.staticvars:
+        if name in self._all_units:
+            return self._all_units[name]
+        elif name in self.staticvars:
             f = self.staticvars[name]
+            print f.func_code.co_varnames
+            print [(var, self.unit(var)) for var in f.func_code.co_varnames]
             return get_unit(f(*[1. * self.unit(var) for var in f.func_code.co_varnames]))
         elif name == 't': # time
             return second
