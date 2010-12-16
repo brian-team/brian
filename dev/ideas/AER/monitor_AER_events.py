@@ -11,9 +11,6 @@ from struct import *
 from time import time,sleep
 from brian.experimental.neuromorphic import *
 
-def pixel_to_neuron(x,y,pol):
-    return y+0*x # let's just have 128 neurons, one per row for now
-
 # Open the UDP socket
 UDP_IP="localhost"
 UDP_PORT=8991
@@ -53,7 +50,7 @@ def listen():
                 _,addr,_=extract_DVS_event(addr)
                 spiketimes=array((addr,timestamp*1e-6+offset+float(latency))).T
                 spiketimes=retina.gather(spiketimes,defaultclock.dt)
-                retina.spiketimes+=spiketimes
+                retina.spiketimes+=spiketimes # not sure this works
     except: # no more events (can we do this in a cleaner way?)
         pass
 
