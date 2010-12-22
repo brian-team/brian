@@ -20,7 +20,7 @@ from db import dB, dB_type, dB_error, gain
 
 __all__ = ['BaseSound', 'Sound',
            'pinknoise','brownnoise','powerlawnoise',
-           'whitenoise', 'tone', 'click', 'clicks', 'silence', 'sequence',
+           'whitenoise', 'tone', 'click', 'clicks', 'silence', 'sequence','harmoniccomplex',
            'loadsound', 'savesound', 'play',
            ]
 
@@ -388,7 +388,7 @@ class Sound(BaseSound, numpy.ndarray):
         if sleep:
             time.sleep(self.duration)
 
-    def spectrogram(self, low=None, high=None, log_power=True, **kwds):
+    def spectrogram(self, low=None, high=None, log_power=True, other = None,  **kwds):
         '''
         Plots a spectrogram of the sound
         
@@ -409,7 +409,10 @@ class Sound(BaseSound, numpy.ndarray):
         '''
         if self.nchannels>1:
             raise ValueError('Can only plot spectrograms for mono sounds.')
-        x = self.flatten()
+        if other is not None:
+            x = self.flatten()-other.flatten()
+        else:
+            x = self.flatten()
         pxx, freqs, bins, im = specgram(x, Fs=self.samplerate, **kwds)
         if low is not None or high is not None:
             restricted = True
@@ -595,10 +598,26 @@ class Sound(BaseSound, numpy.ndarray):
         '''
         samplerate = get_samplerate(samplerate)
         duration = get_duration(duration,samplerate)
-        print duration
         x = sin(2.0*pi*frequency*tile(arange(0, duration, 1)/samplerate,(nchannels,1))).T
         return Sound(x, samplerate)
 
+    @staticmethod
+    def harmoniccomplex(f0, amplitude, duration, samplerate=None, nchannels=1):
+        '''
+        Returns a harmonic complex composed of pure tones at integer multiples of the fundamental frequency. ``amplitude`` can be set to either an integer in which cas all the harmonics up to the nyquist frequency are added with the same amplitude. If it is a list or an array though it sets the relative amplitude of the harmonics.
+        '''
+        samplerate=get_samplerate(samplerate)
+        x=tone(f0,duration,samplerate)
+        try:
+            for i,a in enumerate(amplitude):
+                x+= a*asarray(tone(f0*(2**i),duration,samplerate))
+        except TypeError:
+            i=1
+            while (2**i)*f0 < samplerate/2.:
+                x+=tone((2**i)*f0,duration,samplerate)
+                i+=1
+        return Sound(x,samplerate)
+    
     @staticmethod
     def whitenoise(duration, samplerate=None, nchannels=1):
         '''
@@ -611,7 +630,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
-    def powerlawnoise(duration, alpha, samplerate=None, nchannels=1):
+    def powerlawnoise(duration, alpha, samplerate=None, nchannels=1,normalise=False):
         '''
         Returns a power-law noise for the given duration. Spectral density per unit of bandwidth scales as 1/(f**alpha).
         
@@ -629,39 +648,48 @@ class Sound(BaseSound, numpy.ndarray):
             Desired output samplerate
         '''
         samplerate = get_samplerate(samplerate)
+        duration = get_duration(duration,samplerate)
+        
         # Adapted from http://www.eng.ox.ac.uk/samp/software/powernoise/powernoise.m
         # Little MA et al. (2007), "Exploiting nonlinear recurrence and fractal
         # scaling properties for voice disorder detection", Biomed Eng Online, 6:23
-        
-        duration=get_duration(duration,samplerate)
         n=duration
         n2=floor(n/2)
-        f=fftfreq(n)*samplerate
-        if n%2==1:
-            a2=1/(f[1:(n2+1)]**(alpha/2.0))
-        else:
-            a2=1/(f[1:n2]**(alpha/2.0))
-        a2=tile(a2,(nchannels,1)).T
         
-        p2=(rand(len(a2),nchannels)-0.5)*2*pi
-        print p2.shape
-        print a2.shape
-        d2=a2*exp(1j*p2)
+        f=fftfreq(n,d=1.0/samplerate)
+        f.shape=(len(f),1)
+        f=tile(f,(1,nchannels))
         
         if n%2==1:
-            d=vstack((ones((1,nchannels)),d2,
-                      flipud(conj(d2))))
+            z=(randn(n2,nchannels)+1j*randn(n2,nchannels))
+            a2=1.0/( f[1:(n2+1),:]**(alpha/2.0))
         else:
-            print flipud(conj(d2)).shape
-            d=vstack((ones((1,nchannels)),d2,
-                      1/(abs(f[n2])**(alpha/2.0))*ones((1,nchannels)),
-                      flipud(conj(d2))))
+            z=(randn(n2-1,nchannels)+1j*randn(n2-1,nchannels))
+            a2=1.0/(f[1:n2,:]**(alpha/2.0))
         
-        x=real(ifft(d))
+        a2*=z
+        
+        if n%2==1:
+            d=vstack((ones((1,nchannels)),a2,
+                      flipud(conj(a2))))
+        else:
+            d=vstack((ones((1,nchannels)),a2,
+                      1.0/( abs(f[n2])**(alpha/2.0) )*
+                      randn(1,nchannels),
+                      flipud(conj(a2))))
+        
+        
+        x=real(ifft(d.flatten()))                  
         x.shape=(n,nchannels)
-        x = ((x - amin(x))/(amax(x) - amin(x)) - 0.5) * 2;
+
+        if normalise==True:
+            for i in range(nchannels):
+                x[:,i]=normalise_rms(x[:,i])
+                x[:,i] = ((x[:,i] - amin(x[:,i]))/(amax(x[:,i]) - amin(x[:,i])) - 0.5) * 2;
+        
         return Sound(x,samplerate)
     
+            
     @staticmethod
     def pinknoise(duration, samplerate=None, nchannels=1):
         '''
@@ -855,6 +883,7 @@ powerlawnoise = Sound.powerlawnoise
 pinknoise = Sound.pinknoise
 brownnoise = Sound.brownnoise
 tone = Sound.tone
+harmoniccomplex = Sound.harmoniccomplex
 click = Sound.click
 clicks = Sound.clicks
 silence = Sound.silence
