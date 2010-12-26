@@ -452,14 +452,16 @@ class FunctionFilterbank(Filterbank):
     most standard functions from numpy will work element-wise.
     
     If you want a filterbank that changes the shape of the input (e.g. changes
-    the number of channels), you will have to derive a class from the
-    base class ``Filterbank``).
+    the number of channels), set the ``nchannels`` keyword argument to the
+    number of output channels.
     '''
-    def __init__(self, source, func):
+    def __init__(self, source, func, nchannels=None):
         if isinstance(source, Bufferable):
             source = (source,)
         Filterbank.__init__(self, source)
         self.func = func
+        if nchannels is not None:
+            self.nchannels = nchannels
 
     def buffer_fetch_next(self, samples):
         start = self.cached_buffer_end
