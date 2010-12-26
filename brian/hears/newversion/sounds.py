@@ -67,6 +67,7 @@ class Sound(BaseSound, numpy.ndarray):
     **Properties**
     
     .. autoattribute:: duration
+    .. autoattribute:: nsamples
     .. autoattribute:: nchannels
     .. autoattribute:: times
     .. autoattribute:: left
@@ -130,6 +131,8 @@ class Sound(BaseSound, numpy.ndarray):
     '''
     duration = property(fget=lambda self:len(self) / self.samplerate,
                         doc='The length of the sound in seconds.')
+    nsamples = property(fget=lambda self:len(self),
+                        doc='The number of samples in the sound.')
     times = property(fget=lambda self:arange(len(self), dtype=float) / self.samplerate,
                      doc='An array of times (in seconds) corresponding to each sample.')
     nchannels = property(fget=lambda self:self.shape[1],
