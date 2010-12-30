@@ -61,6 +61,7 @@ import numpy
 from base import *
 from group import *
 from threshold import select_threshold
+from collections import defaultdict
 
 timedarray = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
 network = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
@@ -284,6 +285,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         # StateUpdater
         if isinstance(model, StateUpdater):
             self._state_updater = model # Update mechanism
+            self._all_units = defaultdict()
         elif isinstance(model, Equations):
             self._eqs = model
             if (init == None) and (model._units == {}):

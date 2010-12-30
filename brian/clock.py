@@ -39,13 +39,14 @@ Clocks for the simulator
 __docformat__ = "restructuredtext en"
 
 __all__ = ['Clock', 'defaultclock', 'guess_clock', 'define_default_clock', 'reinit_default_clock', 'get_default_clock',
-           'EventClock', 'RegularClock']
+           'EventClock', 'RegularClock', 'FloatClock', 'NaiveClock']
 
 from inspect import stack
 from units import *
 from globalprefs import *
 import magic
 from time import time
+from numpy import ceil
 
 
 class Clock(magic.InstanceTracker):
@@ -58,9 +59,30 @@ class Clock(magic.InstanceTracker):
         The time step of the simulation.
     ``t``
         The current time of the clock.
+    ``order``
+        If two clocks have the same time, the order of the clock is used to
+        resolve which clock is processed first, lower orders first.
     ``makedefaultclock``
         Set to ``True`` to make this clock the default clock.
-        
+    
+    The times returned by this clock are always off the form ``n*dt+offset``
+    for integer ``n`` and float ``dt`` and ``offset``. For example, for a clock
+    with ``dt=10*ms``, setting ``t=25*ms`` will set ``n=2`` and ``offset=5*ms``.
+    For a clock that uses true float values for ``t`` rather than underlying
+    integers, use :class:`FloatClock` (although see the caveats there).
+    
+    In order to make sure that certain operations happen in the correct
+    sequence, you can use the ``order`` attribute, clocks with a lower order
+    will be processed first if the time is the same. The condition for two
+    clocks to be considered as having the same time is
+    ``abs(t1-t2)<epsilon*abs(t1)``, a standard test for equality of floating
+    point values. For ordinary clocks based on integer times, the value of
+    ``epsilon`` is ``1e-14``, and for float based clocks it is ``1e-8``.
+    
+    The behaviour of clocks was changed in version 1.3 of Brian, if this is
+    causing problems you might try using :class:`FloatClock` or if that doesn't
+    solve the problem, :class:`NaiveClock`.
+    
     **Methods**
     
     .. method:: reinit([t=0*second])
@@ -113,12 +135,125 @@ class Clock(magic.InstanceTracker):
     :meth:`tick`, :meth:`set_duration` and :meth:`still_running`
     (which bypass unit checking internally).
     '''
-
     @check_units(dt=second, t=second)
-    def __init__(self, dt=0.1 * msecond, t=0 * msecond, makedefaultclock=False):
-        self._t = float(t)
+    def __init__(self, dt=0.1*msecond, t=0*msecond, order=0,
+                 makedefaultclock=False):
+        self._gridoffset = 0.0
+        self.__dt = 1
+        self.dt = dt
+        self.t = t
+        #self.__t = int(t / dt)
+        #self.__end = self.__t
+        self.order = order
+        if not exists_global_preference('defaultclock') or makedefaultclock:
+            set_global_preferences(defaultclock=self)
+
+    @check_units(t=second)
+    def reinit(self, t=0 * msecond):
+        self.__t = int(float(t) / self._dt)
+        self._gridoffset = 0.0
+
+    def __repr__(self):
+        return 'Clock: t = ' + str(self.t) + ', dt = ' + str(self.dt)
+    __str__ = __repr__
+
+    def tick(self):
+        self.__t += self.__dt
+
+    @check_units(t=second)
+    def set_t(self, t):
+        self.__t = int(float(t) / self._dt)
+        self._gridoffset = float(t)-self.__t*self._dt
+        self.__end = int(float(t) / self._dt)
+
+    @check_units(dt=second)
+    def set_dt(self, dt):
         self._dt = float(dt)
+#        self._dtby2 = self._dt/2.0
+
+    @check_units(end=second)
+    def set_end(self, end):
+        self.__end = int(float(end) / self._dt)
+
+    @check_units(start=second)
+    def set_start(self, start):
+        self.__start = int(float(start) / self._dt)
+
+    # Regular clock uses integers, but lots of Brian code extracts _t and _dt
+    # directly from the clock, so these should be implemented directly
+    _t = property(fget=lambda self:self.__t * self._dt + self._gridoffset)
+    _end = property(fget=lambda self:self.__end * self._dt + self._gridoffset)
+    _start = property(fget=lambda self:self.__start * self._dt)
+
+    # Clock object internally stores floats, but these properties
+    # return quantities
+    if isinstance(second, Quantity):
+        t = property(fget=lambda self:Quantity.with_dimensions(self._t, second.dim), fset=set_t)
+        dt = property(fget=lambda self:Quantity.with_dimensions(self._dt, second.dim), fset=set_dt)
+        end = property(fget=lambda self:Quantity.with_dimensions(self._end, second.dim), fset=set_end)
+        start = property(fget=lambda self:Quantity.with_dimensions(self._start, second.dim), fset=set_start)
+    else:
+        t = property(fget=lambda self:self._t, fset=set_t)
+        dt = property(fget=lambda self:self._dt, fset=set_dt)
+        end = property(fget=lambda self:self._end, fset=set_end)
+        start = property(fget=lambda self:self._start, fset=set_start)
+
+    @check_units(duration=second)
+    def set_duration(self, duration):
+        self.__start = self.__t
+        self.__end = self.__t + int(ceil(float(duration) / self._dt))
+
+    def get_duration(self):
+        return self.end - self.t
+
+    def still_running(self):
+        return self.__t < self.__end
+
+    epsilon = 1e-14
+
+    def __lt__(self, other):
+        selft = self._t
+        othert = other._t
+        if selft==othert: return self.order<other.order
+#        if selft<=othert-other._dtby2:
+#            return True
+        if abs(selft-othert)<=self.epsilon*abs(selft):
+            return self.order<other.order
+        return selft<othert
+    
+    
+class RegularClock(Clock):
+    '''
+    Deprecated. Now the same as :class:`Clock`. The old :class:`Clock` class
+    is now :class:`FloatClock`.
+    '''
+    pass
+
+
+class FloatClock(Clock):
+    '''
+    Similar to a :class:`Clock` except that it uses a float value of ``t``
+    rather than an integer based underlying value. This means that over time
+    the values of ``t`` can drift slightly off the grid, and sometimes
+    ``t/dt`` will be slightly less than an integer value, sometimes slightly
+    more. This can cause problems in cases where the computation ``int(t/dt)``
+    is performed to extract an index value, as sometimes an index will be
+    repeated or skipped. However, this form of clock can be used for backwards
+    compatibility with versions of Brian before the new integer based clock
+    was introduced, and for more flexibility than the new version allows for.
+    Note also that the equality condition for this clock uses an ``epsilon``
+    of ``1e-8`` rather than ``1e-14``. See :class:`Clock` for more details on
+    this. For full backwards compatibility with older versions of Brian, use
+    :class:`NaiveClock`.
+    '''
+    _t, _end, _start = 0.0, 0.0, 0.0 # set this here to override the property values defined in Clock
+    @check_units(dt=second, t=second)
+    def __init__(self, dt=0.1*msecond, t=0*msecond, order=0,
+                 makedefaultclock=False):
+        self.t = t
+        self.dt = dt
         self._end = float(t)
+        self.order = order
         if not exists_global_preference('defaultclock') or makedefaultclock:
             set_global_preferences(defaultclock=self)
 
@@ -129,18 +264,10 @@ class Clock(magic.InstanceTracker):
     def tick(self):
         self._t += self._dt
 
-    def __repr__(self):
-        return 'Clock: t = ' + str(self.t) + ', dt = ' + str(self.dt)
-
-    def __str__(self):
-        '''
-        Returns the current time.
-        '''
-        return str(self.t)
-
     @check_units(dt=second)
     def set_dt(self, dt):
         self._dt = float(dt)
+#        self._dtby2 = self._dt/2.0
 
     @check_units(t=second)
     def set_t(self, t):
@@ -187,6 +314,23 @@ class Clock(magic.InstanceTracker):
         """
         return self._t < self._end
 
+    epsilon = 1e-8
+
+
+class NaiveClock(FloatClock):
+    '''
+    Provided for backwards compatibility with older versions of Brian. Does not
+    perform any approximate equality tests for clocks, meaning that clock
+    processing sequence is undpredictable. Typically, users should use
+    :class:`Clock` or :class:`FloatClock`.
+    '''
+    def __lt__(self, other):
+        selft = self._t
+        othert = other._t
+        if selft==othert:
+            return self.order<other.order
+        return selft<othert
+
 
 def guess_clock(clock=None):
     '''
@@ -211,19 +355,6 @@ def guess_clock(clock=None):
     raise TypeError("No clock found. Please define a clock.")
 
 
-# Do not track the default clock    
-class DefaultClock(Clock):
-    @staticmethod
-    def _track_instances(): return False
-defaultclock = DefaultClock(dt=0.1 * msecond)
-define_global_preference(
-    'defaultclock', 'Clock(dt=0.1*msecond)',
-    desc="""
-         The default clock to use if none is provided or defined
-         in any enclosing scope.
-         """)
-
-
 class EventClock(Clock):
     '''
     Clock that is used for events.
@@ -236,80 +367,17 @@ class EventClock(Clock):
     def _track_instances(): return False
 
 
-class RegularClock(Clock):
-    '''
-    Clock that always ticks to integer multiples of dt
-    
-    Works the same as a :class:`Clock`, except that underlying times are stored as
-    integers rather than floats, so it doesn't drift over time due to accumulated
-    tiny errors in floating point arithmetic. The initialiser
-    has one extra parameter, ``offset``. Clock times will be of the form
-    ``i*dt+offset``. It is usually better to have a small offset to ensure that
-    ``t`` is always in the interval ``[i*dt, (i+1)*dt)``.
-    '''
-    @check_units(dt=second, t=second)
-    def __init__(self, dt=0.1 * msecond, t=0 * msecond, offset=1e-15 * second, makedefaultclock=False):
-        self._gridoffset = float(gridoffset)
-        self.__t = int(t / dt)
-        self.__dt = 1
-        self._dt = float(dt)
-        self.__end = self.__t
-        if not exists_global_preference('defaultclock') or makedefaultclock:
-            set_global_preferences(defaultclock=self)
-
-    @check_units(t=second)
-    def reinit(self, t=0 * msecond):
-        self.__t = int(float(t) / self._dt)
-
-    def tick(self):
-        self.__t += self.__dt
-
-    @check_units(t=second)
-    def set_t(self, t):
-        self.__t = int(float(t) / self._dt)
-        self.__end = int(float(t) / self._dt)
-
-    @check_units(dt=second)
-    def set_dt(self, dt):
-        self._dt = float(dt)
-
-    @check_units(end=second)
-    def set_end(self, end):
-        self.__end = int(float(end) / self._dt)
-
-    @check_units(start=second)
-    def set_start(self, start):
-        self.__start = int(float(start) / self._dt)
-
-    # Regular clock uses integers, but lots of Brian code extracts _t and _dt
-    # directly from the clock, so these should be implemented directly
-    _t = property(fget=lambda self:self.__t * self._dt + self._gridoffset)
-    _end = property(fget=lambda self:self.__end * self._dt + self._gridoffset)
-    _start = property(fget=lambda self:self.__start * self._dt)
-
-    # Clock object internally stores floats, but these properties
-    # return quantities
-    if isinstance(second, Quantity):
-        t = property(fget=lambda self:Quantity.with_dimensions(self._t, second.dim), fset=set_t)
-        dt = property(fget=lambda self:Quantity.with_dimensions(self._dt, second.dim), fset=set_dt)
-        end = property(fget=lambda self:Quantity.with_dimensions(self._end, second.dim), fset=set_end)
-        start = property(fget=lambda self:Quantity.with_dimensions(self._start, second.dim), fset=set_start)
-    else:
-        t = property(fget=lambda self:self._t, fset=set_t)
-        dt = property(fget=lambda self:self._dt, fset=set_dt)
-        end = property(fget=lambda self:self._end, fset=set_end)
-        start = property(fget=lambda self:self._start, fset=set_start)
-
-    @check_units(duration=second)
-    def set_duration(self, duration):
-        self.__start = self.__t
-        self.__end = self.__t + int(float(duration) / self._dt)
-
-    def get_duration(self):
-        return self.end - self.t
-
-    def still_running(self):
-        return self.__t < self.__end
+# Do not track the default clock    
+class DefaultClock(Clock):
+    @staticmethod
+    def _track_instances(): return False
+defaultclock = DefaultClock(dt=0.1 * msecond)
+define_global_preference(
+    'defaultclock', 'Clock(dt=0.1*msecond)',
+    desc="""
+         The default clock to use if none is provided or defined
+         in any enclosing scope.
+         """)
 
 
 def define_default_clock(**kwds):

@@ -191,6 +191,7 @@ def test_spikemonitor():
     M3 = StateMonitor(G, 'V', record=True, when='before_groups', clock=c)
     net = Network(G, f, M1, M2, M3, M4)
     net.run(2 * ms)
+    print M1[0], M3[0]
     assert (2 * len(M1[0]) == len(M3[0]))
     assert (len(M1[0]) == len(M2[0]))
     for i in range(len(M1[0])):
@@ -404,5 +405,5 @@ def test_coincidencecounter():
 #    show()
 
 if __name__ == '__main__':
-#    test_spikemonitor()
-    test_coincidencecounter()
+    test_spikemonitor()
+#    test_coincidencecounter()

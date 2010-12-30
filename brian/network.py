@@ -55,6 +55,7 @@ import time
 from utils.progressreporting import *
 from globalprefs import *
 import gc
+import heapq
 
 globally_stopped = False
 
@@ -484,17 +485,24 @@ class Network(object):
 
         if self.clock.still_running() and not self.stopped and not globally_stopped:
             not_same_clocks = not self.same_clocks()
-            while self.clock.still_running() and not self.stopped and not globally_stopped:
+            clk = self.clock
+            while clk.still_running() and not self.stopped and not globally_stopped:
                 if report is not None:
                     cur_time = time.time()
                     if cur_time > next_report_time:
                         next_report_time = cur_time + float(report_period)
                         report.update((self.clock.t - self.clock.start) / duration)
                 self.update()
-                self.clock.tick()
+                clk.tick()
                 if not_same_clocks:
                     # Find the next clock to update
-                    self.clock = min([(clock.t, clock) for clock in self.clocks])[1]
+                    #self.clock = min([(clock.t, id(clock), clock) for clock in self.clocks])[2]
+                    clk = self.clock = min(self.clocks)
+                    #heapq.heappush(self.clocks, self.clock)
+                    #clk = self.clock = heapq.heappop(self.clocks)
+                    #clk = self.clock = heapq.heappushpop(self.clocks, self.clock)
+                    #if not clk<self.clocks[0]:
+                    #    clk = self.clock = heapq.heapreplace(self.clocks, self.clock)
         if report is not None:
             report.update(1.0)
 
@@ -534,7 +542,11 @@ class Network(object):
         self.clock points to the current clock between considered.
         '''
         self.clocks = list(set([obj.clock for obj in self.groups + self.operations]))
-        self.clock = min([(clock.t, clock) for clock in self.clocks])[1]
+        #self.clocks.sort(key=lambda c:-c._dt)
+        #heapq.heapify(self.clocks)
+        #self.clock = min([(clock.t, clock) for clock in self.clocks])[1]
+        self.clock = min(self.clocks)
+        #self.clock = heapq.heappop(self.clocks)
 
     def __len__(self):
         '''
@@ -609,9 +621,11 @@ class NetworkOperation(magic.InstanceTracker, ObjectContainer):
         self.clock = guess_clock(clock)
         self.when = when
         self.function = function
+        if hasattr(function, 'func_code'):
+            self._has_arg = (self.function.func_code.co_argcount==1)
 
     def __call__(self):
-        if self.function.func_code.co_argcount == 1:
+        if self._has_arg:
             self.function(self.clock)
         else:
             self.function()

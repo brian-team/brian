@@ -1,22 +1,15 @@
 from brian import *
 
-G = NeuronGroup(1, "V:1")
+c = Clock(dt=1*ms, t=0.5*ms)
 
-print id(defaultclock)
-
-k = Clock(dt=2*ms)
-
-print id(k)
-
-#@network_operation(Clock(dt=2*ms))
-@network_operation(k)
-def netop():
-    pass
-
-print id(defaultclock)
-
-# no problem if this monitor is defined BEFORE network operation
-M = StateMonitor(G, 'V', record=True) 
-
+@network_operation(clock=c)
+def f():
+    print c.t
+    if c.t>5*ms:
+        c.t -= 0.01*ms
+    
 run(10*ms)
-print len(M.values[0]) # prints 5 instead of 101 
+
+net = MagicNetwork()
+net.prepare()
+print net._update_schedule

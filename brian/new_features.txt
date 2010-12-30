@@ -10,6 +10,8 @@ Improvements
 * SpikeGeneratorGroup is faster for large number of events ("gather" option).
 * Speed improvement for pure Python version of sparse matrix preparation
 * Speed improvements for spike propagation weave code (50-100% faster).
+* Clocks have been changed and should now behave more predictably. In addition,
+  you can now specify an order attribute for clocks.
 
 Bug fixes
 
