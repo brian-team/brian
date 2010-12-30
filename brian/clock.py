@@ -143,7 +143,7 @@ class Clock(magic.InstanceTracker):
         self.dt = dt
         self.t = t
         #self.__t = int(t / dt)
-        #self.__end = self.__t
+        self.__end = 0
         self.order = order
         if not exists_global_preference('defaultclock') or makedefaultclock:
             set_global_preferences(defaultclock=self)
@@ -164,7 +164,7 @@ class Clock(magic.InstanceTracker):
     def set_t(self, t):
         self.__t = int(float(t) / self._dt)
         self._gridoffset = float(t)-self.__t*self._dt
-        self.__end = int(float(t) / self._dt)
+        #self.__end = int(float(t) / self._dt)
 
     @check_units(dt=second)
     def set_dt(self, dt):
@@ -272,7 +272,7 @@ class FloatClock(Clock):
     @check_units(t=second)
     def set_t(self, t):
         self._t = float(t)
-        self._end = float(t)
+        #self._end = float(t)
 
     @check_units(end=second)
     def set_end(self, end):
