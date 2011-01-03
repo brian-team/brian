@@ -5,6 +5,15 @@ from brian.hears import *
 from filterbank import Filterbank,FunctionFilterbank,ControlFilterbank
 from filterbanklibrary import *
 from linearfilterbank import *
+from ..sounds import *
+import warnings
+
+try:
+    from scikits.samplerate import resample
+    have_scikits_samplerate = True
+except (ImportError, ValueError):
+    have_scikits_samplerate = False
+#print have_scikits_samplerate
 
 def set_parameters(cf,given_param):
     
@@ -88,14 +97,27 @@ class BP_signal_update:
 
 class PMFR(Filterbank):
     '''
-    Class implementating the non linear auditory filterbank model from Tan, G. and Carney, L., 
-    A phenomenological model for the responses of auditory-nerve
-    fibers. II. Nonlinear tuning with a frequency glide, JASA 2003
+    Class implementing the non linear auditory filterbank model as described in Tan, G. and Carney, L., 
+    "A phenomenological model for the responses of auditory-nerve
+    fibers. II. Nonlinear tuning with a frequency glide", JASA 2003
     
     
     The model consists of a control path and a signal path. The control path controls both its own bandwidth via a feedback
     loop and also the bandwidth of the signal path. 
     
+    Initialised with arguments:
+    
+    ``source``
+        Source of the cochlear model.
+        
+    ``cf``
+        List or array of center frequencies.
+        
+    ``interval``
+        interval in sample when the band pass filter of the signal pathway is updated
+        
+    ``given_param``
+        dictionary used to overwrite the default parameters given in the original paper. 
     
     '''
     
@@ -105,7 +127,12 @@ class PMFR(Filterbank):
         nbr_cf=len(cf)
         parameters=set_parameters(cf,given_param)
         if source.samplerate is not 50*kHz:
-            pass
+            warnings.warn('To use the PMFR cochlear model the sample rate should be 50kHz')
+            if not have_scikits_samplerate:
+                raise ImportError('To use the PMFR cochlear model the sample rate should be 50kHz and  scikits.samplerate package is needed for resampling')               
+            #source=source.resample(50*kHz)
+            warnings.warn('The input to the PMFR cochlear model has been resampled to 50kHz')
+
         samplerate=source.samplerate
         ##### Control Path ####
         # wide band pass control

@@ -68,7 +68,7 @@ def set_parameters(cf,type,given_param):
 class DRNL(Filterbank):
     '''
     
-    Implementation of the dual resonance nonlinear (DRNL) filter.
+    Implementation of the dual resonance nonlinear (DRNL) filter as described in Lopez-Paveda, E. and Meddis, R.., "A human nonlinear cochlear filterbank", JASA 2001.
 
     
     The entire pathway consists of the sum of a linear and a nonlinear pathway
@@ -80,8 +80,24 @@ class DRNL(Filterbank):
     compression function, a second bandpass function, and a low
     pass function, in that order.
     
-    The parameters are those fitted for human
-    from Lopez-Paveda, E. and Meddis, R.., A human nonlinear cochlear filterbank, JASA 2001
+
+    Initialised with arguments:
+    
+    ``source``
+        Source of the cochlear model.
+        
+    ``cf``
+        List or array of center frequencies.
+        
+    ``type``
+        give the parameters set corresponding to a certain fit
+        can be either
+        type='human' where the parameters come  from Lopez-Paveda, E. and Meddis, R.., "A human nonlinear cochlear filterbank", JASA 2001.
+        type='guinnea_pig' where  there parameters come from Summer et al., "A nonlinear filter-bank model of the guinea-pig cochlear nerve:
+        Rate responses", JASA 2003
+        
+    ``given_param``
+        dictionary used to overwrite the default parameters given in the original papers. . 
     
     '''
     

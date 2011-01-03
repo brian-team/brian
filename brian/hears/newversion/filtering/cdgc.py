@@ -9,11 +9,11 @@ from linearfilterbank import *
 def set_parameters(cf,given_param):
     
     parameters=dict()
-    parameters['decay_tcst'] = .5*ms
     parameters['b1'] = 1.81
     parameters['c1'] = -2.96
     parameters['b2'] = 2.17
     parameters['c2'] = 2.2
+    parameters['decay_tcst'] = .5*ms
     parameters['lev_weight'] = .5
     parameters['level_ref'] = 50.
     parameters['level_pwr1'] = 1.5
@@ -80,8 +80,29 @@ class AsymCompUpdate:
  
 class CDGC(Filterbank):
     '''
-    Class implementating example of the compressive gammachirp auditory filter from  Irino, T. and Patterson R.,
+    Class implementing  the compressive gammachirp auditory filter as described in  Irino, T. and Patterson R.,
     "A compressive gammachirp auditory filter for both physiological and psychophysical data", JASA 2001
+    
+    Technical implementation details and notation can be found in Irino, T. and Patterson R., "A Dynamic Compressive Gammachirp Auditory Filterbank",
+    IEEE Trans Audio Speech Lang Processing.
+    
+    The model consists of a control pathway with a bank of bandpass filters followed by a bank of highpass filters (this chain yields a bank of gammachirp filters).
+    The signal pathway consist of a bank of fix bandpass filters followed by a bank of highpass filters with variable cutoff frequencies (this chain yields a bank gammachirp
+    filters with a level-dependent bandwidth).The highpass filters of the signal pathway are controlled by the output levels of the two stages of the control pathway. 
+    
+    Initialised with arguments:
+    
+    ``source``
+        Source of the cochlear model.
+        
+    ``cf``
+        List or array of center frequencies.
+        
+    ``interval``
+        interval in sample when the band pass filter of the signal pathway is updated
+        
+    ``given_param``
+        dictionary used to overwrite the default parameters given in the original paper. . 
     
     '''
     
