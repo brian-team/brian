@@ -395,7 +395,7 @@ class LinGammachirpFilterbank(FIRFilterbank):
         array of shape ``nchannels``X``length_impulse_response`` with each row being an impulse response for the  corresponding channel
     
     '''
-    def __init__(self,source,  f,time_constant,c,phase=0,env='gamma'):
+    def __init__(self,source,  f,time_constant,c,phase=0,env='gamma'): 
         
         self.f=f=atleast_1d(f)
         self.c=c=atleast_1d(c)
@@ -439,22 +439,27 @@ class IIRFilterbank(LinearFilterbank):
     '''
     Filterbank using scipy.signal.iirdesign
     
-    Arguments:
+    Initialisation parameters:
     
     ``samplerate``
         The sample rate in Hz.
-    ``N``
+        
+    ``nchannels``
         The number of channels in the bank
+        
     ``passband``, ``stopband``
         The edges of the pass and stop bands in Hz. For a lowpass filter, make
         passband<stopband and for a highpass make stopband>passband. For a
         bandpass or bandstop filter, make passband and stopband a list with
         two elements, e.g. for a bandpass have passband=[200*Hz, 500*hz] and
         stopband=[100*Hz, 600*Hz], or for a bandstop switch passband and stopband.
+        
     ``gpass``
         The maximum loss in the passband in dB.
+        
     ``gstop``
         The minimum attenuation in the stopband in dB.
+        
     ``ftype``
         The type of IIR filter to design:
             elliptic    : 'ellip'
@@ -466,7 +471,7 @@ class IIRFilterbank(LinearFilterbank):
     See the documentation for scipy.signal.iirdesign for more details.
     '''
     
-    def __init__(self, source, N, passband, stopband, gpass, gstop, ftype):
+    def __init__(self, source, nchannels, passband, stopband, gpass, gstop, ftype):
         # passband can take form x or (a,b) in Hz and we need to convert to scipy's format
         try:
             try:
@@ -493,14 +498,13 @@ class IIRFilterbank(LinearFilterbank):
             raise DimensionMismatchError('IIRFilterbank passband, stopband parameters must be in Hz')
 
         # now design filterbank
-
         self.samplerate=source.samplerate
         self.filt_b, self.filt_a = signal.iirdesign(passband, stopband, gpass, gstop, ftype=ftype)
-        self.filt_b=kron(ones((N,1)),self.filt_b)
+        self.filt_b=kron(ones((nchannels,1)),self.filt_b)
         self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)
-        self.filt_a=kron(ones((N,1)),self.filt_a)
+        self.filt_a=kron(ones((nchannels,1)),self.filt_a)
         self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
-        self.N = N
+        self.nchannels = nchannels
         self.passband = passband
         self.stopband = stopband
         self.gpass = gpass
@@ -514,25 +518,29 @@ class ButterworthFilterbank(LinearFilterbank):
     '''
     Make a butterworth filterbank directly
     
-    Alternatively, use design_butterworth_filterbank
-    
-    Parameters:
+    Initialisation parameters:
     
     ``samplerate``
         Sample rate.
-    ``N``
+        
+    ``nchannels``
         Number of filters in the bank.
+        
     ``ord``
         Order of the filter.
-    ``Fn``
-        Cutoff parameter(s) in Hz, either a single value or pair for band filters.
+        
+    ``fc``
+        Cutoff parameter(s) in Hz. For the case of a lowpass or highpass filterbank, ``fc`` is either a sacalar (thus the same value for all of the channels
+        or an array (of dimension 1) of length ``nchannels``. For the case of a bandpass or bandstop, ``fc`` is either a pair of sacalar (thus the same values for all of the channels
+        or an array of dimension 2 x nchannels``.
+        
     ``btype``
         One of 'low', 'high', 'bandpass' or 'bandstop'.
     '''
 
-    def __init__(self,source, N, ord, Fn, btype='low'):
+    def __init__(self,source, nchannels, ord, fc, btype='low'):
         # print Wn
-        Wn=Fn.copy()
+        Wn=fc.copy()
         Wn=atleast_1d(Wn) #Scalar inputs are converted to 1-dimensional arrays
         self.samplerate = source.samplerate
         try:
@@ -540,41 +548,36 @@ class ButterworthFilterbank(LinearFilterbank):
         except DimensionMismatchError:
             raise DimensionMismatchError('Wn must be in Hz')
         
-        self.filt_b=zeros((N,ord+1))
-        self.filt_a=zeros((N,ord+1))
+        self.filt_b=zeros((nchannels,ord+1))
+        self.filt_a=zeros((nchannels,ord+1))
         
         if btype=='low' or btype=='high':
             if len(Wn)==1:     #if there is only one Wn value for all channel just repeat it
                 self.filt_b, self.filt_a = signal.butter(ord, Wn, btype=btype)
-                self.filt_b=kron(ones((N,1)),self.filt_b)
-                self.filt_a=kron(ones((N,1)),self.filt_a)
-            else:               #else make N different filters
-                for i in xrange((N)):
+                self.filt_b=kron(ones((nchannels,1)),self.filt_b)
+                self.filt_a=kron(ones((nchannels,1)),self.filt_a)
+            else:               #else make nchannels different filters
+                for i in xrange((nchannels)):
                     self.filt_b[i,:], self.filt_a[i,:] = signal.butter(ord, Wn[i], btype=btype)
         else:
             if Wn.ndim==1:     #if there is only one Wn pair of values for all channel just repeat it
                 self.filt_b, self.filt_a = signal.butter(ord, Wn, btype=btype)
-                self.filt_b=kron(ones((N,1)),self.filt_b)
-                self.filt_a=kron(ones((N,1)),self.filt_a)
+                self.filt_b=kron(ones((nchannels,1)),self.filt_b)
+                self.filt_a=kron(ones((nchannels,1)),self.filt_a)
             else:   
-                for i in xrange((N)):
+                for i in xrange((nchannels)):
                     self.filt_b[i,:], self.filt_a[i,:] = signal.butter(ord, Wn[i,:], btype=btype)   
                 
         self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
         self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)    
-        self.N = N    
+        self.nchannels = nchannels    
         
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
         
     
 def asymmetric_compensation_coefs(samplerate,fr,filt_b,filt_a,b,c,p0,p1,p2,p3,p4):
     '''
-     overhead if passing dico
-     better pass filterb a or initialize the here
-     better put his function inside the __call__
-    give the coefficients of an asymmetric compensation filter
-    It is optimized to be used as coefficients of a time varying filter
-    as all the parameters that does not change are given as arguments
+    This function is used to generated the coefficient of the asymmetric compensation filter used for the gammachirp implementation
     '''
     ERBw=24.7*(4.37e-3*fr+1.)
     nbr_cascade=4
