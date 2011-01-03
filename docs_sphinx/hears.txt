@@ -180,6 +180,7 @@ a state variable in the target equations for the output of the filterbank.
 A simple auditory nerve fibre model would take the inner hair cell model from
 earlier, and feed it into a noisy leaky integrate-and-fire model as follows::
 
+	
 	# Inner hair cell model as before
 	cfmin, cfmax, cfN = 20*Hz, 20*kHz, 3000
 	cf = erbspace(cfmin, cfmax, cfN)
@@ -240,6 +241,11 @@ They consit of classes of standard filters used in DSP such as generic IIR (:cla
 Standard auditory filters such as gammatones (:class:`GammatoneFilterbank`) and gammachirps, both linear (:class:`LinGammachirpFilterbank`)  and 
 logarithmic (:class:`LogGammachirpFilterbank`) , are provided. 
 
+All of those filters work the same way as the standard filterbanks in Brians hears, i.e. they take as input a sound or another filterbank and some 
+parameters. For instance, you can define a linear gammachirp filterbank as follow ::
+
+	lin_gammachirp=LinGammachirpFilterbank(sound,cf,time_constant,c)
+	
 Test equation: :math:`\tau \frac{\mathrm{d}V}{\mathrm{d}t} = -(V-V_r)`.
 
 Test equation 2: :math:`\tau=3`.
