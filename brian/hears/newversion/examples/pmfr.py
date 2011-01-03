@@ -10,7 +10,6 @@ loop and also the bandwidth of the signal path.
 
 
 '''
-
 from brian import *
 set_global_preferences(usenewbrianhears=True,
                        useweave=False)
@@ -18,29 +17,14 @@ from brian.hears import *
 from scipy.io import savemat
 from time import time
 
-#dBlevel=60*dB  # dB level in rms dB SPL
-#sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
-#samplerate=sound.samplerate
-#sound=sound.atlevel(dBlevel)
-#sound.samplerate=samplerate
-
-#print 'samplerate=',sound.samplerate,'duration=',len(sound)/sound.samplerate
-
-#simulation_duration=len(sound)/sound.samplerate 
-
 simulation_duration=50*ms
 samplerate=50*kHz
-sound = whitenoise(simulation_duration,samplerate)#.ramp()
-simulation_duration=50*ms+0*ms
-data=dict()
-data['input']=sound
-savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/noise.mat',data)
+sound = whitenoise(simulation_duration,samplerate)
 
 nbr_cf=50
 cf=erbspace(100*Hz,1000*Hz, nbr_cf) 
-#cf=atleast_1d(1000.)#log_space(500*Hz, 1000*Hz, nbr_cf)#atleast_1d(1000)#
 
-interval=33#len(sound)/2
+interval=32
 
 ##### Control Path ####
 
@@ -152,7 +136,7 @@ class BP_control_update:
 
         bfp=2*pi*cf
         self.zz=exp(1j*bfp/samplerate)
-        self.num_gain=abs((zz**2+2*zz+1))
+        self.num_gain=abs((self.zz**2+2*self.zz+1))
         self.zz2=self.zz**2              
         self.f_shift=(10**((x_cf+1.2)/11.9)-0.8)*456-cf
 
@@ -166,7 +150,7 @@ class BP_control_update:
 
          for iorder in xrange(3):
              self.target.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
-         gain_norm=self.num_gain/abs((self.zz2-self.zz*(poles[:,0]+conj(poles[:,0]))+poles[:,0]*conj(poles[:,0])))**3*2
+         gain_norm=self.num_gain/abs((self.zz2-self.zz*(self.poles[:,0]+conj(self.poles[:,0]))+self.poles[:,0]*conj(self.poles[:,0])))**3*2
          self.target.filt_b[:,:,2]=vstack([ones(len(cf)),zeros(len(cf)),-ones(len(cf))]).T/tile(gain_norm,[3,1]).T
          
 #definition of the class updater for the signal path bandpass filter

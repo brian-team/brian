@@ -1,6 +1,6 @@
 '''
 
-Implementation of the dual resonance nonlinear (DRNL) filter.
+Implementation example of the dual resonance nonlinear (DRNL) filter.
 The parameters are those fitted for human
 from Lopez-Paveda, E. and Meddis, R.., A human nonlinear cochlear filterbank, JASA 2001
 
@@ -15,7 +15,6 @@ pass function, in that order.
 
 '''
 
-
 from brian import *
 set_global_preferences(usenewbrianhears=True,
                        useweave=False)
@@ -23,23 +22,9 @@ from brian.hears import *
 from scipy.io import savemat
 from time import time
 
-dBlevel=60*dB  # dB level in rms dB SPL
-sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
-samplerate=sound.samplerate
-sound=sound.atlevel(dBlevel)
-
-
-print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
-
-
-sound.samplerate=samplerate
-data=dict()
-data['input']=sound
-savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/stimulus.mat',data)
-
-
-
-simulation_duration=len(sound)/samplerate
+simulation_duration=50*ms
+samplerate=50*kHz
+sound = whitenoise(simulation_duration,samplerate)
 
 nbr_center_frequencies=50
 center_frequencies=log_space(100*Hz, 1000*Hz, nbr_center_frequencies)
@@ -107,5 +92,6 @@ savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/drnl_BH.mat',data)
 figure()
 imshow(flipud(dnrl.T),aspect='auto')    
 show()
+
 
 

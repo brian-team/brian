@@ -1,3 +1,14 @@
+'''
+Implementation example of the compressive gammachirp auditory filter as described in  Irino, T. and Patterson R.,
+"A compressive gammachirp auditory filter for both physiological and psychophysical data", JASA 2001
+
+Technical implementation details and notation can be found in Irino, T. and Patterson R., "A Dynamic Compressive Gammachirp Auditory Filterbank",
+IEEE Trans Audio Speech Lang Processing.
+
+
+
+'''
+
 from brian import *
 set_global_preferences(usenewbrianhears=True,
                        useweave=False)
@@ -5,14 +16,10 @@ from brian.hears import *
 from scipy.io import savemat
 from time import time
 
-dBlevel=50*dB  # dB level in rms dB SPL
-sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
-sound=sound.atlevel(dBlevel)
-samplerate=sound.samplerate
 
-data=dict()
-data['input']=sound
-savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/stimulus.mat',data)
+simulation_duration=50*ms
+samplerate=50*kHz
+sound = whitenoise(simulation_duration,samplerate)
 
 print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
 
@@ -24,7 +31,7 @@ nbr_cf=50
 cf=erbspace(100*Hz,1000*Hz, nbr_cf) 
 cf=log_space(100*Hz, 1000*Hz, nbr_cf)
 
-order=4
+order_ERB=4
 c1=-2.96
 b1=1.81
 c2=2.2
@@ -37,31 +44,10 @@ ERBspace = mean(diff(ERBrate))
 
 interval=1
 
-
-#bank of passive gammachirp filters. As the control path uses the same passive filterbank than the signal path (buth shifted in frequency)
-#this filterbanl is used by both pathway.
-pGc=LogGammachirpFilterbank(sound,cf,b=b1, c=c1)
-
-fp1 = cf + c1*ERBwidth*b1/order
-
-#### Control Path ####
-
-lct_ERB=1.5  #value of the shift in ERB frequencies
-n_ch_shift  = round(lct_ERB/ERBspace); #value of the shift in channels
-indch1_control = minimum(maximum(1, arange(1,nbr_cf+1)+n_ch_shift),nbr_cf).astype(int)-1
-fp1_control = fp1[indch1_control]
-
-pGc_control=RestructureFilterbank(pGc,indexmapping=indch1_control)
-frat_control=1.08
-fr2_control = frat_control*fp1_control
-
-asym_comp_control=Asymmetric_Compensation_Filterbank(pGc_control, fr2_control,b=b2, c=c2)
-  
-
 param=dict()
 param['decay_tcst'] =.5*ms
-param['b']=b2
-param['c']=c2
+param['b2']=b2
+param['c2']=c2
 param['order']=1.
 param['lev_weight']=.5
 param['level_ref']=50.
@@ -71,7 +57,30 @@ param['RMStoSPL']=30.
 param['frat0']=.2330
 param['frat1']=.005
 
-#signal pathway
+#bank of passive gammachirp filters. As the control path uses the same passive filterbank than the signal path (buth shifted in frequency)
+#this filterbanl is used by both pathway.
+pGc=LogGammachirpFilterbank(sound,cf,b=b1, c=c1)
+
+fp1 = cf + c1*ERBwidth*b1/order_ERB
+
+#### Control Path ####
+
+lct_ERB=1.5  #value of the shift in ERB frequencies
+n_ch_shift  = round(lct_ERB/ERBspace); #value of the shift in channels
+indch1_control = minimum(maximum(1, arange(1,nbr_cf+1)+n_ch_shift),nbr_cf).astype(int)-1
+fp1_control = fp1[indch1_control]
+
+#the control path bank pass filter uses the channels of pGc indexed by indch1_control
+pGc_control=RestructureFilterbank(pGc,indexmapping=indch1_control)
+frat_control=1.08
+fr2_control = frat_control*fp1_control
+
+asym_comp_control=Asymmetric_Compensation_Filterbank(pGc_control, fr2_control,b=b2, c=c2)
+  
+
+
+
+#defition of the controler class
 class AsymCompUpdate: 
     def __init__(self, target,fs,fp1,param):
         fp1=atleast_1d(fp1)
@@ -82,9 +91,9 @@ class AsymCompUpdate:
         self.exp_deca_val = exp(-1/(param['decay_tcst'] *fs)*log(2))
         self.level_min = 10**(- param['RMStoSPL']/20)
         self.level_ref  = 10**(( param['level_ref'] - param['RMStoSPL'])/20) 
-        
-        self.b=param['b']
-        self.c=param['c']
+        self.samplerate=fs
+        self.b=param['b2']
+        self.c=param['c2']
         self.order=param['order']
         self.lev_weight=param['lev_weight']
         self.level_ref=param['level_ref']
@@ -115,7 +124,7 @@ class AsymCompUpdate:
          fr2 = self.fp1*frat
    
          self.iteration+=1
-         self.target.filt_b, self.target.filt_a=asymmetric_compensation_coefs(samplerate,fr2,self.target.filt_b,self.target.filt_a,self.b,self.c,self.p0,self.p1,self.p2,self.p3,self.p4)
+         self.target.filt_b, self.target.filt_a=asymmetric_compensation_coefs(self.samplerate,fr2,self.target.filt_b,self.target.filt_a,self.b,self.c,self.p0,self.p1,self.p2,self.p3,self.p4)
                  
 
 #### Signal Path ####
@@ -126,18 +135,11 @@ signal_path= Asymmetric_Compensation_Filterbank(pGc, fr1,b=b2, c=c2)
 updater = AsymCompUpdate(signal_path,samplerate,fp1,param)   #the updater
 control = ControlFilterbank(signal_path, [pGc_control,asym_comp_control], signal_path, updater, interval)  
 
-
+#run the simulation
 t1=time()
-
 signal=control.buffer_fetch(0, len(sound))
-#pGc_control=signal_path.buffer_fetch(0, len(sound))
-
 print 'the simulation took',time()-t1,' seconds to run'
-#signal=vary_filter_coeff.level_dB[:,:len(sound)].T
-#print signal.shape
-data=dict()
-data['out']=signal.T
-savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/cdgc_BH.mat',data)
+
 
 figure()
 imshow(flipud(signal.T),aspect='auto')    
