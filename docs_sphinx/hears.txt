@@ -9,7 +9,7 @@ Brian hears
 ===========
 
 Brian hears is the auditory modelling library for Brian. It consists of
-classes for defining sounds, filter banks and neuron models. These classes
+classes for defining sounds, filter banks, cochlear models, and neuron models. These classes
 are designed to be modular and easily extendable. Typically, a model will
 consist of a chain starting with a sound which is plugged into a chain of
 filter banks, which are then plugged into a neuron model. 
@@ -235,9 +235,10 @@ for more details.
 Library
 -------
 
-Brian hears comes with a package of predefined filter classes to be used as basic blocks by the user. They consit of classes of standard filters used 
-in DSP such as generic IIR, Butterworth filters, 2nd order lowpass filters, etc implemented as filterbanks. Also, classes of basic auditory filters
-such as gammatones and gammachirps, both linear and logarithmic, are provided. 
+Brian hears comes with a package of predefined filter classes to be used as basic blocks by the user. All of them are implemented as filterbanks.
+They consit of classes of standard filters used in DSP such as generic IIR (:class:`IIRFilterbank`), Butterworth filters (:class:`ButterworthFilterbank`), 2nd order lowpass filters (:class:`LowPassFilterbank`) .
+Standard auditory filters such as gammatones (:class:`GammatoneFilterbank`) and gammachirps, both linear (:class:`LinGammachirpFilterbank`)  and 
+logarithmic (:class:`LogGammachirpFilterbank`) , are provided. 
 
 Test equation: :math:`\tau \frac{\mathrm{d}V}{\mathrm{d}t} = -(V-V_r)`.
 
