@@ -86,7 +86,10 @@ class CDGC(Filterbank):
     Technical implementation details and notation can be found in Irino, T. and Patterson R., "A Dynamic Compressive Gammachirp Auditory Filterbank",
     IEEE Trans Audio Speech Lang Processing.
     
-    The model consists of a control pathway with a bank of bandpass filters followed by a bank of highpass filters (this chain yields a bank of gammachirp filters).
+    The model consists of a control pathway and a signal pathway in parallel.
+    
+    The control pathway consists of a bank of bandpass filters followed by a bank of highpass filters (this chain yields a bank of gammachirp filters).
+    
     The signal pathway consist of a bank of fix bandpass filters followed by a bank of highpass filters with variable cutoff frequencies (this chain yields a bank gammachirp
     filters with a level-dependent bandwidth).The highpass filters of the signal pathway are controlled by the output levels of the two stages of the control pathway. 
     
