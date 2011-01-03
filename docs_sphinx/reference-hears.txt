@@ -45,8 +45,12 @@ Filterbank library
 ------------------
 .. autoclass:: CascadeFilterbank
 .. autoclass:: GammatoneFilterbank(source, cf,b=1.019,order=1,EarQ=9.26449,minBW=24.7)
+.. autoclass:: LinGammachirpFilterbank
+.. autoclass:: LogGammachirpFilterbank
 .. autoclass:: ApproximateGammatoneFilterbank
 .. autoclass:: LowPassFilterbank
+.. autoclass:: IIRFilterbank
+.. autoclass:: ButterworthFilterbank
 
 Cochlear model library
 ----------------------
