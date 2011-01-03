@@ -71,13 +71,13 @@ class DRNL(Filterbank):
     Implementation of the dual resonance nonlinear (DRNL) filter as described in Lopez-Paveda, E. and Meddis, R.., "A human nonlinear cochlear filterbank", JASA 2001.
 
     
-    The entire pathway consists of the sum of a linear and a nonlinear pathway
+    The entire pathway consists of the sum of a linear and a nonlinear pathway.
     
-    The linear path consists of a bandpass function (second order gammatone), a low pass function,
+    The linear path consists of a bank of bandpass filters (second order gammatone), a low pass function,
     and a gain/attenuation factor, g, in a cascade
     
-    The nonlinear path is  a cascade consisting of a bandpass function, a
-    compression function, a second bandpass function, and a low
+    The nonlinear path is  a cascade consisting of a bank of gammatone filters, a
+    compression function, a second bank of gammatone filters, and a low
     pass function, in that order.
     
 
@@ -90,10 +90,13 @@ class DRNL(Filterbank):
         List or array of center frequencies.
         
     ``type``
-        give the parameters set corresponding to a certain fit
-        can be either
-        type='human' where the parameters come  from Lopez-Paveda, E. and Meddis, R.., "A human nonlinear cochlear filterbank", JASA 2001.
-        type='guinnea_pig' where  there parameters come from Summer et al., "A nonlinear filter-bank model of the guinea-pig cochlear nerve:
+        defines the parameters set corresponding to a certain fit
+        
+        it can be either
+        
+        ``type='human'``  where the parameters come  from Lopez-Paveda, E. and Meddis, R.., "A human nonlinear cochlear filterbank", JASA 2001.
+        
+        ``type ='guinnea_pig'`` where  there parameters come from Summer et al., "A nonlinear filter-bank model of the guinea-pig cochlear nerve:
         Rate responses", JASA 2003
         
     ``given_param``
