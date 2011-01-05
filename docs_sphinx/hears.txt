@@ -275,7 +275,8 @@ classes :class:`HRTF` (a single pair of left/right ear HRTFs),
 :class:`HRTFDatabase` (for working with databases of individuals). At the
 moment, we have included only one HRTF database, the :class:`IRCAM_LISTEN`
 public HRTF database. However, we will add support for the CIPIC and MIT-KEMAR
-databases in a subsequent release.
+databases in a subsequent release. There is also one artificial HRTF database,
+:class:`ITDDatabase` used for generating HRTFs of artifically introduced ITDs.
 
 An example of loading the IRCAM database, selecting a subject and plotting
 the pair of impulse responses for a particular direction::

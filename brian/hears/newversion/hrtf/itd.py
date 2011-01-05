@@ -17,9 +17,13 @@ class ITDDatabase(HRTFDatabase):
         no head. ITDs corresponding to ``n`` angles equally spaced between
         ``-azim_max`` and ``azim_max`` are used. The default diameter is that
         which gives the maximum ITD as 650 microseconds. The ITDs are computed
-        with the formula ``diameter*sin(azim)/speed_of_sound_in_air``.
+        with the formula ``diameter*sin(azim)/speed_of_sound_in_air``. In this
+        case, the generated :class:`HRTFSet` will have coordinates of ``azim``
+        and ``itd``.
     ``itd``
         Instead of specifying the keywords above, just give the ITDs directly.
+        In this case, the generated :class:`HRTFSet` will have coordinates of
+        ``itd`` only.
         
     To get the HRTFSet, the simplest thing to do is just::
     

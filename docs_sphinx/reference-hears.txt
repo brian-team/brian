@@ -77,6 +77,7 @@ HRTFs
 .. autofunction:: make_coordinates
 
 .. autoclass:: IRCAM_LISTEN
+.. autoclass:: ITDDatabase
 
 Base classes
 ------------
