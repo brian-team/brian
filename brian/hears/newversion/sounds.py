@@ -593,6 +593,19 @@ class Sound(BaseSound, numpy.ndarray):
         '''
         return self.ramp(when=when, duration=duration, envelope=envelope, inplace=False)
 
+    def fft(self,n=None):
+        '''
+        Performs an n-point FFT on the sound object, that is an array of the same size containing the DFT of each channel. n defaults to the number of samples of the sound, but can be changed manually setting the ``n`` keyword argument
+        '''
+        if n is None:
+            n=self.shape[0]
+        res=zeros(n,self.nchannels)
+        for i in range(self.nchannels):
+            res[:,i]=fft(asarray(self)[:,i].flatten(),n=n)
+        return res
+            
+        
+    
     @staticmethod
     def tone(frequency, duration, samplerate=None, nchannels=1):
         '''
@@ -607,7 +620,7 @@ class Sound(BaseSound, numpy.ndarray):
     @staticmethod
     def harmoniccomplex(f0, amplitude, duration, samplerate=None, nchannels=1):
         '''
-        Returns a harmonic complex composed of pure tones at integer multiples of the fundamental frequency. ``amplitude`` can be set to either an integer in which cas all the harmonics up to the nyquist frequency are added with the same amplitude. If it is a list or an array though it sets the relative amplitude of the harmonics.
+        Returns a harmonic complex composed of pure tones at integer multiples of the fundamental frequency. ``amplitude`` can be set to either an integer in which cas all the harmonics up to the Nyquist frequency are added with the same amplitude. If it is a list or an array though it sets the relative amplitude of the harmonics.
         '''
         samplerate=get_samplerate(samplerate)
         x=tone(f0,duration,samplerate)
@@ -685,27 +698,27 @@ class Sound(BaseSound, numpy.ndarray):
         x=real(ifft(d.flatten()))                  
         x.shape=(n,nchannels)
 
-        if normalise==True:
+        if normalise:
             for i in range(nchannels):
-                x[:,i]=normalise_rms(x[:,i])
+                #x[:,i]=normalise_rms(x[:,i])
                 x[:,i] = ((x[:,i] - amin(x[:,i]))/(amax(x[:,i]) - amin(x[:,i])) - 0.5) * 2;
         
         return Sound(x,samplerate)
     
             
     @staticmethod
-    def pinknoise(duration, samplerate=None, nchannels=1):
+    def pinknoise(duration, samplerate=None, nchannels=1, normalise=False):
         '''
         Returns pink noise, i.e :func:`powerlawnoise` with alpha=1
         '''
-        return Sound.powerlawnoise(duration,1.0,samplerate=samplerate)
+        return Sound.powerlawnoise(duration,1.0,samplerate=samplerate,normalise=False)
     
     @staticmethod
-    def brownnoise(duration, samplerate=None, nchannels=1):
+    def brownnoise(duration, samplerate=None, nchannels=1,normalise=False):
         '''
         Returns brown noise, i.e :func:`powerlawnoise` with alpha=2
         '''
-        return Sound.powerlawnoise(duration,2.0,samplerate=samplerate)
+        return Sound.powerlawnoise(duration,2.0,samplerate=samplerate,normalise=False)
 
     @staticmethod
     def click(duration, peak=None, samplerate=None, nchannels=1):
