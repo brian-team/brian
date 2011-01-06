@@ -4,9 +4,6 @@ Implementation example of the compressive gammachirp auditory filter as describe
 
 Technical implementation details and notation can be found in Irino, T. and Patterson R., "A Dynamic Compressive Gammachirp Auditory Filterbank",
 IEEE Trans Audio Speech Lang Processing.
-
-
-
 '''
 
 from brian import *
@@ -16,7 +13,6 @@ from brian.hears import *
 from scipy.io import savemat
 from time import time
 
-
 simulation_duration=50*ms
 samplerate=50*kHz
 sound = whitenoise(simulation_duration,samplerate)
@@ -25,11 +21,10 @@ print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
 
 simulation_duration=len(sound)/sound.samplerate 
 
-
 #sound = whitenoise(simulation_duration,samplerate,dB=dBlevel).ramp()
 nbr_cf=50
 cf=erbspace(100*Hz,1000*Hz, nbr_cf) 
-cf=log_space(100*Hz, 1000*Hz, nbr_cf)
+cf=logspace(100*Hz, 1000*Hz, nbr_cf)
 
 order_ERB=4
 c1=-2.96
@@ -80,7 +75,7 @@ asym_comp_control=Asymmetric_Compensation_Filterbank(pGc_control, fr2_control,b=
 
 
 
-#defition of the controler class
+#definition of the controller class
 class AsymCompUpdate: 
     def __init__(self, target,fs,fp1,param):
         fp1=atleast_1d(fp1)
@@ -109,6 +104,7 @@ class AsymCompUpdate:
         self.p2=0.5689*(1-0.1620*self.b)*(1-0.0857*abs(self.c))
         self.p3=0.2523*(1-0.0244*self.b)*(1+0.0574*abs(self.c))
         self.p4=1.0724
+        
     def __call__(self,*input):
          value1=input[0][-1,:]
          value2=input[1][-1,:]

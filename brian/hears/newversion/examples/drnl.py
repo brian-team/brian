@@ -1,5 +1,4 @@
 '''
-
 Implementation example of the dual resonance nonlinear (DRNL) filter.
 The parameters are those fitted for human
 from Lopez-Paveda, E. and Meddis, R., A human nonlinear cochlear filterbank, JASA 2001
@@ -12,7 +11,6 @@ and a gain/attenuation factor, g, in a cascade
 The nonlinear path is  a cascade consisting of a bank of gammatone filters, a
 compression function, a second bank of gammatone filters, and a low
 pass function, in that order.
-
 '''
 
 from brian import *
@@ -28,7 +26,6 @@ sound = whitenoise(simulation_duration,samplerate)
 
 nbr_center_frequencies=50
 center_frequencies=log_space(100*Hz, 1000*Hz, nbr_center_frequencies)
-
 
 sound=sound*0.00014  #conversion to stape velocity (which are the units needed for the further centres)
 
@@ -79,7 +76,6 @@ lowpass_nonlinear=CascadeFilterbank(bandpass_nonlinear2,lp_nl,3)
 #adding the two pathways
 dnrl_filter=lowpass_linear+lowpass_nonlinear
 
-
 dnrl_filter.buffer_init()
 t1=time()
 dnrl=dnrl_filter.buffer_fetch(0, len(sound))
@@ -92,6 +88,3 @@ savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/drnl_BH.mat',data)
 figure()
 imshow(flipud(dnrl.T),aspect='auto')    
 show()
-
-
-

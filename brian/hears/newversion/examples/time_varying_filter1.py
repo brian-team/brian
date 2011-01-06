@@ -6,7 +6,6 @@ The bandpass filter is a basic biquad filter for which the Q factor and the cent
 frequency must be given. The input is a white noise.
 '''
 
-
 from brian import *
 set_global_preferences(usenewbrianhears=True,
                        useweave=False)
@@ -45,6 +44,7 @@ class CoefController:
         self.tau_i=tau_i
         self.BW=2*arcsinh(1./2/Q)*1.44269
         self.fc=fc_init
+        
     def __call__(self,input):
         
         noise_term=input[-1,:]#the  control variables are taken as the last of the buffer
@@ -80,9 +80,8 @@ filt_a[:, 2, 0]=1-alpha
 bandpass_filter = LinearFilterbank(sound,filt_b,filt_a) #the filter which will have time varying coefficients
 updater = CoefController(bandpass_filter,samplerate,fc_init,Q,tau_i)   #the updater
 
-#the controler. Remember it must be the last of the chain
-control = ControlFilterbank(bandpass_filter, noise_generator, bandpass_filter, updater, interval)   
-        
+#the controller. Remember it must be the last of the chain
+control = ControlFilterbank(bandpass_filter, noise_generator, bandpass_filter, updater, interval)          
 
 t1=time()
 time_varying_filter_mon=control.buffer_fetch(0, len(sound)) #simulation (on the controler)

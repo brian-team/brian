@@ -3,14 +3,11 @@ set_global_preferences(usenewbrianhears=True,
                        useweave=False)
 from brian.hears import *
 
-dBlevel=50*dB  # dB level in rms dB SPL
 simulation_duration=50*ms
 samplerate=50*kHz
 sound = whitenoise(simulation_duration,samplerate)
-sound=sound.atlevel(dBlevel)
-simulation_duration=len(sound)/samplerate
-nbr_cf=50
-cf=log_space(100*Hz, 1000*Hz, nbr_cf)
+sound=sound.atlevel(50*dB) # dB level in rms dB SPL
+cf=logspace(100*Hz, 1000*Hz, 50)
 
 ## DNRL
 param_drnl={}
@@ -31,7 +28,6 @@ param_pmfr['fp1']=1.0854*cf-106.0034
 interval=20
 pmfr_filter=PMFR(sound,cf,interval,given_param=param_pmfr)
 pmfr=pmfr_filter.buffer_fetch(0, len(sound))
-
 
 figure()
 subplot(311)

@@ -89,16 +89,16 @@ filt_a[:, 2, 0]=1-alpha
 bandpass_filter = LinearFilterbank(sound,filt_b,filt_a) #the filter which will have time varying coefficients
 updater = CoefController(bandpass_filter,Q)   #the updater
 
-#the controler. Remember it must be the last of the chain
+#the controller. Remember it must be the last of the chain
 control = ControlFilterbank(bandpass_filter, fc_generator, bandpass_filter, updater, interval)   
-        
+      
 
 t1=time()
-time_varying_filter_mon=control.buffer_fetch(0, len(sound)) #simulation (on the controler)
+time_varying_filter_mon=control.buffer_fetch(0, len(sound)) #simulation (on the controller)
 print 'the simulation took',time()-t1,' seconds to run'
 
 figure(1)
-pxx, freqs, bins, im = specgram(squeeze(time_varying_filter_mon), NFFT=256, Fs=samplerate, noverlap=240) #pylab functio
+pxx, freqs, bins, im = specgram(squeeze(time_varying_filter_mon), NFFT=256, Fs=samplerate, noverlap=240) #pylab function
 imshow(flipud(pxx),aspect='auto')
 
 show()
