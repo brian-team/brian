@@ -5,6 +5,7 @@ recording during one second.
 '''
 from brian import loadtxt, ms, Equations
 from brian.library.modelfitting import *
+#info_level()
 
 if __name__ == '__main__':
     equations = Equations('''
@@ -13,17 +14,16 @@ if __name__ == '__main__':
         R : 1
         tau : second
     ''')
-    input = loadtxt('current.txt')
-    spikes = loadtxt('spikes.txt')
-    
+    input = loadtxt('current.txt')[:1000]
+    spikes = loadtxt('spikes.txt')    
     results = modelfitting( model = equations,
                             reset = 0,
                             threshold = 1,
                             data = spikes,
                             input = input,
                             dt = .1*ms,
-                            popsize = 2000,
-                            maxiter = 3,
+                            popsize = 10,
+                            maxiter = 1,
                             delta = 2*ms,
                             cpu = 1,
                             R = [1.0e9, 9.0e9],

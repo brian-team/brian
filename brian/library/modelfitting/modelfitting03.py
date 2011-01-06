@@ -17,7 +17,8 @@ except ImportError:
 from brian.experimental.codegen.integration_schemes import *
 import sys
 
-__all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','CMAES']
+__all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','CMAES',
+           'debug_level', 'info_level', 'warning_level', 'open_server']
 
 
 class ModelFitting(Fitness):
@@ -376,7 +377,6 @@ def modelfitting(model=None,
                     gpu=gpu,
                     returninfo=returninfo,
                     algorithm=algorithm,
-                    track_code_dependencies = True,
                     **params)
 
     # r is (results, fitinfo) or (results)
