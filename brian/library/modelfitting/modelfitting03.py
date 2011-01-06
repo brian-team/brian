@@ -3,7 +3,7 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
                     reshape, sum, log
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
-    from playdoh import maximize, print_table, PSO, GA, CMA_ES
+    from playdoh03 import *
 except Exception, e:
     print e
     raise ImportError("Playdoh must be installed (https://code.google.com/p/playdoh/)")
@@ -17,13 +17,14 @@ except ImportError:
 from brian.experimental.codegen.integration_schemes import *
 import sys
 
-__all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','CMA_ES']
+__all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','CMAES']
 
 
-class ModelFitting(object):
-    def __init__(self, shared_data, local_data, use_gpu):
+class ModelFitting(Fitness):
+    def initialize(self):
+        self.use_gpu = self.unit_type=='GPU'
         # Gets the key,value pairs in shared_data
-        for key, val in shared_data.iteritems():
+        for key, val in self.shared_data.iteritems():
             setattr(self, key, val)
 
         # shared_data['model'] is a string
@@ -31,11 +32,9 @@ class ModelFitting(object):
             self.model = Equations(self.model)
 
         self.total_steps = int(self.duration / self.dt)
-        self.use_gpu = use_gpu
 
-        self.worker_index = local_data['_worker_index']
-        self.neurons = local_data['_worker_size']
-        self.groups = local_data['_groups']
+        self.neurons = self.nodesize
+        self.groups = self.groups
 
         # Time slicing
         self.input = self.input[0:self.slices * (len(self.input) / self.slices)] # makes sure that len(input) is a multiple of slices
@@ -54,9 +53,11 @@ class ModelFitting(object):
         # Must recompile the Equations : the functions are not transfered after pickling/unpickling
         self.model.compile_functions()
 
-        self.group = NeuronGroup(self.N, model=self.model,
-                                 reset=self.reset, threshold=self.threshold,
-                                 refractory=self.refractory, # NEW
+        self.group = NeuronGroup(self.N,
+                                 model=self.model,
+                                 reset=self.reset,
+                                 threshold=self.threshold,
+                                 refractory=self.refractory,
                                  clock=Clock(dt=self.dt))
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
@@ -110,10 +111,9 @@ class ModelFitting(object):
         model_target = []
         group_index = 0
 
-        inner_groups = self.groups.keys()
-        inner_groups.sort()
-        for j in inner_groups:
-            neurons_in_group = self.groups[j] # number of neurons in the current group and current worker
+        neurons_in_group = self.subpopsize
+        for j in xrange(self.groups):
+#            neurons_in_group = self.groups[j] # number of neurons in the current group and current worker
             s = sort(t[i == j])
             target_length.extend([len(s)] * neurons_in_group)
             target_rates.extend([firing_rate(s)] * neurons_in_group)
@@ -140,7 +140,7 @@ class ModelFitting(object):
         self.target_length = array(target_length, dtype=int)
         self.target_rates = array(target_rates)
 
-    def __call__(self, **param_values):
+    def evaluate(self, **param_values):
         """
         Use fitparams['_delays'] to take delays into account
         """
@@ -159,7 +159,7 @@ class ModelFitting(object):
 #            if param == '_delays':
 #                continue
             self.group.state(param)[:] = kron(value, ones(self.slices)) # kron param_values if slicing
-
+            
         # Reinitializes the model variables
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
@@ -200,20 +200,31 @@ class ModelFitting(object):
 
 
 
-def modelfitting(model=None, reset=None, threshold=None,
+def modelfitting(model=None,
+                 reset=None,
+                 threshold=None,
                  refractory=0 * ms,
                  data=None,
-                 input_var='I', input=None, dt=None,
-                 particles=1000, iterations=10,
-                 delta=4 * ms,
-                 slices=1, overlap=0 * second,
+                 input_var='I',
+                 input=None,
+                 dt=None,
+                 popsize=1000,
+                 maxiter=10,
+                 delta=4*ms,
+                 slices=1,
+                 overlap=0*second,
                  initial_values=None,
-                 verbose=True, stepsize=100 * ms,
-                 use_gpu=None, max_cpu=None, max_gpu=None,
+                 stepsize=100 * ms,
+                 unit_type='CPU',
+                 total_units=None,
+                 cpu=None,
+                 gpu=None,
                  precision='double', # set to 'float' or 'double' to specify single or double precision on the GPU
-                 machines=[], named_pipe=None, port=None,
+                 machines=[],
+                 allocation=None,
                  returninfo=False,
-                 optalg=None, optinfo=None,
+                 algorithm=PSO,
+                 optparams={},
                  scheme=euler_scheme,
                  **params):
     """
@@ -311,11 +322,6 @@ def modelfitting(model=None, reset=None, threshold=None,
         `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
     """
 
-    # Use GPU ?
-    if can_use_gpu & (use_gpu is not False):
-        gpu_policy = 'prefer_gpu'
-    else:
-        gpu_policy = 'no_gpu'
 
     # Make sure that 'data' is a N*2-array
     data = array(data)
@@ -331,15 +337,10 @@ def modelfitting(model=None, reset=None, threshold=None,
         overlap = 0 * ms
 
     # common values
-    group_size = particles # Number of particles per target train
-    group_count = int(array(data)[:, 0].max() + 1) # number of target trains
-    N = group_size * group_count # number of neurons
+#    group_size = particles # Number of particles per target train
+    groups = int(array(data)[:, 0].max() + 1) # number of target trains
+#    N = group_size * group_count # number of neurons
     duration = len(input) * dt # duration of the input    
-
-    # WARNING: PSO-specific
-    if optalg == None:
-        optalg = PSO
-
 
     shared_data = dict(model=model,
                        threshold=threshold,
@@ -350,8 +351,8 @@ def modelfitting(model=None, reset=None, threshold=None,
                        dt=dt,
                        duration=duration,
                        data=data,
-                       group_size=group_size,
-                       group_count=group_count,
+#                       group_size=group_size,
+#                       group_count=group_count,
                        delta=delta,
                        slices=slices,
                        overlap=overlap,
@@ -362,23 +363,20 @@ def modelfitting(model=None, reset=None, threshold=None,
                        scheme=scheme,
                        onset=0 * ms)
 
-    r = maximize(ModelFitting,
-                    _shared_data=shared_data,
-                    _local_data=None,
-                    _group_size=group_size,
-                    _group_count=group_count,
-                    _iterations=iterations,
-                    _optinfo=optinfo,
-                    _machines=machines,
-                    _gpu_policy=gpu_policy,
-                    _max_cpu=max_cpu,
-                    _max_gpu=max_gpu,
-                    _named_pipe=named_pipe,
-                    _port=port,
-                    _returninfo=returninfo,
-                    _verbose=verbose,
-                    _doserialize=False,
-                    _optalg=optalg,
+    r = maximize(   ModelFitting,
+                    shared_data=shared_data,
+                    groups=groups,
+                    popsize=popsize,
+                    maxiter=maxiter,
+                    optparams=optparams,
+                    unit_type = unit_type,
+                    machines=machines,
+                    allocation=allocation,
+                    cpu=cpu,
+                    gpu=gpu,
+                    returninfo=returninfo,
+                    algorithm=algorithm,
+                    track_code_dependencies = True,
                     **params)
 
     # r is (results, fitinfo) or (results)

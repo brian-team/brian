@@ -1,7 +1,8 @@
-from modelfitting import *
+# REMOVE 03 TO USE OLD VERSION
+from modelfitting03 import *
 from brian.experimental.codegen.integration_schemes import *
 
-__all__ = ['modelfitting', 'worker', 'print_results', 'get_spikes', 'predict',
-           'PSO', 'GA','CMA_ES',
-           'euler_scheme', 'rk2_scheme', 'exp_euler_scheme'
-           ]
+#__all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict',
+#           'PSO', 'GA','CMAES',
+#           'euler_scheme', 'rk2_scheme', 'exp_euler_scheme'
+#           ]
