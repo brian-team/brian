@@ -1,5 +1,5 @@
 from brian import *
-from gputools import *
+from playdoh03 import *
 import brian.optimiser as optimiser
 #import pycuda.autoinit as autoinit
 import pycuda.driver as drv
@@ -369,7 +369,7 @@ class GPUModelFitting(object):
                                   int32(rint(self.onset / self.dt))]
         if self.coincidence_count_algorithm == 'exclusive':
             self.kernel_func_args += [self.last_spike_allowed_arr,
-                                      self.next_spike_allowed_arr, ]
+                                      self.next_spike_allowed_arr]
 
     def launch(self, duration, stepsize=1 * second):
         if stepsize is None:
@@ -386,7 +386,6 @@ class GPUModelFitting(object):
                                  *self.kernel_func_args, **self.kernel_func_kwds)
                 #autoinit.context.synchronize()
                 pycuda.context.synchronize()
-
 
     def get_coincidence_count(self):
         return self.num_coincidences.get()

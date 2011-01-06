@@ -14,7 +14,7 @@ if __name__ == '__main__':
         R : 1
         tau : second
     ''')
-    input = loadtxt('current.txt')[:1000]
+    input = loadtxt('current.txt')
     spikes = loadtxt('spikes.txt')    
     results = modelfitting( model = equations,
                             reset = 0,
@@ -22,11 +22,16 @@ if __name__ == '__main__':
                             data = spikes,
                             input = input,
                             dt = .1*ms,
-                            popsize = 10,
+                            
+                            popsize = 4,
                             maxiter = 1,
-                            delta = 2*ms,
                             cpu = 1,
+
+#                            particles = 10000,
+#                            iterations = 1,
+#                            use_gpu = True, max_gpu=1,
+                            
+                            delta = 4*ms,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms])
-
     print_table(results)
