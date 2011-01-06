@@ -2,15 +2,15 @@
 
 Implementation example of the dual resonance nonlinear (DRNL) filter.
 The parameters are those fitted for human
-from Lopez-Paveda, E. and Meddis, R.., A human nonlinear cochlear filterbank, JASA 2001
+from Lopez-Paveda, E. and Meddis, R., A human nonlinear cochlear filterbank, JASA 2001
 
-The entire pathway consists of the sum of a linear and a nonlinear pathway
+The entire pathway consists of the sum of a linear and a nonlinear pathway.
 
-The linear path consists of a bandpass function (second order gammatone), a low pass function,
+The linear path consists of a bank of bandpass filters (second order gammatone), a low pass function,
 and a gain/attenuation factor, g, in a cascade
 
-The nonlinear path is  a cascade consisting of a bandpass function, a
-compression function, a second bandpass function, and a low
+The nonlinear path is  a cascade consisting of a bank of gammatone filters, a
+compression function, a second bank of gammatone filters, and a low
 pass function, in that order.
 
 '''
