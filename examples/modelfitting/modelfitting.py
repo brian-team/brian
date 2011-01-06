@@ -16,13 +16,17 @@ if __name__ == '__main__':
     input = loadtxt('current.txt')
     spikes = loadtxt('spikes.txt')
     
-    results = modelfitting(model=equations, reset=0, threshold=1,
-                                 data=spikes,
-                                 input=input, dt=.1 * ms,
-                                 popsize=1000, maxiter=1, delta=4 * ms,
-                                 cpu=1,
-#                                 scheme=rk2_scheme, # can use euler_scheme, exp_euler_scheme (for HH), or rk2_scheme
-                                 R_initrange=[1.0e9, 9.0e9],
-                                 tau_initrange=[10 * ms, 40 * ms])
+    results = modelfitting( model = equations,
+                            reset = 0,
+                            threshold = 1,
+                            data = spikes,
+                            input = input,
+                            dt = .1*ms,
+                            popsize = 2000,
+                            maxiter = 3,
+                            delta = 2*ms,
+                            cpu = 1,
+                            R = [1.0e9, 9.0e9],
+                            tau = [10*ms, 40*ms])
 
     print_table(results)

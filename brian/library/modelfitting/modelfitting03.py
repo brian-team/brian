@@ -142,11 +142,11 @@ class ModelFitting(Fitness):
 
     def evaluate(self, **param_values):
         """
-        Use fitparams['_delays'] to take delays into account
+        Use fitparams['delays'] to take delays into account
         """
-        if '_delays' in param_values.keys():
-            delays = param_values['_delays']
-            del param_values['_delays']
+        if 'delays' in param_values.keys():
+            delays = param_values['delays']
+            del param_values['delays']
         else:
             delays = zeros(self.neurons)
 
@@ -265,7 +265,7 @@ def modelfitting(model=None,
         the beginning of the optimization algorithm.
         If not using boundaries, set ``param_name=[min, max]``.
         Also, you can add a fit parameter which is a spike delay for all spikes :
-        add the special parameter ``_delays`` in ``**params``.
+        add the special parameter ``delays`` in ``**params``.
     ``particles``
         Number of particles per target train used by the particle swarm optimization algorithm.
     ``iterations``
@@ -412,7 +412,7 @@ def get_spikes(model=None, reset=None, threshold=None,
                         clock=Clock(dt=dt))
     group.set_var_by_array(input_var, TimedArray(input, clock=group.clock))
     for param, values in params.iteritems():
-        if (param == '_delays') | (param == 'fitness'):
+        if (param == 'delays') | (param == 'fitness'):
             continue
         group.state(param)[:] = values
 
