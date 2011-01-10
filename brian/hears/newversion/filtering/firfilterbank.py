@@ -61,6 +61,37 @@ class FFTFIRFilterbank(Filterbank):
     def buffer_init(self):
         Filterbank.buffer_init(self)
         self.input_cache[:] = 0
+
+    # This version uses a single FFT/IFFT call, using the axis keyword, but it
+    # doesn't appear to be any more efficient than looping, and uses much more
+    # memory, although my tests weren't exhaustive.
+#    def buffer_apply(self, input):
+#        nmax = max(self.input_cache.shape[0]+input.shape[0], self.impulse_response.shape[1])
+#        nmax = 2**int(ceil(log2(nmax)))
+#        if self.fftcache_nmax!=nmax:
+#            # impulse response: (nchannels, ir_length)
+#            ir = zeros((self.nchannels, nmax))
+#            ir[:, :self.impulse_response.shape[1]] = self.impulse_response
+#            # fftcache: (ir_length, nchannels)
+#            self.fftcache = fft(ir, n=nmax, axis=1).T
+#            self.fftcache_nmax = nmax
+#        fullinput = vstack((self.input_cache, input))
+#        fullinput = vstack((fullinput, zeros((nmax-fullinput.shape[1], self.nchannels))))
+#        # fullinput: (ir_length, nchannels)
+#        fullinput_fft = fft(fullinput, n=nmax, axis=0)
+#        fulloutput_fft = fullinput_fft*self.fftcache
+#        fulloutput = ifft(fulloutput_fft, n=nmax, axis=0).real
+#        output = fulloutput[self.input_cache.shape[0]:self.input_cache.shape[0]+input.shape[0]]
+#        # update input cache
+#        nic = self.input_cache.shape[0]
+#        ni = input.shape[0]
+#        #print ni, nic
+#        if ni>=nic:
+#            self.input_cache[:, :] = input[-nic:, :]
+#        else:
+#            self.input_cache[:-ni, :] = self.input_cache[ni:, :]
+#            self.input_cache[-ni:, :] = input
+#        return output
     
     def buffer_apply(self, input):
         output = zeros_like(input)

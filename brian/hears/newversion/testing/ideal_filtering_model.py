@@ -19,7 +19,7 @@ num_indices = hrtfset.num_indices
 hrtf_fb = hrtf.filterbank(sound)
 hrtfset_fb = hrtfset.filterbank(
         RestructureFilterbank(hrtf_fb, 
-                indexmapping=repeat([1, 0], hrtfset.num_indices)))
+                indexmapping=repeat([1, 0], hrtfset.num_indices)), minimum_buffer_size=1024)
 gfb = GammatoneFilterbank(
             RestructureFilterbank(hrtfset_fb, cfN),
             tile(cf, hrtfset_fb.nchannels))

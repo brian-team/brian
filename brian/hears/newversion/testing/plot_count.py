@@ -10,8 +10,8 @@ def ircam_plot_count(hrtfset, count, index=None, showbest=True, absolute=False,
     img = zeros((10, 24))
     for i, c in enumerate(count):
         if i in I:
-            elev = hrtfset.elev[i]
-            azim = hrtfset.azim[i]
+            elev = hrtfset.coordinates['elev'][i]
+            azim = hrtfset.coordinates['azim'][i]
             if elev<60:
                 w = 1
             elif elev==60:
@@ -33,14 +33,14 @@ def ircam_plot_count(hrtfset, count, index=None, showbest=True, absolute=False,
         imshow(img, origin='lower left', interpolation='nearest', extent=(-180-7.5, 180-7.5, -45-7.5, 90+7.5))
         axis('tight')
     if index is not None:
-        azim = hrtfset.azim[index]
-        elev = hrtfset.elev[index]
+        azim = hrtfset.coordinates['azim'][index]
+        elev = hrtfset.coordinates['elev'][index]
         if azim>=180: azim -= 360
         plot([azim], [elev], '+', ms=ms, mew=mew, color=indexcol)
     if showbest:
         i = argmax(count)
-        azim = hrtfset.azim[i]
-        elev = hrtfset.elev[i]
+        azim = hrtfset.coordinates['azim'][i]
+        elev = hrtfset.coordinates['elev'][i]
         if azim>=180: azim -= 360
         plot([azim], [elev], 'x', ms=ms, mew=mew, color=bestcol)
     return img      
