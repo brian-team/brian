@@ -31,6 +31,13 @@ class ITDDatabase(HRTFDatabase):
         
     The generated ITDs can be returned using the ``itd`` attribute of the
     :class:`ITDDatabase` object.
+    
+    Note that the delays induced in the left and right channels are not
+    symmetric as making them so wastes half the samplerate (if the delay to
+    the left channel is itd/2 and the delay to the right channel is -itd/2).
+    Instead, for each channel either the left channel delay is 0 and the right
+    channel delay is -itd (if itd<0) or the left channel delay is itd and the
+    right channel delay is 0 (if itd>0). 
     '''
     def __init__(self, n=None, azim_max=pi/2,
                  diameter=speed_of_sound_in_air*650*usecond,
@@ -43,9 +50,12 @@ class ITDDatabase(HRTFDatabase):
             coords = make_coordinates(itd=itd)
         self.itd = itd
         samplerate = self.samplerate = get_samplerate(samplerate)
-        dmax = amax(abs(itd))/2
-        dl = array(rint((itd/2+dmax)*samplerate), dtype=int)
-        dr = array(rint((-itd/2+dmax)*samplerate), dtype=int)
+        dl = itd.copy()
+        dr = -itd
+        dl[dl<0] = 0
+        dr[dr<0] = 0
+        dl = array(rint(dl*samplerate), dtype=int)
+        dr = array(rint(dr*samplerate), dtype=int)
         idxmax = max(amax(dl), amax(dr))
         data = zeros((2, len(itd), idxmax+1))
         data[0, arange(len(itd)), dl] = 1
