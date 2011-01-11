@@ -3,7 +3,7 @@ This example implements a band pass filter whose center frequency is modulated b
 a sinusoid function. This modulator is implemented as a FunctionFilterbank. One 
 state variable (here time) must be kept; it is therefore implemented with a class.
 The bandpass filter coefficients update is an example of how to use a ControlFilterbank.
-The bandpass filter is a basic biquad filter for which the Q factor and the center
+The bandpass filter is a basic biquadratic filter for which the Q factor and the center
 frequency must be given. The input is a white noise.
 '''
 
@@ -23,7 +23,7 @@ nchannels=1       #number of frequency channel (here it must be one as a spectro
 
 fc_init=5000*Hz   #initial center frequency of the band pass filter
 Q=5               #quality factor of the band pass filter
-interval=1        #interval (here in sample) every which the filter coefficients are updated
+update_interval=1       # the filter coefficients are updated every update_interval (here in sample)
 
 mean_center_freq=4*kHz #mean frequency around which the center frequency will oscillate
 amplitude=1500*Hz      #amplitude of the oscillation
@@ -90,7 +90,7 @@ bandpass_filter = LinearFilterbank(sound,filt_b,filt_a) #the filter which will h
 updater = CoefController(bandpass_filter,Q)   #the updater
 
 #the controller. Remember it must be the last of the chain
-control = ControlFilterbank(bandpass_filter, fc_generator, bandpass_filter, updater, interval)   
+control = ControlFilterbank(bandpass_filter, fc_generator, bandpass_filter, updater, update_interval)   
       
 
 t1=time()

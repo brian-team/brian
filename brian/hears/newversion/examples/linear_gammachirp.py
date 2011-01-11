@@ -1,47 +1,30 @@
+'''
+Example of the use of the class LinearGammachirp available in the library. It implements a filterbank of FIR gammatone filters with linear frequency sweeps as 
+described  in Wagner et al. 2009, "Auditory responses in the barn owl's nucleus laminaris to clicks: impulse response and signal analysis of neurophonic potential", J. Neurophysiol. 
+In this example, a white noise is filtered by a gammachirp filterbank and the resulting cochleogram is plotted. The different impulse responses are also plotted.
+'''
 from brian import *
 set_global_preferences(usenewbrianhears=True,
                        useweave=False)
 from brian.hears import *
-from scipy.io import savemat
-from time import time
 
-dBlevel=50*dB  # dB level in rms dB SPL
-#sound=Sound.load('/home/bertrand/Data/Toolboxes/AIM2006-1.40/Sounds/aimmat.wav')
+dBlevel=50*dB  # dB level of the input sound in rms dB SPL
+sound=whitenoise(100*ms,samplerate=44*kHz).ramp() #generation of a white noise
+sound=sound.atlevel(dBlevel) #set the sound to a certain dB level
 
-sound=whitenoise(100*ms,samplerate=44*kHz).ramp()
-sound=sound.atlevel(dBlevel)
+nbr_center_frequencies=10  #number of frequency channels in the filterbank
+center_frequencies=erbspace(100*Hz, 1000*Hz, nbr_center_frequencies) #center frequencies with a spacing following an ERB scale
 
-print 'fs=',sound.samplerate,'duration=',len(sound)/sound.samplerate
+c=0.0 #linspace(-2,2,nbr_center_frequencies)   #glide slope
+time_constant=linspace(3,0.3,nbr_center_frequencies)*ms
 
-simulation_duration=len(sound)/sound.samplerate
+gamma_chirp=LinearGammachirp(sound, center_frequencies,time_constant,c) #instantiation of the filterbank 
 
-nbr_center_frequencies=5
-
-c=0.3 #linspace(-2,2,nbr_center_frequencies)#-2.96 
-time_constant=linspace(0.6,0.1,nbr_center_frequencies)*ms
-
-cf=log_space(3000*Hz, 5000*Hz, nbr_center_frequencies)
-
-gamma_chirp=LinGammachirpFilterbank(sound, cf,time_constant,c)
-
-
-gamma_chirp.buffer_init()
-t1=time()
-gamma_chirp_mon=gamma_chirp.buffer_fetch(0, len(sound))
-print 'the simulation took',time()-t1,' seconds to run'
-
-
-data=dict()
-data['out']=gamma_chirp_mon.T
-savemat('/home/bertrand/Data/MatlabProg/AuditoryFilters/gT_gc_BH.mat',data)
+gamma_chirp_mon=gamma_chirp.buffer_fetch(0, len(sound))  #processing. The results is a matrix.
 
 figure()
-for ich in xrange(nbr_center_frequencies):
-    subplot(nbr_center_frequencies,1,ich+1)
-    plot(gamma_chirp.impulse_response[ich,:])  
 
-figure()
 imshow(gamma_chirp_mon.T,aspect='auto')    
- 
-#imshow(flipud(gamma_chirp_mon.T),aspect='auto')    
+figure()
+plot(gamma_chirp.impulse_response.T)
 show()    
