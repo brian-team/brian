@@ -1,61 +1,24 @@
-# TODO: update all of this with the new interface/buffering mechanism
-# GammatoneFilterbank already done.
-
 from brian import *
 from scipy import signal, weave, random
 from filterbank import Filterbank,RestructureFilterbank
 from linearfilterbank import *
 from firfilterbank import *
-__all__ = ['CascadeFilterbank',
-           'GammatoneFilterbank',
-           'ApproximateGammatoneFilterbank',
-           'LogGammachirpFilterbank',
-           'LinGammachirpFilterbank',
+__all__ = ['Cascade',
+           'Gammatone',
+           'ApproximateGammatone',
+           'LogGammachirp',
+           'LinearGammachirp',
+           'LinearGaborchirp',
            'IIRFilterbank',
-           'ButterworthFilterbank',
-           'Asymmetric_Compensation_Filterbank',
-           'LowPassFilterbank',
+           'Butterworth',
+           'Asymmetric_Compensation',
+           'LowPass',
            'asymmetric_compensation_coefs',
            ]
 
-def factorial(n):
-    return prod(arange(1, n+1))
 
-
-class CascadeFilterbank(LinearFilterbank):
-    '''
-    Cascade of a filterbank (n times). 
     
-    This function concatenates n times the coefficient filt_b (numerator) and filt_a (denominator)
-    of a given filterbank and return another filterbank.
-    
-    Initialised with arguments:
-    
-    ``source``
-        Source of the new filterbank.
-        
-    ``filterbank``
-        Filterbank object to be put in cascade
-        
-    ``n``
-        Number of cascades
-    '''
-    
-    def __init__(self,source, filterbank,n):
-        b=filterbank.filt_b
-        a=filterbank.filt_a
-        self.samplerate =  source.samplerate
-        self.nchannels=filterbank.nchannels
-        self.filt_b=zeros((b.shape[0], b.shape[1],n))
-        self.filt_a=zeros((a.shape[0], a.shape[1],n))
-        for i in range((n)):
-            self.filt_b[:,:,i]=b[:,:,0]
-            self.filt_a[:,:,i]=a[:,:,0]
-            
-        LinearFilterbank.__init__(self, source,self.filt_b, self.filt_a)
-    
-    
-class GammatoneFilterbank(LinearFilterbank):
+class Gammatone(LinearFilterbank):
     '''
     Bank  of gammatone filters.
     
@@ -140,12 +103,12 @@ class GammatoneFilterbank(LinearFilterbank):
     
         LinearFilterbank.__init__(self, source, self.filt_b, self.filt_a)
 
-class ApproximateGammatoneFilterbank(LinearFilterbank):
+class ApproximateGammatone(LinearFilterbank):
     '''
-    Bank of approximate gammatone filters implemented as a cascade of n  gammatone filters..
+    Bank of approximate gammatone filters implemented as a cascade of ``order``  gammatone filters..
     
-    The design is based on the Hohmann implementation (hohmann, V., 2002, Frequency analysis and synthesis using a Gammatone filterbank,
-    Acta Acustica United with Acustica). The code is based on the matlab gammatone implementation from the Meddis'toolbox (http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm) 
+    The design is based on the Hohmann implementation as described in Hohmann, V., 2002, "Frequency analysis and synthesis using a Gammatone filterbank",
+    Acta Acustica United with Acustica. The code is based on the matlab gammatone implementation from the Meddis'toolbox (http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm) 
     
     Initialised with arguments:
     
@@ -189,111 +152,20 @@ class ApproximateGammatoneFilterbank(LinearFilterbank):
         self.order = order
         
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a)
-        
-        
-class Asymmetric_Compensation_Filterbank(LinearFilterbank):
-    '''
-    Bank of asymmetric compensation fitlers
-    
-    Those filters are meant to be used in cascade with gammatone filters to approximate gammachirp filters (Unoki et al., 2001, Improvement of an IIR asymmetric compensation 
-    gammachirp filter, Acoust. Sci. & Tech.). They are implemented a a cascade of low order filters. The code is based on the implementation found in the AIM-MAT toolobox 
-    (http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/index.html)
-
-    Initialised with arguments:
-    
-    ``source``
-        Source of the filterbank.
-        
-    ``f``
-        List or array of the cut of frequencies
-        
-    ``b=1.019``
-        parameters which determines the duration of the impulse response
-        ``b`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
-    ``c=1``
-        c is the glide slope when this filter is used to implement a gammachirp
-        ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
-     ``ncascades=4``
-        ncascades is the number of time the basic fitler is put in cascade.
-    
-     '''
-     
-    def __init__(self, source, f,b=1.019, c=1,ncascades=4):
-        
-        f = atleast_1d(f)
-        self.f = f
-        self.samplerate =  source.samplerate     
-        ERBw=24.7*(4.37e-3*f+1.)
-        p0=2
-        p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
-        p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
-        p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
-        p4=1.0724
-
-        self.filt_b=zeros((len(f), 3, ncascades))
-        self.filt_a=zeros((len(f), 3, ncascades))
-
-        for k in arange(ncascades):
-
-            r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/self.samplerate) #k instead of k-1 because range 0 N-1
-            Df=(p0*p4)**(k)*p2*c*b*ERBw
-
-            phi=2*pi*maximum((f+Df), 0)/self.samplerate
-            psy=2*pi*maximum((f-Df), 0)/self.samplerate
-
-            ap=vstack((ones(r.shape),-2*r*cos(phi), r**2)).T
-            bz=vstack((ones(r.shape),-2*r*cos(psy), r**2)).T
-
-            fn=f#+ compensation_filter_order* p3 *c *b *ERBw/4;
-
-            vwr=exp(1j*2*pi*fn/self.samplerate)
-            vwrs=vstack((ones(vwr.shape), vwr, vwr**2)).T
-
-            ##normilization stuff
-            nrm=abs(sum(vwrs*ap, 1)/sum(vwrs*bz, 1))
-            
-            bz=bz*tile(nrm,[3,1]).T
-            self.filt_b[:, :, k]=bz
-            self.filt_a[:, :, k]=ap
-
-        LinearFilterbank.__init__(self, source, self.filt_b, self.filt_a)
 
 
-class LowPassFilterbank(LinearFilterbank):
-    '''
-    Bank of 1st-order lowpass filters
-    
-    The code is based on the code found in the Meddis'toolbox (http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm). 
-    It was implemented here to be used in the DRNL cochlear model implementation.
-
-    Initialised with arguments:
-    
-    ``source``
-        Source of the filterbank.
-        
-    ``fc``
-        List or array (with length = number of channels) of cutoff frequencies
-    '''
-    def __init__(self,source,fc):
-        nchannels=len(fc)
-        self.samplerate= source.samplerate
-        dt=1./self.samplerate
-
-        self.filt_b=zeros((nchannels, 2, 1))
-        self.filt_a=zeros((nchannels, 2, 1))
-        tau=1/(2*pi*fc)
-        self.filt_b[:,0,0]=dt/tau
-        self.filt_b[:,1,0]=0*ones(nchannels)
-        self.filt_a[:,0,0]=1*ones(nchannels)
-        self.filt_a[:,1,0]=-(1-dt/tau)
-        LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
 
 
 
             
-class LogGammachirpFilterbank(LinearFilterbank):
+class LogGammachirp(LinearFilterbank):
     '''
     Bank of gammachirp filters with a logarithmic frequency sweep
+    
+    The approximated impulse response :math:`IR` is defined as follow
+    :math:`IR(t)=t^{3}.exp(-2\pi b ERB(f)t)cos[2\pi (f t +c \ln(t)]`
+    where :math:`ERB(f)=24.7+0.108 f` [Hz] is the equivalent rectangular bandwidth of the filter centered at :math:`f`
+
     
     The implementation  is a cascade of 4 2nd-order IIR gammatone filter 
     followed by a cascade of  ncascades 2nd-order asymmetric compensation filters as introduced in " Unoki et al. 2001, Improvement of an IIR asymmetric 
@@ -306,7 +178,7 @@ class LogGammachirpFilterbank(LinearFilterbank):
         Source sound or filterbank.
         
     ``f``
-        List or array of the sweep ending frequencies. (f_inst=f+c/t)
+        List or array of the sweep ending frequencies. (:math:`f_{instantaneous}=f+c/t`) 
         
         
     ``b=1.019``
@@ -319,7 +191,7 @@ class LogGammachirpFilterbank(LinearFilterbank):
         ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
         
     ``ncascades=4``
-        number of times the asymmetric compensation filter is put in cascade; The default value comes from Unoki et al. 2001. This parameters is only used in the IIR implementation.
+        number of times the asymmetric compensation filter is put in cascade; The default value comes from Unoki et al. 2001. 
         
     '''
       
@@ -330,7 +202,7 @@ class LogGammachirpFilterbank(LinearFilterbank):
         
         self.c=c
         self.b=b
-        gammatone=GammatoneFilterbank(source, f,b)
+        gammatone=Gammatone(source, f,b)
 
         self.gammatone_filt_b=gammatone.filt_b
         self.gammatone_filt_a=gammatone.filt_a
@@ -355,14 +227,20 @@ class LogGammachirpFilterbank(LinearFilterbank):
         LinearFilterbank.__init__(self, source, self.filt_b,self.filt_a)
 
 
-class LinGammachirpFilterbank(FIRFilterbank):
+class LinearGammachirp(FIRFilterbank):
     '''
-    Bank of gammachirp filters with linear frequency sweeps
+    Bank of gammachirp filters with linear frequency sweeps and gamma envelopeas described in Wagner et al. 2009, "Auditory responses in the barn owl's nucleus laminaris to clicks: 
+    impulse response and signal analysis of neurophonic potential", J. Neurophysiol.
     
+    The impulse response :math:`IR` is defined as follow
+    :math:`IR(t)=t^{3}exp(-t/\sigma)cos[2\pi (f t +c/2 t^{2})+\phi]`
+    where :math:`\sigma` correspond to ``time_constant`` and :math:`\phi` to ``phase`` (see parameters definition)
+    
+
     Those filters are implemented as FIR filters using  truncated time representations of  gammachirp functions as the impulse response. The impulse responses,
     which need to have the same length for every channel, have a duration of 15 times the biggest time constant. The length of the impulse response is therefore 
-    15.max(time_constant).sampling_rate. The envelope can either be a gamma function or a gaussian function (Gabor filter). In the case of the gabor filter, the duration
-    of the impulse response is only 12 times the biggest time constant. The impulse responses are normalized with respect to the transmitted power, i.e. their rms =1
+    15.max(time_constant).sampling_rate.  The impulse responses are normalized with respect to the transmitted power, i.e.
+    their rms of the filter taps =1
     
     Initialisation parameters:
     
@@ -370,7 +248,7 @@ class LinGammachirpFilterbank(FIRFilterbank):
         Source sound or filterbank.
         
     ``f``
-        List or array of the sweep starting frequencies (f_inst=f+c*t)
+        List or array of the sweep starting frequencies (:math:`f_{instantaneous}=f+c*t`)
 
         
     ``time_constant``
@@ -382,9 +260,7 @@ class LinGammachirpFilterbank(FIRFilterbank):
         
     ``phase=0``
         phase shift of the carrier
-    
-    ``env='gamma'``
-        the envelope can either be a gamma function (env='gamma') or a gaussian function (env='gabor')
+
         
     Has attributes:
     
@@ -423,17 +299,90 @@ class LinGammachirpFilterbank(FIRFilterbank):
         self.impulse_response=zeros((len(f),len(t)))
                                     
         for ich in xrange(len(f)):
-            if env=='gamma':
-                env=(t-t_start)**3*exp(-(t-t_start)/time_constant[ich])
-            if env=='gabor':  
-                env=exp(-(t/(2*time_constant[ich]))**2)
-                
+            env=(t-t_start)**3*exp(-(t-t_start)/time_constant[ich])        
             self.impulse_response[ich,:]=env*cos(2*pi*(f[ich]*t+c[ich]/2*t**2)+phase[ich])
             self.impulse_response[ich,:]=self.impulse_response[ich,:]/sqrt(sum(self.impulse_response[ich,:]**2))    
 
 
         FIRFilterbank.__init__(self,source, self.impulse_response)
 
+class LinearGaborchirp(FIRFilterbank):
+    '''
+    Bank of gammachirp filters with linear frequency sweeps and gaussian envelope as described in Wagner et al. 2009, "Auditory responses in the barn owl's nucleus laminaris to clicks: 
+    impulse response and signal analysis of neurophonic potential", J. Neurophysiol.
+    
+    The impulse response :math:`IR` is defined as follow
+    :math:`IR(t)=exp(-t/2\sigma)^{2}\cos[2\pi (f t +c/2 t^{2})+\phi]`
+    where :math:`\sigma` correspond to ``time_constant`` and :math:`\phi` to ``phase`` (see parameters definition)
+    
+    Those filters are implemented as FIR filters using  truncated time representations of  gammachirp functions as the impulse response. The impulse responses,
+    which need to have the same length for every channel, have a duration of 15 times the biggest time constant. The length of the impulse response is therefore 
+    12.max(time_constant).sampling_rate. The envelope is a gaussian function (Gabor filter).  The impulse responses are normalized with respect to the transmitted power, 
+    i.e. the rms of the filter taps =1
+    
+    Initialisation parameters:
+    
+    ``source``
+        Source sound or filterbank.
+        
+    ``f``
+        List or array of the sweep starting frequencies (:math:`f_{instantaneous}=f+c*t`)
+
+        
+    ``time_constant``
+        determines the duration of the envelope and consequently the length of the impluse response
+        
+    ``c=1``
+        c is the glide slope (or sweep rate) given ins Hertz/second. The time-dependent instantaneous frequency is f+c*t and is therefore going upward when c>0 and downward when c<0
+        ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
+        
+    ``phase=0``
+        phase shift of the carrier
+    
+        
+    Has attributes:
+    
+    ``length_impulse_response`` 
+        number of sample if the impulse responses
+        
+    ``impulse_response``
+        array of shape ``nchannels``X``length_impulse_response`` with each row being an impulse response for the  corresponding channel
+    
+    '''
+    def __init__(self,source,  f,time_constant,c,phase=0,env='gamma'): 
+        
+        self.f=f=atleast_1d(f)
+        self.c=c=atleast_1d(c)
+        self.phase=phase=atleast_1d(phase)
+        self.time_constant=time_constant=atleast_1d(time_constant) 
+        if len(time_constant)==1:
+            time_constant=time_constant*ones(len(f))
+        if len(c)==1:
+            c=c*ones(len(f))
+        if len(phase)==1:
+            phase=phase*ones(len(f))
+        self.samplerate= source.samplerate
+        
+        
+        
+        Tcst_max=max(time_constant)
+        if env=='gamma':
+            t_start=-Tcst_max*3*second
+            t=arange(t_start,-4*t_start,1./self.samplerate)
+
+        if env=='gabor':
+            t_start=-Tcst*6*second
+            t=arange(t_start,-t_start,1./self.samplerate)
+            
+        self.impulse_response=zeros((len(f),len(t)))
+                                    
+        for ich in xrange(len(f)):
+            env=exp(-(t/(2*time_constant[ich]))**2)   
+            self.impulse_response[ich,:]=env*cos(2*pi*(f[ich]*t+c[ich]/2*t**2)+phase[ich])
+            self.impulse_response[ich,:]=self.impulse_response[ich,:]/sqrt(sum(self.impulse_response[ich,:]**2))    
+
+
+        FIRFilterbank.__init__(self,source, self.impulse_response)
 
 class IIRFilterbank(LinearFilterbank):
     '''
@@ -514,7 +463,7 @@ class IIRFilterbank(LinearFilterbank):
         LinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate)
 
 
-class ButterworthFilterbank(LinearFilterbank):
+class Butterworth(LinearFilterbank):
     '''
     Make a butterworth filterbank directly
     
@@ -526,7 +475,7 @@ class ButterworthFilterbank(LinearFilterbank):
     ``nchannels``
         Number of filters in the bank.
         
-    ``ord``
+    ``order``
         Order of the filter.
         
     ``fc``
@@ -538,7 +487,7 @@ class ButterworthFilterbank(LinearFilterbank):
         One of 'low', 'high', 'bandpass' or 'bandstop'.
     '''
 
-    def __init__(self,source, nchannels, ord, fc, btype='low'):
+    def __init__(self,source, nchannels, order, fc, btype='low'):
         # print Wn
         Wn=fc.copy()
         Wn=atleast_1d(Wn) #Scalar inputs are converted to 1-dimensional arrays
@@ -548,33 +497,160 @@ class ButterworthFilterbank(LinearFilterbank):
         except DimensionMismatchError:
             raise DimensionMismatchError('Wn must be in Hz')
         
-        self.filt_b=zeros((nchannels,ord+1))
-        self.filt_a=zeros((nchannels,ord+1))
+        self.filt_b=zeros((nchannels,order+1))
+        self.filt_a=zeros((nchannels,order+1))
         
         if btype=='low' or btype=='high':
             if len(Wn)==1:     #if there is only one Wn value for all channel just repeat it
-                self.filt_b, self.filt_a = signal.butter(ord, Wn, btype=btype)
+                self.filt_b, self.filt_a = signal.butter(order, Wn, btype=btype)
                 self.filt_b=kron(ones((nchannels,1)),self.filt_b)
                 self.filt_a=kron(ones((nchannels,1)),self.filt_a)
             else:               #else make nchannels different filters
                 for i in xrange((nchannels)):
-                    self.filt_b[i,:], self.filt_a[i,:] = signal.butter(ord, Wn[i], btype=btype)
+                    self.filt_b[i,:], self.filt_a[i,:] = signal.butter(order, Wn[i], btype=btype)
         else:
             if Wn.ndim==1:     #if there is only one Wn pair of values for all channel just repeat it
-                self.filt_b, self.filt_a = signal.butter(ord, Wn, btype=btype)
+                self.filt_b, self.filt_a = signal.butter(order, Wn, btype=btype)
                 self.filt_b=kron(ones((nchannels,1)),self.filt_b)
                 self.filt_a=kron(ones((nchannels,1)),self.filt_a)
             else:   
                 for i in xrange((nchannels)):
-                    self.filt_b[i,:], self.filt_a[i,:] = signal.butter(ord, Wn[i,:], btype=btype)   
+                    self.filt_b[i,:], self.filt_a[i,:] = signal.butter(order, Wn[i,:], btype=btype)   
                 
         self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
         self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)    
         self.nchannels = nchannels    
         
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
-        
+
+class LowPass(LinearFilterbank):
+    '''
+    Bank of 1st-order lowpass filters
     
+    The code is based on the code found in the Meddis'toolbox (http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm). 
+    It was implemented here to be used in the DRNL cochlear model implementation.
+
+    Initialised with arguments:
+    
+    ``source``
+        Source of the filterbank.
+        
+    ``fc``
+        List or array (with length = number of channels) of cutoff frequencies
+    '''
+    def __init__(self,source,fc):
+        nchannels=len(fc)
+        self.samplerate= source.samplerate
+        dt=1./self.samplerate
+
+        self.filt_b=zeros((nchannels, 2, 1))
+        self.filt_a=zeros((nchannels, 2, 1))
+        tau=1/(2*pi*fc)
+        self.filt_b[:,0,0]=dt/tau
+        self.filt_b[:,1,0]=0*ones(nchannels)
+        self.filt_a[:,0,0]=1*ones(nchannels)
+        self.filt_a[:,1,0]=-(1-dt/tau)
+        LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
+
+      
+class Cascade(LinearFilterbank):
+    '''
+    Cascade of ``n`` times a linear filterbank. 
+    
+    Initialised with arguments:
+    
+    ``source``
+        Source of the new filterbank.
+        
+    ``filterbank``
+        Filterbank object to be put in cascade
+        
+    ``n``
+        Number of cascades
+    '''
+    
+    def __init__(self,source, filterbank,n):
+        b=filterbank.filt_b
+        a=filterbank.filt_a
+        self.samplerate =  source.samplerate
+        self.nchannels=filterbank.nchannels
+        self.filt_b=zeros((b.shape[0], b.shape[1],n))
+        self.filt_a=zeros((a.shape[0], a.shape[1],n))
+        for i in range((n)):
+            self.filt_b[:,:,i]=b[:,:,0]
+            self.filt_a[:,:,i]=a[:,:,0]
+            
+        LinearFilterbank.__init__(self, source,self.filt_b, self.filt_a)  
+        
+class Asymmetric_Compensation(LinearFilterbank):
+    '''
+    Bank of asymmetric compensation fitlers
+    
+    Those filters are meant to be used in cascade with gammatone filters to approximate gammachirp filters (Unoki et al., 2001, Improvement of an IIR asymmetric compensation 
+    gammachirp filter, Acoust. Sci. & Tech.). They are implemented a a cascade of low order filters. The code is based on the implementation found in the AIM-MAT toolobox 
+    (http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/index.html)
+
+    Initialised with arguments:
+    
+    ``source``
+        Source of the filterbank.
+        
+    ``f``
+        List or array of the cut of frequencies
+        
+    ``b=1.019``
+        parameters which determines the duration of the impulse response
+        ``b`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
+    ``c=1``
+        c is the glide slope when this filter is used to implement a gammachirp
+        ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
+     ``ncascades=4``
+        ncascades is the number of time the basic fitler is put in cascade.
+    
+     '''
+     
+    def __init__(self, source, f,b=1.019, c=1,ncascades=4):
+        
+        f = atleast_1d(f)
+        self.f = f
+        self.samplerate =  source.samplerate     
+        ERBw=24.7*(4.37e-3*f+1.)
+        p0=2
+        p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
+        p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
+        p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
+        p4=1.0724
+
+        self.filt_b=zeros((len(f), 3, ncascades))
+        self.filt_a=zeros((len(f), 3, ncascades))
+
+        for k in arange(ncascades):
+
+            r=exp(-p1*(p0/p4)**(k)*2*pi*b*ERBw/self.samplerate) #k instead of k-1 because range 0 N-1
+            Df=(p0*p4)**(k)*p2*c*b*ERBw
+
+            phi=2*pi*maximum((f+Df), 0)/self.samplerate
+            psy=2*pi*maximum((f-Df), 0)/self.samplerate
+
+            ap=vstack((ones(r.shape),-2*r*cos(phi), r**2)).T
+            bz=vstack((ones(r.shape),-2*r*cos(psy), r**2)).T
+
+            fn=f#+ compensation_filter_order* p3 *c *b *ERBw/4;
+
+            vwr=exp(1j*2*pi*fn/self.samplerate)
+            vwrs=vstack((ones(vwr.shape), vwr, vwr**2)).T
+
+            ##normilization stuff
+            nrm=abs(sum(vwrs*ap, 1)/sum(vwrs*bz, 1))
+            
+            bz=bz*tile(nrm,[3,1]).T
+            self.filt_b[:, :, k]=bz
+            self.filt_a[:, :, k]=ap
+
+        LinearFilterbank.__init__(self, source, self.filt_b, self.filt_a)
+
+
+
 def asymmetric_compensation_coefs(samplerate,fr,filt_b,filt_a,b,c,p0,p1,p2,p3,p4):
     '''
     This function is used to generated the coefficient of the asymmetric compensation filter used for the gammachirp implementation
@@ -604,3 +680,5 @@ def asymmetric_compensation_coefs(samplerate,fr,filt_b,filt_a,b,c,p0,p1,p2,p3,p4
 
     return filt_b,filt_a
 
+def factorial(n):
+    return prod(arange(1, n+1))
