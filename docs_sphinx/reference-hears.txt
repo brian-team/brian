@@ -43,14 +43,15 @@ Filterbanks
 
 Filterbank library
 ------------------
-.. autoclass:: CascadeFilterbank
-.. autoclass:: GammatoneFilterbank(source, cf,b=1.019,order=1,EarQ=9.26449,minBW=24.7)
-.. autoclass:: LinGammachirpFilterbank
-.. autoclass:: LogGammachirpFilterbank
-.. autoclass:: ApproximateGammatoneFilterbank
-.. autoclass:: LowPassFilterbank
+.. autoclass:: Cascade
+.. autoclass:: Gammatone(source, cf,b=1.019,erb_order=1,ear_Q=9.26449,min_bw=24.7)
+.. autoclass:: LogGammachirp(source, f, b=1.019, c=1, ncascades=4)
+.. autoclass:: LinearGammachirp
+.. autoclass:: LinearGaborchirp
 .. autoclass:: IIRFilterbank
-.. autoclass:: ButterworthFilterbank
+.. autoclass:: Butterworth
+.. autoclass:: ApproximateGammatone
+.. autoclass:: LowPass
 
 Cochlear model library
 ----------------------
@@ -100,5 +101,5 @@ Class diagram
 .. inheritance-diagram:: Sound OnlineSound Filterbank LinearFilterbank
 						 RestructureFilterbank FunctionFilterbank
 						 SumFilterbank DoNothingFilterbank
-						 FIRFilterbank GammatoneFilterbank
+						 FIRFilterbank Gammatone
 	:parts: 1
