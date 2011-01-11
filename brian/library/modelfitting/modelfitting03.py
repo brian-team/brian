@@ -376,6 +376,7 @@ def modelfitting(model=None,
                     cpu=cpu,
                     gpu=gpu,
                     returninfo=returninfo,
+                    codedependencies=[],
                     algorithm=algorithm,
                     **params)
 

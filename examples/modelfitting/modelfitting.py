@@ -23,8 +23,8 @@ if __name__ == '__main__':
                             input = input,
                             dt = .1*ms,
                             
-                            popsize = 4,
-                            maxiter = 1,
+                            popsize = 1000,
+                            maxiter = 3,
                             cpu = 1,
 
 #                            particles = 10000,
