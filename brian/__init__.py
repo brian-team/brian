@@ -152,13 +152,6 @@ define_global_preference(
 set_global_preferences(usecstdp=False)
 
 define_global_preference(
-    'usenewbrianhears', 'False',
-    desc='''
-         Whether or not to use new version of Brian hears.
-         ''')
-set_global_preferences(usenewbrianhears=False)
-
-define_global_preference(
     'brianhears_usegpu', 'False',
     desc='''
          Whether or not to use the GPU (if available) in Brian.hears.

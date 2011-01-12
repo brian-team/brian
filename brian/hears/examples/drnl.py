@@ -17,8 +17,6 @@ The parameters are given in the form 10^(p0+mlog10(cf))
 '''
 
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
 from brian.hears import *
 
 

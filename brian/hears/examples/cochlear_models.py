@@ -2,8 +2,6 @@
 Example of the use of the cochlear models available in the library
 '''
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
 from brian.hears import *
 
 simulation_duration=50*ms

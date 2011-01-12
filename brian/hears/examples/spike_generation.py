@@ -6,8 +6,6 @@ The output of this pheripheral model is fed to  leaky integrate and fire neurons
 
 '''
 from brian import *  #needs brian
-set_global_preferences(usenewbrianhears=True,
-                       useweave=True,use_gpu = False)
 from brian.hears import *
 
 # Inner hair cell model 

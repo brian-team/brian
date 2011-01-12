@@ -4,8 +4,6 @@ Unoki et al. 2001, "Improvement of an IIR asymmetric compensation gammachirp fil
 In this example, a white noise is filtered by a linear gammachirp filterbank and the resulting cochleogram is plotted. The different impulse responses are also plotted.
 '''
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
 from brian.hears import *
 
 

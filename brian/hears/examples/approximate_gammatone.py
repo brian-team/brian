@@ -4,8 +4,6 @@ described  in Hohmann, V., 2002, "Frequency analysis and synthesis using a Gamma
 In this example, a white noise is filtered by a gammatone filterbank and the resulting cochleogram is plotted.
 '''
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
 from brian.hears import *
 
 dBlevel=50*dB  # dB level of the input sound in rms dB SPL

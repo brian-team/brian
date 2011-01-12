@@ -9,8 +9,6 @@ IEEE Trans Audio Speech Lang Processing.
 '''
 
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
 from brian.hears import *
 
 

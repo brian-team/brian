@@ -4,8 +4,6 @@ described  in Slaney, M., 1993, "An Efficient Implementation of the Patterson-Ho
 In this example, a white noise is filtered by a gammatone filterbank and the resulting cochleogram is plotted.
 '''
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=True,use_gpu = False)
 from brian.hears import *
 
 

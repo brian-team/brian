@@ -5,7 +5,6 @@ concurrent speech sounds: absence of across-frequency grouping by common
 interaural delay" J. Acoust. Soc. Am. 98, 785-797.
 '''
 from brian import *
-set_global_preferences(usenewbrianhears=True)
 from brian.hears import *
 
 duration = 409.6*ms

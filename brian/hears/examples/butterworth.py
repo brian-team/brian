@@ -4,8 +4,6 @@ In this example, a white noise is filtered by a  bank of butterworth bandpass fi
 cutoff frequency of the filters are linearly taken between 100kHz and 1000kHz and its bandwidth  frequency increases linearly with frequency.
 '''
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=True,use_gpu = False)
 from brian.hears import *
 
 dBlevel=50*dB  # dB level of the input sound in rms dB SPL

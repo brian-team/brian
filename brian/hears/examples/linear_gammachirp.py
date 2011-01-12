@@ -4,8 +4,6 @@ described  in Wagner et al. 2009, "Auditory responses in the barn owl's nucleus 
 In this example, a white noise is filtered by a gammachirp filterbank and the resulting cochleogram is plotted. The different impulse responses are also plotted.
 '''
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
 from brian.hears import *
 
 dBlevel=50*dB  # dB level of the input sound in rms dB SPL

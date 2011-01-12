@@ -8,8 +8,6 @@ frequency must be given. The input is a white noise.
 '''
 
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
 from brian.hears import *
 
 
