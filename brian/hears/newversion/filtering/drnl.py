@@ -5,14 +5,14 @@ from brian.hears import *
 from filterbank import Filterbank,FunctionFilterbank
 from filterbanklibrary import *
 
-def set_parameters(cf,type,given_param):
+def set_parameters(cf,type,param):
     
     parameters=dict()
     parameters['stape_scale']=0.00014 
     parameters['order_linear']=3
     parameters['order_nonlinear']=3
 
-    if type=='ginnea_pig':
+    if type=='guinea pig':
         parameters['cf_lin_p0']=0.339
         parameters['cf_lin_m']=0.339
         parameters['bw_lin_p0']=1.3
@@ -56,13 +56,13 @@ def set_parameters(cf,type,given_param):
         parameters['lp_nl_cutoff_p0']=-0.052
         parameters['lp_nl_cutoff_m']=1.016
         
-    if given_param: 
-        if not isinstance(given_param, dict): 
+    if param: 
+        if not isinstance(param, dict): 
             raise Error('given parameters must be a dict')
-        for key in given_param.keys():
+        for key in param.keys():
             if not parameters.has_key(key):
                 raise Exception(key + ' is invalid key entry for given parameters')
-            parameters[key] = given_param[key]
+            parameters[key] = param[key]
     return parameters
     
 class DRNL(Filterbank):
@@ -96,19 +96,19 @@ class DRNL(Filterbank):
         
         ``type='human'``  where the parameters come  from Lopez-Paveda, E. and Meddis, R.., "A human nonlinear cochlear filterbank", JASA 2001.
         
-        ``type ='guinnea_pig'`` where  there parameters come from Summer et al., "A nonlinear filter-bank model of the guinea-pig cochlear nerve:
+        ``type ='guinea pig'`` where  there parameters come from Summer et al., "A nonlinear filter-bank model of the guinea-pig cochlear nerve:
         Rate responses", JASA 2003
         
-    ``given_param``
+    ``param``
         dictionary used to overwrite the default parameters given in the original papers. . 
     
     '''
     
-    def __new__(cls, source,cf,type='human',given_param={}):
+    def __new__(cls, source,cf,type='human',param={}):
         
         cf = atleast_1d(cf)
         nbr_cf=len(cf)
-        parameters=set_parameters(cf,type,given_param)
+        parameters=set_parameters(cf,type,param)
         
         #conversion to stape velocity (which are the units needed for the further centres)
         source=source*parameters['stape_scale'] 

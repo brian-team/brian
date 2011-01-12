@@ -6,7 +6,7 @@ from filterbank import Filterbank,FunctionFilterbank,ControlFilterbank,Restructu
 from filterbanklibrary import *
 from linearfilterbank import *
 
-def set_parameters(cf,given_param):
+def set_parameters(cf,param):
     
     parameters=dict()
     parameters['b1'] = 1.81
@@ -27,13 +27,13 @@ def set_parameters(cf,given_param):
     parameters['ERBrate']= 21.4*log10(4.37*cf/1000+1)
     parameters['ERBwidth']= 24.7*(4.37*cf/1000 + 1)
     
-    if given_param: 
-        if not isinstance(given_param, dict): 
+    if param: 
+        if not isinstance(param, dict): 
             raise Error('given parameters must be a dict')
-        for key in given_param.keys():
+        for key in param.keys():
             if not parameters.has_key(key):
                 raise Exception(key + ' is invalid key entry for given parameters')
-            parameters[key] = given_param[key]
+            parameters[key] = param[key]
 
     return parameters
 
@@ -101,17 +101,17 @@ class DCGC(Filterbank):
     ``cf``
         List or array of center frequencies.
         
-    ``interval``
+    ``update_interval``
         interval in sample when the band pass filter of the signal pathway is updated
         
-    ``given_param``
+    ``param``
         dictionary used to overwrite the default parameters given in the original paper. . 
     
     '''
     
-    def __new__(cls, source,cf,interval,given_param={}):
+    def __new__(cls, source,cf,update_interval,param={}):
         
-        parameters=set_parameters(cf,given_param)
+        parameters=set_parameters(cf,param)
         ERBspace = mean(diff(parameters['ERBrate']))
         cf=atleast_1d(cf)
         #bank of passive gammachirp filters. As the control path uses the same passive filterbank than the signal path (buth shifted in frequency)
@@ -133,6 +133,6 @@ class DCGC(Filterbank):
 
         #### Controler #### 
         updater = AsymCompUpdate(signal_path,source.samplerate,fp1,parameters)   #the updater
-        control = ControlFilterbank(signal_path, [pGc_control,asym_comp_control], signal_path, updater, interval)  
+        control = ControlFilterbank(signal_path, [pGc_control,asym_comp_control], signal_path, updater, update_interval)  
         
         return control

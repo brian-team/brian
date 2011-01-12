@@ -15,7 +15,7 @@ except (ImportError, ValueError):
     have_scikits_samplerate = False
 #print have_scikits_samplerate
 
-def set_parameters(cf,given_param):
+def set_parameters(cf,param):
     
     parameters=dict()
     parameters['fc_LP_control']=800*Hz
@@ -28,13 +28,13 @@ def set_parameters(cf,given_param):
     parameters['average_control']=0.3357
     parameters['zero_r']= array(-10**( log10(cf)*1.5-0.9 ))   
         
-    if given_param: 
-        if not isinstance(given_param, dict): 
+    if param: 
+        if not isinstance(param, dict): 
             raise Error('given parameters must be a dict')
-        for key in given_param.keys():
+        for key in param.keys():
             if not parameters.has_key(key):
                 raise Exception(key + ' is invalid key entry for given parameters')
-            parameters[key] = given_param[key]
+            parameters[key] = param[key]
     parameters['nlgain']= (parameters['gain80'] - parameters['rgain'])/parameters['average_control']
     return parameters
 
@@ -42,8 +42,8 @@ def set_parameters(cf,given_param):
 
 #definition of the class updater for the control path bandpass filter
 class BP_control_update: 
-    def __init__(self, target,samplerate,cf,given_param):
-        parameters=set_parameters(cf,given_param)
+    def __init__(self, target,samplerate,cf,param):
+        parameters=set_parameters(cf,param)
         self.target=target
         self.samplerate=samplerate
         self.cf=atleast_1d(cf)
@@ -75,8 +75,8 @@ class BP_control_update:
          
 #definition of the class updater for the signal path bandpass filter
 class BP_signal_update: 
-    def __init__(self, target,samplerate,cf,given_param):
-        parameters=set_parameters(cf,given_param)
+    def __init__(self, target,samplerate,cf,param):
+        parameters=set_parameters(cf,param)
         self.target=target
         self.samplerate=samplerate
         self.cf=atleast_1d(cf)
@@ -113,19 +113,19 @@ class PMFR(Filterbank):
     ``cf``
         List or array of center frequencies.
         
-    ``interval``
+    ``update_interval``
         interval in sample when the band pass filter of the signal pathway is updated
         
-    ``given_param``
+    ``param``
         dictionary used to overwrite the default parameters given in the original paper. 
     
     '''
     
-    def __new__(cls, source,cf,interval,given_param={}):
+    def __new__(cls, source,cf,update_interval,param={}):
         
         cf = atleast_1d(cf)
         nbr_cf=len(cf)
-        parameters=set_parameters(cf,given_param)
+        parameters=set_parameters(cf,param)
         if source.samplerate is not 50*kHz:
             warnings.warn('To use the PMFR cochlear model the sample rate should be 50kHz')
             if not have_scikits_samplerate:
@@ -204,10 +204,10 @@ class PMFR(Filterbank):
         signal_path= LinearFilterbank(source,filt_b,filt_a) #bandpass filter instantiation (a controller will vary its coefficients)
         
         #controlers definition
-        updater_control_path=BP_control_update(BP_control,samplerate,cf,given_param) #instantiation of the updater for the control path
-        control1 = ControlFilterbank(signal_path, LP_feed_back, BP_control,updater_control_path, interval)  #controler for the band pass filter of the control path
+        updater_control_path=BP_control_update(BP_control,samplerate,cf,param) #instantiation of the updater for the control path
+        control1 = ControlFilterbank(signal_path, LP_feed_back, BP_control,updater_control_path, update_interval)  #controler for the band pass filter of the control path
         
-        updater_signal_path=BP_signal_update(signal_path,samplerate,cf,given_param)  #instantiation of the updater for the signal path
-        control2 = ControlFilterbank(control1,  LP_control, signal_path,updater_signal_path, interval)     #controler for the band pass filter of the signal path
+        updater_signal_path=BP_signal_update(signal_path,samplerate,cf,param)  #instantiation of the updater for the signal path
+        control2 = ControlFilterbank(control1,  LP_control, signal_path,updater_signal_path, update_interval)     #controler for the band pass filter of the signal path
         
         return control2
