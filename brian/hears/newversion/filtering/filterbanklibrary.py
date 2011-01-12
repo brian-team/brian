@@ -398,11 +398,11 @@ class IIRFilterbank(LinearFilterbank):
         The number of channels in the bank
         
     ``passband``, ``stopband``
-        The edges of the pass and stop bands in Hz. For a lowpass and highpass filters, in the case of similar filters for each channel, they are scalars and 
-        passband<stopband for low pass or stopband>passband for a highpass. For a bandpass or bandstop filter, in the case of similar filters for each channel,
-         make passband and stopband a list with two elements, e.g. for a bandpass have passband=[200*Hz, 500*hz] and stopband=[100*Hz, 600*Hz]. ``passband`` and 
-        ``stopband`` can be  also be arrays of dimension (1 x nchannels) for low and high pass or (2 x nchannels) for stopband and passband  yielding different
-         filters along channels.
+        The edges of the pass and stop bands in Hz. For a lowpass and highpass filters, in the case of similar filters for each channel,
+        they are scalars and passband<stopband for low pass or stopband>passband for a highpass. For a bandpass or bandstop filter, 
+        in the case of similar filters for each channel, make passband and stopband a list with two elements, e.g. for a bandpass 
+        have passband=[200*Hz, 500*hz] and stopband=[100*Hz, 600*Hz]. ``passband`` and ``stopband`` can be  also be arrays of 
+        dimension (1 x nchannels) for low and high pass or (2 x nchannels) for stopband and passband  yielding different filters along channels.
         
     ``gpass``
         The maximum loss in the passband in dB. Can be a scalar or an array of length ``nchannels``
@@ -414,12 +414,12 @@ class IIRFilterbank(LinearFilterbank):
         One of 'low', 'high', 'bandpass' or 'bandstop'.
     
     ``ftype``
-        The type of IIR filter to design:
-            elliptic    : 'ellip'
-            Butterworth : 'butter',
-            Chebyshev I : 'cheby1',
-            Chebyshev II: 'cheby2',
-            Bessel :      'bessel'
+    The type of IIR filter to design:
+        elliptic    : 'ellip'
+        Butterworth : 'butter',
+        Chebyshev I : 'cheby1',
+        Chebyshev II: 'cheby2',
+        Bessel :      'bessel'
     
     '''
     
