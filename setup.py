@@ -28,6 +28,7 @@ extras_folders = ['tutorials/tutorial1_basic_concepts/*.py', 'tutorials/tutorial
                   'examples/misc/*.py',
                   'examples/multiprocessing/*.py',
                   'examples/modelfitting/*.py', 'examples/modelfitting/*.txt',
+                  'examples/hears/*.py',
                   'docs/*.*', 'docs/_images/*.jpg',
                   'docs/_sources/*.*', 'docs/_static/*.*' ]
 
@@ -42,8 +43,8 @@ if __name__ == "__main__":
                         'brian.experimental.cuda',
                         'brian.experimental.codegen',
                     'brian.hears',
-                        'brian.hears.examples',
-                        'brian.hears.newversion',
+                        'brian.hears.filtering',
+                        'brian.hears.hrtf',
                     'brian.library',
                         'brian.library.modelfitting',
                     'brian.tests',
