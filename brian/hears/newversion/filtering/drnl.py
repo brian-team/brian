@@ -68,7 +68,8 @@ def set_parameters(cf,type,param):
 class DRNL(Filterbank):
     '''
     
-    Implementation of the dual resonance nonlinear (DRNL) filter as described in Lopez-Paveda, E. and Meddis, R.., "A human nonlinear cochlear filterbank", JASA 2001.
+    Implementation of the dual resonance nonlinear (DRNL) filter as described in Lopez-Paveda, E. and Meddis, R.,
+     "A human nonlinear cochlear filterbank", JASA 2001.
 
     
     The entire pathway consists of the sum of a linear and a nonlinear pathway.
@@ -102,6 +103,36 @@ class DRNL(Filterbank):
     ``param``
         dictionary used to overwrite the default parameters given in the original papers. . 
     
+    The possible parameters to change and their default values for human (see  Lopez-Paveda, E. and Meddis, R.,"A human nonlinear
+    cochlear filterbank", JASA 2001. for notation) are:
+      
+    * param['stape_scale']=0.00014 
+    * param['order_linear']=3 
+    * param['order_nonlinear']=3 
+    
+    from there on the parameters are given in the form :math:`x=10^{p0+mlog10(cf)}` where :math:`cf` is the center frequency:
+    
+    * param['cf_lin_p0']=-0.067
+    * param['cf_lin_m']=1.016
+    * param['bw_lin_p0']=0.037
+    * param['bw_lin_m']=0.785
+    * param['cf_nl_p0']=-0.052
+    * param['cf_nl_m']=1.016
+    * param['bw_nl_p0']=-0.031
+    * param['bw_nl_m']=0.774
+    * param['a_p0']=1.402
+    * param['a_m']=0.819
+    * param['b_p0']=1.619
+    * param['b_m']=-0.818  
+    * param['c_p0']=-0.602
+    * param['c_m']=0
+    * param['g_p0']=4.2
+    * param['g_m']=0.48
+    * param['lp_lin_cutoff_p0']=-0.067
+    * param['lp_lin_cutoff_m']=1.016
+    * param['lp_nl_cutoff_p0']=-0.052
+    * parame['lp_nl_cutoff_m']=1.016
+        
     '''
     
     def __new__(cls, source,cf,type='human',param={}):
