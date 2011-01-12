@@ -1,88 +1,61 @@
 '''
-Implementation example of the dual resonance nonlinear (DRNL) filter with  parameters  fitted for human as described 
-in Lopez-Paveda, E. and Meddis, R., A human nonlinear cochlear filterbank, JASA 2001.
-
-A class called DRNL implementing this model is available in the library.
-
-The entire pathway consists of the sum of a linear and a nonlinear pathway.
-
-The linear path consists of a bank of bandpass filters (second order gammatone), a low pass function,
-and a gain/attenuation factor, g, in a cascade
-
-The nonlinear path is  a cascade consisting of a bank of gammatone filters, a
-compression function, a second bank of gammatone filters, and a low
-pass function, in that order.
-
-The parameters are given in the form 10^(p0+mlog10(cf))
+Example of the use of the class Butterworth available in the library. 
+In this example, a white noise is filtered by a  bank of butterworth bandpass filters and lowpass filters which are different for every channels. The centre frequency of 
+the filters is linearly taken between 100kHz and 1000kHz and its bandwidth or cutoff frequency increases linearly with frequency.
 '''
-
 from brian import *
 set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
+                       useweave=True,use_gpu = False)
 from brian.hears import *
 
-
-simulation_duration=50*ms
-samplerate=50*kHz
 dBlevel=50*dB  # dB level of the input sound in rms dB SPL
-sound=whitenoise(simulation_duration,samplerate=44*kHz).ramp() #generation of a white noise
+sound=whitenoise(100*ms,samplerate=44*kHz).ramp() #generation of a white noise
 sound=sound.atlevel(dBlevel) #set the sound to a certain dB level
- 
-nbr_cf=50  #number of centre frequencies
-center_frequencies=erbspace(100*Hz,1000*Hz, nbr_cf)  #center frequencies with a spacing following an ERB scale
-
-sound=sound*0.00014  #conversion to stape velocity (which are the units needed by the following centres)
-
-#### Linear Pathway ####
-
-#bandpass filter (second order  gammatone filter)
-center_frequencies_linear=10**(-0.067+1.016*log10(center_frequencies))
-bandwidth_linear=10**(0.037+0.785*log10(center_frequencies))
-order_linear=3
-gammatone=ApproximateGammatone(sound, center_frequencies_linear, bandwidth_linear, order=order_linear)
-
-#linear gain
-g=10**(4.2-0.48*log10(center_frequencies))
-func_gain=lambda x:g*x
-gain= FunctionFilterbank(gammatone,func_gain)
-
-#low pass filter(cascade of 4 second order lowpass butterworth filters)
-cutoff_frequencies_linear=center_frequencies_linear
-order_lowpass_linear=2
-lp_l=LowPass(gain,cutoff_frequencies_linear)
-lowpass_linear=Cascade(gain,lp_l,4)
 
 
-#### Nonlinear Pathway ####
+### example of a bank of bandpass filter ################
+nchannels=50
+center_frequencies=linspace(200*Hz,1000*Hz, nchannels)  #center frequencies 
+bw=linspace(50*Hz,300*Hz, nchannels)  #bandwidth of the filters
+gpass=1. #The maximum loss in the passband in dB. Can be a scalar or an array of length nchannels
+gstop=20. #The minimum attenuation in the stopband in dB. Can be a scalar or an array of length nchannels
 
-#bandpass filter (third order gammatone filters)
-center_frequencies_nonlinear=center_frequencies#10**(-0.05252+1.0165*log10(center_frequencies))
-bandwidth_nonlinear=10**(-0.031+0.774*log10(center_frequencies))
-order_nonlinear=3
-bandpass_nonlinear1=ApproximateGammatone(sound, center_frequencies_nonlinear, bandwidth_nonlinear, order=order_nonlinear)
+passband=vstack((center_frequencies-bw/2,center_frequencies+bw/2)) #arrays of shape (2 x nchannels) defining the passband frequencies (Hz)
+stopband=vstack((center_frequencies-1.1*bw,center_frequencies+1.1*bw)) ##arrays of shape (2 x nchannels) defining the stopband frequencies (Hz)
 
-#compression (linear at low level, compress at high level)
-a=10**(1.402+0.819*log10(center_frequencies))  #linear gain
-b=10**(1.619-0.818*log10(center_frequencies))  
-v=.2 #compression exponent
-func_compression=lambda x:sign(x)*minimum(a*abs(x),b*abs(x)**v)
-compression=FunctionFilterbank(bandpass_nonlinear1,  func_compression)
+gammatone =IIRFilterbank(sound,nchannels, passband, stopband, gpass, gstop, 'bandstop','cheby1') #instantiation of the filterbank
 
-#bandpass filter (third order gammatone filters)
-bandpass_nonlinear2=ApproximateGammatone(compression, center_frequencies_nonlinear, bandwidth_nonlinear, order=order_nonlinear)
+gt_mon=gammatone.buffer_fetch(0, len(sound)) #processing
 
-#low pass filter
-cutoff_frequencies_nonlinear=center_frequencies_nonlinear
-order_lowpass_nonlinear=2
-lp_nl=LowPass(bandpass_nonlinear2,cutoff_frequencies_nonlinear)
-lowpass_nonlinear=Cascade(bandpass_nonlinear2,lp_nl,3)
-
-#adding the two pathways
-dnrl_filter=lowpass_linear+lowpass_nonlinear
-
-dnrl=dnrl_filter.buffer_fetch(0, len(sound))  #processing
-
+print gammatone.order
 
 figure()
-imshow(flipud(dnrl.T),aspect='auto')    
+subplot(211)
+imshow(flipud(gt_mon.T),aspect='auto')    
+
+
+### example of a bank of lowpass filter ################
+nchannels=50
+cutoff_frequencies=linspace(200*Hz,1000*Hz, nchannels)  #center frequencies 
+width_transition=linspace(50*Hz,300*Hz, nchannels)  #bandwidth of the transition region between the en of the pass band and the begin of the stop band
+gpass=1. #The maximum loss in the passband in dB. Can be a scalar or an array of length nchannels
+gstop=20. #The minimum attenuation in the stopband in dB. Can be a scalar or an array of length nchannels
+
+passband=cutoff_frequencies-width_transition/2 #
+stopband=cutoff_frequencies+width_transition/2 #
+
+gammatone =IIRFilterbank(sound,nchannels, passband, stopband, gpass, gstop, 'low','cheby1') #instantiation of the filterbank
+
+gt_mon=gammatone.buffer_fetch(0, len(sound)) #processing
+
+print gammatone.order
+
+subplot(212)
+imshow(flipud(gt_mon.T),aspect='auto')    
 show()
+
+
+
+
+
+    
