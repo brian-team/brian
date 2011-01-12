@@ -117,7 +117,7 @@ class DRNL(Filterbank):
         #bandpass filter (second order  gammatone filter)
         cf_linear=10**(parameters['cf_lin_p0']+parameters['cf_lin_m']*log10(cf))
         bandwidth_linear=10**(parameters['bw_lin_p0']+parameters['bw_lin_m']*log10(cf))
-        gammatone=ApproximateGammatoneFilterbank(source, cf_linear, bandwidth_linear, order=parameters['order_linear'])
+        gammatone=ApproximateGammatone(source, cf_linear, bandwidth_linear, order=parameters['order_linear'])
         #linear gain
         g=10**(parameters['g_p0']+parameters['g_m']*log10(cf))
         func_gain=lambda x:g*x
@@ -125,14 +125,14 @@ class DRNL(Filterbank):
         #low pass filter(cascade of 4 second order lowpass butterworth filters)
         cutoff_frequencies_linear=10**(parameters['lp_lin_cutoff_p0']+parameters['lp_lin_cutoff_m']*log10(cf))
         order_lowpass_linear=2
-        lp_l=LowPassFilterbank(gain,cutoff_frequencies_linear)
-        lowpass_linear=CascadeFilterbank(gain,lp_l,4)
+        lp_l=LowPass(gain,cutoff_frequencies_linear)
+        lowpass_linear=Cascade(gain,lp_l,4)
         
         #### Nonlinear Pathway ####
         #bandpass filter (third order gammatone filters)
         cf_nonlinear=10**(parameters['cf_nl_p0']+parameters['cf_nl_m']*log10(cf))
         bandwidth_nonlinear=10**(parameters['bw_nl_p0']+parameters['bw_nl_m']*log10(cf))
-        bandpass_nonlinear1=ApproximateGammatoneFilterbank(source, cf_nonlinear, bandwidth_nonlinear, order=parameters['order_nonlinear'])
+        bandpass_nonlinear1=ApproximateGammatone(source, cf_nonlinear, bandwidth_nonlinear, order=parameters['order_nonlinear'])
         #compression (linear at low level, compress at high level)
         a=10**(parameters['a_p0']+parameters['a_m']*log10(cf))  #linear gain
         b=10**(parameters['b_p0']+parameters['b_m']*log10(cf))  
@@ -140,12 +140,12 @@ class DRNL(Filterbank):
         func_compression=lambda x:sign(x)*minimum(a*abs(x),b*abs(x)**v)
         compression=FunctionFilterbank(bandpass_nonlinear1,  func_compression)
         #bandpass filter (third order gammatone filters)
-        bandpass_nonlinear2=ApproximateGammatoneFilterbank(compression, cf_nonlinear, bandwidth_nonlinear, order=parameters['order_nonlinear'])
+        bandpass_nonlinear2=ApproximateGammatone(compression, cf_nonlinear, bandwidth_nonlinear, order=parameters['order_nonlinear'])
         #low pass filter
         cutoff_frequencies_nonlinear=10**(parameters['lp_nl_cutoff_p0']+parameters['lp_nl_cutoff_m']*log10(cf))
         order_lowpass_nonlinear=2
-        lp_nl=LowPassFilterbank(bandpass_nonlinear2,cutoff_frequencies_nonlinear)
-        lowpass_nonlinear=CascadeFilterbank(bandpass_nonlinear2,lp_nl,3)
+        lp_nl=LowPass(bandpass_nonlinear2,cutoff_frequencies_nonlinear)
+        lowpass_nonlinear=Cascade(bandpass_nonlinear2,lp_nl,3)
         #adding the two pathways
         dnrl_filter=lowpass_linear+lowpass_nonlinear
         return dnrl_filter

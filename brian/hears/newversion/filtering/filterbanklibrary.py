@@ -43,7 +43,8 @@ class Gammatone(LinearFilterbank):
         ``b`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
         
         
-    ``erb_order=1``, ``ear_Q=9.26449`` and ``min_bw=24.7`` are parameters used to compute the ERB bandwidth. (ERB = ((cf/ear_Q)^erb_order + min_bw^erb_order)^(1/erb_order)).
+    ``erb_order=1``, ``ear_Q=9.26449`` and ``min_bw=24.7`` are parameters used to compute the ERB bandwidth.
+     (ERB = ((cf/ear_Q)^erb_order + min_bw^erb_order)^(1/erb_order)).
     Their default values are the one recommended in Glasberg and Moore, 1990 
 
     '''
@@ -108,7 +109,8 @@ class ApproximateGammatone(LinearFilterbank):
     Bank of approximate gammatone filters implemented as a cascade of ``order``  gammatone filters..
     
     The design is based on the Hohmann implementation as described in Hohmann, V., 2002, "Frequency analysis and synthesis using a Gammatone filterbank",
-    Acta Acustica United with Acustica. The code is based on the matlab gammatone implementation from the Meddis'toolbox (http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm) 
+    Acta Acustica United with Acustica. The code is based on the matlab gammatone implementation from the Meddis'toolbox 
+    (http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm) 
     
     Initialised with arguments:
     
@@ -229,8 +231,8 @@ class LogGammachirp(LinearFilterbank):
 
 class LinearGammachirp(FIRFilterbank):
     '''
-    Bank of gammachirp filters with linear frequency sweeps and gamma envelope as described in Wagner et al. 2009, "Auditory responses in the barn owl's nucleus laminaris to clicks: 
-    impulse response and signal analysis of neurophonic potential", J. Neurophysiol.
+    Bank of gammachirp filters with linear frequency sweeps and gamma envelope as described in Wagner et al. 2009, "Auditory responses in the barn owl's nucleus
+     laminaris to clicks: impulse response and signal analysis of neurophonic potential", J. Neurophysiol.
     
     The impulse response :math:`IR` is defined as follow
     :math:`IR(t)=t^{3}exp(-t/\sigma)cos[2\pi (f t +c/2 t^{2})+\phi]`
@@ -255,8 +257,8 @@ class LinearGammachirp(FIRFilterbank):
         determines the duration of the envelope and consequently the length of the impluse response
         
     ``c=1``
-        c is the glide slope (or sweep rate) given ins Hertz/second. The time-dependent instantaneous frequency is f+c*t and is therefore going upward when c>0 and downward when c<0
-        ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
+        c is the glide slope (or sweep rate) given ins Hertz/second. The time-dependent instantaneous frequency is f+c*t and is therefore going upward when
+         c>0 and downward when c<0 ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
         
     ``phase=0``
         phase shift of the carrier
@@ -306,8 +308,8 @@ class LinearGammachirp(FIRFilterbank):
 
 class LinearGaborchirp(FIRFilterbank):
     '''
-    Bank of gammachirp filters with linear frequency sweeps and gaussian envelope as described in Wagner et al. 2009, "Auditory responses in the barn owl's nucleus laminaris to clicks: 
-    impulse response and signal analysis of neurophonic potential", J. Neurophysiol.
+    Bank of gammachirp filters with linear frequency sweeps and gaussian envelope as described in Wagner et al. 2009, "Auditory responses in the barn owl's 
+    nucleus laminaris to clicks: impulse response and signal analysis of neurophonic potential", J. Neurophysiol.
     
     The impulse response :math:`IR` is defined as follow
     :math:`IR(t)=exp(-t/2\sigma)^{2}\cos[2\pi (f t +c/2 t^{2})+\phi]`
@@ -315,8 +317,8 @@ class LinearGaborchirp(FIRFilterbank):
     
     Those filters are implemented as FIR filters using  truncated time representations of  gammachirp functions as the impulse response. The impulse responses,
     which need to have the same length for every channel, have a duration of 15 times the biggest time constant. The length of the impulse response is therefore 
-    12.max(time_constant).sampling_rate. The envelope is a gaussian function (Gabor filter).  The impulse responses are normalized with respect to the transmitted power, 
-    i.e. the rms of the filter taps =1
+    12.max(time_constant).sampling_rate. The envelope is a gaussian function (Gabor filter).  The impulse responses are normalized with respect to the transmitted 
+    power, i.e. the rms of the filter taps =1
     
     Initialisation parameters:
     
@@ -331,8 +333,8 @@ class LinearGaborchirp(FIRFilterbank):
         determines the duration of the envelope and consequently the length of the impluse response
         
     ``c=1``
-        c is the glide slope (or sweep rate) given ins Hertz/second. The time-dependent instantaneous frequency is f+c*t and is therefore going upward when c>0 and downward when c<0
-        ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
+        c is the glide slope (or sweep rate) given ins Hertz/second. The time-dependent instantaneous frequency is f+c*t and is therefore going upward when c>0
+         and downward when c<0. ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
         
     ``phase=0``
         phase shift of the carrier
@@ -380,13 +382,12 @@ class LinearGaborchirp(FIRFilterbank):
 
 class IIRFilterbank(LinearFilterbank):
     '''
-    Filterbank of IIR filters. The filters can be low, high, bandstop or bandpass and be of type Elliptic, Butterworth, Chebyshev etc. The ``passband`` and ``stopband``
-    can be scalars (for low or high pass) or pairs of parameters (for stopband and passband) yielding similar filters for every channels. They can also be arrays of dimension 
-    (1 x nchannels) for low and high pass or (2 x nchannels) for stopband and passband  yielding different filters along channels. This class uses 
-    scipy iirdesign function to geenrate filters coeffcient for every channel. 
+    Filterbank of IIR filters. The filters can be low, high, bandstop or bandpass and be of type Elliptic, Butterworth, Chebyshev etc. The ``passband`` 
+    and ``stopband`` can be scalars (for low or high pass) or pairs of parameters (for stopband and passband) yielding similar filters for every channels.
+     They can also be arrays of dimension (1 x nchannels) for low and high pass or (2 x nchannels) for stopband and passband  yielding different filters 
+     along channels. This class uses scipy iirdesign function to geenrate filters coeffcient for every channel. 
     
     See the documentation for scipy.signal.iirdesign for more details.
-    
     
     Initialisation parameters:
     
@@ -398,9 +399,10 @@ class IIRFilterbank(LinearFilterbank):
         
     ``passband``, ``stopband``
         The edges of the pass and stop bands in Hz. For a lowpass and highpass filters, in the case of similar filters for each channel, they are scalars and 
-        passband<stopband for low pass or stopband>passband for a highpass. For a bandpass or bandstop filter, in the case of similar filters for each channel, make passband and stopband a list with
-        two elements, e.g. for a bandpass have passband=[200*Hz, 500*hz] and stopband=[100*Hz, 600*Hz]. ``passband`` and ``stopband`` can be  also be arrays of dimension (1 x nchannels) for low and high pass or (2 x nchannels)
-         for stopband and passband  yielding different filters along channels.
+        passband<stopband for low pass or stopband>passband for a highpass. For a bandpass or bandstop filter, in the case of similar filters for each channel,
+         make passband and stopband a list with two elements, e.g. for a bandpass have passband=[200*Hz, 500*hz] and stopband=[100*Hz, 600*Hz]. ``passband`` and 
+        ``stopband`` can be  also be arrays of dimension (1 x nchannels) for low and high pass or (2 x nchannels) for stopband and passband  yielding different
+         filters along channels.
         
     ``gpass``
         The maximum loss in the passband in dB. Can be a scalar or an array of length ``nchannels``
@@ -446,24 +448,40 @@ class IIRFilterbank(LinearFilterbank):
                 self.filt_b=kron(ones((nchannels,1)),self.filt_b)
                 self.filt_a=kron(ones((nchannels,1)),self.filt_a)
             else:               #else make nchannels different filters
-                if len(gstop) != nchannels:
+                if len(gstop) != nchannels: #if the ripple parameters are scalar make them as long as the number of channels
                     gpass=repeat(gpass,nchannels)
                 if len(gstop) != nchannels:
                     gstop=repeat(gstop,nchannels)
-                for i in xrange((nchannels)):
-                    self.filt_b[i,:], self.filt_a[i,:] = signal.iirdesign(Wpassband[i], Wstopband[i], gpass[i], gstop[i], ftype=ftype)
+                order=0
+                filt_b, filt_a =[1]*nchannels,[1]*nchannels  
+                for i in xrange((nchannels)): #generate the different filter coeffcients
+                    filt_b[i], filt_a[i] = signal.iirdesign(Wpassband[i], Wstopband[i], gpass[i], gstop[i], ftype=ftype)
+                if len(filt_b[i])>order: #take the highst order of them to be the size of the filter coefficient matrix
+                    order=len(filt_b[i])
+                self.filt_b=zeros((nchannels,order))
+                self.filt_a=zeros((nchannels,order))
+                for i in xrange((nchannels)): #fill the coefficient matrix 
+                    self.filt_b[i,:len(filt_b[i])], self.filt_a[i,:len(filt_a[i])] = filt_b[i],filt_a[i]
         else:
             if Wpassband.ndim==1:     #if there is only one Wn pair of values for all channel just repeat it
                 self.filt_b, self.filt_a = signal.iirdesign(Wpassband, Wstopband, gpass, gstop, ftype=ftype)
                 self.filt_b=kron(ones((nchannels,1)),self.filt_b)
                 self.filt_a=kron(ones((nchannels,1)),self.filt_a)
             else:   
-                if len(gstop) != nchannels:
+                if len(gstop) != nchannels:#if the ripple parameters are scalar make them as long as the number of channels
                     gpass=repeat(gpass,nchannels)
                 if len(gstop) != nchannels:
                     gstop=repeat(gstop,nchannels)
-                for i in xrange((nchannels)):
-                    self.filt_b[i,:], self.filt_a[i,:] = signal.iirdesign(Wpassband[:,i], Wstopband[:,i], gpass[i], gstop[i], ftype=ftype)
+                order=0
+                filt_b, filt_a =[1]*nchannels,[1]*nchannels
+                for i in xrange((nchannels)):#take the highst order of them to be the size of the filter coefficient matrix
+                    filt_b[i], filt_a[i] = signal.iirdesign(Wpassband[:,i], Wstopband[:,i], gpass[i], gstop[i], ftype=ftype)
+                if len(filt_b[i])>order:
+                    order=len(filt_b[i])
+                self.filt_b=zeros((nchannels,order))
+                self.filt_a=zeros((nchannels,order))
+                for i in xrange((nchannels)):#fill the coefficient matrix 
+                    self.filt_b[i,:len(filt_b[i])], self.filt_a[i,:len(filt_a[i])] = filt_b[i],filt_a[i]
                     
         
         self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
@@ -474,7 +492,7 @@ class IIRFilterbank(LinearFilterbank):
         self.gpass = gpass
         self.gstop = gstop
         self.ftype= ftype
-
+        self.order= self.filt_a.shape[1]-1
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
 
 
@@ -496,8 +514,8 @@ class Butterworth(LinearFilterbank):
         
     ``fc``
         Cutoff parameter(s) in Hz. For the case of a lowpass or highpass filterbank, ``fc`` is either a scalar (thus the same value for all of the channels
-        or an array  of length ``nchannels``. For the case of a bandpass or bandstop, ``fc`` is either a pair of sacalar (thus the same values for all of the channels
-        or an array of dimension (2 x nchannels) to define a pair for every channel.
+        or an array  of length ``nchannels``. For the case of a bandpass or bandstop, ``fc`` is either a pair of scalar defining the bandpass or bandstop
+        (thus the same values for all of the channels or an array of dimension (2 x nchannels) to define a pair for every channel.
         
     ``btype``
         One of 'low', 'high', 'bandpass' or 'bandstop'.
@@ -512,10 +530,11 @@ class Butterworth(LinearFilterbank):
         except DimensionMismatchError:
             raise DimensionMismatchError('Wn must be in Hz')
         
-        self.filt_b=zeros((nchannels,order+1))
-        self.filt_a=zeros((nchannels,order+1))
+
         
         if btype=='low' or btype=='high':
+            self.filt_b=zeros((nchannels,order+1))
+            self.filt_a=zeros((nchannels,order+1))
             if len(Wn)==1:     #if there is only one Wn value for all channel just repeat it
                 self.filt_b, self.filt_a = signal.butter(order, Wn, btype=btype)
                 self.filt_b=kron(ones((nchannels,1)),self.filt_b)
@@ -524,18 +543,21 @@ class Butterworth(LinearFilterbank):
                 for i in xrange((nchannels)):
                     self.filt_b[i,:], self.filt_a[i,:] = signal.butter(order, Wn[i], btype=btype)
         else:
+            self.filt_b=zeros((nchannels,2*order+1))
+            self.filt_a=zeros((nchannels,2*order+1))
             if Wn.ndim==1:     #if there is only one Wn pair of values for all channel just repeat it
                 self.filt_b, self.filt_a = signal.butter(order, Wn, btype=btype)
                 self.filt_b=kron(ones((nchannels,1)),self.filt_b)
                 self.filt_a=kron(ones((nchannels,1)),self.filt_a)
             else:   
                 for i in xrange((nchannels)):
-                    self.filt_b[i,:], self.filt_a[i,:] = signal.butter(order, Wn[i,:], btype=btype)   
-                
+                    self.filt_b[i,:], self.filt_a[i,:] = signal.butter(order, Wn[:,i], btype=btype)   
+                    
+                    
         self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
-        self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)    
+        self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)  
+        print self.filt_a,self.filt_b
         self.nchannels = nchannels    
-        
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
 
 class LowPass(LinearFilterbank):
@@ -601,9 +623,9 @@ class Asymmetric_Compensation(LinearFilterbank):
     '''
     Bank of asymmetric compensation fitlers
     
-    Those filters are meant to be used in cascade with gammatone filters to approximate gammachirp filters (Unoki et al., 2001, Improvement of an IIR asymmetric compensation 
-    gammachirp filter, Acoust. Sci. & Tech.). They are implemented a a cascade of low order filters. The code is based on the implementation found in the AIM-MAT toolobox 
-    (http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/index.html)
+    Those filters are meant to be used in cascade with gammatone filters to approximate gammachirp filters (Unoki et al., 2001, Improvement of
+     an IIR asymmetric compensation gammachirp filter, Acoust. Sci. & Tech.). They are implemented a a cascade of low order filters. The code 
+     is based on the implementation found in the AIM-MAT toolobox (http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/index.html)
 
     Initialised with arguments:
     
