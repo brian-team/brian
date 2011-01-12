@@ -43,20 +43,20 @@ Filterbanks
 
 Filterbank library
 ------------------
-.. autoclass:: Cascade
 .. autoclass:: Gammatone(source, cf,b=1.019,erb_order=1,ear_Q=9.26449,min_bw=24.7)
 .. autoclass:: LogGammachirp(source, f, b=1.019, c=1, ncascades=4)
 .. autoclass:: LinearGammachirp
 .. autoclass:: LinearGaborchirp
 .. autoclass:: IIRFilterbank
 .. autoclass:: Butterworth
-.. autoclass:: ApproximateGammatone
+.. autoclass:: Cascade
 .. autoclass:: LowPass
+.. autoclass:: ApproximateGammatone
 
 Cochlear model library
 ----------------------
 .. autoclass:: DRNL
-.. autoclass:: CDGC
+.. autoclass:: DCGC
 .. autoclass:: PMFR
 
 Filterbank group
