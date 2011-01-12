@@ -78,7 +78,7 @@ class AsymCompUpdate:
          self.iteration+=1
          self.target.filt_b, self.target.filt_a=asymmetric_compensation_coefs(self.samplerate,fr2,self.target.filt_b,self.target.filt_a,self.b,self.c,self.p0,self.p1,self.p2,self.p3,self.p4)
  
-class CDGC(Filterbank):
+class DCGC(Filterbank):
     '''
     Class implementing  the compressive gammachirp auditory filter as described in  Irino, T. and Patterson R.,
     "A compressive gammachirp auditory filter for both physiological and psychophysical data", JASA 2001

@@ -168,7 +168,7 @@ class LogGammachirp(LinearFilterbank):
 
     
     The implementation  is a cascade of 4 2nd-order IIR gammatone filter 
-    followed by a cascade of  ncascades 2nd-order asymmetric compensation filters as introduced in " Unoki et al. 2001, Improvement of an IIR asymmetric 
+    followed by a cascade of  ncascades 2nd-order asymmetric compensation filters as introduced in  Unoki et al. 2001, "Improvement of an IIR asymmetric 
     compensation gammachirp filter". 
     
 
@@ -229,7 +229,7 @@ class LogGammachirp(LinearFilterbank):
 
 class LinearGammachirp(FIRFilterbank):
     '''
-    Bank of gammachirp filters with linear frequency sweeps and gamma envelopeas described in Wagner et al. 2009, "Auditory responses in the barn owl's nucleus laminaris to clicks: 
+    Bank of gammachirp filters with linear frequency sweeps and gamma envelope as described in Wagner et al. 2009, "Auditory responses in the barn owl's nucleus laminaris to clicks: 
     impulse response and signal analysis of neurophonic potential", J. Neurophysiol.
     
     The impulse response :math:`IR` is defined as follow
@@ -288,13 +288,11 @@ class LinearGammachirp(FIRFilterbank):
         
         
         Tcst_max=max(time_constant)
-        if env=='gamma':
-            t_start=-Tcst_max*3*second
-            t=arange(t_start,-4*t_start,1./self.samplerate)
 
-        if env=='gabor':
-            t_start=-Tcst*6*second
-            t=arange(t_start,-t_start,1./self.samplerate)
+        t_start=-Tcst_max*3*second
+        t=arange(t_start,-4*t_start,1./self.samplerate)
+
+        
             
         self.impulse_response=zeros((len(f),len(t)))
                                     
@@ -366,14 +364,10 @@ class LinearGaborchirp(FIRFilterbank):
         
         
         Tcst_max=max(time_constant)
-        if env=='gamma':
-            t_start=-Tcst_max*3*second
-            t=arange(t_start,-4*t_start,1./self.samplerate)
 
-        if env=='gabor':
-            t_start=-Tcst*6*second
-            t=arange(t_start,-t_start,1./self.samplerate)
-            
+        t_start=-Tcst*6*second
+        t=arange(t_start,-t_start,1./self.samplerate)
+
         self.impulse_response=zeros((len(f),len(t)))
                                     
         for ich in xrange(len(f)):
@@ -386,7 +380,13 @@ class LinearGaborchirp(FIRFilterbank):
 
 class IIRFilterbank(LinearFilterbank):
     '''
-    Filterbank using scipy.signal.iirdesign
+    Filterbank of IIR filters. The filters can be low, high, bandstop or bandpass and be of type Elliptic, Butterworth, Chebyshev etc. The ``passband`` and ``stopband``
+    can be scalars (for low or high pass) or pairs of parameters (for stopband and passband) yielding similar filters for every channels. They can also be arrays of dimension 
+    (1 x nchannels) for low and high pass or (2 x nchannels) for stopband and passband  yielding different filters along channels. This class uses 
+    scipy iirdesign function to geenrate filters coeffcient for every channel. 
+    
+    See the documentation for scipy.signal.iirdesign for more details.
+    
     
     Initialisation parameters:
     
@@ -397,18 +397,20 @@ class IIRFilterbank(LinearFilterbank):
         The number of channels in the bank
         
     ``passband``, ``stopband``
-        The edges of the pass and stop bands in Hz. For a lowpass filter, make
-        passband<stopband and for a highpass make stopband>passband. For a
-        bandpass or bandstop filter, make passband and stopband a list with
-        two elements, e.g. for a bandpass have passband=[200*Hz, 500*hz] and
-        stopband=[100*Hz, 600*Hz], or for a bandstop switch passband and stopband.
+        The edges of the pass and stop bands in Hz. For a lowpass and highpass filters, in the case of similar filters for each channel, they are scalars and 
+        passband<stopband for low pass or stopband>passband for a highpass. For a bandpass or bandstop filter, in the case of similar filters for each channel, make passband and stopband a list with
+        two elements, e.g. for a bandpass have passband=[200*Hz, 500*hz] and stopband=[100*Hz, 600*Hz]. ``passband`` and ``stopband`` can be  also be arrays of dimension (1 x nchannels) for low and high pass or (2 x nchannels)
+         for stopband and passband  yielding different filters along channels.
         
     ``gpass``
-        The maximum loss in the passband in dB.
+        The maximum loss in the passband in dB. Can be a scalar or an array of length ``nchannels``
         
     ``gstop``
-        The minimum attenuation in the stopband in dB.
+        The minimum attenuation in the stopband in dB. Can be a scalar or an array of length ``nchannels``
         
+    ``btype``
+        One of 'low', 'high', 'bandpass' or 'bandstop'.
+    
     ``ftype``
         The type of IIR filter to design:
             elliptic    : 'ellip'
@@ -417,42 +419,55 @@ class IIRFilterbank(LinearFilterbank):
             Chebyshev II: 'cheby2',
             Bessel :      'bessel'
     
-    See the documentation for scipy.signal.iirdesign for more details.
     '''
     
-    def __init__(self, source, nchannels, passband, stopband, gpass, gstop, ftype):
-        # passband can take form x or (a,b) in Hz and we need to convert to scipy's format
+    def __init__(self, source, nchannels, passband, stopband, gpass, gstop, btype, ftype):
+
+        Wpassband = passband.copy()
+        Wstopband = stopband.copy()
+        Wpassband = atleast_1d(Wpassband)
+        Wstopband = atleast_1d(Wstopband)
+        gpass = atleast_1d(gpass)
+        gstop = atleast_1d(gstop)
+        
+        self.samplerate=source.samplerate
+        if Wpassband.shape != Wstopband.shape:
+            raise Exeption('passband and stopband must contain the same number of ent')
         try:
-            try:
-                a, b=passband
-                a=a/samplerate*2+0.0    # wn=1 corresponding to half the sample rate 
-                b=b/samplerate*2+0.0     
-                passband=[a, b]
-                a+1
-                b+1
-            except TypeError:
-                passband=passband/samplerate
-                passband+1
-            try:
-                a, b=stopband
-                a=a/samplerate*2+0.0 
-                b=b/samplerate*2+0.0    
-                stopband=[a, b]
-                a+1
-                b+1
-            except TypeError:
-                stopband=stopband/samplerate
-                stopband+1
+            Wpassband=Wpassband/self.samplerate*2+0.0    # wn=1 corresponding to half the sample rate 
+            Wstopband=Wstopband/self.samplerate*2+0.0     
         except DimensionMismatchError:
             raise DimensionMismatchError('IIRFilterbank passband, stopband parameters must be in Hz')
-
-        # now design filterbank
-        self.samplerate=source.samplerate
-        self.filt_b, self.filt_a = signal.iirdesign(passband, stopband, gpass, gstop, ftype=ftype)
-        self.filt_b=kron(ones((nchannels,1)),self.filt_b)
-        self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)
-        self.filt_a=kron(ones((nchannels,1)),self.filt_a)
+        
+        # now design filterbank      
+        if btype=='low' or btype=='high':
+            if len(Wpassband)==1:     #if there is only one Wn value for all channel just repeat it
+                self.filt_b, self.filt_a = signal.iirdesign(Wpassband, Wstopband, gpass, gstop, ftype=ftype)
+                self.filt_b=kron(ones((nchannels,1)),self.filt_b)
+                self.filt_a=kron(ones((nchannels,1)),self.filt_a)
+            else:               #else make nchannels different filters
+                if len(gstop) != nchannels:
+                    gpass=repeat(gpass,nchannels)
+                if len(gstop) != nchannels:
+                    gstop=repeat(gstop,nchannels)
+                for i in xrange((nchannels)):
+                    self.filt_b[i,:], self.filt_a[i,:] = signal.iirdesign(Wpassband[i], Wstopband[i], gpass[i], gstop[i], ftype=ftype)
+        else:
+            if Wpassband.ndim==1:     #if there is only one Wn pair of values for all channel just repeat it
+                self.filt_b, self.filt_a = signal.iirdesign(Wpassband, Wstopband, gpass, gstop, ftype=ftype)
+                self.filt_b=kron(ones((nchannels,1)),self.filt_b)
+                self.filt_a=kron(ones((nchannels,1)),self.filt_a)
+            else:   
+                if len(gstop) != nchannels:
+                    gpass=repeat(gpass,nchannels)
+                if len(gstop) != nchannels:
+                    gstop=repeat(gstop,nchannels)
+                for i in xrange((nchannels)):
+                    self.filt_b[i,:], self.filt_a[i,:] = signal.iirdesign(Wpassband[:,i], Wstopband[:,i], gpass[i], gstop[i], ftype=ftype)
+                    
+        
         self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
+        self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)  
         self.nchannels = nchannels
         self.passband = passband
         self.stopband = stopband
@@ -460,12 +475,13 @@ class IIRFilterbank(LinearFilterbank):
         self.gstop = gstop
         self.ftype= ftype
 
-        LinearFilterbank.__init__(self, self.filt_b, self.filt_a, samplerate)
+        LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
 
 
 class Butterworth(LinearFilterbank):
     '''
-    Make a butterworth filterbank directly
+    Filterbank of  low, high, bandstop or bandpass  Butterworth filters. 
+    The cut-off frequencies or the band frequencies can either be the same for each channels or different along channels.
     
     Initialisation parameters:
     
@@ -476,19 +492,18 @@ class Butterworth(LinearFilterbank):
         Number of filters in the bank.
         
     ``order``
-        Order of the filter.
+        Order of the filters.
         
     ``fc``
-        Cutoff parameter(s) in Hz. For the case of a lowpass or highpass filterbank, ``fc`` is either a sacalar (thus the same value for all of the channels
-        or an array (of dimension 1) of length ``nchannels``. For the case of a bandpass or bandstop, ``fc`` is either a pair of sacalar (thus the same values for all of the channels
-        or an array of dimension 2 x nchannels``.
+        Cutoff parameter(s) in Hz. For the case of a lowpass or highpass filterbank, ``fc`` is either a scalar (thus the same value for all of the channels
+        or an array  of length ``nchannels``. For the case of a bandpass or bandstop, ``fc`` is either a pair of sacalar (thus the same values for all of the channels
+        or an array of dimension (2 x nchannels) to define a pair for every channel.
         
     ``btype``
         One of 'low', 'high', 'bandpass' or 'bandstop'.
     '''
 
     def __init__(self,source, nchannels, order, fc, btype='low'):
-        # print Wn
         Wn=fc.copy()
         Wn=atleast_1d(Wn) #Scalar inputs are converted to 1-dimensional arrays
         self.samplerate = source.samplerate
