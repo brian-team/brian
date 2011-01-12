@@ -11,8 +11,7 @@ from brian import *
 set_global_preferences(usenewbrianhears=True,
                        useweave=False)
 from brian.hears import *
-import scipy.signal as signal
-from time import time
+
 
 samplerate=20*kHz #sample frequency of the sound
 defaultclock.dt =1./samplerate 
@@ -92,10 +91,8 @@ updater = CoefController(bandpass_filter,Q)   #the updater
 #the controller. Remember it must be the last of the chain
 control = ControlFilterbank(bandpass_filter, fc_generator, bandpass_filter, updater, update_interval)   
       
-
-t1=time()
 time_varying_filter_mon=control.buffer_fetch(0, len(sound)) #simulation (on the controller)
-print 'the simulation took',time()-t1,' seconds to run'
+
 
 figure(1)
 pxx, freqs, bins, im = specgram(squeeze(time_varying_filter_mon), NFFT=256, Fs=samplerate, noverlap=240) #pylab function
