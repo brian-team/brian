@@ -124,7 +124,7 @@ updater = CompensensationFilterUpdater(varyingfilter_signal_path,samplerate,fp1,
 control = ControlFilterbank(varyingfilter_signal_path, [pGc_control,asym_comp_control], varyingfilter_signal_path, updater, update_interval)  
 
 #run the simulation
-signal=control.buffer_fetch(0, len(sound))  #processing. Remember that the controler are at the end of the chain and the output of the whole path comes from them
+signal=control.process() #processing. Remember that the controler are at the end of the chain and the output of the whole path comes from them
 
 
 

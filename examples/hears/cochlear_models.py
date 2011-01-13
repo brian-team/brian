@@ -29,7 +29,7 @@ param_pmfr={}
 param_pmfr['fp1']=1.0854*cf-106.0034
 interval=20
 pmfr_filter=PMFR(sound,cf,interval,param=param_pmfr)
-pmfr=pmfr_filter.buffer_fetch(0, len(sound))
+pmfr=pmfr_filter.process()
 
 figure()
 subplot(311)

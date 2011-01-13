@@ -21,7 +21,7 @@ cf=erbspace(100*Hz, 1000*Hz, nbr_center_frequencies)  #center frequencies with a
 
 gamma_chirp=LogGammachirp(sound,cf, c=c1,b=b1)     #instantiation of the filterbank 
 
-gamma_chirp_mon=gamma_chirp.buffer_fetch(0, len(sound))  #processing. The results is a matrix.
+gamma_chirp_mon=gamma_chirp.process()  #processing. The results is a matrix.
 
 
 figure()

@@ -16,7 +16,7 @@ bw=10**(0.037+0.785*log10(center_frequencies))   #bandwidth of the filters (diff
 
 gammatone=ApproximateGammatone(sound, center_frequencies, bw,order=3) #instantiation of the filterbank 
 
-gt_mon=gammatone.buffer_fetch(0, len(sound))  #processing. The results is a matrix.
+gt_mon=gammatone.process()  #processing. The results is a matrix.
 
 figure()
 imshow(flipud(gt_mon.T),aspect='auto')    

@@ -18,7 +18,7 @@ time_constant=linspace(3,0.3,nbr_center_frequencies)*ms
 
 gamma_chirp=LinearGammachirp(sound, center_frequencies,time_constant,c) #instantiation of the filterbank 
 
-gamma_chirp_mon=gamma_chirp.buffer_fetch(0, len(sound))  #processing. The results is a matrix.
+gamma_chirp_mon=gamma_chirp.process()  #processing. The results is a matrix.
 
 figure()
 

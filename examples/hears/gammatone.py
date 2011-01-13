@@ -17,7 +17,7 @@ b1=1.019  #factor determining the time constant of the filters
 center_frequencies=erbspace(100*Hz,1000*Hz, nbr_center_frequencies)  #center frequencies with a spacing following an ERB scale
 gammatone =Gammatone(sound,center_frequencies,b=b1 ) #instantiation of the filterbank
 
-gt_mon=gammatone.buffer_fetch(0, len(sound)) #processing
+gt_mon=gammatone.process() #processing
 
 
 figure()

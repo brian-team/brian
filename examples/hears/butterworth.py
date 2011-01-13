@@ -20,7 +20,7 @@ fc=vstack((center_frequencies-bw/2,center_frequencies+bw/2)) #arrays of shape (2
 
 filterbank =Butterworth(sound,nchannels, order, fc, 'bandpass') #instantiation of the filterbank
 
-filterbank_mon=filterbank.buffer_fetch(0, len(sound)) #processing
+filterbank_mon=filterbank.process() #processing
 
 figure()
 subplot(211)
@@ -33,7 +33,7 @@ cutoff_frequencies=linspace(200*Hz,1000*Hz, nchannels)  #center frequencies
 
 filterbank =Butterworth(sound,nchannels, order, cutoff_frequencies, 'low') #instantiation of the filterbank
 
-filterbank_mon=filterbank.buffer_fetch(0, len(sound)) #processing
+filterbank_mon=filterbank.process() #processing
 
 
 subplot(212)

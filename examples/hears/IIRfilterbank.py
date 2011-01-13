@@ -16,14 +16,14 @@ nchannels=50
 center_frequencies=linspace(200*Hz,1000*Hz, nchannels)  #center frequencies 
 bw=linspace(50*Hz,300*Hz, nchannels)  #bandwidth of the filters
 gpass=1. #The maximum loss in the passband in dB. Can be a scalar or an array of length nchannels
-gstop=20. #The minimum attenuation in the stopband in dB. Can be a scalar or an array of length nchannels
+gstop=10. #The minimum attenuation in the stopband in dB. Can be a scalar or an array of length nchannels
 
 passband=vstack((center_frequencies-bw/2,center_frequencies+bw/2)) #arrays of shape (2 x nchannels) defining the passband frequencies (Hz)
 stopband=vstack((center_frequencies-1.1*bw,center_frequencies+1.1*bw)) ##arrays of shape (2 x nchannels) defining the stopband frequencies (Hz)
-print passband.shape
+
 filterbank =IIRFilterbank(sound,nchannels, passband, stopband, gpass, gstop, 'bandstop','cheby1') #instantiation of the filterbank
 
-filterbank_mon=filterbank.buffer_fetch(0, len(sound)) #processing
+filterbank_mon=filterbank.process() #processing
 
 print filterbank.order
 
@@ -32,19 +32,19 @@ subplot(211)
 imshow(flipud(filterbank_mon.T),aspect='auto')    
 
 
-### example of a bank of lowpass filter ################
+#### example of a bank of lowpass filter ################
 nchannels=50
-cutoff_frequencies=linspace(200*Hz,1000*Hz, nchannels)  #center frequencies 
+cutoff_frequencies=linspace(100*Hz,1000*Hz, nchannels)  #center frequencies 
 width_transition=linspace(50*Hz,300*Hz, nchannels)  #bandwidth of the transition region between the en of the pass band and the begin of the stop band
 gpass=1. #The maximum loss in the passband in dB. Can be a scalar or an array of length nchannels
-gstop=20. #The minimum attenuation in the stopband in dB. Can be a scalar or an array of length nchannels
+gstop=10. #The minimum attenuation in the stopband in dB. Can be a scalar or an array of length nchannels
 
 passband=cutoff_frequencies-width_transition/2 #
 stopband=cutoff_frequencies+width_transition/2 #
 
 filterbank =IIRFilterbank(sound,nchannels, passband, stopband, gpass, gstop, 'low','cheby1') #instantiation of the filterbank
 
-filterbank_mon=filterbank.buffer_fetch(0, len(sound)) #processing
+filterbank_mon=filterbank.process()#processing
 
 print filterbank.order
 

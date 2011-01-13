@@ -78,7 +78,7 @@ lowpass_nonlinear=Cascade(bandpass_nonlinear2,lp_nl,3)
 #adding the two pathways
 dnrl_filter=lowpass_linear+lowpass_nonlinear
 
-dnrl=dnrl_filter.buffer_fetch(0, len(sound))  #processing
+dnrl=dnrl_filter.process()  #processing
 
 
 figure()

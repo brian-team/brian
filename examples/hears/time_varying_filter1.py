@@ -79,7 +79,7 @@ updater = CoefController(bandpass_filter,samplerate,fc_init,Q,tau_i)   #the upda
 #the controller. Remember it must be the last of the chain
 control = ControlFilterbank(bandpass_filter, noise_generator, bandpass_filter, updater, update_interval)          
 
-time_varying_filter_mon=control.buffer_fetch(0, len(sound)) #simulation (on the controler)
+time_varying_filter_mon=control.process() #simulation (on the controler)
 
 
 figure(1)
