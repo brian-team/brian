@@ -17,6 +17,34 @@ class Filterbank(Bufferable):
     '''
     Generalised filterbank object
     
+    **Documentation common to all filterbanks**
+    
+    Filterbanks all share a few basic attributes:
+    
+    .. autoattribute:: source
+    
+    .. attribute:: nchannels
+    
+        The number of channels.
+        
+    .. attribute:: samplerate
+    
+        The sample rate.
+        
+    .. autoattribute:: duration
+
+    To process the output of a filterbank, the following method can be used:
+    
+    .. automethod:: process
+    
+    Alternatively, the buffer interface can be used, which is described in
+    more detail below.
+    
+    Filterbank also defines arithmetical operations for +, -, *, / where the other
+    operand can be a filterbank or scalar.
+    
+    **Details on the class**
+    
     This class is a base class not designed to be instantiated. A Filterbank
     object should define the interface of :class:`Bufferable`, as well as
     defining a ``source`` attribute. This is normally a :class:`Bufferable`
@@ -37,29 +65,7 @@ class Filterbank(Bufferable):
     
     There is a default ``buffer_init()`` method that calls ``buffer_init()`` on
     the ``source`` (or list of sources).
-    
-    Also defines arithmetical operations for +, -, *, / where the other
-    operand can be a filterbank or scalar.
-    
-    In addition to the ``buffer_fetch()`` mechanism, Filterbanks have a simpler
-    method for fetching the whole output, which should only be used in the case
-    where the entire output fits in memory (i.e. short sounds or a low number
-    of channels).
-    
-    .. automethod:: fetch
-    
-    **Attributes**
-    
-    .. autoattribute:: source
-    
-    .. attribute:: nchannels
-    
-        The number of channels.
         
-    .. attribute:: samplerate
-    
-        The sample rate.
-    
     **Example of deriving a class**
     
     The following class takes N input channels and sums them to a single output
@@ -130,18 +136,68 @@ class Filterbank(Bufferable):
         insert a dummy filterbank (:class:`DoNothingFilterbank`) which is
         guaranteed to work if you change the source.
         ''')
+    
+    def get_duration(self):
+        if hasattr(self, '_duration'):
+            return self._duration
+        else:
+            source = self.source
+            if isinstance(source, Bufferable):
+                source = [source]
+            try:
+                durations = [s.duration for s in source]
+                duration = max(durations)
+                return duration
+            except KeyError:
+                raise KeyError('Cannot compute duration from sources.')
 
-    def fetch(self, duration, buffersize=32):
+    def set_duration(self, duration):
+        self._duration = duration
+    
+    duration = property(fget=get_duration, fset=set_duration, doc='''
+        The duration of the filterbank. If it is not specified by the user, it
+        is computed by finding the maximum of its source durations. If these are
+        not specified a :class:`KeyError` will be raised (for example, using
+        :class:`OnlineSound` as a source).
+        ''')
+
+    def process(self, func=None, duration=None, buffersize=32):
         '''
         Returns the output of the filterbank for the given duration.
         
-        ``duration``
-            The length of time (in seconds) or number of samples to return.
+        ``func``
+            If a function is specified, it should be a function of one or two
+            arguments that will be called on each filtered buffered segment
+            (of shape ``(buffersize, nchannels)`` in order. If the function has
+            one argument, the argument should be buffered segment. If it has
+            two arguments, the second argument is the value returned by the
+            previous application of the function (or 0 for the first
+            application). In this case, the method will return the final
+            value returned by the function. See example below.
+        ``duration=None``
+            The length of time (in seconds) or number of samples to process.
+            If no ``func`` is specified, the method will return an array of shape
+            ``(duration, nchannels)`` with the filtered outputs. Note that in
+            many cases, this will be too large to fit in memory, in which you
+            will want to process the filtered outputs online, by providing
+            a function ``func`` (see example below). If no duration is specified,
+            the maximum duration of the inputs to the filterbank will be used,
+            or an error raised if they do not have durations (e.g. in the case
+            of :class:`OnlineSound`).
         ``buffersize=32``
             The size of the buffered segments to fetch, as a length of time or
             number of samples. 32 samples typically gives reasonably good
             performance.
+            
+        For example, to compute the RMS of each channel in a filterbank, you
+        would do::
+        
+            def sum_of_squares(input, running_sum_of_squares):
+                return running_sum_of_squares+sum(input**2, axis=0)
+            rms = sqrt(fb.process(sum_of_squares)/nsamples)
         '''
+        if duration is None:
+            duration = self.duration
         if not isinstance(duration, int):
             duration = int(duration*self.samplerate)
         if not isinstance(buffersize, int):
@@ -149,7 +205,17 @@ class Filterbank(Bufferable):
         self.buffer_init()
         endpoints = hstack((arange(0, duration, buffersize), duration))
         sizes = diff(endpoints)
-        return vstack(tuple(self.buffer_fetch_next(size) for size in sizes))
+        if func is None:
+            return vstack(tuple(self.buffer_fetch_next(size) for size in sizes))
+        else:
+            if func.func_code.co_argcount==1:
+                for size in sizes:
+                    func(self.buffer_fetch_next(size))
+            else:
+                runningval = 0
+                for size in sizes:
+                    runningval = func(self.buffer_fetch_next(size), runningval)
+                return runningval
 
     def buffer_init(self):
         Bufferable.buffer_init(self)
