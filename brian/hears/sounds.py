@@ -607,14 +607,28 @@ class Sound(BaseSound, numpy.ndarray):
         
     
     @staticmethod
-    def tone(frequency, duration, samplerate=None, nchannels=1):
+    def tone(frequency, duration, phase=0, samplerate=None, nchannels=1):
         '''
         Returns a pure tone at frequency for duration, using the default
-        samplerate or the given one.
+        samplerate or the given one. The ``frequency`` and ``phase`` parameters
+        can be single values, in which case multiple channels can be
+        specified with the ``nchannels`` argument, or they can be sequences
+        (lists/tuples/arrays) in which case there is one frequency or phase for
+        each channel.
         '''
         samplerate = get_samplerate(samplerate)
         duration = get_duration(duration,samplerate)
-        x = sin(2.0*pi*frequency*tile(arange(0, duration, 1)/samplerate,(nchannels,1))).T
+        frequency = array(frequency)
+        phase = array(phase)
+        if frequency.size>nchannels and nchannels==1:
+            nchannels = frequency.size
+        if phase.size>nchannels and nchannels==1:
+            nchannels = phase.size
+        if frequency.size==nchannels:
+            frequency.shape = (nchannels, 1)
+        if phase.size==nchannels:
+            phase.shape =(nchannels, 1)
+        x = sin(phase+2.0*pi*frequency*tile(arange(0, duration, 1)/samplerate,(nchannels,1))).T
         return Sound(x, samplerate)
 
     @staticmethod
