@@ -1,4 +1,4 @@
-.. currentmodule:: brian.hears.newversion
+.. currentmodule:: brian.hears
 
 .. _brian-hears-reference:
 
