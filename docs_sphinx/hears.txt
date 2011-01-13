@@ -1,4 +1,4 @@
-.. currentmodule:: brian.hears.newversion
+.. currentmodule:: brian.hears
 
 .. index::
 	pair: auditory; modelling
@@ -237,34 +237,55 @@ Library
 -------
 
 Brian hears comes with a package of predefined filter classes to be used as basic blocks by the user. All of them are implemented as filterbanks.
-They consit of classes of standard filters used in DSP such as generic IIR (:class:`IIRFilterbank`), Butterworth filters (:class:`ButterworthFilterbank`), 2nd order lowpass filters (:class:`LowPassFilterbank`) .
-Standard auditory filters such as gammatones (:class:`GammatoneFilterbank`) and gammachirps, both linear (:class:`LinGammachirpFilterbank`)  and 
-logarithmic (:class:`LogGammachirpFilterbank`) , are provided. 
 
-All of those filters work the same way as the standard filterbanks in Brians hears, i.e. they take as input a sound or another filterbank and some 
-parameters. For instance, you can define a linear gammachirp filterbank as follow ::
+First, a series of standard filters widely used in audio processing are available:
 
-	lin_gammachirp=LinGammachirpFilterbank(sound,cf,time_constant,c)
-	
-Test equation: :math:`\tau \frac{\mathrm{d}V}{\mathrm{d}t} = -(V-V_r)`.
 
-Test equation 2: :math:`\tau=3`.
+.. tabularcolumns::|p{3cm}|p{15cm}|p{3cm}|p{3cm}|
 
-Test equation 3: :math:`\tau \mathrm{d}V/\mathrm{d}t = -(V-V_r)`.
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+| Class name                         | Descripition                                                                                      |  Reference                        |  Example                                     |
++====================================+===================================================================================================+===================================+==============================================+
+| IIRfilterbank                      | Bank of low, high, bandpass or bandstop filter of type Chebyshef, Elliptic, etc...                | :class:`IIRFilterbank`            |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+|  Butterworth                       | Bank of low, high, bandpass or bandstop Butterworth filters                                       | :class:`Butterworth`              |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+| LowPass                            | Bank of lowpass fitlers of order 1                                                                | :class:`LowPass`                  |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+| BiQuadratic                        | Bank of biquadratic filter                                                                        | :class:`IIRFilterbank`            |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
 
-Test equation 4: :math:`\frac{\mathrm{d}V}{\mathrm{d}t}`
+Second, the library provides linear audtiory filters developed to model the frequency analysis of the cochlea: 
 
-Test equation 5: :math:`a+b+c+d+e+f+g+h+i+j+k+l^{l^{l^l}}-(V-V_r)`
+.. tabularcolumns::|p{3cm}|p{15cm}|p{3cm}|p{3cm}|
 
-Test equation: :math:`\tau \frac{\mathrm{d}V}{\mathrm{d}t} = -V`.
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+| Class name                         | Descripition                                                                                      |  Reference                        |  Example                                     |
++====================================+===================================================================================================+===================================+==============================================+
+| Gammatone                          | Bank of IIR gammatone filters  (based on Slaney implementation)                                   | :class:`Gammatone`                |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+|  ApproximateGammatone              | Bank of IIR gammatone filters  (based on Homann implementation)                                   | :class:`ApproximateGammatone`     |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+| LogGammachirp                      | Bank of IIRgammachirp filters with logarithmic sweep (based on Irino implementation)              | :class:`LogGammachirp`            |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+| LinearGammachirp                   | Bank of FIR chirp filters with linear sweep and gamma envelope                                    | :class:`LinearGammachirp`         |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+| LinearGaborchirp                   | Bank of FIR chirp filters with linear sweep and gaussian envelope                                 | :class:`LinearGaborchirp`         |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
 
-Test equation: 
+Finally, Brian hears comes with a series of complex nonlinear cochlear models developed to model nonlinear effects as filter bandwith level dependency, two-tones suppression, peak position level dependency etc
 
-.. math::
-
-	\tau \frac{\mathrm{d}V}{\mathrm{d}t} = -(V-V_r)
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+| Class name                         | Descripition                                                                                      |  Reference                        |  Example                                     |
++====================================+===================================================================================================+===================================+==============================================+
+| DRNL                               | Dual resonance nonlinear filter as described in Lopez-Paveda and Meddis,JASA 2001                 | :class:`DRNL`                     |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
+|  DCGC                              |Compressive gammachirp auditory filter as described in  Irino and Patterson, JASA 2001             | :class:`DCGC`                     |                                              |
++------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
 
 .. index:: HRTF
+
+
 
 Head-related transfer functions
 -------------------------------
