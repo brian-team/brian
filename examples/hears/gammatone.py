@@ -5,12 +5,12 @@ In this example, a white noise is filtered by a gammatone filterbank and the res
 '''
 from brian import *
 from brian.hears import *
-
+from matplotlib import pyplot
 
 dBlevel=50*dB  # dB level of the input sound in rms dB SPL
 sound=whitenoise(100*ms,samplerate=44*kHz).ramp() #generation of a white noise
 sound=sound.atlevel(dBlevel) #set the sound to a certain dB level
-
+time_axis=arange(0*ms,sound.duration,1./sound.samplerate)
 
 nbr_center_frequencies=50
 b1=1.019  #factor determining the time constant of the filters
@@ -21,10 +21,15 @@ gt_mon=gammatone.process() #processing
 
 
 figure()
-imshow(flipud(gt_mon.T),aspect='auto')    
+imshow(flipud(gt_mon.T),aspect='auto',extent=(time_axis[0]*1000,time_axis[-1]*1000,center_frequencies[0],center_frequencies[-1]))
+pyplot.yscale('log')
+#yticks(center_frequencies)
+title('Cochleogram')
+ylabel('Frequency axis (Hz)')
+xlabel('Time axis (ms)')
+
+
 show()
 
 
 
-
-    
