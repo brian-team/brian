@@ -22,8 +22,12 @@ class Gammatone(LinearFilterbank):
     '''
     Bank  of gammatone filters.
     
-    They are implemented as cascades of four 2nd-order filters (this 8th-order digital filter corresponds to a 4th-order gammatone filter).
+    They are implemented as cascades of four 2nd-order IIR filters (this 8th-order digital filter corresponds to a 4th-order gammatone filter).
     
+    The approximated impulse response :math:`IR` is defined as follow
+    :math:`IR(t)=t^{3}.exp(-2\pi b ERB(f)t)cos(2\pi f t )`
+    where :math:`ERB(f)=24.7+0.108 f` [Hz] is the equivalent rectangular bandwidth of the filter centered at :math:`f`
+
     It comes from Slaney's exact gammatone  implementation (Slaney, M., 1993, "An Efficient Implementation of the Patterson-Holdsworth 
     Auditory Filter Bank". Apple Computer Technical Report #35). The code is based on  Slaney's matlab implementation 
     (http://cobweb.ecn.purdue.edu/~malcolm/interval/1998-010/)
@@ -44,7 +48,7 @@ class Gammatone(LinearFilterbank):
         
         
     ``erb_order=1``, ``ear_Q=9.26449`` and ``min_bw=24.7`` are parameters used to compute the ERB bandwidth.
-     (ERB = ((cf/ear_Q)^erb_order + min_bw^erb_order)^(1/erb_order)).
+     :math:`ERB = ((cf/ear\_Q)^{erb\_order} + min\_bw^{erb\_order})^{(1/erb\_order)}`.
     Their default values are the one recommended in Glasberg and Moore, 1990 
 
     '''
@@ -106,7 +110,11 @@ class Gammatone(LinearFilterbank):
 
 class ApproximateGammatone(LinearFilterbank):
     '''
-    Bank of approximate gammatone filters implemented as a cascade of ``order``  gammatone filters..
+    Bank of approximate gammatone filters implemented as a cascade of ``order``  IIR gammatone filters..
+    
+    The filter is derived from the sampled version of the complex analog Gammatone impulse response
+    :math:`g_{\gamma}(t)=t^{\gamma-1} \lambda  \exp(i \\eta t)` 
+    where :math:`\gamma` corresponds to ``order``, :math:`\eta` defines the oscillation frequency ``cf``, and :math:`\lambda` defines the bandwidth parameter.
     
     The design is based on the Hohmann implementation as described in Hohmann, V., 2002, "Frequency analysis and synthesis using a Gammatone filterbank",
     Acta Acustica United with Acustica. The code is based on the matlab gammatone implementation from the Meddis'toolbox 
@@ -414,7 +422,7 @@ class IIRFilterbank(LinearFilterbank):
         One of 'low', 'high', 'bandpass' or 'bandstop'.
     
     ``ftype``
-    The type of IIR filter to design:
+        The type of IIR filter to design:
         elliptic    : 'ellip'
         Butterworth : 'butter',
         Chebyshev I : 'cheby1',
