@@ -126,10 +126,10 @@ class PMFR(CombinedFilterbank):
         cf = atleast_1d(cf)
         nbr_cf=len(cf)
         parameters=set_parameters(cf,param)
-        if source.samplerate is not 50*kHz:
+        if int(source.samplerate)!=50000:
             warnings.warn('To use the PMFR cochlear model the sample rate should be 50kHz')
             if not have_scikits_samplerate:
-                raise ImportError('To use the PMFR cochlear model the sample rate should be 50kHz and  scikits.samplerate package is needed for resampling')               
+                raise ImportError('To use the PMFR cochlear model the sample rate should be 50kHz and scikits.samplerate package is needed for resampling')               
             #source=source.resample(50*kHz)
             warnings.warn('The input to the PMFR cochlear model has been resampled to 50kHz')
 
