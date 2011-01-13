@@ -2,11 +2,11 @@ from brian import *
 from .hrtf import *
 from ..prefs import get_samplerate
 
-__all__ = ['ITDDatabase']
+__all__ = ['HeadlessDatabase']
 
 speed_of_sound_in_air = 343.2*metre/second
 
-class ITDDatabase(HRTFDatabase):
+class HeadlessDatabase(HRTFDatabase):
     '''
     Database for creating HRTFSet with artificial interaural time-differences
     
@@ -27,10 +27,10 @@ class ITDDatabase(HRTFDatabase):
         
     To get the HRTFSet, the simplest thing to do is just::
     
-        hrtfset = ITDDatabase(13).load_subject()
+        hrtfset = HeadlessDatabase(13).load_subject()
         
     The generated ITDs can be returned using the ``itd`` attribute of the
-    :class:`ITDDatabase` object.
+    :class:`HeadlessDatabase` object.
     
     Note that the delays induced in the left and right channels are not
     symmetric as making them so wastes half the samplerate (if the delay to
