@@ -274,8 +274,8 @@ class GPUModelFitting(object):
                        precision=default_precision,
                        scheme=euler_scheme
                        ):
-        if pycuda.context is None:
-            set_gpu_device(0)
+#        if pycuda.context is None:
+#            set_gpu_device(0)
         eqs.prepare()
         self.precision = precision
         if precision == 'double':
@@ -331,9 +331,9 @@ class GPUModelFitting(object):
                   eqs, threshold, reset, dt, N, delta,
                   coincidence_count_algorithm=coincidence_count_algorithm,
                   precision=precision, scheme=scheme)
-        self.kernel_module = SourceModule(self.kernel_src)
-        self.kernel_func = self.kernel_module.get_function('runsim')
-        self.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
+#        self.kernel_module = SourceModule(self.kernel_src)
+#        self.kernel_func = self.kernel_module.get_function('runsim')
+#        self.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
         # TODO: compute block, grid, etc. with best maximum blocksize
         blocksize = 128#256
         self.block = (blocksize, 1, 1)
@@ -341,6 +341,10 @@ class GPUModelFitting(object):
         self.kernel_func_kwds = {'block':self.block, 'grid':self.grid}
 
     def reinit_vars(self, I, I_offset, spiketimes, spiketimes_offset, spikedelays):
+        
+        self.kernel_module = SourceModule(self.kernel_src)
+        self.kernel_func = self.kernel_module.get_function('runsim')
+        
         mydtype = self.mydtype
         N = self.N
         eqs = self.eqs

@@ -5,7 +5,6 @@ recording during one second.
 '''
 from brian import loadtxt, ms, Equations
 from brian.library.modelfitting import *
-#info_level()
 
 if __name__ == '__main__':
     equations = Equations('''
@@ -22,15 +21,12 @@ if __name__ == '__main__':
                             data = spikes,
                             input = input,
                             dt = .1*ms,
-                            
                             popsize = 1000,
                             maxiter = 3,
                             cpu = 1,
-
 #                            particles = 10000,
 #                            iterations = 1,
 #                            use_gpu = True, max_gpu=1,
-                            
                             delta = 4*ms,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms])
