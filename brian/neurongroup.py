@@ -452,16 +452,17 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         '''
         self._state_updater.rest(self)
 
-    def reinit(self):
+    def reinit(self, states=True):
         '''
         Resets the variables.
         '''
         if self._owner is self:
-            if self._S0 is not None:
-                for i in range(len(self._state_updater)):
-                    self._S[i, :] = self._S0[i]
-            else:
-                self._S[:] = 0 # State matrix
+            if states:
+                if self._S0 is not None:
+                    for i in range(len(self._state_updater)):
+                        self._S[i, :] = self._S0[i]
+                else:
+                    self._S[:] = 0 # State matrix
             self._next_allowed_spiketime[:] = -1
             self.LS.reinit()
 

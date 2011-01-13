@@ -4,6 +4,7 @@ New features since 1.2.1
 Minor features:
 
 * Added new brian.tools.datamanager.DataManager, moved from brian.experimental
+* reinit(states=False) will now not reset NeuronGroup state variables to 0.
 
 Improvements
 

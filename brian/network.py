@@ -99,9 +99,10 @@ class Network(object):
         Runs the network for the given duration. See below for details about
         what happens when you do this. See documentation for :func:`run` for
         an explanation of the ``report`` and ``report_period`` keywords.
-    ``reinit()``
+    ``reinit(states=True)``
         Reinitialises the network, runs each object's ``reinit()`` and each
-        clock's ``reinit()`` method (resetting them to 0).
+        clock's ``reinit()`` method (resetting them to 0). If ``states=False``
+        then it will not reinitialise the :class:`NeuronGroup` state variables.
     ``stop()``
         Can be called from a :func:`network_operation` for example to stop the
         network from running.
@@ -238,9 +239,10 @@ class Network(object):
         self.add(obj)
         return obj
 
-    def reinit(self):
+    def reinit(self, states=True):
         '''
-        Resets the objects and clocks.
+        Resets the objects and clocks. If ``states=False`` it will not reinit
+        the state variables.
         '''
         objs = self.groups + self.connections + self.operations
         if self.clock is not None:
@@ -251,7 +253,13 @@ class Network(object):
             objs.extend(self.clocks)
         for P in objs:
             if hasattr(P, 'reinit'):
-                P.reinit()
+                if isinstance(P, NeuronGroup):
+                    try:
+                        P.reinit(states=states)
+                    except TypeError:
+                        P.reinit()
+                else:
+                    P.reinit()
 
     def prepare(self):
         '''
@@ -848,20 +856,23 @@ def run(duration, threads=1, report=None, report_period=10 * second):
                                             report=report, report_period=report_period)
 
 
-def reinit():
+def reinit(states=True):
     '''
     Reinitialises any suitable objects that can be found
     
     **Usage:** ::
     
-        reinit()
+        reinit(states=True)
     
     Works by constructing a :class:`MagicNetwork` object from all the suitable
     objects that could be found (:class:`NeuronGroup`, :class:`Connection`, etc.) and
     then calling ``reinit()`` for each of them. Not suitable for repeated
     runs or situations in which you need precise control.
+    
+    If ``states=False`` then :class:`NeuronGroup` state variables will not be
+    reinitialised.
     '''
-    MagicNetwork(verbose=False, level=2).reinit()
+    MagicNetwork(verbose=False, level=2).reinit(states=states)
 
 
 def stop():
