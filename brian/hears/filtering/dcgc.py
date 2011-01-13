@@ -1,7 +1,4 @@
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
-from brian.hears import *
 from filterbank import Filterbank,FunctionFilterbank,ControlFilterbank,RestructureFilterbank
 from filterbanklibrary import *
 from linearfilterbank import *

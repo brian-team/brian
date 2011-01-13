@@ -1,8 +1,5 @@
 from brian import *
-set_global_preferences(usenewbrianhears=True,
-                       useweave=False)
-from brian.hears import *
-from filterbank import Filterbank,FunctionFilterbank
+from filterbank import Filterbank, FunctionFilterbank, CombinedFilterbank
 from filterbanklibrary import *
 
 def set_parameters(cf,type,param):
@@ -65,7 +62,7 @@ def set_parameters(cf,type,param):
             parameters[key] = param[key]
     return parameters
     
-class DRNL(Filterbank):
+class DRNL(CombinedFilterbank):
     '''
     
     Implementation of the dual resonance nonlinear (DRNL) filter as described in Lopez-Paveda, E. and Meddis, R.,
@@ -131,11 +128,14 @@ class DRNL(Filterbank):
     * param['lp_lin_cutoff_p0']=-0.067
     * param['lp_lin_cutoff_m']=1.016
     * param['lp_nl_cutoff_p0']=-0.052
-    * parame['lp_nl_cutoff_m']=1.016
+    * param['lp_nl_cutoff_m']=1.016
         
     '''
     
-    def __new__(cls, source,cf,type='human',param={}):
+    def __init__(self, source, cf, type='human', param={}):
+
+        CombinedFilterbank.__init__(self, source)
+        source = self.get_modified_source()
         
         cf = atleast_1d(cf)
         nbr_cf=len(cf)
@@ -178,8 +178,9 @@ class DRNL(Filterbank):
         lp_nl=LowPass(bandpass_nonlinear2,cutoff_frequencies_nonlinear)
         lowpass_nonlinear=Cascade(bandpass_nonlinear2,lp_nl,3)
         #adding the two pathways
-        dnrl_filter=lowpass_linear+lowpass_nonlinear
-        return dnrl_filter
+        drnl_filter=lowpass_linear+lowpass_nonlinear
+
+        self.set_output(drnl_filter)
 
     
 if __name__ == '__main__':        

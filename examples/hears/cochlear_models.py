@@ -14,15 +14,15 @@ cf=erbspace(100*Hz, 1000*Hz, 50)
 param_drnl={}
 param_drnl['lp_nl_cutoff_m']=1.1
 
-dnrl_filter=DRNL(sound,cf,type='human',param=param_drnl)
-dnrl=dnrl_filter.buffer_fetch(0, len(sound))
+drnl_filter=DRNL(sound,cf,type='human',param=param_drnl)
+drnl=drnl_filter.process()
 
 ## CDGC
 param_cdgc={}
 param_cdgc['c1']=-2.96
 interval=20
 cdgc_filter=DCGC(sound,cf,interval,param=param_cdgc)
-cdgc=cdgc_filter.buffer_fetch(0, len(sound))
+cdgc=cdgc_filter.process()
 
 ### PMFR
 #param_pmfr={}
@@ -33,7 +33,7 @@ cdgc=cdgc_filter.buffer_fetch(0, len(sound))
 
 figure()
 subplot(311)
-imshow(flipud(dnrl.T),aspect='auto')
+imshow(flipud(drnl.T),aspect='auto')
 subplot(312)
 imshow(flipud(cdgc.T),aspect='auto')
 #subplot(313)

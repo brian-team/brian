@@ -40,6 +40,8 @@ Filterbanks
 .. autoclass:: FunctionFilterbank
 .. autoclass:: SumFilterbank
 .. autoclass:: DoNothingFilterbank
+.. autoclass:: ControlFilterbank
+.. autoclass:: CombinedFilterbank
 
 Filterbank library
 ------------------

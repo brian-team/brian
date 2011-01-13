@@ -11,6 +11,7 @@ __all__ = ['Filterbank',
            'SumFilterbank',
            'DoNothingFilterbank',
            'ControlFilterbank',
+           'CombinedFilterbank',
            ]
 
 class Filterbank(Bufferable):
@@ -204,17 +205,18 @@ class Filterbank(Bufferable):
             buffersize = int(buffersize*self.samplerate)
         self.buffer_init()
         endpoints = hstack((arange(0, duration, buffersize), duration))
-        sizes = diff(endpoints)
+        zendpoints = zip(endpoints[:-1], endpoints[1:])
+        #sizes = diff(endpoints)
         if func is None:
-            return vstack(tuple(self.buffer_fetch_next(size) for size in sizes))
+            return vstack(tuple(self.buffer_fetch(start, end) for start, end in zendpoints))
         else:
             if func.func_code.co_argcount==1:
-                for size in sizes:
-                    func(self.buffer_fetch_next(size))
+                for start, end in zendpoints:
+                    func(self.buffer_fetch(start, end))
             else:
                 runningval = 0
-                for size in sizes:
-                    runningval = func(self.buffer_fetch_next(size), runningval)
+                for start, end in zendpoints:
+                    runningval = func(self.buffer_fetch(start, end), runningval)
                 return runningval
 
     def buffer_init(self):
@@ -707,3 +709,76 @@ class ControlFilterbank(Filterbank):
         input_buffers = [x.buffer_fetch(start, end) for x in self.inputs]
         self.updater(*input_buffers)
         return source_input
+
+
+class CombinedFilterbank(Filterbank):
+    '''
+    Filterbank that encapsulates a chain of filterbanks internally.
+    
+    This class should mostly be used by people writing extensions to Brian hears
+    rather than by users directly. The purpose is to take an existing chain of
+    filterbanks and wrap them up so they appear to the user as a single
+    filterbank which can be used exactly as any other filterbank.
+    
+    In order to do this, derive from this class and in your initialisation
+    follow this pattern::
+    
+        class RectifiedGammatone(CombinedFilterbank):
+            def __init__(self, source, cf):
+                CombinedFilterbank.__init__(self, source)
+                source = self.get_modified_source()
+                # At this point, insert your chain of filterbanks acting on
+                # the modified source object
+                gfb = Gammatone(source, cf)
+                rectified = FunctionFilterbank(gfb,
+                                lambda input: clip(input, 0, Inf))
+                # Finally, set the output filterbank to be the last in your chain
+                self.set_output(fb)
+    
+    This combination of a :class:`Gammatone` and a rectification via a
+    :class:`FunctionFilterbank` can now be used as a single filterbank, for
+    example::
+    
+        x = whitenoise(100*ms)
+        fb = RectifiedGammatone(x, [1*kHz, 1.5*kHz])
+        y = fb.process()
+
+    **Details**
+    
+    The reason for the ``get_modified_source()`` call is that the source
+    attribute of a filterbank can be changed after creation. The modified source
+    provides a buffer (in fact, a :class:`DoNothingFilterbank`) so that the
+    input to the chain of filters defined by the derived class doesn't need to
+    be changed.
+    '''
+    def __init__(self, source):
+        Filterbank.__init__(self, source)
+
+    def get_duration(self):
+        if hasattr(self, '_duration'):
+            return self._duration
+        else:
+            return max(Filterbank.get_duration(self), self.output.duration)        
+
+    source = property(fget=lambda self:self._source,
+                      fset=lambda self, source:self.change_source(source))
+    
+    def change_source(self, source):
+        Filterbank.change_source(self, source)
+        if hasattr(self, '_modified_source'):
+            self._modified_source.source = source
+
+    def get_modified_source(self):
+        self._modified_source = DoNothingFilterbank(self.source)
+        return self._modified_source
+    
+    def set_output(self, output):
+        self.output = output
+        self.nchannels = output.nchannels
+                    
+    def buffer_init(self):
+        Filterbank.buffer_init(self)
+        self.output.buffer_init()
+            
+    def buffer_fetch(self, start, end):
+        return self.output.buffer_fetch(start, end)
