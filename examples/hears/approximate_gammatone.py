@@ -21,8 +21,3 @@ gt_mon=gammatone.process()  #processing. The results is a matrix.
 figure()
 imshow(flipud(gt_mon.T),aspect='auto')    
 show()
-
-
-
-
-    

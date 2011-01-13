@@ -50,10 +50,12 @@ misc
 
    examples-misc_adaptive
    examples-misc_adaptive_threshold
+   examples-misc_after_potential
    examples-misc_cable
    examples-misc_COBA
    examples-misc_COBAHH
    examples-misc_correlated_inputs
+   examples-misc_correlated_inputs2
    examples-misc_CUBA
    examples-misc_current_clamp
    examples-misc_delays
@@ -71,6 +73,7 @@ misc
    examples-misc_multipleclocks
    examples-misc_named_threshold
    examples-misc_noisy_ring
+   examples-misc_non_reliability
    examples-misc_phase_locking
    examples-misc_poisson
    examples-misc_poissongroup
@@ -87,6 +90,7 @@ misc
    examples-misc_transient_sync
    examples-misc_two_neurons
    examples-misc_using_classes
+   examples-misc_van_rossum_metric
 
 interface
 ---------
@@ -95,6 +99,26 @@ interface
    :maxdepth: 1
 
    examples-interface_interface
+
+hears
+-----
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-hears_approximate_gammatone
+   examples-hears_artificial_vowels
+   examples-hears_butterworth
+   examples-hears_cochlear_models
+   examples-hears_dcgc
+   examples-hears_drnl
+   examples-hears_gammatone
+   examples-hears_IIRfilterbank
+   examples-hears_linear_gammachirp
+   examples-hears_log_gammachirp
+   examples-hears_spike_generation
+   examples-hears_time_varying_filter1
+   examples-hears_time_varying_filter2
 
 frompapers
 ----------
@@ -105,9 +129,6 @@ frompapers
    examples-frompapers_Brette_Gerstner_2005
    examples-frompapers_Diesmann_et_al_1999
    examples-frompapers_Diesmann_et_al_1999_longer
-   examples-frompapers_Izhikevich_2006_Polychronization
-   examples-frompapers_Izhikevich_2006_Polychronization_longer
-   examples-frompapers_masquelier_et_al_2008
    examples-frompapers_Rothman_Manis_2003
    examples-frompapers_Sturzl_et_al_2000
 

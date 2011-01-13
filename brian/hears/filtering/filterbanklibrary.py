@@ -48,7 +48,7 @@ class Gammatone(LinearFilterbank):
         
         
     ``erb_order=1``, ``ear_Q=9.26449`` and ``min_bw=24.7`` are parameters used to compute the ERB bandwidth.
-     :math:`ERB = ((cf/ear\_Q)^{erb\_order} + min\_bw^{erb\_order})^{(1/erb\_order)}`.
+    :math:`ERB = ((cf/ear\_Q)^{erb\_order} + min\_bw^{erb\_order})^{(1/erb\_order)}`.
     Their default values are the one recommended in Glasberg and Moore, 1990 
 
     '''

@@ -41,7 +41,7 @@ class Filterbank(Bufferable):
     Alternatively, the buffer interface can be used, which is described in
     more detail below.
     
-    Filterbank also defines arithmetical operations for +, -, *, / where the other
+    Filterbank also defines arithmetical operations for +, -, ``*``, / where the other
     operand can be a filterbank or scalar.
     
     **Details on the class**

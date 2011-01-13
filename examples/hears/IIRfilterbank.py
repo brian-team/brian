@@ -51,9 +51,3 @@ print filterbank.order
 subplot(212)
 imshow(flipud(filterbank_mon.T),aspect='auto')    
 show()
-
-
-
-
-
-    

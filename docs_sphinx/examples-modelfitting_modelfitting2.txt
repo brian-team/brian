@@ -16,7 +16,7 @@ A second example of the modelfitting toolbox.
     
     if __name__ == '__main__':
         from brian import *
-        from modelfitting import *
+        from brian.library.modelfitting import *
     
         model = '''
             dV/dt=(R*I-V)/tau : 1
@@ -31,17 +31,22 @@ A second example of the modelfitting toolbox.
         spikes0 = loadtxt('spikes.txt')
         spikes = []
         for i in xrange(2):
-            spikes.extend([(i, spike * second + 5 * i * ms) for spike in spikes0])
+            spikes.extend([(i, spike*second + 5*i* ms) for spike in spikes0])
     
-        results = modelfitting(model=model, reset=reset, threshold=threshold,
-                                data=spikes,
-                                input=input, dt=.1 * ms,
-                                max_cpu=4,
-                                particles=1000, iterations=3, delta=2 * ms,
-                                R=[1.0e9, 8.0e9],
-                                tau=[10 * ms, 40 * ms],
-                                _delays=[-10 * ms, 10 * ms])
-        print_results(results)
+        result = modelfitting(model = model,
+                               reset = reset,
+                               threshold = threshold,
+                               data = spikes,
+                               input = input,
+                               dt = .1*ms,
+                               cpu = 1,
+                               popsize = 1000,
+                               maxiter = 3,
+                               delta = 2*ms,
+                               R = [1.0e9, 8.0e9],
+                               tau = [10*ms, 40*ms],
+                               delays = [-10*ms, 10*ms])
+        print_table(result)
     
     
 

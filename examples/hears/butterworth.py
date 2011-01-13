@@ -39,9 +39,3 @@ filterbank_mon=filterbank.process() #processing
 subplot(212)
 imshow(flipud(filterbank_mon.T),aspect='auto')    
 show()
-
-
-
-
-
-    
