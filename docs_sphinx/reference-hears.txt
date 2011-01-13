@@ -46,6 +46,7 @@ Filterbanks
 Filterbank library
 ------------------
 .. autoclass:: Gammatone(source, cf,b=1.019,erb_order=1,ear_Q=9.26449,min_bw=24.7)
+.. autoclass:: ApproximateGammatone
 .. autoclass:: LogGammachirp(source, f, b=1.019, c=1, ncascades=4)
 .. autoclass:: LinearGammachirp
 .. autoclass:: LinearGaborchirp
@@ -53,7 +54,7 @@ Filterbank library
 .. autoclass:: Butterworth
 .. autoclass:: Cascade
 .. autoclass:: LowPass
-.. autoclass:: ApproximateGammatone
+
 
 Cochlear model library
 ----------------------
