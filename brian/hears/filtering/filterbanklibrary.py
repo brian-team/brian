@@ -564,7 +564,6 @@ class Butterworth(LinearFilterbank):
                     
         self.filt_a=self.filt_a.reshape(self.filt_a.shape[0],self.filt_a.shape[1],1)
         self.filt_b=self.filt_b.reshape(self.filt_b.shape[0],self.filt_b.shape[1],1)  
-        print self.filt_a,self.filt_b
         self.nchannels = nchannels    
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
 
