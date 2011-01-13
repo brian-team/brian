@@ -1,5 +1,5 @@
 from brian import *
-from filterbank import Filterbank,FunctionFilterbank,ControlFilterbank,RestructureFilterbank
+from filterbank import Filterbank,FunctionFilterbank,ControlFilterbank,CombinedFilterbank,RestructureFilterbank
 from filterbanklibrary import *
 from linearfilterbank import *
 
@@ -75,7 +75,7 @@ class AsymCompUpdate:
          self.iteration+=1
          self.target.filt_b, self.target.filt_a=asymmetric_compensation_coefs(self.samplerate,fr2,self.target.filt_b,self.target.filt_a,self.b,self.c,self.p0,self.p1,self.p2,self.p3,self.p4)
  
-class DCGC(Filterbank):
+class DCGC(CombinedFilterbank):
     '''
     Class implementing  the compressive gammachirp auditory filter as described in  Irino, T. and Patterson R.,
     "A compressive gammachirp auditory filter for both physiological and psychophysical data", JASA 2001
@@ -127,7 +127,10 @@ class DCGC(Filterbank):
     * param['ERBwidth']= :math:`24.7*(4.37*cf/1000 + 1)`
     '''
     
-    def __new__(cls, source,cf,update_interval,param={}):
+    def __init__(self, source,cf,update_interval,param={}):
+        
+        CombinedFilterbank.__init__(self, source)
+        source = self.get_modified_source()
         
         parameters=set_parameters(cf,param)
         ERBspace = mean(diff(parameters['ERBrate']))
@@ -153,4 +156,4 @@ class DCGC(Filterbank):
         updater = AsymCompUpdate(signal_path,source.samplerate,fp1,parameters)   #the updater
         control = ControlFilterbank(signal_path, [pGc_control,asym_comp_control], signal_path, updater, update_interval)  
         
-        return control
+        self.set_output(control)

@@ -1,5 +1,5 @@
 from brian import *
-from filterbank import Filterbank,FunctionFilterbank,ControlFilterbank
+from filterbank import Filterbank,FunctionFilterbank,ControlFilterbank, CombinedFilterbank
 from filterbanklibrary import *
 from linearfilterbank import *
 from ..sounds import *
@@ -92,7 +92,7 @@ class BP_signal_update:
          for iorder in xrange(10):
             self.target.filt_a[:,:,iorder]=vstack([ones(self.N),real(-(squeeze(self.poles[:,iorder])+conj(squeeze(self.poles[:,iorder])))),real(squeeze(self.poles[:,iorder])*conj(squeeze(self.poles[:,iorder])))]).T
 
-class PMFR(Filterbank):
+class PMFR(CombinedFilterbank):
     '''
     Class implementing the non linear auditory filterbank model as described in Tan, G. and Carney, L., 
     "A phenomenological model for the responses of auditory-nerve
@@ -118,7 +118,10 @@ class PMFR(Filterbank):
     
     '''
     
-    def __new__(cls, source,cf,update_interval,param={}):
+    def __init__(self, source,cf,update_interval,param={}):
+        
+        CombinedFilterbank.__init__(self, source)
+        source = self.get_modified_source()
         
         cf = atleast_1d(cf)
         nbr_cf=len(cf)
@@ -166,10 +169,10 @@ class PMFR(Filterbank):
         NL2_control=FunctionFilterbank(NL1_control,func_NL2_control)      
         
         #control low pass filter (its output will be used to control the signal path)
-        LP_control=ButterworthFilterbank(NL2_control, nbr_cf, 3, parameters['fc_LP_control'], btype='low')       
+        LP_control=Butterworth(NL2_control, nbr_cf, 3, parameters['fc_LP_control'], btype='low')       
         
         #low pass filter for feedback to control band pass (its output will be used to control the control path)
-        LP_feed_back= ButterworthFilterbank(LP_control, nbr_cf, 3,parameters['fc_LP_fb'], btype='low')
+        LP_feed_back= Butterworth(LP_control, nbr_cf, 3,parameters['fc_LP_fb'], btype='low')
         
         
         #### Signal Path ####
@@ -207,4 +210,4 @@ class PMFR(Filterbank):
         updater_signal_path=BP_signal_update(signal_path,samplerate,cf,param)  #instantiation of the updater for the signal path
         control2 = ControlFilterbank(control1,  LP_control, signal_path,updater_signal_path, update_interval)     #controler for the band pass filter of the signal path
         
-        return control2
+        self.set_output(control2)
