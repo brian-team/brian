@@ -12,6 +12,7 @@ Docs
 * One example with more complex spike generation (adaptation)
 * Update HRTF example buffer_fecth -> something simpler
 
+* stand alone 
 
 Bertrand
 -------
@@ -19,6 +20,7 @@ Bertrand
 * Table of papers with models
   + put in index
 
+* cochleogram
 
 Additional features
 -------------------
