@@ -1,58 +1,29 @@
 Meeting 6 Jan 2011
 ------------------
 
-Additional features
--------------------
-* Outer ear/middle ear: a couple of standard models
-* Phase of tones+
-* FilterBank.process(duration)
+Dan
+---
 
 Docs
 ----
 * Update. dB.
 * Move example up + link to examples in docs
-* Library: example + link to other examples and list of classes linked to ref
-* One example without spikes
+
 * One example with more complex spike generation (adaptation)
 * Update HRTF example buffer_fecth -> something simpler
-* Make it clear what process(duration) means
+
+
+Bertrand
+-------
+
 * Table of papers with models
   + put in index
-* Controller
 
-Library
--------
-* Perhaps Meddis inner hair cell
-* ITDDatabase -> Headless(Database)? ITD>0 => on the right (clockwise angle
-  starting from front)
-* CascadeFilterBank. Linear filter banks. Functional description rather than
-  implementation.
-* LinGammachirpFilterbank -> LinearGammachirp
-* Remove "Filterbank" suffix on all but:
-	* IIRFilterbank
-	* LinearFilterbank
-	* FIRFilterbank
-	* FunctionFilterbank
-	* RestructureFilterbank
-* LinearGammachirpFilterbank -> LinearGaborchirp and LinearGammachirp
-  and remove env keyword
-* LinearGammachirp and LogGammachirp: equation and reference
-* ApproximateGammatoneFilterbank: n -> order
-* IIRFilterbank: more docs
-* ButterworthFilterbank: ord -> order
-* DRNL: guinnea_pig -> guinea pig
-  in code: ginnea_pig -> guinea pig
-  given_param -> params (everywhere)
-  in docs: give the list of parameters + ref to papers
-* PMFR -> TanCarney2003
-* CDGC -> DCGC
-* CDGC and PMFR: interval -> update_interval; list of parameters
+
+Additional features
+-------------------
+* Outer ear/middle ear: a couple of standard models
 
 Examples
 --------
-* Update cochlear_models + doc string
-* approximate_gammatone_ex.py -> approximate_gammatone.py
-* remove wav files
-* cdgc and drnl: more comments and a few words at the beginning to link to the library
-* Peripheral model (with spikes)
 * other simple examples
