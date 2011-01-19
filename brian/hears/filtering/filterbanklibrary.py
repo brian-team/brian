@@ -567,6 +567,67 @@ class Butterworth(LinearFilterbank):
         self.nchannels = nchannels    
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a) 
 
+
+class BiQuadratic(LinearFilterbank):
+    '''
+    Bank of biquadratic bandpass filters
+    The transfer function of the filters are like the ones of  all second-order linear filters
+    :math:`H(s)=\frac{Kw_{0}^{2}}{s_{2}+w_{0}/Qs+w_{0}^{2}}`
+    where :math:`w_{0}`  is the centre frequency and :math:`Q` the quality factor of the filter
+
+    
+    The implementation  is a 2nd-order IIR  filter with a tranfer function being the ratio of two quadratic functions.
+    
+
+    Initialisation parameters:
+    
+    ``source``
+        Source sound or filterbank.
+        
+    ``f``
+        List or array of the centre frequencies. (:math:`w_{0}^{2}/2\pi`) 
+        
+        
+    ``Q``
+        Quality factor of the filters (dimensionless). It can be a scalar (the same for every channel) or a list/array.``Q`` defines the bandwidth such that
+        
+        
+    ``BW``
+        Alternativl
+        
+    '''
+      
+    def __init__(self, source, f,b=1.019,c=1,ncascades=4):
+        f = atleast_1d(f)
+        self.f = f
+        self.samplerate= source.samplerate
+        
+        self.c=c
+        self.b=b
+        gammatone=Gammatone(source, f,b)
+
+        self.gammatone_filt_b=gammatone.filt_b
+        self.gammatone_filt_a=gammatone.filt_a
+
+        ERBw=24.7*(4.37e-3*f+1.)
+
+        p0=2
+        p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
+        p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
+        p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
+        p4=1.0724
+
+        self.asymmetric_filt_b=zeros((len(f),3, ncascades))
+        self.asymmetric_filt_a=zeros((len(f),3, ncascades))
+
+        self.asymmetric_filt_b,self.asymmetric_filt_a=asymmetric_compensation_coefs(self.samplerate,f,self.asymmetric_filt_b,self.asymmetric_filt_a,b,c,p0,p1,p2,p3,p4)
+
+        #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
+        self.filt_b=concatenate([self.gammatone_filt_b, self.asymmetric_filt_b],axis=2)
+        self.filt_a=concatenate([self.gammatone_filt_a, self.asymmetric_filt_a],axis=2)
+        
+        LinearFilterbank.__init__(self, source, self.filt_b,self.filt_a)
+
 class LowPass(LinearFilterbank):
     '''
     Bank of 1st-order lowpass filters
