@@ -41,3 +41,4 @@ version of the documentation `here <http://brian.di.ens.fr/docs/Brian.pdf>`__.
 		moreunits
 		concepts
 		reference-scipy-numpy-pylab
+		
