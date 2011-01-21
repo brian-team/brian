@@ -91,7 +91,7 @@ if get_global_preference('useweave'):
         numsamples = x.shape[0]
         if n1!=n or m1!=m or p1!=p or x.shape!=(numsamples, n) or zi.shape!=(n, m-1, p):
             raise ValueError('Data has wrong shape.')
-        if not x.flags['C_CONTIGUOUS']:
+        if numsamples>1 and not x.flags['C_CONTIGUOUS']:
             raise ValueError('Input data must be C_CONTIGUOUS')
         if not b.flags['F_CONTIGUOUS'] or not a.flags['F_CONTIGUOUS'] or not zi.flags['F_CONTIGUOUS']:
             raise ValueError('Filter parameters must be F_CONTIGUOUS')
