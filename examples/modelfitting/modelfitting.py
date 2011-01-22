@@ -24,9 +24,6 @@ if __name__ == '__main__':
                             popsize = 1000,
                             maxiter = 3,
                             cpu = 1,
-#                            particles = 10000,
-#                            iterations = 1,
-#                            use_gpu = True, max_gpu=1,
                             delta = 4*ms,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms])
