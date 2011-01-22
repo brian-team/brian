@@ -29,8 +29,7 @@ if __name__ == '__main__':
                             popsize = 1000,
                             maxiter = 3,
                             cpu = 1,
-                            algorithm = PSO,
-                            delta = 2*ms,
+                            delta = 4*ms,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms],
                             delays = [-10*ms, 10*ms])
