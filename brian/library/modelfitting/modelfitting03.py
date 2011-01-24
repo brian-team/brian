@@ -224,6 +224,7 @@ def modelfitting(model=None,
                  machines=[],
                  allocation=None,
                  returninfo=False,
+                 scaling=None,
                  algorithm=PSO,
                  optparams={},
                  scheme=euler_scheme,
@@ -337,6 +338,9 @@ def modelfitting(model=None,
     if slices == 1:
         overlap = 0 * ms
 
+    if (algorithm == CMAES) & (scaling is None):
+        scaling = 'mapminmax'
+
     # common values
 #    group_size = particles # Number of particles per target train
     groups = int(array(data)[:, 0].max() + 1) # number of target trains
@@ -378,6 +382,7 @@ def modelfitting(model=None,
                     returninfo=returninfo,
                     codedependencies=[],
                     algorithm=algorithm,
+                    scaling=scaling,
                     **params)
 
     # r is (results, fitinfo) or (results)
