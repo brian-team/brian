@@ -3,7 +3,7 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
                     reshape, sum, log
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
-    from playdoh03 import *
+    from playdoh import *
 except Exception, e:
     print e
     raise ImportError("Playdoh must be installed (https://code.google.com/p/playdoh/)")
