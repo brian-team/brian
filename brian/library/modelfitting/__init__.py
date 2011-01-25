@@ -1,5 +1,4 @@
-# REMOVE 03 TO USE OLD VERSION
-from modelfitting03 import *
+from modelfitting import *
 from brian.experimental.codegen.integration_schemes import *
 
 #__all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict',

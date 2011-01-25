@@ -1,5 +1,5 @@
 from brian import *
-from playdoh03 import *
+from playdoh import *
 import brian.optimiser as optimiser
 #import pycuda.autoinit as autoinit
 import pycuda.driver as drv
