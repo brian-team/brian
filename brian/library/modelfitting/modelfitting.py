@@ -22,10 +22,13 @@ __all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','
 
 
 class ModelFitting(Fitness):
-    def initialize(self):
+    def initialize(self, **kwds):
         self.use_gpu = self.unit_type=='GPU'
         # Gets the key,value pairs in shared_data
         for key, val in self.shared_data.iteritems():
+            setattr(self, key, val)
+        # Gets the key,value pairs in **kwds
+        for key, val in kwds.iteritems():
             setattr(self, key, val)
 
         # shared_data['model'] is a string
@@ -144,22 +147,22 @@ class ModelFitting(Fitness):
     def evaluate(self, **param_values):
         """
         Use fitparams['delays'] to take delays into account
+        Use fitparams['refractory'] to take refractory into account
         """
-        if 'delays' in param_values.keys():
-            delays = param_values['delays']
-            del param_values['delays']
-        else:
-            delays = zeros(self.neurons)
+        delays = param_values.pop('delays', zeros(self.neurons))
+        refractory = param_values.pop('refractory', zeros(self.neurons))
 
         # kron spike delays
         delays = kron(delays, ones(self.slices))
+        refractory = kron(refractory, ones(self.slices))
 
         # Sets the parameter values in the NeuronGroup object
         self.group.reinit()
         for param, value in param_values.iteritems():
-#            if param == '_delays':
-#                continue
             self.group.state(param)[:] = kron(value, ones(self.slices)) # kron param_values if slicing
+            
+        # set the refractory period
+        self.group.refractory = refractory
             
         # Reinitializes the model variables
         if self.initial_values is not None:
@@ -167,6 +170,12 @@ class ModelFitting(Fitness):
                 self.group.state(param)[:] = value
 
         if self.use_gpu:
+            
+            
+            # TODO: take the refractory into account on the GPU
+            log_warn("optimizing refractoriness is not yet supported on the GPU")
+            
+            
             # Reinitializes the simulation object
             self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, delays)
             # LAUNCHES the simulation on the GPU
@@ -204,7 +213,7 @@ class ModelFitting(Fitness):
 def modelfitting(model=None,
                  reset=None,
                  threshold=None,
-                 refractory=0 * ms,
+                 refractory=0*ms,
                  data=None,
                  input_var='I',
                  input=None,
@@ -340,6 +349,11 @@ def modelfitting(model=None,
 
     if (algorithm == CMAES) & (scaling is None):
         scaling = 'mapminmax'
+        
+    # determines whether optimization over refractoriness or not
+    if type(refractory) is tuple or type(refractory) is list:
+        params['refractory'] = refractory
+        refractory = 0*ms
 
     # common values
 #    group_size = particles # Number of particles per target train
@@ -347,29 +361,28 @@ def modelfitting(model=None,
 #    N = group_size * group_count # number of neurons
     duration = len(input) * dt # duration of the input    
 
-    shared_data = dict(model=model,
-                       threshold=threshold,
-                       reset=reset,
-                       refractory=refractory,
-                       input_var=input_var,
-                       input=input,
-                       dt=dt,
-                       duration=duration,
+    # keyword arguments for Modelfitting initialize
+    kwds = dict(   model=model,
+                   threshold=threshold,
+                   reset=reset,
+                   refractory=refractory,
+                   input_var=input_var,dt=dt,
+                   duration=duration,delta=delta,
+                   slices=slices,
+                   overlap=overlap,
+                   returninfo=returninfo,
+                   precision=precision,
+                   stepsize=stepsize,
+                   scheme=scheme,
+                   onset=0 * ms)
+
+    shared_data = dict(input=input,
                        data=data,
-#                       group_size=group_size,
-#                       group_count=group_count,
-                       delta=delta,
-                       slices=slices,
-                       overlap=overlap,
-                       returninfo=returninfo,
-                       precision=precision,
-                       stepsize=stepsize,
-                       initial_values=initial_values,
-                       scheme=scheme,
-                       onset=0 * ms)
+                       initial_values=initial_values)
 
     r = maximize(   ModelFitting,
                     shared_data=shared_data,
+                    kwds = kwds,
                     groups=groups,
                     popsize=popsize,
                     maxiter=maxiter,

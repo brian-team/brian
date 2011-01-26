@@ -26,5 +26,6 @@ if __name__ == '__main__':
                             cpu = 1,
                             delta = 4*ms,
                             R = [1.0e9, 9.0e9],
-                            tau = [10*ms, 40*ms])
+                            tau = [10*ms, 40*ms],
+                            refractory = [0*ms, 10*ms])
     print_table(results)
