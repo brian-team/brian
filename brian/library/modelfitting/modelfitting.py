@@ -66,6 +66,10 @@ class ModelFitting(Fitness):
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
                 self.group.state(param)[:] = value
+        
+        if self.refractory_range is not None:
+            self.group.min_refractory = self.refractory_range[0]
+            self.group.max_refractory = self.refractory_range[1]
 
         # Injects current in consecutive subgroups, where I_offset have the same value
         # on successive intervals
@@ -353,7 +357,10 @@ def modelfitting(model=None,
     # determines whether optimization over refractoriness or not
     if type(refractory) is tuple or type(refractory) is list:
         params['refractory'] = refractory
+        refractory_range = refractory
         refractory = 0*ms
+    else:
+        refractory_range = None
 
     # common values
 #    group_size = particles # Number of particles per target train
@@ -366,6 +373,7 @@ def modelfitting(model=None,
                    threshold=threshold,
                    reset=reset,
                    refractory=refractory,
+                   refractory_range=refractory_range,
                    input_var=input_var,dt=dt,
                    duration=duration,delta=delta,
                    slices=slices,
