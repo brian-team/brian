@@ -15,7 +15,7 @@ try:
 except ImportError:
     can_use_gpu = False
 from brian.experimental.codegen.integration_schemes import *
-import sys
+import sys, cPickle
 
 __all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','CMAES',
            'debug_level', 'info_level', 'warning_level', 'open_server']
@@ -31,7 +31,11 @@ class ModelFitting(Fitness):
         for key, val in kwds.iteritems():
             setattr(self, key, val)
 
-        # shared_data['model'] is a string
+#        log_info(self.model)
+        self.model = cPickle.loads(self.model)
+#        log_info(self.model)
+
+        # if model is a string
         if type(self.model) is str:
             self.model = Equations(self.model)
 
@@ -55,6 +59,7 @@ class ModelFitting(Fitness):
         self.prepare_data()
 
         # Must recompile the Equations : the functions are not transfered after pickling/unpickling
+        # BUG
         self.model.compile_functions()
 
         self.group = NeuronGroup(self.N,
@@ -369,7 +374,7 @@ def modelfitting(model=None,
     duration = len(input) * dt # duration of the input    
 
     # keyword arguments for Modelfitting initialize
-    kwds = dict(   model=model,
+    kwds = dict(   model=cPickle.dumps(model),
                    threshold=threshold,
                    reset=reset,
                    refractory=refractory,
