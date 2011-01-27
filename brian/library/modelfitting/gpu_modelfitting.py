@@ -49,6 +49,8 @@ __global__ void runsim(
                               // end each train with large negative value)
     int *spiketime_indices,   // Pointer into above array for each neuron
     int *spikedelay_arr,      // Integer delay for each spike
+    int *refractory_arr,      // Integer refractory times
+    int *next_allowed_spiketime_arr,// Integer time of the next allowed spike (for refractoriness)
     int onset                 // Time onset (only count spikes from here onwards)
     %COINCIDENCE_COUNT_DECLARE_EXTRA_STATE_VARIABLES%
     )
@@ -65,6 +67,8 @@ __global__ void runsim(
     int nspikes = spikecount[neuron_index];
     int I_offset = I_arr_offset[neuron_index];
     int spikedelay = spikedelay_arr[neuron_index];
+    const int refractory = refractory_arr[neuron_index];
+    int next_allowed_spiketime = next_allowed_spiketime_arr[neuron_index];
     for(int T=Tstart; T<Tend; T++)
     {
         %SCALAR% t = T*%DT%;
@@ -79,12 +83,15 @@ __global__ void runsim(
         // State update
         %STATE_UPDATE%
         // Threshold
-        const bool has_spiked = %THRESHOLD%;
+        const bool is_refractory = (T<=next_allowed_spiketime);
+        const bool has_spiked = (%THRESHOLD%)&&!is_refractory;
+        //const bool has_spiked = %THRESHOLD%;
         nspikes += has_spiked*(T>=onset);
         // Reset
         if(has_spiked)
         {
             %RESET%
+            next_allowed_spiketime = T+refractory;
         }
         // Coincidence counter
         const int Tspike = T+spikedelay;
@@ -99,6 +106,7 @@ __global__ void runsim(
     // Store variables at end
     %STORE_VARIABLES%
     %COINCIDENCE_COUNT_STORE_VARIABLES%
+    next_allowed_spiketime_arr[neuron_index] = next_allowed_spiketime;
     spiketime_indices[neuron_index] = spiketime_index;
     num_coincidences[neuron_index] = ncoinc;
     spikecount[neuron_index] = nspikes;
@@ -218,6 +226,8 @@ class GPUModelFitting(object):
         The spike times array and offsets (see below).
     ``spikedelays``,
         Array of delays for each neuron.
+    ``refractory``,
+        Array of refractory periods, or a single value.
     ``delta``
         The half-width of the coincidence window.
     ``precision``
@@ -268,7 +278,8 @@ class GPUModelFitting(object):
     mark the beginning and end of the train rather than storing the number of
     spikes for each train. 
     '''
-    def __init__(self, G, eqs, I, I_offset, spiketimes, spiketimes_offset, spikedelays,
+    def __init__(self, G, eqs, I, I_offset, spiketimes, spiketimes_offset,
+                       spikedelays, refractory,
                        delta, onset=0 * ms,
                        coincidence_count_algorithm='exclusive',
                        precision=default_precision,
@@ -340,7 +351,8 @@ class GPUModelFitting(object):
         self.grid = (int(ceil(float(N) / blocksize)), 1)
         self.kernel_func_kwds = {'block':self.block, 'grid':self.grid}
 
-    def reinit_vars(self, I, I_offset, spiketimes, spiketimes_offset, spikedelays):
+    def reinit_vars(self, I, I_offset, spiketimes, spiketimes_offset,
+                    spikedelays, refractory):
         
         self.kernel_module = SourceModule(self.kernel_src)
         self.kernel_func = self.kernel_module.get_function('runsim')
@@ -361,6 +373,10 @@ class GPUModelFitting(object):
         self.num_coincidences = gpuarray.to_gpu(zeros(N, dtype=int32))
         self.spikecount = gpuarray.to_gpu(zeros(N, dtype=int32))
         self.spikedelay_arr = gpuarray.to_gpu(array(rint(spikedelays / self.dt), dtype=int32))
+        if isinstance(refractory, float):
+            refractory = refractory*ones(N)
+        self.refractory_arr = gpuarray.to_gpu(array(rint(refractory / self.dt), dtype=int32))
+        self.next_allowed_spiketime_arr = gpuarray.to_gpu(-ones(N, dtype=int32))
         self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
         self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
         self.kernel_func_args = [self.state_vars[name] for name in self.declarations_seq]
@@ -370,6 +386,8 @@ class GPUModelFitting(object):
                                   self.spiketimes,
                                   self.spiketime_indices,
                                   self.spikedelay_arr,
+                                  self.refractory_arr,
+                                  self.next_allowed_spiketime_arr,
                                   int32(rint(self.onset / self.dt))]
         if self.coincidence_count_algorithm == 'exclusive':
             self.kernel_func_args += [self.last_spike_allowed_arr,
@@ -402,6 +420,9 @@ class GPUModelFitting(object):
 if __name__ == '__main__':
     import time
     from matplotlib.cm import jet
+    from playdoh import *
+    initialise_cuda()
+    set_gpu_device(0)
     if 1:
         set_global_preferences(usecodegenthreshold=False)
         N = 10000
@@ -428,9 +449,10 @@ if __name__ == '__main__':
         duration = len(I) * G.clock.dt
         spiketimes = hstack((-1, spiketimes, float(duration) + 1))
         mf = GPUModelFitting(G, eqs, I, I_offset, spiketimes, spiketimes_offset,
-                             spikedelays,
+                             spikedelays, 0*ms,
                              delta,
                              coincidence_count_algorithm='exclusive')
+        mf.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays, 0*ms)
         print mf.kernel_src
         start_time = time.time()
         mf.launch(duration)

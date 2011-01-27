@@ -89,7 +89,7 @@ class ModelFitting(Fitness):
 
         if self.use_gpu:
             self.mf = GPUModelFitting(self.group, self.model, self.input, self.I_offset,
-                                      self.spiketimes, self.spiketimes_offset, zeros(self.neurons), self.delta,
+                                      self.spiketimes, self.spiketimes_offset, zeros(self.neurons), 0*ms, self.delta,
                                       precision=self.precision, scheme=self.scheme)
         else:
             self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset,
@@ -186,7 +186,7 @@ class ModelFitting(Fitness):
             
             
             # Reinitializes the simulation object
-            self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, delays)
+            self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, refractory, delays)
             # LAUNCHES the simulation on the GPU
             self.mf.launch(self.duration, self.stepsize)
             coincidence_count = self.mf.coincidence_count
