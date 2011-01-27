@@ -174,6 +174,30 @@ if get_global_preference('useweave'):
             }
         }
         '''
+        if 0: # this version is used for comparing without vectorising over frequency
+            code = '''
+            #define X(s,i) x[(s)*n+(i)]
+            #define Y(s,i) y[(s)*n+(i)]
+            #define A(i,j,k) a[(i)+(j)*n+(k)*n*m]
+            #define B(i,j,k) b[(i)+(j)*n+(k)*n*m]
+            #define Zi(i,j,k) zi[(i)+(j)*n+(k)*n*(m-1)]
+            for(int j=0; j<n; j++)
+            {
+                for(int k=0; k<p; k++)
+                {
+                    for(int s=0; s<numsamples; s++)
+                    {
+                    
+                        Y(s,j) =   B(j,0,k)*X(s,j) + Zi(j,0,k);
+                        for(int i=0; i<m-2; i++)
+                            Zi(j,i,k) = B(j,i+1,k)*X(s,j) + Zi(j,i+1,k) - A(j,i+1,k)*Y(s,j);                    
+                        Zi(j,m-2,k) = B(j,m-1,k)*X(s,j)               - A(j,m-1,k)*Y(s,j);
+                        if(k<p-1)
+                            X(s,j) = Y(s,j);
+                    }
+                }
+            }
+            '''
         weave.inline(code, ['b', 'a', 'x', 'zi', 'y', 'n', 'm', 'p', 'numsamples'],
                      compiler=_cpp_compiler,
                      extra_compile_args=_extra_compile_args)
