@@ -59,7 +59,6 @@ class ModelFitting(Fitness):
         self.prepare_data()
 
         # Must recompile the Equations : the functions are not transfered after pickling/unpickling
-        # BUG
         self.model.compile_functions()
 
         self.group = NeuronGroup(self.N,
@@ -179,12 +178,6 @@ class ModelFitting(Fitness):
                 self.group.state(param)[:] = value
 
         if self.use_gpu:
-            
-            
-            # TODO: take the refractory into account on the GPU
-            log_warn("optimizing refractoriness is not yet supported on the GPU")
-            
-            
             # Reinitializes the simulation object
             self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, refractory, delays)
             # LAUNCHES the simulation on the GPU
