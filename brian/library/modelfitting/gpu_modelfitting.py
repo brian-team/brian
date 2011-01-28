@@ -87,11 +87,12 @@ __global__ void runsim(
         const bool has_spiked = (%THRESHOLD%)&&!is_refractory;
         nspikes += has_spiked*(T>=onset);
         // Reset
-        if(has_spiked)
+        if(has_spiked||is_refractory)
         {
             %RESET%
-            next_allowed_spiketime = T+refractory;
         }
+        if(has_spiked)
+            next_allowed_spiketime = T+refractory;
         // Coincidence counter
         const int Tspike = T+spikedelay;
         %COINCIDENCE_COUNT_TEST%
