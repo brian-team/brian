@@ -179,7 +179,7 @@ class ModelFitting(Fitness):
 
         if self.use_gpu:
             # Reinitializes the simulation object
-            self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, refractory, delays)
+            self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, delays, refractory)
             # LAUNCHES the simulation on the GPU
             self.mf.launch(self.duration, self.stepsize)
             coincidence_count = self.mf.coincidence_count

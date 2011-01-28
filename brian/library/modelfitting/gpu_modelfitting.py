@@ -85,7 +85,6 @@ __global__ void runsim(
         // Threshold
         const bool is_refractory = (T<=next_allowed_spiketime);
         const bool has_spiked = (%THRESHOLD%)&&!is_refractory;
-        //const bool has_spiked = %THRESHOLD%;
         nspikes += has_spiked*(T>=onset);
         // Reset
         if(has_spiked)
