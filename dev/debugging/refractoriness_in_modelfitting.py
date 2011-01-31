@@ -37,18 +37,13 @@ if __name__ == '__main__':
                             data = spikes,
                             input = input,
                             dt = .1*ms,
-                            popsize = 5,
-                            maxiter = 1,
+                            popsize = 150000,
+                            maxiter = 50,
                             gpu = 1,
-                            #algorithm = CMAES,
+                            algorithm = CMAES,
                             delta = 1*ms,
-                            R = [3.0e9, 3.0e9],
-                            tau = [20*ms, 20*ms],
-                            delays = [0*ms, 0*ms],
-                            refractory=[5*ms, 5*ms],
-                            )
-#                            R = [1.0e9, 9.0e9],
-#                            tau = [10*ms, 40*ms],
-#                            delays = [-100*ms, 100*ms],
-#                            refractory=[0*ms, 0*ms, 10*ms, 10*ms])
+                            R = [1.0e9, 9.0e9],
+                            tau = [10*ms, 40*ms],
+                            delays = [-20*ms, 20*ms],
+                            refractory=[0*ms, 0*ms, 10*ms, 10*ms])
     print_table(results)
