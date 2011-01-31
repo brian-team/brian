@@ -58,6 +58,19 @@ class ModelFitting(Fitness):
         # Prepares data (generates I_offset, spiketimes, spiketimes_offset)
         self.prepare_data()
 
+        # Add 'refractory' parameter on the CPU on the CPU only
+        if not self.use_gpu:
+            if self.max_refractory is not None:
+                refractory = 'refractory'
+                self.model.add_param('refractory', second)
+            else:
+                refractory = self.refractory
+        else:
+            if self.max_refractory is not None:
+                refractory = 0*ms
+            else:
+                refractory = self.refractory
+
         # Must recompile the Equations : the functions are not transfered after pickling/unpickling
         self.model.compile_functions()
 
@@ -65,15 +78,13 @@ class ModelFitting(Fitness):
                                  model=self.model,
                                  reset=self.reset,
                                  threshold=self.threshold,
-                                 refractory=self.refractory,
+                                 refractory=refractory,
+                                 max_refractory = self.max_refractory,
                                  clock=Clock(dt=self.dt))
+        
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
                 self.group.state(param)[:] = value
-        
-        if self.refractory_range is not None:
-            self.group.min_refractory = self.refractory_range[0]
-            self.group.max_refractory = self.refractory_range[1]
 
         # Injects current in consecutive subgroups, where I_offset have the same value
         # on successive intervals
@@ -169,9 +180,6 @@ class ModelFitting(Fitness):
         for param, value in param_values.iteritems():
             self.group.state(param)[:] = kron(value, ones(self.slices)) # kron param_values if slicing
             
-        # set the refractory period
-        self.group.refractory = refractory
-            
         # Reinitializes the model variables
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
@@ -185,10 +193,12 @@ class ModelFitting(Fitness):
             coincidence_count = self.mf.coincidence_count
             spike_count = self.mf.spike_count
         else:
-
+            # set the refractory period
+            if self.max_refractory is not None:
+                self.group.refractory = refractory
+            
             self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset,
                                         onset=self.onset, delta=self.delta)
-
             # Sets the spike delay values
             self.cc.spikedelays = delays
             # Reinitializes the simulation objects
@@ -196,9 +206,7 @@ class ModelFitting(Fitness):
 #            self.cc.reinit()
             net = Network(self.group, self.cc)
             # LAUNCHES the simulation on the CPU
-
             net.run(self.duration)
-
             coincidence_count = self.cc.coincidences
             spike_count = self.cc.model_length
 
@@ -355,10 +363,10 @@ def modelfitting(model=None,
     # determines whether optimization over refractoriness or not
     if type(refractory) is tuple or type(refractory) is list:
         params['refractory'] = refractory
-        refractory_range = refractory
-        refractory = 0*ms
+        max_refractory = refractory[-1]
+#        refractory = 'refractory'
     else:
-        refractory_range = None
+        max_refractory = None
 
     # common values
 #    group_size = particles # Number of particles per target train
@@ -371,7 +379,7 @@ def modelfitting(model=None,
                    threshold=threshold,
                    reset=reset,
                    refractory=refractory,
-                   refractory_range=refractory_range,
+                   max_refractory=max_refractory,
                    input_var=input_var,dt=dt,
                    duration=duration,delta=delta,
                    slices=slices,
