@@ -318,7 +318,8 @@ class Sound(BaseSound, numpy.ndarray):
         can be the number of samples or a length of time in seconds.
         '''
         duration=get_duration(duration,self.samplerate)
-        return self[:self.duration+duration]
+        current_duration = get_duration(self.duration,self.samplerate)
+        return self[:current_duration+duration]
 
     def resized(self, L):
         '''
