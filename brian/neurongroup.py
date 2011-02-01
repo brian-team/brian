@@ -616,16 +616,27 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             import network
         if clock is None:
             clock = self.clock
+        # check that var is not an equation (it really should only be a parameter
+        # but not sure how to make this generic and still work with neurongroups
+        # that aren't defined by Equations objects)
+        if hasattr(self, 'staticvars') and var in self.staticvars:
+            raise ValueError("Cannot set a static variable (equation) with a linked variable.")
         selfarr = self.state_(var)
-        sourcearr = source.state_(sourcevar)
-        if func is None:
+        if hasattr(source, 'staticvars') and sourcevar in source.staticvars:
+            if func is None: func = lambda x: x
             @network.network_operation(when=when, clock=clock)
             def update_link_var():
-                selfarr[:] = sourcearr
+                selfarr[:] = func(getattr(source, sourcevar))
         else:
-            @network.network_operation(when=when, clock=clock)
-            def update_link_var():
-                selfarr[:] = func(sourcearr)
+            sourcearr = source.state_(sourcevar)
+            if func is None:
+                @network.network_operation(when=when, clock=clock)
+                def update_link_var():
+                    selfarr[:] = sourcearr
+            else:
+                @network.network_operation(when=when, clock=clock)
+                def update_link_var():
+                    selfarr[:] = func(sourcearr)
         self._owner.contained_objects.append(update_link_var)
 
     def set_var_by_array(self, var, arr, times=None, clock=None, start=None, dt=None):
