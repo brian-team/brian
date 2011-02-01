@@ -290,6 +290,8 @@ class STDP(NetworkOperation):
             max_delay = C._max_delay * C.target.clock.dt
 
             def gencode(incode, vars, other_vars, wreplacement):
+                num_immediate = num_delayed = 0
+                reordering_warning = False
                 incode_lines = [line.strip() for line in incode.split('\n')]
                 outcode_immediate = 'for _i in spikes:\n'
                 # delayed variables
@@ -297,14 +299,20 @@ class STDP(NetworkOperation):
                 for var in other_vars:
                     outcode_delayed += '    ' + var + '__delayed = ' + var + '__delayed_values_seq[_j]\n'
                 for line in incode_lines:
+                    if not line.strip(): continue
                     m = re.search(r'\bw\b\s*[^><=]?=', line) # lines of the form w = ..., w *= ..., etc.
                     for var in vars:
                         line = re.sub(r'\b' + var + r'\b', var + '[_i]', line)
                     for var in other_vars:
                         line = re.sub(r'\b' + var + r'\b', var + '__delayed', line)
                     if m:
+                        num_delayed += 1
                         outcode_delayed += '    ' + line + '\n'
                     else:
+                        if num_delayed!=0 and not reordering_warning:
+                            log_warn('brian.stdp', 'STDP operations are being re-ordered for delay connection, results may be wrong.')
+                            reordering_warning = True
+                        num_immediate += 1
                         outcode_immediate += '    ' + line + '\n'
                 outcode_delayed = re.sub(r'\bw\b', wreplacement, outcode_delayed)
                 outcode_delayed += '\n    %(w)s = clip(%(w)s, %(min)e, %(max)e)' % {'min':wmin, 'max':wmax, 'w':wreplacement}
@@ -312,6 +320,9 @@ class STDP(NetworkOperation):
 
             pre_immediate, pre_delayed = gencode(pre, vars_pre, vars_post, 'w[_i,:]')
             post_immediate, post_delayed = gencode(post, vars_post, vars_pre, 'w[:,_i]')
+            log_debug('brian.stdp', 'PRE CODE IMMEDIATE:\n'+pre_immediate)
+            log_debug('brian.stdp', 'PRE CODE DELAYED:\n'+pre_delayed)
+            log_debug('brian.stdp', 'POST CODE:\n'+post_immediate+post_delayed)
             pre_delay_expr = 'max_delay-d'
             post_delay_expr = 'd'
             pre_code_immediate = compile(pre_immediate, "Presynaptic code immediate", "exec")
@@ -367,6 +378,8 @@ class STDP(NetworkOperation):
             # or actual code? (rather than compiled string)
             pre += '\n    w[_i,:]=clip(w[_i,:],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
             post += '\n    w[:,_i]=clip(w[:,_i],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
+            log_debug('brian.stdp', 'PRE CODE:\n'+pre)
+            log_debug('brian.stdp', 'POST CODE:\n'+post)
             # Compile code
             pre_code = compile(pre, "Presynaptic code", "exec")
             post_code = compile(post, "Postsynaptic code", "exec")

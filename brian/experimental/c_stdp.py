@@ -11,7 +11,7 @@ else:
     from ..utils.documentation import flattened_docstring
     from ..stdunits import ms
     from ..connections import Connection, DelayConnection
-    from ..log import log_debug
+    from ..log import log_debug, log_warn
     from ..monitor import RecentStateMonitor, SpikeMonitor
     from ..network import NetworkOperation
     from ..neurongroup import NeuronGroup
@@ -100,14 +100,22 @@ class CSTDP(NetworkOperation):
         post_namespace = namespace(post, level=level + 1)
 
         def splitcode(incode):
+            num_perneuron = num_persynapse = 0
+            reordering_warning = False
             incode_lines = [line.strip() for line in incode.split('\n') if line.strip()]
             per_neuron_lines = []
             per_synapse_lines = []
             for line in incode_lines:
+                if not line.strip(): continue
                 m = re.search(r'\bw\b\s*[^><=]?=', line) # lines of the form w = ..., w *= ..., etc.
                 if m:
+                    num_persynapse += 1
                     per_synapse_lines.append(line)
                 else:
+                    num_perneuron += 1
+                    if num_persynapse!=0 and not reordering_warning:
+                        log_warn('brian.experimental.cstdp', 'STDP operations are being re-ordered, results may be wrong.')
+                        reordering_warning = True
                     per_neuron_lines.append(line)
             return per_neuron_lines, per_synapse_lines
 
