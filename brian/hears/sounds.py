@@ -233,6 +233,14 @@ class Sound(BaseSound, numpy.ndarray):
             return Sound(x, self.samplerate)
     __radd__ = __add__
     
+    # getslice and setslice need to be implemented for compatibility reasons,
+    # but __getitem__ covers all the functionality so we just use that
+    def __getslice__(self, start, stop):
+        return self.__getitem__(slice(start, stop))
+
+    def __setslice__(self, start, stop, seq):
+        return self.__setitem__(slice(start, stop), seq)
+    
     def __getitem__(self,key):
         channel=slice(None)
         if isinstance(key,tuple):
@@ -317,9 +325,8 @@ class Sound(BaseSound, numpy.ndarray):
         Returns the Sound with length extended by the given duration, which
         can be the number of samples or a length of time in seconds.
         '''
-        duration=get_duration(duration,self.samplerate)
-        current_duration = get_duration(self.duration,self.samplerate)
-        return self[:current_duration+duration]
+        duration = get_duration(duration, self.samplerate)
+        return self[:self.nsamples+duration]
 
     def resized(self, L):
         '''
