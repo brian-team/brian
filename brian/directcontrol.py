@@ -196,20 +196,18 @@ class SpikeGeneratorGroup(NeuronGroup):
         Optionally makes the spikes recur periodically with the given
         period. Note that iterator objects cannot be used as the ``spikelist``
         with a period as they cannot be reinitialised.
+    ``gather=False``
+        Set to True if you want to gather spike events that fall in the same
+        timestep (makes the simulation faster if you have many events).
+    ``sort=True``
+        Set to False if your spike events are already sorted.
     
     Has an attribute:
     
     ``spiketimes``
         This can be used to reset the list of spike times, however the values of
         ``N``, ``clock`` and ``period`` cannot be changed. 
-    
-    Options:
-    ``gather`` (default False)
-        Set to True if you want to gather spike events that fall in the same
-        timestep (makes the simulation faster if you have many events).
-    ``sort`` (default True)
-        Set to False if your spike events are already sorted.
-    
+        
     **Sample usages**
     
     The simplest usage would be a list of pairs ``(i,t)``::
