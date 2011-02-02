@@ -51,6 +51,7 @@ import warnings
 import uuid
 import numpy
 from numpy import zeros, ones
+import numpy
 from log import *
 from optimiser import *
 from scipy import optimize
@@ -962,14 +963,40 @@ class Equations(object):
             if '__builtins__' in selfcopy._namespace[key]:
                 del selfcopy._namespace[key]['__builtins__']
         selfcopy._function = {}
+        # Sometimes namespaces have numpy ufuncs in them, which are not
+        # picklable, so we replace them with PickledUfunc objects which just
+        # store their name, and _load_equations_from_pickle will extract them
+        # from numpy again
+        def replaceufunc(d):
+            for k in d.keys():
+                v = d[k]
+                if isinstance(v, numpy.ufunc):
+                    d[k] = PickledUfunc(v)
+                    print v.__name__
+                if isinstance(v, dict):
+                    replaceufunc(v)
+        replaceufunc(selfcopy.__dict__)
         self.__class__ = cls
         return (_load_Equations_from_pickle, (selfcopy, cls))
 
+class PickledUfunc(object):
+    def __init__(self, ufunc):
+        self.name = ufunc.__name__
+    def get(self):
+        return getattr(numpy, self.name)
 
 class PickledEquations(object):
     pass
 
 def _load_Equations_from_pickle(eqs, cls):
+    def replaceufunc(d):
+        for k in d.keys():
+            v = d[k]
+            if isinstance(v, PickledUfunc):
+                d[k] = v.get()
+            if isinstance(v, dict):
+                replaceufunc(v)
+    replaceufunc(eqs.__dict__)
     eqs.__class__ = cls
     eqs.prepare()
     return eqs
