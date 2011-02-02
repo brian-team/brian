@@ -972,7 +972,6 @@ class Equations(object):
                 v = d[k]
                 if isinstance(v, numpy.ufunc):
                     d[k] = PickledUfunc(v)
-                    print v.__name__
                 if isinstance(v, dict):
                     replaceufunc(v)
         replaceufunc(selfcopy.__dict__)
