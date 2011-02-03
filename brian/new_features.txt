@@ -11,7 +11,7 @@ Minor features:
 * reinit(states=False) will now not reset NeuronGroup state variables to 0.
 * modelfitting now has support for refractoriness
 * New examples in misc: after_potential, non_reliability, reliability,
-  van_rossum_metric.
+  van_rossum_metric, remotecontrolserver, remotecontrolclient
 * New experimental.neuromorphic package
 * Van Rossum metric added
 

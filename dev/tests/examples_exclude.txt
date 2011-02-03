@@ -12,3 +12,5 @@ Izhikevich_2006_Polychronization_longer.py
 multiple_runs_with_gui.py
 clusterexample_manager.py
 clusterexample_worker.py
+remotecontrolserver.py
+remotecontrolclient.py

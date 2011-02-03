@@ -151,3 +151,13 @@ Here the averages are calculated over 1 ms time windows. Alternatively, one can 
 
 The rates are convolved with a linear filter, which is either a Gaussian function
 (``gaussian``, default) or a box function ('flat').
+
+Van Rossum Metric
+-----------------
+
+The Van Rossum metric can be computed by monitoring a group with a
+:class:`VanRossumMetric` object::
+
+	M = VanRossumMetric(G, tau=4*ms)
+	...
+	imshow(M.distance)

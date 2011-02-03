@@ -36,15 +36,25 @@ is simulated with dt=0.01 ms and the variable x is recorded every ms::
 The current time of a clock is stored in the attribute ``t`` (``simulation_clock.t``) and
 the timestep is stored in the attribute ``dt``.
 
+When using multiple clocks, it can be important to specify the order in which
+they evaluated, which you can using the ``order`` keyword of the :class:`Clock`
+object, e.g.::
+
+	clock_first = Clock(dt=1*ms, order=0)
+	clock_second = Clock(dt=5*ms, order=1)
+	
+Every 5ms, these two clocks will coincide, and the order attribute means that
+``clock_first`` will always be evaluated before ``clock_second``.
+
 Other clocks
 ------------
 
-Clocks use floating point values for ``t`` and ``dt`` which means that if
-multiple clocks are being used, the sequence of operations may not always be
-entirely regular or predictable (small errors accumulate). If this is an issue,
-you can use a :class:`RegularClock` which uses integer multiples of ``dt`` for ``t``.
+The default clock uses an underlying integer representation. This behaviour
+was changed in Brian 1.3 from earlier versions which used a float representation.
+To recover the earlier behaviour if it is important, you can use
+:class:`FloatClock` or :class:`NaiveClock`.
 
-You may also want to have events that happen at regular times, but still want to
+You may want to have events that happen at regular times, but still want to
 use the default clock for all other objects, in which case you can use the
 :class:`EventClock` for a :func:`network_operation` and it will not create any
 clock ambiguities, e.g.::

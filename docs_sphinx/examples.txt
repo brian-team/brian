@@ -81,6 +81,8 @@ misc
    examples-misc_rate_model
    examples-misc_realtime_plotting
    examples-misc_reliability
+   examples-misc_remotecontrolclient
+   examples-misc_remotecontrolserver
    examples-misc_ring
    examples-misc_stim2d
    examples-misc_stopping

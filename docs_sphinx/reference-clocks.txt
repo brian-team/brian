@@ -40,6 +40,8 @@ The :class:`Clock` class
 
 .. autoclass:: Clock
 .. autoclass:: EventClock
+.. autoclass:: FloatClock
+.. autoclass:: NaiveClock
 .. autoclass:: RegularClock
 
 .. index::
