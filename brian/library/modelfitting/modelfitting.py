@@ -80,6 +80,7 @@ class ModelFitting(Fitness):
                                  threshold=self.threshold,
                                  refractory=refractory,
                                  max_refractory = self.max_refractory,
+                                 method = self.method,
                                  clock=Clock(dt=self.dt))
         
         if self.initial_values is not None:
@@ -98,9 +99,15 @@ class ModelFitting(Fitness):
             k = i
 
         if self.use_gpu:
+            # Select integration scheme according to method
+            if self.method == 'Euler': scheme = euler_scheme
+            elif self.method == 'RK': scheme = rk2_scheme
+            elif self.method == 'exponential_Euler': scheme = exp_euler_scheme
+            else: raise Exception("The numerical integration method is not valid")
+            
             self.mf = GPUModelFitting(self.group, self.model, self.input, self.I_offset,
                                       self.spiketimes, self.spiketimes_offset, zeros(self.neurons), 0*ms, self.delta,
-                                      precision=self.precision, scheme=self.scheme)
+                                      precision=self.precision, scheme=scheme)
         else:
             self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset,
                                         onset=self.onset, delta=self.delta)
@@ -244,9 +251,9 @@ def modelfitting(model=None,
                  allocation=None,
                  returninfo=False,
                  scaling=None,
-                 algorithm=PSO,
+                 algorithm=CMAES,
                  optparams={},
-                 scheme=euler_scheme,
+                 method='Euler',
                  **params):
     """
     Model fitting function.
@@ -259,25 +266,37 @@ def modelfitting(model=None,
     
     ``model``
         An :class:`~brian.Equations` object containing the equations defining the model.
+    
     ``reset``
         A reset value for the membrane potential, or a string containing the reset
         equations.
+        
     ``threshold``
         A threshold value for the membrane potential, or a string containing the threshold
         equations.
+        
     ``refractory``
-        The refractory period in second.
+        The refractory period in second. If it's a single value, the same refractory will be
+        used in all the simulations. If it's a list or a tuple, the fitting will also
+        optimize the refractory period (see ``**params`` below).
+        
+        Warning: when using a refractory period, you can't use a custom reset, only a fixed one.
+        
     ``data``
         A list of spike times, or a list of several spike trains as a list of pairs (index, spike time)
         if the fit must be performed in parallel over several target spike trains. In this case,
         the modelfitting function returns as many parameters sets as target spike trains.
+        
     ``input_var='I'``
         The variable name used in the equations for the input current.
+        
     ``input``
         A vector of values containing the time-varying signal the neuron responds to (generally
         an injected current).
+        
     ``dt``
         The time step of the input (the inverse of the sampling frequency).
+        
     ``**params``
         The list of parameters to fit the model with. Each parameter must be set as follows:
         ``param_name=[bound_min, min, max, bound_max]``
@@ -285,40 +304,69 @@ def modelfitting(model=None,
         specify the interval from which the parameter values are uniformly sampled at
         the beginning of the optimization algorithm.
         If not using boundaries, set ``param_name=[min, max]``.
+        
         Also, you can add a fit parameter which is a spike delay for all spikes :
-        add the special parameter ``delays`` in ``**params``.
+        add the special parameter ``delays`` in ``**params``, for example 
+        ``modelfitting(..., delays=[-10*ms, 10*ms])``.
+        
+        You can also add fit the refractory period by specifying 
+        ``modelfitting(..., refractory=[-10*ms, 10*ms])``.
+        
     ``popsize``
         Size of the population (number of particles) per target train used by the optimization algorithm.
+        
     ``maxiter``
         Number of iterations in the optimization algorithm.
+        
     ``optparams``
-        Parameters of the optimization algorithm. 
-        TODO: put this elsewhere
-        It is a dictionary with three scalar values (omega, c_l, c_g).
-        The parameter ``omega`` is the "inertial constant", ``c_l`` is the "local best"
-        constant affecting how much the particle's personl best influences its movement, and
-        ``c_g`` is the "global best" constant affecting how much the global best
-        position influences each particle's movement. See the
-        `wikipedia entry on PSO <http://en.wikipedia.org/wiki/Particle_swarm_optimization>`__
-        for more details (note that they use ``c_1`` and ``c_2`` instead of ``c_l``
-        and ``c_g``). Reasonable values are (.9, .5, 1.5), but experimentation
-        with other values is a good idea.
+        Optimization algorithm parameters. It is a dictionary: keys are parameter names,
+        values are parameter values or lists of parameters (one value per group). 
+        This argument is specific to the optimization
+        algorithm used. See :class:`PSO`, :class:`GA`, :class:`CMAES`. 
+        
     ``delta=4*ms``
         The precision factor delta (a scalar value in second).
+        
     ``slices=1``
         The number of time slices to use.
+        
     ``overlap=0*ms``
         When using several time slices, the overlap between consecutive slices, in seconds.
+        
     ``initial_values``
         A dictionary containing the initial values for the state variables.
+        
     ``cpu``
         The number of CPUs to use in parallel. It is set to the number of CPUs in the machine by default.
+        
     ``gpu``
         The number of GPUs to use in parallel. It is set to the number of GPUs in the machine by default.
+        
     ``precision``
-        A string set to either ``float`` or ``double`` to specify whether to use
+        GPU only: a string set to either ``float`` or ``double`` to specify whether to use
         single or double precision on the GPU. If it is not specified, it will
         use the best precision available.
+        
+    ``returninfo=False``
+        Boolean indicating whether the modelfitting function should return technical information
+        about the optimization.
+        
+    ``scaling=None``
+        Specify the scaling used for the parameters during the optimization. 
+        It can be ``None`` or ``'mapminmax'``. It is ``None``
+        by default (no scaling), and ``mapminmax`` by default for the CMAES algorithm.
+        
+     ``algorithm=CMAES``
+         
+         
+     ``optparams={}``
+         Optimization parameters. See
+         
+    ``method='Euler'``
+        Integration scheme used on the CPU and GPU: ``'Euler'`` (default), ``RK``, 
+        or ``exponential_Euler``.
+        See also :ref:`numerical-integration`.
+        
     ``machines=[]``
         A list of machine names to use in parallel. See :ref:`modelfitting-clusters`.
     
@@ -375,6 +423,12 @@ def modelfitting(model=None,
     if slices == 1:
         overlap = 0 * ms
 
+    # check numerical integration method
+    if (gpu>0 or unit_type == 'GPU') and method not in ['Euler', 'RK', 'exponential_Euler']:
+        raise Exception("The method can only be 'Euler', 'RK', or 'exponential_Euler' when using the GPU") 
+    if method not in ['Euler', 'RK', 'exponential_Euler', 'linear', 'nonlinear']:
+        raise Exception("The method can only be 'Euler', 'RK', 'exponential_Euler', 'linear', or 'nonlinear'")
+
     if (algorithm == CMAES) & (scaling is None):
         scaling = 'mapminmax'
         
@@ -405,7 +459,7 @@ def modelfitting(model=None,
                    returninfo=returninfo,
                    precision=precision,
                    stepsize=stepsize,
-                   scheme=scheme,
+                   method=method,
                    onset=0 * ms)
 
     shared_data = dict(input=input,

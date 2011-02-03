@@ -8,10 +8,10 @@ The model fitting toolbox uses the package
 documentation `here <http://playdoh.googlecode.com/svn/docs/index.html>`__.
 
 .. autofunction:: modelfitting(**kwds)
-.. autofunction:: get_spikes
-.. autofunction:: predict
 .. autofunction:: print_table
 .. autofunction:: open_server
+.. autofunction:: get_spikes
+.. autofunction:: predict
 
 .. autoclass:: PSO()
 .. autoclass:: GA()

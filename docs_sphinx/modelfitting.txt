@@ -34,10 +34,10 @@ in the model train within plus or minus ``delta``, where ``delta`` is the size o
 `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
 
 The optimization procedure is performed by an optimization algorithm. The optimization toolbox
-used by modelfitting is implemented in the external Python package Playdoh
-<https://code.google.com/p/playdoh/>. It also
+used by modelfitting is implemented in the external Python package `Playdoh
+<https://code.google.com/p/playdoh/>`__. It also
 supports distributed and parallel optimization across CPUs and machines.
-Different optimization algorithms are supported, the default one is CMA-ES.
+Different optimization algorithms are supported, the default one is CMAES.
 All those algorithms require the evaluation of the fitness function for a large number of parameter
 sets. Each iteration of the algorithm
 involves the simulation of a large number of neurons (one neuron corresponding to one parameter set) 
@@ -142,7 +142,8 @@ Clusters
 
 The model fitting package can be used with a cluster of computers connected over
 IP. Every computer must have Brian and Playdoh installed, and they must run
-the Playdoh server (TODO: REF TO PLAYDOH DOC).
+the Playdoh server: see 
+`the Playdoh documentation <http://playdoh.googlecode.com/svn/docs/playdoh.html#launching-the-playdoh-server>`__.
 Then, you can launch the ```modelfitting`` function with the ``machines`` keyword,
 which is the list of the IP addresses of the machines to use in parallel 
 for the fitting procedure. 
@@ -188,5 +189,5 @@ The following script launches a fitting procedure in parallel on two machines::
 	    
 	    print_results(results)
 
-The two remote machines would run the Playdoh server. TODO: REF
+The two remote machines would run the `Playdoh server <http://playdoh.googlecode.com/svn/docs/playdoh.html#launching-the-playdoh-server>`__.
 
