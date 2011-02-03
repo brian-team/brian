@@ -23,7 +23,7 @@ if __name__ == '__main__':
                             dt = .1*ms,
                             popsize = 1000,
                             maxiter = 3,
-                            gpu = 1,
+                            #gpu = 1,
                             delta = 4*ms,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms],

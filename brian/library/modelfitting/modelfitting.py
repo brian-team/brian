@@ -18,6 +18,7 @@ from brian.experimental.codegen.integration_schemes import *
 import sys, cPickle
 
 __all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','CMAES',
+           'MAXCPU', 'MAXGPU',
            'debug_level', 'info_level', 'warning_level', 'open_server']
 
 
@@ -422,6 +423,11 @@ def modelfitting(model=None,
     # default overlap when no time slicing
     if slices == 1:
         overlap = 0 * ms
+
+    # default allocation
+    if cpu is None and gpu is None:
+        if CANUSEGPU: gpu = 1
+        else: cpu = MAXCPU-1
 
     # check numerical integration method
     if (gpu>0 or unit_type == 'GPU') and method not in ['Euler', 'RK', 'exponential_Euler']:

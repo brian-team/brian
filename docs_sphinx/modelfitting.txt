@@ -37,7 +37,7 @@ The optimization procedure is performed by an optimization algorithm. The optimi
 used by modelfitting is implemented in the external Python package `Playdoh
 <https://code.google.com/p/playdoh/>`__. It also
 supports distributed and parallel optimization across CPUs and machines.
-Different optimization algorithms are supported, the default one is CMAES.
+Different optimization algorithms are supported, the default one is :class:`CMAES`.
 All those algorithms require the evaluation of the fitness function for a large number of parameter
 sets. Each iteration of the algorithm
 involves the simulation of a large number of neurons (one neuron corresponding to one parameter set) 
@@ -154,7 +154,16 @@ IP
 To connect several machines via IP, pass a list of host names or IP addresses
 as strings to the ``machines`` keyword of the :func:`modelfitting` function.
 To specify a specific port, use a tuple ``(IP, port)`` instead
-of a string.
+of a string. You can also specify a default port in the Playdoh user preferences, see 
+`the Playdoh documentation <http://playdoh.googlecode.com/svn/docs/playdoh.html#userpref>`__.
+
+Authentication
+~~~~~~~~~~~~~~
+
+You can specify an authentication string on all the computers running the Playdoh server
+to secure communications.
+See 
+`the Playdoh documentation <http://playdoh.googlecode.com/svn/docs/playdoh.html#userpref>`__.
 
 Example
 ~~~~~~~
@@ -182,7 +191,7 @@ The following script launches a fitting procedure in parallel on two machines::
 	                                 data=spikes, input=input,
 	                                 dt = .1*ms,
 	                                 machines=machines,
-	                                 popsize=40000, maxiter=10,
+	                                 popsize=10000, maxiter=10,
 	                                 delta=2*ms,
 	                                 R=[1.0e9, 1.0e9, 1.0e10, 1.0e10],
 	                                 tau=[1*ms, 1*ms, 50*ms, 50*ms])
