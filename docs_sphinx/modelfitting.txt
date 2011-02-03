@@ -33,22 +33,24 @@ in the model train within plus or minus ``delta``, where ``delta`` is the size o
 `Jolivet et al. 2008, "A benchmark test for a quantitative assessment of simple neuron models", J. Neurosci. Methods <http://www.ncbi.nlm.nih.gov/pubmed/18160135>`__ (available in PDF
 `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
 
-The optimization procedure is performed by the
-`particle swarm optimization algorithm <http://en.wikipedia.org/wiki/Particle_swarm_optimization>`__.
-This algorithm requires the evaluation of the fitness function for a large number of parameter
+The optimization procedure is performed by an optimization algorithm. The optimization toolbox
+used by modelfitting is implemented in the external Python package Playdoh
+<https://code.google.com/p/playdoh/>. It also
+supports distributed and parallel optimization across CPUs and machines.
+Different optimization algorithms are supported, the default one is CMA-ES.
+All those algorithms require the evaluation of the fitness function for a large number of parameter
 sets. Each iteration of the algorithm
 involves the simulation of a large number of neurons (one neuron corresponding to one parameter set) 
 as well as the computation of the gamma factor for each neuron. 
 The quality of the result depends
 on the number of neurons used, which is specified in the :func:`modelfitting` function. 
 
-The library supports processors with multiple cores through the Python library Playdoh
-<https://code.google.com/p/playdoh/>. It also supports the use of graphical processing
+Playdoh supports the use of graphical processing
 units (GPUs) in order to accelerate the speed of convergence of the algorithm.
 If multiple cores are detected, the library will use all of them by default.
 Also, if a CUDA-enabled GPU is present on the system, and if PyCUDA is installed,
 the library will automatically use the GPU by default. In addition, several computers
-can be networked either on a Windows network or over IP, see :ref:`modelfitting-clusters`. 
+can be networked over IP, see :ref:`modelfitting-clusters`.
 
 Usage example
 -------------
@@ -63,7 +65,7 @@ To fit the parameters of a neuron model with respect to some data, use the
     results = modelfitting(model = equations, reset = 0, threshold = 1,
                          data = spikes, 
                          input = input, dt = .1*ms,
-                         particles = 1000, iterations = 10, 
+                         popsize = 1000, maxiter = 10, 
                          R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
 
     print_results(results)
@@ -85,9 +87,9 @@ The input variable should be ``I`` in the equations, although the input variable
 can be specified with ``input_var``.
 
 The number of particles per target train used in the optimization algorithm is
-specified with ``particles``. The total number of neurons is  ``particles`` multiplied
+specified with ``popsize``. The total number of neurons is  ``popsize`` multiplied
 by the number of target spike trains.
-The number of iterations in the algorithm is specified with ``iterations``.
+The number of iterations in the algorithm is specified with ``maxiter``.
 
 Each free parameter of the model that shall be fitted is defined by two values ::
   
@@ -106,9 +108,9 @@ during the optimization.
 The complete list of arguments can be found in the reference
 section of the :func:`modelfitting` function.
 
-The best parameters found by the optimization procedure are returned in the :class:`~brian.Parameters`
-object ``best_params``, and the corresponding best fitness values are returned in the
-``best_values`` vector, containing as many values as there are data spike trains.
+The best parameters and the corresponding best fitness values found by the optimization 
+procedure are returned in the :class:`OptimizationResult`
+object ``result``.
 
 .. _note-for-windows-users:
 
@@ -139,89 +141,24 @@ Clusters
 --------
 
 The model fitting package can be used with a cluster of computers connected over
-IP or a Windows network. If your computers have an IP address and can accept
-incoming connections (i.e. they are not behind a NAT firewall) then the simplest
-way is to use IP. Otherwise, you have to use the 'Named pipes' feature of
-Windows networks.
-
-The way it works is that you have a central machine (the manager) and several
-worker machines. Each machine must have an identical copy of the code available
-on it. The central machine runs a script which defines the model to fit, and
-the workers run a much simpler script, essentially just calling the
-:func:`modelfitting_worker` function to set up the machine to listen for data
-sent over the network and then run code when it receives the data. The manager
-just calls the :func:`modelfitting` function but including an extra keyword
-``machines`` with the list of connection details to the worker machines
-(described in the next two sections).
+IP. Every computer must have Brian and Playdoh installed, and they must run
+the Playdoh server (TODO: REF TO PLAYDOH DOC).
+Then, you can launch the ```modelfitting`` function with the ``machines`` keyword,
+which is the list of the IP addresses of the machines to use in parallel 
+for the fitting procedure. 
 
 IP
 ~~
 
 To connect several machines via IP, pass a list of host names or IP addresses
 as strings to the ``machines`` keyword of the :func:`modelfitting` function.
-To specify a specific port, use the ``port`` keyword. The worker machines should
-run a script like::
-
-	from brian.library.modelfitting import *
-	if __name__=='__main__': # only necessary on Windows
-		worker(port=...)
-		
-The ``port`` keyword is optional, and :func:`modelfitting_worker` has other
-options described below.
-
-Named pipes
-~~~~~~~~~~~
-
-Using named pipes on Windows is slightly more complicated. First of all, each
-computer has to be visible on the local Windows network. Secondly, the user of
-the manager machine has to have a log on using the same ID and password on each
-of the worker machines. With that specified, just pass a list of the computer
-names of each of the worker machines as the ``machines`` keyword of the
-:func:`modelfitting` function. You also need to specify ``named_pipes=True``.
-In fact, you can specify ``named_pipes`` as a string to use a specific name for
-the named pipe, but this is usually not necessary. The worker machines should
-run a script like::
-
-	from brian.library.modelfitting import *
-	if __name__=='__main__':
-		worker(named_pipes=True)
-
-If ``named_pipes`` is set to a particular name, the worker functions should be
-given the same name. The :func:`modelfitting_worker` function has some other 
-options described below.
-
-Cluster keyword arguments
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The :func:`modelfitting` function has the following keyword arguments relevant
-to running over a cluster:
-
-``use_gpu=True``
-	Used to specify whether or not GPUs should be used if present.
-``machines=[]``
-	A list of worker machines, either hostname/IP addresses as strings, or
-	computer names if using Windows named pipes.
-
-The :func:`modelfitting` and :func:`modelfitting_worker` functions both have
-the following keyword arguments:
-
-``max_cpu=None``
-	If specified, ensures that this machine will use at most that number of
-	CPUs, otherwise it will use the maximum number.
-``max_gpu=None``
-	If specified, ensures that this machine will use at most that number of
-	GPUs, otherwise it will use the maximum number.
-``port=None``
-	The port number to communicate with if using IP, should be the same on
-	all machines.
-``named_pipes=None``
-	Set to ``True`` if using Windows named pipes, or a string to choose a
-	particular pipe name. Should be the same on all machines.
+To specify a specific port, use a tuple ``(IP, port)`` instead
+of a string.
 
 Example
 ~~~~~~~
 
-The following script could be run on the manager machine::
+The following script launches a fitting procedure in parallel on two machines::
 
 	from brian import *
 	from brian.library.modelfitting import *
@@ -244,16 +181,12 @@ The following script could be run on the manager machine::
 	                                 data=spikes, input=input,
 	                                 dt = .1*ms,
 	                                 machines=machines,
-	                                 particles=40000, iterations=10,
+	                                 popsize=40000, maxiter=10,
 	                                 delta=2*ms,
 	                                 R=[1.0e9, 1.0e9, 1.0e10, 1.0e10],
 	                                 tau=[1*ms, 1*ms, 50*ms, 50*ms])
 	    
 	    print_results(results)
 
-The worker machines would run this script::
+The two remote machines would run the Playdoh server. TODO: REF
 
-	from brian.library.modelfitting import *
-	if __name__=='__main__':
-	    worker()
-	    

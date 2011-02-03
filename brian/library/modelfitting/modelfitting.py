@@ -287,12 +287,14 @@ def modelfitting(model=None,
         If not using boundaries, set ``param_name=[min, max]``.
         Also, you can add a fit parameter which is a spike delay for all spikes :
         add the special parameter ``delays`` in ``**params``.
-    ``particles``
-        Number of particles per target train used by the particle swarm optimization algorithm.
-    ``iterations``
-        Number of iterations in the particle swarm optimization algorithm.
-    ``optinfo``
-        Parameters of the PSO algorithm. It is a dictionary with three scalar values (omega, c_l, c_g).
+    ``popsize``
+        Size of the population (number of particles) per target train used by the optimization algorithm.
+    ``maxiter``
+        Number of iterations in the optimization algorithm.
+    ``optparams``
+        Parameters of the optimization algorithm. 
+        TODO: put this elsewhere
+        It is a dictionary with three scalar values (omega, c_l, c_g).
         The parameter ``omega`` is the "inertial constant", ``c_l`` is the "local best"
         constant affecting how much the particle's personl best influences its movement, and
         ``c_g`` is the "global best" constant affecting how much the global best
@@ -309,38 +311,54 @@ def modelfitting(model=None,
         When using several time slices, the overlap between consecutive slices, in seconds.
     ``initial_values``
         A dictionary containing the initial values for the state variables.
-    ``verbose=True``
-        A boolean value indicating whether printing the progress of the optimization algorithm or not.
-    ``use_gpu``
-        A boolean value indicating whether using the GPU or not. This value is not taken into account
-        if no GPU is present on the computer.
-    ``max_cpu``
-        The maximum number of CPUs to use in parallel. It is set to the number of CPUs in the machine by default.
-    ``max_gpu``
-        The maximum number of GPUs to use in parallel. It is set to the number of GPUs in the machine by default.
+    ``cpu``
+        The number of CPUs to use in parallel. It is set to the number of CPUs in the machine by default.
+    ``gpu``
+        The number of GPUs to use in parallel. It is set to the number of GPUs in the machine by default.
     ``precision``
         A string set to either ``float`` or ``double`` to specify whether to use
         single or double precision on the GPU. If it is not specified, it will
         use the best precision available.
     ``machines=[]``
         A list of machine names to use in parallel. See :ref:`modelfitting-clusters`.
-    ``named_pipe``
-        Set to ``True`` to use Windows named pipes for networking, or a string
-        to use a particular name for the pipe. See :ref:`modelfitting-clusters`.
-    ``port``
-        The port number for IP networking, you only need to specify this if the
-        default value of 2718 is blocked. See :ref:`modelfitting-clusters`.
     
     **Return values**
     
-    ``results``
-        A dictionary containing the best parameter values for each target spike train
-        found by the optimization algorithm. ``results['param_name']`` is a vector containing
-        the parameter values for each target. ``results['fitness']`` is a vector containing
-        the gamma factor for each target.
-        For more details on the gamma factor, see
-        `Jolivet et al. 2008, "A benchmark test for a quantitative assessment of simple neuron models", J. Neurosci. Methods <http://www.ncbi.nlm.nih.gov/pubmed/18160135>`__ (available in PDF
-        `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
+    Return an :class:`OptimizationResult` object with the following attributes:
+    
+    ``best_pos``
+        Minimizing position found by the algorithm. For array-like fitness functions,
+        it is a single vector if there is one group, or a list of vectors.
+        For keyword-like fitness functions, it is a dictionary
+        where keys are parameter names and values are numeric values. If there are several groups,
+        it is a list of dictionaries.
+    
+    ``best_fit``
+        The value of the fitness function for the best positions. It is a single value if 
+        there is one group, or it is a list if there are several groups.
+    
+    ``info``
+        A dictionary containing various information about the optimization.
+
+
+    Also, the following syntax is possible with an ``OptimizationResult`` instance ``or``.
+    The ``key`` is either an optimizing parameter name for keyword-like fitness functions,
+    or a dimension index for array-like fitness functions.
+    
+    ``or[key]``
+        it is the best ``key`` parameter found (single value), or the list
+        of the best parameters ``key`` found for all groups.
+    
+    ``or[i]``
+        where ``i`` is a group index. This object has attributes ``best_pos``, ``best_fit``,
+        ``info`` but only for group ``i``.
+    
+    ``or[i][key]``
+        where ``i`` is a group index, is the same as ``or[i].best_pos[key]``.
+
+    For more details on the gamma factor, see
+    `Jolivet et al. 2008, "A benchmark test for a quantitative assessment of simple neuron models", J. Neurosci. Methods <http://www.ncbi.nlm.nih.gov/pubmed/18160135>`__ (available in PDF
+    `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
     """
 
 
