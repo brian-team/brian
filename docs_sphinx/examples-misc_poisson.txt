@@ -1,12 +1,12 @@
 .. currentmodule:: brian
 
-.. _example-misc_poisson:
-
 .. index::
    pair: example usage; raster_plot
    pair: example usage; SpikeMonitor
    pair: example usage; PoissonGroup
    pair: example usage; run
+
+.. _example-misc_poisson:
 
 Example: poisson (misc)
 =======================

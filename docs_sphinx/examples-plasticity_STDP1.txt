@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-plasticity_STDP1:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -10,6 +8,8 @@
    pair: example usage; STDP
    pair: example usage; PoissonGroup
    pair: example usage; stdp
+
+.. _example-plasticity_STDP1:
 
 Example: STDP1 (plasticity)
 ===========================

@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_topographic_map2:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -9,6 +7,8 @@
    pair: example usage; Connection
    pair: example usage; PoissonGroup
    pair: example usage; SpikeMonitor
+
+.. _example-misc_topographic_map2:
 
 Example: topographic_map2 (misc)
 ================================

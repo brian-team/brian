@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_adaptive:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -9,6 +7,8 @@
    pair: example usage; PoissonGroup
    pair: example usage; SpikeMonitor
    pair: example usage; StateMonitor
+
+.. _example-misc_adaptive:
 
 Example: adaptive (misc)
 ========================

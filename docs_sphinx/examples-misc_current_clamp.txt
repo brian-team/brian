@@ -1,12 +1,12 @@
 .. currentmodule:: brian
 
-.. _example-misc_current_clamp:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; Equations
    pair: example usage; run
    pair: example usage; StateMonitor
+
+.. _example-misc_current_clamp:
 
 Example: current_clamp (misc)
 =============================

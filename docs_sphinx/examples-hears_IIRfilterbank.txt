@@ -1,5 +1,10 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; whitenoise
+   pair: example usage; IIRFilterbank
+   pair: example usage; filterbank
+
 .. _example-hears_IIRfilterbank:
 
 Example: IIRfilterbank (hears)

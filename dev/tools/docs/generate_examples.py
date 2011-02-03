@@ -1,6 +1,11 @@
 import os, re, glob, brian, inspect, compiler, unicodedata, fnmatch
+import brian.hears
+import itertools
 documentable_names = set()
-for k, v in brian.__dict__.iteritems():
+for k, v in itertools.chain(
+                brian.__dict__.iteritems(),
+                brian.hears.__dict__.iteritems()
+                ):
     try:
         if 'brian' in inspect.getsourcefile(v):
             documentable_names.add(k)
@@ -84,12 +89,12 @@ for fname, path, basename, code, docs, afterdoccode, documentables in examples:
     title = 'Example: ' + basename
     if len(path): title += ' (' + path[:-1] + ')'
     output = '.. currentmodule:: brian\n\n'
-    output += '.. _example-' + path + basename + ':\n\n'
     if len(documentables):
         output += '.. index::\n'
         for dname in documentables:
             output += '   pair: example usage; ' + dname + '\n'
         output += '\n'
+    output += '.. _example-' + path + basename + ':\n\n'
     output += title + '\n' + '=' * len(title) + '\n\n'
     output += docs + '\n\n::\n\n'
     output += '\n'.join(['    ' + line for line in afterdoccode.split('\n')])
@@ -105,6 +110,7 @@ curpath = ''
 for fname, path, basename, code, docs, afterdoccode, documentables in examples:
     if path != curpath:
         mainpage_text += '\n'
+        mainpage_text += '.. _examples-'+path[:-1]+':\n\n'
         mainpage_text += path[:-1] + '\n'
         mainpage_text += '-' * (len(path) - 1) + '\n\n'
         mainpage_text += '.. toctree::\n'

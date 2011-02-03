@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_stopping:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -10,6 +8,8 @@
    pair: example usage; network_operation
    pair: example usage; Connection
    pair: example usage; PoissonGroup
+
+.. _example-misc_stopping:
 
 Example: stopping (misc)
 ========================

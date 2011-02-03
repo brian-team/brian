@@ -8,8 +8,68 @@
 Brian hears
 ===========
 
-Brian hears is the auditory modelling library for Brian. It consists of
-classes for defining sounds, filter banks, cochlear models, and neuron models. These classes
+Brian hears is an auditory modelling library for Python. It is part of the
+neural network simulator package Brian, but can also be used on its own.
+
+It is primarily designed for generating and manipulating sounds, and applying
+large banks of filters. For example, to generate a tone or a whitenoise we
+write::
+
+	sound1 = tone(1*kHz, .1*second)
+	sound2 = whitenoise(.1*second)
+	
+These sounds can then be manipulated in various ways, for example::
+
+	sound = sound1+sound2
+	sound = sound.ramp()
+	
+We can filter these sounds through a bank of 3000 gammatone filters covering
+the human auditory range as follows::
+
+	cf = erbspace(20*Hz, 20*kHz, 3000)
+	fb = Gammatone(sound, cf)
+	output = fb.process()
+
+The output of this would look something like this (zoomed into one region):
+
+.. image:: images/cochleagram.png
+	
+Alternatively, if we're interested in modelling auditory nerve fibres, we could
+feed the output of this filterbank directly into a group of neurons defined with
+Brian::
+
+	# Half-wave rectification and compression [x]^(1/3)
+	ihc = FunctionFilterbank(fb, lambda x: 3*clip(x, 0, Inf)**(1.0/3.0))
+	# Leaky integrate-and-fire model with noise and refractoriness
+	eqs = '''
+	dv/dt = (I-v)/(1*ms)+0.2*xi*(2/(1*ms))**.5 : 1
+	I : 1
+	'''
+	anf = FilterbankGroup(ihc, 'I', eqs, reset=0, threshold=1, refractory=5*ms)
+
+This model would give output something like this:
+
+.. image:: images/auditory-nerve-fibre-rasterplot.png
+
+The human cochlea applies the equivalent of 3000 auditory
+filters, which causes a technical problem for modellers which this package is
+designed to address. At a typical sample rate, the output of 3000 filters would
+saturate the computer's RAM in a few seconds. To deal with this, we use 
+online computation, that is we only ever keep in memory the output of the
+filters for a relatively short duration (say, the most recent 20ms), do our
+modelling with these values, and then discard them. Although this requires that
+some models be rewritten for online rather than offline computation, it allows
+us to easily handle models with very large numbers of channels. 3000 or 6000 for
+human monaural or binaural processing is straightforward, and even much larger
+banks of filters can be used (for example, around 30,000 in
+`Goodman DFM, Brette R (2010). Spike-timing-based computation in sound localization. PLoS Comput. Biol. 6(11): e1000993. doi:10.1371/journal.pcbi.1000993 <http://www.ploscompbiol.org/article/info:doi/10.1371/journal.pcbi.1000993>`__).
+Techniques for online computation are discussed below in the section
+`Online computation`_.
+
+Brian hears consists of classes and functions
+for defining `sounds`_, `filter chains`_, cochlear models, neuron models and
+`head-related transfer functions`_.
+These classes
 are designed to be modular and easily extendable. Typically, a model will
 consist of a chain starting with a sound which is plugged into a chain of
 filter banks, which are then plugged into a neuron model. 
@@ -27,7 +87,14 @@ hears packages as follows::
 	from brian import *
 	from brian.hears import *
 
-.. seealso:: Reference documentation for :ref:`brian-hears-reference`.
+.. seealso:: Reference documentation for :ref:`brian-hears-reference`, which
+			 covers everything in this overview in detail, and more. List of
+			 :ref:`examples of using Brian hears <examples-hears>`.
+
+.. index::
+	single: sound
+	pair: sound; wav
+	pair: sound; aiff
 
 .. _sounds_overview:
 
@@ -84,10 +151,17 @@ Sounds can be played using the :func:`play` function or :meth:`Sound.play` metho
 
 	play(sound)
 	sound.play()
+
+.. index::
+	pair: sound; sequence
 	
 Sequences of sounds can be played as::
 
 	play(sound1, sound2, sound3)
+
+.. index::
+	pair: sound; stereo
+	single: sound; multiple channels
 
 The number of channels in a sound can be found using the ``nchannels``
 attribute, and individual channels can be extracted using the
@@ -97,11 +171,33 @@ in the case of stereo sounds::
 	print sound.nchannels
 	print amax(abs(sound.left-sound.channel(0)))
 
-As an example of usage, the following swaps the channels in a stereo sound::
+As an example of using this, the following swaps the channels in a stereo sound::
 
 	sound = Sound('test_stereo.wav')
 	swappedsound = Sound((sound.right, sound.left))
 	swappedsound.play()
+
+.. index::
+	pair: sound; level
+	pair: sound; dB
+
+The level of the sound can be computed and changed with the ``sound.level``
+attribute. Levels are returned in dB which is a special unit in Brian hears.
+For example, ``10*dB+10`` will raise an error because ``10`` does not have
+units of dB. The multiplicative gain of a value in dB can be computed with
+the function ``gain(level)``. All dB values are measured as RMS dB SPL assuming
+that the values of the sound object are measured in Pascals. Some examples::
+
+	sound = whitenoise(100*ms)
+	print sound.level
+	sound.level = 60*dB
+	sound.level += 10*dB
+	sound *= gain(-10*dB)
+
+.. index::
+	single: filter
+	single: filter bank
+	pair: cochlea; modelling
 
 Filter chains
 -------------
@@ -170,6 +266,18 @@ you might do::
 	
 Note that the new source should have the same number of channels.
 
+.. index::
+	pair: filtering; control path
+
+You can implement control paths (using the output of one filter chain path
+to modify the parameters of another filter chain path) using
+:class:`ControlFilterbank` (see reference documentation for more details).
+For examples of this in action, see the following:
+
+ * :ref:`example-hears_time_varying_filter1`.
+ * :ref:`example-hears_time_varying_filter2`.
+ * :ref:`example-hears_dcgc`.
+
 Connecting with Brian
 ---------------------
 
@@ -179,7 +287,6 @@ To create spiking neuron models based on filter chains, you use the
 a state variable in the target equations for the output of the filterbank.
 A simple auditory nerve fibre model would take the inner hair cell model from
 earlier, and feed it into a noisy leaky integrate-and-fire model as follows::
-
 	
 	# Inner hair cell model as before
 	cfmin, cfmax, cfN = 20*Hz, 20*kHz, 3000
@@ -202,6 +309,17 @@ earlier, and feed it into a noisy leaky integrate-and-fire model as follows::
 And here's the output (after 6 seconds of computation on a 2GHz laptop):
 
 .. image:: images/auditory-nerve-fibre-rasterplot.png
+
+.. index::
+	pair: online; computation
+
+Online computation
+------------------
+
+TODO
+
+.. index::
+	pair: buffering; interface
 
 Buffering interface
 -------------------
@@ -236,7 +354,8 @@ for more details.
 Library
 -------
 
-Brian hears comes with a package of predefined filter classes to be used as basic blocks by the user. All of them are implemented as filterbanks.
+Brian hears comes with a package of predefined filter classes to be used as
+basic blocks by the user. All of them are implemented as filterbanks.
 
 First, a series of standard filters widely used in audio processing are available:
 
@@ -281,9 +400,10 @@ Finally, Brian hears comes with a series of complex nonlinear cochlear models de
 |  DCGC                              |Compressive gammachirp auditory filter as described in  Irino and Patterson, JASA 2001             | :class:`DCGC`                     |    :ref:`example-hears_dcgc`                 |
 +------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
 
-.. index:: HRTF
-
-
+.. index::
+	single: HRTF
+	pair: IRCAM; HRTF
+	pair: database; HRTF
 
 Head-related transfer functions
 -------------------------------
@@ -327,7 +447,7 @@ response as an image::
 	sound = whitenoise(10*ms)
 	fb = hrtfset.filterbank(sound)
 	# Extract the filtered response and plot
-	img = fb.buffer_fetch(0, len(sound)).T
+	img = fb.process().T
 	img_left = img[:img.shape[0]/2, :]
 	img_right = img[img.shape[0]/2:, :]
 	subplot(121)
@@ -349,4 +469,5 @@ This generates the following output:
 .. image:: images/hrtfset_response_plot.png
 
 For more details, see the reference documentation for :class:`HRTF`,
-:class:`HRTFSet`, :class:`HRTFDatabase` and :class:`IRCAM_LISTEN`.
+:class:`HRTFSet`, :class:`HRTFDatabase`, :class:`IRCAM_LISTEN` and
+:class:`HeadlessDatabase`.

@@ -1,14 +1,18 @@
 .. currentmodule:: brian
 
-.. _example-hears_time_varying_filter1:
-
 .. index::
    pair: example usage; cos
    pair: example usage; arcsinh
+   pair: example usage; ControlFilterbank
    pair: example usage; sqrt
+   pair: example usage; FunctionFilterbank
    pair: example usage; sinh
+   pair: example usage; whitenoise
+   pair: example usage; LinearFilterbank
    pair: example usage; sin
    pair: example usage; log
+
+.. _example-hears_time_varying_filter1:
 
 Example: time_varying_filter1 (hears)
 =====================================

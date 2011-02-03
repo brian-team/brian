@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-plasticity_short_term_plasticity:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -9,6 +7,8 @@
    pair: example usage; STP
    pair: example usage; stp
    pair: example usage; StateMonitor
+
+.. _example-plasticity_short_term_plasticity:
 
 Example: short_term_plasticity (plasticity)
 ===========================================

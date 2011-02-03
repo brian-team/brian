@@ -1,10 +1,16 @@
 .. currentmodule:: brian
 
-.. _example-hears_dcgc:
-
 .. index::
    pair: example usage; log
+   pair: example usage; ControlFilterbank
+   pair: example usage; RestructureFilterbank
+   pair: example usage; erbspace
    pair: example usage; exp
+   pair: example usage; whitenoise
+   pair: example usage; AsymmetricCompensation
+   pair: example usage; LogGammachirp
+
+.. _example-hears_dcgc:
 
 Example: dcgc (hears)
 =====================

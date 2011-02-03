@@ -3,6 +3,8 @@ from filterbank import Filterbank,FunctionFilterbank,ControlFilterbank,CombinedF
 from filterbanklibrary import *
 from linearfilterbank import *
 
+__all__ = ['DCGC']
+
 def set_parameters(cf,param):
     
     parameters=dict()

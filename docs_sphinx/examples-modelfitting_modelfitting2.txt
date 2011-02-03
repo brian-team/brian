@@ -1,9 +1,9 @@
 .. currentmodule:: brian
 
-.. _example-modelfitting_modelfitting2:
-
 .. index::
    pair: example usage; Equations
+
+.. _example-modelfitting_modelfitting2:
 
 Example: modelfitting2 (modelfitting)
 =====================================

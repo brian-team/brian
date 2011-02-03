@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-audition_licklider:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -11,6 +9,8 @@
    pair: example usage; SpikeMonitor
    pair: example usage; exp
    pair: example usage; StateMonitor
+
+.. _example-audition_licklider:
 
 Example: licklider (audition)
 =============================

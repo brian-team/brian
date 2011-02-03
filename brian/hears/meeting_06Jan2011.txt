@@ -4,15 +4,12 @@ Meeting 6 Jan 2011
 Dan
 ---
 
-Docs
-----
-* Update. dB.
-* Move example up + link to examples in docs
-
-* One example with more complex spike generation (adaptation)
-* Update HRTF example buffer_fecth -> something simpler
-
-* stand alone 
+* Online computation docs
+* Examples in the examples folder of some simpler things and things covered
+  in the user guide
+* Examples of HRTF stuff in the examples folder
+* Make sure everything is documented, read through and check that it reads OK
+* LOGO!
 
 Bertrand
 -------

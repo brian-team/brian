@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_expIF_network:
-
 .. index::
    pair: example usage; IdentityConnection
    pair: example usage; NeuronGroup
@@ -11,6 +9,8 @@
    pair: example usage; Current
    pair: example usage; PoissonGroup
    pair: example usage; SpikeMonitor
+
+.. _example-misc_expIF_network:
 
 Example: expIF_network (misc)
 =============================

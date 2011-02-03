@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_mirollo_strogatz:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; group
@@ -9,6 +7,8 @@
    pair: example usage; Connection
    pair: example usage; SpikeMonitor
    pair: example usage; run
+
+.. _example-misc_mirollo_strogatz:
 
 Example: mirollo_strogatz (misc)
 ================================

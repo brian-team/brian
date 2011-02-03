@@ -1,13 +1,13 @@
 .. currentmodule:: brian
 
-.. _example-misc_reliability:
-
 .. index::
    pair: example usage; raster_plot
    pair: example usage; NeuronGroup
    pair: example usage; run
    pair: example usage; SpikeMonitor
    pair: example usage; linked_var
+
+.. _example-misc_reliability:
 
 Example: reliability (misc)
 ===========================

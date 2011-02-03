@@ -1,10 +1,10 @@
 .. currentmodule:: brian
 
-.. _example-misc_remotecontrolclient:
-
 .. index::
    pair: example usage; stop
    pair: example usage; RemoteControlClient
+
+.. _example-misc_remotecontrolclient:
 
 Example: remotecontrolclient (misc)
 ===================================

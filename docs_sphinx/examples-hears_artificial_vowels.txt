@@ -1,5 +1,10 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; Sound
+   pair: example usage; play
+   pair: example usage; set_default_samplerate
+
 .. _example-hears_artificial_vowels:
 
 Example: artificial_vowels (hears)

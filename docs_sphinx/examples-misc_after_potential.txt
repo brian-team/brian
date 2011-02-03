@@ -1,11 +1,11 @@
 .. currentmodule:: brian
 
-.. _example-misc_after_potential:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
    pair: example usage; StateMonitor
+
+.. _example-misc_after_potential:
 
 Example: after_potential (misc)
 ===============================

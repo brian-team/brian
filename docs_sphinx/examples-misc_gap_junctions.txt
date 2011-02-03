@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_gap_junctions:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -11,6 +9,8 @@
    pair: example usage; SpikeMonitor
    pair: example usage; group
    pair: example usage; StateMonitor
+
+.. _example-misc_gap_junctions:
 
 Example: gap_junctions (misc)
 =============================

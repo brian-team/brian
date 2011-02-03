@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_I-F_curve:
-
 .. index::
    pair: example usage; IdentityConnection
    pair: example usage; NeuronGroup
@@ -9,6 +7,8 @@
    pair: example usage; Current
    pair: example usage; group
    pair: example usage; StateMonitor
+
+.. _example-misc_I-F_curve:
 
 Example: I-F_curve (misc)
 =========================

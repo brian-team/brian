@@ -4,9 +4,18 @@ from numpy import *
 __all__ = ['dB', 'dB_type', 'dB_error', 'gain']
 
 class dB_error(ValueError):
+    '''
+    Error raised when values in dB are used inconsistently with other units.
+    '''
     pass
 
 class dB_type(float64):
+    '''
+    The type of values in dB.
+    
+    dB values are assumed to be RMS dB SPL assuming that the sound source is
+    measured in Pascals.
+    '''
     def __str__(self):
         return str(float(self))+'*dB'
     def __repr__(self):

@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_adaptive_threshold:
-
 .. index::
    pair: example usage; reset
    pair: example usage; NeuronGroup
@@ -9,6 +7,8 @@
    pair: example usage; Connection
    pair: example usage; PoissonGroup
    pair: example usage; StateMonitor
+
+.. _example-misc_adaptive_threshold:
 
 Example: adaptive_threshold (misc)
 ==================================

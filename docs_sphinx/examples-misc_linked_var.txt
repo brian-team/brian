@@ -1,12 +1,12 @@
 .. currentmodule:: brian
 
-.. _example-misc_linked_var:
-
 .. index::
    pair: example usage; MultiStateMonitor
    pair: example usage; NeuronGroup
    pair: example usage; run
    pair: example usage; linked_var
+
+.. _example-misc_linked_var:
 
 Example: linked_var (misc)
 ==========================

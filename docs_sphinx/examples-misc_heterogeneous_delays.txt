@@ -1,12 +1,12 @@
 .. currentmodule:: brian
 
-.. _example-misc_heterogeneous_delays:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; Connection
    pair: example usage; run
    pair: example usage; StateMonitor
+
+.. _example-misc_heterogeneous_delays:
 
 Example: heterogeneous_delays (misc)
 ====================================

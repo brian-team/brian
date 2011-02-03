@@ -1,12 +1,12 @@
 .. currentmodule:: brian
 
-.. _example-misc_remotecontrolserver:
-
 .. index::
    pair: example usage; RecentStateMonitor
    pair: example usage; NeuronGroup
    pair: example usage; RemoteControlServer
    pair: example usage; run
+
+.. _example-misc_remotecontrolserver:
 
 Example: remotecontrolserver (misc)
 ===================================

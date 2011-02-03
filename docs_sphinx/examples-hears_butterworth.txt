@@ -1,5 +1,10 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; whitenoise
+   pair: example usage; Butterworth
+   pair: example usage; filterbank
+
 .. _example-hears_butterworth:
 
 Example: butterworth (hears)

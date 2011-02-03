@@ -1,13 +1,13 @@
 .. currentmodule:: brian
 
-.. _example-misc_HodgkinHuxley:
-
 .. index::
    pair: example usage; Current
    pair: example usage; MembraneEquation
    pair: example usage; NeuronGroup
    pair: example usage; run
    pair: example usage; StateMonitor
+
+.. _example-misc_HodgkinHuxley:
 
 Example: HodgkinHuxley (misc)
 =============================

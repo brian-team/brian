@@ -1,10 +1,10 @@
 .. currentmodule:: brian
 
-.. _example-frompapers_Diesmann_et_al_1999_longer:
-
 .. index::
    pair: example usage; Network
    pair: example usage; Parameters
+
+.. _example-frompapers_Diesmann_et_al_1999_longer:
 
 Example: Diesmann_et_al_1999_longer (frompapers)
 ================================================

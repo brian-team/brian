@@ -2,6 +2,8 @@ from brian import *
 from filterbank import Filterbank, FunctionFilterbank, CombinedFilterbank
 from filterbanklibrary import *
 
+__all__ = ['DRNL']
+
 def set_parameters(cf,type,param):
     
     parameters=dict()

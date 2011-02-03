@@ -1,5 +1,10 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; erbspace
+   pair: example usage; LinearGammachirp
+   pair: example usage; whitenoise
+
 .. _example-hears_linear_gammachirp:
 
 Example: linear_gammachirp (hears)

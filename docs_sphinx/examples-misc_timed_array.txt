@@ -1,13 +1,13 @@
 .. currentmodule:: brian
 
-.. _example-misc_timed_array:
-
 .. index::
    pair: example usage; MultiStateMonitor
    pair: example usage; run
    pair: example usage; sin
    pair: example usage; TimedArray
    pair: example usage; NeuronGroup
+
+.. _example-misc_timed_array:
 
 Example: timed_array (misc)
 ===========================

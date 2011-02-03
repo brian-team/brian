@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_van_rossum_metric:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -9,6 +7,8 @@
    pair: example usage; SpikeMonitor
    pair: example usage; VanRossumMetric
    pair: example usage; StateMonitor
+
+.. _example-misc_van_rossum_metric:
 
 Example: van_rossum_metric (misc)
 =================================

@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_cable:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -9,6 +7,8 @@
    pair: example usage; Compartments
    pair: example usage; Current
    pair: example usage; StateMonitor
+
+.. _example-misc_cable:
 
 Example: cable (misc)
 =====================

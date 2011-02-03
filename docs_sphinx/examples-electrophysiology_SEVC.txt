@@ -1,12 +1,12 @@
 .. currentmodule:: brian
 
-.. _example-electrophysiology_SEVC:
-
 .. index::
    pair: example usage; run
    pair: example usage; NeuronGroup
    pair: example usage; Equations
    pair: example usage; StateMonitor
+
+.. _example-electrophysiology_SEVC:
 
 Example: SEVC (electrophysiology)
 =================================

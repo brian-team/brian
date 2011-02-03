@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_COBAHH:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -9,6 +7,8 @@
    pair: example usage; EmpiricalThreshold
    pair: example usage; Equations
    pair: example usage; StateMonitor
+
+.. _example-misc_COBAHH:
 
 Example: COBAHH (misc)
 ======================

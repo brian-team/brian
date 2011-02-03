@@ -1,12 +1,12 @@
 .. currentmodule:: brian
 
-.. _example-misc_I-F_curve2:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
    pair: example usage; group
    pair: example usage; SpikeCounter
+
+.. _example-misc_I-F_curve2:
 
 Example: I-F_curve2 (misc)
 ==========================

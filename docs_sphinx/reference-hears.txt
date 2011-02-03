@@ -27,6 +27,21 @@ Sounds
 .. autofunction:: silence
 .. autofunction:: sequence(*sounds, samplerate=None)
 
+.. index::
+	single: dB
+	single: decibel
+	pair: level; sound
+	single: sound; dB
+	single: sound; decibel
+
+.. _dB:
+
+dB
+~~
+
+.. autoclass:: dB_type
+.. autoclass:: dB_error
+
 Filterbanks
 -----------
 

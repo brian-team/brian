@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-frompapers_Diesmann_et_al_1999:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -10,6 +8,8 @@
    pair: example usage; SpikeMonitor
    pair: example usage; PulsePacket
    pair: example usage; Equations
+
+.. _example-frompapers_Diesmann_et_al_1999:
 
 Example: Diesmann_et_al_1999 (frompapers)
 =========================================

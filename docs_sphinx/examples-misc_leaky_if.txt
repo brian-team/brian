@@ -1,13 +1,13 @@
 .. currentmodule:: brian
 
-.. _example-misc_leaky_if:
-
 .. index::
    pair: example usage; MultipleSpikeGeneratorGroup
    pair: example usage; Connection
    pair: example usage; NeuronGroup
    pair: example usage; run
    pair: example usage; StateMonitor
+
+.. _example-misc_leaky_if:
 
 Example: leaky_if (misc)
 ========================

@@ -1,5 +1,10 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; erbspace
+   pair: example usage; Gammatone
+   pair: example usage; whitenoise
+
 .. _example-hears_gammatone:
 
 Example: gammatone (hears)

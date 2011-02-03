@@ -1,5 +1,14 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; FunctionFilterbank
+   pair: example usage; Cascade
+   pair: example usage; erbspace
+   pair: example usage; gain
+   pair: example usage; LowPass
+   pair: example usage; ApproximateGammatone
+   pair: example usage; whitenoise
+
 .. _example-hears_drnl:
 
 Example: drnl (hears)

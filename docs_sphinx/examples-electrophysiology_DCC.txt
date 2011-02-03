@@ -1,12 +1,12 @@
 .. currentmodule:: brian
 
-.. _example-electrophysiology_DCC:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; Equations
    pair: example usage; run
    pair: example usage; StateMonitor
+
+.. _example-electrophysiology_DCC:
 
 Example: DCC (electrophysiology)
 ================================

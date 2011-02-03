@@ -1,13 +1,13 @@
 .. currentmodule:: brian
 
-.. _example-misc_COBA:
-
 .. index::
    pair: example usage; PopulationSpikeCounter
    pair: example usage; Connection
    pair: example usage; Equations
    pair: example usage; run
    pair: example usage; NeuronGroup
+
+.. _example-misc_COBA:
 
 Example: COBA (misc)
 ====================

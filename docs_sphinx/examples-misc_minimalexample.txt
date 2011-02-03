@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_minimalexample:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -10,6 +8,8 @@
    pair: example usage; Connection
    pair: example usage; SpikeMonitor
    pair: example usage; CV
+
+.. _example-misc_minimalexample:
 
 Example: minimalexample (misc)
 ==============================

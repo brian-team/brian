@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-misc_noisy_ring:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
@@ -10,6 +8,8 @@
    pair: example usage; SpikeMonitor
    pair: example usage; group
    pair: example usage; StateMonitor
+
+.. _example-misc_noisy_ring:
 
 Example: noisy_ring (misc)
 ==========================

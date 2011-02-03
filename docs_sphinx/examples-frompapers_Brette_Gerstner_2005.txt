@@ -1,12 +1,12 @@
 .. currentmodule:: brian
 
-.. _example-frompapers_Brette_Gerstner_2005:
-
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
    pair: example usage; SpikeMonitor
    pair: example usage; StateMonitor
+
+.. _example-frompapers_Brette_Gerstner_2005:
 
 Example: Brette_Gerstner_2005 (frompapers)
 ==========================================

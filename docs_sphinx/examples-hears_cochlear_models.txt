@@ -1,5 +1,14 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; DCGC
+   pair: example usage; dcgc
+   pair: example usage; erbspace
+   pair: example usage; drnl
+   pair: example usage; set_default_samplerate
+   pair: example usage; DRNL
+   pair: example usage; whitenoise
+
 .. _example-hears_cochlear_models:
 
 Example: cochlear_models (hears)

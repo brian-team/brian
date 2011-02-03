@@ -1,7 +1,5 @@
 .. currentmodule:: brian
 
-.. _example-frompapers_Sturzl_et_al_2000:
-
 .. index::
    pair: example usage; IdentityConnection
    pair: example usage; NeuronGroup
@@ -11,6 +9,8 @@
    pair: example usage; Connection
    pair: example usage; exp
    pair: example usage; SpikeCounter
+
+.. _example-frompapers_Sturzl_et_al_2000:
 
 Example: Sturzl_et_al_2000 (frompapers)
 =======================================
