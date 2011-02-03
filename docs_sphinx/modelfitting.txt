@@ -68,7 +68,7 @@ To fit the parameters of a neuron model with respect to some data, use the
                          popsize = 1000, maxiter = 10, 
                          R = [1.0e9, 1.0e10], tau = [1*ms, 50*ms])
 
-    print_results(results)
+    print_table(results)
 
 .. warning::
 

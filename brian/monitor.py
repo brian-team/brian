@@ -1228,16 +1228,24 @@ class CoincidenceCounter(SpikeMonitor):
 class VanRossumMetric(StateMonitor):
     """
     van Rossum spike train metric.
-    from van Rossum M (2001) A novel spike distance Neural Computation 
+    From M. van Rossum (2001): A novel spike distance (Neural Computation). 
     
-    Compute the van Rossum distance between every spike trains from the source poupulation.
-    tau (in second) is the time constant of the kernel (low pass filter)
+    Compute the van Rossum distance between every spike train from the source
+    population.
+    
+    Arguments:
+    
+    ``source``
+        The group to compute the distances for. 
+    ``tau``
+        Time constant of the kernel (low pass filter).
     
     Has one attribute:
-    "distance" is a square symmetric matrix containg the distances
     
+    ``distance``
+        A square symmetric matrix containing the distances.    
     """
-    def __init__(self, source, tau=2 * ms):
+    def __init__(self, source, tau=2*ms):
         self.dt = source.clock.dt
         self.source = source
         self.nbr_neurons = len(source)

@@ -3,9 +3,17 @@
 Model fitting toolbox
 =====================
 
-.. autofunction:: modelfitting
-.. autofunction:: worker
+The model fitting toolbox uses the package
+`Playdoh <http://code.google.com/p/playdoh/>`__, you can see the
+documentation `here <http://playdoh.googlecode.com/svn/docs/index.html>`__.
+
+.. autofunction:: modelfitting(**kwds)
 .. autofunction:: get_spikes
 .. autofunction:: predict
-.. autofunction:: print_results
+.. autofunction:: print_table
+.. autofunction:: open_server
+
+.. autoclass:: PSO()
+.. autoclass:: GA()
+.. autoclass:: CMAES()
  

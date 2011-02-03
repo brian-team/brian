@@ -30,5 +30,6 @@ decorator.
 .. autoclass:: FileSpikeMonitor
 .. autoclass:: ISIHistogramMonitor
 .. autoclass:: PopulationRateMonitor
+.. autoclass:: VanRossumMetric
 .. autoclass:: CoincidenceCounter
 .. autoclass:: StateHistogramMonitor

@@ -1,13 +1,13 @@
 Installation
 ============
 
-If you already have a copy of Python 2.5 or 2.6, try the `Quick installation`_ below,
+If you already have a copy of Python 2.5-2.7, try the `Quick installation`_ below,
 otherwise take a look at `Manual installation`_.
 
 Quick installation
 ------------------
 
-The easiest way to install Brian if you already have a version of Python 2.5 or 2.6 including the
+The easiest way to install Brian if you already have a version of Python 2.5-2.7 including the
 ``easy_install`` script is to simply run the following in a shell::
 
 	easy_install brian
@@ -22,7 +22,7 @@ Manual installation
 
 Installing Brian requires the following components:
 
-#. `Python <http://www.python.org/download/>`__ version 2.5 or 2.6.
+#. `Python <http://www.python.org/download/>`__ version 2.5-2.7.
 #. `NumPy and Scipy <http://www.scipy.org/Download>`__ packages for Python:
    an efficient scientific library.
 #. `PyLab <http://matplotlib.sourceforge.net/>`__ package for Python:
@@ -46,7 +46,7 @@ Finally, if you want to use the (optional) automatic C++ code generation feature
 have the ``gcc`` compiler installed (on `Cygwin <http://www.cygwin.com/>`__ if you are
 running on Windows).
 
-Mac users: the `Scipy Superpack for Intel OS X <http://trichech.us/?page_id=5>`__ includes
+Mac users: the `Scipy Superpack for Intel OS X <http://stronginference.com/scipy-superpack/>`__ includes
 recent versions of Numpy, Scipy, Pylab and IPython.
 
 Windows users: the `Python(x,y) <http://www.pythonxy.com/>`__ distribution includes all the packages
@@ -76,7 +76,7 @@ one can be downloaded `here <http://www.eclipse.org/cdt/downloads.php>`__.
 
 Having downloaded and installed Eclipse, you should download and install the PyDev plugin from
 `their web site <http://pydev.sourceforge.net/>`__. The best way to do this is directly from within
-the Eclipse IDE. Follow the instructions on the `PyDev manual page <http://www.fabioz.com/pydev/manual_101_root.html>`__.
+the Eclipse IDE. Follow the instructions on the `PyDev manual page <http://pydev.org/manual_101_root.html>`__.
 
 Installing IPython
 ^^^^^^^^^^^^^^^^^^
