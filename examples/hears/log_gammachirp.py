@@ -1,29 +1,29 @@
 '''
-Example of the use of the class LogGammachirp available in the library. It implements a filterbank of IIR gammachirp filters  as 
-Unoki et al. 2001, "Improvement of an IIR asymmetric compensation gammachirp filter"
-In this example, a white noise is filtered by a linear gammachirp filterbank and the resulting cochleogram is plotted. The different impulse responses are also plotted.
+Example of the use of the class :class:`~brian.hears.LogGammachirp` available in
+the library. It implements a filterbank of IIR gammachirp filters as 
+Unoki et al. 2001, "Improvement of an IIR asymmetric compensation gammachirp
+filter". In this example, a white noise is filtered by a linear gammachirp
+filterbank and the resulting cochleogram is plotted. The different impulse
+responses are also plotted.
 '''
 from brian import *
 from brian.hears import *
 
+sound = whitenoise(100*ms).ramp()
+sound.level = 50*dB
 
-dBlevel=50*dB  # dB level of the input sound in rms dB SPL
-sound=whitenoise(100*ms,samplerate=44*kHz).ramp() #generation of a white noise
-sound=sound.atlevel(dBlevel) #set the sound to a certain dB level
+nbr_center_frequencies = 50  #number of frequency channels in the filterbank
 
-nbr_center_frequencies=50  #number of frequency channels in the filterbank
+c1 = -2.96 #glide slope
+b1 = 1.81  #factor determining the time constant of the filters
 
-c1=-2.96 #linspace(-2,2,nbr_center_frequencies)    #glide slope
-b1=1.81#linspace(1,1.5,nbr_center_frequencies)     #factor determining the time constant of the filters
+#center frequencies with a spacing following an ERB scale
+cf = erbspace(100*Hz, 1000*Hz, nbr_center_frequencies)
 
-cf=erbspace(100*Hz, 1000*Hz, nbr_center_frequencies)  #center frequencies with a spacing following an ERB scale
+gamma_chirp = LogGammachirp(sound, cf, c=c1, b=b1) 
 
-
-gamma_chirp=LogGammachirp(sound,cf, c=c1,b=b1)     #instantiation of the filterbank 
-
-gamma_chirp_mon=gamma_chirp.process()  #processing. The results is a matrix.
-
+gamma_chirp_mon = gamma_chirp.process()
 
 figure()
-imshow(flipud(gamma_chirp_mon.T),aspect='auto')    
+imshow(flipud(gamma_chirp_mon.T), aspect='auto')    
 show()    

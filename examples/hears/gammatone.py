@@ -1,35 +1,33 @@
 '''
-Example of the use of the class Gammatone available in the library. It implements a fitlerbank of IIR gammatone filters as 
-described  in Slaney, M., 1993, "An Efficient Implementation of the Patterson-Holdsworth  Auditory Filter Bank". Apple Computer Technical Report #35. 
-In this example, a white noise is filtered by a gammatone filterbank and the resulting cochleogram is plotted.
+Example of the use of the class :class:`~brian.hears.Gammatone` available in the
+library. It implements a fitlerbank of IIR gammatone filters as 
+described  in Slaney, M., 1993, "An Efficient Implementation of the
+Patterson-Holdsworth Auditory Filter Bank". Apple Computer Technical Report #35. 
+In this example, a white noise is filtered by a gammatone filterbank and the
+resulting cochleogram is plotted.
 '''
 from brian import *
 from brian.hears import *
 from matplotlib import pyplot
 
-dBlevel=50*dB  # dB level of the input sound in rms dB SPL
-sound=whitenoise(100*ms,samplerate=44*kHz).ramp() #generation of a white noise
-sound=sound.atlevel(dBlevel) #set the sound to a certain dB level
-time_axis=arange(0*ms,sound.duration,1./sound.samplerate)
+sound = whitenoise(100*ms).ramp()
+sound.level = 50*dB
 
-nbr_center_frequencies=50
-b1=1.019  #factor determining the time constant of the filters
-center_frequencies=erbspace(100*Hz,1000*Hz, nbr_center_frequencies)  #center frequencies with a spacing following an ERB scale
-gammatone =Gammatone(sound,center_frequencies,b=b1 ) #instantiation of the filterbank
+nbr_center_frequencies = 50
+b1 = 1.019  #factor determining the time constant of the filters
+#center frequencies with a spacing following an ERB scale
+center_frequencies = erbspace(100*Hz, 1000*Hz, nbr_center_frequencies)
+gammatone = Gammatone(sound, center_frequencies, b=b1)
 
-gt_mon=gammatone.process() #processing
-
+gt_mon = gammatone.process()
 
 figure()
-imshow(flipud(gt_mon.T),aspect='auto',extent=(time_axis[0]*1000,time_axis[-1]*1000,center_frequencies[0],center_frequencies[-1]))
+imshow(gt_mon.T, aspect='auto', origin='lower left',
+       extent=(0, sound.duration/ms,
+               center_frequencies[0], center_frequencies[-1]))
 pyplot.yscale('log')
-#yticks(center_frequencies)
 title('Cochleogram')
-ylabel('Frequency axis (Hz)')
-xlabel('Time axis (ms)')
-
+ylabel('Frequency (Hz)')
+xlabel('Time (ms)')
 
 show()
-
-
-

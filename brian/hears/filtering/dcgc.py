@@ -73,7 +73,7 @@ class AsymCompUpdate:
          frat = self.frat0 + self.frat1*level_dB
          fr2 = self.fp1*frat
          self.iteration+=1
-         self.target.filt_b, self.target.filt_a=asymmetric_compensation_coefs(self.samplerate,fr2,self.target.filt_b,self.target.filt_a,self.b,self.c,self.p0,self.p1,self.p2,self.p3,self.p4)
+         self.target.filt_b, self.target.filt_a=asymmetric_compensation_coeffs(self.samplerate,fr2,self.target.filt_b,self.target.filt_a,self.b,self.c,self.p0,self.p1,self.p2,self.p3,self.p4)
  
 class DCGC(CombinedFilterbank):
     '''
@@ -146,11 +146,11 @@ class DCGC(CombinedFilterbank):
         fp1_control = fp1[indch1_control]        
         pGc_control=RestructureFilterbank(pGc,indexmapping=indch1_control)
         fr2_control = parameters['frat_control']*fp1_control       
-        asym_comp_control=Asymmetric_Compensation(pGc_control, fr2_control,b=parameters['b2'], c=parameters['c2'])
+        asym_comp_control=AsymmetricCompensation(pGc_control, fr2_control,b=parameters['b2'], c=parameters['c2'])
         
         #### Signal Path ####
         fr1=fp1*parameters['frat0']
-        signal_path= Asymmetric_Compensation(pGc, fr1,b=parameters['b2'], c=parameters['c2'])
+        signal_path= AsymmetricCompensation(pGc, fr1,b=parameters['b2'], c=parameters['c2'])
 
         #### Controler #### 
         updater = AsymCompUpdate(signal_path,source.samplerate,fp1,parameters)   #the updater

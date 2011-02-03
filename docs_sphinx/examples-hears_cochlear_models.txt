@@ -2,47 +2,41 @@
 
 .. _example-hears_cochlear_models:
 
-.. index::
-   pair: example usage; set_global_preferences
-
 Example: cochlear_models (hears)
 ================================
 
-Example of the use of the cochlear models available in the library
+Example of the use of the cochlear models (:class:`~brian.hears.DRNL` and
+:class:`~brian.hears.DCGC`) available in the library.
 
 ::
 
     from brian import *
-    set_global_preferences(useweave=True)
     from brian.hears import *
     
-    simulation_duration=50*ms
-    samplerate=50*kHz
-    sound = whitenoise(simulation_duration,samplerate)
-    sound=sound.atlevel(50*dB) # dB level in rms dB SPL
-    cf=erbspace(100*Hz, 1000*Hz, 50)
+    simulation_duration = 50*ms
+    set_default_samplerate(50*kHz)
+    sound = whitenoise(simulation_duration)
+    sound = sound.atlevel(50*dB) # level in rms dB SPL
+    cf = erbspace(100*Hz, 1000*Hz, 50) # centre frequencies
     
     ## DNRL
-    param_drnl={}
-    param_drnl['lp_nl_cutoff_m']=1.1
+    param_drnl = {}
+    param_drnl['lp_nl_cutoff_m'] = 1.1
+    drnl_filter=DRNL(sound, cf, type='human', param=param_drnl)
+    drnl = drnl_filter.process()
     
-    drnl_filter=DRNL(sound,cf,type='human',param=param_drnl)
-    drnl=drnl_filter.process()
-    
-    ## CDGC
-    param_cdgc={}
-    param_cdgc['c1']=-2.96
-    interval=1
-    cdgc_filter=DCGC(sound,cf,interval,param=param_cdgc)
-    cdgc=cdgc_filter.process()
-    
+    ## DCGC
+    param_dcgc = {}
+    param_dcgc['c1'] = -2.96
+    interval = 1
+    dcgc_filter = DCGC(sound, cf, interval, param=param_dcgc)
+    dcgc = dcgc_filter.process()
     
     figure()
     subplot(211)
-    imshow(flipud(drnl.T),aspect='auto')
+    imshow(flipud(drnl.T), aspect='auto')
     subplot(212)
-    imshow(flipud(cdgc.T),aspect='auto')
-    
-    
+    imshow(flipud(dcgc.T), aspect='auto')
     show()
+    
 

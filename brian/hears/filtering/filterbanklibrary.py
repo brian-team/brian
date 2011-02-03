@@ -11,9 +11,9 @@ __all__ = ['Cascade',
            'LinearGaborchirp',
            'IIRFilterbank',
            'Butterworth',
-           'Asymmetric_Compensation',
+           'AsymmetricCompensation',
            'LowPass',
-           'asymmetric_compensation_coefs',
+           'asymmetric_compensation_coeffs',
            ]
 
 
@@ -228,7 +228,7 @@ class LogGammachirp(LinearFilterbank):
         self.asymmetric_filt_b=zeros((len(f),3, ncascades))
         self.asymmetric_filt_a=zeros((len(f),3, ncascades))
 
-        self.asymmetric_filt_b,self.asymmetric_filt_a=asymmetric_compensation_coefs(self.samplerate,f,self.asymmetric_filt_b,self.asymmetric_filt_a,b,c,p0,p1,p2,p3,p4)
+        self.asymmetric_filt_b,self.asymmetric_filt_a=asymmetric_compensation_coeffs(self.samplerate,f,self.asymmetric_filt_b,self.asymmetric_filt_a,b,c,p0,p1,p2,p3,p4)
 
         #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
         self.filt_b=concatenate([self.gammatone_filt_b, self.asymmetric_filt_b],axis=2)
@@ -620,7 +620,7 @@ class BiQuadratic(LinearFilterbank):
         self.asymmetric_filt_b=zeros((len(f),3, ncascades))
         self.asymmetric_filt_a=zeros((len(f),3, ncascades))
 
-        self.asymmetric_filt_b,self.asymmetric_filt_a=asymmetric_compensation_coefs(self.samplerate,f,self.asymmetric_filt_b,self.asymmetric_filt_a,b,c,p0,p1,p2,p3,p4)
+        self.asymmetric_filt_b,self.asymmetric_filt_a=asymmetric_compensation_coeffs(self.samplerate,f,self.asymmetric_filt_b,self.asymmetric_filt_a,b,c,p0,p1,p2,p3,p4)
 
         #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
         self.filt_b=concatenate([self.gammatone_filt_b, self.asymmetric_filt_b],axis=2)
@@ -687,7 +687,7 @@ class Cascade(LinearFilterbank):
             
         LinearFilterbank.__init__(self, source,self.filt_b, self.filt_a)  
         
-class Asymmetric_Compensation(LinearFilterbank):
+class AsymmetricCompensation(LinearFilterbank):
     '''
     Bank of asymmetric compensation fitlers
     
@@ -756,7 +756,7 @@ class Asymmetric_Compensation(LinearFilterbank):
 
 
 
-def asymmetric_compensation_coefs(samplerate,fr,filt_b,filt_a,b,c,p0,p1,p2,p3,p4):
+def asymmetric_compensation_coeffs(samplerate,fr,filt_b,filt_a,b,c,p0,p1,p2,p3,p4):
     '''
     This function is used to generated the coefficient of the asymmetric compensation filter used for the gammachirp implementation
     '''
