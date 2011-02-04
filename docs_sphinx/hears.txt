@@ -390,7 +390,7 @@ Second, the library provides linear audtiory filters developed to model the freq
 | LinearGaborchirp                   | Bank of FIR chirp filters with linear sweep and gaussian envelope                                 | :class:`LinearGaborchirp`         |                                              |
 +------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
 
-Finally, Brian hears comes with a series of complex nonlinear cochlear models developed to model nonlinear effects as filter bandwith level dependency, two-tones suppression, peak position level dependency etc
+Finally, Brian hears comes with a series of complex nonlinear cochlear models developed to model nonlinear effects such as filter bandwith level dependency, two-tones suppression, peak position level dependency etc
 
 +------------------------------------+---------------------------------------------------------------------------------------------------+-----------------------------------+----------------------------------------------+
 | Class name                         | Descripition                                                                                      |  Reference                        |  Example                                     |
