@@ -1,5 +1,5 @@
 '''
-A second example of the modelfitting toolbox, showing how to fit a single model
+Example showing how to fit a single model
 with different target spike trains (several groups).
 '''
 from brian import loadtxt, ms, Equations, second
@@ -32,6 +32,6 @@ if __name__ == '__main__':
                             delta = 4*ms,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms],
-                            delays = [-100*ms, 100*ms])
+                            delays = [-10*ms, 10*ms])
     print_table(results)
 

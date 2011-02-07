@@ -243,7 +243,7 @@ def modelfitting(model=None,
                  overlap=0*second,
                  initial_values=None,
                  stepsize=100 * ms,
-                 unit_type='CPU',
+                 unit_type=None,
                  total_units=None,
                  cpu=None,
                  gpu=None,
@@ -357,10 +357,10 @@ def modelfitting(model=None,
         It can be ``None`` or ``'mapminmax'``. It is ``None``
         by default (no scaling), and ``mapminmax`` by default for the CMAES algorithm.
         
-     ``algorithm=CMAES``
+    ``algorithm=CMAES``
+        The optimization algorithm. It can be :class:`PSO`, :class:`GA` or :class:`CMAES`.
          
-         
-     ``optparams={}``
+    ``optparams={}``
          Optimization parameters. See
          
     ``method='Euler'``
@@ -388,7 +388,6 @@ def modelfitting(model=None,
     
     ``info``
         A dictionary containing various information about the optimization.
-
 
     Also, the following syntax is possible with an ``OptimizationResult`` instance ``or``.
     The ``key`` is either an optimizing parameter name for keyword-like fitness functions,
@@ -425,9 +424,9 @@ def modelfitting(model=None,
         overlap = 0 * ms
 
     # default allocation
-    if cpu is None and gpu is None:
-        if CANUSEGPU: gpu = 1
-        else: cpu = MAXCPU-1
+    if cpu is None and gpu is None and unit_type is None:
+        if CANUSEGPU: unit_type = 'GPU'
+        else: unit_type = 'CPU'
 
     # check numerical integration method
     if (gpu>0 or unit_type == 'GPU') and method not in ['Euler', 'RK', 'exponential_Euler']:

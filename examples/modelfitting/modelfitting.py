@@ -1,6 +1,6 @@
 '''
 Model fitting example.
-Fits an integrate-and-fire model to an in-vitro electrophysiological 
+Fit an integrate-and-fire model to an in-vitro electrophysiological 
 recording during one second.
 '''
 from brian import loadtxt, ms, Equations
@@ -14,7 +14,7 @@ if __name__ == '__main__':
         tau : second
     ''')
     input = loadtxt('current.txt')
-    spikes = loadtxt('spikes.txt')    
+    spikes = loadtxt('spikes.txt')
     results = modelfitting( model = equations,
                             reset = 0,
                             threshold = 1,
