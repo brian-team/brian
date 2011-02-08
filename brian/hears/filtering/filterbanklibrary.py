@@ -281,7 +281,7 @@ class LinearGammachirp(FIRFilterbank):
         array of shape ``nchannels``X``length_impulse_response`` with each row being an impulse response for the  corresponding channel
     
     '''
-    def __init__(self,source,  f,time_constant,c,phase=0,env='gamma'): 
+    def __init__(self,source,  f,time_constant,c,phase=0): 
         
         self.f=f=atleast_1d(f)
         self.c=c=atleast_1d(c)
@@ -357,7 +357,7 @@ class LinearGaborchirp(FIRFilterbank):
         array of shape ``nchannels``X``length_impulse_response`` with each row being an impulse response for the  corresponding channel
     
     '''
-    def __init__(self,source,  f,time_constant,c,phase=0,env='gamma'): 
+    def __init__(self,source,  f,time_constant,c,phase=0): 
         
         self.f=f=atleast_1d(f)
         self.c=c=atleast_1d(c)
