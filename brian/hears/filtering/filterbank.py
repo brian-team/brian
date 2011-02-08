@@ -573,6 +573,9 @@ class DoNothingFilterbank(Filterbank):
                 a = AFilterbank(source)
                 b = BFilterbank(a)
                 DoNothingFilterbank.__init__(self, b)
+                
+    However, a more general way of writing compound filterbanks is to use
+    :class:`CombinedFilterbank`.
     '''
     def buffer_apply(self, input):
         return input

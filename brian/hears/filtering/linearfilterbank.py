@@ -220,7 +220,10 @@ class LinearFilterbank(Filterbank):
         ``(nchannels, m, p)``. Here ``m`` is
         the order of the filters, and ``p`` is the number of filters in a
         chain (first you apply ``[:, :, 0]``, then ``[:, :, 1]``, etc.).
-        
+    
+    The filter parameters are stored in the modifiable attributes ``filt_b``,
+    ``filt_a`` and ``filt_state`` (the variable ``z`` in the section below).
+    
     **Notes**
     
     These notes adapted from scipy's :func:`~scipy.signal.lfilter` function.
