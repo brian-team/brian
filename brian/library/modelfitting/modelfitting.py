@@ -408,7 +408,10 @@ def modelfitting(model=None,
     `Jolivet et al. 2008, "A benchmark test for a quantitative assessment of simple neuron models", J. Neurosci. Methods <http://www.ncbi.nlm.nih.gov/pubmed/18160135>`__ (available in PDF
     `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
     """
-
+    
+    for param in params.keys():
+        if (param not in model._diffeq_names) and (param != 'delays'):
+            raise Exception("Parameter %s must be defined as a parameter in the model" % param)
 
     # Make sure that 'data' is a N*2-array
     data = array(data)
