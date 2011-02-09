@@ -123,7 +123,8 @@ def compare_files(acc, files):
                 ask.append(f)
             del files[f]
         except KeyError:
-            strange.append(f)
+            if 'docs/' not in f:
+                strange.append(f)
     too_few = [f for f, c in files.iteritems() if c == '+']
     ask_not_inc = [f for f, c in files.iteritems() if c == '*']
     if len(strange):

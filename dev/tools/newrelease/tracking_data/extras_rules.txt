@@ -4,7 +4,6 @@
 
 include ^tutorials/
 include ^examples/
-include ^docs/
 exclude \.svn
 exclude \.pyc
 exclude \.o
@@ -14,6 +13,5 @@ exclude \.lib
 exclude build/
 exclude \.pyd
 exclude ^\.buildinfo
-exclude ^docs/\.doctrees/
 exclude ^examples/frompapers/data/
 exclude ^examples/frompapers/imgs/

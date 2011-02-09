@@ -2,16 +2,24 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.2.2dev
+Version: 1.3.0
 Authors:
 	Romain Brette
 		http://audition.ens.fr/brette/
 	Dan Goodman
 		http://thesamovar.net/neuroscience
+Team:
+	Cyrille Rossant (brian.library.modelfitting)
+		http://cyrille.rossant.net/
+	Bertrand Fontaine (brian.hears)
+		http://lpp.psycho.univ-paris5.fr/person.php?name=BertrandF
+	Victor Benichoux (brian.hears)
+	Boris Gourevitch (brian.hears)
+		http://pi314.net/
 
 ==== Installation ==========================================================
 
-Requirements: Python (version 2.5 or 2.6), the following modules:
+Requirements: Python (version 2.5-7), the following modules:
 
 * numpy
 * scipy (preferably 0.7 or later)
@@ -42,6 +50,59 @@ See the documentation in the extras download, or online:
 	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.2.1 to 1.3.0
+----------------------
+
+Major features:
+
+* Added Brian.hears auditory library
+
+Minor features:
+
+* Added new brian.tools.datamanager.DataManager, moved from brian.experimental
+* reinit(states=False) will now not reset NeuronGroup state variables to 0.
+* modelfitting now has support for refractoriness
+* New examples in misc: after_potential, non_reliability, reliability,
+  van_rossum_metric, remotecontrolserver, remotecontrolclient
+* New experimental.neuromorphic package
+* Van Rossum metric added
+
+Improvements:
+
+* SpikeGeneratorGroup is faster for large number of events ("gather" option).
+* Speed improvement for pure Python version of sparse matrix preparation
+* Speed improvements for spike propagation weave code (50-100% faster).
+* Clocks have been changed and should now behave more predictably. In addition,
+  you can now specify an order attribute for clocks.
+* modelfitting is now based on playdoh 0.3
+* modelfitting can now use euler/exp.euler or RK2 integration schemes
+* Loading AER data is much faster
+* Freezing now uses higher precision (used to only use 12sf now uses 17sf)
+
+Bug fixes:
+
+* Bug in STDP with small values for wmin/wmax fixed (ticket #63)
+* Equations/aliases now work correctly in STDP (ticket #56)
+* Bug in sparse matrices introduced in scipy 0.8.0 fixed
+* Bug in TimedArray when dt keyword is used now fixed (thanks to Adrien
+  Wohrer for pointing out the bug).
+* Units now work correctly in STDP (ticket #60)
+* STDP raises an error if operations are reordered (ticket #57)
+* linked_var works with static vars (equations) (ticket #68)
+* Changing clock.t during a run won't end the run
+* Fixed ticket #66 (unit bug)
+* Fixed ticket #64 (bug with freeze)
+* Can now run a network with no group
+* Exception handling now works properly for C version of circiular spike
+  container
+* ccircular now builds correctly on linux and 64 bit
+
+Internal changes:
+
+* brian.connection deprecated and replaced by subpackage brian.connections,
+  making the code structure much more straightforward and setting up for future
+  work on code generation, etc.
 
 Version 1.2.0 to 1.2.1
 ----------------------

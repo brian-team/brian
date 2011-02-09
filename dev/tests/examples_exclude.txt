@@ -14,3 +14,5 @@ clusterexample_manager.py
 clusterexample_worker.py
 remotecontrolserver.py
 remotecontrolclient.py
+ircam_hrtf.py
+sound_localisation_model.py

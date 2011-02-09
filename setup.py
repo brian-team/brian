@@ -4,7 +4,7 @@ Setup script for Brian
 
 from distutils.core import setup
 
-version = '1.2.2dev'
+version = '1.3.0'
 
 long_description = '''
 Brian is a simulator for spiking neural networks available on almost all platforms.
@@ -22,15 +22,22 @@ support and extension packages.
 # containing the following files
 extras_folders = ['tutorials/tutorial1_basic_concepts/*.py', 'tutorials/tutorial1_basic_concepts/*.txt',
                   'tutorials/tutorial2_connections/*.py', 'tutorials/tutorial2_connections/*.txt',
-                  'examples/*.py', 'examples/*.txt', 'examples/audition/*.py',
-                  'examples/electrophysiology/*.py', 'examples/frompapers/*.py',
-                  'examples/interface/*.*', 'examples/plasticity/*.py',
-                  'examples/misc/*.py',
-                  'examples/multiprocessing/*.py',
-                  'examples/modelfitting/*.py', 'examples/modelfitting/*.txt',
-                  'examples/hears/*.py',
-                  'docs/*.*', 'docs/_images/*.jpg',
-                  'docs/_sources/*.*', 'docs/_static/*.*' ]
+                  'examples/*.py', 'examples/*.txt',
+                    'examples/audition/*.py',
+                    'examples/electrophysiology/*.py',
+                    'examples/frompapers/*.py',
+                    'examples/hears/*.py',
+                    'examples/interface/*.*',
+                    'examples/misc/*.py',
+                    'examples/modelfitting/*.py',
+                    'examples/modelfitting/*.txt',
+                    'examples/multiprocessing/*.py',
+                    'examples/plasticity/*.py',
+                  'docs/*.*',
+                    'docs/_images/*.jpg',
+                    'docs/_sources/*.*',
+                    'docs/_static/*.*' 
+                  ]
 
 if __name__ == "__main__":
     setup(name='brian',
@@ -42,6 +49,7 @@ if __name__ == "__main__":
                     'brian.experimental',
                         'brian.experimental.cuda',
                         'brian.experimental.codegen',
+                        'brian.experimental.neuromorphic',
                     'brian.hears',
                         'brian.hears.filtering',
                         'brian.hears.hrtf',
