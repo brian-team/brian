@@ -21,17 +21,21 @@ __all__ = ['Cascade',
     
 class Gammatone(LinearFilterbank):
     '''
-    Bank  of gammatone filters.
+    Bank of gammatone filters.
     
-    They are implemented as cascades of four 2nd-order IIR filters (this 8th-order digital filter corresponds to a 4th-order gammatone filter).
+    They are implemented as cascades of four 2nd-order IIR filters (this
+    8th-order digital filter corresponds to a 4th-order gammatone filter).
     
-    The approximated impulse response :math:`IR` is defined as follow
-    :math:`IR(t)=t^{3}.exp(-2\pi b ERB(f)t)cos(2\pi f t )`
-    where :math:`ERB(f)=24.7+0.108 f` [Hz] is the equivalent rectangular bandwidth of the filter centered at :math:`f`
+    The approximated impulse response :math:`\\mathrm{IR}` is defined as follow
+    :math:`\\mathrm{IR}(t)=t^3\\exp(-2\\pi b \\mathrm{ERB}(f)t)\\cos(2\\pi f t)`
+    where :math:`\\mathrm{ERB}(f)=24.7+0.108 f` [Hz] is the equivalent
+    rectangular bandwidth of the filter centered at :math:`f`.
 
-    It comes from Slaney's exact gammatone  implementation (Slaney, M., 1993, "An Efficient Implementation of the Patterson-Holdsworth 
-    Auditory Filter Bank". Apple Computer Technical Report #35). The code is based on  Slaney's matlab implementation 
-    (http://cobweb.ecn.purdue.edu/~malcolm/interval/1998-010/)
+    It comes from Slaney's exact gammatone implementation (Slaney, M., 1993,
+    "An Efficient Implementation of the Patterson-Holdsworth 
+    Auditory Filter Bank". Apple Computer Technical Report #35). The code is
+    based on
+    `Slaney's Matlab implementation <http://cobweb.ecn.purdue.edu/~malcolm/interval/1998-010/>`__.
     
     Initialised with arguments:
     
@@ -42,15 +46,18 @@ class Gammatone(LinearFilterbank):
         List or array of center frequencies.
         
     ``b=1.019``
-        parameter which determines the  bandwidth of the filters (and reciprocally the duration of its impulse response). 
-        In particular, the bandwdith = b.ERB(cf), where ERB(cf) is the equivalent bandwidth at frequency ``cf``.
-        The default value of ``b`` to a best fit (Patterson et al., 1992).
-        ``b`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
+        parameter which determines the bandwidth of the filters (and
+        reciprocally the duration of its impulse response). In particular, the
+        bandwidth = b.ERB(cf), where ERB(cf) is the equivalent bandwidth at
+        frequency ``cf``. The default value of ``b`` to a best fit
+        (Patterson et al., 1992). ``b`` can either be a scalar and will be the
+        same for every channel or an array of the same length as ``cf``.
         
-        
-    ``erb_order=1``, ``ear_Q=9.26449`` and ``min_bw=24.7`` are parameters used to compute the ERB bandwidth.
-    :math:`ERB = ((cf/ear\_Q)^{erb\_order} + min\_bw^{erb\_order})^{(1/erb\_order)}`.
-    Their default values are the one recommended in Glasberg and Moore, 1990 
+    ``erb_order=1``, ``ear_Q=9.26449``, ``min_bw=24.7``
+        Parameters used to compute the ERB bandwidth.
+        :math:`\\mathrm{ERB} = ((\mathrm{cf}/\mathrm{ear\\_Q})^{\\mathrm{erb}\\_\\mathrm{order}} + \\mathrm{min\\_bw}^{\\mathrm{erb}\\_\\mathrm{order}})^{(1/\\mathrm{erb}\\_\\mathrm{order})}`.
+        Their default values are the ones recommended in
+        Glasberg and Moore, 1990. 
 
     '''
 
@@ -110,16 +117,21 @@ class Gammatone(LinearFilterbank):
         LinearFilterbank.__init__(self, source, self.filt_b, self.filt_a)
 
 class ApproximateGammatone(LinearFilterbank):
-    '''
-    Bank of approximate gammatone filters implemented as a cascade of ``order``  IIR gammatone filters..
+    r'''
+    Bank of approximate gammatone filters implemented as a cascade of ``order`` IIR gammatone filters.
     
-    The filter is derived from the sampled version of the complex analog Gammatone impulse response
-    :math:`g_{\gamma}(t)=t^{\gamma-1} \lambda  \exp(i \\eta t)` 
-    where :math:`\gamma` corresponds to ``order``, :math:`\eta` defines the oscillation frequency ``cf``, and :math:`\lambda` defines the bandwidth parameter.
+    The filter is derived from the sampled version of the complex analog
+    gammatone impulse response
+    :math:`g_{\gamma}(t)=t^{\gamma-1} \lambda e^{i \eta t}` 
+    where :math:`\gamma` corresponds to ``order``, :math:`\eta` defines the
+    oscillation frequency ``cf``, and :math:`\lambda` defines the bandwidth
+    parameter.
     
-    The design is based on the Hohmann implementation as described in Hohmann, V., 2002, "Frequency analysis and synthesis using a Gammatone filterbank",
-    Acta Acustica United with Acustica. The code is based on the matlab gammatone implementation from the Meddis'toolbox 
-    (http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm) 
+    The design is based on the Hohmann implementation as described in
+    Hohmann, V., 2002, "Frequency analysis and synthesis using a Gammatone
+    filterbank", Acta Acustica United with Acustica. The code is based on the
+    Matlab gammatone implementation from
+    `Meddis' toolbox <http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm>`__. 
     
     Initialised with arguments:
     
@@ -133,8 +145,8 @@ class ApproximateGammatone(LinearFilterbank):
         List or array of filters bandwidth corresponding, one for each cf.
         
     ``order=4``
-        order is the number of 1st-order gammatone filters put in cascade and is therefore the order the resulting gammatone filters.
-    
+        The number of 1st-order gammatone filters put in cascade, and therefore
+        the order the resulting gammatone filters.
      '''
    
     def __init__(self, source, cf,  bandwidth,order=4):
@@ -164,24 +176,20 @@ class ApproximateGammatone(LinearFilterbank):
         
         LinearFilterbank.__init__(self,source, self.filt_b, self.filt_a)
 
-
-
-
-
-            
+           
 class LogGammachirp(LinearFilterbank):
-    '''
-    Bank of gammachirp filters with a logarithmic frequency sweep
+    r'''
+    Bank of gammachirp filters with a logarithmic frequency sweep.
     
-    The approximated impulse response :math:`IR` is defined as follow
-    :math:`IR(t)=t^{3}.exp(-2\pi b ERB(f)t)cos[2\pi (f t +c \ln(t)]`
-    where :math:`ERB(f)=24.7+0.108 f` [Hz] is the equivalent rectangular bandwidth of the filter centered at :math:`f`
-
+    The approximated impulse response :math:`\mathrm{IR}` is defined as follows:
+    :math:`\mathrm{IR}(t)=t^3e^{-2\pi b \mathrm{ERB}(f)t}\cos(2\pi (f t +c\cdot\ln(t))`
+    where :math:`\mathrm{ERB}(f)=24.7+0.108 f` [Hz] is the equivalent
+    rectangular bandwidth of the filter centered at :math:`f`.
     
-    The implementation  is a cascade of 4 2nd-order IIR gammatone filter 
-    followed by a cascade of  ncascades 2nd-order asymmetric compensation filters as introduced in  Unoki et al. 2001, "Improvement of an IIR asymmetric 
+    The implementation is a cascade of 4 2nd-order IIR gammatone filters 
+    followed by a cascade of ncascades 2nd-order asymmetric compensation filters
+    as introduced in Unoki et al. 2001, "Improvement of an IIR asymmetric 
     compensation gammachirp filter". 
-    
 
     Initialisation parameters:
     
@@ -189,21 +197,24 @@ class LogGammachirp(LinearFilterbank):
         Source sound or filterbank.
         
     ``f``
-        List or array of the sweep ending frequencies. (:math:`f_{instantaneous}=f+c/t`) 
-        
+        List or array of the sweep ending frequencies
+        (:math:`f_{\mathrm{instantaneous}}=f+c/t`). 
         
     ``b=1.019``
-        parameters which determines the duration of the impulse response
-        ``b`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
+        Parameters which determine the duration of the impulse response.
+        ``b`` can either be a scalar and will be the same for every channel or
+        an array with the same length as ``f``.
         
     ``c=1``
-        c is the glide slope (or sweep rate) given in Hertz/second. The trajectory of the instantaneous frequency towards f is an upchirp when c<0 and a 
-        downchirp when c>0
-        ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
+        The glide slope (or sweep rate) given in Hz/second. The trajectory of
+        the instantaneous frequency towards f is an upchirp when c<0 and a 
+        downchirp when c>0.
+        ``c`` can either be a scalar and will be the same for every channel or
+        an array with the same length as ``f``.
         
     ``ncascades=4``
-        number of times the asymmetric compensation filter is put in cascade; The default value comes from Unoki et al. 2001. 
-        
+        Number of times the asymmetric compensation filter is put in cascade.
+        The default value comes from Unoki et al. 2001. 
     '''
       
     def __init__(self, source, f,b=1.019,c=1,ncascades=4):
@@ -239,19 +250,24 @@ class LogGammachirp(LinearFilterbank):
 
 
 class LinearGammachirp(FIRFilterbank):
-    '''
-    Bank of gammachirp filters with linear frequency sweeps and gamma envelope as described in Wagner et al. 2009, "Auditory responses in the barn owl's nucleus
-     laminaris to clicks: impulse response and signal analysis of neurophonic potential", J. Neurophysiol.
+    r'''
+    Bank of gammachirp filters with linear frequency sweeps and gamma envelope
+    as described in Wagner et al. 2009, "Auditory responses in the barn owl's
+    nucleus laminaris to clicks: impulse response and signal analysis of
+    neurophonic potential", J. Neurophysiol.
     
-    The impulse response :math:`IR` is defined as follow
-    :math:`IR(t)=t^{3}exp(-t/\sigma)cos[2\pi (f t +c/2 t^{2})+\phi]`
-    where :math:`\sigma` correspond to ``time_constant`` and :math:`\phi` to ``phase`` (see parameters definition)
-    
+    The impulse response :math:`\mathrm{IR}` is defined as follow
+    :math:`\mathrm{IR}(t)=t^3e^{-t/\sigma}\cos(2\pi (f t +c/2 t^2)+\phi)`
+    where :math:`\sigma` corresponds to ``time_constant`` and :math:`\phi` to
+    ``phase`` (see definition of parameters).
 
-    Those filters are implemented as FIR filters using  truncated time representations of  gammachirp functions as the impulse response. The impulse responses,
-    which need to have the same length for every channel, have a duration of 15 times the biggest time constant. The length of the impulse response is therefore 
-    15.max(time_constant).sampling_rate.  The impulse responses are normalized with respect to the transmitted power, i.e.
-    their rms of the filter taps =1
+    Those filters are implemented as FIR filters using truncated time
+    representations of gammachirp functions as the impulse response. The impulse
+    responses, which need to have the same length for every channel, have a
+    duration of 15 times the biggest time constant. The length of the impulse
+    response is therefore ``15*max(time_constant)*sampling_rate``.  The impulse
+    responses are normalized with respect to the transmitted power, i.e.
+    the rms of the filter taps is 1.
     
     Initialisation parameters:
     
@@ -259,30 +275,32 @@ class LinearGammachirp(FIRFilterbank):
         Source sound or filterbank.
         
     ``f``
-        List or array of the sweep starting frequencies (:math:`f_{instantaneous}=f+c*t`)
-
+        List or array of the sweep starting frequencies
+        (:math:`f_{\mathrm{instantaneous}}=f+ct`).
         
     ``time_constant``
-        determines the duration of the envelope and consequently the length of the impluse response
+        Determines the duration of the envelope and consequently the length of
+        the impulse response.
         
     ``c=1``
-        c is the glide slope (or sweep rate) given ins Hertz/second. The time-dependent instantaneous frequency is f+c*t and is therefore going upward when
-         c>0 and downward when c<0 ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
+        The glide slope (or sweep rate) given in Hz/second. The time-dependent
+        instantaneous frequency is ``f+c*t`` and is therefore going upward when
+        c>0 and downward when c<0. ``c`` can either be a scalar and will be the
+        same for every channel or an array with the same length as ``f``.
         
     ``phase=0``
-        phase shift of the carrier
-
+        Phase shift of the carrier.
         
     Has attributes:
     
     ``length_impulse_response`` 
-        number of sample if the impulse responses
+        Number of samples in the impulse responses.
         
     ``impulse_response``
-        array of shape ``nchannels``X``length_impulse_response`` with each row being an impulse response for the  corresponding channel
-    
+        Array of shape ``(nchannels, length_impulse_response)`` with each row
+        being an impulse response for the corresponding channel.
     '''
-    def __init__(self,source,  f,time_constant,c,phase=0): 
+    def __init__(self,source, f, time_constant, c, phase=0): 
         
         self.f=f=atleast_1d(f)
         self.c=c=atleast_1d(c)
@@ -316,18 +334,25 @@ class LinearGammachirp(FIRFilterbank):
         FIRFilterbank.__init__(self,source, self.impulse_response)
 
 class LinearGaborchirp(FIRFilterbank):
-    '''
-    Bank of gammachirp filters with linear frequency sweeps and gaussian envelope as described in Wagner et al. 2009, "Auditory responses in the barn owl's 
-    nucleus laminaris to clicks: impulse response and signal analysis of neurophonic potential", J. Neurophysiol.
+    r'''
+    Bank of gammachirp filters with linear frequency sweeps and gaussian envelope
+    as described in Wagner et al. 2009, "Auditory responses in the barn owl's 
+    nucleus laminaris to clicks: impulse response and signal analysis of
+    neurophonic potential", J. Neurophysiol.
     
-    The impulse response :math:`IR` is defined as follow
-    :math:`IR(t)=exp(-t/2\sigma)^{2}\cos[2\pi (f t +c/2 t^{2})+\phi]`
-    where :math:`\sigma` correspond to ``time_constant`` and :math:`\phi` to ``phase`` (see parameters definition)
+    The impulse response :math:`\mathrm{IR}` is defined as follows:
+    :math:`\mathrm{IR}(t)=e^{-t/2\sigma^2}\cos(2\pi (f t +c/2 t^2)+\phi)`,
+    where :math:`\sigma` corresponds to ``time_constant`` and :math:`\phi` to
+    ``phase`` (see definition of parameters).
     
-    Those filters are implemented as FIR filters using  truncated time representations of  gammachirp functions as the impulse response. The impulse responses,
-    which need to have the same length for every channel, have a duration of 15 times the biggest time constant. The length of the impulse response is therefore 
-    12.max(time_constant).sampling_rate. The envelope is a gaussian function (Gabor filter).  The impulse responses are normalized with respect to the transmitted 
-    power, i.e. the rms of the filter taps =1
+    These filters are implemented as FIR filters using truncated time
+    representations of gammachirp functions as the impulse response. The impulse
+    responses, which need to have the same length for every channel, have a
+    duration of 15 times the biggest time constant. The length of the impulse
+    response is therefore ``15*max(time_constant)*sampling_rate``. The envelope
+    is a gaussian function (Gabor filter).  The impulse responses are normalized
+    with respect to the transmitted  power, i.e. the rms of the filter taps is
+    1.
     
     Initialisation parameters:
     
@@ -335,31 +360,32 @@ class LinearGaborchirp(FIRFilterbank):
         Source sound or filterbank.
         
     ``f``
-        List or array of the sweep starting frequencies (:math:`f_{instantaneous}=f+c*t`)
-
+        List or array of the sweep starting frequencies
+        (:math:`f_{\mathrm{instantaneous}}=f+c*t`).
         
     ``time_constant``
-        determines the duration of the envelope and consequently the length of the impluse response
+        Determines the duration of the envelope and consequently the length of
+        the impluse response.
         
     ``c=1``
-        c is the glide slope (or sweep rate) given ins Hertz/second. The time-dependent instantaneous frequency is f+c*t and is therefore going upward when c>0
-         and downward when c<0. ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``f``
+        The glide slope (or sweep rate) given ins Hz/second. The time-dependent
+        instantaneous frequency is ``f+c*t`` and is therefore going upward when
+        c>0 and downward when c<0. ``c`` can either be a scalar and will be the
+        same for every channel or an array with the same length as ``f``.
         
     ``phase=0``
-        phase shift of the carrier
-    
+        Phase shift of the carrier.
         
     Has attributes:
     
     ``length_impulse_response`` 
-        number of sample if the impulse responses
+        Number of sample in the impulse responses.
         
     ``impulse_response``
-        array of shape ``nchannels``X``length_impulse_response`` with each row being an impulse response for the  corresponding channel
-    
+        Array of shape ``(nchannels, length_impulse_response)`` with each row
+        being an impulse response for the corresponding channel.
     '''
-    def __init__(self,source,  f,time_constant,c,phase=0): 
-        
+    def __init__(self,source, f, time_constant, c, phase=0): 
         self.f=f=atleast_1d(f)
         self.c=c=atleast_1d(c)
         self.phase=phase=atleast_1d(phase)
@@ -370,9 +396,7 @@ class LinearGaborchirp(FIRFilterbank):
             c=c*ones(len(f))
         if len(phase)==1:
             phase=phase*ones(len(f))
-        self.samplerate= source.samplerate
-        
-        
+        self.samplerate = source.samplerate
         
         Tcst_max=max(time_constant)
 
@@ -384,17 +408,20 @@ class LinearGaborchirp(FIRFilterbank):
         for ich in xrange(len(f)):
             env=exp(-(t/(2*time_constant[ich]))**2)   
             self.impulse_response[ich,:]=env*cos(2*pi*(f[ich]*t+c[ich]/2*t**2)+phase[ich])
-            self.impulse_response[ich,:]=self.impulse_response[ich,:]/sqrt(sum(self.impulse_response[ich,:]**2))    
+            self.impulse_response[ich,:]=self.impulse_response[ich,:]/sqrt(sum(self.impulse_response[ich,:]**2))
 
-
-        FIRFilterbank.__init__(self,source, self.impulse_response)
+        FIRFilterbank.__init__(self, source, self.impulse_response)
 
 class IIRFilterbank(LinearFilterbank):
     '''
-    Filterbank of IIR filters. The filters can be low, high, bandstop or bandpass and be of type Elliptic, Butterworth, Chebyshev etc. The ``passband`` 
-    and ``stopband`` can be scalars (for low or high pass) or pairs of parameters (for stopband and passband) yielding similar filters for every channels.
-     They can also be arrays of dimension (1 x nchannels) for low and high pass or (2 x nchannels) for stopband and passband  yielding different filters 
-     along channels. This class uses scipy iirdesign function to geenrate filters coeffcient for every channel. 
+    Filterbank of IIR filters. The filters can be low, high, bandstop or
+    bandpass and be of type Elliptic, Butterworth, Chebyshev etc. The
+    ``passband``  and ``stopband`` can be scalars (for low or high pass) or
+    pairs of parameters (for stopband and passband) yielding similar filters for
+    every channel. They can also be arrays of shape ``(1, nchannels)`` for low
+    and high pass or ``(2, nchannels)`` for stopband and passband yielding
+    different filters along channels. This class uses the scipy iirdesign
+    function to generate filter coefficients for every channel. 
     
     See the documentation for scipy.signal.iirdesign for more details.
     
@@ -407,28 +434,35 @@ class IIRFilterbank(LinearFilterbank):
         The number of channels in the bank
         
     ``passband``, ``stopband``
-        The edges of the pass and stop bands in Hz. For a lowpass and highpass filters, in the case of similar filters for each channel,
-        they are scalars and passband<stopband for low pass or stopband>passband for a highpass. For a bandpass or bandstop filter, 
-        in the case of similar filters for each channel, make passband and stopband a list with two elements, e.g. for a bandpass 
-        have passband=[200*Hz, 500*hz] and stopband=[100*Hz, 600*Hz]. ``passband`` and ``stopband`` can be  also be arrays of 
-        dimension (1 x nchannels) for low and high pass or (2 x nchannels) for stopband and passband  yielding different filters along channels.
+        The edges of the pass and stop bands in Hz. For lowpass and highpass
+        filters, in the case of similar filters for each channel, they are
+        scalars and passband<stopband for low pass or stopband>passband for a
+        highpass. For a bandpass or bandstop filter, in the case of similar
+        filters for each channel, make passband and stopband a list with two
+        elements, e.g. for a bandpass have ``passband=[200*Hz, 500*Hz]`` and
+        ``stopband=[100*Hz, 600*Hz]``. ``passband`` and ``stopband`` can also be
+        arrays of shape ``(1, nchannels)`` for low and high pass or
+        ``(2, nchannels)`` for stopband and passband yielding different filters
+        along channels.
         
     ``gpass``
-        The maximum loss in the passband in dB. Can be a scalar or an array of length ``nchannels``
+        The maximum loss in the passband in dB. Can be a scalar or an array of
+        length ``nchannels``.
         
     ``gstop``
-        The minimum attenuation in the stopband in dB. Can be a scalar or an array of length ``nchannels``
+        The minimum attenuation in the stopband in dB. Can be a scalar or an
+        array of length ``nchannels``.
         
     ``btype``
         One of 'low', 'high', 'bandpass' or 'bandstop'.
     
     ``ftype``
         The type of IIR filter to design:
-        elliptic    : 'ellip'
-        Butterworth : 'butter',
-        Chebyshev I : 'cheby1',
-        Chebyshev II: 'cheby2',
-        Bessel :      'bessel'
+        'ellip' (elliptic),
+        'butter' (Butterworth),
+        'cheby1' (Chebyshev I),
+        'cheby2' (Chebyshev II),
+        'bessel' (Bessel).
     
     '''
     
@@ -508,7 +542,8 @@ class IIRFilterbank(LinearFilterbank):
 class Butterworth(LinearFilterbank):
     '''
     Filterbank of  low, high, bandstop or bandpass  Butterworth filters. 
-    The cut-off frequencies or the band frequencies can either be the same for each channels or different along channels.
+    The cut-off frequencies or the band frequencies can either be the same for
+    each channel or different along channels.
     
     Initialisation parameters:
     
@@ -522,9 +557,12 @@ class Butterworth(LinearFilterbank):
         Order of the filters.
         
     ``fc``
-        Cutoff parameter(s) in Hz. For the case of a lowpass or highpass filterbank, ``fc`` is either a scalar (thus the same value for all of the channels
-        or an array  of length ``nchannels``. For the case of a bandpass or bandstop, ``fc`` is either a pair of scalar defining the bandpass or bandstop
-        (thus the same values for all of the channels or an array of dimension (2 x nchannels) to define a pair for every channel.
+        Cutoff parameter(s) in Hz. For the case of a lowpass or highpass
+        filterbank, ``fc`` is either a scalar (thus the same value for all of
+        the channels) or an array  of length ``nchannels``. For the case of a
+        bandpass or bandstop, ``fc`` is either a pair of scalar defining the
+        bandpass or bandstop (thus the same values for all of the channels) or
+        an array of shape ``(2, nchannels)`` to define a pair for every channel.
         
     ``btype``
         One of 'low', 'high', 'bandpass' or 'bandstop'.
@@ -572,6 +610,7 @@ class Butterworth(LinearFilterbank):
 class BiQuadratic(LinearFilterbank):
     '''
     Bank of biquadratic bandpass filters
+    
     The transfer function of the filters are like the ones of  all second-order linear filters
     :math:`H(s)=\frac{Kw_{0}^{2}}{s_{2}+w_{0}/Qs+w_{0}^{2}}`
     where :math:`w_{0}`  is the centre frequency and :math:`Q` the quality factor of the filter
@@ -694,11 +733,14 @@ class Cascade(LinearFilterbank):
         
 class AsymmetricCompensation(LinearFilterbank):
     '''
-    Bank of asymmetric compensation fitlers
+    Bank of asymmetric compensation filters.
     
-    Those filters are meant to be used in cascade with gammatone filters to approximate gammachirp filters (Unoki et al., 2001, Improvement of
-     an IIR asymmetric compensation gammachirp filter, Acoust. Sci. & Tech.). They are implemented a a cascade of low order filters. The code 
-     is based on the implementation found in the AIM-MAT toolobox (http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/index.html)
+    Those filters are meant to be used in cascade with gammatone filters to
+    approximate gammachirp filters (Unoki et al., 2001, Improvement of
+    an IIR asymmetric compensation gammachirp filter, Acoust. Sci. & Tech.).
+    They are implemented a a cascade of low order filters. The code 
+    is based on the implementation found in the
+    `AIM-MAT toolbox <http://www.pdn.cam.ac.uk/groups/cnbh/aimmanual/index.html>`__.
 
     Initialised with arguments:
     
@@ -706,17 +748,20 @@ class AsymmetricCompensation(LinearFilterbank):
         Source of the filterbank.
         
     ``f``
-        List or array of the cut of frequencies
+        List or array of the cut off frequencies.
         
     ``b=1.019``
-        parameters which determines the duration of the impulse response
-        ``b`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
+        Determines the duration of the impulse response.
+        Can either be a scalar and will be the same for every channel or
+        an array with the same length as ``cf``.
+        
     ``c=1``
-        c is the glide slope when this filter is used to implement a gammachirp
-        ``c`` can either be a scalar and will be the same for every channel or either an array with the same length as ``cf``
-     ``ncascades=4``
-        ncascades is the number of time the basic fitler is put in cascade.
-    
+        The glide slope when this filter is used to implement a gammachirp.
+        Can either be a scalar and will be the same for every channel or
+        an array with the same length as ``cf``.
+        
+    ``ncascades=4``
+        The number of time the basic filter is put in cascade.
      '''
      
     def __init__(self, source, f,b=1.019, c=1,ncascades=4):
@@ -763,7 +808,8 @@ class AsymmetricCompensation(LinearFilterbank):
 
 def asymmetric_compensation_coeffs(samplerate,fr,filt_b,filt_a,b,c,p0,p1,p2,p3,p4):
     '''
-    This function is used to generated the coefficient of the asymmetric compensation filter used for the gammachirp implementation
+    This function is used to generated the coefficient of the asymmetric
+    compensation filter used for the gammachirp implementation.
     '''
     ERBw=24.7*(4.37e-3*fr+1.)
     nbr_cascade=4

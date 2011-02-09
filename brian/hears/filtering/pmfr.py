@@ -94,12 +94,13 @@ class BP_signal_update:
 
 class PMFR(CombinedFilterbank):
     '''
-    Class implementing the non linear auditory filterbank model as described in Tan, G. and Carney, L., 
+    Class implementing the nonlinear auditory filterbank model as described in
+    Tan, G. and Carney, L., 
     "A phenomenological model for the responses of auditory-nerve
-    fibers. II. Nonlinear tuning with a frequency glide", JASA 2003
+    fibers. II. Nonlinear tuning with a frequency glide", JASA 2003.
     
-    
-    The model consists of a control path and a signal path. The control path controls both its own bandwidth via a feedback
+    The model consists of a control path and a signal path. The control path
+    controls both its own bandwidth via a feedback
     loop and also the bandwidth of the signal path. 
     
     Initialised with arguments:
@@ -111,11 +112,13 @@ class PMFR(CombinedFilterbank):
         List or array of center frequencies.
         
     ``update_interval``
-        interval in sample when the band pass filter of the signal pathway is updated
+        Interval in samples controlling how often the band pass filter of the
+        signal pathway is updated. Smaller values are more accurate but
+        increase the computation time.
         
     ``param``
-        dictionary used to overwrite the default parameters given in the original paper. 
-    
+        Dictionary used to overwrite the default parameters given in the
+        original paper. 
     '''
     
     def __init__(self, source,cf,update_interval,param={}):

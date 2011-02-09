@@ -154,7 +154,9 @@ set_global_preferences(usecstdp=False)
 define_global_preference(
     'brianhears_usegpu', 'False',
     desc='''
-         Whether or not to use the GPU (if available) in Brian.hears.
+         Whether or not to use the GPU (if available) in Brian.hears. Support
+         is experimental at the moment, and requires the PyCUDA package to be
+         installed.
          ''')
 set_global_preferences(brianhears_usegpu=False)
 

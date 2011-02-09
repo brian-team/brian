@@ -69,7 +69,7 @@ Filterbank library
 .. autoclass:: Butterworth
 .. autoclass:: Cascade
 .. autoclass:: LowPass
-
+.. autoclass:: AsymmetricCompensation
 
 Cochlear model library
 ----------------------
@@ -86,6 +86,7 @@ Functions
 ---------
 
 .. autofunction:: erbspace
+.. autofunction:: asymmetric_compensation_coeffs
 
 HRTFs
 -----
@@ -113,11 +114,36 @@ Useful for understanding more about the internals.
 
 .. _brian-hears-class-diagram:
 
+Options
+-------
+
+There are several relevant global options for Brian hears. In particular,
+activating scipy Weave support with the ``useweave=True`` will give considerably
+faster linear filtering. See :ref:`preferences` and :ref:`compiled-code` for
+more details.
+
 Class diagram
 -------------
 
-.. inheritance-diagram:: Sound OnlineSound Filterbank LinearFilterbank
-						 RestructureFilterbank FunctionFilterbank
-						 SumFilterbank DoNothingFilterbank
-						 FIRFilterbank Gammatone
+.. inheritance-diagram:: Sound OnlineSound
+						 Filterbank
+						   LinearFilterbank
+						     Gammatone ApproximateGammatone LogGammachirp
+						     LinearGammachirp LinearGaborchirp
+						   Cascade
+						   IIRFilterbank
+						     Butterworth
+						     LowPass
+						   FIRFilterbank
+						   RestructureFilterbank
+						     Join Interleave Repeat Tile
+						   FunctionFilterbank
+						     SumFilterbank
+						   DoNothingFilterbank
+						   ControlFilterbank
+						   CombinedFilterbank
+						   DRNL DCGC PMFR
+						   AsymmetricCompensation
+						 HRTFDatabase
+						   IRCAM_LISTEN HeadlessDatabase
 	:parts: 1

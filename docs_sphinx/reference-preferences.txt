@@ -75,6 +75,10 @@ The following global preferences have been defined:
     Whether or not to use experimental new C propagation functions.
 ``usecstdp = False``
     Whether or not to use experimental new C STDP.
+``brianhears_usegpu = False``
+    Whether or not to use the GPU (if available) in Brian.hears. Support
+    is experimental at the moment, and requires the PyCUDA package to be
+    installed.
 ``magic_useframes = True``
     Defines whether or not the magic functions should search
     for objects defined only in the calling frame or if they

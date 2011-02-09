@@ -79,18 +79,23 @@ class AsymCompUpdate:
  
 class DCGC(CombinedFilterbank):
     '''
-    Class implementing  the compressive gammachirp auditory filter as described in  Irino, T. and Patterson R.,
-    "A compressive gammachirp auditory filter for both physiological and psychophysical data", JASA 2001
+    The compressive gammachirp auditory filter as described in Irino, T. and
+    Patterson R., "A compressive gammachirp auditory filter for both
+    physiological and psychophysical data", JASA 2001.
     
-    Technical implementation details and notation can be found in Irino, T. and Patterson R., "A Dynamic Compressive Gammachirp Auditory Filterbank",
+    Technical implementation details and notation can be found in Irino, T. and
+    Patterson R., "A Dynamic Compressive Gammachirp Auditory Filterbank",
     IEEE Trans Audio Speech Lang Processing.
     
     The model consists of a control pathway and a signal pathway in parallel.
     
-    The control pathway consists of a bank of bandpass filters followed by a bank of highpass filters (this chain yields a bank of gammachirp filters).
+    The control pathway consists of a bank of bandpass filters followed by a
+    bank of highpass filters (this chain yields a bank of gammachirp filters).
     
-    The signal pathway consist of a bank of fix bandpass filters followed by a bank of highpass filters with variable cutoff frequencies 
-    (this chain yields a bank gammachirp filters with a level-dependent bandwidth).The highpass filters of the signal pathway are controlled 
+    The signal pathway consist of a bank of fix bandpass filters followed by a
+    bank of highpass filters with variable cutoff frequencies  (this chain
+    yields a bank of gammachirp filters with a level-dependent bandwidth). The
+    highpass filters of the signal pathway are controlled 
     by the output levels of the two stages of the control pathway. 
     
     Initialised with arguments:
@@ -102,31 +107,35 @@ class DCGC(CombinedFilterbank):
         List or array of center frequencies.
         
     ``update_interval``
-        interval in sample when the band pass filter of the signal pathway is updated
+        Interval in samples controlling how often the band pass filter of the
+        signal pathway is updated. Smaller values are more accurate, but give
+        longer computation times.
         
     ``param``
-        dictionary used to overwrite the default parameters given in the original paper.
+        Dictionary used to overwrite the default parameters given in the
+        original paper.
     
-    The possible parameters to change and their default values (see Irino, T. and Patterson R., "A Dynamic Compressive Gammachirp 
-    Auditory Filterbank", IEEE Trans Audio Speech Lang Processing)  are:
+    The possible parameters to change and their default values (see Irino, T.
+    and Patterson R., "A Dynamic Compressive Gammachirp 
+    Auditory Filterbank", IEEE Trans Audio Speech Lang Processing) are::
     
-    * param['b1'] = 1.81
-    * param['c1'] = -2.96
-    * param['b2'] = 2.17
-    * param['c2'] = 2.2
-    * param['decay_tcst'] = .5*ms
-    * param['lev_weight'] = .5
-    * param['level_ref'] = 50.
-    * param['level_pwr1'] = 1.5
-    * param['level_pwr2'] = .5
-    * param['RMStoSPL'] = 30.
-    * param['frat0'] = .2330
-    * param['frat1'] = .005
-    * param['lct_ERB'] = 1.5  #value of the shift in ERB frequencies
-    * param['frat_control'] = 1.08
-    * param['order_gc']=4
-    * param['ERBrate']= :math:`21.4*log10(4.37*cf/1000+1)` where :math:`cf` is the center frequency
-    * param['ERBwidth']= :math:`24.7*(4.37*cf/1000 + 1)`
+      param['b1'] = 1.81
+      param['c1'] = -2.96
+      param['b2'] = 2.17
+      param['c2'] = 2.2
+      param['decay_tcst'] = .5*ms
+      param['lev_weight'] = .5
+      param['level_ref'] = 50.
+      param['level_pwr1'] = 1.5
+      param['level_pwr2'] = .5
+      param['RMStoSPL'] = 30.
+      param['frat0'] = .2330
+      param['frat1'] = .005
+      param['lct_ERB'] = 1.5  #value of the shift in ERB frequencies
+      param['frat_control'] = 1.08
+      param['order_gc']=4
+      param['ERBrate']= 21.4*log10(4.37*cf/1000+1) # cf is the center frequency
+      param['ERBwidth']= 24.7*(4.37*cf/1000 + 1)
     '''
     
     def __init__(self, source,cf,update_interval,param={}):

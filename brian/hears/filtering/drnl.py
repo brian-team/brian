@@ -65,21 +65,20 @@ def set_parameters(cf,type,param):
     return parameters
     
 class DRNL(CombinedFilterbank):
-    '''
-    
-    Implementation of the dual resonance nonlinear (DRNL) filter as described in Lopez-Paveda, E. and Meddis, R.,
-     "A human nonlinear cochlear filterbank", JASA 2001.
-
+    r'''
+    Implementation of the dual resonance nonlinear (DRNL) filter
+    as described in Lopez-Paveda, E. and Meddis, R.,
+    "A human nonlinear cochlear filterbank", JASA 2001.
     
     The entire pathway consists of the sum of a linear and a nonlinear pathway.
     
-    The linear path consists of a bank of bandpass filters (second order gammatone), a low pass function,
-    and a gain/attenuation factor, g, in a cascade
+    The linear path consists of a bank of bandpass filters (second order
+    gammatone), a low pass function, and a gain/attenuation factor, g, in a
+    cascade.
     
-    The nonlinear path is  a cascade consisting of a bank of gammatone filters, a
+    The nonlinear path is a cascade consisting of a bank of gammatone filters, a
     compression function, a second bank of gammatone filters, and a low
     pass function, in that order.
-    
 
     Initialised with arguments:
     
@@ -90,48 +89,53 @@ class DRNL(CombinedFilterbank):
         List or array of center frequencies.
         
     ``type``
-        defines the parameters set corresponding to a certain fit
+        defines the parameters set corresponding to a certain fit. It can be
+        either:
         
-        it can be either
+        ``type='human'`` 
+            The parameters come from Lopez-Paveda, E. and Meddis, R.., "A human
+            nonlinear cochlear filterbank", JASA 2001.
         
-        ``type='human'``  where the parameters come  from Lopez-Paveda, E. and Meddis, R.., "A human nonlinear cochlear filterbank", JASA 2001.
-        
-        ``type ='guinea pig'`` where  there parameters come from Summer et al., "A nonlinear filter-bank model of the guinea-pig cochlear nerve:
-        Rate responses", JASA 2003
+        ``type ='guinea pig'``
+            The parameters come from Summer et al., "A nonlinear filter-bank
+            model of the guinea-pig cochlear nerve: Rate responses", JASA 2003.
         
     ``param``
-        dictionary used to overwrite the default parameters given in the original papers. . 
+        Dictionary used to overwrite the default parameters given in the
+        original papers. 
     
-    The possible parameters to change and their default values for human (see  Lopez-Paveda, E. and Meddis, R.,"A human nonlinear
-    cochlear filterbank", JASA 2001. for notation) are:
+    The possible parameters to change and their default values for humans (see 
+    Lopez-Paveda, E. and Meddis, R.,"A human nonlinear cochlear filterbank",
+    JASA 2001. for notation) are::
       
-    * param['stape_scale']=0.00014 
-    * param['order_linear']=3 
-    * param['order_nonlinear']=3 
+      param['stape_scale']=0.00014 
+      param['order_linear']=3 
+      param['order_nonlinear']=3 
     
-    from there on the parameters are given in the form :math:`x=10^{p0+mlog10(cf)}` where :math:`cf` is the center frequency:
+    from there on the parameters are given in the form
+    :math:`x=10^{\mathrm{p0}+m\log_{10}(\mathrm{cf})}` where
+    ``cf`` is the center frequency::
     
-    * param['cf_lin_p0']=-0.067
-    * param['cf_lin_m']=1.016
-    * param['bw_lin_p0']=0.037
-    * param['bw_lin_m']=0.785
-    * param['cf_nl_p0']=-0.052
-    * param['cf_nl_m']=1.016
-    * param['bw_nl_p0']=-0.031
-    * param['bw_nl_m']=0.774
-    * param['a_p0']=1.402
-    * param['a_m']=0.819
-    * param['b_p0']=1.619
-    * param['b_m']=-0.818  
-    * param['c_p0']=-0.602
-    * param['c_m']=0
-    * param['g_p0']=4.2
-    * param['g_m']=0.48
-    * param['lp_lin_cutoff_p0']=-0.067
-    * param['lp_lin_cutoff_m']=1.016
-    * param['lp_nl_cutoff_p0']=-0.052
-    * param['lp_nl_cutoff_m']=1.016
-        
+      param['cf_lin_p0']=-0.067
+      param['cf_lin_m']=1.016
+      param['bw_lin_p0']=0.037
+      param['bw_lin_m']=0.785
+      param['cf_nl_p0']=-0.052
+      param['cf_nl_m']=1.016
+      param['bw_nl_p0']=-0.031
+      param['bw_nl_m']=0.774
+      param['a_p0']=1.402
+      param['a_m']=0.819
+      param['b_p0']=1.619
+      param['b_m']=-0.818  
+      param['c_p0']=-0.602
+      param['c_m']=0
+      param['g_p0']=4.2
+      param['g_m']=0.48
+      param['lp_lin_cutoff_p0']=-0.067
+      param['lp_lin_cutoff_m']=1.016
+      param['lp_nl_cutoff_p0']=-0.052
+      param['lp_nl_cutoff_m']=1.016   
     '''
     
     def __init__(self, source, cf, type='human', param={}):
