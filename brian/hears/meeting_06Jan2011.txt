@@ -4,10 +4,6 @@ Meeting 6 Jan 2011
 Dan
 ---
 
-* Online computation docs
-* Examples in the examples folder of some simpler things and things covered
-  in the user guide
-* Examples of HRTF stuff in the examples folder
 * Make sure everything is documented, read through and check that it reads OK
 * LOGO!
 

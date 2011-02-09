@@ -46,7 +46,8 @@ modelfitting
    :maxdepth: 1
 
    examples-modelfitting_modelfitting
-   examples-modelfitting_modelfitting2
+   examples-modelfitting_modelfitting_groups
+   examples-modelfitting_modelfitting_machines
 
 .. _examples-misc:
 
@@ -123,6 +124,7 @@ hears
    examples-hears_approximate_gammatone
    examples-hears_artificial_vowels
    examples-hears_butterworth
+   examples-hears_cochleagram
    examples-hears_cochlear_models
    examples-hears_dcgc
    examples-hears_drnl
@@ -130,6 +132,10 @@ hears
    examples-hears_IIRfilterbank
    examples-hears_linear_gammachirp
    examples-hears_log_gammachirp
+   examples-hears_online_computation
+   examples-hears_simple_anf
+   examples-hears_sounds
+   examples-hears_sound_localisation_model
    examples-hears_spike_generation
    examples-hears_time_varying_filter1
    examples-hears_time_varying_filter2

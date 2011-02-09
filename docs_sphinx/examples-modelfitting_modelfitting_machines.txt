@@ -2,36 +2,35 @@
 
 .. index::
    pair: example usage; Equations
+   pair: example usage; equations
 
-.. _example-modelfitting_modelfitting2:
+.. _example-modelfitting_modelfitting_machines:
 
-Example: modelfitting2 (modelfitting)
-=====================================
+Example: modelfitting_machines (modelfitting)
+=============================================
 
-A second example of the modelfitting toolbox, showing how to fit a single model
-with different target spike trains (several groups).
+Model fitting example using several machines.
+Before running this example, you must start the Playdoh server on the remote machines.
 
 ::
 
-    from brian import loadtxt, ms, Equations, second
+    from brian import loadtxt, ms, Equations
     from brian.library.modelfitting import *
     
     if __name__ == '__main__':
-    
-        model = Equations('''
+        # List of machines IP addresses
+        machines = ['bobs-machine.university.com',
+                    'jims-machine.university.com']
+        
+        equations = Equations('''
             dV/dt=(R*I-V)/tau : 1
             I : 1
             R : 1
             tau : second
         ''')
-    
         input = loadtxt('current.txt')
-        spikes0 = loadtxt('spikes.txt')
-        spikes = []
-        for i in xrange(2):
-            spikes.extend([(i, spike*second + 5*i*ms) for spike in spikes0])
-    
-        results = modelfitting( model = model,
+        spikes = loadtxt('spikes.txt')
+        results = modelfitting( model = equations,
                                 reset = 0,
                                 threshold = 1,
                                 data = spikes,
@@ -39,12 +38,12 @@ with different target spike trains (several groups).
                                 dt = .1*ms,
                                 popsize = 1000,
                                 maxiter = 3,
-                                cpu = 1,
                                 delta = 4*ms,
+                                unit_type = 'CPU',
+                                machines = machines,
                                 R = [1.0e9, 9.0e9],
                                 tau = [10*ms, 40*ms],
-                                delays = [-100*ms, 100*ms])
+                                refractory = [0*ms, 10*ms])
         print_table(results)
-    
     
 

@@ -1,5 +1,6 @@
 from brian import *
 from scipy import signal, weave, random
+from operator import isSequenceType
 from filterbank import Filterbank,RestructureFilterbank
 from linearfilterbank import *
 from firfilterbank import *
@@ -632,7 +633,8 @@ class LowPass(LinearFilterbank):
     '''
     Bank of 1st-order lowpass filters
     
-    The code is based on the code found in the Meddis'toolbox (http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm). 
+    The code is based on the code found in the
+    `Meddis toolbox <http://www.essex.ac.uk/psychology/psy/PEOPLE/meddis/webFolder08/WebIntro.htm>`__. 
     It was implemented here to be used in the DRNL cochlear model implementation.
 
     Initialised with arguments:
@@ -641,9 +643,12 @@ class LowPass(LinearFilterbank):
         Source of the filterbank.
         
     ``fc``
-        List or array (with length = number of channels) of cutoff frequencies
+        Value, list or array (with length = number of channels) of cutoff
+        frequencies.
     '''
     def __init__(self,source,fc):
+        if not isSequenceType(fc):
+            fc = fc*ones(source.nchannels)
         nchannels=len(fc)
         self.samplerate= source.samplerate
         dt=1./self.samplerate
