@@ -10,8 +10,10 @@ Brian hears
 
 Brian hears is an auditory modelling library for Python. It is part of the
 neural network simulator package Brian, but can also be used on its own.
+To download Brian hears, simply :ref:`download Brian <installation>`:
+Brian hears is included as part of the package.
 
-It is primarily designed for generating and manipulating sounds, and applying
+Brian hears is primarily designed for generating and manipulating sounds, and applying
 large banks of filters. For example, to generate a tone or a whitenoise we
 write::
 
@@ -91,6 +93,9 @@ hears packages as follows::
 
 	from brian import *
 	from brian.hears import *
+
+To download Brian hears, simply :ref:`download Brian <installation>`:
+Brian hears is included as part of the package.
 
 .. seealso:: Reference documentation for :ref:`brian-hears-reference`, which
 			 covers everything in this overview in detail, and more. List of
