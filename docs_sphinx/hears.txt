@@ -17,8 +17,12 @@ To download Brian hears, simply :ref:`download Brian <installation>`:
 Brian hears is included as part of the package.
 
 Brian hears is primarily designed for generating and manipulating sounds, and applying
-large banks of filters. For example, to generate a tone or a whitenoise we
-write::
+large banks of filters. We import the package by writing::
+
+	from brian import *
+	from brian.hears import *
+
+Then, for example, to generate a tone or a whitenoise we would write::
 
 	sound1 = tone(1*kHz, .1*second)
 	sound2 = whitenoise(.1*second)
