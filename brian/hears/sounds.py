@@ -20,7 +20,7 @@ from db import dB, dB_type, dB_error, gain
 
 __all__ = ['BaseSound', 'Sound',
            'pinknoise','brownnoise','powerlawnoise',
-           'whitenoise', 'tone', 'click', 'clicks', 'silence', 'sequence','harmoniccomplex',
+           'whitenoise', 'tone', 'click', 'clicks', 'silence', 'sequence', 'harmoniccomplex',
            'loadsound', 'savesound', 'play',
            ]
 
@@ -86,6 +86,7 @@ class Sound(BaseSound, numpy.ndarray):
     .. automethod:: silence
     .. automethod:: click
     .. automethod:: clicks
+    .. automethod:: harmoniccomplex
     
     **Timing and sequencing**
     
@@ -640,9 +641,13 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
-    def harmoniccomplex(f0, amplitude, duration, samplerate=None, nchannels=1):
+    def harmoniccomplex(f0, amplitude, duration, phase=0, samplerate=None, nchannels=1):
         '''
-        Returns a harmonic complex composed of pure tones at integer multiples of the fundamental frequency. ``amplitude`` can be set to either an integer in which cas all the harmonics up to the Nyquist frequency are added with the same amplitude. If it is a list or an array though it sets the relative amplitude of the harmonics.
+        Returns a harmonic complex composed of pure tones at integer multiples
+        of the fundamental frequency ``f0``. ``amplitude`` can be set to either an
+        integer in which case all the harmonics up to the Nyquist frequency are
+        added with the same amplitude. If it is a list or an array though it
+        sets the relative amplitude of the harmonics.
         '''
         samplerate=get_samplerate(samplerate)
         x=tone(f0,duration,samplerate)

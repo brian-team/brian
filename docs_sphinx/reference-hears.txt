@@ -24,6 +24,7 @@ Sounds
 .. autofunction:: tone
 .. autofunction:: click
 .. autofunction:: clicks
+.. autofunction:: harmoniccomplex
 .. autofunction:: silence
 .. autofunction:: sequence(*sounds, samplerate=None)
 

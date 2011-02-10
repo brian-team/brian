@@ -365,10 +365,6 @@ we simply do::
 
 	rms = sqrt(fb.process(sum_of_squares)/nsamples)
 	
-This is of course more complicated than the offline equivalent, but in cases
-where offline computation is not feasible due to memory restrictions, online
-computation is not much more complicated.
-
 If the computation you wish to perform is more complicated than can be
 achieved with the :meth:`~Filterbank.process` method, you can derive a class
 from :class:`Filterbank` (see that class' reference documentation for more
