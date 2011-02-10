@@ -641,24 +641,37 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
-    def harmoniccomplex(f0, amplitude, duration, phase=0, samplerate=None, nchannels=1):
+    def harmoniccomplex(f0, duration, amplitude=1, phase=0, samplerate=None, nchannels=1):
         '''
         Returns a harmonic complex composed of pure tones at integer multiples
-        of the fundamental frequency ``f0``. ``amplitude`` can be set to either an
-        integer in which case all the harmonics up to the Nyquist frequency are
-        added with the same amplitude. If it is a list or an array though it
-        sets the relative amplitude of the harmonics.
+        of the fundamental frequency ``f0``. 
+        The ``amplitude`` and
+        ``phase`` keywords can be set to either a single value or an
+        array of values. In the former case the value is set for all
+        harmonics, and in the latter each harmonic parameter is set separately.
         '''
         samplerate=get_samplerate(samplerate)
-        x=tone(f0,duration,samplerate)
-        try:
-            for i,a in enumerate(amplitude):
-                x+= a*asarray(tone(f0*(2**i),duration,samplerate))
-        except TypeError:
-            i=1
-            while (2**i)*f0 < samplerate/2.:
-                x+=tone((2**i)*f0,duration,samplerate)
-                i+=1
+
+        phases = np.array(phase).flatten()
+        amplitudes = np.array(amplitude).flatten()
+        
+        if len(phases)>1 or len(amplitudes)>1:
+            if (len(phases)>1 and len(amplitudes)>1) and (len(phases) != len(amplitudes)):
+                raise ValueError('Please specify the same number of phases and amplitudes')        
+            Nharmonics = max(len(phases),len(amplitudes))
+        else:
+            Nharmonics = int(np.ceil( np.log2( samplerate/(2*f0) ) )) +1
+            
+        if len(phases) == 1:
+            phases = np.tile(phase, Nharmonics)
+        if len(amplitudes) == 1:
+            amplitudes = np.tile(amplitude, Nharmonics)
+            
+        x = amplitudes[0]*tone(f0, duration, phase = phases[0], 
+                               samplerate = samplerate, nchannels = nchannels)
+        for i in range(1,Nharmonics):
+            x += amplitudes[i]*tone((2**i)*f0, duration, phase = phases[i], 
+                                    samplerate = samplerate, nchannels = nchannels)
         return Sound(x,samplerate)
     
     @staticmethod
