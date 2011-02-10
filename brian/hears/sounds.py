@@ -648,7 +648,10 @@ class Sound(BaseSound, numpy.ndarray):
         The ``amplitude`` and
         ``phase`` keywords can be set to either a single value or an
         array of values. In the former case the value is set for all
-        harmonics, and in the latter each harmonic parameter is set separately.
+        harmonics, and harmonics up the the sampling frequency are
+        generated. In the latter each harmonic parameter is set
+        separately, and the number of harmonics generated corresponds
+        to the length of the array.
         '''
         samplerate=get_samplerate(samplerate)
 
@@ -660,7 +663,7 @@ class Sound(BaseSound, numpy.ndarray):
                 raise ValueError('Please specify the same number of phases and amplitudes')        
             Nharmonics = max(len(phases),len(amplitudes))
         else:
-            Nharmonics = int(np.ceil( np.log2( samplerate/(2*f0) ) )) +1
+            Nharmonics = int(np.ceil( np.log2( samplerate/(2*f0) ) ))
             
         if len(phases) == 1:
             phases = np.tile(phase, Nharmonics)
