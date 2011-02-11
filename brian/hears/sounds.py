@@ -715,7 +715,7 @@ class Sound(BaseSound, numpy.ndarray):
         n=duration
         n2=floor(n/2)
         
-        f=fftfreq(n,d=1.0/samplerate)
+        f=array(fftfreq(n,d=1.0/samplerate), dtype=complex)
         f.shape=(len(f),1)
         f=tile(f,(1,nchannels))
         
