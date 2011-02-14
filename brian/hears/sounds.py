@@ -661,9 +661,9 @@ class Sound(BaseSound, numpy.ndarray):
         if len(phases)>1 or len(amplitudes)>1:
             if (len(phases)>1 and len(amplitudes)>1) and (len(phases) != len(amplitudes)):
                 raise ValueError('Please specify the same number of phases and amplitudes')        
-            Nharmonics = max(len(phases),len(amplitudes))
+            Nharmonics = max(len(phases),len(amplitudes)) 
         else:
-            Nharmonics = int(np.ceil( np.log2( samplerate/(2*f0) ) ))
+            Nharmonics = int(np.floor( samplerate/(2*f0) ) )
             
         if len(phases) == 1:
             phases = np.tile(phase, Nharmonics)
@@ -673,7 +673,7 @@ class Sound(BaseSound, numpy.ndarray):
         x = amplitudes[0]*tone(f0, duration, phase = phases[0], 
                                samplerate = samplerate, nchannels = nchannels)
         for i in range(1,Nharmonics):
-            x += amplitudes[i]*tone((2**i)*f0, duration, phase = phases[i], 
+            x += amplitudes[i]*tone((i+1)*f0, duration, phase = phases[i], 
                                     samplerate = samplerate, nchannels = nchannels)
         return Sound(x,samplerate)
     
