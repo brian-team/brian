@@ -348,8 +348,8 @@ class LinearGaborchirp(FIRFilterbank):
     These filters are implemented as FIR filters using truncated time
     representations of gammachirp functions as the impulse response. The impulse
     responses, which need to have the same length for every channel, have a
-    duration of 15 times the biggest time constant. The length of the impulse
-    response is therefore ``15*max(time_constant)*sampling_rate``. The envelope
+    duration of 12 times the biggest time constant. The length of the impulse
+    response is therefore ``12*max(time_constant)*sampling_rate``. The envelope
     is a gaussian function (Gabor filter).  The impulse responses are normalized
     with respect to the transmitted  power, i.e. the rms of the filter taps is
     1.
