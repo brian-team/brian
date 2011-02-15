@@ -42,11 +42,6 @@ class LinearFilterbank(Filterbank):
     '''
     def __init__(self, source, b, a, samplerate=None,
                  precision='double', forcesync=True, pagelocked_mem=True, unroll_filterorder=None):
-        # TODO: handle use_gpu = False here
-#        if not use_gpu:
-#            self.__class__=nongpu_LinearFilterbank
-#            self.__init__(b, a, samplerate=samplerate)
-#            return
         # Automatically duplicate mono input to fit the desired output shape
         if b.shape[0]!=source.nchannels:
             if source.nchannels!=1:
@@ -74,13 +69,9 @@ class LinearFilterbank(Filterbank):
         else:
             filt_y=zeros(n, dtype=self.precision_dtype)
             self.pre_x=zeros(n, dtype=self.precision_dtype)
-        #filt_x=zeros(n, dtype=self.precision_dtype)
         self.filt_b_gpu=gpuarray.to_gpu(filt_b_gpu.T.flatten()) # transform to Fortran order for better GPU mem
         self.filt_a_gpu=gpuarray.to_gpu(filt_a_gpu.T.flatten()) # access speeds
         self.filt_state=gpuarray.to_gpu(filt_state.T.flatten())
-        #self.filt_x=gpuarray.to_gpu(filt_x)
-        #self.filt_y=GPUBufferedArray(filt_y)
-        #self.filt_y=gpuarray.to_gpu(filt_y)
         if unroll_filterorder is None:
             if m<=32:
                 unroll_filterorder = True
@@ -159,17 +150,15 @@ class LinearFilterbank(Filterbank):
         b = self.filt_b_gpu
         a = self.filt_a_gpu
         zi = self.filt_state
-        if not hasattr(self, 'filt_x_gpu') or input.shape[0]!=self.filt_x_gpu.shape[0]:
+        if not hasattr(self, 'filt_x_gpu') or input.size!=self.filt_x_gpu.size:
+            self._desiredshape = input.shape
             self._has_run_once = False
-            self.filt_x_gpu = gpuarray.to_gpu(input)
+            self.filt_x_gpu = gpuarray.to_gpu(input.flatten())
             self.filt_y_gpu = gpuarray.empty_like(self.filt_x_gpu)
-            if self.pagelocked_mem:
-                self.filt_y = drv.pagelocked_zeros(input.shape, dtype=self.precision_dtype)
-            else:
-                self.filt_y = zeros(input.shape, dtype=self.precision_dtype) 
+        else:
+            self.filt_x_gpu.set(input.flatten())
         filt_x_gpu = self.filt_x_gpu
         filt_y_gpu = self.filt_y_gpu
-        filt_y = self.filt_y
         if self._has_run_once:
             self.gpu_filt_func.launch_grid(*self.grid)
         else:
@@ -177,35 +166,4 @@ class LinearFilterbank(Filterbank):
                     intp(a.gpudata), intp(filt_x_gpu.gpudata),
                     intp(zi.gpudata), intp(filt_y_gpu.gpudata), int32(input.shape[0]))
             self._has_run_once = True
-        filt_y_gpu.get(filt_y)
-        return filt_y
-        #y=self.filt_y
-        #fx=self.filt_x
-        # For the moment, assume that input is a CPU array and has shape (numsamples, nchannels)
-        
-#        if isinstance(x, GPUBufferedArray):
-#            if not len(x.shape) or x.shape==(1,):
-#                x.sync_to_cpu()
-#                newx=empty(self.N, dtype=b.dtype)
-#                newx[:]=x
-#                fx.set(newx)
-#            else:
-#                drv.memcpy_dtod(fx.gpudata, x.gpu_dev_alloc, fx.size*self.precision_dtype().nbytes)
-#        else:
-#            if not isinstance(x, ndarray) or not len(x.shape) or x.shape==(1,):
-#                # Current version of pycuda doesn't allow .fill(val) method on float64 gpuarrays
-#                # because it assumed float32 only, so we have to do our own copying here
-#                px=self.pre_x
-#                px[:]=x
-#                x=px
-#            fx.set(x)
-#        if self._has_run_once:
-#            self.gpu_filt_func.launch_grid(*self.grid)
-#        else:
-#            self.gpu_filt_func.prepared_call(self.grid, intp(b.gpudata), intp(a.gpudata), intp(fx.gpudata),
-#                                             intp(zi.gpudata), y.gpu_pointer)
-#            self._has_run_once=True
-#        y.changed_gpu_data()
-#        if self.forcesync:
-#            y.sync_to_cpu()#might need to turn this on although it slows everything down
-#        return y
+        return reshape(filt_y_gpu.get(pagelocked=self.pagelocked_mem), self._desiredshape)
