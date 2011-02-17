@@ -331,15 +331,6 @@ class GPUModelFitting(object):
                   eqs, threshold, reset, dt, N, delta,
                   coincidence_count_algorithm=coincidence_count_algorithm,
                   precision=precision, scheme=scheme)
-#        self.kernel_module = SourceModule(self.kernel_src)
-#        self.kernel_func = self.kernel_module.get_function('runsim')
-#        self.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
-        # TODO: compute block, grid, etc. with best maximum blocksize
-        #blocksize = 128#256
-        #blocksize = self.kernel_func_kwds.ge
-        #self.block = (blocksize, 1, 1)
-        #self.grid = (int(ceil(float(N) / blocksize)), 1)
-        #self.kernel_func_kwds = {'block':self.block, 'grid':self.grid}
 
     def reinit_vars(self, I, I_offset, spiketimes, spiketimes_offset,
                     spikedelays, refractory):
@@ -347,10 +338,9 @@ class GPUModelFitting(object):
         self.kernel_module = SourceModule(self.kernel_src)
         self.kernel_func = self.kernel_module.get_function('runsim')
 
-        blocksize = 128#256
+        blocksize = 128
         try:
             blocksize = self.kernel_func.get_attribute(pycuda.driver.function_attribute.MAX_THREADS_PER_BLOCK)
-            print 'blocksize', blocksize
         except: # above won't work unless CUDA>=2.2
             pass
         self.block = (blocksize, 1, 1)
