@@ -41,6 +41,7 @@ __global__ void runsim(
     int Tstart, int Tend,     // Start, end time as integer (t=T*dt)
     // State variables
     %SCALAR% *state_vars,     // State variables are offset from this
+    double *I_arr,            // Input current
     int *I_arr_offset,        // Input current offset (for separate input
                               // currents for each neuron)
     int *spikecount,          // Number of spikes produced by each neuron
@@ -154,7 +155,7 @@ coincidence_counting_algorithm_src = {
         },
     }
 
-def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons,
+def generate_modelfitting_kernel_src(G, eqs, threshold, reset, dt, num_neurons,
                                      delta,
                                      coincidence_count_algorithm='exclusive',
                                      precision=default_precision,
@@ -163,8 +164,8 @@ def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons,
     eqs.prepare()
     src = modelfitting_kernel_template
     # Substitute state variable declarations
-    declarations_seq = eqs._diffeq_names + []
-    extractions = '\n    '.join('%SCALAR% *'+name+'_arr = state_vars+'+str(i*num_neurons)+';' for i, name in enumerate(eqs._diffeq_names))
+    indexvar = dict((v, k) for k, v in G.var_index.iteritems() if isinstance(k, str) and k!='I')
+    extractions = '\n    '.join('%SCALAR% *'+name+'_arr = state_vars+'+str(i*num_neurons)+';' for i, name in indexvar.iteritems())
     src = src.replace('%EXTRACT_STATE_VARIABLES%', extractions)
     # Substitute load variables
     loadvar_names = eqs._diffeq_names + []
@@ -195,8 +196,7 @@ def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons,
     src = src.replace('%NUM_NEURONS%', str(num_neurons))
     # Substitute delta, the coincidence window half-width
     src = src.replace('%DELTA%', str(int(rint(delta / dt))))
-#    open('blah.txt','a').write(src)
-    return src, declarations_seq
+    return src
 
 
 class GPUModelFitting(object):
@@ -274,8 +274,6 @@ class GPUModelFitting(object):
                        precision=default_precision,
                        scheme=euler_scheme
                        ):
-#        if pycuda.context is None:
-#            set_gpu_device(0)
         eqs.prepare()
         self.precision = precision
         if precision == 'double':
@@ -327,8 +325,8 @@ class GPUModelFitting(object):
             expr = optimiser.freeze(expr, all_variables, namespace)
             reset = expr
         self.reset = reset
-        self.kernel_src, self.declarations_seq = generate_modelfitting_kernel_src(
-                  eqs, threshold, reset, dt, N, delta,
+        self.kernel_src = generate_modelfitting_kernel_src(
+                  self.G, eqs, threshold, reset, dt, N, delta,
                   coincidence_count_algorithm=coincidence_count_algorithm,
                   precision=precision, scheme=scheme)
 
@@ -350,15 +348,8 @@ class GPUModelFitting(object):
         mydtype = self.mydtype
         N = self.N
         eqs = self.eqs
-        statevar_names = eqs._diffeq_names + []
-        statevar_names.remove('I')
-        self.state_vars = dict((name, self.G.state_(name)) for name in statevar_names)
-        self.state_vars['I'] = I
-        statevars_arr = gpuarray.empty(N*len(self.declarations_seq), dtype=mydtype)
-        for i, name in enumerate(self.declarations_seq):
-            val = self.state_vars[name]
-            pycuda.driver.memcpy_htod(int(statevars_arr.gpudata)+i*N*mydtype().nbytes,
-                                      array(val, dtype=mydtype))
+        statevars_arr = gpuarray.to_gpu(array(self.G._S.flatten(), dtype=mydtype))
+        self.I = gpuarray.to_gpu(array(I, dtype=mydtype))
         self.statevars_arr = statevars_arr
         self.I_offset = gpuarray.to_gpu(array(I_offset, dtype=int32))
         self.spiketimes = gpuarray.to_gpu(array(rint(spiketimes / self.dt), dtype=int32))
@@ -373,6 +364,7 @@ class GPUModelFitting(object):
         self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
         self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
         self.kernel_func_args = [self.statevars_arr,
+                                 self.I,
                                  self.I_offset,
                                  self.spikecount,
                                  self.num_coincidences,
@@ -390,7 +382,6 @@ class GPUModelFitting(object):
         if stepsize is None:
             self.kernel_func(int32(0), int32(duration / self.dt),
                              *self.kernel_func_args, **self.kernel_func_kwds)
-            #autoinit.context.synchronize()
             pycuda.context.synchronize()
         else:
             stepsize = int(stepsize / self.dt)
@@ -399,7 +390,6 @@ class GPUModelFitting(object):
                 Tend = Tstart + min(stepsize, duration - Tstart)
                 self.kernel_func(int32(Tstart), int32(Tend),
                                  *self.kernel_func_args, **self.kernel_func_kwds)
-                #autoinit.context.synchronize()
                 pycuda.context.synchronize()
 
     def get_coincidence_count(self):
