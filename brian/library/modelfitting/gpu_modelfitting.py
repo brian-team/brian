@@ -40,7 +40,7 @@ modelfitting_kernel_template = """
 __global__ void runsim(
     int Tstart, int Tend,     // Start, end time as integer (t=T*dt)
     // State variables
-    %FUNC_DECLARE_STATE_VARIABLES%
+    %SCALAR% *state_vars,     // State variables are offset from this
     int *I_arr_offset,        // Input current offset (for separate input
                               // currents for each neuron)
     int *spikecount,          // Number of spikes produced by each neuron
@@ -57,6 +57,7 @@ __global__ void runsim(
 {
     const int neuron_index = blockIdx.x * blockDim.x + threadIdx.x;
     if(neuron_index>=%NUM_NEURONS%) return;
+    %EXTRACT_STATE_VARIABLES%
     // Load variables at start
     %LOAD_VARIABLES%
     int spiketime_index = spiketime_indices[neuron_index];
@@ -162,9 +163,9 @@ def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons,
     eqs.prepare()
     src = modelfitting_kernel_template
     # Substitute state variable declarations
-    declarations = '\n    '.join('%SCALAR% *' + name + '_arr,' for name in eqs._diffeq_names)
     declarations_seq = eqs._diffeq_names + []
-    src = src.replace('%FUNC_DECLARE_STATE_VARIABLES%', declarations)
+    extractions = '\n    '.join('%SCALAR% *'+name+'_arr = state_vars+'+str(i*num_neurons)+';' for i, name in enumerate(eqs._diffeq_names))
+    src = src.replace('%EXTRACT_STATE_VARIABLES%', extractions)
     # Substitute load variables
     loadvar_names = eqs._diffeq_names + []
     loadvar_names.remove('I') # I is assumed to be a parameter and loaded per time step
@@ -180,19 +181,7 @@ def generate_modelfitting_kernel_src(eqs, threshold, reset, dt, num_neurons,
     src = src.replace('%RESET%', reset)
     # Substitute state update
     sulines = ModelfittingGPUCodeGenerator(dtype=precision).generate(eqs, scheme)
-#    open('blah.txt','a').write(sulines)
     sulines = re.sub(r'\bdt\b', '%DT%', sulines)
-#    open('blah.txt','a').write(sulines)
-#    open('blah.txt','a').write(sulines)
-#    sulines = ''
-#    all_variables = eqs._eq_names + eqs._diffeq_names + eqs._alias.keys() + ['t']
-#    for name in eqs._diffeq_names:
-#        namespace = eqs._namespace[name]
-#        expr = optimiser.freeze(eqs._string[name], all_variables, namespace)
-#        if name in eqs._diffeq_names_nonzero:
-#            sulines += '        %SCALAR% ' + name + '__tmp = ' + expr + ';\n'
-#    for name in eqs._diffeq_names_nonzero:
-#        sulines += '        ' + name + ' += %DT%*' + name + '__tmp;\n'
     src = src.replace('%STATE_UPDATE%', sulines.strip())
     # Substitute coincidence counting algorithm
     ccalgo = coincidence_counting_algorithm_src[coincidence_count_algorithm]
@@ -346,16 +335,27 @@ class GPUModelFitting(object):
 #        self.kernel_func = self.kernel_module.get_function('runsim')
 #        self.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays)
         # TODO: compute block, grid, etc. with best maximum blocksize
-        blocksize = 128#256
-        self.block = (blocksize, 1, 1)
-        self.grid = (int(ceil(float(N) / blocksize)), 1)
-        self.kernel_func_kwds = {'block':self.block, 'grid':self.grid}
+        #blocksize = 128#256
+        #blocksize = self.kernel_func_kwds.ge
+        #self.block = (blocksize, 1, 1)
+        #self.grid = (int(ceil(float(N) / blocksize)), 1)
+        #self.kernel_func_kwds = {'block':self.block, 'grid':self.grid}
 
     def reinit_vars(self, I, I_offset, spiketimes, spiketimes_offset,
                     spikedelays, refractory):
         
         self.kernel_module = SourceModule(self.kernel_src)
         self.kernel_func = self.kernel_module.get_function('runsim')
+
+        blocksize = 128#256
+        try:
+            blocksize = self.kernel_func.get_attribute(pycuda.driver.function_attribute.MAX_THREADS_PER_BLOCK)
+            print 'blocksize', blocksize
+        except: # above won't work unless CUDA>=2.2
+            pass
+        self.block = (blocksize, 1, 1)
+        self.grid = (int(ceil(float(self.N) / blocksize)), 1)
+        self.kernel_func_kwds = {'block':self.block, 'grid':self.grid}
         
         mydtype = self.mydtype
         N = self.N
@@ -363,10 +363,13 @@ class GPUModelFitting(object):
         statevar_names = eqs._diffeq_names + []
         statevar_names.remove('I')
         self.state_vars = dict((name, self.G.state_(name)) for name in statevar_names)
-        for name, val in self.state_vars.items():
-            self.state_vars[name] = gpuarray.to_gpu(array(val, dtype=mydtype))
-        self.I = gpuarray.to_gpu(array(I, dtype=mydtype))
-        self.state_vars['I'] = self.I
+        self.state_vars['I'] = I
+        statevars_arr = gpuarray.empty(N*len(self.declarations_seq), dtype=mydtype)
+        for i, name in enumerate(self.declarations_seq):
+            val = self.state_vars[name]
+            pycuda.driver.memcpy_htod(int(statevars_arr.gpudata)+i*N*mydtype().nbytes,
+                                      array(val, dtype=mydtype))
+        self.statevars_arr = statevars_arr
         self.I_offset = gpuarray.to_gpu(array(I_offset, dtype=int32))
         self.spiketimes = gpuarray.to_gpu(array(rint(spiketimes / self.dt), dtype=int32))
         self.spiketime_indices = gpuarray.to_gpu(array(spiketimes_offset, dtype=int32))
@@ -379,16 +382,16 @@ class GPUModelFitting(object):
         self.next_allowed_spiketime_arr = gpuarray.to_gpu(-ones(N, dtype=int32))
         self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
         self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
-        self.kernel_func_args = [self.state_vars[name] for name in self.declarations_seq]
-        self.kernel_func_args += [self.I_offset,
-                                  self.spikecount,
-                                  self.num_coincidences,
-                                  self.spiketimes,
-                                  self.spiketime_indices,
-                                  self.spikedelay_arr,
-                                  self.refractory_arr,
-                                  self.next_allowed_spiketime_arr,
-                                  int32(rint(self.onset / self.dt))]
+        self.kernel_func_args = [self.statevars_arr,
+                                 self.I_offset,
+                                 self.spikecount,
+                                 self.num_coincidences,
+                                 self.spiketimes,
+                                 self.spiketime_indices,
+                                 self.spikedelay_arr,
+                                 self.refractory_arr,
+                                 self.next_allowed_spiketime_arr,
+                                 int32(rint(self.onset / self.dt))]
         if self.coincidence_count_algorithm == 'exclusive':
             self.kernel_func_args += [self.last_spike_allowed_arr,
                                       self.next_spike_allowed_arr]
@@ -426,15 +429,18 @@ if __name__ == '__main__':
     if 1:
         set_global_preferences(usecodegenthreshold=False)
         N = 10000
+        nvar = 100
         delta = 4 * ms
         doplot = True
-        eqs = Equations('''
+        eqs = '''
         dV/dt = (-V+R*I)/tau : volt
         Vt : volt
         tau : second
         R : ohm
         I : amp
-        ''')
+        '''
+        eqs += '\n'.join(['var'+str(i)+':0' for i in range(nvar)])
+        eqs = Equations(eqs)
         Vr = 0.0 * volt
         Vt = 1.0 * volt
         I = loadtxt('../../../dev/ideas/cuda/modelfitting/current.txt')
