@@ -1,5 +1,5 @@
 from brian import *
-from ..sounds import *
+from ..sounds import Sound
 from ..filtering import FIRFilterbank
 from copy import copy
 

@@ -2,7 +2,6 @@ from brian import *
 from filterbank import Filterbank,FunctionFilterbank,ControlFilterbank, CombinedFilterbank
 from filterbanklibrary import *
 from linearfilterbank import *
-from ..sounds import *
 import warnings
 
 try:

@@ -21,7 +21,8 @@ drnl = drnl_filter.process()
 param_dcgc = {}
 param_dcgc['c1'] = -2.96
 interval = 1
-dcgc_filter = DCGC(sound, cf, interval, param=param_dcgc)
+#dcgc_filter = DCGC(sound, cf, interval, param=param_dcgc)
+dcgc_filter = PMFR(sound, cf, interval)
 dcgc = dcgc_filter.process()
 
 figure()

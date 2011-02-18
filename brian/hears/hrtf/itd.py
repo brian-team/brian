@@ -1,5 +1,5 @@
 from brian import *
-from .hrtf import *
+from hrtf import *
 from ..prefs import get_samplerate
 
 __all__ = ['HeadlessDatabase']
