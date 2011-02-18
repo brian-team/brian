@@ -39,4 +39,5 @@ compilation, possibly with some warnings but no errors.
 Automatically generated C code
 ------------------------------
 
-There is an experimental module for automatic generation of C code, see :ref:`ccodegen` for details.
+There is an experimental module for automatic generation of C code, see
+:ref:`experimental-codegen`. 

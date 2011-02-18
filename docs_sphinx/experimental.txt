@@ -10,6 +10,8 @@ be subject to change.
 .. toctree::
    :maxdepth: 1
   
-   experimental-ccodegen
+   experimental-codegen
+   experimental-cuda
    experimental-multilinearstateupdater
+   experimental-realtimeconnectionmonitor
    

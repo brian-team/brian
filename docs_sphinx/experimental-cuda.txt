@@ -1,0 +1,17 @@
+.. currentmodule:: brian.experimental.cuda
+
+GPU/CUDA
+========
+
+Brian has some experimental support for doing numerical integration only using
+GPUs, using the `PyCUDA package <http://mathema.tician.de/software/pycuda>`__.
+
+Note that only numerical integration is done on the GPU, which means that
+variables that can be altered on the CPU (via synapses or user operations) need
+to be copied to and from the GPU each time step, as well as variables that are
+used for thresholding and reset operations. This creates a memory bandwidth
+bottleneck, which means that for the moment the GPU code is only useful for
+complicated neuron models such as Hodgkin-Huxley type neurons (although in this
+case it can lead to very substantial speed improvements).
+
+.. autoclass:: GPUNeuronGroup

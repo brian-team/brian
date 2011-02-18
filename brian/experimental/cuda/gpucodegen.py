@@ -1,4 +1,4 @@
-import brian_no_units
+#import brian_no_units
 from brian import *
 import brian.optimiser as optimiser
 from scipy import weave
@@ -11,7 +11,8 @@ from buffering import *
 import time
 from brian.experimental.codegen.rewriting import rewrite_to_c_expression
 
-__all__ = ['GPUNonlinearStateUpdater', 'GPUNeuronGroup']
+__all__ = ['GPUNonlinearStateUpdater', 'UserControlledGPUNonlinearStateUpdater',
+           'GPUNeuronGroup']
 
 #DEBUG_BUFFER_CACHE = False
 
@@ -113,6 +114,41 @@ class UserControlledGPUNonlinearStateUpdater(GPUNonlinearStateUpdater):
 
 
 class GPUNeuronGroup(NeuronGroup):
+    '''
+    Neuron group which performs numerical integration on the GPU.
+    
+    .. warning::
+        This class is still experimental, not supported and subject to change
+        in future versions of Brian.
+        
+    Initialised with arguments as for :class:`NeuronGroup` and additionally:
+    
+    ``precision='double'``
+        The GPU scalar precision to use, older models can only use
+        ``precision='float'``.
+    ``maxblocksize=512``
+        If GPU compilation fails, reduce this value.
+    ``forcesync=False``
+        Whether or not to force copying of state variables to and from the
+        GPU each time step. This is slow, so it is better to specify precisely
+        which variables should be copied to and from using ``gpu_to_cpu_vars``
+        and ``cpu_to_gpu_vars``.
+    ``pagelocked_mem=True``
+        Whether to store state variables in pagelocked memory on the CPU,
+        which makes copying data to/from the GPU twice as fast.
+    ``cpu_to_gpu_vars=None``, ``gpu_to_cpu_vars=None``
+        Which variables should be copied each time step from the CPU to the GPU
+        (before state update) and from the GPU to the CPU (after state update).
+        
+    The point of the copying of variables to and from the GPU is that the GPU
+    maintains a separate memory from the CPU, and so changes made on either the
+    CPU or GPU won't automatically be reflected in the other. Since only
+    numerical integration is done on the GPU, any state variable that is
+    modified by incoming synapses, for example, should be copied to and from
+    the GPU each time step. In addition, any variables used for thresholding
+    or resetting need to be appropriately copied (GPU->CPU for thresholding, and
+    both for resetting).
+    '''
     def __init__(self, N, model, threshold=None, reset=NoReset(),
                  init=None, refractory=0 * msecond, level=0,
                  clock=None, order=1, implicit=False, unit_checking=True,

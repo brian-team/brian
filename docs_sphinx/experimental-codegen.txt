@@ -1,0 +1,26 @@
+.. currentmodule:: brian.experimental.codegen
+
+.. _experimental-codegen:
+
+Code generation
+===============
+
+Brian has support for automatic generation of C code, detailed in :ref:`compiled-code`.
+We also have experimental support for C code generation
+more widely, implementing the algorithms described
+in `Goodman (2010) <http://www.springerlink.com/content/12614h7817602680/>`__.
+This support can be activated using the ``usecodegen*``, ``usenewpropagate``
+and ``usecstdp`` global preferences
+(see :ref:`preferences`).
+
+Note that not all code will run without problems using code generation yet, but
+in most cases it will and speed improvements can be very substantial, especially
+for STDP.
+
+References
+----------
+
+* `Goodman DFM (2010) <http://www.ploscompbiol.org/article/info:doi/10.1371/journal.pcbi.1000993>`__.
+  Code Generation: A Strategy for Neural Network Simulators.
+  Neuroinformatics 8, no. 3 (9). doi:10.1007/s12021-010-9082-x.
+  [`pdf <http://dl.dropbox.com/u/556426/codegen.pdf>`__] 

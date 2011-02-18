@@ -1,0 +1,9 @@
+.. currentmodule:: brian.experimental.realtime_monitor
+
+Realtime Connection Monitor
+===========================
+
+You can visual weight matrices in realtime, using the
+`PyGame <http://www.pygame.org/>`__ package with the following class.
+
+.. autoclass:: RealtimeConnectionMonitor

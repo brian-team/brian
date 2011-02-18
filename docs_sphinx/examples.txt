@@ -130,13 +130,13 @@ hears
    examples-hears_drnl
    examples-hears_gammatone
    examples-hears_IIRfilterbank
+   examples-hears_ircam_hrtf
    examples-hears_linear_gammachirp
    examples-hears_log_gammachirp
    examples-hears_online_computation
    examples-hears_simple_anf
    examples-hears_sounds
    examples-hears_sound_localisation_model
-   examples-hears_spike_generation
    examples-hears_time_varying_filter1
    examples-hears_time_varying_filter2
 
