@@ -1,6 +1,6 @@
 #import brian_no_units
 from brian import *
-import brian.optimiser as optimiser
+from brian import optimiser
 from scipy import weave
 import pycuda
 import pycuda.autoinit as autoinit

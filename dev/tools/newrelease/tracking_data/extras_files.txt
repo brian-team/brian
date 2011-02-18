@@ -28,7 +28,6 @@
 + examples/hears/simple_anf.py
 + examples/hears/sound_localisation_model.py
 + examples/hears/sounds.py
-+ examples/hears/spike_generation.py
 + examples/hears/time_varying_filter1.py
 + examples/hears/time_varying_filter2.py
 + examples/interface/index.html
