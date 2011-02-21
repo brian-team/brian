@@ -1,7 +1,15 @@
 New features since 1.3.0
 ------------------------
 
- 
+Major features:
+
+Minor features:
+
+Improvements:
+
+Bug fixes:
+
+* Fixed bug with loading sounds using Sound('filename.wav')
 
 New features since 1.2.1
 ------------------------
