@@ -155,7 +155,9 @@ class Sound(BaseSound, numpy.ndarray):
         elif isinstance(data, str):
             if duration is not None:
                 raise ValueError('Cannot specify duration when initialising Sound from file.')
-            x = Sound.load(data, samplerate=samplerate)
+            if samplerate is not None:
+                raise ValueError('Cannot specify samplerate when initialising Sound from a file.')
+            x = Sound.load(data)
             samplerate = x.samplerate
         elif callable(data):
             samplerate = get_samplerate(samplerate)
