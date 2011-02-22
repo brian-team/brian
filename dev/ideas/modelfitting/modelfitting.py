@@ -1,6 +1,7 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
-                    reshape, sum, log
+                    reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
+                    arange
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
     from playdoh import *
@@ -188,28 +189,70 @@ class DataTransformer(object):
     like 2 dimensional arrays or lists of spikes, into algorithm- and GPU-friendly structures,
     i.e. inline vectors (1 dimensional) easily parallelizable.
     """
-    def __init__(self, neurons, input, spikes = None, traces = None, slices = 1, overlap = 0*ms):
+    def __init__(self, neurons, input, spikes = None, traces = None, dt = defaultclock.dt,
+                 slices = 1, overlap = 0*ms, groups = 1):
         self.neurons = neurons # number of particles on the node
         self.input = input # a KxT array
         self.spikes = spikes # a list of spikes [(i,t)...]
         self.traces = traces # a KxT array
         self.slices = slices
         self.overlap = overlap
+        self.groups = groups
+        self.dt = dt
         
         # ensure 2 dimensions
         if self.input.ndim == 1:
             self.input = self.input.reshape((1,-1))
-        if self.traces.ndim == 1:
-            self.traces = self.traces.reshape((1,-1))
+        if self.traces is not None:
+            if self.traces.ndim == 1:
+                self.traces = self.traces.reshape((1,-1))
 
         # number of steps
         self.T = self.input.shape[1]
-
-        # number of targets
-        self.K = self.input.shape[0]
+        self.duration = self.T*self.dt
+        
+        self.subpopsize = self.neurons/self.groups # number of neurons per group: nodesize/groups
 
     def slice_spikes(self, spikes):
         # from standard structure to standard structure
+        # TODO
+        i, t = zip(*self.data)
+        i = array(i)
+        t = array(t)
+        alls = []
+        n = 0
+        pointers = []
+        dt = self.dt
+
+        target_length = []
+        target_rates = []
+        model_target = []
+        group_index = 0
+
+        neurons_in_group = self.subpopsize
+        for j in xrange(self.groups):
+#            neurons_in_group = self.groups[j] # number of neurons in the current group and current worker
+            s = sort(t[i == j])
+            target_length.extend([len(s)] * neurons_in_group)
+            target_rates.extend([firing_rate(s)] * neurons_in_group)
+
+            for k in xrange(self.slices):
+            # first sliced group : 0...0, second_train...second_train, ...
+            # second sliced group : first_train_second_slice...first_train_second_slice, second_train_second_slice...
+                spikeindices = (s >= k * self.sliced_steps * dt) & (s < (k + 1) * self.sliced_steps * dt) # spikes targeted by sliced neuron number k, for target j
+                targeted_spikes = s[spikeindices] - k * self.sliced_steps * dt + self.overlap_steps * dt # targeted spikes in the "local clock" for sliced neuron k
+                targeted_spikes = hstack((-1 * second, targeted_spikes, self.sliced_duration + 1 * second))
+                model_target.extend([k + group_index * self.slices] * neurons_in_group)
+                alls.append(targeted_spikes)
+                pointers.append(n)
+                n += len(targeted_spikes)
+            group_index += 1
+        pointers = array(pointers, dtype=int)
+        model_target = array(hstack(model_target), dtype=int)
+
+        
+        
+        
         return sliced_spikes
 
     def slice_traces(self, traces):
@@ -218,10 +261,32 @@ class DataTransformer(object):
 
     def transform_spikes(self, spikes):
         # from standard structure to inline structure
+        i, t = zip(*spikes)
+        i = array(i)
+        t = array(t)
+        alls = []
+        n = 0
+        pointers = []
+        model_target = []
+
+        for j in xrange(self.groups):
+            s = sort(t[i == j])
+            s = hstack((-1 * second, s, self.duration + 1 * second))
+            model_target.extend([j] * self.subpopsize)
+            alls.append(s)
+            pointers.append(n)
+            n += len(s)
+        pointers = array(pointers, dtype=int)
+        model_target = array(hstack(model_target), dtype=int)
+        spikes_inline = hstack(alls)
+        spikes_offset = pointers[model_target]
         return spikes_inline, spikes_offset
     
     def transform_traces(self, traces):
         # from standard structure to inline structure
+        K, T = traces.shape
+        traces_inline = traces.flatten()
+        traces_offset = array(kron(arange(K), T*ones(self.subpopsize)), dtype=int)
         return traces_inline, traces_offset
 
 
@@ -779,3 +844,19 @@ def predict(model=None, reset=None, threshold=None,
         return gamma[0]
     else:
         return gamma
+
+
+
+if __name__ == '__main__':
+    neurons = 3
+    input = linspace(0., 10., 11)
+    dt = DataTransformer(neurons, input)
+    
+#    spikes = [(i%2, i*.1*ms) for i in xrange(10)]
+#    print spikes
+#    print dt.transform_spikes(spikes)
+    
+#    traces = vstack((input,input,input))
+#    print traces
+#    print dt.transform_traces(traces)
+    
