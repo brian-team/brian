@@ -22,8 +22,215 @@ __all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','
            'debug_level', 'info_level', 'warning_level', 'open_server']
 
 
+
+
+class Criterion(Monitor, NetworkOperation):
+    """
+    Abstract class from which modelfitting criterions should derive.
+    Derived classes should implement the following methods:
+    
+    ``initialize(self, **params)``
+        Called once before the simulation. ```params`` is a dictionary with criterion-specific
+        parameters. 
+    
+    ``timestep_call(self)``
+        Called at every timestep.
+    
+    ``spike_call(self, neurons)``
+        Called at every spike, with the spiking neurons as argument.
+    
+    ``get_values(self)``
+        Called at the end, returns the criterion values.
+        
+    You have access to the following methods:
+    
+    ``self.get_value(self, varname)``
+        Returns the value of the specified variable for all neurons (vector).
+    
+    You have access to the following attributes:
+    
+    ``self.step``
+        The time step (integer)
+    
+    ``self.group``
+        The NeuronGroup
+    
+    ``self.traces=None``
+        Target traces.
+        A 2-dimensional K*T array where K is the number of targets, and T the total number of timesteps.
+        It is still a 2-dimensional array when K=1. It is None if not specified.
+        
+    ``self.spikes=None``
+        A list of target spike trains : [(i,t)..] where i is the target index and t the spike time.
+    
+    ``self.N``
+        The number of neurons in the NeuronGroup
+    
+    ``self.K=1``
+        The number of targets.
+    
+    ``self.duration``
+        The total duration of the simulation, in seconds.
+    
+    ``self.total_steps``
+        The total number of time steps.
+    
+    ``self.dt``
+        The timestep duration, in seconds.
+    
+    ``self.delays=zeros(self.n)``
+        The delays for every neuron, in seconds. The delay is relative to the target.
+    
+    ``self.onset=0*ms``
+        The onset, in seconds. The first timesteps, before onset, should be discarded in the criterion.
+    
+    ``self.intdelays=0``
+        The delays, but in number of timesteps (``int(delays/dt)``).
+    """
+    def __init__(self, group, traces=None, spikes=None, targets_count=1, duration=None, onset=0*ms, 
+                 delays=None, when='start', **params):
+        NetworkOperation.__init__(self, None, clock=group.clock, when=when)
+        self.group = group
+        self.dt = self.clock.dt
+        self.traces = array(traces) # KxT array
+        if self.traces.ndim == 1:
+            self.traces = self.traces.reshape((1,-1))
+        self.spikes = spikes
+        self.N = len(group) # number of neurons
+        assert targets_count==self.traces.shape[0]
+        self.K = targets_count # number of targets
+        # get the duration from the traces if duration is not specified in the constructor
+        if duration is None: duration = self.traces.shape[1] # total number of steps
+        self.duration = duration
+        self.total_steps = int(duration/self.dt)
+        if delays is None: delays = zeros(self.n)
+        self.delays = delays
+        self.onset = int(onset/self.dt)
+        self.intdelays = array(self.delays/self.clock.dt, dtype=int)
+        self.mindelay = min(delays)
+        self.maxdelay = max(delays)
+        self.initialize(**params)
+
+    def get_step(self):
+        return int(self.t_/self.clock.dt)
+    step = property(get_step)
+    
+    def initialize(self): # TO IMPLEMENT
+        """
+        Override this method to initialize the criterion before the simulation
+        """
+        pass
+    
+    def timestep_call(self): # TO IMPLEMENT
+        """
+        Override this method to do something at every time step
+        """
+        pass
+    
+    def spike_call(self, neurons): # TO IMPLEMENT
+        """
+        Override this method to do something at every time spike. neurons contains
+        the list of neurons that just spiked
+        """
+        pass
+    
+    def get_value(self, varname):
+        return self.group.state_(varname)
+    
+    def __call__(self):
+        self.timestep_call()
+        
+    def propagate(self, neurons):
+        self.spike_call(neurons)
+
+    def get_values(self):
+        """
+        Override this method to return the criterion values at the end
+        """
+        pass
+    values = property(get_values)
+
+
+
+class LpErrorCriterion(Criterion):
+    def initialize(self, p=2, varname='v'):
+        self.p = p
+        self.varname = varname
+        self._error = zeros((self.k, self.n))
+    
+    def timestep_call(self):
+        v = self.get_value()
+        t = self.step
+        if t<self.onset: return # onset
+        d = self.intdelays
+        indices = (t-d>=0)&(t-d<self.T) # neurons with valid delays (stay inside the target trace)
+        vtar = self.traces[:,t-d] # target value at this timestep for every neuron
+        for i in xrange(self.k):
+            self._error[i,indices] += abs(v[indices]-vtar[i,indices])**self.p
+    
+    def get_values(self):
+        if self.k == 1: error = self._error.flatten()
+        else: error = self._error
+        return 1./self.total_steps*error**(1./self.p)
+
+
+
+
+
+
+
+
+
+
+class DataTransformer(object):
+    """
+    Transform spike, input and trace data from user-friendly data structures,
+    like 2 dimensional arrays or lists of spikes, into algorithm- and GPU-friendly structures,
+    i.e. inline vectors (1 dimensional) easily parallelizable.
+    """
+    def __init__(self, neurons, input, spikes = None, traces = None, slices = 1, overlap = 0*ms):
+        self.neurons = neurons # number of particles on the node
+        self.input = input # a KxT array
+        self.spikes = spikes # a list of spikes [(i,t)...]
+        self.traces = traces # a KxT array
+        self.slices = slices
+        self.overlap = overlap
+        
+        # ensure 2 dimensions
+        if self.input.ndim == 1:
+            self.input = self.input.reshape((1,-1))
+        if self.traces.ndim == 1:
+            self.traces = self.traces.reshape((1,-1))
+
+        # number of steps
+        self.T = self.input.shape[1]
+
+        # number of targets
+        self.K = self.input.shape[0]
+
+    def slice_spikes(self, spikes):
+        # from standard structure to standard structure
+        return sliced_spikes
+
+    def slice_traces(self, traces):
+        # from standard structure to standard structure
+        return sliced_traces
+
+    def transform_spikes(self, spikes):
+        # from standard structure to inline structure
+        return spikes_inline, spikes_offset
+    
+    def transform_traces(self, traces):
+        # from standard structure to inline structure
+        return traces_inline, traces_offset
+
+
+
+
+
 class ModelFitting(Fitness):
     def initialize(self, **kwds):
+        # Initialization of variables
         self.use_gpu = self.unit_type=='GPU'
         # Gets the key,value pairs in shared_data
         for key, val in self.shared_data.iteritems():
@@ -31,21 +238,13 @@ class ModelFitting(Fitness):
         # Gets the key,value pairs in **kwds
         for key, val in kwds.iteritems():
             setattr(self, key, val)
-
-#        log_info(self.model)
+        self.neurons = self.nodesize
+        self.groups = self.groups
         self.model = cPickle.loads(self.model)
-#        log_info(self.model)
-
-        # if model is a string
         if type(self.model) is str:
             self.model = Equations(self.model)
 
-        self.total_steps = int(self.duration / self.dt)
-
-        self.neurons = self.nodesize
-        self.groups = self.groups
-
-        # Time slicing
+        # Generation of input current, takes time slicing into account
         self.input = self.input[0:self.slices * (len(self.input) / self.slices)] # makes sure that len(input) is a multiple of slices
         self.duration = len(self.input) * self.dt # duration of the input
         self.sliced_steps = len(self.input) / self.slices # timesteps per slice
@@ -53,13 +252,20 @@ class ModelFitting(Fitness):
         self.total_steps = self.sliced_steps + self.overlap_steps # total number of timesteps
         self.sliced_duration = self.overlap + self.duration / self.slices # duration of the vectorized simulation
         self.N = self.neurons * self.slices # TOTAL number of neurons in this worker
-
         self.input = hstack((zeros(self.overlap_steps), self.input)) # add zeros at the beginning because there is no overlap from the previous slice
+        # Generates I_offset
+        # TODO: handle different input currents?
+        self.I_offset = zeros(self.N, dtype=int)
+        for slice in range(self.slices):
+            self.I_offset[self.neurons * slice:self.neurons * (slice + 1)] = self.sliced_steps * slice
 
-        # Prepares data (generates I_offset, spiketimes, spiketimes_offset)
+
+
+
+        # Prepare data (generate spiketimes, spiketimes_offset)
         self.prepare_data()
 
-        # Add 'refractory' parameter on the CPU on the CPU only
+        # Add 'refractory' parameter on the CPU only
         if not self.use_gpu:
             if self.max_refractory is not None:
                 refractory = 'refractory'
@@ -98,7 +304,7 @@ class ModelFitting(Fitness):
             input_sliced_values = self.input[I_offset_subgroup_value:I_offset_subgroup_value + self.total_steps]
             sliced_subgroup.set_var_by_array(self.input_var, TimedArray(input_sliced_values, clock=self.group.clock))
             k = i
-
+        
         if self.use_gpu:
             # Select integration scheme according to method
             if self.method == 'Euler': scheme = euler_scheme
@@ -112,10 +318,10 @@ class ModelFitting(Fitness):
         else:
             self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset,
                                         onset=self.onset, delta=self.delta)
-
+    
     def prepare_data(self):
         """
-        Generates I_offset, spiketimes, spiketimes_offset from data,
+        Generates spiketimes, spiketimes_offset from data,
         and also target_length and target_rates.
         
         The neurons are first grouped by time slice : there are group_size*group_count
@@ -123,11 +329,7 @@ class ModelFitting(Fitness):
         Within each time slice, the neurons are grouped by target train : there are
         group_size neurons per group/target train
         """
-        # Generates I_offset
-        self.I_offset = zeros(self.N, dtype=int)
-        for slice in range(self.slices):
-            self.I_offset[self.neurons * slice:self.neurons * (slice + 1)] = self.sliced_steps * slice
-
+        
         # Generates spiketimes, spiketimes_offset, target_length, target_rates
         i, t = zip(*self.data)
         i = array(i)
@@ -422,7 +624,7 @@ def modelfitting(model=None,
 
     # default overlap when no time slicing
     if slices == 1:
-        overlap = 0 * ms
+        overlap = 0*ms
 
     # default allocation
     if cpu is None and gpu is None:
@@ -458,15 +660,15 @@ def modelfitting(model=None,
                    reset=reset,
                    refractory=refractory,
                    max_refractory=max_refractory,
-                   input_var=input_var,dt=dt,
-                   duration=duration,delta=delta,
+                   input_var=input_var, dt=dt,
+                   duration=duration, delta=delta,
                    slices=slices,
                    overlap=overlap,
                    returninfo=returninfo,
                    precision=precision,
                    stepsize=stepsize,
                    method=method,
-                   onset=0 * ms)
+                   onset=0*ms)
 
     shared_data = dict(input=input,
                        data=data,
