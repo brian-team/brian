@@ -117,7 +117,7 @@ class DataTransformer(object):
 
 
 
-class Criterion(SpikeMonitor, NetworkOperation):
+class Criterion(Monitor, NetworkOperation):
     """
     Abstract class from which modelfitting criterions should derive.
     Derived classes should implement the following methods:
@@ -185,7 +185,7 @@ class Criterion(SpikeMonitor, NetworkOperation):
     def __init__(self, group, traces=None, spikes=None, targets_count=1, duration=None, onset=0*ms, 
                  spikes_inline=None, spikes_offset=None,
                  traces_inline=None, traces_offset=None,
-                 delays=None, when='start', **params):
+                 delays=None, when='end', **params):
         NetworkOperation.__init__(self, None, clock=group.clock, when=when)
         self.group = group
         
@@ -1090,12 +1090,12 @@ if __name__ == '__main__':
     spikes= loadtxt('spikes_artificial.txt')
     
     # GAMMA FACTOR
-    criterion = GammaFactor(delta=4*ms)
-    data = spikes
+#    criterion = GammaFactor(delta=4*ms)
+#    data = spikes
     
     # LP ERROR
-#    criterion = LpError(p=2, varname='V')
-#    data = trace
+    criterion = LpError(p=2, varname='V')
+    data = trace
     
     
     results = modelfitting( model = equations,
@@ -1106,7 +1106,7 @@ if __name__ == '__main__':
                             cpu = 1,
                             dt = .1*ms,
                             popsize = 1000,
-                            maxiter = 3,
+                            maxiter = 1,
                             criterion = criterion,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms],
