@@ -264,9 +264,11 @@ class Criterion(Monitor, NetworkOperation):
     
     def __call__(self):
         self.timestep_call()
-        
-    def propagate(self, neurons):
+        neurons = self.group.get_spikes()
         self.spike_call(neurons)
+        
+#    def propagate(self, neurons):
+#        self.spike_call(neurons)
 
     def get_values(self): # TO IMPLEMENT
         """
@@ -416,7 +418,7 @@ class GammaFactorCriterion(Criterion):
         t = self.step()*dt
         
         spiking_neurons = array(spiking_neurons)
-        if len(spiking_neurons):
+        if len(spiking_neurons)>0:
             
             if t >= self.onset:
                 self.spike_count[spiking_neurons] += 1
@@ -1055,6 +1057,7 @@ def predict(model=None, reset=None, threshold=None,
 
 
 
+
 if __name__ == '__main__':
     
     from brian import loadtxt, ms, savetxt, loadtxt, Equations, NeuronGroup, run, SpikeMonitor,\
@@ -1090,8 +1093,8 @@ if __name__ == '__main__':
     spikes= loadtxt('spikes_artificial.txt')
     
     # GAMMA FACTOR
-#    criterion = GammaFactor(delta=4*ms)
-#    data = spikes
+    criterion = GammaFactor(delta=4*ms)
+    data = spikes
     
     # LP ERROR
     criterion = LpError(p=2, varname='V')
