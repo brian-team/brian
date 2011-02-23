@@ -1,7 +1,7 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
-                    arange
+                    arange, sort_spikes
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
     from playdoh import *
@@ -177,12 +177,6 @@ class LpErrorCriterion(Criterion):
 
 
 
-
-
-
-
-
-
 class DataTransformer(object):
     """
     Transform spike, input and trace data from user-friendly data structures,
@@ -192,7 +186,7 @@ class DataTransformer(object):
     def __init__(self, neurons, input, spikes = None, traces = None, dt = defaultclock.dt,
                  slices = 1, overlap = 0*ms, groups = 1):
         self.neurons = neurons # number of particles on the node
-        self.input = input # a KxT array
+        self.input = input # a IxT array
         self.spikes = spikes # a list of spikes [(i,t)...]
         self.traces = traces # a KxT array
         self.slices = slices
@@ -206,57 +200,46 @@ class DataTransformer(object):
         if self.traces is not None:
             if self.traces.ndim == 1:
                 self.traces = self.traces.reshape((1,-1))
+        self.inputs_count = self.input.shape[0]
 
         # number of steps
         self.T = self.input.shape[1]
         self.duration = self.T*self.dt
         
         self.subpopsize = self.neurons/self.groups # number of neurons per group: nodesize/groups
-
+        
+        self.input = self.input[:,0:self.slices * (self.T / self.slices)] # makes sure that len(input) is a multiple of slices
+        self.sliced_steps = self.T / self.slices # timesteps per slice
+        self.overlap_steps = int(self.overlap / self.dt) # timesteps during the overlap
+        self.total_steps = self.sliced_steps + self.overlap_steps # total number of timesteps
+        self.sliced_duration = self.overlap + self.duration / self.slices # duration of the vectorized simulation
+        self.N = self.neurons * self.slices # TOTAL number of neurons on this node
+        self.input = hstack((zeros((self.inputs_count, self.overlap_steps)), self.input)) # add zeros at the beginning because there is no overlap from the previous slice
+        
     def slice_spikes(self, spikes):
         # from standard structure to standard structure
-        # TODO
-        i, t = zip(*self.data)
-        i = array(i)
-        t = array(t)
-        alls = []
-        n = 0
-        pointers = []
-        dt = self.dt
-
-        target_length = []
-        target_rates = []
-        model_target = []
-        group_index = 0
-
-        neurons_in_group = self.subpopsize
-        for j in xrange(self.groups):
-#            neurons_in_group = self.groups[j] # number of neurons in the current group and current worker
-            s = sort(t[i == j])
-            target_length.extend([len(s)] * neurons_in_group)
-            target_rates.extend([firing_rate(s)] * neurons_in_group)
-
-            for k in xrange(self.slices):
-            # first sliced group : 0...0, second_train...second_train, ...
-            # second sliced group : first_train_second_slice...first_train_second_slice, second_train_second_slice...
-                spikeindices = (s >= k * self.sliced_steps * dt) & (s < (k + 1) * self.sliced_steps * dt) # spikes targeted by sliced neuron number k, for target j
-                targeted_spikes = s[spikeindices] - k * self.sliced_steps * dt + self.overlap_steps * dt # targeted spikes in the "local clock" for sliced neuron k
-                targeted_spikes = hstack((-1 * second, targeted_spikes, self.sliced_duration + 1 * second))
-                model_target.extend([k + group_index * self.slices] * neurons_in_group)
-                alls.append(targeted_spikes)
-                pointers.append(n)
-                n += len(targeted_spikes)
-            group_index += 1
-        pointers = array(pointers, dtype=int)
-        model_target = array(hstack(model_target), dtype=int)
-
-        
-        
-        
+        sliced_spikes = []
+        slice_length = self.sliced_steps*self.dt
+        for (i,t) in spikes:
+            slice = int(t/slice_length)
+            newt = self.overlap + t % slice_length
+            newi = i + self.groups*slice
+            sliced_spikes.append((newi, newt)) 
+        sliced_spikes = sort_spikes(sliced_spikes)
         return sliced_spikes
 
     def slice_traces(self, traces):
         # from standard structure to standard structure
+        k = traces.shape[0]
+        sliced_traces = zeros((k*self.slices, self.total_steps))
+        for slice in xrange(self.slices):
+            i0 = slice*k
+            i1 = (slice+1)*k
+            j0 = slice*self.sliced_steps
+            j1 = (slice+1)*self.sliced_steps
+            sliced_traces[i0:i1,self.overlap_steps:] = traces[:,j0:j1]
+            if slice>0:
+                sliced_traces[i0:i1,:self.overlap_steps] = traces[:,j0-self.overlap_steps:j0]
         return sliced_traces
 
     def transform_spikes(self, spikes):
@@ -268,7 +251,6 @@ class DataTransformer(object):
         n = 0
         pointers = []
         model_target = []
-
         for j in xrange(self.groups):
             s = sort(t[i == j])
             s = hstack((-1 * second, s, self.duration + 1 * second))
@@ -288,7 +270,6 @@ class DataTransformer(object):
         traces_inline = traces.flatten()
         traces_offset = array(kron(arange(K), T*ones(self.subpopsize)), dtype=int)
         return traces_inline, traces_offset
-
 
 
 
@@ -849,11 +830,18 @@ def predict(model=None, reset=None, threshold=None,
 
 if __name__ == '__main__':
     neurons = 3
-    input = linspace(0., 10., 11)
-    dt = DataTransformer(neurons, input)
+    input = linspace(0., 1., 21)
+    dt = DataTransformer(neurons, input, groups=1, overlap=1*ms, slices=2)
     
-#    spikes = [(i%2, i*.1*ms) for i in xrange(10)]
+#    spikes = [(i%2, i*ms) for i in xrange(10)]
 #    print spikes
+#    
+#    sliced_spikes = dt.slice_spikes(spikes)
+#    print sliced_spikes
+
+#    traces = input.reshape((1,-1))
+#    print dt.slice_traces(traces)
+    
 #    print dt.transform_spikes(spikes)
     
 #    traces = vstack((input,input,input))
