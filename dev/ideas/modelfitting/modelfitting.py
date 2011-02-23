@@ -1,7 +1,7 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
-                    arange, sort_spikes
+                    arange, sort_spikes, rint, SpikeMonitor
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
     from playdoh import *
@@ -24,8 +24,99 @@ __all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','
 
 
 
+class DataTransformer(object):
+    """
+    Transform spike, input and trace data from user-friendly data structures,
+    like 2 dimensional arrays or lists of spikes, into algorithm- and GPU-friendly structures,
+    i.e. inline vectors (1 dimensional) easily parallelizable.
+    """
+    def __init__(self, neurons, input, spikes = None, traces = None, dt = defaultclock.dt,
+                 slices = 1, overlap = 0*ms, groups = 1):
+        self.neurons = neurons # number of particles on the node
+        self.input = input # a IxT array
+        self.spikes = spikes # a list of spikes [(i,t)...]
+        self.traces = traces # a KxT array
+        self.slices = slices
+        self.overlap = overlap
+        self.groups = groups
+        self.dt = dt
+        # ensure 2 dimensions
+        if self.input.ndim == 1:
+            self.input = self.input.reshape((1,-1))
+        if self.traces is not None:
+            if self.traces.ndim == 1:
+                self.traces = self.traces.reshape((1,-1))
+        self.inputs_count = self.input.shape[0]
+        self.T = self.input.shape[1] # number of steps
+        self.duration = self.T*self.dt
+        self.subpopsize = self.neurons/self.groups # number of neurons per group: nodesize/groups
+        self.input = self.input[:,0:self.slices * (self.T / self.slices)] # makes sure that len(input) is a multiple of slices
+        self.sliced_steps = self.T / self.slices # timesteps per slice
+        self.overlap_steps = int(self.overlap / self.dt) # timesteps during the overlap
+        self.total_steps = self.sliced_steps + self.overlap_steps # total number of timesteps
+        self.sliced_duration = self.overlap + self.duration / self.slices # duration of the vectorized simulation
+        self.N = self.neurons * self.slices # TOTAL number of neurons on this node
+        self.input = hstack((zeros((self.inputs_count, self.overlap_steps)), self.input)) # add zeros at the beginning because there is no overlap from the previous slice
+        
+    def slice_spikes(self, spikes):
+        # from standard structure to standard structure
+        sliced_spikes = []
+        slice_length = self.sliced_steps*self.dt
+        for (i,t) in spikes:
+            slice = int(t/slice_length)
+            newt = self.overlap + (t % slice_length)*second
+            newi = i + self.groups*slice
+            sliced_spikes.append((newi, newt)) 
+        sliced_spikes = sort_spikes(sliced_spikes)
+        return sliced_spikes
 
-class Criterion(Monitor, NetworkOperation):
+    def slice_traces(self, traces):
+        # from standard structure to standard structure
+        k = traces.shape[0]
+        sliced_traces = zeros((k*self.slices, self.total_steps))
+        for slice in xrange(self.slices):
+            i0 = slice*k
+            i1 = (slice+1)*k
+            j0 = slice*self.sliced_steps
+            j1 = (slice+1)*self.sliced_steps
+            sliced_traces[i0:i1,self.overlap_steps:] = traces[:,j0:j1]
+            if slice>0:
+                sliced_traces[i0:i1,:self.overlap_steps] = traces[:,j0-self.overlap_steps:j0]
+        return sliced_traces
+
+    def transform_spikes(self, spikes):
+        # from standard structure to inline structure
+        i, t = zip(*spikes)
+        i = array(i)
+        t = array(t)
+        alls = []
+        n = 0
+        pointers = []
+        model_target = []
+        for j in xrange(self.groups):
+            s = sort(t[i == j])
+            s = hstack((-1 * second, s, self.duration + 1 * second))
+            model_target.extend([j] * self.subpopsize)
+            alls.append(s)
+            pointers.append(n)
+            n += len(s)
+        pointers = array(pointers, dtype=int)
+        model_target = array(hstack(model_target), dtype=int)
+        spikes_inline = hstack(alls)
+        spikes_offset = pointers[model_target]
+        return spikes_inline, spikes_offset
+    
+    def transform_traces(self, traces):
+        # from standard structure to inline structure
+        K, T = traces.shape
+        traces_inline = traces.flatten()
+        traces_offset = array(kron(arange(K), T*ones(self.subpopsize)), dtype=int)
+        return traces_inline, traces_offset
+
+
+
+
+class Criterion(SpikeMonitor, NetworkOperation):
     """
     Abstract class from which modelfitting criterions should derive.
     Derived classes should implement the following methods:
@@ -87,19 +178,30 @@ class Criterion(Monitor, NetworkOperation):
     
     ``self.intdelays=0``
         The delays, but in number of timesteps (``int(delays/dt)``).
+    
+    NOTE: traces and spikes have all been sliced before being passed to the criterion object
     """
     def __init__(self, group, traces=None, spikes=None, targets_count=1, duration=None, onset=0*ms, 
+                 spikes_inline=None, spikes_offset=None,
+                 traces_inline=None, traces_offset=None,
                  delays=None, when='start', **params):
         NetworkOperation.__init__(self, None, clock=group.clock, when=when)
         self.group = group
-        self.dt = self.clock.dt
-        self.traces = array(traces) # KxT array
-        if self.traces.ndim == 1:
-            self.traces = self.traces.reshape((1,-1))
-        self.spikes = spikes
+        
+        # needed by SpikeMonitor
+        self.source = group
+        self.source.set_max_delay(0)
+        self.delay = 0
+        
         self.N = len(group) # number of neurons
-        assert targets_count==self.traces.shape[0]
         self.K = targets_count # number of targets
+        self.dt = self.clock.dt
+        if traces is not None:
+            self.traces = array(traces) # KxT array
+            if self.traces.ndim == 1:
+                self.traces = self.traces.reshape((1,-1))
+            assert targets_count==self.traces.shape[0]
+        self.spikes = spikes
         # get the duration from the traces if duration is not specified in the constructor
         if duration is None: duration = self.traces.shape[1] # total number of steps
         self.duration = duration
@@ -110,11 +212,32 @@ class Criterion(Monitor, NetworkOperation):
         self.intdelays = array(self.delays/self.clock.dt, dtype=int)
         self.mindelay = min(delays)
         self.maxdelay = max(delays)
+        # the following data is sliced
+        self.spikes_inline = spikes_inline
+        self.spikes_offset = spikes_offset
+        self.traces_inline = traces_inline
+        self.traces_offset = traces_offset
+        if self.spikes is not None:
+            # target spike count and rates
+            self.target_spikes_count = self.get_spikes_count(self.spikes)
+            self.target_spikes_rate = self.get_spikes_rate(self.spikes)
         self.initialize(**params)
 
-    def get_step(self):
-        return int(self.t_/self.clock.dt)
-    step = property(get_step)
+    def step(self):
+        """
+        Return the current time step
+        """
+        return int(self.clock.t/self.dt)
+    
+    def get_spikes_count(self, spikes):
+        count = zeros(self.K)
+        for (i,t) in spikes:
+            count[i] += 1
+        return count
+    
+    def get_spikes_rate(self, spikes):
+        count = self.get_spikes_count(spikes)
+        return count*1.0/self.duration
     
     def initialize(self): # TO IMPLEMENT
         """
@@ -144,12 +267,23 @@ class Criterion(Monitor, NetworkOperation):
     def propagate(self, neurons):
         self.spike_call(neurons)
 
-    def get_values(self):
+    def get_values(self): # TO IMPLEMENT
         """
-        Override this method to return the criterion values at the end
+        Override this method to return the criterion values at the end.
+        It must return one (or several, as a tuple) additive values, i.e.,
+        values corresponding to slices. The method normalize can normalize
+        combined values.
         """
         pass
-    values = property(get_values)
+    additive_values = property(get_values)
+
+    def normalize(self, values): # TO IMPLEMENT
+        """
+        Values contains combined criterion values. It is either a vector of values (as many values
+        as neurons), or a tuple with different vector of as many values as neurons.
+        """
+        pass
+
 
 
 
@@ -161,7 +295,7 @@ class LpErrorCriterion(Criterion):
     
     def timestep_call(self):
         v = self.get_value()
-        t = self.step
+        t = self.step()
         if t<self.onset: return # onset
         d = self.intdelays
         indices = (t-d>=0)&(t-d<self.T) # neurons with valid delays (stay inside the target trace)
@@ -172,104 +306,164 @@ class LpErrorCriterion(Criterion):
     def get_values(self):
         if self.k == 1: error = self._error.flatten()
         else: error = self._error
-        return 1./self.total_steps*error**(1./self.p)
-
-
-
-
-class DataTransformer(object):
-    """
-    Transform spike, input and trace data from user-friendly data structures,
-    like 2 dimensional arrays or lists of spikes, into algorithm- and GPU-friendly structures,
-    i.e. inline vectors (1 dimensional) easily parallelizable.
-    """
-    def __init__(self, neurons, input, spikes = None, traces = None, dt = defaultclock.dt,
-                 slices = 1, overlap = 0*ms, groups = 1):
-        self.neurons = neurons # number of particles on the node
-        self.input = input # a IxT array
-        self.spikes = spikes # a list of spikes [(i,t)...]
-        self.traces = traces # a KxT array
-        self.slices = slices
-        self.overlap = overlap
-        self.groups = groups
-        self.dt = dt
-        
-        # ensure 2 dimensions
-        if self.input.ndim == 1:
-            self.input = self.input.reshape((1,-1))
-        if self.traces is not None:
-            if self.traces.ndim == 1:
-                self.traces = self.traces.reshape((1,-1))
-        self.inputs_count = self.input.shape[0]
-
-        # number of steps
-        self.T = self.input.shape[1]
-        self.duration = self.T*self.dt
-        
-        self.subpopsize = self.neurons/self.groups # number of neurons per group: nodesize/groups
-        
-        self.input = self.input[:,0:self.slices * (self.T / self.slices)] # makes sure that len(input) is a multiple of slices
-        self.sliced_steps = self.T / self.slices # timesteps per slice
-        self.overlap_steps = int(self.overlap / self.dt) # timesteps during the overlap
-        self.total_steps = self.sliced_steps + self.overlap_steps # total number of timesteps
-        self.sliced_duration = self.overlap + self.duration / self.slices # duration of the vectorized simulation
-        self.N = self.neurons * self.slices # TOTAL number of neurons on this node
-        self.input = hstack((zeros((self.inputs_count, self.overlap_steps)), self.input)) # add zeros at the beginning because there is no overlap from the previous slice
-        
-    def slice_spikes(self, spikes):
-        # from standard structure to standard structure
-        sliced_spikes = []
-        slice_length = self.sliced_steps*self.dt
-        for (i,t) in spikes:
-            slice = int(t/slice_length)
-            newt = self.overlap + t % slice_length
-            newi = i + self.groups*slice
-            sliced_spikes.append((newi, newt)) 
-        sliced_spikes = sort_spikes(sliced_spikes)
-        return sliced_spikes
-
-    def slice_traces(self, traces):
-        # from standard structure to standard structure
-        k = traces.shape[0]
-        sliced_traces = zeros((k*self.slices, self.total_steps))
-        for slice in xrange(self.slices):
-            i0 = slice*k
-            i1 = (slice+1)*k
-            j0 = slice*self.sliced_steps
-            j1 = (slice+1)*self.sliced_steps
-            sliced_traces[i0:i1,self.overlap_steps:] = traces[:,j0:j1]
-            if slice>0:
-                sliced_traces[i0:i1,:self.overlap_steps] = traces[:,j0-self.overlap_steps:j0]
-        return sliced_traces
-
-    def transform_spikes(self, spikes):
-        # from standard structure to inline structure
-        i, t = zip(*spikes)
-        i = array(i)
-        t = array(t)
-        alls = []
-        n = 0
-        pointers = []
-        model_target = []
-        for j in xrange(self.groups):
-            s = sort(t[i == j])
-            s = hstack((-1 * second, s, self.duration + 1 * second))
-            model_target.extend([j] * self.subpopsize)
-            alls.append(s)
-            pointers.append(n)
-            n += len(s)
-        pointers = array(pointers, dtype=int)
-        model_target = array(hstack(model_target), dtype=int)
-        spikes_inline = hstack(alls)
-        spikes_offset = pointers[model_target]
-        return spikes_inline, spikes_offset
+        return error # just the integral, for every slice
     
-    def transform_traces(self, traces):
-        # from standard structure to inline structure
-        K, T = traces.shape
-        traces_inline = traces.flatten()
-        traces_offset = array(kron(arange(K), T*ones(self.subpopsize)), dtype=int)
-        return traces_inline, traces_offset
+    def normalize(self, error):
+        # error is now the combined error on the whole duration (sum on the slices)
+        return self.dt*error**(1./self.p)
+
+class LpError(object):
+    """
+    Structure used by the users to specify a criterion
+    """
+    def __init__(self, p, varname):
+        self.p = p
+        self.varname = varname
+
+
+
+
+class GammaFactorCriterion(Criterion):
+    """
+    Coincidence counter class.
+    
+    Counts the number of coincidences between the spikes of the neurons in the network (model spikes),
+    and some user-specified data spike trains (target spikes). This number is defined as the number of 
+    target spikes such that there is at least one model spike within +- ``delta``, where ``delta``
+    is the half-width of the time window.
+    
+    Initialised as::
+    
+        cc = CoincidenceCounter(source, data, delta = 4*ms)
+    
+    with the following arguments:
+    
+    ``source``
+        A :class:`NeuronGroup` object which neurons are being monitored.
+    
+    ``data``
+        The list of spike times. Several spike trains can be passed in the following way.
+        Define a single 1D array ``data`` which contains all the target spike times one after the
+        other. Now define an array ``spiketimes_offset`` of integers so that neuron ``i`` should 
+        be linked to target train: ``data[spiketimes_offset[i]], data[spiketimes_offset[i]+1]``, etc.
+        
+        It is essential that each spike train with the spiketimes array should begin with a spike at a
+        large negative time (e.g. -1*second) and end with a spike that is a long time
+        after the duration of the run (e.g. duration+1*second).
+    
+    ``delta=4*ms``
+        The half-width of the time window for the coincidence counting algorithm.
+    
+    ``spiketimes_offset``
+        A 1D array, ``spiketimes_offset[i]`` is the index of the first spike of 
+        the target train associated to neuron i.
+        
+    ``spikedelays``
+        A 1D array with spike delays for each neuron. All spikes from the target 
+        train associated to neuron i are shifted by ``spikedelays[i]``.
+        
+    ``coincidence_count_algorithm``
+        If set to ``'exclusive'``, the algorithm cannot count more than one
+        coincidence for each model spike.
+        If set to ``'inclusive'``, the algorithm can count several coincidences
+        for a single model spike.
+    
+    ``onset``
+        A scalar value in seconds giving the start of the counting: no
+        coincidences are counted before ``onset``.
+    
+    Has three attributes:
+    
+    ``coincidences``
+        The number of coincidences for each neuron of the :class:`NeuronGroup`.
+        ``coincidences[i]`` is the number of coincidences for neuron i.
+        
+    ``model_length``
+        The number of spikes for each neuron. ``model_length[i]`` is the spike
+        count for neuron i.
+        
+    ``target_length``
+        The number of spikes in the target spike train associated to each neuron.
+    """
+    def initialize(self, delta, coincidence_count_algorithm):
+        self.coincidence_count_algorithm = coincidence_count_algorithm
+        self.delta = int(rint(delta / self.dt))
+        
+        self.spike_count = zeros(self.N, dtype='int')
+        self.coincidences = zeros(self.N, dtype='int')
+        self.spiketime_index = self.spikes_offset
+        self.last_spike_time = array(rint(self.spikes_inline[self.spiketime_index] / self.dt), dtype=int)
+        self.next_spike_time = array(rint(self.spikes_inline[self.spiketime_index + 1] / self.dt), dtype=int)
+
+        # First target spikes (needed for the computation of 
+        #   the target train firing rates)
+#        self.first_target_spike = zeros(self.N)
+
+        self.last_spike_allowed = ones(self.N, dtype='bool')
+        self.next_spike_allowed = ones(self.N, dtype='bool')
+        
+    def spike_call(self, spiking_neurons):
+        dt = self.dt
+        t = self.step()*dt
+        
+        spiking_neurons = array(spiking_neurons)
+        if len(spiking_neurons):
+            
+            if t >= self.onset:
+                self.spike_count[spiking_neurons] += 1
+
+            T_spiking = array(rint((t + self.delays[spiking_neurons]) / dt), dtype=int)
+
+            remaining_neurons = spiking_neurons
+            remaining_T_spiking = T_spiking
+            while True:
+                remaining_indices, = (remaining_T_spiking > self.next_spike_time[remaining_neurons]).nonzero()
+                if len(remaining_indices):
+                    indices = remaining_neurons[remaining_indices]
+                    self.spiketime_index[indices] += 1
+                    self.last_spike_time[indices] = self.next_spike_time[indices]
+                    self.next_spike_time[indices] = array(rint(self.spikes_inline[self.spiketime_index[indices] + 1] / dt), dtype=int)
+                    if self.coincidence_count_algorithm == 'exclusive':
+                        self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
+                        self.next_spike_allowed[indices] = True
+                    remaining_neurons = remaining_neurons[remaining_indices]
+                    remaining_T_spiking = remaining_T_spiking[remaining_indices]
+                else:
+                    break
+
+            # Updates coincidences count
+            near_last_spike = self.last_spike_time[spiking_neurons] + self.delta >= T_spiking
+            near_next_spike = self.next_spike_time[spiking_neurons] - self.delta <= T_spiking
+            last_spike_allowed = self.last_spike_allowed[spiking_neurons]
+            next_spike_allowed = self.next_spike_allowed[spiking_neurons]
+            I = (near_last_spike & last_spike_allowed) | (near_next_spike & next_spike_allowed)
+
+            if t >= self.onset:
+                self.coincidences[spiking_neurons[I]] += 1
+
+            if self.coincidence_count_algorithm == 'exclusive':
+                near_both_allowed = (near_last_spike & last_spike_allowed) & (near_next_spike & next_spike_allowed)
+                self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
+                self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed
+            
+    def get_values(self):
+        return (self.coincidences, self.spike_count)
+    
+    def normalize(self, values):
+        coincidence_count = values[0]
+        spike_count = values[1]
+        delta = self.delta*self.dt
+
+        gamma = get_gamma_factor(coincidence_count, spike_count, 
+                                 self.target_spikes_count, self.target_spikes_rate, 
+                                 delta)
+        
+        return gamma
+
+class GammaFactor(object):
+    def __init__(self, delta, coincidence_count_algorithm):
+        self.delta = delta
+        self.coincidence_count_algorithm = coincidence_count_algorithm
 
 
 
@@ -289,28 +483,29 @@ class ModelFitting(Fitness):
         self.model = cPickle.loads(self.model)
         if type(self.model) is str:
             self.model = Equations(self.model)
-
-        # Generation of input current, takes time slicing into account
-        self.input = self.input[0:self.slices * (len(self.input) / self.slices)] # makes sure that len(input) is a multiple of slices
-        self.duration = len(self.input) * self.dt # duration of the input
-        self.sliced_steps = len(self.input) / self.slices # timesteps per slice
-        self.overlap_steps = int(self.overlap / self.dt) # timesteps during the overlap
-        self.total_steps = self.sliced_steps + self.overlap_steps # total number of timesteps
-        self.sliced_duration = self.overlap + self.duration / self.slices # duration of the vectorized simulation
-        self.N = self.neurons * self.slices # TOTAL number of neurons in this worker
-        self.input = hstack((zeros(self.overlap_steps), self.input)) # add zeros at the beginning because there is no overlap from the previous slice
-        # Generates I_offset
-        # TODO: handle different input currents?
-        self.I_offset = zeros(self.N, dtype=int)
-        for slice in range(self.slices):
-            self.I_offset[self.neurons * slice:self.neurons * (slice + 1)] = self.sliced_steps * slice
-
-
-
-
-        # Prepare data (generate spiketimes, spiketimes_offset)
-        self.prepare_data()
-
+        
+        self.initialize_neurongroup()
+        self.transform_data()
+        self.inject_input()
+        
+#        if self.use_gpu:
+#            ########
+#            # TODO
+#            ########
+#            # Select integration scheme according to method
+#            if self.method == 'Euler': scheme = euler_scheme
+#            elif self.method == 'RK': scheme = rk2_scheme
+#            elif self.method == 'exponential_Euler': scheme = exp_euler_scheme
+#            else: raise Exception("The numerical integration method is not valid")
+#            
+#            self.mf = GPUModelFitting(self.group, self.model, self.input, self.I_offset,
+#                                      self.spiketimes, self.spiketimes_offset, zeros(self.neurons), 0*ms, self.delta,
+#                                      precision=self.precision, scheme=scheme)
+#        else:
+#            self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset,
+#                                        onset=self.onset, delta=self.delta)
+    
+    def initialize_neurongroup(self):
         # Add 'refractory' parameter on the CPU only
         if not self.use_gpu:
             if self.max_refractory is not None:
@@ -327,7 +522,7 @@ class ModelFitting(Fitness):
         # Must recompile the Equations : the functions are not transfered after pickling/unpickling
         self.model.compile_functions()
 
-        self.group = NeuronGroup(self.N,
+        self.group = NeuronGroup(self.neurons,
                                  model=self.model,
                                  reset=self.reset,
                                  threshold=self.threshold,
@@ -339,86 +534,89 @@ class ModelFitting(Fitness):
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
                 self.group.state(param)[:] = value
-
+    
+    def transform_data(self):
+        self.transformer = DataTransformer(self.neurons,
+                                           self.inputs,
+                                           spikes = self.spikes, 
+                                           traces = self.traces,
+                                           dt = self.dt,
+                                           slices = self.slices,
+                                           overlap = self.overlap, 
+                                           groups = self.groups)
+        self.total_steps = self.transformer.total_steps
+        self.sliced_duration = self.transformer.sliced_duration
+        
+        self.sliced_inputs = self.transformer.slice_traces(self.inputs)
+        self.inputs_inline, self.inputs_offset = self.transformer.transform_traces(self.sliced_inputs)
+        
+        if self.traces is not None:
+            self.sliced_traces = self.transformer.slice_traces(self.traces)
+            self.traces_inline, self.traces_offset = self.transformer.transform_traces(self.sliced_traces)
+        else:
+            self.sliced_traces, self.traces_inline, self.traces_offset = None, None, None
+        
+        if self.spikes is not None:
+            self.sliced_spikes = self.transformer.slice_spikes(self.spikes)
+            self.spikes_inline, self.spikes_offset = self.transformer.transform_spikes(self.sliced_spikes)
+        else:
+            self.sliced_spikes, self.spikes_inline, self.spikes_offset = None, None, None
+    
+    def inject_input(self):
         # Injects current in consecutive subgroups, where I_offset have the same value
         # on successive intervals
+        I_offset = self.inputs_offset
         k = -1
-        for i in hstack((nonzero(diff(self.I_offset))[0], len(self.I_offset) - 1)):
-            I_offset_subgroup_value = self.I_offset[i]
+        for i in hstack((nonzero(diff(I_offset))[0], len(I_offset) - 1)):
+            I_offset_subgroup_value = I_offset[i]
             I_offset_subgroup_length = i - k
             sliced_subgroup = self.group.subgroup(I_offset_subgroup_length)
-            input_sliced_values = self.input[I_offset_subgroup_value:I_offset_subgroup_value + self.total_steps]
+            input_sliced_values = self.inputs_inline[I_offset_subgroup_value:I_offset_subgroup_value + self.total_steps]
             sliced_subgroup.set_var_by_array(self.input_var, TimedArray(input_sliced_values, clock=self.group.clock))
             k = i
-        
-        if self.use_gpu:
-            # Select integration scheme according to method
-            if self.method == 'Euler': scheme = euler_scheme
-            elif self.method == 'RK': scheme = rk2_scheme
-            elif self.method == 'exponential_Euler': scheme = exp_euler_scheme
-            else: raise Exception("The numerical integration method is not valid")
-            
-            self.mf = GPUModelFitting(self.group, self.model, self.input, self.I_offset,
-                                      self.spiketimes, self.spiketimes_offset, zeros(self.neurons), 0*ms, self.delta,
-                                      precision=self.precision, scheme=scheme)
-        else:
-            self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset,
-                                        onset=self.onset, delta=self.delta)
     
-    def prepare_data(self):
-        """
-        Generates spiketimes, spiketimes_offset from data,
-        and also target_length and target_rates.
+    def initialize_criterion(self, delays):
+        # general criterion parameters
+        params = dict(group=self.group, traces=self.sliced_traces, spikes=self.sliced_spikes, 
+                      targets_count=self.groups*self.slices, duration=self.sliced_duration, onset=self.onset, 
+                      spikes_inline=self.spikes_inline, spikes_offset=self.spikes_offset,
+                      traces_inline=self.traces_inline, traces_offset=self.traces_offset,
+                      delays=delays, when='start')
         
-        The neurons are first grouped by time slice : there are group_size*group_count
-        per group/time slice
-        Within each time slice, the neurons are grouped by target train : there are
-        group_size neurons per group/target train
-        """
+        criterion_name = self.criterion.__class__.__name__
         
-        # Generates spiketimes, spiketimes_offset, target_length, target_rates
-        i, t = zip(*self.data)
-        i = array(i)
-        t = array(t)
-        alls = []
-        n = 0
-        pointers = []
-        dt = self.dt
-
-        target_length = []
-        target_rates = []
-        model_target = []
-        group_index = 0
-
-        neurons_in_group = self.subpopsize
-        for j in xrange(self.groups):
-#            neurons_in_group = self.groups[j] # number of neurons in the current group and current worker
-            s = sort(t[i == j])
-            target_length.extend([len(s)] * neurons_in_group)
-            target_rates.extend([firing_rate(s)] * neurons_in_group)
-
-            for k in xrange(self.slices):
-            # first sliced group : 0...0, second_train...second_train, ...
-            # second sliced group : first_train_second_slice...first_train_second_slice, second_train_second_slice...
-                spikeindices = (s >= k * self.sliced_steps * dt) & (s < (k + 1) * self.sliced_steps * dt) # spikes targeted by sliced neuron number k, for target j
-                targeted_spikes = s[spikeindices] - k * self.sliced_steps * dt + self.overlap_steps * dt # targeted spikes in the "local clock" for sliced neuron k
-                targeted_spikes = hstack((-1 * second, targeted_spikes, self.sliced_duration + 1 * second))
-                model_target.extend([k + group_index * self.slices] * neurons_in_group)
-                alls.append(targeted_spikes)
-                pointers.append(n)
-                n += len(targeted_spikes)
-            group_index += 1
-        pointers = array(pointers, dtype=int)
-        model_target = array(hstack(model_target), dtype=int)
-
-        self.spiketimes = hstack(alls)
-        self.spiketimes_offset = pointers[model_target] # [pointers[i] for i in model_target]
-
-        # Duplicates each target_length value 'group_size' times so that target_length[i]
-        # is the length of the train targeted by neuron i
-        self.target_length = array(target_length, dtype=int)
-        self.target_rates = array(target_rates)
-
+        # criterion-specific parameters
+        if criterion_name == 'GammaFactor':
+            params['delta'] = self.criterion.delta
+            params['coincidence_count_algorithm'] = self.criterion.coincidence_count_algorithm
+            self.criterion_object = GammaFactorCriterion(**params)
+            
+        if criterion_name == 'LpError':
+            params['p'] = self.criterion.p
+            params['varname'] = self.criterion.varname
+            self.criterion_object = LpErrorCriterion(**params)
+    
+    def update_neurongroup(self, **param_values):
+        """
+        Inject fitting parameters into the NeuronGroup
+        """
+        # Sets the parameter values in the NeuronGroup object
+        self.group.reinit()
+        for param, value in param_values.iteritems():
+            self.group.state(param)[:] = kron(value, ones(self.slices)) # kron param_values if slicing
+        
+        # Reinitializes the model variables
+        if self.initial_values is not None:
+            for param, value in self.initial_values.iteritems():
+                self.group.state(param)[:] = value
+    
+    def combine_sliced_values(self, values):
+        if type(values) is tuple:
+            combined_values = tuple([sum(reshape(v, (self.slices, -1)), axis=0) for v in values])
+        else:
+            combined_values = sum(reshape(values, (self.slices, -1)), axis=0)
+        return combined_values
+    
     def evaluate(self, **param_values):
         """
         Use fitparams['delays'] to take delays into account
@@ -427,51 +625,38 @@ class ModelFitting(Fitness):
         delays = param_values.pop('delays', zeros(self.neurons))
         refractory = param_values.pop('refractory', zeros(self.neurons))
 
-        # kron spike delays
+        # repeat spike delays and refractory to take slices into account
         delays = kron(delays, ones(self.slices))
         refractory = kron(refractory, ones(self.slices))
 
-        # Sets the parameter values in the NeuronGroup object
-        self.group.reinit()
-        for param, value in param_values.iteritems():
-            self.group.state(param)[:] = kron(value, ones(self.slices)) # kron param_values if slicing
-            
-        # Reinitializes the model variables
-        if self.initial_values is not None:
-            for param, value in self.initial_values.iteritems():
-                self.group.state(param)[:] = value
-
+        self.update_neurongroup(**param_values)
+        self.initialize_criterion(delays)
+        
         if self.use_gpu:
-            # Reinitializes the simulation object
-            self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, delays, refractory)
-            # LAUNCHES the simulation on the GPU
-            self.mf.launch(self.duration, self.stepsize)
-            coincidence_count = self.mf.coincidence_count
-            spike_count = self.mf.spike_count
+            pass
+            #########
+            # TODO
+            #########
+#            # Reinitializes the simulation object
+#            self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, delays, refractory)
+#            # LAUNCHES the simulation on the GPU
+#            self.mf.launch(self.duration, self.stepsize)
+#            coincidence_count = self.mf.coincidence_count
+#            spike_count = self.mf.spike_count
         else:
             # set the refractory period
             if self.max_refractory is not None:
                 self.group.refractory = refractory
             
-            self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset,
-                                        onset=self.onset, delta=self.delta)
-            # Sets the spike delay values
-            self.cc.spikedelays = delays
-            # Reinitializes the simulation objects
+            # Launch the simulation on the CPU
             self.group.clock.reinit()
-#            self.cc.reinit()
-            net = Network(self.group, self.cc)
-            # LAUNCHES the simulation on the CPU
+            net = Network(self.group, self.criterion_object)
             net.run(self.duration)
-            coincidence_count = self.cc.coincidences
-            spike_count = self.cc.model_length
-
-        coincidence_count = sum(reshape(coincidence_count, (self.slices, -1)), axis=0)
-        spike_count = sum(reshape(spike_count, (self.slices, -1)), axis=0)
-
-        gamma = get_gamma_factor(coincidence_count, spike_count, self.target_length, self.target_rates, self.delta)
-
-        return gamma
+        
+        sliced_values = self.criterion_object.get_values()
+        combined_values = self.combine_sliced_values(sliced_values)
+        values = self.criterion_object.normalize(combined_values)
+        return values
 
 
 
@@ -486,7 +671,6 @@ def modelfitting(model=None,
                  dt=None,
                  popsize=1000,
                  maxiter=10,
-                 delta=4*ms,
                  slices=1,
                  overlap=0*second,
                  initial_values=None,
@@ -501,6 +685,7 @@ def modelfitting(model=None,
                  returninfo=False,
                  scaling=None,
                  algorithm=CMAES,
+                 criterion=None,
                  optparams={},
                  method='Euler',
                  **params):
@@ -698,7 +883,17 @@ def modelfitting(model=None,
 #    group_size = particles # Number of particles per target train
     groups = int(array(data)[:, 0].max() + 1) # number of target trains
 #    N = group_size * group_count # number of neurons
-    duration = len(input) * dt # duration of the input    
+    duration = len(input) * dt # duration of the input
+    
+    if criterion is None:
+        criterion = GammaFactor(delta=4*ms, coincidence_count_algorithm='exclusive')
+
+    # TODO
+    inputs = input
+    spikes = data
+    if inputs.ndim==1:
+        inputs = inputs.reshape((1,-1))
+    traces = None
 
     # keyword arguments for Modelfitting initialize
     kwds = dict(   model=cPickle.dumps(model),
@@ -707,17 +902,19 @@ def modelfitting(model=None,
                    refractory=refractory,
                    max_refractory=max_refractory,
                    input_var=input_var, dt=dt,
-                   duration=duration, delta=delta,
+                   duration=duration,
+                   criterion=criterion,
                    slices=slices,
                    overlap=overlap,
                    returninfo=returninfo,
                    precision=precision,
                    stepsize=stepsize,
                    method=method,
-                   onset=0*ms)
+                   onset=overlap)
 
-    shared_data = dict(input=input,
-                       data=data,
+    shared_data = dict(inputs=inputs,
+                       traces=traces,
+                       spikes=spikes,
                        initial_values=initial_values)
 
     r = maximize(   ModelFitting,
@@ -829,22 +1026,36 @@ def predict(model=None, reset=None, threshold=None,
 
 
 if __name__ == '__main__':
-    neurons = 3
-    input = linspace(0., 1., 21)
-    dt = DataTransformer(neurons, input, groups=1, overlap=1*ms, slices=2)
+    from brian import loadtxt, ms, Equations
     
-#    spikes = [(i%2, i*ms) for i in xrange(10)]
-#    print spikes
-#    
-#    sliced_spikes = dt.slice_spikes(spikes)
-#    print sliced_spikes
-
-#    traces = input.reshape((1,-1))
-#    print dt.slice_traces(traces)
+    equations = Equations('''
+        dV/dt=(R*I-V)/tau : 1
+        I : 1
+        R : 1
+        tau : second
+    ''')
+    input = loadtxt('current.txt')
     
-#    print dt.transform_spikes(spikes)
     
-#    traces = vstack((input,input,input))
-#    print traces
-#    print dt.transform_traces(traces)
+    
+    spikes = loadtxt('spikes.txt')
+    results = modelfitting( model = equations,
+                            reset = 0,
+                            threshold = 1,
+                            data = spikes,
+                            input = input,
+                            cpu = 1,
+                            dt = .1*ms,
+                            popsize = 1000,
+                            maxiter = 1,
+                            R = [1.0e9, 9.0e9],
+                            tau = [10*ms, 40*ms],
+                            delays = [-5*ms, 5*ms],
+                            refractory = [0*ms, 0*ms, 10*ms, 10*ms]
+                            )
+    
+    
+    print_table(results)
+    
+    
     

@@ -20,11 +20,12 @@ if __name__ == '__main__':
                             threshold = 1,
                             data = spikes,
                             input = input,
+                            cpu = 1,
                             dt = .1*ms,
-                            popsize = 1000,
-                            maxiter = 3,
-                            delta = 4*ms,
+                            popsize = 10,
+                            maxiter = 1,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms],
-                            refractory = [0*ms, 10*ms])
+#                            refractory = [0*ms, 10*ms]
+                            )
     print_table(results)
