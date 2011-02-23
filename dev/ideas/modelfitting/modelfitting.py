@@ -1,7 +1,7 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
-                    arange, sort_spikes, rint, SpikeMonitor
+                    arange, sort_spikes, rint, SpikeMonitor, Connection
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
     from playdoh import *
@@ -20,6 +20,7 @@ import sys, cPickle
 
 __all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','CMAES',
            'MAXCPU', 'MAXGPU',
+           'GammaFactor', 'LpError',
            'debug_level', 'info_level', 'warning_level', 'open_server']
 
 
@@ -284,6 +285,12 @@ class Criterion(SpikeMonitor, NetworkOperation):
         """
         pass
 
+class CriterionStruct(object):
+    type = None # 'trace', 'spike' or 'both'
+    def get_name(self):
+        return self.__class__.__name__
+    name = property(get_name)
+
 
 
 
@@ -291,32 +298,34 @@ class LpErrorCriterion(Criterion):
     def initialize(self, p=2, varname='v'):
         self.p = p
         self.varname = varname
-        self._error = zeros((self.k, self.n))
+        self._error = zeros((self.K, self.N))
     
     def timestep_call(self):
-        v = self.get_value()
+        v = self.get_value(self.varname)
         t = self.step()
         if t<self.onset: return # onset
         d = self.intdelays
-        indices = (t-d>=0)&(t-d<self.T) # neurons with valid delays (stay inside the target trace)
+        indices = (t-d>=0)&(t-d<self.total_steps) # neurons with valid delays (stay inside the target trace)
         vtar = self.traces[:,t-d] # target value at this timestep for every neuron
-        for i in xrange(self.k):
+        for i in xrange(self.K):
             self._error[i,indices] += abs(v[indices]-vtar[i,indices])**self.p
     
     def get_values(self):
-        if self.k == 1: error = self._error.flatten()
+        if self.K == 1: error = self._error.flatten()
         else: error = self._error
         return error # just the integral, for every slice
     
     def normalize(self, error):
         # error is now the combined error on the whole duration (sum on the slices)
-        return self.dt*error**(1./self.p)
+        # HACK: 1- because modelfitting MAXIMIZES for now...
+        return 1-self.dt*error**(1./self.p)
 
-class LpError(object):
+class LpError(CriterionStruct):
     """
     Structure used by the users to specify a criterion
     """
-    def __init__(self, p, varname):
+    def __init__(self, p = 2, varname = 'v'):
+        self.type = 'trace'
         self.p = p
         self.varname = varname
 
@@ -460,10 +469,24 @@ class GammaFactorCriterion(Criterion):
         
         return gamma
 
-class GammaFactor(object):
-    def __init__(self, delta, coincidence_count_algorithm):
+class GammaFactor(CriterionStruct):
+    def __init__(self, delta = 4*ms, coincidence_count_algorithm = 'exclusive'):
+        self.type = 'spikes'
         self.delta = delta
         self.coincidence_count_algorithm = coincidence_count_algorithm
+
+
+
+
+class VanRossumCriterion(Criterion):
+    # TODO
+    pass
+
+class VanRossum(CriterionStruct):
+    # TODO
+    def __init__(self, tau):
+        self.type = 'spikes'
+        self.tau = tau
 
 
 
@@ -843,11 +866,28 @@ def modelfitting(model=None,
     `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
     """
 
-
-    # Make sure that 'data' is a N*2-array
+    if criterion is None:
+        criterion = GammaFactor()
+        
     data = array(data)
-    if data.ndim == 1:
-        data = concatenate((zeros((len(data), 1)), data.reshape((-1, 1))), axis=1)
+    if criterion.type == 'spikes':
+        # Make sure that 'data' is a N*2-array
+        if data.ndim == 1:
+            data = concatenate((zeros((len(data), 1)), data.reshape((-1, 1))), axis=1)
+        spikes = data
+        traces = None 
+    elif criterion.type == 'trace':
+        if data.ndim == 1:
+            data = data.reshape((1,-1))
+        spikes = None
+        traces = data
+    elif criterion.type == 'both':
+        # TODO
+        log_warn("Not implemented yet")
+        pass
+    inputs = input
+    if inputs.ndim==1:
+        inputs = inputs.reshape((1,-1))
 
     # dt must be set
     if dt is None:
@@ -884,16 +924,6 @@ def modelfitting(model=None,
     groups = int(array(data)[:, 0].max() + 1) # number of target trains
 #    N = group_size * group_count # number of neurons
     duration = len(input) * dt # duration of the input
-    
-    if criterion is None:
-        criterion = GammaFactor(delta=4*ms, coincidence_count_algorithm='exclusive')
-
-    # TODO
-    inputs = input
-    spikes = data
-    if inputs.ndim==1:
-        inputs = inputs.reshape((1,-1))
-    traces = None
 
     # keyword arguments for Modelfitting initialize
     kwds = dict(   model=cPickle.dumps(model),
@@ -1026,7 +1056,21 @@ def predict(model=None, reset=None, threshold=None,
 
 
 if __name__ == '__main__':
-    from brian import loadtxt, ms, Equations
+    
+    from brian import loadtxt, ms, savetxt, loadtxt, Equations, NeuronGroup, run, SpikeMonitor,\
+         StateMonitor, Network
+    from pylab import *
+    
+    def generate_data():
+        g = NeuronGroup(1, model=equations, reset=0, threshold=1)
+        g.I = TimedArray(input, dt=.1*ms)
+        g.tau = 25*ms
+        g.R = 3e9
+        SpM = SpikeMonitor(g)
+        StM = StateMonitor(g, 'V', record=True)
+        net = Network(g, SpM, StM)
+        net.run(1*second)
+        return StM.values[0], SpM.spikes
     
     equations = Equations('''
         dV/dt=(R*I-V)/tau : 1
@@ -1036,22 +1080,38 @@ if __name__ == '__main__':
     ''')
     input = loadtxt('current.txt')
     
+    # ARTIFICIAL DATA: R=3e9, tau=25*ms
+#    spikes = loadtxt('spikes.txt') # real data
+#    trace, spikes = generate_data()
+#    savetxt('trace_artificial.txt', trace)
+#    savetxt('spikes_artificial.txt', spikes)
+    
+    trace = loadtxt('trace_artificial.txt')
+    spikes= loadtxt('spikes_artificial.txt')
+    
+    # GAMMA FACTOR
+    criterion = GammaFactor(delta=4*ms)
+    data = spikes
+    
+    # LP ERROR
+#    criterion = LpError(p=2, varname='V')
+#    data = trace
     
     
-    spikes = loadtxt('spikes.txt')
     results = modelfitting( model = equations,
                             reset = 0,
                             threshold = 1,
-                            data = spikes,
+                            data = data,
                             input = input,
                             cpu = 1,
                             dt = .1*ms,
                             popsize = 1000,
-                            maxiter = 1,
+                            maxiter = 3,
+                            criterion = criterion,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms],
-                            delays = [-5*ms, 5*ms],
-                            refractory = [0*ms, 0*ms, 10*ms, 10*ms]
+#                            delays = [-5*ms, 5*ms],
+#                            refractory = [0*ms, 0*ms, 10*ms, 10*ms]
                             )
     
     
