@@ -154,7 +154,6 @@ class SpikeMonitor(Connection, Monitor):
             self.spikes += zip(spikes, repeat(self.source.clock.t))
 
     def origin(self, P, Q):
-
         '''
         Returns the starting coordinate of the given groups in
         the connection matrix W.
