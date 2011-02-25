@@ -325,7 +325,7 @@ def modelfitting(model=None,
                  overlap=0*second,
                  initial_values=None,
                  stepsize=100 * ms,
-                 unit_type='CPU',
+                 unit_type=None,
                  total_units=None,
                  cpu=None,
                  gpu=None,
@@ -335,6 +335,7 @@ def modelfitting(model=None,
                  returninfo=False,
                  scaling=None,
                  algorithm=CMAES,
+                 async = None,
                  criterion=None,
                  optparams={},
                  method='Euler',
@@ -440,10 +441,10 @@ def modelfitting(model=None,
         It can be ``None`` or ``'mapminmax'``. It is ``None``
         by default (no scaling), and ``mapminmax`` by default for the CMAES algorithm.
         
-     ``algorithm=CMAES``
+    ``algorithm=CMAES``
+        The optimization algorithm. It can be :class:`PSO`, :class:`GA` or :class:`CMAES`.
          
-         
-     ``optparams={}``
+    ``optparams={}``
          Optimization parameters. See
          
     ``method='Euler'``
@@ -492,7 +493,11 @@ def modelfitting(model=None,
     `Jolivet et al. 2008, "A benchmark test for a quantitative assessment of simple neuron models", J. Neurosci. Methods <http://www.ncbi.nlm.nih.gov/pubmed/18160135>`__ (available in PDF
     `here <http://icwww.epfl.ch/~gerstner/PUBLICATIONS/Jolivet08.pdf>`__).
     """
-
+    
+    for param in params.keys():
+        if (param not in model._diffeq_names) and (param != 'delays'):
+            raise Exception("Parameter %s must be defined as a parameter in the model" % param)
+    
     if criterion is None:
         criterion = GammaFactor()
         
@@ -523,11 +528,11 @@ def modelfitting(model=None,
     # default overlap when no time slicing
     if slices == 1:
         overlap = 0*ms
-
+        
     # default allocation
-    if cpu is None and gpu is None:
-        if CANUSEGPU: gpu = 1
-        else: cpu = MAXCPU-1
+    if cpu is None and gpu is None and unit_type is None:
+        if CANUSEGPU: unit_type = 'GPU'
+        else: unit_type = 'CPU'
 
     # check numerical integration method
     if (gpu>0 or unit_type == 'GPU') and method not in ['Euler', 'RK', 'exponential_Euler']:
@@ -574,23 +579,42 @@ def modelfitting(model=None,
                        spikes=spikes,
                        initial_values=initial_values)
 
-    r = maximize(   ModelFitting,
-                    shared_data=shared_data,
-                    kwds = kwds,
-                    groups=groups,
-                    popsize=popsize,
-                    maxiter=maxiter,
-                    optparams=optparams,
-                    unit_type = unit_type,
-                    machines=machines,
-                    allocation=allocation,
-                    cpu=cpu,
-                    gpu=gpu,
-                    returninfo=returninfo,
-                    codedependencies=[],
-                    algorithm=algorithm,
-                    scaling=scaling,
-                    **params)
+    if async:
+        r = maximize_async(   ModelFitting,
+                        shared_data=shared_data,
+                        kwds = kwds,
+                        groups=groups,
+                        popsize=popsize,
+                        maxiter=maxiter,
+                        optparams=optparams,
+                        unit_type = unit_type,
+                        machines=machines,
+                        allocation=allocation,
+                        cpu=cpu,
+                        gpu=gpu,
+                        returninfo=returninfo,
+                        codedependencies=[],
+                        algorithm=algorithm,
+                        scaling=scaling,
+                        **params)
+    else:
+        r = maximize(   ModelFitting,
+                        shared_data=shared_data,
+                        kwds = kwds,
+                        groups=groups,
+                        popsize=popsize,
+                        maxiter=maxiter,
+                        optparams=optparams,
+                        unit_type = unit_type,
+                        machines=machines,
+                        allocation=allocation,
+                        cpu=cpu,
+                        gpu=gpu,
+                        returninfo=returninfo,
+                        codedependencies=[],
+                        algorithm=algorithm,
+                        scaling=scaling,
+                        **params)
 
     # r is (results, fitinfo) or (results)
     return r
