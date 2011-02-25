@@ -3,11 +3,6 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
                     arange, sort_spikes, rint, SpikeMonitor, Connection
 from brian.tools.statistics import firing_rate, get_gamma_factor
-try:
-    from playdoh import *
-except Exception, e:
-    print e
-    raise ImportError("Playdoh must be installed (https://code.google.com/p/playdoh/)")
 
 try:
     import pycuda
@@ -144,6 +139,29 @@ class Criterion(Monitor, NetworkOperation):
         count = self.get_spikes_count(spikes)
         return count*1.0/self.duration
     
+    def get_gpu_code(self): # TO IMPLEMENT
+        """
+        Returns CUDA code snippets to put at various places in the CUDA code template.
+        It must return a dictionary with the following items:
+            %CRITERION_DECLARATION%: kernel declaration code
+            %CRITERION_INIT%: initialization code
+            %CRITERION_TIMESTEP%: main code, called at every time step
+            %CRITERION_END%: finalization code
+        """
+        log_warn("GPU code not implemented by the derived criterion class")
+    
+    def initialize_cuda_variables(self): # TO IMPLEMENT
+        """
+        Initialize criterion-specific CUDA variables here.
+        """
+        pass
+    
+    def get_kernel_arguments(self): # TO IMPLEMENT
+        """
+        Return a list of objects to pass to the CUDA kernel.
+        """
+        pass
+    
     def initialize(self): # TO IMPLEMENT
         """
         Override this method to initialize the criterion before the simulation
@@ -201,7 +219,12 @@ class CriterionStruct(object):
 
 
 class LpErrorCriterion(Criterion):
+    type = 'traces'
     def initialize(self, p=2, varname='v'):
+        """
+        Called at the beginning of every iteration. The keyword arguments here are
+        specified in modelfitting.initialize_criterion().
+        """
         self.p = p
         self.varname = varname
         self._error = zeros((self.K, self.N))
@@ -224,7 +247,8 @@ class LpErrorCriterion(Criterion):
     def normalize(self, error):
         # error is now the combined error on the whole duration (sum on the slices)
         # HACK: 1- because modelfitting MAXIMIZES for now...
-        return 1-self.dt*error**(1./self.p)
+#        self._norm = sum(self.traces**self.p, axis=1)**(1./self.p) # norm of every trace
+        return 1-(self.dt*error)**(1./self.p)#/self._norm
 
 class LpError(CriterionStruct):
     """
@@ -300,8 +324,9 @@ class GammaFactorCriterion(Criterion):
     ``target_length``
         The number of spikes in the target spike train associated to each neuron.
     """
+    type = 'spikes'
     def initialize(self, delta, coincidence_count_algorithm):
-        self.coincidence_count_algorithm = coincidence_count_algorithm
+        self.algorithm = coincidence_count_algorithm
         self.delta = int(rint(delta / self.dt))
         
         self.spike_count = zeros(self.N, dtype='int')
@@ -360,7 +385,105 @@ class GammaFactorCriterion(Criterion):
                 near_both_allowed = (near_last_spike & last_spike_allowed) & (near_next_spike & next_spike_allowed)
                 self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
                 self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed
-            
+    
+    def get_cuda_code(self):
+        code = {}
+        
+        #  DECLARATION
+        code['%CRITERION_DECLARE%'] = """
+    int *spikecount,          // Number of spikes produced by each neuron
+    int *num_coincidences,    // Count of coincidences for each neuron
+        """
+        
+        if self.algorithm == 'exclusive':
+            code['%CRITERION_DECLARE%'] += """ 
+    bool *last_spike_allowed_arr,
+    bool *next_spike_allowed_arr
+           """
+        
+        # INITIALIZATION
+        code['%CRITERION_INIT%'] = """
+    int ncoinc = num_coincidences[neuron_index];
+    int nspikes = spikecount[neuron_index];
+        """
+        
+        if self.algorithm == 'exclusive':
+            code['%CRITERION_INIT%'] += """ 
+    int last_spike_time = spiketimes[spiketime_index];
+    int next_spike_time = spiketimes[spiketime_index+1];
+            """
+        
+        # TIMESTEP
+        code['%CRITERION_TIMESTEP%'] = """
+    const int Tspike = T+spikedelay;
+        """
+        
+        if self.algorithm == 'inclusive':
+            code['%CRITERION_TIMESTEP%'] += """ 
+    ncoinc += has_spiked && (((last_spike_time+%DELTA%)>=Tspike) || ((next_spike_time-%DELTA%)<=Tspike));
+            """
+        if self.algorithm == 'exclusive':
+            code['%CRITERION_TIMESTEP%'] += """
+    bool near_last_spike = last_spike_time+%DELTA%>=Tspike;
+    bool near_next_spike = next_spike_time-%DELTA%<=Tspike;
+    near_last_spike = near_last_spike && has_spiked;
+    near_next_spike = near_next_spike && has_spiked;
+    ncoinc += (near_last_spike&&last_spike_allowed) || (near_next_spike&&next_spike_allowed);
+    bool near_both_allowed = (near_last_spike&&last_spike_allowed) && (near_next_spike&&next_spike_allowed);
+    last_spike_allowed = last_spike_allowed && !near_last_spike;
+    next_spike_allowed = (next_spike_allowed && !near_next_spike) || near_both_allowed;
+            """
+    
+        code['%CRITERION_TIMESTEP%'] += """
+    nspikes += has_spiked*(T>=onset);
+    if(Tspike>=next_spike_time){
+        spiketime_index++;
+        last_spike_time = next_spike_time;
+        next_spike_time = spiketimes[spiketime_index+1];
+        """
+    
+        if self.algorithm == 'exclusive':
+            code['%CRITERION_TIMESTEP%'] += """
+        last_spike_allowed = next_spike_allowed;
+        next_spike_allowed = true;
+            """
+    
+        code['%CRITERION_TIMESTEP%'] += """
+    }
+        """
+        
+        # FINALIZATION
+        code['%CRITERION_END%'] = """
+    num_coincidences[neuron_index] = ncoinc;
+    spikecount[neuron_index] = nspikes;
+        """
+        
+        if self.algorithm == 'exclusive':
+            code['%CRITERION_END%'] += """
+    last_spike_allowed_arr[neuron_index] = last_spike_allowed;
+    next_spike_allowed_arr[neuron_index] = next_spike_allowed;
+            """
+        
+        return code
+    
+    def initialize_cuda_variables(self):
+        self.spikecount = gpuarray.to_gpu(zeros(N, dtype=int32))
+        self.num_coincidences = gpuarray.to_gpu(zeros(N, dtype=int32))
+        
+        if self.algorithm == 'exclusive':
+            self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(self.N, dtype=bool))
+            self.next_spike_allowed_arr = gpuarray.to_gpu(ones(self.N, dtype=bool))
+    
+    def get_kernel_arguments(self):
+        """
+        Return a list of objects to pass to the CUDA kernel.
+        """
+        args = [self.spikecount, self.num_coincidences]
+        
+        if self.algorithm == 'exclusive':
+            args += [self.last_spike_allowed_arr,
+                     self.next_spike_allowed_arr]
+    
     def get_values(self):
         return (self.coincidences, self.spike_count)
     
@@ -385,8 +508,22 @@ class GammaFactor(CriterionStruct):
 
 
 class VanRossumCriterion(Criterion):
-    # TODO
-    pass
+    type = 'spikes'
+    def initialize(self, p=2, varname='v'):
+        # TODO
+        pass
+    
+    def timestep_call(self):
+        # TODO
+        pass
+    
+    def get_values(self):
+        # TODO
+        pass
+    
+    def normalize(self, error):
+        # TODO
+        pass
 
 class VanRossum(CriterionStruct):
     # TODO

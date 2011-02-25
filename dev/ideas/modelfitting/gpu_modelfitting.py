@@ -36,128 +36,134 @@ class ModelfittingGPUCodeGenerator(GPUCodeGenerator):
                 code += '    ' + line + '\n'
         return code
 
-modelfitting_kernel_template = """
-__global__ void runsim(
-    int Tstart, int Tend,     // Start, end time as integer (t=T*dt)
-    // State variables
-    %SCALAR% *state_vars,     // State variables are offset from this
-    double *I_arr,            // Input current
-    int *I_arr_offset,        // Input current offset (for separate input
-                              // currents for each neuron)
-    int *spikecount,          // Number of spikes produced by each neuron
-    int *num_coincidences,    // Count of coincidences for each neuron
-    int *spiketimes,          // Array of all spike times as integers (begin and
-                              // end each train with large negative value)
-    int *spiketime_indices,   // Pointer into above array for each neuron
-    int *spikedelay_arr,      // Integer delay for each spike
-    int *refractory_arr,      // Integer refractory times
-    int *next_allowed_spiketime_arr,// Integer time of the next allowed spike (for refractoriness)
-    int onset                 // Time onset (only count spikes from here onwards)
-    %COINCIDENCE_COUNT_DECLARE_EXTRA_STATE_VARIABLES%
-    )
-{
-    const int neuron_index = blockIdx.x * blockDim.x + threadIdx.x;
-    if(neuron_index>=%NUM_NEURONS%) return;
-    %EXTRACT_STATE_VARIABLES%
-    // Load variables at start
-    %LOAD_VARIABLES%
-    int spiketime_index = spiketime_indices[neuron_index];
-    int last_spike_time = spiketimes[spiketime_index];
-    int next_spike_time = spiketimes[spiketime_index+1];
-    %COINCIDENCE_COUNT_INIT%
-    int ncoinc = num_coincidences[neuron_index];
-    int nspikes = spikecount[neuron_index];
-    int I_offset = I_arr_offset[neuron_index];
-    int spikedelay = spikedelay_arr[neuron_index];
-    const int refractory = refractory_arr[neuron_index];
-    int next_allowed_spiketime = next_allowed_spiketime_arr[neuron_index];
-    for(int T=Tstart; T<Tend; T++)
-    {
-        %SCALAR% t = T*%DT%;
-        // Read input current
-        %SCALAR% I = I_arr[T+I_offset];
-                             // this is a global read for each thread, can maybe
-                             // reduce this by having just one read per block,
-                             // put it into shared memory, and then have all the
-                             // threads in that block read it, we could even
-                             // maybe buffer reads of I into shared memory -
-                             // experiment with this 
-        // State update
-        %STATE_UPDATE%
-        // Threshold
-        const bool is_refractory = (T<=next_allowed_spiketime);
-        const bool has_spiked = (%THRESHOLD%)&&!is_refractory;
-        nspikes += has_spiked*(T>=onset);
-        // Reset
-        if(has_spiked||is_refractory)
-        {
-            %RESET%
-        }
-        if(has_spiked)
-            next_allowed_spiketime = T+refractory;
-        // Coincidence counter
-        const int Tspike = T+spikedelay;
-        %COINCIDENCE_COUNT_TEST%
-        if(Tspike>=next_spike_time){
-            spiketime_index++;
-            last_spike_time = next_spike_time;
-            next_spike_time = spiketimes[spiketime_index+1];
-            %COINCIDENCE_COUNT_NEXT%
-        }
-    }
-    // Store variables at end
-    %STORE_VARIABLES%
-    %COINCIDENCE_COUNT_STORE_VARIABLES%
-    next_allowed_spiketime_arr[neuron_index] = next_allowed_spiketime;
-    spiketime_indices[neuron_index] = spiketime_index;
-    num_coincidences[neuron_index] = ncoinc;
-    spikecount[neuron_index] = nspikes;
-}
-"""
 
-coincidence_counting_algorithm_src = {
-    'inclusive':{
-        '%COINCIDENCE_COUNT_DECLARE_EXTRA_STATE_VARIABLES%':'',
-        '%COINCIDENCE_COUNT_INIT%':'',
-        '%COINCIDENCE_COUNT_TEST%':'''
-            ncoinc += has_spiked && (((last_spike_time+%DELTA%)>=Tspike) || ((next_spike_time-%DELTA%)<=Tspike));
-            ''',
-        '%COINCIDENCE_COUNT_NEXT%':'',
-        '%COINCIDENCE_COUNT_STORE_VARIABLES%':'',
-        },
-    'exclusive':{
-        '%COINCIDENCE_COUNT_DECLARE_EXTRA_STATE_VARIABLES%':''',
-            bool *last_spike_allowed_arr,
-            bool *next_spike_allowed_arr
-        ''',
-        '%COINCIDENCE_COUNT_INIT%':'''
-            bool last_spike_allowed = last_spike_allowed_arr[neuron_index];
-            bool next_spike_allowed = next_spike_allowed_arr[neuron_index];
-            ''',
-        '%COINCIDENCE_COUNT_TEST%':'''
-            bool near_last_spike = last_spike_time+%DELTA%>=Tspike;
-            bool near_next_spike = next_spike_time-%DELTA%<=Tspike;
-            near_last_spike = near_last_spike && has_spiked;
-            near_next_spike = near_next_spike && has_spiked;
-            ncoinc += (near_last_spike&&last_spike_allowed) || (near_next_spike&&next_spike_allowed);
-            bool near_both_allowed = (near_last_spike&&last_spike_allowed) && (near_next_spike&&next_spike_allowed);
-            last_spike_allowed = last_spike_allowed && !near_last_spike;
-            next_spike_allowed = (next_spike_allowed && !near_next_spike) || near_both_allowed;
-            ''',
-        '%COINCIDENCE_COUNT_NEXT%':'''
-            last_spike_allowed = next_spike_allowed;
-            next_spike_allowed = true;
-            ''',
-        '%COINCIDENCE_COUNT_STORE_VARIABLES%':'''
-            last_spike_allowed_arr[neuron_index] = last_spike_allowed;
-            next_spike_allowed_arr[neuron_index] = next_spike_allowed;
-            ''',
-        },
+
+
+def get_cuda_template():
+    return """
+    __global__ void runsim(
+        // ITERATIONS
+        int Tstart, int Tend,             // Start, end time as integer (t=T*dt)
+        
+        // STATE VARIABLES
+        %SCALAR% *state_vars,             // State variables are offset from this
+        
+        // INPUT PARAMETERS
+        double *I_arr,                    // Input current
+        int *I_arr_offset,                // Input current offset (for separate input
+                                          // currents for each neuron)
+        // DELAYS PARAMETERS
+        int *spikedelay_arr,              // Integer delay for each spike
+        
+        // REFRACTORY PARAMETERS
+        int *refractory_arr,              // Integer refractory times
+        int *next_allowed_spiketime_arr,  // Integer time of the next allowed spike (for refractoriness)
+        
+        // CRITERION SPECIFIC PARAMETERS
+        %CRITERION_DECLARE%
+        
+        // SPIKES PARAMETERS
+        %SPIKES_DECLARE%
+        
+        // TRACES PARAMETERS
+        %TRACES_DECLARE%
+        
+        // MISC PARAMETERS
+        int onset                         // Time onset (only count spikes from here onwards)
+        )
+    {
+        // NEURON INDEX
+        const int neuron_index = blockIdx.x * blockDim.x + threadIdx.x;
+        if(neuron_index>=%NUM_NEURONS%) return;
+        
+        // EXTRACT STATE VARIABLES
+        %EXTRACT_STATE_VARIABLES%
+        
+        // LOAD VARIABLES
+        %LOAD_VARIABLES%
+        
+        // SPIKE INITIALIZATION
+        %SPIKES_INIT%
+        //int spiketime_index = spiketime_indices[neuron_index];
+        
+        // CRITERION INITIALIZATION
+        %CRITERION_INIT%
+        //int last_spike_time = spiketimes[spiketime_index];
+        //int next_spike_time = spiketimes[spiketime_index+1];
+        //int ncoinc = num_coincidences[neuron_index];
+        //int nspikes = spikecount[neuron_index];
+        //%COINCIDENCE_COUNT_INIT%
+        
+        // INPUT INITIALIZATION
+        int I_offset = I_arr_offset[neuron_index];
+        
+        // DELAYS INITIALIZATION
+        int spikedelay = spikedelay_arr[neuron_index];
+        
+        // REFRACTORY INITIALIZATION
+        const int refractory = refractory_arr[neuron_index];
+        int next_allowed_spiketime = next_allowed_spiketime_arr[neuron_index];
+        
+        for(int T=Tstart; T<Tend; T++)
+        {
+            %SCALAR% t = T*%DT%;
+            // Read input current
+            %SCALAR% ${input_var} = I_arr[T+I_offset];
+                                 // this is a global read for each thread, can maybe
+                                 // reduce this by having just one read per block,
+                                 // put it into shared memory, and then have all the
+                                 // threads in that block read it, we could even
+                                 // maybe buffer reads of I into shared memory -
+                                 // experiment with this
+                                 
+            // STATE UPDATE
+            %STATE_UPDATE%
+            
+            // THRESHOLD
+            const bool is_refractory = (T<=next_allowed_spiketime);
+            const bool has_spiked = (%THRESHOLD%)&&!is_refractory;
+            
+            // RESET
+            if(has_spiked||is_refractory)
+            {
+                %RESET%
+            }
+            
+            if(has_spiked)
+                next_allowed_spiketime = T+refractory;
+            
+            // CRITERION TIMESTEP
+            %CRITERION_TIMESTEP%
+            // Coincidence counter
+            //const int Tspike = T+spikedelay;
+            //%COINCIDENCE_COUNT_TEST%
+            //nspikes += has_spiked*(T>=onset);
+            //if(Tspike>=next_spike_time){
+            //    spiketime_index++;
+            //    last_spike_time = next_spike_time;
+            //    next_spike_time = spiketimes[spiketime_index+1];
+            //    %COINCIDENCE_COUNT_NEXT%
+            //}
+        }
+        // Store variables at end
+        %STORE_VARIABLES%
+        
+        // CRITERION END
+        %CRITERION_END%
+        //%COINCIDENCE_COUNT_STORE_VARIABLES%
+        //num_coincidences[neuron_index] = ncoinc;
+        //spikecount[neuron_index] = nspikes;
+        
+        next_allowed_spiketime_arr[neuron_index] = next_allowed_spiketime;
+        
+        // SPIKE END
+        %SPIKES_END%
+        //spiketime_indices[neuron_index] = spiketime_index;
     }
+    """
 
 def generate_modelfitting_kernel_src(G, eqs, threshold, reset, dt, num_neurons,
-                                     delta,
-                                     coincidence_count_algorithm='exclusive',
+                                     criterion,
                                      precision=default_precision,
                                      scheme=euler_scheme
                                      ):
@@ -184,10 +190,23 @@ def generate_modelfitting_kernel_src(G, eqs, threshold, reset, dt, num_neurons,
     sulines = ModelfittingGPUCodeGenerator(dtype=precision).generate(eqs, scheme)
     sulines = re.sub(r'\bdt\b', '%DT%', sulines)
     src = src.replace('%STATE_UPDATE%', sulines.strip())
+    
+    # TODO
     # Substitute coincidence counting algorithm
-    ccalgo = coincidence_counting_algorithm_src[coincidence_count_algorithm]
-    for search, replace in ccalgo.iteritems():
-        src = src.replace(search, replace)
+#    ccalgo = coincidence_counting_algorithm_src[coincidence_count_algorithm]
+#    for search, replace in ccalgo.iteritems():
+#        src = src.replace(search, replace)
+    if criterion.type == 'spikes':
+        spikes_declare = """
+    int *spiketimes,          // Array of all spike times as integers (begin and
+                              // end each train with large negative value)
+    int *spiketime_indices,   // Pointer into above array for each neuron
+        """
+        src = src.replace('%SPIKES_DECLARE%', spikes_declare)
+    if criterion.type == 'traces':
+        # TODO: traces_declare = ...
+        src = src.replace('%TRACES_DECLARE%', traces_declare)
+        
     # Substitute dt
     src = src.replace('%DT%', str(float(dt)))
     # Substitute SCALAR
@@ -197,6 +216,8 @@ def generate_modelfitting_kernel_src(G, eqs, threshold, reset, dt, num_neurons,
     # Substitute delta, the coincidence window half-width
     src = src.replace('%DELTA%', str(int(rint(delta / dt))))
     return src
+
+
 
 
 class GPUModelFitting(object):
@@ -267,13 +288,12 @@ class GPUModelFitting(object):
     mark the beginning and end of the train rather than storing the number of
     spikes for each train. 
     '''
-    def __init__(self, G, eqs, I, I_offset, spiketimes, spiketimes_offset,
-                       spikedelays, refractory,
-                       delta, onset=0 * ms,
-                       coincidence_count_algorithm='exclusive',
-                       precision=default_precision,
-                       scheme=euler_scheme
-                       ):
+    def __init__(self, G, eqs,
+                 delta, onset=0*ms,
+                 criterion, # Criterion object
+                 precision=default_precision,
+                 scheme=euler_scheme
+                 ):
         eqs.prepare()
         self.precision = precision
         if precision == 'double':
@@ -286,8 +306,12 @@ class GPUModelFitting(object):
         self.onset = onset
         self.eqs = eqs
         self.G = G
-        self.coincidence_count_algorithm = coincidence_count_algorithm
-        threshold = G._threshold
+        self.criterion = criterion
+        self.generate_code()
+
+    def generate_threshold_code(self):
+        eqs = self.eqs
+        threshold = self.G._threshold
         if threshold.__class__ is Threshold:
             state = threshold.state
             if isinstance(state, int):
@@ -306,8 +330,11 @@ class GPUModelFitting(object):
             threshold = expr
         else:
             raise ValueError('Threshold must be constant, VariableThreshold or StringThreshold.')
-        self.threshold = threshold
-        reset = G._resetfun
+        return threshold
+        
+    def generate_reset_code(self):
+        eqs = self.eqs
+        reset = self.G._resetfun
         if reset.__class__ is Reset:
             state = reset.state
             if isinstance(state, int):
@@ -324,18 +351,59 @@ class GPUModelFitting(object):
             all_variables = eqs._eq_names + eqs._diffeq_names + eqs._alias.keys() + ['t']
             expr = optimiser.freeze(expr, all_variables, namespace)
             reset = expr
-        self.reset = reset
+        return reset
+            
+    def generate_code(self):
+        threshold = self.generate_threshold_code()
+        reset = self.generate_reset_code()
         self.kernel_src = generate_modelfitting_kernel_src(
-                  self.G, eqs, threshold, reset, dt, N, delta,
-                  coincidence_count_algorithm=coincidence_count_algorithm,
-                  precision=precision, scheme=scheme)
+                  self.G, self.eqs, threshold, reset, self.dt, self.N, self.delta,
+                  coincidence_count_algorithm=self.coincidence_count_algorithm,
+                  precision=self.precision, scheme=self.scheme)
 
-    def reinit_vars(self, I, I_offset, spiketimes, spiketimes_offset,
-                    spikedelays, refractory):
+    def initialize_spikes(self, spiketimes, spiketimes_indices):
+        self.spiketimes = gpuarray.to_gpu(array(rint(spiketimes / self.dt), dtype=int32))
+        self.spiketime_indices = gpuarray.to_gpu(array(spiketimes_offset, dtype=int32))
         
+    def initialize_traces(self):
+        # TODO
+        pass
+
+    def initialize_delays(self, spikedelays):
+        self.spikedelay_arr = gpuarray.to_gpu(array(rint(spikedelays / self.dt), dtype=int32))
+    
+    def initialize_refractory(self, refractory):
+        if isinstance(refractory, float):
+            refractory = refractory*ones(self.N)
+        self.refractory_arr = gpuarray.to_gpu(array(rint(refractory / self.dt), dtype=int32))
+        self.next_allowed_spiketime_arr = gpuarray.to_gpu(-ones(self.N, dtype=int32))
+
+    def initialize_kernel_arguments(self):
+        self.kernel_func_args = [self.statevars_arr,
+                                 self.I,
+                                 self.I_offset,
+                                 self.spikedelay_arr,
+                                 self.refractory_arr,
+                                 self.next_allowed_spiketime_arr]
+        self.kernel_func_args += self.criterion.get_kernel_arguments()
+        if self.criterion.type == 'spikes':
+            self.kernel_func_args += [self.spiketimes,
+                                      self.spiketime_indices]
+        if self.criterion.type == 'traces':
+            # TODO
+            self.kernel_func_args += []
+        self.kernel_func_args += [int32(rint(self.onset / self.dt))]
+        
+        if self.coincidence_count_algorithm == 'exclusive':
+            self.kernel_func_args += [self.last_spike_allowed_arr,
+                                      self.next_spike_allowed_arr]
+
+    def reinit_vars(self, I, I_offset,
+                    spikedelays, refractory,
+                    spiketimes = None, spiketimes_offset = None,
+                    inputs = None, inputs_offset = None):
         self.kernel_module = SourceModule(self.kernel_src)
         self.kernel_func = self.kernel_module.get_function('runsim')
-
         blocksize = 128
         try:
             blocksize = self.kernel_func.get_attribute(pycuda.driver.function_attribute.MAX_THREADS_PER_BLOCK)
@@ -344,7 +412,6 @@ class GPUModelFitting(object):
         self.block = (blocksize, 1, 1)
         self.grid = (int(ceil(float(self.N) / blocksize)), 1)
         self.kernel_func_kwds = {'block':self.block, 'grid':self.grid}
-        
         mydtype = self.mydtype
         N = self.N
         eqs = self.eqs
@@ -352,31 +419,16 @@ class GPUModelFitting(object):
         self.I = gpuarray.to_gpu(array(I, dtype=mydtype))
         self.statevars_arr = statevars_arr
         self.I_offset = gpuarray.to_gpu(array(I_offset, dtype=int32))
-        self.spiketimes = gpuarray.to_gpu(array(rint(spiketimes / self.dt), dtype=int32))
-        self.spiketime_indices = gpuarray.to_gpu(array(spiketimes_offset, dtype=int32))
-        self.num_coincidences = gpuarray.to_gpu(zeros(N, dtype=int32))
-        self.spikecount = gpuarray.to_gpu(zeros(N, dtype=int32))
-        self.spikedelay_arr = gpuarray.to_gpu(array(rint(spikedelays / self.dt), dtype=int32))
-        if isinstance(refractory, float):
-            refractory = refractory*ones(N)
-        self.refractory_arr = gpuarray.to_gpu(array(rint(refractory / self.dt), dtype=int32))
-        self.next_allowed_spiketime_arr = gpuarray.to_gpu(-ones(N, dtype=int32))
-        self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
-        self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
-        self.kernel_func_args = [self.statevars_arr,
-                                 self.I,
-                                 self.I_offset,
-                                 self.spikecount,
-                                 self.num_coincidences,
-                                 self.spiketimes,
-                                 self.spiketime_indices,
-                                 self.spikedelay_arr,
-                                 self.refractory_arr,
-                                 self.next_allowed_spiketime_arr,
-                                 int32(rint(self.onset / self.dt))]
-        if self.coincidence_count_algorithm == 'exclusive':
-            self.kernel_func_args += [self.last_spike_allowed_arr,
-                                      self.next_spike_allowed_arr]
+        # SPIKES
+        if self.criterion.type == 'spikes':
+            self.initialize_spikes(spiketimes, spiketimes_offset)
+        # TRACES
+        if self.criterion.type == 'traces':
+            self.initialize_traces(inputs, inputs_offset)
+        self.criterion.initialize_cuda_variables()
+        self.initialize_delays(spikedelays)
+        self.initialize_refractory(refractory)
+        self.initialize_kernel_arguments()
 
     def launch(self, duration, stepsize=1 * second):
         if stepsize is None:
@@ -400,241 +452,3 @@ class GPUModelFitting(object):
     coincidence_count = property(fget=lambda self:self.get_coincidence_count())
     spike_count = property(fget=lambda self:self.get_spike_count())
 
-if __name__ == '__main__':
-    import time
-    from matplotlib.cm import jet
-    from playdoh import *
-    initialise_cuda()
-    set_gpu_device(0)
-    if 1:
-        set_global_preferences(usecodegenthreshold=False)
-        N = 10000
-        nvar = 100
-        delta = 4 * ms
-        doplot = True
-        eqs = '''
-        dV/dt = (-V+R*I)/tau : volt
-        Vt : volt
-        tau : second
-        R : ohm
-        I : amp
-        '''
-        eqs += '\n'.join(['var'+str(i)+':0' for i in range(nvar)])
-        eqs = Equations(eqs)
-        Vr = 0.0 * volt
-        Vt = 1.0 * volt
-        I = loadtxt('../../../dev/ideas/cuda/modelfitting/current.txt')
-        spiketimes = loadtxt('../../../dev/ideas/cuda/modelfitting/spikes.txt')
-        spiketimes -= int(min(spiketimes))
-        I_offset = zeros(N, dtype=int)
-        spiketimes_offset = zeros(N, dtype=int)
-        G = NeuronGroup(N, eqs, reset='V=0*volt; Vt+=1*volt', threshold='V>1*volt')
-        G.R = rand(N) * 2e9 + 1e9
-        G.tau = rand(N) * 49 * ms + 1 * ms
-        spikedelays = rand(N) * 5 * ms
-        duration = len(I) * G.clock.dt
-        spiketimes = hstack((-1, spiketimes, float(duration) + 1))
-        mf = GPUModelFitting(G, eqs, I, I_offset, spiketimes, spiketimes_offset,
-                             spikedelays, 0*ms,
-                             delta,
-                             coincidence_count_algorithm='exclusive')
-        mf.reinit_vars(I, I_offset, spiketimes, spiketimes_offset, spikedelays, 0*ms)
-        print mf.kernel_src
-        start_time = time.time()
-        mf.launch(duration)
-        running_time = time.time() - start_time
-
-        print 'N:', N
-        print 'Duration:', duration
-        print 'Total running time:', running_time
-
-        if doplot:
-
-            spikecount = mf.spike_count
-            num_coincidences = mf.coincidence_count
-            R = G.R
-            tau = G.tau
-
-            print 'Spike count varies between', spikecount.min(), 'and', spikecount.max()
-            print 'Num coincidences varies between', num_coincidences.min(), 'and', num_coincidences.max()
-
-            subplot(221)
-            scatter(R, tau, color=jet(spikecount / float(spikecount.max())))
-            xlabel('R')
-            ylabel('tau')
-            title('Spike count, max = ' + str(spikecount.max()))
-            axis('tight')
-
-            subplot(222)
-            scatter(R, tau, color=jet(num_coincidences / float(num_coincidences.max())))
-            xlabel('R')
-            ylabel('tau')
-            title('Num coincidences, max = ' + str(num_coincidences.max()))
-            axis('tight')
-
-            spikecount -= num_coincidences
-            num_coincidences -= spikecount
-            num_coincidences[num_coincidences < 0] = 0
-            maxcoinc = num_coincidences.max()
-            num_coincidences = (1. * num_coincidences) / maxcoinc
-
-            subplot(212)
-            scatter(R, tau, color=jet(num_coincidences))
-            xlabel('R')
-            ylabel('tau')
-            title('Hot = ' + str(maxcoinc) + ' excess coincidences, cool = 0 or less')
-            axis('tight')
-
-            show()
-    if 0:
-        N = 10000
-        eqs = Equations('''
-        dV/dt = (-V+R*I)/tau : volt
-        dVt/dt = -(V-1*volt)/tau_t : volt
-        R : ohm
-        tau : second
-        tau_t : second
-        Vt_delta : volt
-        I : amp
-        ''')
-        threshold = 'V>Vt'
-        reset = '''
-        V = 0*volt
-        Vt += Vt_delta
-        '''
-        delta = 4 * ms
-        src, declarations_seq = generate_modelfitting_kernel_src(eqs, threshold, reset,
-                                               defaultclock.dt, N, delta)
-        print src
-        print
-        print declarations_seq
-    if 0:
-        # test traces
-
-        #clk = RegularClock(makedefaultclock=True)
-        clk = defaultclock
-
-        N = 1
-        duration = 200 * ms
-        delta = 4 * ms
-        Ntarg = 20
-
-        randspikes = hstack(([-1 * second], sort(rand(Ntarg) * duration * .9 + duration * 0.05), [duration + 1 * second]))
-        #randspikes = sort(unique(array(randspikes/(2*delta), dtype=int)))*2*delta
-        randspikes = sort(unique(array(randspikes / clk.dt, dtype=int))) * clk.dt + 1e-10
-
-        eqs = Equations('''
-        dV/dt = (-V+I)/(10*ms) : 1
-        I : 1
-        ''')
-        threshold = 'V>1'
-        reset = 'V=0'
-        G = NeuronGroup(N, eqs, threshold=threshold, reset=reset, method='Euler',
-                        clock=clk)
-        #from brian.experimental.ccodegen import *
-        #su = AutoCompiledNonlinearStateUpdater(eqs, G.clock, freeze=True)
-        #G._state_updater = su
-        #I = 1.1*ones(int(duration/defaultclock.dt))
-        I = 5.0 * rand(int(duration / defaultclock.dt))
-        #I = hstack((zeros(100), 10*ones(int(duration/defaultclock.dt))))
-        #I = hstack((zeros(100), 10*ones(100))*(int(duration/defaultclock.dt)/200))
-        #I = hstack((zeros(100), 10*exp(-linspace(0,2,100)))*(int(duration/defaultclock.dt)/200))
-        #G.I = TimedArray(hstack((0, I)))
-        #G.I = TimedArray(I[1:], clock=clk)
-        G.I = TimedArray(I, clock=clk)
-        M = StateMonitor(G, 'V', record=True, when='end', clock=clk)
-        MS = SpikeMonitor(G)
-        cc_ex = CoincidenceCounter(source=G, data=randspikes, delta=delta,
-                                   coincidence_count_algorithm='exclusive')
-        cc_in = CoincidenceCounter(source=G, data=randspikes, delta=delta,
-                                   coincidence_count_algorithm='inclusive')
-#        cc2 = CoincidenceCounter(source=G, data=randspikes[1:-1], delta=delta)
-        run(duration)
-        #spiketimes = array([-1*second, duration+1*second])
-        #spiketimes_offset = zeros(N, dtype=int)
-        #spiketimes = [-1*second]+MS[0]+[duration+1*second]
-        spiketimes = randspikes
-        spiketimes_offset = zeros(N, dtype=int)
-        #I = array([0]+I)
-        I_offset = zeros(N, dtype=int)
-        spikedelays = zeros(N)
-        reinit_default_clock()
-        G.V = 0
-        mf = GPUModelFitting(G, eqs, I, I_offset, spiketimes, spiketimes_offset,
-                             spikedelays,
-                             delta,
-                             coincidence_count_algorithm='exclusive')
-        allV = []
-        oldnc = 0
-        oldsc = 0
-        allcoinc = []
-        all_pst = []
-        all_nst = []
-        allspike = []
-        all_nsa = []
-        all_lsa = []
-
-        if 0:
-            for i in xrange(len(M.times)):
-                mf.kernel_func(int32(i), int32(i + 1),
-                                 *mf.kernel_func_args, **mf.kernel_func_kwds)
-                #autoinit.context.synchronize()
-                pycuda.context.synchronize()
-                allV.append(mf.state_vars['V'].get())
-                all_pst.append(mf.spiketimes.get()[mf.spiketime_indices.get()])
-                all_nst.append(mf.spiketimes.get()[mf.spiketime_indices.get() + 1])
-                all_nsa.append(mf.next_spike_allowed_arr.get()[0])
-                all_lsa.append(mf.last_spike_allowed_arr.get()[0])
-#        self.next_spike_allowed_arr = gpuarray.to_gpu(ones(N, dtype=bool))
-#        self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(N, dtype=bool))
-                nc = mf.coincidence_count[0]
-                if nc > oldnc:
-                    oldnc = nc
-                    allcoinc.append(i * clk.dt)
-                sc = mf.spike_count[0]
-                if sc > oldsc:
-                    oldsc = sc
-                    allspike.append(i * clk.dt)
-
-        else:
-            mf.launch(duration, stepsize=None)
-
-        print 'Num target spikes:', len(randspikes) - 2
-        print 'Predicted spike counts:', MS.nspikes, mf.spike_count[0]
-
-        print 'Coincidences:'
-        print 'GPU', mf.coincidence_count
-#        print 'CPU bis inc', cc_in.coincidences
-        print 'CPU bis exc', cc_ex.coincidences
-#        print 'CPU', cc2.coincidences
-
-#        for t in randspikes[1:-1]:
-#            plot([t*second-delta, t*second+delta], [0, 0], lw=5, color=(.9,.9,.9))
-#        plot(randspikes[1:-1], zeros(len(randspikes)-2), '+', ms=15)
-#        plot(M.times, M[0])
-        if len(allV):
-#            plot(M.times, allV)
-#            plot(allcoinc, zeros(len(allcoinc)), 'o')
-#            figure()
-            plot(M.times, array(all_pst) * clk.dt)
-            plot(M.times, array(all_nst) * clk.dt)
-            plot(randspikes[1:-1], randspikes[1:-1], 'o')
-            plot(allspike, allspike, 'x')
-            plot(allcoinc, allcoinc, '+')
-            plot(M.times, array(all_nsa) * M.times, '--')
-            plot(M.times, array(all_lsa) * M.times, '-.')
-            predicted_spikes = allspike
-            target_spikes = [t * second for t in randspikes]
-            i = 0
-            truecoinc = []
-            for pred_t in predicted_spikes:
-                 while target_spikes[i] < pred_t + delta:
-                     if abs(target_spikes[i] - pred_t) < delta:
-                         truecoinc.append((pred_t, target_spikes[i]))
-                         i += 1
-                         break
-                     i += 1
-            print 'Truecoinc:', len(truecoinc)
-            for t1, t2 in truecoinc:
-                plot([t1, t2], [t1, t2], ':', color=(0.5, 0, 0), lw=3)
-#        show()

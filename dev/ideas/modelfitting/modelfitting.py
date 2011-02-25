@@ -225,14 +225,14 @@ class ModelFitting(Fitness):
             sliced_subgroup.set_var_by_array(self.input_var, TimedArray(input_sliced_values, clock=self.group.clock))
             k = i
     
-    def initialize_criterion(self, delays):
+    def initialize_criterion(self, **criterion_params):
         # general criterion parameters
         params = dict(group=self.group, traces=self.sliced_traces, spikes=self.sliced_spikes, 
                       targets_count=self.groups*self.slices, duration=self.sliced_duration, onset=self.onset, 
                       spikes_inline=self.spikes_inline, spikes_offset=self.spikes_offset,
-                      traces_inline=self.traces_inline, traces_offset=self.traces_offset,
-                      delays=delays, when='start')
-        
+                      traces_inline=self.traces_inline, traces_offset=self.traces_offset)
+        for key,val in criterion_params.iteritems():
+            params[key] = val
         criterion_name = self.criterion.__class__.__name__
         
         # criterion-specific parameters
@@ -278,9 +278,13 @@ class ModelFitting(Fitness):
         # repeat spike delays and refractory to take slices into account
         delays = kron(delays, ones(self.slices))
         refractory = kron(refractory, ones(self.slices))
+        
+        criterion_params = dict(delays=delays)
+        
+        # TODO: add here parameters to criterion_params if a criterion must use some parameters
 
         self.update_neurongroup(**param_values)
-        self.initialize_criterion(delays)
+        self.initialize_criterion(**criterion_params)
         
         if self.use_gpu:
             pass
