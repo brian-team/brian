@@ -507,12 +507,14 @@ def modelfitting(model=None,
         if data.ndim == 1:
             data = concatenate((zeros((len(data), 1)), data.reshape((-1, 1))), axis=1)
         spikes = data
-        traces = None 
+        traces = None
+        groups = int(array(data)[:, 0].max() + 1) # number of target trains
     elif criterion.type == 'trace':
         if data.ndim == 1:
             data = data.reshape((1,-1))
         spikes = None
         traces = data
+        groups = data.shape[0]
     elif criterion.type == 'both':
         # TODO
         log_warn("Not implemented yet")
@@ -547,14 +549,9 @@ def modelfitting(model=None,
     if type(refractory) is tuple or type(refractory) is list:
         params['refractory'] = refractory
         max_refractory = refractory[-1]
-#        refractory = 'refractory'
     else:
         max_refractory = None
-
-    # common values
-#    group_size = particles # Number of particles per target train
-    groups = int(array(data)[:, 0].max() + 1) # number of target trains
-#    N = group_size * group_count # number of neurons
+    
     duration = len(input) * dt # duration of the input
 
     # keyword arguments for Modelfitting initialize
@@ -580,41 +577,41 @@ def modelfitting(model=None,
                        initial_values=initial_values)
 
     if async:
-        r = maximize_async(   ModelFitting,
-                        shared_data=shared_data,
-                        kwds = kwds,
-                        groups=groups,
-                        popsize=popsize,
-                        maxiter=maxiter,
-                        optparams=optparams,
-                        unit_type = unit_type,
-                        machines=machines,
-                        allocation=allocation,
-                        cpu=cpu,
-                        gpu=gpu,
-                        returninfo=returninfo,
-                        codedependencies=[],
-                        algorithm=algorithm,
-                        scaling=scaling,
-                        **params)
+        r = maximize_async( ModelFitting,
+                            shared_data=shared_data,
+                            kwds = kwds,
+                            groups=groups,
+                            popsize=popsize,
+                            maxiter=maxiter,
+                            optparams=optparams,
+                            unit_type = unit_type,
+                            machines=machines,
+                            allocation=allocation,
+                            cpu=cpu,
+                            gpu=gpu,
+                            returninfo=returninfo,
+                            codedependencies=[],
+                            algorithm=algorithm,
+                            scaling=scaling,
+                            **params)
     else:
-        r = maximize(   ModelFitting,
-                        shared_data=shared_data,
-                        kwds = kwds,
-                        groups=groups,
-                        popsize=popsize,
-                        maxiter=maxiter,
-                        optparams=optparams,
-                        unit_type = unit_type,
-                        machines=machines,
-                        allocation=allocation,
-                        cpu=cpu,
-                        gpu=gpu,
-                        returninfo=returninfo,
-                        codedependencies=[],
-                        algorithm=algorithm,
-                        scaling=scaling,
-                        **params)
+        r = maximize(       ModelFitting,
+                            shared_data=shared_data,
+                            kwds = kwds,
+                            groups=groups,
+                            popsize=popsize,
+                            maxiter=maxiter,
+                            optparams=optparams,
+                            unit_type = unit_type,
+                            machines=machines,
+                            allocation=allocation,
+                            cpu=cpu,
+                            gpu=gpu,
+                            returninfo=returninfo,
+                            codedependencies=[],
+                            algorithm=algorithm,
+                            scaling=scaling,
+                            **params)
 
     # r is (results, fitinfo) or (results)
     return r
