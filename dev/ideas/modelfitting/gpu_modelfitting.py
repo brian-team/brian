@@ -2,7 +2,7 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
                     arange, sort_spikes, rint, SpikeMonitor, Connection, Threshold, Reset, \
-                    int32, double
+                    int32, double, VariableReset, StringReset
 from brian.tools.statistics import firing_rate, get_gamma_factor
 from playdoh import *
 import brian.optimiser as optimiser
@@ -48,6 +48,7 @@ def get_cuda_template():
 __global__ void runsim(
     // ITERATIONS
     int Tstart, int Tend,             // Start, end time as integer (t=T*dt)
+    int duration,                     // Total duration as integer
     
     // STATE VARIABLES
     %SCALAR% *state_vars,             // State variables are offset from this
@@ -125,8 +126,6 @@ __global__ void runsim(
         
         if(has_spiked)
             next_allowed_spiketime = T+refractory;
-        
-        const int Tspike = T+spikedelay;
         
         %DATA_UPDATE%
         
@@ -344,6 +343,7 @@ class GPUModelFitting(object):
             data_init = """
     int trace_offset = traces_arr_offset[neuron_index];
     double trace_value = 0.0;
+    int Tdelay = 0;
             """
         src = src.replace('%DATA_INIT%', data_init)
         
@@ -353,7 +353,10 @@ class GPUModelFitting(object):
             """
         if self.criterion.type == 'traces':
             data_update = """
-        trace_value = traces_arr[Tspike+trace_offset];
+        Tdelay = T+spikedelay;
+        if ((Tdelay>=0)&(Tdelay<duration)) {
+            trace_value = traces_arr[Tdelay+trace_offset];
+        }
             """
         src = src.replace('%DATA_UPDATE%', data_update)
         
@@ -457,15 +460,6 @@ class GPUModelFitting(object):
             duration = int(duration / self.dt)
             for Tstart in xrange(0, duration, stepsize):
                 Tend = Tstart + min(stepsize, duration - Tstart)
-                self.kernel_func(int32(Tstart), int32(Tend),
+                self.kernel_func(int32(Tstart), int32(Tend), int32(duration),
                                  *self.kernel_func_args, **self.kernel_func_kwds)
                 pycuda.context.synchronize()
-
-#    def get_coincidence_count(self):
-#        return self.num_coincidences.get()
-#
-#    def get_spike_count(self):
-#        return self.spikecount.get()
-#    coincidence_count = property(fget=lambda self:self.get_coincidence_count())
-#    spike_count = property(fget=lambda self:self.get_spike_count())
-

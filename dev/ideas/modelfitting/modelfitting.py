@@ -68,6 +68,8 @@ class DataTransformer(object):
             slice = int(t/slice_length)
             newt = self.overlap + (t % slice_length)*second
             newi = i + self.groups*slice
+            # discard unreachable spikes
+            if newi >= (self.slices*self.groups): continue
             sliced_spikes.append((newi, newt)) 
         sliced_spikes = sort_spikes(sliced_spikes)
         return sliced_spikes
@@ -118,21 +120,44 @@ class DataTransformer(object):
 
 
 
-class ModelFitting(Fitness):
-    def initialize(self, **kwds):
-        # Initialization of variables
+class Simulator(object):
+    def __init__(self, model, reset, threshold, 
+                 inputs, input_var = 'I', dt = defaultclock.dt,
+                 refractory = 0*ms, max_refractory = None,
+                 spikes = None, traces = None,
+                 groups = 1,
+                 slices = 1, overlap = 0*second,
+                 onset = 0*second,
+                 neurons = 1000, # = nodesize = number of neurons on this node = total number of neurons/slices
+                 initial_values = None,
+                 unit_type = 'CPU',
+                 stepsize = 100*ms,
+                 precision = 'double',
+                 criterion = None,
+                 method = 'Euler'
+                 ):
+        self.model = model
+        self.reset = reset
+        self.threshold = threshold
+        self.inputs = inputs
+        self.input_var = input_var
+        self.dt = dt
+        self.refractory = refractory
+        self.max_refractory = max_refractory
+        self.spikes = spikes
+        self.traces = traces
+        self.initial_values = initial_values 
+        self.groups = groups
+        self.slices = slices
+        self.overlap = overlap
+        self.onset = onset
+        self.neurons = neurons
+        self.unit_type = unit_type
+        self.stepsize = stepsize
+        self.precision = precision
+        self.criterion = criterion
+        self.method = method
         self.use_gpu = self.unit_type=='GPU'
-        # Gets the key,value pairs in shared_data
-        for key, val in self.shared_data.iteritems():
-            setattr(self, key, val)
-        # Gets the key,value pairs in **kwds
-        for key, val in kwds.iteritems():
-            setattr(self, key, val)
-        self.neurons = self.nodesize
-        self.groups = self.groups
-        self.model = cPickle.loads(self.model)
-        if type(self.model) is str:
-            self.model = Equations(self.model)
         
         self.initialize_neurongroup()
         self.transform_data()
@@ -141,18 +166,7 @@ class ModelFitting(Fitness):
         
         if self.use_gpu:
             self.initialize_gpu()
-        
-    def initialize_gpu(self):
-            # Select integration scheme according to method
-            if self.method == 'Euler': scheme = euler_scheme
-            elif self.method == 'RK': scheme = rk2_scheme
-            elif self.method == 'exponential_Euler': scheme = exp_euler_scheme
-            else: raise Exception("The numerical integration method is not valid")
             
-            self.mf = GPUModelFitting(self.group, self.model, self.criterion_object,
-                                      self.input_var,
-                                      self.onset, precision=self.precision, scheme=scheme)
-    
     def initialize_neurongroup(self):
         # Add 'refractory' parameter on the CPU only
         if not self.use_gpu:
@@ -182,6 +196,17 @@ class ModelFitting(Fitness):
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
                 self.group.state(param)[:] = value
+    
+    def initialize_gpu(self):
+            # Select integration scheme according to method
+            if self.method == 'Euler': scheme = euler_scheme
+            elif self.method == 'RK': scheme = rk2_scheme
+            elif self.method == 'exponential_Euler': scheme = exp_euler_scheme
+            else: raise Exception("The numerical integration method is not valid")
+            
+            self.mf = GPUModelFitting(self.group, self.model, self.criterion_object,
+                                      self.input_var,
+                                      self.onset, precision=self.precision, scheme=scheme)
     
     def transform_data(self):
         self.transformer = DataTransformer(self.neurons,
@@ -265,21 +290,18 @@ class ModelFitting(Fitness):
             combined_values = sum(reshape(values, (self.slices, -1)), axis=0)
         return combined_values
     
-    def evaluate(self, **param_values):
-        """
-        Use fitparams['delays'] to take delays into account
-        Use fitparams['refractory'] to take refractory into account
-        """
+    def run(self, **param_values):
         delays = param_values.pop('delays', zeros(self.neurons))
         refractory = param_values.pop('refractory', zeros(self.neurons))
+        
+        self.update_neurongroup(**param_values)
 
         # repeat spike delays and refractory to take slices into account
         delays = kron(delays, ones(self.slices))
         refractory = kron(refractory, ones(self.slices))
         
-        criterion_params = dict(delays=delays)
-        
         # TODO: add here parameters to criterion_params if a criterion must use some parameters
+        criterion_params = dict(delays=delays)
 
         self.update_neurongroup(**param_values)
         self.initialize_criterion(**criterion_params)
@@ -293,22 +315,67 @@ class ModelFitting(Fitness):
                                 delays, refractory
                                 )
             # LAUNCHES the simulation on the GPU
-            self.mf.launch(self.duration, self.stepsize)
+            self.mf.launch(self.sliced_duration, self.stepsize)
             # Synchronize the GPU values with a call to gpuarray.get()
             self.criterion_object.update_gpu_values()
         else:
             # set the refractory period
             if self.max_refractory is not None:
                 self.group.refractory = refractory
-            
             # Launch the simulation on the CPU
             self.group.clock.reinit()
             net = Network(self.group, self.criterion_object)
-            net.run(self.duration)
+            net.run(self.sliced_duration)
         
         sliced_values = self.criterion_object.get_values()
         combined_values = self.combine_sliced_values(sliced_values)
         values = self.criterion_object.normalize(combined_values)
+        return values
+
+
+
+
+class ModelFitting(Fitness):
+    def initialize(self, **kwds):
+        
+        # Gets the key,value pairs in shared_data
+        for key, val in self.shared_data.iteritems():
+            setattr(self, key, val)
+            
+        # Gets the key,value pairs in **kwds
+        for key, val in kwds.iteritems():
+            setattr(self, key, val)
+        
+        self.model = cPickle.loads(self.model)
+        if type(self.model) is str:
+            self.model = Equations(self.model)
+        
+        self.simulator = Simulator(self.model, self.reset, self.threshold,
+                                   inputs = self.inputs, input_var = self.input_var,
+                                   dt = self.dt,
+                                   refractory = self.refractory,
+                                   max_refractory = self.max_refractory,
+                                   spikes = self.spikes,
+                                   traces = self.traces,
+                                   groups = self.groups,
+                                   slices = self.slices,
+                                   overlap = self.overlap,
+                                   onset = self.onset,
+                                   neurons = self.nodesize,
+                                   initial_values = self.initial_values,
+                                   unit_type = self.unit_type,
+                                   stepsize = self.stepsize,
+                                   precision = self.precision,
+                                   criterion = self.criterion,
+                                   method = self.method
+                                   )
+            
+    def evaluate(self, **param_values):
+        """
+        Use fitparams['delays'] to take delays into account
+        Use fitparams['refractory'] to take refractory into account
+        """
+        values = self.simulator.run(**param_values)
         return values
 
 
@@ -555,7 +622,7 @@ def modelfitting(model=None,
     else:
         max_refractory = None
     
-    duration = len(input) * dt # duration of the input
+#    duration = len(input) * dt # duration of the input
 
     # keyword arguments for Modelfitting initialize
     kwds = dict(   model=cPickle.dumps(model),
@@ -564,7 +631,6 @@ def modelfitting(model=None,
                    refractory=refractory,
                    max_refractory=max_refractory,
                    input_var=input_var, dt=dt,
-                   duration=duration,
                    criterion=criterion,
                    slices=slices,
                    overlap=overlap,
@@ -742,8 +808,9 @@ if __name__ == '__main__':
     spikes= loadtxt('spikes_artificial.txt')
     
     # GAMMA FACTOR
-    criterion = GammaFactor(delta=4*ms)
+    criterion = GammaFactor(delta=2*ms)
     data = spikes
+#    data[:,1] += 50*ms
     
     # LP ERROR
     criterion = LpError(p=2, varname='V')
@@ -761,8 +828,6 @@ if __name__ == '__main__':
                             criterion = criterion,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms],
-#                            delays = [-5*ms, 5*ms],
-#                            refractory = [0*ms, 0*ms, 10*ms, 10*ms]
                             )
     
     

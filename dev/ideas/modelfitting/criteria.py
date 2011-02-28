@@ -257,7 +257,9 @@ class LpErrorCriterion(Criterion):
         
         # TIMESTEP
         code['%CRITERION_TIMESTEP%'] = """
-        error = error + pow(abs(trace_value - %s), %.4f);
+        if (T<=duration-spikedelay) {
+            error = error + pow(abs(trace_value - %s), %.4f);
+        }
         """ % (self.varname, self.p)
         
         # FINALIZATION
@@ -410,7 +412,7 @@ class GammaFactorCriterion(Criterion):
                     self.spiketime_index[indices] += 1
                     self.last_spike_time[indices] = self.next_spike_time[indices]
                     self.next_spike_time[indices] = array(rint(self.spikes_inline[self.spiketime_index[indices] + 1] / dt), dtype=int)
-                    if self.coincidence_count_algorithm == 'exclusive':
+                    if self.algorithm == 'exclusive':
                         self.last_spike_allowed[indices] = self.next_spike_allowed[indices]
                         self.next_spike_allowed[indices] = True
                     remaining_neurons = remaining_neurons[remaining_indices]
@@ -428,7 +430,7 @@ class GammaFactorCriterion(Criterion):
             if t >= self.onset:
                 self.coincidences[spiking_neurons[I]] += 1
 
-            if self.coincidence_count_algorithm == 'exclusive':
+            if self.algorithm == 'exclusive':
                 near_both_allowed = (near_last_spike & last_spike_allowed) & (near_next_spike & next_spike_allowed)
                 self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
                 self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed
@@ -464,6 +466,7 @@ class GammaFactorCriterion(Criterion):
         
         # TIMESTEP
         code['%CRITERION_TIMESTEP%'] = """
+        const int Tspike = T+spikedelay;
         """
         
         if self.algorithm == 'inclusive':
