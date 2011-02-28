@@ -1,12 +1,14 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
-                    arange, sort_spikes, rint, SpikeMonitor, Connection
+                    arange, sort_spikes, rint, SpikeMonitor, Connection, int32
 from brian.tools.statistics import firing_rate, get_gamma_factor
 
 try:
     import pycuda
-    from gpu_modelfitting import GPUModelFitting
+    import pycuda.driver as drv
+    import pycuda
+    from pycuda import gpuarray
     can_use_gpu = True
 except ImportError:
     can_use_gpu = False
@@ -398,48 +400,49 @@ class GammaFactorCriterion(Criterion):
         if self.algorithm == 'exclusive':
             code['%CRITERION_DECLARE%'] += """ 
     bool *last_spike_allowed_arr,
-    bool *next_spike_allowed_arr
+    bool *next_spike_allowed_arr,
            """
         
         # INITIALIZATION
         code['%CRITERION_INIT%'] = """
     int ncoinc = num_coincidences[neuron_index];
     int nspikes = spikecount[neuron_index];
+    int last_spike_time = spiketimes[spiketime_index];
+    int next_spike_time = spiketimes[spiketime_index+1];
         """
         
         if self.algorithm == 'exclusive':
-            code['%CRITERION_INIT%'] += """ 
-    int last_spike_time = spiketimes[spiketime_index];
-    int next_spike_time = spiketimes[spiketime_index+1];
+            code['%CRITERION_INIT%'] += """
+    bool last_spike_allowed = last_spike_allowed_arr[neuron_index];
+    bool next_spike_allowed = next_spike_allowed_arr[neuron_index];
             """
         
         # TIMESTEP
         code['%CRITERION_TIMESTEP%'] = """
-    const int Tspike = T+spikedelay;
         """
         
         if self.algorithm == 'inclusive':
             code['%CRITERION_TIMESTEP%'] += """ 
-    ncoinc += has_spiked && (((last_spike_time+%DELTA%)>=Tspike) || ((next_spike_time-%DELTA%)<=Tspike));
-            """
+    ncoinc += has_spiked && (((last_spike_time+%d)>=Tspike) || ((next_spike_time-%d)<=Tspike));
+            """ % (self.delta, self.delta)
         if self.algorithm == 'exclusive':
             code['%CRITERION_TIMESTEP%'] += """
-    bool near_last_spike = last_spike_time+%DELTA%>=Tspike;
-    bool near_next_spike = next_spike_time-%DELTA%<=Tspike;
-    near_last_spike = near_last_spike && has_spiked;
-    near_next_spike = near_next_spike && has_spiked;
-    ncoinc += (near_last_spike&&last_spike_allowed) || (near_next_spike&&next_spike_allowed);
-    bool near_both_allowed = (near_last_spike&&last_spike_allowed) && (near_next_spike&&next_spike_allowed);
-    last_spike_allowed = last_spike_allowed && !near_last_spike;
-    next_spike_allowed = (next_spike_allowed && !near_next_spike) || near_both_allowed;
-            """
+        bool near_last_spike = last_spike_time+%d>=Tspike;
+        bool near_next_spike = next_spike_time-%d<=Tspike;
+        near_last_spike = near_last_spike && has_spiked;
+        near_next_spike = near_next_spike && has_spiked;
+        ncoinc += (near_last_spike&&last_spike_allowed) || (near_next_spike&&next_spike_allowed);
+        bool near_both_allowed = (near_last_spike&&last_spike_allowed) && (near_next_spike&&next_spike_allowed);
+        last_spike_allowed = last_spike_allowed && !near_last_spike;
+        next_spike_allowed = (next_spike_allowed && !near_next_spike) || near_both_allowed;
+            """ % (self.delta, self.delta)
     
         code['%CRITERION_TIMESTEP%'] += """
-    nspikes += has_spiked*(T>=onset);
-    if(Tspike>=next_spike_time){
-        spiketime_index++;
-        last_spike_time = next_spike_time;
-        next_spike_time = spiketimes[spiketime_index+1];
+        nspikes += has_spiked*(T>=onset);
+        if(Tspike>=next_spike_time){
+            spiketime_index++;
+            last_spike_time = next_spike_time;
+            next_spike_time = spiketimes[spiketime_index+1];
         """
     
         if self.algorithm == 'exclusive':
@@ -449,7 +452,7 @@ class GammaFactorCriterion(Criterion):
             """
     
         code['%CRITERION_TIMESTEP%'] += """
-    }
+        }
         """
         
         # FINALIZATION
@@ -467,8 +470,11 @@ class GammaFactorCriterion(Criterion):
         return code
     
     def initialize_cuda_variables(self):
-        self.spikecount = gpuarray.to_gpu(zeros(N, dtype=int32))
-        self.num_coincidences = gpuarray.to_gpu(zeros(N, dtype=int32))
+        """
+        Initialize GPU variables to pass to the kernel
+        """
+        self.spike_count_gpu = gpuarray.to_gpu(zeros(self.N, dtype=int32))
+        self.coincidences_gpu = gpuarray.to_gpu(zeros(self.N, dtype=int32))
         
         if self.algorithm == 'exclusive':
             self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(self.N, dtype=bool))
@@ -478,11 +484,19 @@ class GammaFactorCriterion(Criterion):
         """
         Return a list of objects to pass to the CUDA kernel.
         """
-        args = [self.spikecount, self.num_coincidences]
+        args = [self.spike_count_gpu, self.coincidences_gpu]
         
         if self.algorithm == 'exclusive':
             args += [self.last_spike_allowed_arr,
                      self.next_spike_allowed_arr]
+        return args
+    
+    def update_gpu_values(self):
+        """
+        Call gpuarray.get() on final values, so that get_values() returns updated values.
+        """
+        self.coincidences = self.coincidences_gpu.get()
+        self.spike_count = self.spike_count_gpu.get()
     
     def get_values(self):
         return (self.coincidences, self.spike_count)

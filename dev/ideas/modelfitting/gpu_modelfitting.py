@@ -1,7 +1,10 @@
-from brian import *
+from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
+                    ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
+                    reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
+                    arange, sort_spikes, rint, SpikeMonitor, Connection, Threshold, Reset
+from brian.tools.statistics import firing_rate, get_gamma_factor
 from playdoh import *
 import brian.optimiser as optimiser
-#import pycuda.autoinit as autoinit
 import pycuda.driver as drv
 import pycuda
 from pycuda.gpuarray import GPUArray
@@ -33,7 +36,7 @@ class ModelfittingGPUCodeGenerator(GPUCodeGenerator):
         for line in self.scheme(eqs, scheme).split('\n'):
             line = line.strip()
             if line:
-                code += '    ' + line + '\n'
+                code += '        ' + line + '\n'
         return code
 
 
@@ -41,182 +44,159 @@ class ModelfittingGPUCodeGenerator(GPUCodeGenerator):
 
 def get_cuda_template():
     return """
-    __global__ void runsim(
-        // ITERATIONS
-        int Tstart, int Tend,             // Start, end time as integer (t=T*dt)
-        
-        // STATE VARIABLES
-        %SCALAR% *state_vars,             // State variables are offset from this
-        
-        // INPUT PARAMETERS
-        double *I_arr,                    // Input current
-        int *I_arr_offset,                // Input current offset (for separate input
-                                          // currents for each neuron)
-        // DELAYS PARAMETERS
-        int *spikedelay_arr,              // Integer delay for each spike
-        
-        // REFRACTORY PARAMETERS
-        int *refractory_arr,              // Integer refractory times
-        int *next_allowed_spiketime_arr,  // Integer time of the next allowed spike (for refractoriness)
-        
-        // CRITERION SPECIFIC PARAMETERS
-        %CRITERION_DECLARE%
-        
-        // SPIKES PARAMETERS
-        %SPIKES_DECLARE%
-        
-        // TRACES PARAMETERS
-        %TRACES_DECLARE%
-        
-        // MISC PARAMETERS
-        int onset                         // Time onset (only count spikes from here onwards)
-        )
+__global__ void runsim(
+    // ITERATIONS
+    int Tstart, int Tend,             // Start, end time as integer (t=T*dt)
+    
+    // STATE VARIABLES
+    %SCALAR% *state_vars,             // State variables are offset from this
+    
+    // INPUT PARAMETERS
+    double *I_arr,                    // Input current
+    int *I_arr_offset,                // Input current offset (for separate input
+                                      // currents for each neuron)
+    // DELAYS PARAMETERS
+    int *spikedelay_arr,              // Integer delay for each spike
+    
+    // REFRACTORY PARAMETERS
+    int *refractory_arr,              // Integer refractory times
+    int *next_allowed_spiketime_arr,  // Integer time of the next allowed spike (for refractoriness)
+    
+    // CRITERION SPECIFIC PARAMETERS
+    %CRITERION_DECLARE%
+    
+    // DATA DECLARE
+    %DATA_DECLARE%
+    
+    // MISC PARAMETERS
+    int onset                         // Time onset (only count spikes from here onwards)
+    )
+{
+    // NEURON INDEX
+    const int neuron_index = blockIdx.x * blockDim.x + threadIdx.x;
+    if(neuron_index>=%NUM_NEURONS%) return;
+    
+    // EXTRACT STATE VARIABLES
+    %EXTRACT_STATE_VARIABLES%
+    
+    // LOAD VARIABLES
+    %LOAD_VARIABLES%
+    
+    %DATA_INIT%
+    
+    // CRITERION INITIALIZATION
+    %CRITERION_INIT%
+    
+    // INPUT INITIALIZATION
+    int I_offset = I_arr_offset[neuron_index];
+    
+    // DELAYS INITIALIZATION
+    int spikedelay = spikedelay_arr[neuron_index];
+    
+    // REFRACTORY INITIALIZATION
+    const int refractory = refractory_arr[neuron_index];
+    int next_allowed_spiketime = next_allowed_spiketime_arr[neuron_index];
+    
+    for(int T=Tstart; T<Tend; T++)
     {
-        // NEURON INDEX
-        const int neuron_index = blockIdx.x * blockDim.x + threadIdx.x;
-        if(neuron_index>=%NUM_NEURONS%) return;
+        %SCALAR% t = T*%DT%;
+        // Read input current
+        %SCALAR% ${input_var} = I_arr[T+I_offset];
+                             // this is a global read for each thread, can maybe
+                             // reduce this by having just one read per block,
+                             // put it into shared memory, and then have all the
+                             // threads in that block read it, we could even
+                             // maybe buffer reads of I into shared memory -
+                             // experiment with this
+                             
+        // STATE UPDATE
+        %STATE_UPDATE%
         
-        // EXTRACT STATE VARIABLES
-        %EXTRACT_STATE_VARIABLES%
+        // THRESHOLD
+        const bool is_refractory = (T<=next_allowed_spiketime);
+        const bool has_spiked = (%THRESHOLD%)&&!is_refractory;
         
-        // LOAD VARIABLES
-        %LOAD_VARIABLES%
-        
-        // SPIKE INITIALIZATION
-        %SPIKES_INIT%
-        //int spiketime_index = spiketime_indices[neuron_index];
-        
-        // CRITERION INITIALIZATION
-        %CRITERION_INIT%
-        //int last_spike_time = spiketimes[spiketime_index];
-        //int next_spike_time = spiketimes[spiketime_index+1];
-        //int ncoinc = num_coincidences[neuron_index];
-        //int nspikes = spikecount[neuron_index];
-        //%COINCIDENCE_COUNT_INIT%
-        
-        // INPUT INITIALIZATION
-        int I_offset = I_arr_offset[neuron_index];
-        
-        // DELAYS INITIALIZATION
-        int spikedelay = spikedelay_arr[neuron_index];
-        
-        // REFRACTORY INITIALIZATION
-        const int refractory = refractory_arr[neuron_index];
-        int next_allowed_spiketime = next_allowed_spiketime_arr[neuron_index];
-        
-        for(int T=Tstart; T<Tend; T++)
+        // RESET
+        if(has_spiked||is_refractory)
         {
-            %SCALAR% t = T*%DT%;
-            // Read input current
-            %SCALAR% ${input_var} = I_arr[T+I_offset];
-                                 // this is a global read for each thread, can maybe
-                                 // reduce this by having just one read per block,
-                                 // put it into shared memory, and then have all the
-                                 // threads in that block read it, we could even
-                                 // maybe buffer reads of I into shared memory -
-                                 // experiment with this
-                                 
-            // STATE UPDATE
-            %STATE_UPDATE%
-            
-            // THRESHOLD
-            const bool is_refractory = (T<=next_allowed_spiketime);
-            const bool has_spiked = (%THRESHOLD%)&&!is_refractory;
-            
-            // RESET
-            if(has_spiked||is_refractory)
-            {
-                %RESET%
-            }
-            
-            if(has_spiked)
-                next_allowed_spiketime = T+refractory;
-            
-            // CRITERION TIMESTEP
-            %CRITERION_TIMESTEP%
-            // Coincidence counter
-            //const int Tspike = T+spikedelay;
-            //%COINCIDENCE_COUNT_TEST%
-            //nspikes += has_spiked*(T>=onset);
-            //if(Tspike>=next_spike_time){
-            //    spiketime_index++;
-            //    last_spike_time = next_spike_time;
-            //    next_spike_time = spiketimes[spiketime_index+1];
-            //    %COINCIDENCE_COUNT_NEXT%
-            //}
+            %RESET%;
         }
-        // Store variables at end
-        %STORE_VARIABLES%
         
-        // CRITERION END
-        %CRITERION_END%
-        //%COINCIDENCE_COUNT_STORE_VARIABLES%
-        //num_coincidences[neuron_index] = ncoinc;
-        //spikecount[neuron_index] = nspikes;
+        if(has_spiked)
+            next_allowed_spiketime = T+refractory;
         
-        next_allowed_spiketime_arr[neuron_index] = next_allowed_spiketime;
+        const int Tspike = T+spikedelay;
         
-        // SPIKE END
-        %SPIKES_END%
-        //spiketime_indices[neuron_index] = spiketime_index;
+        // CRITERION TIMESTEP
+        %CRITERION_TIMESTEP%
     }
+    // Store variables at end
+    %STORE_VARIABLES%
+    
+    // CRITERION END
+    %CRITERION_END%
+    
+    next_allowed_spiketime_arr[neuron_index] = next_allowed_spiketime;
+    
+    // END
+    %DATA_END%
+}
     """
 
-def generate_modelfitting_kernel_src(G, eqs, threshold, reset, dt, num_neurons,
-                                     criterion,
-                                     precision=default_precision,
-                                     scheme=euler_scheme
-                                     ):
-    eqs.prepare()
-    src = modelfitting_kernel_template
-    # Substitute state variable declarations
-    indexvar = dict((v, k) for k, v in G.var_index.iteritems() if isinstance(k, str) and k!='I')
-    extractions = '\n    '.join('%SCALAR% *'+name+'_arr = state_vars+'+str(i*num_neurons)+';' for i, name in indexvar.iteritems())
-    src = src.replace('%EXTRACT_STATE_VARIABLES%', extractions)
-    # Substitute load variables
-    loadvar_names = eqs._diffeq_names + []
-    loadvar_names.remove('I') # I is assumed to be a parameter and loaded per time step
-    loadvars = '\n    '.join('%SCALAR% ' + name + ' = ' + name + '_arr[neuron_index];' for name in loadvar_names)
-    src = src.replace('%LOAD_VARIABLES%', loadvars)
-    # Substitute save variables
-    savevars = '\n    '.join(name + '_arr[neuron_index] = ' + name + ';' for name in loadvar_names)
-    src = src.replace('%STORE_VARIABLES%', savevars)
-    # Substitute threshold
-    src = src.replace('%THRESHOLD%', threshold)
-    # Substitute reset
-    reset = '\n            '.join(line.strip() + ';' for line in reset.split('\n') if line.strip())
-    src = src.replace('%RESET%', reset)
-    # Substitute state update
-    sulines = ModelfittingGPUCodeGenerator(dtype=precision).generate(eqs, scheme)
-    sulines = re.sub(r'\bdt\b', '%DT%', sulines)
-    src = src.replace('%STATE_UPDATE%', sulines.strip())
-    
-    # TODO
-    # Substitute coincidence counting algorithm
-#    ccalgo = coincidence_counting_algorithm_src[coincidence_count_algorithm]
-#    for search, replace in ccalgo.iteritems():
+#def generate_modelfitting_kernel_src(G, eqs, threshold, reset, dt, num_neurons,
+#                                     criterion,
+#                                     precision=default_precision,
+#                                     scheme=euler_scheme
+#                                     ):
+#    eqs.prepare()
+#    src = modelfitting_kernel_template
+#    # Substitute state variable declarations
+#    indexvar = dict((v, k) for k, v in G.var_index.iteritems() if isinstance(k, str) and k!='I')
+#    extractions = '\n    '.join('%SCALAR% *'+name+'_arr = state_vars+'+str(i*num_neurons)+';' for i, name in indexvar.iteritems())
+#    src = src.replace('%EXTRACT_STATE_VARIABLES%', extractions)
+#    # Substitute load variables
+#    loadvar_names = eqs._diffeq_names + []
+#    loadvar_names.remove('I') # I is assumed to be a parameter and loaded per time step
+#    loadvars = '\n    '.join('%SCALAR% ' + name + ' = ' + name + '_arr[neuron_index];' for name in loadvar_names)
+#    src = src.replace('%LOAD_VARIABLES%', loadvars)
+#    # Substitute save variables
+#    savevars = '\n    '.join(name + '_arr[neuron_index] = ' + name + ';' for name in loadvar_names)
+#    src = src.replace('%STORE_VARIABLES%', savevars)
+#    # Substitute threshold
+#    src = src.replace('%THRESHOLD%', threshold)
+#    # Substitute reset
+#    reset = '\n            '.join(line.strip() + ';' for line in reset.split('\n') if line.strip())
+#    src = src.replace('%RESET%', reset)
+#    # Substitute state update
+#    sulines = ModelfittingGPUCodeGenerator(dtype=precision).generate(eqs, scheme)
+#    sulines = re.sub(r'\bdt\b', '%DT%', sulines)
+#    src = src.replace('%STATE_UPDATE%', sulines.strip())
+#    # Substitute criterion code
+#    criterion_code = criterion.get_cuda_code()
+#    for search, replace in criterion_code.iteritems():
 #        src = src.replace(search, replace)
-    if criterion.type == 'spikes':
-        spikes_declare = """
-    int *spiketimes,          // Array of all spike times as integers (begin and
-                              // end each train with large negative value)
-    int *spiketime_indices,   // Pointer into above array for each neuron
-        """
-        src = src.replace('%SPIKES_DECLARE%', spikes_declare)
-    if criterion.type == 'traces':
-        # TODO: traces_declare = ...
-        src = src.replace('%TRACES_DECLARE%', traces_declare)
-        
-    # Substitute dt
-    src = src.replace('%DT%', str(float(dt)))
-    # Substitute SCALAR
-    src = src.replace('%SCALAR%', precision)
-    # Substitute number of neurons
-    src = src.replace('%NUM_NEURONS%', str(num_neurons))
-    # Substitute delta, the coincidence window half-width
-    src = src.replace('%DELTA%', str(int(rint(delta / dt))))
-    return src
-
+#        
+#    if criterion.type == 'spikes':
+#        spikes_declare = """
+#    int *spiketimes,          // Array of all spike times as integers (begin and
+#                              // end each train with large negative value)
+#    int *spiketime_indices,   // Pointer into above array for each neuron
+#        """
+#        src = src.replace('%SPIKES_DECLARE%', spikes_declare)
+#    if criterion.type == 'traces':
+#        traces_declare = """
+#    double *traces_arr,
+#    int *traces_arr_offset,
+#        """
+#        src = src.replace('%TRACES_DECLARE%', traces_declare)
+#        
+#    # Substitute dt
+#    src = src.replace('%DT%', str(float(dt)))
+#    # Substitute SCALAR
+#    src = src.replace('%SCALAR%', precision)
+#    # Substitute number of neurons
+#    src = src.replace('%NUM_NEURONS%', str(num_neurons))
+#    return src
 
 
 
@@ -289,23 +269,25 @@ class GPUModelFitting(object):
     spikes for each train. 
     '''
     def __init__(self, G, eqs,
-                 delta, onset=0*ms,
                  criterion, # Criterion object
+                 input_var,
+                 onset=0*ms,
                  precision=default_precision,
                  scheme=euler_scheme
                  ):
         eqs.prepare()
         self.precision = precision
+        self.scheme = scheme
         if precision == 'double':
             self.mydtype = float64
         else:
             self.mydtype = float32
-        self.N = N = len(G)
-        self.dt = dt = G.clock.dt
-        self.delta = delta
+        self.N = len(G)
+        self.dt = G.clock.dt
         self.onset = onset
         self.eqs = eqs
         self.G = G
+        self.input_var = input_var
         self.criterion = criterion
         self.generate_code()
 
@@ -330,7 +312,8 @@ class GPUModelFitting(object):
             threshold = expr
         else:
             raise ValueError('Threshold must be constant, VariableThreshold or StringThreshold.')
-        return threshold
+        self.threshold = threshold
+#        return threshold
         
     def generate_reset_code(self):
         eqs = self.eqs
@@ -351,19 +334,95 @@ class GPUModelFitting(object):
             all_variables = eqs._eq_names + eqs._diffeq_names + eqs._alias.keys() + ['t']
             expr = optimiser.freeze(expr, all_variables, namespace)
             reset = expr
-        return reset
+        self.reset = reset
+#        return reset
             
     def generate_code(self):
-        threshold = self.generate_threshold_code()
-        reset = self.generate_reset_code()
-        self.kernel_src = generate_modelfitting_kernel_src(
-                  self.G, self.eqs, threshold, reset, self.dt, self.N, self.delta,
-                  coincidence_count_algorithm=self.coincidence_count_algorithm,
-                  precision=self.precision, scheme=self.scheme)
+        
+        self.eqs.prepare()
+        
+        self.generate_threshold_code()
+        self.generate_reset_code()
+        
+        src = get_cuda_template()
+        # Substitute state variable declarations
+        indexvar = dict((v, k) for k, v in self.G.var_index.iteritems() if isinstance(k, str) and k!='I')
+        extractions = '\n    '.join('%SCALAR% *'+name+'_arr = state_vars+'+str(i*self.N)+';' for i, name in indexvar.iteritems())
+        src = src.replace('%EXTRACT_STATE_VARIABLES%', extractions)
+        # Substitute load variables
+        loadvar_names = self.eqs._diffeq_names + []
+        loadvar_names.remove('I') # I is assumed to be a parameter and loaded per time step
+        loadvars = '\n    '.join('%SCALAR% ' + name + ' = ' + name + '_arr[neuron_index];' for name in loadvar_names)
+        src = src.replace('%LOAD_VARIABLES%', loadvars)
+        # Substitute save variables
+        savevars = '\n    '.join(name + '_arr[neuron_index] = ' + name + ';' for name in loadvar_names)
+        src = src.replace('%STORE_VARIABLES%', savevars)
+        # Substitute threshold
+        src = src.replace('%THRESHOLD%', self.threshold)
+        # Substitute reset
+        reset = '\n            '.join(line.strip() + ';' for line in self.reset.split('\n') if line.strip())
+        src = src.replace('%RESET%', self.reset)
+        # Substitute state update
+        sulines = ModelfittingGPUCodeGenerator(dtype=self.precision).generate(self.eqs, self.scheme)
+        sulines = re.sub(r'\bdt\b', '%DT%', sulines)
+        src = src.replace('%STATE_UPDATE%', sulines.strip())
+        
+        # Substitute criterion code
+        criterion_code = self.criterion.get_cuda_code()
+        for search, replace in criterion_code.iteritems():
+            src = src.replace(search, replace)
+        
+        # Substitute spikes/traces declare
+        if self.criterion.type == 'spikes':
+            data_declare = """
+    int *spiketimes,          // Array of all spike times as integers (begin and
+                              // end each train with large negative value)
+    int *spiketime_indices,   // Pointer into above array for each neuron
+            """
+        if self.criterion.type == 'traces':
+            data_declare = """
+    double *traces_arr,
+    int *traces_arr_offset,
+            """
+        src = src.replace('%DATA_DECLARE%', data_declare)
+        
+        # Substitute spikes/traces declare
+        if self.criterion.type == 'spikes':
+            data_init = """
+    int spiketime_index = spiketime_indices[neuron_index];
+            """
+        if self.criterion.type == 'traces':
+            data_init = """
+    TODO
+            """
+        src = src.replace('%DATA_INIT%', data_init)
+        
+        # Substitute spikes/traces end
+        if self.criterion.type == 'spikes':
+            data_end = """
+            spiketime_indices[neuron_index] = spiketime_index;
+            """
+        if self.criterion.type == 'traces':
+            data_end = """
+            TODO
+            """
+        src = src.replace('%DATA_END%', data_end)
+            
+        # Substitute dt
+        src = src.replace('%DT%', str(float(self.dt)))
+        # Substitute SCALAR
+        src = src.replace('%SCALAR%', self.precision)
+        # Substitute number of neurons
+        src = src.replace('%NUM_NEURONS%', str(self.N))
+        # Substitute input var name
+        src = src.replace('${input_var}', str(self.input_var))
+        
+        self.kernel_src = src
+#        log_info(src)
 
     def initialize_spikes(self, spiketimes, spiketimes_indices):
         self.spiketimes = gpuarray.to_gpu(array(rint(spiketimes / self.dt), dtype=int32))
-        self.spiketime_indices = gpuarray.to_gpu(array(spiketimes_offset, dtype=int32))
+        self.spiketime_indices = gpuarray.to_gpu(array(spiketimes_indices, dtype=int32))
         
     def initialize_traces(self):
         # TODO
@@ -393,15 +452,14 @@ class GPUModelFitting(object):
             # TODO
             self.kernel_func_args += []
         self.kernel_func_args += [int32(rint(self.onset / self.dt))]
-        
-        if self.coincidence_count_algorithm == 'exclusive':
-            self.kernel_func_args += [self.last_spike_allowed_arr,
-                                      self.next_spike_allowed_arr]
 
-    def reinit_vars(self, I, I_offset,
-                    spikedelays, refractory,
+    def reinit_vars(self, criterion,
+                    I, I_offset,
                     spiketimes = None, spiketimes_offset = None,
-                    inputs = None, inputs_offset = None):
+                    traces = None, traces_offset = None,
+                    spikedelays = None, refractory = None):
+        self.criterion = criterion
+        
         self.kernel_module = SourceModule(self.kernel_src)
         self.kernel_func = self.kernel_module.get_function('runsim')
         blocksize = 128
@@ -424,7 +482,7 @@ class GPUModelFitting(object):
             self.initialize_spikes(spiketimes, spiketimes_offset)
         # TRACES
         if self.criterion.type == 'traces':
-            self.initialize_traces(inputs, inputs_offset)
+            self.initialize_traces(traces, traces_offset)
         self.criterion.initialize_cuda_variables()
         self.initialize_delays(spikedelays)
         self.initialize_refractory(refractory)
@@ -444,11 +502,11 @@ class GPUModelFitting(object):
                                  *self.kernel_func_args, **self.kernel_func_kwds)
                 pycuda.context.synchronize()
 
-    def get_coincidence_count(self):
-        return self.num_coincidences.get()
-
-    def get_spike_count(self):
-        return self.spikecount.get()
-    coincidence_count = property(fget=lambda self:self.get_coincidence_count())
-    spike_count = property(fget=lambda self:self.get_spike_count())
+#    def get_coincidence_count(self):
+#        return self.num_coincidences.get()
+#
+#    def get_spike_count(self):
+#        return self.spikecount.get()
+#    coincidence_count = property(fget=lambda self:self.get_coincidence_count())
+#    spike_count = property(fget=lambda self:self.get_spike_count())
 

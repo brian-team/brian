@@ -137,23 +137,21 @@ class ModelFitting(Fitness):
         self.initialize_neurongroup()
         self.transform_data()
         self.inject_input()
+        self.initialize_criterion(delays=zeros(self.neurons))
         
-#        if self.use_gpu:
-#            ########
-#            # TODO
-#            ########
-#            # Select integration scheme according to method
-#            if self.method == 'Euler': scheme = euler_scheme
-#            elif self.method == 'RK': scheme = rk2_scheme
-#            elif self.method == 'exponential_Euler': scheme = exp_euler_scheme
-#            else: raise Exception("The numerical integration method is not valid")
-#            
-#            self.mf = GPUModelFitting(self.group, self.model, self.input, self.I_offset,
-#                                      self.spiketimes, self.spiketimes_offset, zeros(self.neurons), 0*ms, self.delta,
-#                                      precision=self.precision, scheme=scheme)
-#        else:
-#            self.cc = CoincidenceCounter(self.group, self.spiketimes, self.spiketimes_offset,
-#                                        onset=self.onset, delta=self.delta)
+        if self.use_gpu:
+            self.initialize_gpu()
+        
+    def initialize_gpu(self):
+            # Select integration scheme according to method
+            if self.method == 'Euler': scheme = euler_scheme
+            elif self.method == 'RK': scheme = rk2_scheme
+            elif self.method == 'exponential_Euler': scheme = exp_euler_scheme
+            else: raise Exception("The numerical integration method is not valid")
+            
+            self.mf = GPUModelFitting(self.group, self.model, self.criterion_object,
+                                      self.input_var,
+                                      self.onset, precision=self.precision, scheme=scheme)
     
     def initialize_neurongroup(self):
         # Add 'refractory' parameter on the CPU only
@@ -168,10 +166,10 @@ class ModelFitting(Fitness):
                 refractory = 0*ms
             else:
                 refractory = self.refractory
-
+        
         # Must recompile the Equations : the functions are not transfered after pickling/unpickling
         self.model.compile_functions()
-
+        
         self.group = NeuronGroup(self.neurons,
                                  model=self.model,
                                  reset=self.reset,
@@ -287,16 +285,17 @@ class ModelFitting(Fitness):
         self.initialize_criterion(**criterion_params)
         
         if self.use_gpu:
-            pass
-            #########
-            # TODO
-            #########
-#            # Reinitializes the simulation object
-#            self.mf.reinit_vars(self.input, self.I_offset, self.spiketimes, self.spiketimes_offset, delays, refractory)
-#            # LAUNCHES the simulation on the GPU
-#            self.mf.launch(self.duration, self.stepsize)
-#            coincidence_count = self.mf.coincidence_count
-#            spike_count = self.mf.spike_count
+            # Reinitializes the simulation object
+            self.mf.reinit_vars(self.criterion_object,
+                                self.inputs_inline, self.inputs_offset,
+                                self.spikes_inline, self.spikes_offset,
+                                self.traces_inline, self.traces_offset,
+                                delays, refractory
+                                )
+            # LAUNCHES the simulation on the GPU
+            self.mf.launch(self.duration, self.stepsize)
+            # Synchronize the GPU values with a call to gpuarray.get()
+            self.criterion_object.update_gpu_values()
         else:
             # set the refractory period
             if self.max_refractory is not None:
@@ -747,8 +746,8 @@ if __name__ == '__main__':
     data = spikes
     
     # LP ERROR
-    criterion = LpError(p=2, varname='V')
-    data = trace
+#    criterion = LpError(p=2, varname='V')
+#    data = trace
     
     
     results = modelfitting( model = equations,
@@ -756,7 +755,7 @@ if __name__ == '__main__':
                             threshold = 1,
                             data = data,
                             input = input,
-                            cpu = 1,
+                            gpu = 1,
                             dt = .1*ms,
                             popsize = 1000,
                             maxiter = 1,
