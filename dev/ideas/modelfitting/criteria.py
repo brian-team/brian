@@ -1,7 +1,7 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
-                    arange, sort_spikes, rint, SpikeMonitor, Connection, int32
+                    arange, sort_spikes, rint, SpikeMonitor, Connection, int32, double
 from brian.tools.statistics import firing_rate, get_gamma_factor
 
 try:
@@ -227,7 +227,7 @@ class LpErrorCriterion(Criterion):
         Called at the beginning of every iteration. The keyword arguments here are
         specified in modelfitting.initialize_criterion().
         """
-        self.p = p
+        self.p = double(p)
         self.varname = varname
         self._error = zeros((self.K, self.N))
     
@@ -240,6 +240,51 @@ class LpErrorCriterion(Criterion):
         vtar = self.traces[:,t-d] # target value at this timestep for every neuron
         for i in xrange(self.K):
             self._error[i,indices] += abs(v[indices]-vtar[i,indices])**self.p
+    
+    def get_cuda_code(self):
+        code = {}
+        
+        #  DECLARATION
+        code['%CRITERION_DECLARE%'] = """
+    double *error_arr,
+    double p,
+        """
+        
+        # INITIALIZATION
+        code['%CRITERION_INIT%'] = """
+    double error = error_arr[neuron_index];
+        """
+        
+        # TIMESTEP
+        code['%CRITERION_TIMESTEP%'] = """
+        error = error + pow(abs(trace_value - %s), %.4f);
+        """ % (self.varname, self.p)
+        
+        # FINALIZATION
+        code['%CRITERION_END%'] = """
+    error_arr[neuron_index] = error;
+        """
+        
+        return code
+    
+    def initialize_cuda_variables(self):
+        """
+        Initialize GPU variables to pass to the kernel
+        """
+        self.error_gpu = gpuarray.to_gpu(zeros(self.N, dtype=double))
+    
+    def get_kernel_arguments(self):
+        """
+        Return a list of objects to pass to the CUDA kernel.
+        """
+        args = [self.error_gpu, self.p]
+        return args
+    
+    def update_gpu_values(self):
+        """
+        Call gpuarray.get() on final values, so that get_values() returns updated values.
+        """
+        self._error = self.error_gpu.get()
     
     def get_values(self):
         if self.K == 1: error = self._error.flatten()

@@ -1,7 +1,8 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
-                    arange, sort_spikes, rint, SpikeMonitor, Connection, Threshold, Reset
+                    arange, sort_spikes, rint, SpikeMonitor, Connection, Threshold, Reset, \
+                    int32, double
 from brian.tools.statistics import firing_rate, get_gamma_factor
 from playdoh import *
 import brian.optimiser as optimiser
@@ -127,6 +128,8 @@ __global__ void runsim(
         
         const int Tspike = T+spikedelay;
         
+        %DATA_UPDATE%
+        
         // CRITERION TIMESTEP
         %CRITERION_TIMESTEP%
     }
@@ -143,60 +146,6 @@ __global__ void runsim(
 }
     """
 
-#def generate_modelfitting_kernel_src(G, eqs, threshold, reset, dt, num_neurons,
-#                                     criterion,
-#                                     precision=default_precision,
-#                                     scheme=euler_scheme
-#                                     ):
-#    eqs.prepare()
-#    src = modelfitting_kernel_template
-#    # Substitute state variable declarations
-#    indexvar = dict((v, k) for k, v in G.var_index.iteritems() if isinstance(k, str) and k!='I')
-#    extractions = '\n    '.join('%SCALAR% *'+name+'_arr = state_vars+'+str(i*num_neurons)+';' for i, name in indexvar.iteritems())
-#    src = src.replace('%EXTRACT_STATE_VARIABLES%', extractions)
-#    # Substitute load variables
-#    loadvar_names = eqs._diffeq_names + []
-#    loadvar_names.remove('I') # I is assumed to be a parameter and loaded per time step
-#    loadvars = '\n    '.join('%SCALAR% ' + name + ' = ' + name + '_arr[neuron_index];' for name in loadvar_names)
-#    src = src.replace('%LOAD_VARIABLES%', loadvars)
-#    # Substitute save variables
-#    savevars = '\n    '.join(name + '_arr[neuron_index] = ' + name + ';' for name in loadvar_names)
-#    src = src.replace('%STORE_VARIABLES%', savevars)
-#    # Substitute threshold
-#    src = src.replace('%THRESHOLD%', threshold)
-#    # Substitute reset
-#    reset = '\n            '.join(line.strip() + ';' for line in reset.split('\n') if line.strip())
-#    src = src.replace('%RESET%', reset)
-#    # Substitute state update
-#    sulines = ModelfittingGPUCodeGenerator(dtype=precision).generate(eqs, scheme)
-#    sulines = re.sub(r'\bdt\b', '%DT%', sulines)
-#    src = src.replace('%STATE_UPDATE%', sulines.strip())
-#    # Substitute criterion code
-#    criterion_code = criterion.get_cuda_code()
-#    for search, replace in criterion_code.iteritems():
-#        src = src.replace(search, replace)
-#        
-#    if criterion.type == 'spikes':
-#        spikes_declare = """
-#    int *spiketimes,          // Array of all spike times as integers (begin and
-#                              // end each train with large negative value)
-#    int *spiketime_indices,   // Pointer into above array for each neuron
-#        """
-#        src = src.replace('%SPIKES_DECLARE%', spikes_declare)
-#    if criterion.type == 'traces':
-#        traces_declare = """
-#    double *traces_arr,
-#    int *traces_arr_offset,
-#        """
-#        src = src.replace('%TRACES_DECLARE%', traces_declare)
-#        
-#    # Substitute dt
-#    src = src.replace('%DT%', str(float(dt)))
-#    # Substitute SCALAR
-#    src = src.replace('%SCALAR%', precision)
-#    # Substitute number of neurons
-#    src = src.replace('%NUM_NEURONS%', str(num_neurons))
-#    return src
 
 
 
@@ -386,16 +335,27 @@ class GPUModelFitting(object):
             """
         src = src.replace('%DATA_DECLARE%', data_declare)
         
-        # Substitute spikes/traces declare
+        # Substitute spikes/traces init
         if self.criterion.type == 'spikes':
             data_init = """
     int spiketime_index = spiketime_indices[neuron_index];
             """
         if self.criterion.type == 'traces':
             data_init = """
-    TODO
+    int trace_offset = traces_arr_offset[neuron_index];
+    double trace_value = 0.0;
             """
         src = src.replace('%DATA_INIT%', data_init)
+        
+        # Substitute spikes/traces update
+        if self.criterion.type == 'spikes':
+            data_update = """
+            """
+        if self.criterion.type == 'traces':
+            data_update = """
+        trace_value = traces_arr[Tspike+trace_offset];
+            """
+        src = src.replace('%DATA_UPDATE%', data_update)
         
         # Substitute spikes/traces end
         if self.criterion.type == 'spikes':
@@ -404,7 +364,6 @@ class GPUModelFitting(object):
             """
         if self.criterion.type == 'traces':
             data_end = """
-            TODO
             """
         src = src.replace('%DATA_END%', data_end)
             
@@ -424,9 +383,9 @@ class GPUModelFitting(object):
         self.spiketimes = gpuarray.to_gpu(array(rint(spiketimes / self.dt), dtype=int32))
         self.spiketime_indices = gpuarray.to_gpu(array(spiketimes_indices, dtype=int32))
         
-    def initialize_traces(self):
-        # TODO
-        pass
+    def initialize_traces(self, traces, traces_offset):
+        self.traces = gpuarray.to_gpu(array(traces, dtype=double))
+        self.traces_offset = gpuarray.to_gpu(array(traces_offset, dtype=int32))
 
     def initialize_delays(self, spikedelays):
         self.spikedelay_arr = gpuarray.to_gpu(array(rint(spikedelays / self.dt), dtype=int32))
@@ -449,8 +408,8 @@ class GPUModelFitting(object):
             self.kernel_func_args += [self.spiketimes,
                                       self.spiketime_indices]
         if self.criterion.type == 'traces':
-            # TODO
-            self.kernel_func_args += []
+            self.kernel_func_args += [self.traces,
+                                      self.traces_offset]
         self.kernel_func_args += [int32(rint(self.onset / self.dt))]
 
     def reinit_vars(self, criterion,

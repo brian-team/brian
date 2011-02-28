@@ -746,16 +746,15 @@ if __name__ == '__main__':
     data = spikes
     
     # LP ERROR
-#    criterion = LpError(p=2, varname='V')
-#    data = trace
-    
+    criterion = LpError(p=2, varname='V')
+    data = trace
     
     results = modelfitting( model = equations,
                             reset = 0,
                             threshold = 1,
                             data = data,
                             input = input,
-                            gpu = 1,
+                            cpu = 1,
                             dt = .1*ms,
                             popsize = 1000,
                             maxiter = 1,
