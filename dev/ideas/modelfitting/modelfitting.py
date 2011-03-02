@@ -17,320 +17,14 @@ except ImportError:
     can_use_gpu = False
 from brian.experimental.codegen.integration_schemes import *
 from criteria import *
+from simulator import * 
 import sys, cPickle
 
-__all__ = ['modelfitting', 'print_table', 'get_spikes', 'predict', 'PSO', 'GA','CMAES',
+__all__ = ['modelfitting', 'print_table', 'PSO', 'GA','CMAES',
            'MAXCPU', 'MAXGPU',
            'GammaFactor', 'LpError',
+           'simulate', 
            'debug_level', 'info_level', 'warning_level', 'open_server']
-
-
-
-class DataTransformer(object):
-    """
-    Transform spike, input and trace data from user-friendly data structures,
-    like 2 dimensional arrays or lists of spikes, into algorithm- and GPU-friendly structures,
-    i.e. inline vectors (1 dimensional) easily parallelizable.
-    """
-    def __init__(self, neurons, input, spikes = None, traces = None, dt = defaultclock.dt,
-                 slices = 1, overlap = 0*ms, groups = 1):
-        self.neurons = neurons # number of particles on the node
-        self.input = input # a IxT array
-        self.spikes = spikes # a list of spikes [(i,t)...]
-        self.traces = traces # a KxT array
-        self.slices = slices
-        self.overlap = overlap
-        self.groups = groups
-        self.dt = dt
-        # ensure 2 dimensions
-        if self.input.ndim == 1:
-            self.input = self.input.reshape((1,-1))
-        if self.traces is not None:
-            if self.traces.ndim == 1:
-                self.traces = self.traces.reshape((1,-1))
-        self.inputs_count = self.input.shape[0]
-        self.T = self.input.shape[1] # number of steps
-        self.duration = self.T*self.dt
-        self.subpopsize = self.neurons/self.groups # number of neurons per group: nodesize/groups
-        self.input = self.input[:,0:self.slices * (self.T / self.slices)] # makes sure that len(input) is a multiple of slices
-        self.sliced_steps = self.T / self.slices # timesteps per slice
-        self.overlap_steps = int(self.overlap / self.dt) # timesteps during the overlap
-        self.total_steps = self.sliced_steps + self.overlap_steps # total number of timesteps
-        self.sliced_duration = self.overlap + self.duration / self.slices # duration of the vectorized simulation
-        self.N = self.neurons * self.slices # TOTAL number of neurons on this node
-        self.input = hstack((zeros((self.inputs_count, self.overlap_steps)), self.input)) # add zeros at the beginning because there is no overlap from the previous slice
-        
-    def slice_spikes(self, spikes):
-        # from standard structure to standard structure
-        sliced_spikes = []
-        slice_length = self.sliced_steps*self.dt
-        for (i,t) in spikes:
-            slice = int(t/slice_length)
-            newt = self.overlap + (t % slice_length)*second
-            newi = i + self.groups*slice
-            # discard unreachable spikes
-            if newi >= (self.slices*self.groups): continue
-            sliced_spikes.append((newi, newt)) 
-        sliced_spikes = sort_spikes(sliced_spikes)
-        return sliced_spikes
-
-    def slice_traces(self, traces):
-        # from standard structure to standard structure
-        k = traces.shape[0]
-        sliced_traces = zeros((k*self.slices, self.total_steps))
-        for slice in xrange(self.slices):
-            i0 = slice*k
-            i1 = (slice+1)*k
-            j0 = slice*self.sliced_steps
-            j1 = (slice+1)*self.sliced_steps
-            sliced_traces[i0:i1,self.overlap_steps:] = traces[:,j0:j1]
-            if slice>0:
-                sliced_traces[i0:i1,:self.overlap_steps] = traces[:,j0-self.overlap_steps:j0]
-        return sliced_traces
-
-    def transform_spikes(self, spikes):
-        # from standard structure to inline structure
-        i, t = zip(*spikes)
-        i = array(i)
-        t = array(t)
-        alls = []
-        n = 0
-        pointers = []
-        model_target = []
-        for j in xrange(self.groups):
-            s = sort(t[i == j])
-            s = hstack((-1 * second, s, self.duration + 1 * second))
-            model_target.extend([j] * self.subpopsize)
-            alls.append(s)
-            pointers.append(n)
-            n += len(s)
-        pointers = array(pointers, dtype=int)
-        model_target = array(hstack(model_target), dtype=int)
-        spikes_inline = hstack(alls)
-        spikes_offset = pointers[model_target]
-        return spikes_inline, spikes_offset
-    
-    def transform_traces(self, traces):
-        # from standard structure to inline structure
-        K, T = traces.shape
-        traces_inline = traces.flatten()
-        traces_offset = array(kron(arange(K), T*ones(self.subpopsize)), dtype=int)
-        return traces_inline, traces_offset
-
-
-
-
-class Simulator(object):
-    def __init__(self, model, reset, threshold, 
-                 inputs, input_var = 'I', dt = defaultclock.dt,
-                 refractory = 0*ms, max_refractory = None,
-                 spikes = None, traces = None,
-                 groups = 1,
-                 slices = 1, overlap = 0*second,
-                 onset = 0*second,
-                 neurons = 1000, # = nodesize = number of neurons on this node = total number of neurons/slices
-                 initial_values = None,
-                 unit_type = 'CPU',
-                 stepsize = 100*ms,
-                 precision = 'double',
-                 criterion = None,
-                 method = 'Euler'
-                 ):
-        self.model = model
-        self.reset = reset
-        self.threshold = threshold
-        self.inputs = inputs
-        self.input_var = input_var
-        self.dt = dt
-        self.refractory = refractory
-        self.max_refractory = max_refractory
-        self.spikes = spikes
-        self.traces = traces
-        self.initial_values = initial_values 
-        self.groups = groups
-        self.slices = slices
-        self.overlap = overlap
-        self.onset = onset
-        self.neurons = neurons
-        self.unit_type = unit_type
-        self.stepsize = stepsize
-        self.precision = precision
-        self.criterion = criterion
-        self.method = method
-        self.use_gpu = self.unit_type=='GPU'
-        
-        self.initialize_neurongroup()
-        self.transform_data()
-        self.inject_input()
-        self.initialize_criterion(delays=zeros(self.neurons))
-        
-        if self.use_gpu:
-            self.initialize_gpu()
-            
-    def initialize_neurongroup(self):
-        # Add 'refractory' parameter on the CPU only
-        if not self.use_gpu:
-            if self.max_refractory is not None:
-                refractory = 'refractory'
-                self.model.add_param('refractory', second)
-            else:
-                refractory = self.refractory
-        else:
-            if self.max_refractory is not None:
-                refractory = 0*ms
-            else:
-                refractory = self.refractory
-        
-        # Must recompile the Equations : the functions are not transfered after pickling/unpickling
-        self.model.compile_functions()
-        
-        self.group = NeuronGroup(self.neurons,
-                                 model=self.model,
-                                 reset=self.reset,
-                                 threshold=self.threshold,
-                                 refractory=refractory,
-                                 max_refractory = self.max_refractory,
-                                 method = self.method,
-                                 clock=Clock(dt=self.dt))
-        
-        if self.initial_values is not None:
-            for param, value in self.initial_values.iteritems():
-                self.group.state(param)[:] = value
-    
-    def initialize_gpu(self):
-            # Select integration scheme according to method
-            if self.method == 'Euler': scheme = euler_scheme
-            elif self.method == 'RK': scheme = rk2_scheme
-            elif self.method == 'exponential_Euler': scheme = exp_euler_scheme
-            else: raise Exception("The numerical integration method is not valid")
-            
-            self.mf = GPUModelFitting(self.group, self.model, self.criterion_object,
-                                      self.input_var,
-                                      self.onset, precision=self.precision, scheme=scheme)
-    
-    def transform_data(self):
-        self.transformer = DataTransformer(self.neurons,
-                                           self.inputs,
-                                           spikes = self.spikes, 
-                                           traces = self.traces,
-                                           dt = self.dt,
-                                           slices = self.slices,
-                                           overlap = self.overlap, 
-                                           groups = self.groups)
-        self.total_steps = self.transformer.total_steps
-        self.sliced_duration = self.transformer.sliced_duration
-        
-        self.sliced_inputs = self.transformer.slice_traces(self.inputs)
-        self.inputs_inline, self.inputs_offset = self.transformer.transform_traces(self.sliced_inputs)
-        
-        if self.traces is not None:
-            self.sliced_traces = self.transformer.slice_traces(self.traces)
-            self.traces_inline, self.traces_offset = self.transformer.transform_traces(self.sliced_traces)
-        else:
-            self.sliced_traces, self.traces_inline, self.traces_offset = None, None, None
-        
-        if self.spikes is not None:
-            self.sliced_spikes = self.transformer.slice_spikes(self.spikes)
-            self.spikes_inline, self.spikes_offset = self.transformer.transform_spikes(self.sliced_spikes)
-        else:
-            self.sliced_spikes, self.spikes_inline, self.spikes_offset = None, None, None
-    
-    def inject_input(self):
-        # Injects current in consecutive subgroups, where I_offset have the same value
-        # on successive intervals
-        I_offset = self.inputs_offset
-        k = -1
-        for i in hstack((nonzero(diff(I_offset))[0], len(I_offset) - 1)):
-            I_offset_subgroup_value = I_offset[i]
-            I_offset_subgroup_length = i - k
-            sliced_subgroup = self.group.subgroup(I_offset_subgroup_length)
-            input_sliced_values = self.inputs_inline[I_offset_subgroup_value:I_offset_subgroup_value + self.total_steps]
-            sliced_subgroup.set_var_by_array(self.input_var, TimedArray(input_sliced_values, clock=self.group.clock))
-            k = i
-    
-    def initialize_criterion(self, **criterion_params):
-        # general criterion parameters
-        params = dict(group=self.group, traces=self.sliced_traces, spikes=self.sliced_spikes, 
-                      targets_count=self.groups*self.slices, duration=self.sliced_duration, onset=self.onset, 
-                      spikes_inline=self.spikes_inline, spikes_offset=self.spikes_offset,
-                      traces_inline=self.traces_inline, traces_offset=self.traces_offset)
-        for key,val in criterion_params.iteritems():
-            params[key] = val
-        criterion_name = self.criterion.__class__.__name__
-        
-        # criterion-specific parameters
-        if criterion_name == 'GammaFactor':
-            params['delta'] = self.criterion.delta
-            params['coincidence_count_algorithm'] = self.criterion.coincidence_count_algorithm
-            self.criterion_object = GammaFactorCriterion(**params)
-            
-        if criterion_name == 'LpError':
-            params['p'] = self.criterion.p
-            params['varname'] = self.criterion.varname
-            self.criterion_object = LpErrorCriterion(**params)
-    
-    def update_neurongroup(self, **param_values):
-        """
-        Inject fitting parameters into the NeuronGroup
-        """
-        # Sets the parameter values in the NeuronGroup object
-        self.group.reinit()
-        for param, value in param_values.iteritems():
-            self.group.state(param)[:] = kron(value, ones(self.slices)) # kron param_values if slicing
-        
-        # Reinitializes the model variables
-        if self.initial_values is not None:
-            for param, value in self.initial_values.iteritems():
-                self.group.state(param)[:] = value
-    
-    def combine_sliced_values(self, values):
-        if type(values) is tuple:
-            combined_values = tuple([sum(reshape(v, (self.slices, -1)), axis=0) for v in values])
-        else:
-            combined_values = sum(reshape(values, (self.slices, -1)), axis=0)
-        return combined_values
-    
-    def run(self, **param_values):
-        delays = param_values.pop('delays', zeros(self.neurons))
-        refractory = param_values.pop('refractory', zeros(self.neurons))
-        
-        self.update_neurongroup(**param_values)
-
-        # repeat spike delays and refractory to take slices into account
-        delays = kron(delays, ones(self.slices))
-        refractory = kron(refractory, ones(self.slices))
-        
-        # TODO: add here parameters to criterion_params if a criterion must use some parameters
-        criterion_params = dict(delays=delays)
-
-        self.update_neurongroup(**param_values)
-        self.initialize_criterion(**criterion_params)
-        
-        if self.use_gpu:
-            # Reinitializes the simulation object
-            self.mf.reinit_vars(self.criterion_object,
-                                self.inputs_inline, self.inputs_offset,
-                                self.spikes_inline, self.spikes_offset,
-                                self.traces_inline, self.traces_offset,
-                                delays, refractory
-                                )
-            # LAUNCHES the simulation on the GPU
-            self.mf.launch(self.sliced_duration, self.stepsize)
-            # Synchronize the GPU values with a call to gpuarray.get()
-            self.criterion_object.update_gpu_values()
-        else:
-            # set the refractory period
-            if self.max_refractory is not None:
-                self.group.refractory = refractory
-            # Launch the simulation on the CPU
-            self.group.clock.reinit()
-            net = Network(self.group, self.criterion_object)
-            net.run(self.sliced_duration)
-        
-        sliced_values = self.criterion_object.get_values()
-        combined_values = self.combine_sliced_values(sliced_values)
-        values = self.criterion_object.normalize(combined_values)
-        return values
 
 
 
@@ -688,87 +382,87 @@ def modelfitting(model=None,
 
 
 
-def get_spikes(model=None, reset=None, threshold=None,
-                input=None, input_var='I', dt=None,
-                **params):
-    """
-    Retrieves the spike times corresponding to the best parameters found by
-    the modelfitting function.
-    
-    **Arguments**
-    
-    ``model``, ``reset``, ``threshold``, ``input``, ``input_var``, ``dt``
-        Same parameters as for the ``modelfitting`` function.
-        
-    ``**params``
-        The best parameters returned by the ``modelfitting`` function.
-    
-    **Returns**
-    
-    ``spiketimes``
-        The spike times of the model with the given input and parameters.
-    """
-    duration = len(input) * dt
-    ngroups = len(params[params.keys()[0]])
-
-    group = NeuronGroup(N=ngroups, model=model, reset=reset, threshold=threshold,
-                        clock=Clock(dt=dt))
-    group.set_var_by_array(input_var, TimedArray(input, clock=group.clock))
-    for param, values in params.iteritems():
-        if (param == 'delays') | (param == 'fitness'):
-            continue
-        group.state(param)[:] = values
-
-    M = SpikeMonitor(group)
-    net = Network(group, M)
-    net.run(duration)
-    reinit_default_clock()
-    return M.spikes
-
-def predict(model=None, reset=None, threshold=None,
-            data=None, delta=4 * ms,
-            input=None, input_var='I', dt=None,
-            **params):
-    """
-    Predicts the gamma factor of a fitted model with respect to the data with
-    a different input current.
-    
-    **Arguments**
-    
-    ``model``, ``reset``, ``threshold``, ``input_var``, ``dt``
-        Same parameters as for the ``modelfitting`` function.
-        
-    ``input``
-        The input current, that can be different from the current used for the fitting
-        procedure.
-    
-    ``data``
-        The experimental spike times to compute the gamma factor against. They have
-        been obtained with the current ``input``.
-    
-    ``**params``
-        The best parameters returned by the ``modelfitting`` function.
-    
-    **Returns**
-    
-    ``gamma``
-        The gamma factor of the model spike trains against the data.
-        If there were several groups in the fitting procedure, it is a vector
-        containing the gamma factor for each group.
-    """
-    spikes = get_spikes(model=model, reset=reset, threshold=threshold,
-                        input=input, input_var=input_var, dt=dt,
-                        **params)
-
-    ngroups = len(params[params.keys()[0]])
-    gamma = zeros(ngroups)
-    for i in xrange(ngroups):
-        spk = [t for j, t in spikes if j == i]
-        gamma[i] = gamma_factor(spk, data, delta, normalize=True, dt=dt)
-    if len(gamma) == 1:
-        return gamma[0]
-    else:
-        return gamma
+#def get_spikes(model=None, reset=None, threshold=None,
+#                input=None, input_var='I', dt=None,
+#                **params):
+#    """
+#    Retrieves the spike times corresponding to the best parameters found by
+#    the modelfitting function.
+#    
+#    **Arguments**
+#    
+#    ``model``, ``reset``, ``threshold``, ``input``, ``input_var``, ``dt``
+#        Same parameters as for the ``modelfitting`` function.
+#        
+#    ``**params``
+#        The best parameters returned by the ``modelfitting`` function.
+#    
+#    **Returns**
+#    
+#    ``spiketimes``
+#        The spike times of the model with the given input and parameters.
+#    """
+#    duration = len(input) * dt
+#    ngroups = len(params[params.keys()[0]])
+#
+#    group = NeuronGroup(N=ngroups, model=model, reset=reset, threshold=threshold,
+#                        clock=Clock(dt=dt))
+#    group.set_var_by_array(input_var, TimedArray(input, clock=group.clock))
+#    for param, values in params.iteritems():
+#        if (param == 'delays') | (param == 'fitness'):
+#            continue
+#        group.state(param)[:] = values
+#
+#    M = SpikeMonitor(group)
+#    net = Network(group, M)
+#    net.run(duration)
+#    reinit_default_clock()
+#    return M.spikes
+#
+#def predict(model=None, reset=None, threshold=None,
+#            data=None, delta=4 * ms,
+#            input=None, input_var='I', dt=None,
+#            **params):
+#    """
+#    Predicts the gamma factor of a fitted model with respect to the data with
+#    a different input current.
+#    
+#    **Arguments**
+#    
+#    ``model``, ``reset``, ``threshold``, ``input_var``, ``dt``
+#        Same parameters as for the ``modelfitting`` function.
+#        
+#    ``input``
+#        The input current, that can be different from the current used for the fitting
+#        procedure.
+#    
+#    ``data``
+#        The experimental spike times to compute the gamma factor against. They have
+#        been obtained with the current ``input``.
+#    
+#    ``**params``
+#        The best parameters returned by the ``modelfitting`` function.
+#    
+#    **Returns**
+#    
+#    ``gamma``
+#        The gamma factor of the model spike trains against the data.
+#        If there were several groups in the fitting procedure, it is a vector
+#        containing the gamma factor for each group.
+#    """
+#    spikes = get_spikes(model=model, reset=reset, threshold=threshold,
+#                        input=input, input_var=input_var, dt=dt,
+#                        **params)
+#
+#    ngroups = len(params[params.keys()[0]])
+#    gamma = zeros(ngroups)
+#    for i in xrange(ngroups):
+#        spk = [t for j, t in spikes if j == i]
+#        gamma[i] = gamma_factor(spk, data, delta, normalize=True, dt=dt)
+#    if len(gamma) == 1:
+#        return gamma[0]
+#    else:
+#        return gamma
 
 
 
@@ -821,7 +515,7 @@ if __name__ == '__main__':
                             threshold = 1,
                             data = data,
                             input = input,
-                            cpu = 1,
+                            gpu = 1,
                             dt = .1*ms,
                             popsize = 1000,
                             maxiter = 1,
@@ -829,9 +523,6 @@ if __name__ == '__main__':
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms],
                             )
-    
-    
     print_table(results)
-    
     
     

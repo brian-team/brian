@@ -129,7 +129,7 @@ class Criterion(Monitor, NetworkOperation):
         """
         Return the current time step
         """
-        return int(self.clock.t/self.dt)
+        return int(round(self.clock.t/self.dt))
     
     def get_spikes_count(self, spikes):
         count = zeros(self.K)
@@ -233,8 +233,9 @@ class LpErrorCriterion(Criterion):
     
     def timestep_call(self):
         v = self.get_value(self.varname)
-        t = self.step()
+        t = self.step()+1
         if t<self.onset: return # onset
+        if t*self.dt >= self.duration: return
         d = self.intdelays
         indices = (t-d>=0)&(t-d<self.total_steps) # neurons with valid delays (stay inside the target trace)
         vtar = self.traces[:,t-d] # target value at this timestep for every neuron
@@ -257,7 +258,7 @@ class LpErrorCriterion(Criterion):
         
         # TIMESTEP
         code['%CRITERION_TIMESTEP%'] = """
-        if (T<=duration-spikedelay) {
+        if (Tdelay<duration-spikedelay-1) {
             error = error + pow(abs(trace_value - %s), %.4f);
         }
         """ % (self.varname, self.p)

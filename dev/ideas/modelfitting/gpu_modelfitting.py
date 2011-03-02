@@ -2,7 +2,7 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
                     arange, sort_spikes, rint, SpikeMonitor, Connection, Threshold, Reset, \
-                    int32, double, VariableReset, StringReset
+                    int32, double, VariableReset, StringReset, VariableThreshold, StringThreshold
 from brian.tools.statistics import firing_rate, get_gamma_factor
 from playdoh import *
 import brian.optimiser as optimiser
@@ -70,6 +70,9 @@ __global__ void runsim(
     // DATA DECLARE
     %DATA_DECLARE%
     
+    // STATEMONITOR DECLARE
+    %STATEMONITOR_DECLARE%
+    
     // MISC PARAMETERS
     int onset                         // Time onset (only count spikes from here onwards)
     )
@@ -84,7 +87,11 @@ __global__ void runsim(
     // LOAD VARIABLES
     %LOAD_VARIABLES%
     
+    // DATA INIT
     %DATA_INIT%
+    
+    // STATEMONITOR INIT
+    %STATEMONITOR_INIT%
     
     // CRITERION INITIALIZATION
     %CRITERION_INIT%
@@ -121,19 +128,26 @@ __global__ void runsim(
         // RESET
         if(has_spiked||is_refractory)
         {
-            %RESET%;
+            %RESET%
         }
         
         if(has_spiked)
             next_allowed_spiketime = T+refractory;
         
+        // DATA UPDATE
         %DATA_UPDATE%
+        
+        // STATEMONITOR UPDATE
+        %STATEMONITOR_UPDATE%
         
         // CRITERION TIMESTEP
         %CRITERION_TIMESTEP%
     }
-    // Store variables at end
+    // STORE VARIABLES
     %STORE_VARIABLES%
+    
+    // STATEMONITOR END
+    %STATEMONITOR_END%
     
     // CRITERION END
     %CRITERION_END%
@@ -216,11 +230,15 @@ class GPUModelFitting(object):
     mark the beginning and end of the train rather than storing the number of
     spikes for each train. 
     '''
-    def __init__(self, G, eqs,
+    def __init__(self,
+                 G,
+                 eqs,
                  criterion, # Criterion object
                  input_var,
                  onset=0*ms,
                  precision=default_precision,
+                 statemonitor_var=None,
+                 duration=None,
                  scheme=euler_scheme
                  ):
         eqs.prepare()
@@ -235,11 +253,13 @@ class GPUModelFitting(object):
         self.onset = onset
         self.eqs = eqs
         self.G = G
+        self.duration = int(duration/self.dt)
         self.input_var = input_var
+        self.statemonitor_var = statemonitor_var
         self.criterion = criterion
         self.generate_code()
 
-    def generate_threshold_code(self):
+    def generate_threshold_code(self, src):
         eqs = self.eqs
         threshold = self.G._threshold
         if threshold.__class__ is Threshold:
@@ -260,10 +280,13 @@ class GPUModelFitting(object):
             threshold = expr
         else:
             raise ValueError('Threshold must be constant, VariableThreshold or StringThreshold.')
-        self.threshold = threshold
-#        return threshold
         
-    def generate_reset_code(self):
+        # Substitute threshold
+        src = src.replace('%THRESHOLD%', threshold)
+        
+        return src
+     
+    def generate_reset_code(self, src):
         eqs = self.eqs
         reset = self.G._resetfun
         if reset.__class__ is Reset:
@@ -282,44 +305,14 @@ class GPUModelFitting(object):
             all_variables = eqs._eq_names + eqs._diffeq_names + eqs._alias.keys() + ['t']
             expr = optimiser.freeze(expr, all_variables, namespace)
             reset = expr
-        self.reset = reset
-#        return reset
-            
-    def generate_code(self):
-        
-        self.eqs.prepare()
-        
-        self.generate_threshold_code()
-        self.generate_reset_code()
-        
-        src = get_cuda_template()
-        # Substitute state variable declarations
-        indexvar = dict((v, k) for k, v in self.G.var_index.iteritems() if isinstance(k, str) and k!='I')
-        extractions = '\n    '.join('%SCALAR% *'+name+'_arr = state_vars+'+str(i*self.N)+';' for i, name in indexvar.iteritems())
-        src = src.replace('%EXTRACT_STATE_VARIABLES%', extractions)
-        # Substitute load variables
-        loadvar_names = self.eqs._diffeq_names + []
-        loadvar_names.remove('I') # I is assumed to be a parameter and loaded per time step
-        loadvars = '\n    '.join('%SCALAR% ' + name + ' = ' + name + '_arr[neuron_index];' for name in loadvar_names)
-        src = src.replace('%LOAD_VARIABLES%', loadvars)
-        # Substitute save variables
-        savevars = '\n    '.join(name + '_arr[neuron_index] = ' + name + ';' for name in loadvar_names)
-        src = src.replace('%STORE_VARIABLES%', savevars)
-        # Substitute threshold
-        src = src.replace('%THRESHOLD%', self.threshold)
+#        self.reset = reset
         # Substitute reset
-        reset = '\n            '.join(line.strip() + ';' for line in self.reset.split('\n') if line.strip())
-        src = src.replace('%RESET%', self.reset)
-        # Substitute state update
-        sulines = ModelfittingGPUCodeGenerator(dtype=self.precision).generate(self.eqs, self.scheme)
-        sulines = re.sub(r'\bdt\b', '%DT%', sulines)
-        src = src.replace('%STATE_UPDATE%', sulines.strip())
+        reset = '\n            '.join(line.strip() + ';' for line in reset.split('\n') if line.strip())
+        src = src.replace('%RESET%', reset)
         
-        # Substitute criterion code
-        criterion_code = self.criterion.get_cuda_code()
-        for search, replace in criterion_code.iteritems():
-            src = src.replace(search, replace)
-        
+        return src
+            
+    def generate_data_code(self, src):
         # Substitute spikes/traces declare
         if self.criterion.type == 'spikes':
             data_declare = """
@@ -354,8 +347,8 @@ class GPUModelFitting(object):
         if self.criterion.type == 'traces':
             data_update = """
         Tdelay = T+spikedelay;
-        if ((Tdelay>=0)&(Tdelay<duration)) {
-            trace_value = traces_arr[Tdelay+trace_offset];
+        if ((Tdelay>=0)&(Tdelay<duration-1)) {
+            trace_value = traces_arr[Tdelay+trace_offset+1];
         }
             """
         src = src.replace('%DATA_UPDATE%', data_update)
@@ -369,7 +362,81 @@ class GPUModelFitting(object):
             data_end = """
             """
         src = src.replace('%DATA_END%', data_end)
-            
+        
+        return src
+    
+    def generate_statemonitor_code(self, src):
+        if self.statemonitor_var is not None:
+            declare = """
+    %SCALAR% *statemonitor_values,
+    int *statemonitor_offsets,
+            """
+            init = """
+    int statemonitor_offset = statemonitor_offsets[neuron_index];
+            """
+            update = """
+        statemonitor_values[statemonitor_offset] = %s;
+        statemonitor_offset++;
+            """ % self.statemonitor_var
+            end = """
+    statemonitor_offsets[neuron_index] = statemonitor_offset;
+            """
+        else:
+            declare = ""
+            init = ""
+            update = ""
+            end = ""
+        src = src.replace('%STATEMONITOR_DECLARE%', declare)
+        src = src.replace('%STATEMONITOR_INIT%', init)
+        src = src.replace('%STATEMONITOR_UPDATE%', update)
+        src = src.replace('%STATEMONITOR_END%', end)
+        return src
+    
+    def generate_code(self):
+        self.eqs.prepare()
+        src = get_cuda_template()
+        # Substitute state variable declarations
+        indexvar = dict((v, k) for k, v in self.G.var_index.iteritems() if isinstance(k, str) and k!='I')
+        extractions = '\n    '.join('%SCALAR% *'+name+'_arr = state_vars+'+str(i*self.N)+';' for i, name in indexvar.iteritems())
+        src = src.replace('%EXTRACT_STATE_VARIABLES%', extractions)
+        
+        # Substitute load variables
+        loadvar_names = self.eqs._diffeq_names + []
+        loadvar_names.remove('I') # I is assumed to be a parameter and loaded per time step
+        loadvars = '\n    '.join('%SCALAR% ' + name + ' = ' + name + '_arr[neuron_index];' for name in loadvar_names)
+        
+        # simple equation patterns
+        for name in self.eqs._string.keys():
+            if name not in self.eqs._diffeq_names:
+                loadvars += '\n    %SCALAR% ' + name + ' = 0;'
+        
+        src = src.replace('%LOAD_VARIABLES%', loadvars)
+        
+        # Substitute save variables
+        savevars = '\n    '.join(name + '_arr[neuron_index] = ' + name + ';' for name in loadvar_names)
+        src = src.replace('%STORE_VARIABLES%', savevars)
+        
+        src = self.generate_threshold_code(src)
+        src = self.generate_reset_code(src)
+        src = self.generate_data_code(src)
+        src = self.generate_statemonitor_code(src)
+        
+        # Substitute state update
+        sulines = ModelfittingGPUCodeGenerator(dtype=self.precision).generate(self.eqs, self.scheme)
+        
+        # simple equation patterns
+        for name in self.eqs._string.keys():
+            if name not in self.eqs._diffeq_names:
+                sulines += '        ' + name + ' = ' + self.eqs._string[name] + ';\n'
+        
+        sulines = re.sub(r'\bdt\b', '%DT%', sulines)
+        src = src.replace('%STATE_UPDATE%', sulines.strip())
+        
+        # Substitute criterion code
+        criterion_code = self.criterion.get_cuda_code()
+        for search, replace in criterion_code.iteritems():
+            src = src.replace(search, replace)
+        
         # Substitute dt
         src = src.replace('%DT%', str(float(self.dt)))
         # Substitute SCALAR
@@ -399,6 +466,12 @@ class GPUModelFitting(object):
         self.refractory_arr = gpuarray.to_gpu(array(rint(refractory / self.dt), dtype=int32))
         self.next_allowed_spiketime_arr = gpuarray.to_gpu(-ones(self.N, dtype=int32))
 
+    def initialize_statemonitor(self):
+        self.statemonitor_values = gpuarray.to_gpu(zeros(self.N*self.duration, dtype=self.precision))
+        self.statemonitor_offsets = gpuarray.to_gpu(arange(0, self.duration*self.N+1,
+                                                           self.duration, 
+                                                           dtype=int32))
+    
     def initialize_kernel_arguments(self):
         self.kernel_func_args = [self.statevars_arr,
                                  self.I,
@@ -413,6 +486,10 @@ class GPUModelFitting(object):
         if self.criterion.type == 'traces':
             self.kernel_func_args += [self.traces,
                                       self.traces_offset]
+        if self.statemonitor_var is not None:
+            self.kernel_func_args += [self.statemonitor_values,
+                                      self.statemonitor_offsets]
+        
         self.kernel_func_args += [int32(rint(self.onset / self.dt))]
 
     def reinit_vars(self, criterion,
@@ -448,6 +525,10 @@ class GPUModelFitting(object):
         self.criterion.initialize_cuda_variables()
         self.initialize_delays(spikedelays)
         self.initialize_refractory(refractory)
+        
+        if self.statemonitor_var is not None:
+            self.initialize_statemonitor()
+        
         self.initialize_kernel_arguments()
 
     def launch(self, duration, stepsize=1 * second):
@@ -463,3 +544,11 @@ class GPUModelFitting(object):
                 self.kernel_func(int32(Tstart), int32(Tend), int32(duration),
                                  *self.kernel_func_args, **self.kernel_func_kwds)
                 pycuda.context.synchronize()
+
+    def get_statemonitor_values(self):
+        values = self.statemonitor_values.get()
+        values = values.reshape((self.N, -1))
+        return values
+
+
+
