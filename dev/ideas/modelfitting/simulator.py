@@ -1,7 +1,7 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
-                    arange, sort_spikes, rint, SpikeMonitor, Connection
+                    arange, sort_spikes, rint, SpikeMonitor, Connection, StateMonitor
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
     from playdoh import *
