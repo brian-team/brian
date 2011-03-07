@@ -258,7 +258,7 @@ class LpErrorCriterion(Criterion):
         
         # TIMESTEP
         code['%CRITERION_TIMESTEP%'] = """
-        if (Tdelay<duration-spikedelay-1) {
+        if ((T >= onset)&(Tdelay<duration-spikedelay-1)) {
             error = error + pow(abs(trace_value - %s), %.4f);
         }
         """ % (self.varname, self.p)

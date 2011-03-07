@@ -116,6 +116,18 @@ class DataTransformer(object):
 
 
 
+def slice_trace(input, trace, slices = 1, dt = defaultclock.dt, overlap = 0*ms):
+    input = input.reshape((1,-1))
+    trace = trace.reshape((1,-1))
+    dt = DataTransformer(1, input, trace, dt = dt,
+                         slices = slices, overlap = overlap, groups = slices)
+    sliced_traces = dt.slice_traces(trace)
+    sliced_input = dt.slice_traces(input)
+    return sliced_input, sliced_traces
+
+
+
+
 class Simulator(object):
     def __init__(self, model, reset, threshold, 
                  inputs, input_var = 'I', dt = defaultclock.dt,
@@ -355,6 +367,7 @@ def simulate( model, reset = None, threshold = None,
                  groups = 1,
                  slices = 1,
                  overlap = 0*second,
+                 onset = None,
                  neurons = 1,
                  initial_values = None,
                  use_gpu = False,
@@ -404,7 +417,10 @@ def simulate( model, reset = None, threshold = None,
     # default overlap when no time slicing
     if slices == 1:
         overlap = 0*ms
-
+        
+    if onset is None:
+        onset = overlap    
+    
     # check numerical integration method
     if use_gpu and method not in ['Euler', 'RK', 'exponential_Euler']:
         raise Exception("The method can only be 'Euler', 'RK', or 'exponential_Euler' when using the GPU") 
@@ -433,7 +449,7 @@ def simulate( model, reset = None, threshold = None,
                          groups = groups,
                          slices = slices,
                          overlap = overlap,
-                         onset = overlap,
+                         onset = onset,
                          neurons = neurons,
                          initial_values = initial_values,
                          unit_type = unit_type,
@@ -464,41 +480,51 @@ if __name__ == '__main__':
         R : 1
         tau : second
     ''')
-    input = loadtxt('current.txt')
     
+    input = loadtxt('current.txt')
     trace = loadtxt('trace_artificial.txt')
-    spikes= loadtxt('spikes_artificial.txt')
+    
+    neurons = 1
+    groups = 4
+    overlap = 250*ms
+    
+    R = [3e9]*neurons
+    tau = linspace(25*ms, 30*ms, neurons)
     
     # GAMMA FACTOR
-    criterion = GammaFactor(delta=2*ms)
-    data = spikes
-#    data[:,1] += 50*ms
+#    criterion = GammaFactor(delta=2*ms)
+#    spikes= loadtxt('spikes_artificial.txt')
+#    data = spikes
     
     # LP ERROR
     criterion = LpError(p=2, varname='V')
+    
+    input, trace = slice_trace(input, trace, slices = groups, overlap = overlap)
     data = trace
     
     # SIMULATE, EVALUATE CRITERION AND RECORD TRACES ON GPU
-    neurons = 5
-    R = [3e9]*neurons
-    tau = linspace(25*ms, 30*ms, neurons)
-    criterion_values, record_values = simulate(model = equations,
-                                reset = 0,
-                                threshold = 1,
-                                data = data,
-                                input = input,
-                                use_gpu = True,
-                                dt = .1*ms,
-                                criterion = criterion,
-                                record = 'V',
-                                neurons = neurons,
-                                R = R,
-                                tau = tau,
-                                )
+    criterion_values, record_values = simulate( model = equations,
+                                                reset = 0,
+                                                threshold = 1,
+                                                data = trace,
+                                                input = input,
+                                                use_gpu = True,
+                                                dt = .1*ms,
+                                                criterion = criterion,
+                                                record = 'V',
+                                                onset = overlap,
+                                                neurons = neurons*groups,
+                                                R = R,
+                                                tau = tau,
+                                                )
     print criterion_values
     
-    plot(trace)
-    plot(record_values.transpose())
+    n = data.shape[0]
+    print data.shape
+    for i in xrange(n):
+        subplot(100*n+10+(i+1))
+        plot(trace[i,:])
+        plot(record_values[i,:])
     show()
     
     

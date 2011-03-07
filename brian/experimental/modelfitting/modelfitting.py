@@ -21,6 +21,7 @@ from simulator import *
 import sys, cPickle
 
 __all__ = ['modelfitting', 'print_table', 'PSO', 'GA','CMAES',
+           'slice_trace',
            'MAXCPU', 'MAXGPU',
            'GammaFactor', 'LpError',
            'simulate', 
@@ -86,7 +87,8 @@ def modelfitting(model=None,
                  popsize=1000,
                  maxiter=10,
                  slices=1,
-                 overlap=0*second,
+                 overlap=None,
+                 onset=None,
                  initial_values=None,
                  stepsize=100 * ms,
                  unit_type=None,
@@ -292,8 +294,13 @@ def modelfitting(model=None,
         raise Exception('dt (sampling frequency of the input) must be set')
 
     # default overlap when no time slicing
-    if slices == 1:
+    if overlap is None:
         overlap = 0*ms
+    if onset is None:
+        onset = overlap
+#    if slices == 1:
+#        overlap = 0*ms
+#        onset = overlap
         
     # default allocation
     if cpu is None and gpu is None and unit_type is None:
@@ -332,7 +339,7 @@ def modelfitting(model=None,
                    precision=precision,
                    stepsize=stepsize,
                    method=method,
-                   onset=overlap)
+                   onset=onset)
 
     shared_data = dict(inputs=inputs,
                        traces=traces,
@@ -501,11 +508,15 @@ if __name__ == '__main__':
 #    savetxt('spikes_artificial.txt', spikes)
     
     trace = loadtxt('trace_artificial.txt')
-    spikes= loadtxt('spikes_artificial.txt')
+    overlap = 250*ms
+    slices = 4
+    dt = .1*ms
+    input, trace = slice_trace(input, trace, slices = slices, dt=dt, overlap = overlap)
     
     # GAMMA FACTOR
-    criterion = GammaFactor(delta=2*ms)
-    data = spikes
+#    criterion = GammaFactor(delta=2*ms)
+#    spikes= loadtxt('spikes_artificial.txt')
+#    data = spikes
 #    data[:,1] += 50*ms
     
     # LP ERROR
@@ -517,14 +528,36 @@ if __name__ == '__main__':
                             threshold = 1,
                             data = data,
                             input = input,
+                            onset = overlap,
                             gpu = 1,
-                            dt = .1*ms,
+                            dt = dt,
                             popsize = 1000,
-                            maxiter = 1,
+                            maxiter = 5,
                             criterion = criterion,
                             R = [1.0e9, 9.0e9],
                             tau = [10*ms, 40*ms],
                             )
     print_table(results)
     
+    criterion_values, record_values = simulate( model = equations,
+                                                reset = 0,
+                                                threshold = 1,
+                                                data = data,
+                                                input = input,
+                                                use_gpu = True,
+                                                dt = dt,
+                                                criterion = criterion,
+                                                record = 'V',
+                                                onset = overlap,
+                                                neurons = slices,
+                                                **results.best_params
+                                                )
+    
+    trace = trace[:,int(overlap/dt):].flatten()
+    traceV = record_values[:,int(overlap/dt):].flatten()
+    
+    plot(trace)
+    plot(traceV)
+    
+    show()
     
