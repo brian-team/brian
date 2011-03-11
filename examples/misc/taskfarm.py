@@ -7,13 +7,13 @@ from brian import *
 from brian.tools.datamanager import *
 from brian.tools.taskfarm import *
 
-def find_rate(k):#, report):
+def find_rate(k, report):
     eqs = '''
     dV/dt = (k-V)/(10*ms) : 1
     '''
     G = NeuronGroup(1000, eqs, reset=0, threshold=1)
     M = SpikeCounter(G)
-    run(30*second)#, report=report)
+    run(30*second, report=report)
     return (k, mean(M.count)/30)
 
 if __name__=='__main__':
