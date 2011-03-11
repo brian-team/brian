@@ -73,6 +73,11 @@ class DataManager(object):
     ``iteritems()``
         Returns all ``(key, value)`` pairs, for each Shelf file, as an iterator
         (useful for large files with too much data to be loaded into memory).
+    ``itervalues()``
+        Return all values, for each Shelf file, as an iterator.
+    ``items()``, ``values()``
+        As for ``iteritems`` and ``itervalues`` but returns a list rather than
+        an iterator.
     ``itemcount()``
         Returns the total number of items across all the Shelf files.
     ``keys()``
@@ -206,6 +211,16 @@ class DataManager(object):
             shelf = shelve.open(name, protocol=2)
             for key, value in shelf.iteritems():
                 yield key, value
+                
+    def itervalues(self):
+        for key, val in self.iteritems():
+            yield val
+    
+    def items(self):
+        return list(self.iteritems())
+            
+    def values(self):
+        return list(self.itervalues())
     
     def itemcount(self):
         return sum(len(shelve.open(name, protocol=2)) for name in self.session_filenames())

@@ -16,3 +16,4 @@ remotecontrolserver.py
 remotecontrolclient.py
 ircam_hrtf.py
 sound_localisation_model.py
+taskfarm.py

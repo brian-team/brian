@@ -5,6 +5,10 @@ Major features:
 
 Minor features:
 
+* Added new brian.tools.taskfarm.run_tasks function to use multiple CPUs to
+  perform multiple runs of a simulation and save results to a DataManager,
+  with an optional GUI interface.
+
 Improvements:
 
 Bug fixes:
