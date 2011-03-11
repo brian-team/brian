@@ -20,7 +20,8 @@ if __name__=='__main__':
     N = 30
     dataman = DataManager('ratedata')
     if dataman.itemcount()<N:
-        run_tasks(dataman, find_rate, rand(N-dataman.itemcount())*19+1)
+        M = N-dataman.itemcount()
+        run_tasks(dataman, find_rate, rand(M)*19+1)
     X, Y = zip(*dataman.values())
     plot(X, Y, '.')
     xlabel('k')

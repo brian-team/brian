@@ -6,6 +6,7 @@ from brian.utils.progressreporting import make_text_report
 import inspect
 import time
 import os
+from numpy import ndarray
 
 __all__ = ['run_tasks']
 
@@ -51,8 +52,8 @@ def run_tasks(dataman, task, items, gui=True, poolsize=0,
         Specify True or False to print out every progress message (defaults to
         False if the GUI is used, or True if not).
     ``numitems=None``
-        If you specify the number of items, an estimate of the time remaining
-        will be given.
+        For iterables (rather than fixed length sequences), if you specify the
+        number of items, an estimate of the time remaining will be given.
         
     The task (defined by a function or class, see below) will be called on each
     item in ``items``, and the results saved to ``dataman``. Results are stored
@@ -93,8 +94,18 @@ def run_tasks(dataman, task, items, gui=True, poolsize=0,
     # User can provide task as a class or a function, if its a function we
     # we use the default FunctionTask
     if not inspect.isclass(task):
+        f = task
         initargs = (task,)
         task = FunctionTask
+    else:
+        f = task.__call__
+    fc = f.func_code
+    if 'report' in fc.co_varnames[:fc.co_argcount] or fc.co_flags&8:
+        will_report = True
+    else:
+        will_report = False
+    if numitems is None and isinstance(items, (list, tuple, ndarray)):
+        numitems = len(items)
     # This will be used to provide process safe access to the data manager
     # (so that multiple processes do not attempt to write to the session at
     # the same time)
@@ -139,7 +150,8 @@ def run_tasks(dataman, task, items, gui=True, poolsize=0,
     if gui:
         if verbose is None:
             verbose = False
-        controller = GuiTaskController(numprocesses, terminate_sim, verbose=verbose)
+        controller = GuiTaskController(numprocesses, terminate_sim,
+                                       verbose=verbose, will_report=will_report)
     else:
         if verbose is None:
             verbose = True
@@ -231,7 +243,8 @@ def task_compute(args):
 
 # task control GUI
 class GuiTaskController(Tkinter.Tk):
-    def __init__(self, processes, terminator, width=600, verbose=False):
+    def __init__(self, processes, terminator, width=600, verbose=False,
+                 will_report=True):
         Tkinter.Tk.__init__(self, None)
         self.parent = None
         self.grid()
@@ -240,11 +253,15 @@ class GuiTaskController(Tkinter.Tk):
         button.grid(column=0, row=0)
         self.pb_width = width
         self.progressbars = []
-        for i in xrange(processes+1):
+        numbars = 1
+        self.will_report = will_report
+        if will_report:
+            numbars += processes
+        for i in xrange(numbars):
             can = Tkinter.Canvas(self, width=width, height=30)
             can.grid(column=0, row=1+i)
             can.create_rectangle(0, 0, width, 30, fill='#aaaaaa')
-            if i<processes:
+            if i<numbars-1:
                 col = '#ffaaaa'
             else:
                 col = '#aaaaff'
@@ -253,10 +270,11 @@ class GuiTaskController(Tkinter.Tk):
             self.progressbars.append((can, r, t))
         self.title('Task control')
     def update_process(self, i, elapsed, complete, msg):
-        can, r, t = self.progressbars[i]
-        can.itemconfigure(t, text='Process '+str(i)+': '+make_text_report(elapsed, complete)+': '+msg)
-        can.coords(r, 0, 0, int(self.pb_width*complete), 30)
-        self.update()
+        if self.will_report:
+            can, r, t = self.progressbars[i]
+            can.itemconfigure(t, text='Process '+str(i)+': '+make_text_report(elapsed, complete)+': '+msg)
+            can.coords(r, 0, 0, int(self.pb_width*complete), 30)
+            self.update()
     def update_overall(self, numdone, numitems, elapsed, complete):
         can, r, t = self.progressbars[-1]
         txt = 'Overall progress, '+str(numdone)+' complete'
