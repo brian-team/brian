@@ -23,7 +23,8 @@ class FunctionTask(object):
             return self.func(*args)
 
 def run_tasks(dataman, task, items, gui=True, poolsize=0,
-              initargs=None, initkwds=None, verbose=None):
+              initargs=None, initkwds=None, verbose=None,
+              numitems=None):
     '''
     Run a series of tasks using multiple CPUs on a single computer.
     
@@ -49,6 +50,9 @@ def run_tasks(dataman, task, items, gui=True, poolsize=0,
     ``verbose=None``
         Specify True or False to print out every progress message (defaults to
         False if the GUI is used, or True if not).
+    ``numitems=None``
+        If you specify the number of items, an estimate of the time remaining
+        will be given.
         
     The task (defined by a function or class, see below) will be called on each
     item in ``items``, and the results saved to ``dataman``. Results are stored
@@ -150,7 +154,13 @@ def run_tasks(dataman, task, items, gui=True, poolsize=0,
             # complete
             nextresult = results.next(0.1)
             i = i+1
-            print 'Computed', i, 'results, time taken:', int(time.time()-start), 's'
+            elapsed = time.time()-start
+            complete = 0.0
+            print 'Computed', i, 'results, time taken:', int(elapsed), 's'
+            if numitems is not None:
+                complete = float(i)/numitems
+                print make_text_report(time.time()-start, complete)
+            controller.update_overall(i, numitems, elapsed, complete)
         except StopIteration:
             terminate_sim()
             print 'Finished.'
@@ -230,11 +240,15 @@ class GuiTaskController(Tkinter.Tk):
         button.grid(column=0, row=0)
         self.pb_width = width
         self.progressbars = []
-        for i in xrange(processes):
+        for i in xrange(processes+1):
             can = Tkinter.Canvas(self, width=width, height=30)
             can.grid(column=0, row=1+i)
             can.create_rectangle(0, 0, width, 30, fill='#aaaaaa')
-            r = can.create_rectangle(0, 0, 0, 30, fill='#ffaaaa', width=0)
+            if i<processes:
+                col = '#ffaaaa'
+            else:
+                col = '#aaaaff'
+            r = can.create_rectangle(0, 0, 0, 30, fill=col, width=0)
             t = can.create_text(width/2, 15, text='')
             self.progressbars.append((can, r, t))
         self.title('Task control')
@@ -243,6 +257,16 @@ class GuiTaskController(Tkinter.Tk):
         can.itemconfigure(t, text='Process '+str(i)+': '+make_text_report(elapsed, complete)+': '+msg)
         can.coords(r, 0, 0, int(self.pb_width*complete), 30)
         self.update()
+    def update_overall(self, numdone, numitems, elapsed, complete):
+        can, r, t = self.progressbars[-1]
+        txt = 'Overall progress, '+str(numdone)+' complete'
+        if numitems is not None:
+            txt += ': '+make_text_report(elapsed, complete)
+        can.itemconfigure(t, text=txt)
+        if numitems is not None:
+            can.coords(r, 0, 0, int(self.pb_width*complete), 30)
+        self.update()
+        
 
 class TaskController(object):
     def __init__(self, processes, terminator, verbose=True):
@@ -250,6 +274,8 @@ class TaskController(object):
     def update_process(self, i, elapsed, complete, msg):
         if self.verbose:
             print 'Process '+str(i)+': '+make_text_report(elapsed, complete)+': '+msg
+    def update_overall(self, numdone, numitems, elapsed, complete):
+        pass
     def update(self):
         pass
     def destroy(self):
