@@ -6,7 +6,7 @@ from brian.utils.progressreporting import make_text_report
 import inspect
 import time
 import os
-from numpy import ndarray
+from numpy import ndarray, zeros
 
 __all__ = ['run_tasks']
 
@@ -19,7 +19,7 @@ class FunctionTask(object):
         # function that will have been passed in kwds (see task_compute)
         fc = self.func.func_code
         if 'report' in fc.co_varnames[:fc.co_argcount] or fc.co_flags&8:
-            return self.func(*args, report=kwds['report'])
+            return self.func(*args, **kwds)
         else:
             return self.func(*args)
 
@@ -155,24 +155,31 @@ def run_tasks(dataman, task, items, gui=True, poolsize=0,
     else:
         if verbose is None:
             verbose = True
-        controller = TaskController(numprocesses, terminate_sim, verbose=verbose)
+        controller = TextTaskController(numprocesses, terminate_sim, verbose=verbose)
     for i in range(numprocesses):
         controller.update_process(i, 0, 0, 'No task information')
     i = 0
+    controller.update_overall(0, numitems)
+    def empty_message_queue():
+        while not message_queue.empty():
+            try:
+                pid, taskname, elapsed, complete = message_queue.get_nowait()
+                controller.update_process(pid_to_id[pid], elapsed, complete, taskname)
+            except QueueEmpty:
+                break
+        controller.update()
+        
     while True:
         try:
             # This waits 0.1s for a new result, and otherwise raises a
             # TimeoutError that allows the GUI to update the percentage
             # complete
             nextresult = results.next(0.1)
+            empty_message_queue()
             i = i+1
             elapsed = time.time()-start
             complete = 0.0
-            print 'Computed', i, 'results, time taken:', int(elapsed), 's'
-            if numitems is not None:
-                complete = float(i)/numitems
-                print make_text_report(time.time()-start, complete)
-            controller.update_overall(i, numitems, elapsed, complete)
+            controller.update_overall(i, numitems)
         except StopIteration:
             terminate_sim()
             print 'Finished.'
@@ -182,13 +189,7 @@ def run_tasks(dataman, task, items, gui=True, poolsize=0,
             print 'Terminated task processes'
             raise
         except multiprocessing.TimeoutError:
-            while not message_queue.empty():
-                try:
-                    pid, taskname, elapsed, complete = message_queue.get_nowait()
-                    controller.update_process(pid_to_id[pid], elapsed, complete, taskname)
-                except QueueEmpty:
-                    break
-            controller.update()
+            empty_message_queue()
             if stoprunningsim[0]:
                 print 'Terminated task processes'
                 break
@@ -241,11 +242,50 @@ def task_compute(args):
     # Save the results, with a unique key, to the locking session of the dataman
     task_session[task_dataman.make_unique_key()] = result
 
+class TaskController(object):
+    def __init__(self, processes, terminator, verbose=True):
+        self.verbose = verbose
+        self.completion = zeros(processes)
+        self.numitems, self.numdone = None, 0
+        self.start_time = time.time()
+    def update_process(self, i, elapsed, complete, msg):
+        self.completion[i] = complete%1.0
+        if self.verbose:
+            print 'Process '+str(i)+': '+make_text_report(elapsed, complete)+': '+msg
+            _, msg = self.get_overall_completion()
+            print msg
+    def get_overall_completion(self):
+        complete = 0.0
+        numitems, numdone = self.numitems, self.numdone
+        elapsed = time.time()-self.start_time
+        if numitems is not None:
+            complete = (numdone+sum(self.completion))/numitems
+        txt = 'Overall, '+str(numdone)+' done'
+        if numitems is not None:
+            txt += ' of '+str(numitems)+': '+make_text_report(elapsed, complete)
+        return complete, txt
+    def update_overall(self, numdone, numitems):
+        self.numdone = numdone
+        self.numitems = numitems
+    def recompute_overall(self):
+        pass
+    def update(self):
+        pass
+    def destroy(self):
+        pass
+
+class TextTaskController(TaskController):
+    def update_overall(self, numdone, numitems):
+        TaskController.update_overall(self, numdone, numitems)
+        _, msg = self.get_overall_completion()
+        print msg
+
 # task control GUI
-class GuiTaskController(Tkinter.Tk):
+class GuiTaskController(Tkinter.Tk, TaskController):
     def __init__(self, processes, terminator, width=600, verbose=False,
                  will_report=True):
         Tkinter.Tk.__init__(self, None)
+        TaskController.__init__(self, processes, terminator, verbose=verbose)
         self.parent = None
         self.grid()
         button = Tkinter.Button(self, text='Terminate task',
@@ -269,32 +309,24 @@ class GuiTaskController(Tkinter.Tk):
             t = can.create_text(width/2, 15, text='')
             self.progressbars.append((can, r, t))
         self.title('Task control')
+        
     def update_process(self, i, elapsed, complete, msg):
+        TaskController.update_process(self, i, elapsed, complete, msg)
         if self.will_report:
             can, r, t = self.progressbars[i]
             can.itemconfigure(t, text='Process '+str(i)+': '+make_text_report(elapsed, complete)+': '+msg)
             can.coords(r, 0, 0, int(self.pb_width*complete), 30)
-            self.update()
-    def update_overall(self, numdone, numitems, elapsed, complete):
+        self.recompute_overall()
+        
+    def update_overall(self, numdone, numitems):
+        TaskController.update_overall(self, numdone, numitems)
+        self.recompute_overall()
+    
+    def recompute_overall(self):
+        complete, msg = TaskController.get_overall_completion(self)
+        numitems = self.numitems
         can, r, t = self.progressbars[-1]
-        txt = 'Overall progress, '+str(numdone)+' complete'
-        if numitems is not None:
-            txt += ': '+make_text_report(elapsed, complete)
-        can.itemconfigure(t, text=txt)
+        can.itemconfigure(t, text=msg)
         if numitems is not None:
             can.coords(r, 0, 0, int(self.pb_width*complete), 30)
         self.update()
-        
-
-class TaskController(object):
-    def __init__(self, processes, terminator, verbose=True):
-        self.verbose = verbose
-    def update_process(self, i, elapsed, complete, msg):
-        if self.verbose:
-            print 'Process '+str(i)+': '+make_text_report(elapsed, complete)+': '+msg
-    def update_overall(self, numdone, numitems, elapsed, complete):
-        pass
-    def update(self):
-        pass
-    def destroy(self):
-        pass
