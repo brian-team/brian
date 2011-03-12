@@ -37,6 +37,7 @@ Brian itself is documented in the following sections:
    simulation
    equations
    files
+   managing_sims
 
 For more detailed information, see the reference chapter.
  

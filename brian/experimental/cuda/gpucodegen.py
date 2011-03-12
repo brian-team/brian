@@ -2,12 +2,15 @@
 from brian import *
 from brian import optimiser
 from scipy import weave
-import pycuda
-import pycuda.autoinit as autoinit
-import pycuda.driver as drv
-import pycuda.compiler as compiler
-from pycuda import gpuarray
-from buffering import *
+try:
+    import pycuda
+    import pycuda.autoinit as autoinit
+    import pycuda.driver as drv
+    import pycuda.compiler as compiler
+    from pycuda import gpuarray
+    from buffering import *
+except ImportError:
+    log_warn('Cannot import pycuda')
 import time
 from brian.experimental.codegen.rewriting import rewrite_to_c_expression
 

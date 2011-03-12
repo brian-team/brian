@@ -1,0 +1,99 @@
+.. currentmodule:: brian
+
+Managing simulation runs and data
+=================================
+
+Often, you want to run a simulation multiple times with different parameters
+to generate data for a plot. There are many different ways to manage this,
+and Brian has a few tools to make it easier.
+
+Saving data by hand
+-------------------
+
+The simplest strategy is to run your simulation, and then save the data with
+a unique filename using either
+`pickle <http://docs.python.org/library/pickle.html>`__, writing text or binary
+data to a file
+`with Python <http://docs.python.org/tutorial/inputoutput.html>`__, or with
+`Numpy <http://docs.scipy.org/doc/numpy/user/basics.io.html>`__ and
+`Scipy <http://docs.scipy.org/doc/scipy/reference/tutorial/io.html>`__.
+
+Structured data formats
+-----------------------
+
+Another option is to use a more structured file type, for example, you could
+use the high performance `HDF5 <http://www.hdfgroup.org/HDF5/>`__ scientific
+data file format with `PyTables <http://www.pytables.org>`__.
+
+Python also includes an object for storing data in a dictionary like database
+object with the `shelve module <http://docs.python.org/library/shelve.html>`__.
+
+Brian includes a simple modification of Python's shelves to make it easy to
+generate data in parallel on a single machine or across several machines. The
+problem with Python shelves and HDF5 is that they cannot be accessed by several
+processes on a single machine concurrently (if two processes attempt to write
+to the file at the same time it gets corrupted). In addition, if you want to
+run simulations on two computers at once and merge them you have to write a
+separate program to merge the databases produced. With the
+:class:`~brian.tools.datamanager.DataManager` class, you generate a directory
+containing multiple files, and the data can be distributed amongst these files.
+To merge the results generated on two different computers just copy the
+contents of one directory into the other. The way it works is that to write
+data to a :class:`~brian.tools.datamanager.DataManager`, you first generate a
+''session'' object (which is essentially a Python shelf object) and then
+write data to that. However, when you want to read data, it will look in all
+the files in the directory and return merged data from them. Typically, a
+session file will have the form ``username.computername`` so that merging
+directories across multiple computers/users is straightforward (no name
+conflicts). You can also create a ''locking session''. This object can be
+used in multiple processes concurrently without danger of losing data.
+
+Multiple runs in parallel
+-------------------------
+
+The Python
+`multiprocessing <http://docs.python.org/library/multiprocessing.html>`__
+module can be used for relatively simply distributing simulation runs over
+multiple CPUs. Alternatively, you could use
+`Playdoh <http://code.google.com/p/playdoh/>`__ (produced by our group) to
+distribute work over multiple CPUs and multiple machines. For other solutions,
+see the "Parallel and distributed programming" section of the
+`Scipy Topical Software <http://www.scipy.org/Topical_Software>`__ page.
+
+Brian provides a simple, single machine technique that works with the
+:class:`~brian.tools.datamanager.DataManager` object,
+:func:`~brian.tools.taskfarm.run_tasks`. With this, you provide a function and
+a sequence of arguments to that function, and the function calls will be
+evaluated across multiple CPUs, with the results being stored in the data
+manager. It also features a GUI which gives feedback on simulations as they
+run, and can be used to safely stop the processes without risking losing any
+data. A simple example of using this technique::
+
+	from brian import *
+	from brian.tools.datamanager import *
+	from brian.tools.taskfarm import *
+	
+	def find_rate(k, report):
+	    eqs = '''
+	    dV/dt = (k-V)/(10*ms) : 1
+	    '''
+	    G = NeuronGroup(1000, eqs, reset=0, threshold=1)
+	    M = SpikeCounter(G)
+	    run(30*second, report=report)
+	    return (k, mean(M.count)/30)
+	
+	if __name__=='__main__':
+	    N = 20
+	    dataman = DataManager('taskfarmexample')
+	    if dataman.itemcount()<N:
+	        M = N-dataman.itemcount()
+	        run_tasks(dataman, find_rate, rand(M)*19+1)
+	    X, Y = zip(*dataman.values())
+	    plot(X, Y, '.')
+	    xlabel('k')
+	    ylabel('Firing rate (Hz)')
+	    show()
+
+Finally, a more sophisticated solution for "managing and tracking projects,
+based on numerical simulation or analysis, with the aim of supporting
+reproducible research" is `Sumatra <http://neuralensemble.org/trac/sumatra/>`__.
