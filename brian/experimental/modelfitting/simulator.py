@@ -197,7 +197,7 @@ class Simulator(object):
         # Must recompile the Equations : the functions are not transfered after pickling/unpickling
         self.model.compile_functions()
         
-        self.group = NeuronGroup(self.neurons,
+        self.group = NeuronGroup(self.neurons, # TODO: * slices?
                                  model=self.model,
                                  reset=self.reset,
                                  threshold=self.threshold,
@@ -218,7 +218,7 @@ class Simulator(object):
             else: raise Exception("The numerical integration method is not valid")
             
             self.mf = GPUModelFitting(self.group, self.model, self.criterion_object,
-                                      self.input_var,
+                                      self.input_var, self.neurons/self.groups,
                                       self.onset, 
                                       statemonitor_var = self.statemonitor_var,
                                       duration = self.sliced_duration,

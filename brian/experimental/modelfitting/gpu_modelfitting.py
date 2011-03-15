@@ -119,7 +119,11 @@ __global__ void runsim(
                              // experiment with this
                              
         // STATE UPDATE
-        %STATE_UPDATE%
+        // Update the variables only for T>=onset for neurons in the first group
+        if ((neuron_index>=%NUM_NEURONS_FIRSTGROUP%)|(T>=onset))
+        {
+            %STATE_UPDATE%
+        }
         
         // THRESHOLD
         const bool is_refractory = (T<=next_allowed_spiketime);
@@ -235,6 +239,7 @@ class GPUModelFitting(object):
                  eqs,
                  criterion, # Criterion object
                  input_var,
+                 subpopsize,
                  onset=0*ms,
                  precision=default_precision,
                  statemonitor_var=None,
@@ -253,6 +258,7 @@ class GPUModelFitting(object):
         self.onset = onset
         self.eqs = eqs
         self.G = G
+        self.subpopsize = subpopsize
         self.duration = int(duration/self.dt)
         self.input_var = input_var
         self.statemonitor_var = statemonitor_var
@@ -443,11 +449,11 @@ class GPUModelFitting(object):
         src = src.replace('%SCALAR%', self.precision)
         # Substitute number of neurons
         src = src.replace('%NUM_NEURONS%', str(self.N))
+        src = src.replace('%NUM_NEURONS_FIRSTGROUP%', str(self.subpopsize))
         # Substitute input var name
         src = src.replace('${input_var}', str(self.input_var))
         
         self.kernel_src = src
-#        log_info(src)
 
     def initialize_spikes(self, spiketimes, spiketimes_indices):
         self.spiketimes = gpuarray.to_gpu(array(rint(spiketimes / self.dt), dtype=int32))
