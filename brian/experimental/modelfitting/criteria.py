@@ -592,21 +592,24 @@ class VanRossumCriterion(Criterion):
         for iN in xrange(self.N):
             self.C_population.delay[iN,iN] = diagflat(self.min_delay + self.delays[iN])
         self.C_population.connect_one_to_one(self.group,self.kernel_population)
-        self.spikecount = SpikeCounter(self.group)
-        self.contained_objects = [self.kernel_population,self.C_population,self.spikecount,self.input_target,self.C_target,self.kernel_target]  
-    
+        self.spikecount_mon = SpikeCounter(self.group)
+        self.contained_objects = [self.kernel_population,self.C_population,self.spikecount_mon,self.input_target,self.C_target,self.kernel_target]  
+        self.dt=self.group.clock.dt
+        self.tau = tau
+
     def timestep_call(self):
         trace_population = self.kernel_population.state_('v')
         trace_target = self.kernel_target.state_('v')
         for igroup in xrange(self.K):
             self.distance_vector[igroup*self.nbr_neurons_group:(1+igroup)*self.nbr_neurons_group] += (trace_population[igroup*self.nbr_neurons_group:(1+igroup)*self.nbr_neurons_group]-trace_target[igroup])**2
-    
+        self.spikecount=self.spikecount_mon.count
     def get_values(self):
         return (self.distance_vector)
     
     def normalize(self, distance_vector):
-        distance_vector[nonzero(self.spikecount.count==0)] = inf
-        return 1-self.distance_vector*self.group.clock.dt
+        distance_vector[nonzero(self.spikecount==0)] = inf
+        #distance_vector[nonzero(self.spikecount==1)] = inf
+        return 1-distance_vector*self.group.clock.dt
 
     def get_cuda_code(self):
         code = {}
@@ -614,27 +617,46 @@ class VanRossumCriterion(Criterion):
         #  DECLARATION
         code['%CRITERION_DECLARE%'] = """
     double *error_arr,
-    double tau,
-    double V_kernel,
+    int *count_arr,
         """
         
         # INITIALIZATION
         code['%CRITERION_INIT%'] = """
     double error = error_arr[neuron_index];
+    double V_kernel =0;
+    double V_target =0;
+    int count=count_arr[neuron_index];
+    int next_spike_time = spiketimes[spiketime_index+1];
         """
         
         # TIMESTEP
+#        code['%CRITERION_TIMESTEP%'] = """
+#        """
         code['%CRITERION_TIMESTEP%'] = """
-        if(has_spiked){
-        double V__tmp = (-V_kernel)/tau_metric;
-        V += V__tmp*0.0001;
+        const int Tspike = T+spikedelay;
+        
+        if(has_spiked){       // If the neuron has spiked
+            V_kernel+=1;
         }
+        
+        count += has_spiked*(T>=onset);
+        if(Tspike>=next_spike_time){
+            V_target+=1;
+            spiketime_index++;
+            next_spike_time = spiketimes[spiketime_index+1]; }
+            
 
-        """ % (self.varname, self.p)
+        V_kernel=V_kernel*exp(-%.8f/%.6f);
+        V_target=V_target*exp(-%.8f/%.6f);
+        error+=pow(V_kernel-V_target,2);
+        
+        
+        """ % (self.dt,self.tau,self.dt,self.tau)
         
         # FINALIZATION
         code['%CRITERION_END%'] = """
     error_arr[neuron_index] = error;
+    count_arr[neuron_index] = count;
         """
         
         return code
@@ -644,19 +666,22 @@ class VanRossumCriterion(Criterion):
         Initialize GPU variables to pass to the kernel
         """
         self.error_gpu = gpuarray.to_gpu(zeros(self.N, dtype=double))
+        self.count_gpu = gpuarray.to_gpu(zeros(self.N, dtype=int32))
     
     def get_kernel_arguments(self):
         """
         Return a list of objects to pass to the CUDA kernel.
         """
-        args = [self.error_gpu, self.tau]
+        args = [self.error_gpu,self.count_gpu]
         return args
     
     def update_gpu_values(self):
         """
         Call gpuarray.get() on final values, so that get_values() returns updated values.
         """
-        self._error = self.error_gpu.get()
+        self.distance_vector = self.error_gpu.get()
+        self.spikecount = self.count_gpu.get()
+
         
 class VanRossum(CriterionStruct):
     def __init__(self, tau):
@@ -695,29 +720,118 @@ class BretteCriterion(Criterion):
             self.C_population.delay[iN,iN] = diagflat(self.min_delay + self.delays[iN])
         self.C_population.connect_one_to_one(self.group,self.kernel_population)
         self.kernel_population.tau=tau_metric
-        self.spikecount = SpikeCounter(self.group)
-        self.contained_objects = [self.kernel_population,self.C_population,self.spikecount,self.input_target,self.C_target,self.kernel_target]  
-
+        self.spikecount_mon = SpikeCounter(self.group)
+        self.contained_objects = [self.kernel_population,self.C_population,self.spikecount_mon,self.input_target,self.C_target,self.kernel_target]  
+        self.tau_metric=tau_metric
+        self.dt=self.group.clock.dt
+        
     def timestep_call(self):
         trace_population = self.kernel_population.state_('v')
         trace_target = self.kernel_target.state_('v')
         self.corr_vector += trace_population*trace_target
         self.norm_pop += trace_population**2
         self.norm_target += trace_target**2
+        self.spikecount=self.spikecount_mon.count
         
     def get_values(self):
+        #print self.corr_vector,self.norm_pop,self.norm_target
         return (self.corr_vector,self.norm_pop,self.norm_target)
     
     def normalize(self, values):
         corr_vector=values[0]
         norm_pop=values[1]
         norm_target=values[2]
-        corr_vector[nonzero(self.spikecount.count==0)] = -inf
+        corr_vector[nonzero(self.spikecount==0)] = -inf
         temp=self.corr_vector/sqrt(norm_pop)/sqrt(norm_target)
         temp[isnan(temp)] = -inf
-        print temp
         return temp
 
+    def get_cuda_code(self):
+        code = {}
+        
+        #  DECLARATION
+        code['%CRITERION_DECLARE%'] = """
+    double *error_arr,
+    int *count_arr,
+    double *tau_metric_arr,
+    double *norm_pop_arr,
+    double *norm_target_arr, 
+        """
+
+        
+        # INITIALIZATION
+        code['%CRITERION_INIT%'] = """
+    double error = error_arr[neuron_index];
+    double V_kernel =0;
+    double V_target =0;
+    double tau_metric=tau_metric_arr[neuron_index];
+    int count=count_arr[neuron_index];
+    int next_spike_time = spiketimes[spiketime_index+1];
+    double norm_pop=norm_pop_arr[neuron_index];
+    double norm_target=norm_target_arr[neuron_index];
+        """
+        
+        # TIMESTEP
+#        code['%CRITERION_TIMESTEP%'] = """
+#        """
+        code['%CRITERION_TIMESTEP%'] = """
+        const int Tspike = T+spikedelay;
+        
+        if(has_spiked){       // If the neuron has spiked
+            V_kernel+=1;
+        }
+        
+        count += has_spiked*(T>=onset);
+        if(Tspike>=next_spike_time){
+            V_target+=1;
+            spiketime_index++;
+            next_spike_time = spiketimes[spiketime_index+1]; }
+        
+        V_kernel=V_kernel*exp(-%.8f/tau_metric);
+        V_target=V_target*exp(-%.8f/tau_metric);
+        
+        error+=V_kernel*V_target;
+        norm_pop+=pow(V_kernel,2);
+        norm_target +=pow(V_target,2);
+        
+        
+        """ % (self.dt,self.dt)
+        
+        # FINALIZATION
+        code['%CRITERION_END%'] = """
+    error_arr[neuron_index] = error;
+    count_arr[neuron_index] = count;
+    norm_pop_arr[neuron_index] = norm_pop;
+    norm_target_arr[neuron_index] = norm_target;
+        """
+        
+        return code
+    
+    def initialize_cuda_variables(self):
+        """
+        Initialize GPU variables to pass to the kernel
+        """
+        self.error_gpu = gpuarray.to_gpu(zeros(self.N, dtype=double))
+        self.count_gpu = gpuarray.to_gpu(zeros(self.N, dtype=int32))
+        self.tau_metric_gpu = gpuarray.to_gpu(array(self.tau_metric, dtype=double))
+        self.norm_pop_gpu = gpuarray.to_gpu(zeros(self.N, dtype=double))
+        self.norm_target_gpu = gpuarray.to_gpu(zeros(self.N, dtype=double))
+        
+    def get_kernel_arguments(self):
+        """
+        Return a list of objects to pass to the CUDA kernel.
+        """
+        args = [self.error_gpu,self.count_gpu,self.tau_metric_gpu,self.norm_pop_gpu,self.norm_target_gpu]
+        return args
+    
+    def update_gpu_values(self):
+        """
+        Call gpuarray.get() on final values, so that get_values() returns updated values.
+        """
+        self.corr_vector = self.error_gpu.get()
+        self.spikecount = self.count_gpu.get()
+        self.norm_pop = self.norm_pop_gpu.get()
+        self.norm_target = self.norm_target_gpu.get()
 
 class Brette(CriterionStruct):
     def __init__(self):
