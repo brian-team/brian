@@ -175,8 +175,11 @@ class Simulator(object):
         self.initialize_neurongroup()
         self.transform_data()
         self.inject_input()
-        self.initialize_criterion(delays=zeros(self.neurons))
-        
+
+        if self.criterion.__class__.__name__ == 'Brette':
+            self.initialize_criterion(delays=zeros(self.neurons),tau_metric=zeros(self.neurons))
+        else:
+            self.initialize_criterion(delays=zeros(self.neurons))
         if self.use_gpu:
             self.initialize_gpu()
             
@@ -284,6 +287,13 @@ class Simulator(object):
             params['p'] = self.criterion.p
             params['varname'] = self.criterion.varname
             self.criterion_object = LpErrorCriterion(**params)
+            
+        if criterion_name == 'VanRossum':
+            params['tau'] = self.criterion.tau
+            self.criterion_object = VanRossumCriterion(**params)
+        
+        if criterion_name == 'Brette':
+            self.criterion_object = BretteCriterion(**params)
     
     def update_neurongroup(self, **param_values):
         """
@@ -309,16 +319,20 @@ class Simulator(object):
     def run(self, **param_values):
         delays = param_values.pop('delays', zeros(self.neurons))
         refractory = param_values.pop('refractory', zeros(self.neurons))
-        
+        tau_metric = param_values.pop('tau_metric', zeros(self.neurons))
         self.update_neurongroup(**param_values)
 
         # repeat spike delays and refractory to take slices into account
         delays = kron(delays, ones(self.slices))
         refractory = kron(refractory, ones(self.slices))
-        
+        tau_metric = kron(tau_metric, ones(self.slices))
         # TODO: add here parameters to criterion_params if a criterion must use some parameters
         criterion_params = dict(delays=delays)
 
+        if self.criterion.__class__.__name__ == 'Brette':
+            criterion_params['tau_metric'] = tau_metric
+    
+        
         self.update_neurongroup(**param_values)
         self.initialize_criterion(**criterion_params)
         
@@ -382,7 +396,7 @@ def simulate( model, reset = None, threshold = None,
     if use_gpu: unit_type = 'GPU'
     
     for param in params.keys():
-        if (param not in model._diffeq_names) and (param != 'delays'):
+        if (param not in model._diffeq_names) and (param != 'delays') and (param != 'tau_metric'):
             raise Exception("Parameter %s must be defined as a parameter in the model" % param)
     
     if criterion is None:

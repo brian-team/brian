@@ -498,31 +498,40 @@ if __name__ == '__main__':
         I : 1
         R : 1
         tau : second
+        tau_metric : second
     ''')
     input = loadtxt('current.txt')
     
     # ARTIFICIAL DATA: R=3e9, tau=25*ms
 #    spikes = loadtxt('spikes.txt') # real data
-#    trace, spikes = generate_data()
+    trace, spikes = generate_data()
 #    savetxt('trace_artificial.txt', trace)
 #    savetxt('spikes_artificial.txt', spikes)
     
-    trace = loadtxt('trace_artificial.txt')
-    overlap = 250*ms
-    slices = 4
+#    trace = loadtxt('trace_artificial.txt')
+    overlap = 10*ms
+    slices = 1
     dt = .1*ms
     input, trace = slice_trace(input, trace, slices = slices, dt=dt, overlap = overlap)
     
     # GAMMA FACTOR
-#    criterion = GammaFactor(delta=2*ms)
-#    spikes= loadtxt('spikes_artificial.txt')
+    criterion = GammaFactor(delta=2*ms)
+    spikes= loadtxt('spikes_artificial.txt')
+    data = spikes
+    data[:,1] += 50*ms
+    
+#    # LP ERROR
+#    criterion = LpError(p=2, varname='V')
+#    data = trace
+
+#    # Van Rossum
+#    criterion = VanRossum(tau=6*ms)
 #    data = spikes
-#    data[:,1] += 50*ms
     
-    # LP ERROR
-    criterion = LpError(p=2, varname='V')
-    data = trace
-    
+    #Brette
+#    criterion = Brette()
+#    data = spikes
+
     results = modelfitting( model = equations,
                             reset = 0,
                             threshold = 1,
@@ -530,12 +539,16 @@ if __name__ == '__main__':
                             input = input,
                             onset = overlap,
                             gpu = 1,
+                            #cpu=0,
                             dt = dt,
-                            popsize = 1000,
-                            maxiter = 5,
+                            popsize = 200,
+                            maxiter = 10,
                             criterion = criterion,
                             R = [1.0e9, 9.0e9],
-                            tau = [10*ms, 40*ms],
+                            tau = [10*ms, 4*ms],
+                            algorithm=PSO,
+                            tau_metric= [1*ms, 30*ms],
+                           # delays=[-1*ms, 1*ms]
                             )
     print_table(results)
     
@@ -544,7 +557,7 @@ if __name__ == '__main__':
                                                 threshold = 1,
                                                 data = data,
                                                 input = input,
-                                                use_gpu = True,
+                                                use_gpu = False,
                                                 dt = dt,
                                                 criterion = criterion,
                                                 record = 'V',

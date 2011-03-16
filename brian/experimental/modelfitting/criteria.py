@@ -1,7 +1,8 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
-                    arange, sort_spikes, rint, SpikeMonitor, Connection, int32, double
+                    arange, sort_spikes, rint, SpikeMonitor, Connection, int32, double,SpikeGeneratorGroup,DelayConnection,\
+                    SpikeCounter,forget,diagflat,inf,sqrt,ones_like,isnan
 from brian.tools.statistics import firing_rate, get_gamma_factor
 
 try:
@@ -365,11 +366,8 @@ class GammaFactorCriterion(Criterion):
     
     ``coincidences``
         The number of coincidences for each neuron of the :class:`NeuronGroup`.
-        ``coincidences[i]`` is the number of coincidences for neuron i.
-        
-    ``model_length``
-        The number of spikes for each neuron. ``model_length[i]`` is the spike
-        count for neuron i.
+        ``coincidences[i]`` is the number oflength[i]`` is the spike
+  count for n i.
         
     ``target_length``
         The number of spikes in the target spike train associated to each neuron.
@@ -572,25 +570,155 @@ class GammaFactor(CriterionStruct):
 
 class VanRossumCriterion(Criterion):
     type = 'spikes'
-    def initialize(self, p=2, varname='v'):
-        # TODO
-        pass
+    def initialize(self, tau):
+        self.delay_range =max(self.delays)- min(self.delays)#delay range
+        self.min_delay = abs(min(self.delays))#minimum of possible delay
+        self.distance_vector=zeros(self.N) 
+        self.nbr_neurons_group = self.N/self.K
+        
+        eqs="""
+        dv/dt=(-v)/tau: volt
+        """
+        # network to convolve target spikes with the kernel
+        self.input_target=SpikeGeneratorGroup(self.K,self.spikes,clock=self.group.clock)
+        self.kernel_target=NeuronGroup(self.K,model=eqs,clock=self.group.clock)
+        self.C_target = DelayConnection(self.input_target, self.kernel_target, 'v', structure='dense',  max_delay=self.min_delay)     
+        self.C_target.connect_one_to_one(self.input_target,self.kernel_target)
+        self.C_target.delay = self.min_delay*ones_like(self.C_target.delay)
+
+        # network to convolve population spikes with the kernel
+        self.kernel_population=NeuronGroup(self.N,model=eqs,clock=self.group.clock)
+        self.C_population = DelayConnection(self.group, self.kernel_population, 'v', structure='sparse',  max_delay=self.delay_range)
+        for iN in xrange(self.N):
+            self.C_population.delay[iN,iN] = diagflat(self.min_delay + self.delays[iN])
+        self.C_population.connect_one_to_one(self.group,self.kernel_population)
+        self.spikecount = SpikeCounter(self.group)
+        self.contained_objects = [self.kernel_population,self.C_population,self.spikecount,self.input_target,self.C_target,self.kernel_target]  
     
     def timestep_call(self):
-        # TODO
-        pass
+        trace_population = self.kernel_population.state_('v')
+        trace_target = self.kernel_target.state_('v')
+        for igroup in xrange(self.K):
+            self.distance_vector[igroup*self.nbr_neurons_group:(1+igroup)*self.nbr_neurons_group] += (trace_population[igroup*self.nbr_neurons_group:(1+igroup)*self.nbr_neurons_group]-trace_target[igroup])**2
     
     def get_values(self):
-        # TODO
-        pass
+        return (self.distance_vector)
     
-    def normalize(self, error):
-        # TODO
-        pass
+    def normalize(self, distance_vector):
+        distance_vector[nonzero(self.spikecount.count==0)] = inf
+        return 1-self.distance_vector*self.group.clock.dt
 
+    def get_cuda_code(self):
+        code = {}
+        
+        #  DECLARATION
+        code['%CRITERION_DECLARE%'] = """
+    double *error_arr,
+    double tau,
+    double V_kernel,
+        """
+        
+        # INITIALIZATION
+        code['%CRITERION_INIT%'] = """
+    double error = error_arr[neuron_index];
+        """
+        
+        # TIMESTEP
+        code['%CRITERION_TIMESTEP%'] = """
+        if(has_spiked){
+        double V__tmp = (-V_kernel)/tau_metric;
+        V += V__tmp*0.0001;
+        }
+
+        """ % (self.varname, self.p)
+        
+        # FINALIZATION
+        code['%CRITERION_END%'] = """
+    error_arr[neuron_index] = error;
+        """
+        
+        return code
+    
+    def initialize_cuda_variables(self):
+        """
+        Initialize GPU variables to pass to the kernel
+        """
+        self.error_gpu = gpuarray.to_gpu(zeros(self.N, dtype=double))
+    
+    def get_kernel_arguments(self):
+        """
+        Return a list of objects to pass to the CUDA kernel.
+        """
+        args = [self.error_gpu, self.tau]
+        return args
+    
+    def update_gpu_values(self):
+        """
+        Call gpuarray.get() on final values, so that get_values() returns updated values.
+        """
+        self._error = self.error_gpu.get()
+        
 class VanRossum(CriterionStruct):
-    # TODO
     def __init__(self, tau):
         self.type = 'spikes'
         self.tau = tau
 
+
+class BretteCriterion(Criterion):
+    type = 'spikes'
+    def initialize(self,tau_metric):
+        self.delay_range =max(self.delays)- min(self.delays)#delay range
+        self.min_delay = abs(min(self.delays))#minimum of possible delay
+        self.corr_vector=zeros(self.N) 
+        self.norm_pop = zeros(self.N) 
+        self.norm_target = zeros(self.N) 
+        self.nbr_neurons_group = self.N/self.K
+        
+        eqs="""
+        tau:second
+        dv/dt=(-v)/tau: volt
+        """
+        # network to convolve target spikes with the kernel
+        self.input_target=SpikeGeneratorGroup(self.K,self.spikes,clock=self.group.clock)
+        self.kernel_target=NeuronGroup(self.N,model=eqs,clock=self.group.clock)
+        self.C_target = DelayConnection(self.input_target, self.kernel_target, 'v', structure='sparse',  max_delay=self.min_delay)  
+        self.kernel_target.tau=tau_metric
+
+        for igroup in xrange(self.K):
+            self.C_target.W[igroup,igroup*self.nbr_neurons_group:(1+igroup)*self.nbr_neurons_group] = ones(self.nbr_neurons_group)
+            self.C_target.delay[igroup,igroup*self.nbr_neurons_group:(1+igroup)*self.nbr_neurons_group] =  self.min_delay * ones(self.nbr_neurons_group)
+            
+        # network to convolve population spikes with the kernel
+        self.kernel_population=NeuronGroup(self.N,model=eqs,clock=self.group.clock)
+        self.C_population = DelayConnection(self.group, self.kernel_population, 'v', structure='sparse',  max_delay=self.delay_range)
+        for iN in xrange(self.N):
+            self.C_population.delay[iN,iN] = diagflat(self.min_delay + self.delays[iN])
+        self.C_population.connect_one_to_one(self.group,self.kernel_population)
+        self.kernel_population.tau=tau_metric
+        self.spikecount = SpikeCounter(self.group)
+        self.contained_objects = [self.kernel_population,self.C_population,self.spikecount,self.input_target,self.C_target,self.kernel_target]  
+
+    def timestep_call(self):
+        trace_population = self.kernel_population.state_('v')
+        trace_target = self.kernel_target.state_('v')
+        self.corr_vector += trace_population*trace_target
+        self.norm_pop += trace_population**2
+        self.norm_target += trace_target**2
+        
+    def get_values(self):
+        return (self.corr_vector,self.norm_pop,self.norm_target)
+    
+    def normalize(self, values):
+        corr_vector=values[0]
+        norm_pop=values[1]
+        norm_target=values[2]
+        corr_vector[nonzero(self.spikecount.count==0)] = -inf
+        temp=self.corr_vector/sqrt(norm_pop)/sqrt(norm_target)
+        temp[isnan(temp)] = -inf
+        print temp
+        return temp
+
+
+class Brette(CriterionStruct):
+    def __init__(self):
+        self.type = 'spikes'
