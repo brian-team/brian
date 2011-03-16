@@ -8,7 +8,7 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
                equations = None, reset = None, threshold = None,
                   slice_duration = None, overlap = 0*ms,
                   initial = None, dt = defaultclock.dt,
-                  cpu = None, gpu = 1,
+                  cpu = None, gpu = 1, record='V',
                   p = 1., results=None,
                   **params):
     
@@ -18,7 +18,7 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
     if slice_duration is None:
         slices = 1
     else:
-        slices = int(len(current)*dt/slice_duration)
+        slices = max(int(len(current)*dt/slice_duration), 1)
     current, trace = slice_trace(current, trace, slices=slices, overlap=overlap, dt=dt)
     
     initial_values = {'V0': initial, 'Ve': 0.}
@@ -63,7 +63,12 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
     
     print_table(results)
     
-    bestparams = results.best_pos
+    try:
+        best_params = results.best_params
+    except:
+        best_params = results.best_pos
+        for key in best_params.keys():
+            best_params[key] = [best_params[key]]
     
     criterion_values, record_values = simulate( model = equations,
                                                 reset = reset,
@@ -75,9 +80,9 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
                                                 onset = overlap,
                                                 criterion = criterion,
                                                 use_gpu = True,
-                                                record = 'V',
+                                                record = record,
                                                 initial_values = initial_values,
-                                                **results.best_params
+                                                **best_params
                                                 )
     
     traceV = record_values[:,int(overlap/dt):].flatten()
