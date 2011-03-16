@@ -261,7 +261,7 @@ def modelfitting(model=None,
     """
     
     for param in params.keys():
-        if (param not in model._diffeq_names) and (param != 'delays'):
+        if (param not in model._diffeq_names) and (param != 'delays') and (param != 'tau_metric'):
             raise Exception("Parameter %s must be defined as a parameter in the model" % param)
     
     if criterion is None:
@@ -498,7 +498,7 @@ if __name__ == '__main__':
         I : 1
         R : 1
         tau : second
-        tau_metric : second
+        #tau_metric : second
     ''')
     input = loadtxt('current.txt')
     
@@ -515,22 +515,22 @@ if __name__ == '__main__':
     input, trace = slice_trace(input, trace, slices = slices, dt=dt, overlap = overlap)
     
     # GAMMA FACTOR
-    criterion = GammaFactor(delta=2*ms)
-    spikes= loadtxt('spikes_artificial.txt')
-    data = spikes
-    data[:,1] += 50*ms
+#    criterion = GammaFactor(delta=2*ms)
+#    spikes= loadtxt('spikes_artificial.txt')
+#    data = spikes
+#    data[:,1] += 50*ms
     
 #    # LP ERROR
 #    criterion = LpError(p=2, varname='V')
 #    data = trace
 
 #    # Van Rossum
-#    criterion = VanRossum(tau=6*ms)
+#    criterion = VanRossum(tau=2*ms)
 #    data = spikes
     
     #Brette
-#    criterion = Brette()
-#    data = spikes
+    criterion = Brette()
+    data = spikes
 
     results = modelfitting( model = equations,
                             reset = 0,
@@ -539,38 +539,38 @@ if __name__ == '__main__':
                             input = input,
                             onset = overlap,
                             gpu = 1,
-                            #cpu=0,
+                            #cpu=4,
                             dt = dt,
-                            popsize = 200,
+                            popsize = 20000,
                             maxiter = 10,
                             criterion = criterion,
-                            R = [1.0e9, 9.0e9],
-                            tau = [10*ms, 4*ms],
-                            algorithm=PSO,
-                            tau_metric= [1*ms, 30*ms],
-                           # delays=[-1*ms, 1*ms]
+                            R = [1.0e9,1.0e9, 9.0e9, 9.0e9],
+                            tau = [10*ms,10*ms, 40*ms, 40*ms],
+                            algorithm=CMAES,
+                            tau_metric= [0.5*ms,0.5*ms, 4*ms, 4*ms],
+                            #delays=[-1*ms, 1*ms]
                             )
     print_table(results)
     
-    criterion_values, record_values = simulate( model = equations,
-                                                reset = 0,
-                                                threshold = 1,
-                                                data = data,
-                                                input = input,
-                                                use_gpu = False,
-                                                dt = dt,
-                                                criterion = criterion,
-                                                record = 'V',
-                                                onset = overlap,
-                                                neurons = slices,
-                                                **results.best_params
-                                                )
-    
-    trace = trace[:,int(overlap/dt):].flatten()
-    traceV = record_values[:,int(overlap/dt):].flatten()
-    
-    plot(trace)
-    plot(traceV)
-    
-    show()
-    
+#    criterion_values, record_values = simulate( model = equations,
+#                                                reset = 0,
+#                                                threshold = 1,
+#                                                data = data,
+#                                                input = input,
+#                                                use_gpu = False,
+#                                                dt = dt,
+#                                                criterion = criterion,
+#                                                record = 'V',
+#                                                onset = overlap,
+#                                                neurons = slices,
+#                                                **results.best_params
+#                                                )
+#    
+#    trace = trace[:,int(overlap/dt):].flatten()
+#    traceV = record_values[:,int(overlap/dt):].flatten()
+#    
+#    plot(trace)
+#    plot(traceV)
+#    
+#    show()
+#    
