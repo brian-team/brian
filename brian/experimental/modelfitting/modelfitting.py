@@ -23,7 +23,7 @@ import sys, cPickle
 __all__ = ['modelfitting', 'print_table', 'PSO', 'GA','CMAES',
            'slice_trace',
            'MAXCPU', 'MAXGPU',
-           'GammaFactor', 'LpError',
+           'GammaFactor', 'LpError','VanRossum','Brette',
            'simulate', 
            'debug_level', 'info_level', 'warning_level', 'open_server']
 
