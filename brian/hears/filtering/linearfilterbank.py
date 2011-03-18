@@ -6,6 +6,7 @@ try:
     import numexpr
 except ImportError:
     numexpr = None
+from itertools import izip
 
 # TODO: test all the buffered version of apply_linear_filterbank here
 # So far, they seem to more or less work, but probably need more thorough
@@ -25,71 +26,47 @@ def apply_linear_filterbank(b, a, x, zi):
     a chain (cascade) to apply (you do first with (:,:,0) then (:,:,1), etc.),
     and s is the size of the buffer segment.
     '''
+    alf_cache_b00 = [0]*zi.shape[2]
+    alf_cache_a1 = [0]*zi.shape[2]
+    alf_cache_b1 = [0]*zi.shape[2]
+    alf_cache_zi00 = [0]*zi.shape[2]
+    alf_cache_zi0 = [0]*zi.shape[2]
+    alf_cache_zi1 = [0]*zi.shape[2]
+    for curf in xrange(zi.shape[2]):
+        alf_cache_b00[curf] = b[:, 0, curf]
+        alf_cache_zi00[curf] = zi[:, 0, curf]
+        alf_cache_b1[curf] = b[:, 1:b.shape[1], curf]
+        alf_cache_a1[curf] = a[:, 1:b.shape[1], curf]
+        alf_cache_zi0[curf] = zi[:, 0:b.shape[1]-1, curf]
+        alf_cache_zi1[curf] = zi[:, 1:b.shape[1], curf]
     X = x
     output = empty_like(X)
-    for sample in xrange(X.shape[0]):
-        x = X[sample]
-        for curf in xrange(zi.shape[2]):
-            y = b[:, 0, curf]*x+zi[:, 0, curf]
-            for i in xrange(b.shape[1]-2):
-                zi[:, i, curf] = b[:, i+1, curf]*x+zi[:, i+1, curf]-a[:, i+1, curf]*y
-            i = b.shape[1]-2
-            zi[:, i, curf] = b[:, i+1, curf]*x-a[:, i+1, curf]*y
+    num_cascade = zi.shape[2]
+    b_loop_size = b.shape[1]-2
+    y = zeros(zi.shape[0])
+    yr = reshape(y, (1, len(y))).T
+    t = zeros(alf_cache_b1[0].shape, order='F')
+    t2 = zeros(alf_cache_b1[0].shape, order='F')
+    for sample, (x, o) in enumerate(izip(X, output)):
+        xr = reshape(x, (1, len(x))).T
+        for curf in xrange(num_cascade):
+            #y = b[:, 0, curf]*x+zi[:, 0, curf]
+            multiply(alf_cache_b00[curf], x, y)
+            add(y, alf_cache_zi00[curf], y)
+            #zi[:, :i-1, curf] = b[:, 1:i, curf]*xr+zi[:, 1:i, curf]-a[:, 1:i, curf]*yr
+            multiply(alf_cache_b1[curf], xr, t)
+            add(t, alf_cache_zi1[curf], t)
+            multiply(alf_cache_a1[curf], yr, t2)
+            subtract(t, t2, alf_cache_zi0[curf])
+            u = x
+            ur = xr
             x = y
-        output[sample] = y
+            xr = yr
+            y = u
+            yr = ur
+        #output[sample] = y
+        o[:] = x
     return output
-
-if True:
-    from itertools import izip
-    def apply_linear_filterbank(b, a, x, zi):
-        '''
-        Parallel version of scipy lfilter command for a bank of n sequences of length 1
-        
-        In scipy.lfilter, you can apply a filter to multiple sounds at the same time,
-        but you can't apply a bank of filters at the same time. This command does
-        that. The coeffs b, a must be of shape (n,m,p), x must be of shape (s, n),
-        and zi must be of shape (n,m-1,p). Here n is the number of channels in the
-        filterbank, m is the order of the filter, p is the number of filters in
-        a chain (cascade) to apply (you do first with (:,:,0) then (:,:,1), etc.),
-        and s is the size of the buffer segment.
-        '''
-        alf_cache_b = [[0]*zi.shape[2] for _ in xrange(b.shape[1])]
-        alf_cache_a = [[0]*zi.shape[2] for _ in xrange(b.shape[1])]
-        alf_cache_zi = [[0]*zi.shape[2] for _ in xrange(b.shape[1])]
-        for curf in xrange(zi.shape[2]):
-            alf_cache_b[0][curf] = b[:, 0, curf]
-            alf_cache_zi[0][curf] = zi[:, 0, curf]
-            for i in xrange(b.shape[1]-2):
-                alf_cache_b[i+1][curf] = b[:, i+1, curf]
-                alf_cache_zi[i+1][curf] = zi[:, i+1, curf]
-                alf_cache_a[i+1][curf] = a[:, i+1, curf]
-            i = b.shape[1]-2
-            alf_cache_b[i+1][curf] = b[:, i+1, curf]
-            alf_cache_a[i+1][curf] = a[:, i+1, curf]
-        X = x
-        output = empty_like(X)
-        num_cascade = zi.shape[2]
-        b_loop_size = b.shape[1]-2
-        for sample, (x, o) in enumerate(izip(X, output)):
-            for curf in xrange(num_cascade):
-                #y = b[:, 0, curf]*x+zi[:, 0, curf]
-                y = alf_cache_b[0][curf]*x
-                add(y, alf_cache_zi[0][curf], y)
-                for i in xrange(b_loop_size):
-                    #zi[:, i, curf] = b[:, i+1, curf]*x+zi[:, i+1, curf]-a[:, i+1, curf]*y
-                    t = alf_cache_b[i+1][curf]*x
-                    add(t, alf_cache_zi[i+1][curf], t)
-                    subtract(t, alf_cache_a[i+1][curf]*y, t)
-                    alf_cache_zi[i][curf][:] = t
-                i = b.shape[1]-2
-                #zi[:, i, curf] = b[:, i+1, curf]*x-a[:, i+1, curf]*y
-                t = alf_cache_b[i+1][curf]*x
-                subtract(t, alf_cache_a[i+1][curf]*y, t)
-                alf_cache_zi[i][curf][:] = t
-                x = y
-            #output[sample] = y
-            o[:] = y
-        return output
 
 if numexpr is not None and False:
     def apply_linear_filterbank(b, a, x, zi):
