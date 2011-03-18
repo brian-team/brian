@@ -41,7 +41,6 @@ def apply_linear_filterbank(b, a, x, zi):
 
 if True:
     from itertools import izip
-    alf_cache = {}
     def apply_linear_filterbank(b, a, x, zi):
         '''
         Parallel version of scipy lfilter command for a bank of n sequences of length 1
@@ -54,22 +53,19 @@ if True:
         a chain (cascade) to apply (you do first with (:,:,0) then (:,:,1), etc.),
         and s is the size of the buffer segment.
         '''
-        if id(zi) in alf_cache:
-            alf_cache_a, alf_cache_b, alf_cache_zi = alf_cache[id(zi)]
-        else:
-            alf_cache_b = [[0]*zi.shape[2] for _ in xrange(b.shape[1])]
-            alf_cache_a = [[0]*zi.shape[2] for _ in xrange(b.shape[1])]
-            alf_cache_zi = [[0]*zi.shape[2] for _ in xrange(b.shape[1])]
-            for curf in xrange(zi.shape[2]):
-                alf_cache_b[0][curf] = b[:, 0, curf]
-                alf_cache_zi[0][curf] = zi[:, 0, curf]
-                for i in xrange(b.shape[1]-2):
-                    alf_cache_b[i+1][curf] = b[:, i+1, curf]
-                    alf_cache_zi[i+1][curf] = zi[:, i+1, curf]
-                    alf_cache_a[i+1][curf] = a[:, i+1, curf]
-                i = b.shape[1]-2
+        alf_cache_b = [[0]*zi.shape[2] for _ in xrange(b.shape[1])]
+        alf_cache_a = [[0]*zi.shape[2] for _ in xrange(b.shape[1])]
+        alf_cache_zi = [[0]*zi.shape[2] for _ in xrange(b.shape[1])]
+        for curf in xrange(zi.shape[2]):
+            alf_cache_b[0][curf] = b[:, 0, curf]
+            alf_cache_zi[0][curf] = zi[:, 0, curf]
+            for i in xrange(b.shape[1]-2):
                 alf_cache_b[i+1][curf] = b[:, i+1, curf]
+                alf_cache_zi[i+1][curf] = zi[:, i+1, curf]
                 alf_cache_a[i+1][curf] = a[:, i+1, curf]
+            i = b.shape[1]-2
+            alf_cache_b[i+1][curf] = b[:, i+1, curf]
+            alf_cache_a[i+1][curf] = a[:, i+1, curf]
         X = x
         output = empty_like(X)
         num_cascade = zi.shape[2]
