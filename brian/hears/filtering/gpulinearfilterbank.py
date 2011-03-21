@@ -72,6 +72,7 @@ class LinearFilterbank(Filterbank):
         self.filt_b_gpu=gpuarray.to_gpu(filt_b_gpu.T.flatten()) # transform to Fortran order for better GPU mem
         self.filt_a_gpu=gpuarray.to_gpu(filt_a_gpu.T.flatten()) # access speeds
         self.filt_state=gpuarray.to_gpu(filt_state.T.flatten())
+        self.unroll_filterorder = unroll_filterorder
         if unroll_filterorder is None:
             if m<=32:
                 unroll_filterorder = True
@@ -167,3 +168,36 @@ class LinearFilterbank(Filterbank):
                     intp(zi.gpudata), intp(filt_y_gpu.gpudata), int32(input.shape[0]))
             self._has_run_once = True
         return reshape(filt_y_gpu.get(pagelocked=self.pagelocked_mem), self._desiredshape)
+
+    def decascade(self, ncascade=1):
+        '''
+        Reduces cascades of low order filters into smaller cascades of high order filters.
+        
+        ``ncascade`` is the number of cascaded filters to use, which should be
+        a divisor of the original number.
+        
+        Note that higher order filters are often numerically unstable.
+        '''
+        n, m, p = self.filt_b.shape
+        if p%ncascade!=0:
+            raise ValueError('Number of cascades must be a divisor of original number of cascaded filters.')
+        b = zeros((n, (m-1)*(p/ncascade)+1, ncascade))
+        a = zeros((n, (m-1)*(p/ncascade)+1, ncascade))
+        for i in xrange(n):
+            for k in xrange(ncascade):
+                bp = ones(1)
+                ap = ones(1)
+                for j in xrange(k*(p/ncascade), (k+1)*(p/ncascade)):
+                    bp = polymul(bp, self.filt_b[i, ::-1, j])
+                    ap = polymul(ap, self.filt_a[i, ::-1, j])
+                bp = bp[::-1]
+                ap = ap[::-1]
+                a0 = ap[0]
+                ap /= a0
+                bp /= a0
+                b[i, :len(bp), k] = bp
+                a[i, :len(ap), k] = ap
+        LinearFilterbank.__init__(self, self.source, b, a, samplerate=self.samplerate,
+                      precision=self.precision, forcesync=self.forcesync,
+                      pagelocked_mem=self.pagelocked_mem,
+                      unroll_filterorder=self.unroll_filterorder)
