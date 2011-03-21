@@ -118,7 +118,7 @@ if get_global_preference('useweave'):
         n, m, p = b.shape
         n1, m1, p1 = a.shape
         numsamples = x.shape[0]
-        if n1!=n or m1!=m or p1!=p or x.shape!=(numsamples, n) or zi.shape!=(n, m-1, p):
+        if n1!=n or m1!=m or p1!=p or x.shape!=(numsamples, n) or zi.shape!=(n, m, p):
             raise ValueError('Data has wrong shape.')
         if numsamples>1 and not x.flags['C_CONTIGUOUS']:
             raise ValueError('Input data must be C_CONTIGUOUS')
@@ -241,7 +241,7 @@ class LinearFilterbank(Filterbank):
             a = reshape(a, a.shape+(1,))
         self.filt_b = array(b, order='F')
         self.filt_a = array(a, order='F')
-        self.filt_state = zeros((b.shape[0], b.shape[1]-1, b.shape[2]), order='F')
+        self.filt_state = zeros((b.shape[0], b.shape[1], b.shape[2]), order='F')
 
     def reset(self):
         self.buffer_init()
