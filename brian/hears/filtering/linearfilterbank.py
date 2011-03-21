@@ -197,6 +197,10 @@ class LinearFilterbank(Filterbank):
     The filter parameters are stored in the modifiable attributes ``filt_b``,
     ``filt_a`` and ``filt_state`` (the variable ``z`` in the section below).
     
+    Has one method:
+    
+    .. automethod:: decascade
+    
     **Notes**
     
     These notes adapted from scipy's :func:`~scipy.signal.lfilter` function.
@@ -253,7 +257,39 @@ class LinearFilterbank(Filterbank):
     def buffer_apply(self, input):
         return apply_linear_filterbank(self.filt_b, self.filt_a, input,
                                        self.filt_state)
-
+        
+    def decascade(self, ncascade=1):
+        '''
+        Reduces cascades of low order filters into smaller cascades of high order filters.
+        
+        ``ncascade`` is the number of cascaded filters to use, which should be
+        a divisor of the original number.
+        
+        Note that higher order filters are often numerically unstable.
+        '''
+        n, m, p = self.filt_b.shape
+        if p%ncascade!=0:
+            raise ValueError('Number of cascades must be a divisor of original number of cascaded filters.')
+        b = zeros((n, (m-1)*(p/ncascade)+1, ncascade))
+        a = zeros((n, (m-1)*(p/ncascade)+1, ncascade))
+        for i in xrange(n):
+            for k in xrange(ncascade):
+                bp = ones(1)
+                ap = ones(1)
+                for j in xrange(k*(p/ncascade), (k+1)*(p/ncascade)):
+                    bp = polymul(bp, self.filt_b[i, ::-1, j])
+                    ap = polymul(ap, self.filt_a[i, ::-1, j])
+                bp = bp[::-1]
+                ap = ap[::-1]
+                a0 = ap[0]
+                ap /= a0
+                bp /= a0
+                b[i, :len(bp), k] = bp
+                a[i, :len(ap), k] = ap
+        self.filt_b = array(b, order='F')
+        self.filt_a = array(a, order='F')
+        self.filt_state = zeros((b.shape[0], b.shape[1], b.shape[2]), order='F')
+                
 # Use the GPU version if available
 try:
     if get_global_preference('brianhears_usegpu'):
