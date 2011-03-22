@@ -245,11 +245,11 @@ class LpErrorCriterion(Criterion):
     
     def get_cuda_code(self):
         code = {}
-        
+        #    double p,
         #  DECLARATION
         code['%CRITERION_DECLARE%'] = """
     double *error_arr,
-    double p,
+
         """
         
         # INITIALIZATION
@@ -281,7 +281,7 @@ class LpErrorCriterion(Criterion):
         """
         Return a list of objects to pass to the CUDA kernel.
         """
-        args = [self.error_gpu, self.p]
+        args = [self.error_gpu]
         return args
     
     def update_gpu_values(self):
