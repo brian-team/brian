@@ -521,27 +521,28 @@ if __name__ == '__main__':
 #    data[:,1] += 50*ms
     
 #    # LP ERROR
-#    criterion = LpError(p=2, varname='V')
-#    data = trace
-
+    criterion = LpError(p=2, varname='V')
+    data = trace
+    print data.shape
+    print input.shape 
 #    # Van Rossum
 #    criterion = VanRossum(tau=2*ms)
 #    data = spikes
     
     #Brette
-    criterion = Brette()
-    data = spikes
+#    criterion = Brette()
+#    data = spikes
 
     results = modelfitting( model = equations,
                             reset = 0,
                             threshold = 1,
                             data = data,
                             input = input,
-                            onset = overlap,
+                            #onset = overlap,
                             gpu = 1,
                             #cpu=4,
                             dt = dt,
-                            popsize = 20000,
+                            popsize = 2000,
                             maxiter = 10,
                             criterion = criterion,
                             R = [1.0e9,1.0e9, 9.0e9, 9.0e9],
