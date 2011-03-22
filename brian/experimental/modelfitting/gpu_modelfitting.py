@@ -43,6 +43,8 @@ class ModelfittingGPUCodeGenerator(GPUCodeGenerator):
 
 
 
+BLOCKSIZE = 256
+
 def get_cuda_template():
     return """
 __global__ void runsim(
@@ -97,6 +99,7 @@ __global__ void runsim(
     %CRITERION_INIT%
     
     // INPUT INITIALIZATION
+    int I_offset0 = I_arr_offset[blockIdx.x * blockDim.x]; // I_offset of the first thread in the block
     int I_offset = I_arr_offset[neuron_index];
     
     // DELAYS INITIALIZATION
@@ -106,18 +109,24 @@ __global__ void runsim(
     const int refractory = refractory_arr[neuron_index];
     int next_allowed_spiketime = next_allowed_spiketime_arr[neuron_index];
     
+    //__shared__ %SCALAR% I_sm[%BLOCKSIZE%];
+    %SCALAR% ${input_var} = 0;
+    
     for(int T=Tstart; T<Tend; T++)
     {
         %SCALAR% t = T*%DT%;
-        // Read input current
-        %SCALAR% ${input_var} = I_arr[T+I_offset];
-                             // this is a global read for each thread, can maybe
-                             // reduce this by having just one read per block,
-                             // put it into shared memory, and then have all the
-                             // threads in that block read it, we could even
-                             // maybe buffer reads of I into shared memory -
-                             // experiment with this
-                             
+        //int Tloc = T%%BLOCKSIZE%; // between 0 and blocksize-1
+        
+        // LOAD INPUT CURRENT
+        /*if (Tloc == 0)
+        {
+            I_sm[threadIdx.x] = I_arr[T+I_offset0+threadIdx.x];
+        }
+        __syncthreads();*/
+        
+        ${input_var} = I_arr[T+I_offset];
+        //${input_var} = I_sm[Tloc];
+        
         // STATE UPDATE
         // Update the variables only for T>=onset for neurons in the first group
         if ((neuron_index>=%NUM_NEURONS_FIRSTGROUP%)|(T>=onset))
@@ -450,6 +459,7 @@ class GPUModelFitting(object):
         # Substitute number of neurons
         src = src.replace('%NUM_NEURONS%', str(self.N))
         src = src.replace('%NUM_NEURONS_FIRSTGROUP%', str(self.subpopsize))
+        src = src.replace('%BLOCKSIZE%', str(BLOCKSIZE))
         # Substitute input var name
         src = src.replace('${input_var}', str(self.input_var))
         
@@ -507,11 +517,11 @@ class GPUModelFitting(object):
         
         self.kernel_module = SourceModule(self.kernel_src)
         self.kernel_func = self.kernel_module.get_function('runsim')
-        blocksize = 128
-        try:
-            blocksize = self.kernel_func.get_attribute(pycuda.driver.function_attribute.MAX_THREADS_PER_BLOCK)
-        except: # above won't work unless CUDA>=2.2
-            pass
+        blocksize = BLOCKSIZE
+#        try:
+#            blocksize = self.kernel_func.get_attribute(pycuda.driver.function_attribute.MAX_THREADS_PER_BLOCK)
+#        except: # above won't work unless CUDA>=2.2
+#            pass
         self.block = (blocksize, 1, 1)
         self.grid = (int(ceil(float(self.N) / blocksize)), 1)
         self.kernel_func_kwds = {'block':self.block, 'grid':self.grid}
@@ -521,6 +531,13 @@ class GPUModelFitting(object):
         statevars_arr = gpuarray.to_gpu(array(self.G._S.flatten(), dtype=mydtype))
         self.I = gpuarray.to_gpu(array(I, dtype=mydtype))
         self.statevars_arr = statevars_arr
+        
+        
+        
+        print max(I_offset)
+        
+        
+        
         self.I_offset = gpuarray.to_gpu(array(I_offset, dtype=int32))
         # SPIKES
         if self.criterion.type == 'spikes':
@@ -537,7 +554,7 @@ class GPUModelFitting(object):
         
         self.initialize_kernel_arguments()
 
-    def launch(self, duration, stepsize=1 * second):
+    def launch(self, duration, stepsize=128*ms):
         if stepsize is None:
             self.kernel_func(int32(0), int32(duration / self.dt),
                              *self.kernel_func_args, **self.kernel_func_kwds)
