@@ -8,7 +8,7 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
                equations = None, reset = None, threshold = None,
                   slice_duration = None, overlap = 0*ms,
                   initial = None, dt = defaultclock.dt,
-                  cpu = None, gpu = 1, record='V',
+                  cpu = None, gpu = 1, record=['V','Ve'],
                   p = 1., results=None,
                   **params):
     
@@ -85,9 +85,10 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
                                                 **best_params
                                                 )
     
-    traceV = record_values[:,int(overlap/dt):].flatten()
+    traceV = record_values[0][:,int(overlap/dt):].flatten()
+    traceVe = record_values[1][:,int(overlap/dt):].flatten()
     
-    return traceV, results
+    return traceV, traceVe, results
 
 if __name__ == '__main__':
     
@@ -100,12 +101,13 @@ if __name__ == '__main__':
                     tau =  [1*ms, 5*ms, 50*ms, 200*ms],
                     taue = [1*ms, 1*ms, 2*ms, 2*ms])
     
-    trace_compensated, results = compensate(current, trace, threshold=1,reset=0,
+    traceV, traceVe, results = compensate(current, trace, threshold=1,reset=0,
                                             popsize=1000, maxiter=10,
                                             **params)
     
     plot(trace)
-    plot(trace_compensated)
+    plot(traceV)
+    plot(trace-traceVe)
     grid()
     show()
     

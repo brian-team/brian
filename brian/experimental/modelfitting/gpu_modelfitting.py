@@ -382,15 +382,17 @@ class GPUModelFitting(object):
     
     def generate_statemonitor_code(self, src):
         if self.statemonitor_var is not None:
-            declare = """
-    %SCALAR% *statemonitor_values,
+            declare = "\n".join(["%SCALAR% *statemonitor_"+state+"_values," for state in self.statemonitor_var])
+            declare += """
     int *statemonitor_offsets,
             """
             init = """
     int statemonitor_offset = statemonitor_offsets[neuron_index];
             """
-            update = """
-        statemonitor_values[statemonitor_offset] = %s;
+            update = "".join([("""
+        statemonitor_%s_values[statemonitor_offset] = %s;
+        """ % (state,state)) for state in self.statemonitor_var])
+            update += """
         statemonitor_offset++;
             """ % self.statemonitor_var
             end = """
@@ -483,7 +485,9 @@ class GPUModelFitting(object):
         self.next_allowed_spiketime_arr = gpuarray.to_gpu(-ones(self.N, dtype=int32))
 
     def initialize_statemonitor(self):
-        self.statemonitor_values = gpuarray.to_gpu(zeros(self.N*self.duration, dtype=self.precision))
+        self.statemonitor_values = [gpuarray.to_gpu(zeros(self.N*self.duration, 
+                                                          dtype=self.precision))
+                                    for state in self.statemonitor_var]
         self.statemonitor_offsets = gpuarray.to_gpu(arange(0, self.duration*self.N+1,
                                                            self.duration, 
                                                            dtype=int32))
@@ -503,8 +507,8 @@ class GPUModelFitting(object):
             self.kernel_func_args += [self.traces,
                                       self.traces_offset]
         if self.statemonitor_var is not None:
-            self.kernel_func_args += [self.statemonitor_values,
-                                      self.statemonitor_offsets]
+            self.kernel_func_args += [val for val in self.statemonitor_values]
+            self.kernel_func_args += [self.statemonitor_offsets]
         
         self.kernel_func_args += [int32(rint(self.onset / self.dt))]
 
@@ -531,12 +535,6 @@ class GPUModelFitting(object):
         statevars_arr = gpuarray.to_gpu(array(self.G._S.flatten(), dtype=mydtype))
         self.I = gpuarray.to_gpu(array(I, dtype=mydtype))
         self.statevars_arr = statevars_arr
-        
-        
-        
-        print max(I_offset)
-        
-        
         
         self.I_offset = gpuarray.to_gpu(array(I_offset, dtype=int32))
         # SPIKES
@@ -569,9 +567,11 @@ class GPUModelFitting(object):
                 pycuda.context.synchronize()
 
     def get_statemonitor_values(self):
-        values = self.statemonitor_values.get()
-        values = values.reshape((self.N, -1))
-        return values
+        values = [val.get().reshape((self.N, -1)) for val in self.statemonitor_values]
+        if len(self.statemonitor_var)==1:
+            return values[0]
+        else:
+            return values
 
 
 

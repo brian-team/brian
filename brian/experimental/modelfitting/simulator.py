@@ -162,6 +162,8 @@ class Simulator(object):
         self.onset = onset
         self.neurons = neurons
         self.unit_type = unit_type
+        if type(statemonitor_var) is not list and statemonitor_var is not None:
+            statemonitor_var = [statemonitor_var]
         self.statemonitor_var = statemonitor_var
         self.stepsize = stepsize
         self.precision = precision
@@ -170,7 +172,7 @@ class Simulator(object):
         self.use_gpu = self.unit_type=='GPU'
         
         if self.statemonitor_var is not None:
-            self.statemonitor_values = zeros(self.neurons)
+            self.statemonitor_values = [zeros(self.neurons)]*len(statemonitor_var)
         
         self.initialize_neurongroup()
         self.transform_data()
@@ -356,8 +358,11 @@ class Simulator(object):
             self.group.clock.reinit()
             net = Network(self.group, self.criterion_object)
             if self.statemonitor_var is not None:
-                self.statemonitor = StateMonitor(self.group, self.statemonitor_var, record=True)
-                net.add(self.statemonitor)
+                self.statemonitors = []
+                for state in self.statemonitor_var:
+                    monitor = StateMonitor(self.group, state, record=True)
+                    self.statemonitors.append(monitor)
+                    net.add(monitor)
             net.run(self.sliced_duration)
         
         sliced_values = self.criterion_object.get_values()
@@ -367,7 +372,7 @@ class Simulator(object):
 
     def get_statemonitor_values(self):
         if not self.use_gpu:
-            return self.statemonitor.values
+            return [monitor.values for monitor in self.statemonitors]
         else:
             return self.mf.get_statemonitor_values()
 
@@ -532,6 +537,7 @@ if __name__ == '__main__':
                                                 tau = tau,
                                                 )
     print criterion_values
+    print record_values.shape
     
     n = data.shape[0]
     print data.shape
