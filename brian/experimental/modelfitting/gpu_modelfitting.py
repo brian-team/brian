@@ -567,7 +567,7 @@ class GPUModelFitting(object):
                 pycuda.context.synchronize()
 
     def get_statemonitor_values(self):
-        values = [val.get().reshape((self.N, -1)) for val in self.statemonitor_values]
+        values = [val.get() for val in self.statemonitor_values]
         if len(self.statemonitor_var)==1:
             return values[0]
         else:
