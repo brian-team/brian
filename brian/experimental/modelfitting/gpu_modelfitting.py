@@ -109,23 +109,13 @@ __global__ void runsim(
     const int refractory = refractory_arr[neuron_index];
     int next_allowed_spiketime = next_allowed_spiketime_arr[neuron_index];
     
-    //__shared__ %SCALAR% I_sm[%BLOCKSIZE%];
     %SCALAR% ${input_var} = 0;
     
     for(int T=Tstart; T<Tend; T++)
     {
         %SCALAR% t = T*%DT%;
-        //int Tloc = T%%BLOCKSIZE%; // between 0 and blocksize-1
-        
-        // LOAD INPUT CURRENT
-        /*if (Tloc == 0)
-        {
-            I_sm[threadIdx.x] = I_arr[T+I_offset0+threadIdx.x];
-        }
-        __syncthreads();*/
         
         ${input_var} = I_arr[T+I_offset];
-        //${input_var} = I_sm[Tloc];
         
         // STATE UPDATE
         // Update the variables only for T>=onset for neurons in the first group
@@ -155,6 +145,7 @@ __global__ void runsim(
         
         // CRITERION TIMESTEP
         %CRITERION_TIMESTEP%
+        
     }
     // STORE VARIABLES
     %STORE_VARIABLES%
@@ -268,7 +259,7 @@ class GPUModelFitting(object):
         self.eqs = eqs
         self.G = G
         self.subpopsize = subpopsize
-        self.duration = int(duration/self.dt)
+        self.duration = int(ceil(duration/self.dt))
         self.input_var = input_var
         self.statemonitor_var = statemonitor_var
         self.criterion = criterion
@@ -567,7 +558,7 @@ class GPUModelFitting(object):
                 pycuda.context.synchronize()
 
     def get_statemonitor_values(self):
-        values = [val.get() for val in self.statemonitor_values]
+        values = [val.get().reshape((self.N, -1)) for val in self.statemonitor_values]
         if len(self.statemonitor_var)==1:
             return values[0]
         else:

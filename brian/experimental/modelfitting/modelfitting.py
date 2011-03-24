@@ -20,8 +20,8 @@ from criteria import *
 from simulator import * 
 import sys, cPickle
 
-__all__ = ['modelfitting', 'print_table', 'PSO', 'GA','CMAES',
-           'slice_trace',
+__all__ = ['modelfitting', 'print_table', 'PSO', 'GA', 'CMAES',
+           'slice_trace', 'transform_spikes',
            'MAXCPU', 'MAXGPU',
            'GammaFactor', 'LpError','VanRossum','Brette',
            'simulate', 

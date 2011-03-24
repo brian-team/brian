@@ -60,10 +60,12 @@ class DataTransformer(object):
         # from standard structure to standard structure
         sliced_spikes = []
         slice_length = self.sliced_steps*self.dt
+#        print self.groups,self.slices, slice_length
         for (i,t) in spikes:
             slice = int(t/slice_length)
             newt = self.overlap + (t % slice_length)*second
             newi = i + self.groups*slice
+#            print i,t,slice,newt,newi
             # discard unreachable spikes
             if newi >= (self.slices*self.groups): continue
             sliced_spikes.append((newi, newt)) 
@@ -124,6 +126,15 @@ def slice_trace(input, trace, slices = 1, dt = defaultclock.dt, overlap = 0*ms):
     sliced_traces = dt.slice_traces(trace)
     sliced_input = dt.slice_traces(input)
     return sliced_input, sliced_traces
+
+def transform_spikes(n, input, spikes, slices = 1, dt = defaultclock.dt, overlap = 0*ms):
+    input = input.reshape((1,-1))
+    dt = DataTransformer(n, input, spikes = spikes, dt = dt,
+                         slices = slices, overlap = overlap)
+    sliced_spikes = dt.slice_spikes(spikes)
+    dt.groups = slices
+    spikes_inline, spike_offset = dt.transform_spikes(sliced_spikes)
+    return spikes_inline, spike_offset
 
 
 
@@ -288,6 +299,9 @@ class Simulator(object):
         if criterion_name == 'LpError':
             params['p'] = self.criterion.p
             params['varname'] = self.criterion.varname
+            params['cut'] = self.criterion.cut
+            params['cut_steps'] = self.criterion.cut_steps
+            params['cut_indices'] = self.criterion.cut_indices
             self.criterion_object = LpErrorCriterion(**params)
             
         if criterion_name == 'VanRossum':

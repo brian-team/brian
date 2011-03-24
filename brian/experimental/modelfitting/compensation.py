@@ -9,6 +9,7 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
                   slice_duration = None, overlap = 0*ms,
                   initial = None, dt = defaultclock.dt,
                   cpu = None, gpu = 1, record=['V','Ve'],
+                  cut = None, cut_length = 0.0,
                   p = 1., results=None,
                   **params):
     
@@ -19,7 +20,18 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
         slices = 1
     else:
         slices = max(int(len(current)*dt/slice_duration), 1)
+    current0 = current
     current, trace = slice_trace(current, trace, slices=slices, overlap=overlap, dt=dt)
+    
+    if cut is not None:
+        cut, cut_indices = transform_spikes(popsize, current0, [(0, float(c)) for c in cut], 
+                                            slices=slices, overlap=overlap, dt=dt)
+        cut_steps = int32(cut_length/dt)
+        cut = array(cut/dt, dtype=int32)
+        cut_indices = array(cut_indices, dtype=int32)
+    else:
+        cut_indices = None
+        cut_steps = 0
     
     initial_values = {'V0': initial, 'Ve': 0.}
     
@@ -42,24 +54,24 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
     if reset is None:
         reset = ""
     
-    criterion = LpError(p=p, varname='V')
+    criterion = LpError(p=p, varname='V', cut=cut, cut_indices=cut_indices, cut_steps=cut_steps)
     
     if results is None:
         results = modelfitting( model = equations,
-                            reset = reset,
-                            threshold = threshold,
-                            data = trace,
-                            input = current,
-                            cpu = cpu,
-                            gpu = gpu,
-                            dt = dt,
-                            popsize = popsize,
-                            maxiter = maxiter,
-                            onset = overlap,
-                            criterion = criterion,
-                            initial_values = initial_values,
-                            **params
-                            )
+                                reset = reset,
+                                threshold = threshold,
+                                data = trace,
+                                input = current,
+                                cpu = cpu,
+                                gpu = gpu,
+                                dt = dt,
+                                popsize = popsize,
+                                maxiter = maxiter,
+                                onset = overlap,
+                                criterion = criterion,
+                                initial_values = initial_values,
+                                **params
+                                )
     
     print_table(results)
     
@@ -102,12 +114,15 @@ if __name__ == '__main__':
                     taue = [1*ms, 1*ms, 2*ms, 2*ms])
     
     traceV, traceVe, results = compensate(current, trace, threshold=1,reset=0,
-                                            popsize=1000, maxiter=10,
+                                            popsize=100, maxiter=1,
                                             **params)
+    print traceV.shape
+    print traceVe.shape
     
     plot(trace)
     plot(traceV)
     plot(trace-traceVe)
     grid()
     show()
+    
     

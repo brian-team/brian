@@ -4,7 +4,7 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
                     arange, sort_spikes, rint, SpikeMonitor, Connection, int32, double,SpikeGeneratorGroup,DelayConnection,\
                     SpikeCounter,forget,diagflat,inf,sqrt,ones_like,isnan
 from brian.tools.statistics import firing_rate, get_gamma_factor
-
+from playdoh import *
 try:
     import pycuda
     import pycuda.driver as drv
@@ -223,7 +223,7 @@ class CriterionStruct(object):
 
 class LpErrorCriterion(Criterion):
     type = 'traces'
-    def initialize(self, p=2, varname='v'):
+    def initialize(self, p=2, varname='v', cut=None, cut_indices=None, cut_steps=0):
         """
         Called at the beginning of every iteration. The keyword arguments here are
         specified in modelfitting.initialize_criterion().
@@ -231,6 +231,12 @@ class LpErrorCriterion(Criterion):
         self.p = double(p)
         self.varname = varname
         self._error = zeros((self.K, self.N))
+        
+#        if cut is None: cut = zeros(self.N, dtype=int32)
+        self.cut = cut
+#        if cut_indices is None: cut_indices = zeros(self.N, dtype=int32)
+        self.cut_indices = cut_indices
+        self.cut_steps = cut_steps
     
     def timestep_call(self):
         v = self.get_value(self.varname)
@@ -240,6 +246,7 @@ class LpErrorCriterion(Criterion):
         d = self.intdelays
         indices = (t-d>=0)&(t-d<self.total_steps) # neurons with valid delays (stay inside the target trace)
         vtar = self.traces[:,t-d] # target value at this timestep for every neuron
+        # TODO: CUT ON CPU
         for i in xrange(self.K):
             self._error[i,indices] += abs(v[indices]-vtar[i,indices])**self.p
     
@@ -248,18 +255,40 @@ class LpErrorCriterion(Criterion):
         #    double p,
         #  DECLARATION
         code['%CRITERION_DECLARE%'] = """
-    double *error_arr,
-
+    double *error_arr,"""
+        if self.cut is not None:
+           code['%CRITERION_DECLARE%'] += """ 
+    int *cut, // array with all cut offsets
+    int *cut_indices, // cut_indices[neuron_index] is the last timestep to cut for this neuron
+    int cut_steps,
         """
         
         # INITIALIZATION
         code['%CRITERION_INIT%'] = """
     double error = error_arr[neuron_index];
+    bool iscut = false; // true=the criterion must not be updated at this timestep because it is within a cut window"""
+        if self.cut is not None:
+            code['%CRITERION_INIT%'] += """
+    int cut_index = cut_indices[neuron_index];
+    int last_cut = cut[cut_index];
+    int last_cut_end = last_cut+cut_steps;
+    int next_cut = cut[cut_index+1];
         """
         
         # TIMESTEP
-        code['%CRITERION_TIMESTEP%'] = """
-        if ((T >= onset)&(Tdelay<duration-spikedelay-1)) {
+        code['%CRITERION_TIMESTEP%'] = ""
+        if self.cut is not None:
+            code['%CRITERION_TIMESTEP%'] += """
+        if (T==next_cut) {
+            cut_index++;
+            last_cut = cut[cut_index];
+            last_cut_end = last_cut+cut_steps;
+            next_cut = cut[cut_index+1];
+        }
+        iscut = (T<last_cut_end);
+        """
+        code['%CRITERION_TIMESTEP%'] += """
+        if ((T >= onset)&(Tdelay<duration-spikedelay-1)&(!iscut)) {
             error = error + pow(abs(trace_value - %s), %.4f);
         }
         """ % (self.varname, self.p)
@@ -268,7 +297,10 @@ class LpErrorCriterion(Criterion):
         code['%CRITERION_END%'] = """
     error_arr[neuron_index] = error;
         """
-        
+        if self.cut is not None:
+            code['%CRITERION_END%'] += """
+    cut_indices[neuron_index] = cut_index;
+            """
         return code
     
     def initialize_cuda_variables(self):
@@ -276,12 +308,17 @@ class LpErrorCriterion(Criterion):
         Initialize GPU variables to pass to the kernel
         """
         self.error_gpu = gpuarray.to_gpu(zeros(self.N, dtype=double))
+        if self.cut is not None:
+            self.cut_gpu = gpuarray.to_gpu(self.cut)
+            self.cut_indices_gpu = gpuarray.to_gpu(self.cut_indices)
     
     def get_kernel_arguments(self):
         """
         Return a list of objects to pass to the CUDA kernel.
         """
         args = [self.error_gpu]
+        if self.cut is not None:
+            args += [self.cut_gpu, self.cut_indices_gpu, self.cut_steps]
         return args
     
     def update_gpu_values(self):
@@ -305,10 +342,13 @@ class LpError(CriterionStruct):
     """
     Structure used by the users to specify a criterion
     """
-    def __init__(self, p = 2, varname = 'v'):
+    def __init__(self, p = 2, varname = 'v', cut = None, cut_indices = None, cut_steps=0):
         self.type = 'trace'
         self.p = p
         self.varname = varname
+        self.cut = cut
+        self.cut_steps = cut_steps
+        self.cut_indices = cut_indices
 
 
 
