@@ -776,7 +776,7 @@ class Sound(BaseSound, numpy.ndarray):
         noise=Sound.whitenoise(duration)
         splrate=noise.samplerate
         x=array(noise.T)[0]
-        IRNadd=fft(x)
+        IRNadd=np.fft.fft(x)
         Nspl,spl_dur=len(IRNadd),float(1.0/splrate)
         w=2*pi*fftfreq(Nspl,spl_dur)
         d=float(delay)
@@ -798,7 +798,7 @@ class Sound(BaseSound, numpy.ndarray):
         noise=Sound.whitenoise(duration)
         splrate=noise.samplerate
         x=array(noise.T)[0]
-        IRNadd=fft(x)
+        IRNadd=np.fft.fft(x)
         Nspl,spl_dur=len(IRNadd),float(1.0/splrate)
         w=2*pi*fftfreq(Nspl,spl_dur)
         d=float(delay)
