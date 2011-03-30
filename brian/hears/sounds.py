@@ -20,7 +20,7 @@ from db import dB, dB_type, dB_error, gain
 
 __all__ = ['BaseSound', 'Sound',
            'pinknoise','brownnoise','powerlawnoise',
-           'whitenoise', 'irn_addsame', 'irn_addoriginal', 
+           'whitenoise', 'irns', 'irno', 
            'tone', 'click', 'clicks', 'silence', 'sequence', 'harmoniccomplex',
            'loadsound', 'savesound', 'play',
            ]
@@ -766,7 +766,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound.powerlawnoise(duration,2.0,samplerate=samplerate,normalise=False)
     
     @staticmethod
-    def irn_addsame(delay, gain, niter, duration, samplerate=None, nchannels=1):
+    def irns(delay, gain, niter, duration, samplerate=None, nchannels=1):
         '''
         Returns an IRN_S noise. The iterated ripple noise is obtained trough
         a cascade of gain and delay filtering. 
@@ -788,7 +788,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x,samplerate)
     
     @staticmethod
-    def irn_addoriginal(delay, gain, niter, duration, samplerate=None, nchannels=1):
+    def irno(delay, gain, niter, duration, samplerate=None, nchannels=1):
         '''
         Returns an IRN_O noise. The iterated ripple noise is obtained many attenuated and
         delayed version of the original broadband noise. 
@@ -986,6 +986,8 @@ whitenoise = Sound.whitenoise
 powerlawnoise = Sound.powerlawnoise
 pinknoise = Sound.pinknoise
 brownnoise = Sound.brownnoise
+irns = Sound.irns
+irno = Sound.irno
 tone = Sound.tone
 harmoniccomplex = Sound.harmoniccomplex
 click = Sound.click
