@@ -20,7 +20,7 @@ from db import dB, dB_type, dB_error, gain
 
 __all__ = ['BaseSound', 'Sound',
            'pinknoise','brownnoise','powerlawnoise',
-           'whitenoise', 'IRNaddsame', 'IRNaddoriginal', 
+           'whitenoise', 'irn_addsame', 'irn_addoriginal', 
            'tone', 'click', 'clicks', 'silence', 'sequence', 'harmoniccomplex',
            'loadsound', 'savesound', 'play',
            ]
@@ -766,12 +766,13 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound.powerlawnoise(duration,2.0,samplerate=samplerate,normalise=False)
     
     @staticmethod
-    def IRNaddsame(delay, gain, niter, duration, samplerate=None, nchannels=1):
+    def irn_addsame(delay, gain, niter, duration, samplerate=None, nchannels=1):
         '''
         Returns an IRN_S noise. The iterated ripple noise is obtained trough
         a cascade of gain and delay filtering. 
         For more details: see Yost 1996 or chapter 15 in Hartman Sound Signal Sensation.
         '''
+        samplerate = get_samplerate(samplerate)
         noise=Sound.whitenoise(duration)
         splrate=noise.samplerate
         x=array(noise.T)[0]
@@ -783,15 +784,17 @@ class Sound(BaseSound, numpy.ndarray):
             nchoosek=factorial(niter)/(factorial(niter-k)*factorial(k))
             IRNadd+=nchoosek*(gain**k)*fft(x)*exp(-1j*w*k*d)
         IRNadd = ifft(IRNadd)
-        return Sound(real(IRNadd))
+        x=real(IRNadd)
+        return Sound(x,samplerate)
     
     @staticmethod
-    def IRNaddoriginal(delay, gain, niter, duration, samplerate=None, nchannels=1):
+    def irn_addoriginal(delay, gain, niter, duration, samplerate=None, nchannels=1):
         '''
         Returns an IRN_O noise. The iterated ripple noise is obtained many attenuated and
         delayed version of the original broadband noise. 
         For more details: see Yost 1996 or chapter 15 in Hartman Sound Signal Sensation.
         '''
+        samplerate = get_samplerate(samplerate)
         noise=Sound.whitenoise(duration)
         splrate=noise.samplerate
         x=array(noise.T)[0]
@@ -800,10 +803,10 @@ class Sound(BaseSound, numpy.ndarray):
         w=2*pi*fftfreq(Nspl,spl_dur)
         d=float(delay)
         for k in range(1,niter):
-            nchoosek=factorial(niter)/(factorial(niter-k)*factorial(k))
-            IRNadd+=nchoosek*(gain**k)*fft(x)*exp(-1j*w*k*d)
+            IRNadd+=(gain**k)*fft(x)*exp(-1j*w*k*d)
         IRNadd = ifft(IRNadd)
-        return Sound(real(IRNadd))
+        x=real(IRNadd)
+        return Sound(x, samplerate)
 
     @staticmethod
     def click(duration, peak=None, samplerate=None, nchannels=1):
