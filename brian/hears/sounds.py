@@ -24,7 +24,6 @@ __all__ = ['BaseSound', 'Sound',
            'loadsound', 'savesound', 'play',
            ]
 
-# Comment line to see if I'm now included in Brian's developpers team.
 
 _mixer_status = [-1,-1]
 
