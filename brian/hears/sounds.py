@@ -20,7 +20,8 @@ from db import dB, dB_type, dB_error, gain
 
 __all__ = ['BaseSound', 'Sound',
            'pinknoise','brownnoise','powerlawnoise',
-           'whitenoise', 'tone', 'click', 'clicks', 'silence', 'sequence', 'harmoniccomplex',
+           'whitenoise', 'IRNaddsame', 'IRNaddoriginal', 
+           'tone', 'click', 'clicks', 'silence', 'sequence', 'harmoniccomplex',
            'loadsound', 'savesound', 'play',
            ]
 
