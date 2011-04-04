@@ -2,7 +2,8 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
                     arange, sort_spikes, rint, SpikeMonitor, Connection, Threshold, Reset, \
-                    int32, double, VariableReset, StringReset, VariableThreshold, StringThreshold
+                    int32, double, VariableReset, StringReset, VariableThreshold, StringThreshold, \
+                    Refractoriness
 from brian.tools.statistics import firing_rate, get_gamma_factor
 from playdoh import *
 import brian.optimiser as optimiser
@@ -295,6 +296,11 @@ class GPUModelFitting(object):
     def generate_reset_code(self, src):
         eqs = self.eqs
         reset = self.G._resetfun
+        if reset.__class__ is Refractoriness:
+            state = reset.state
+            if isinstance(state, int):
+                state = eqs._diffeq_names[state]
+            reset = state + ' = ' + str(float(reset.resetvalue))
         if reset.__class__ is Reset:
             state = reset.state
             if isinstance(state, int):

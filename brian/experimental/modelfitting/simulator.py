@@ -334,7 +334,12 @@ class Simulator(object):
     
     def run(self, **param_values):
         delays = param_values.pop('delays', zeros(self.neurons))
-        refractory = param_values.pop('refractory', zeros(self.neurons))
+        
+        if self.max_refractory is not None:
+            refractory = param_values.pop('refractory', zeros(self.neurons))
+        else:
+            refractory = self.refractory*ones(self.neurons)
+            
         tau_metric = param_values.pop('tau_metric', zeros(self.neurons))
         self.update_neurongroup(**param_values)
 
