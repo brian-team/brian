@@ -199,6 +199,7 @@ class StringReset(Reset):
                 expr = re.sub("\\b" + var + "\\b", var + '[_spikes_]', expr)
             self._code = compile(expr, "StringReset", "exec")
             self._vars = unknowns
+            self._prepared = True
         spikes = P.LS.lastspikes()
         self._namespace['_spikes_'] = spikes
         self._namespace['rand'] = self._Replacer(numpy.random.rand, len(spikes))
