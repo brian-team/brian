@@ -799,6 +799,8 @@ class StateMonitor(NetworkOperation, Monitor):
             ylim = [Inf, -Inf]
             @network_operation(clock=EventClock(dt=refresh))
             def refresh_state_monitor_plot(clk):
+                if self.times.size==0: # bugfix submitted by Oleg Sinyavskiy
+                    return
                 ymin, ymax = ylim
                 if matplotlib.is_interactive():
                     if showlast is not None:
