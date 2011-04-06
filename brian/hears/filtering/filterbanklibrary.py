@@ -59,9 +59,14 @@ class Gammatone(LinearFilterbank):
         Their default values are the ones recommended in
         Glasberg and Moore, 1990. 
 
+    ``cascade=None``
+        Specify 1 or 2 to use a cascade of 1 or 2 order 8 or 4 filters instead
+        of 4 2nd order filters. Note that this is more efficient but may
+        induce numerical stability issues.
     '''
 
-    def __init__(self, source, cf,b=1.019,erb_order=1,ear_Q=9.26449,min_bw=24.7):
+    def __init__(self, source, cf, b=1.019, erb_order=1, ear_Q=9.26449,
+                 min_bw=24.7, cascade=None):
         cf = atleast_1d(cf)
         self.cf = cf
         self.samplerate =  source.samplerate
@@ -115,6 +120,8 @@ class Gammatone(LinearFilterbank):
                          array([A0*ones(len(cf)), A14, zeros(len(cf))]).T))
     
         LinearFilterbank.__init__(self, source, self.filt_b, self.filt_a)
+        if cascade is not None:
+            self.decascade(cascade)
 
 class ApproximateGammatone(LinearFilterbank):
     r'''
