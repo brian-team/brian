@@ -10,7 +10,7 @@ try:
     from pycuda import gpuarray
     from buffering import *
 except ImportError:
-    log_warn('Cannot import pycuda')
+    log_warn('brian.experimental.cuda.gpucodegen', 'Cannot import pycuda')
 import time
 from brian.experimental.codegen.rewriting import rewrite_to_c_expression
 
