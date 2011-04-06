@@ -400,7 +400,10 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
 
         self._next_allowed_spiketime = -ones(N)
         self._refractory_time = float(max_refractory) - 0.5 * clock._dt
-        self._use_next_allowed_spiketime_refractoriness = True
+        if not self._variable_refractory_time and max_refractory < 0.9 * clock.dt:
+            self._use_next_allowed_spiketime_refractoriness = False
+        else:
+            self._use_next_allowed_spiketime_refractoriness = True
 
         self._owner = self # owner (for subgroups)
         self._subgroup_set = magic.WeakSet()
