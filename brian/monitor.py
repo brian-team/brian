@@ -1009,8 +1009,6 @@ class MultiStateMonitor(NetworkOperation):
     
     Methods:
     
-    ``vars()``
-        Returns the variables
     ``items()``, ``iteritems()``
         Returns the pairs (var, mon)
     ``plot([indices[, cmap]])``
@@ -1018,7 +1016,9 @@ class MultiStateMonitor(NetworkOperation):
         for this class).
     
     Attributes:
-    
+
+    ``vars``
+        The list of variables recorded.
     ``times``
         The times at which recordings were made.
     ``monitors``
