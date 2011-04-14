@@ -153,6 +153,15 @@ class ConnectionCode(object):
             if not isinstance(_spikes, numpy.ndarray):
                 _spikes = array(_spikes, dtype=int)
             vars = self.vars
+#            print '****'
+#            print self.codestr
+#            for k, v in vars.iteritems():
+#                if isinstance(v, numpy.ndarray):
+#                    print k, ': shape =', v.shape
+#                else:
+#                    print k, ':', v
+#            import sys
+#            sys.stdout.flush()
             vars['_spikes'] = _spikes
             vars['_spikes_len'] = len(_spikes)
             if self.compiled_pycode is not None:
@@ -325,10 +334,10 @@ def iterate_over_col(source_index, weight_variable, weight_matrix, target_index,
     vars.update(code.vars)
     if isinstance(weight_matrix, DenseConnectionMatrix):
         outcode = '''
-        double *_weight_arr_row = _weight_arr+%TARGETINDEX%*_num_target_neurons;
+        double *_weight_arr_row = _weight_arr+%TARGETINDEX%;
         for(int %SOURCEINDEX%=0; %SOURCEINDEX%<_num_source_neurons; %SOURCEINDEX%++)
         {
-            double &%WEIGHT% = _weight_arr_row[%SOURCEINDEX%];
+            double &%WEIGHT% = _weight_arr_row[%SOURCEINDEX%*_num_target_neurons];
             %EXTRAVARS%
             %CODE%
         }

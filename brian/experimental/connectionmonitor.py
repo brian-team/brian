@@ -332,7 +332,6 @@ if __name__=='__main__':
         imshow(Z, aspect='auto')
         show()
     else:
-        set_global_preferences(usecstdp=False)
         Nin = 200
         Nout = 200
         duration = 40 * second
@@ -400,7 +399,6 @@ if __name__=='__main__':
             Gin.rate = Fmax * exp(-(linspace(0, 1, Nin) - rand())**2 / (2 * width ** 2))
     
         run(40*second, report='stderr')
-        exit()
 
         if 0:
             for i, (_, m) in enumerate(M.values):
