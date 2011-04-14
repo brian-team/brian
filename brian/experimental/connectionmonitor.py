@@ -72,9 +72,8 @@ class ConnectionMonitor(NetworkOperation):
         Each time an image ``I`` is recorded, ``image_callback(I)`` is called.
         See below for image format.
     ``size=None``
-        Specifies the dimension of the image, which should be at most the
-        dimensions of the matrix. A fairly crude scaling will be used
-        if the dimensions of the image are smaller than the matrix.
+        Specifies the dimension of the image. A fairly crude scaling will be used
+        if the dimensions of the image are different to those of the matrix.
     ``cmap=jet``
         The colourmap to use. Various values are available in
         ``matplotlib.cm``.
@@ -128,8 +127,6 @@ class ConnectionMonitor(NetworkOperation):
         if size is None:
             size = Ww, Wh
         w, h = size
-        if w>Ww: w = Ww
-        if h>Wh: h = Wh
         self.size = (h, w)
         self.wmin = wmin
         self.wmax = wmax
@@ -239,13 +236,17 @@ class ConnectionMonitor(NetworkOperation):
         wmin, wmax = self.wmin, self.wmax
         if W is None:
             W = getattr(self.C, self.matrix)
-        image = zeros(self.size[::-1])
-        # We're going to do some crude scaling by adding all the weights and
-        # dividing by the number of itmes, for each pixel of the image
-        image_numitems = zeros(self.size[::-1], dtype=int)
-        ind = arange(W.shape[1])
         h, w = self.size
         Wh, Ww = W.shape
+        # We initially generate the image at the maximum size of the matrix,
+        # and scale up if the requested size was bigger
+        if w>Ww: w = Ww
+        if h>Wh: h = Wh
+        image = zeros((w, h))
+        # We're going to do some crude scaling by adding all the weights and
+        # dividing by the number of itmes, for each pixel of the image
+        image_numitems = zeros((w, h), dtype=int)
+        ind = arange(W.shape[1])
         # We will do histograms for each row, adding up the corresponding
         # weights for indices in these bins
         bins = hstack(((arange(w)*Ww)/w, Ww))
@@ -264,6 +265,13 @@ class ConnectionMonitor(NetworkOperation):
         if wmax is None: wmax = amax(image)
         if wmax - wmin < 1e-20: wmax = wmin + 1e-20
         image = self.cmap(clip((image - wmin) / (wmax - wmin), 0, 1), bytes=True)
+        # Scale up if the requested image size is larger than the matrix
+        ih, iw = self.size
+        if ih>h or iw>w:
+            yind = (arange(ih)*h)/ih
+            xind = (arange(iw)*w)/iw
+            xind, yind = meshgrid(xind, yind)
+            image = image[xind.T, yind.T, :]
         return image
         
     def pygame_image_callback(self, image):
@@ -389,7 +397,7 @@ if __name__=='__main__':
         stdp_rec = ExponentialSTDP(rec, taup, taud, Ap, Ad, wmax=wmax_rec)
     
         M = ConnectionMonitor(ff, display='pygame',
-                              #size=(50,50),
+                              #size=(500,500),
                               #synapses=10000,
                               )
         
