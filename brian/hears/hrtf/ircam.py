@@ -62,8 +62,19 @@ class IRCAM_LISTEN(HRTFDatabase):
         else:                      # COMPENSATED DATA
             affix = '_eq_hrir_S'
         l, r = m['l' + affix], m['r' + affix]
+
         azim = l['azim_v'][0][0][:, 0]
         elev = l['elev_v'][0][0][:, 0]
+        if len(azim) == len(elev) and len(azim) == 1:
+            # it is the case with IRCAM_New db
+            # - the coordinates are 1xN instead of Nx1
+            # - some measures that should be at the same elevation are
+            # at very close but different elevations (7.47
+            # vs. 7.5). This is annoying for interpolation. Hence I
+            # round the elevations
+            rounddot5 = lambda x: np.round(2*x)/2
+            azim = rounddot5(l['azim_v'][0][0][0, :])
+            elev = l['elev_v'][0][0][0, :]
         coords = make_coordinates(azim=azim, elev=elev)
         l = l['content_m'][0][0]
         r = r['content_m'][0][0]
