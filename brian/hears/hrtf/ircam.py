@@ -48,7 +48,7 @@ class IRCAM_LISTEN(HRTFDatabase):
             raise ValueError('Custom samplerate not supported.')
         self.samplerate = samplerate
 
-    def load_subject(self, subject):
+    def load_subject(self, subject, rounddot5 = False):
         subject = str(subject)
         filename = os.path.join(self.basedir, 'IRC_' + subject)
         if self.compensated:
@@ -72,8 +72,10 @@ class IRCAM_LISTEN(HRTFDatabase):
             # at very close but different elevations (7.47
             # vs. 7.5). This is annoying for interpolation. Hence I
             # round the elevations
-            rounddot5 = lambda x: np.round(2*x)/2
-            azim = rounddot5(l['azim_v'][0][0][0, :])
+            conv = lambda x : x
+            if rounddot5:
+                conv = lambda x: np.round(2*x)/2
+            azim = conv(l['azim_v'][0][0][0, :])
             elev = l['elev_v'][0][0][0, :]
         coords = make_coordinates(azim=azim, elev=elev)
         l = l['content_m'][0][0]
