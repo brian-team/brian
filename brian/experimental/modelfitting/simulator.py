@@ -156,6 +156,7 @@ class Simulator(object):
                  statemonitor_var=None,
                  method = 'Euler'
                  ):
+#        print refractory, max_refractory
         self.model = model
         self.reset = reset
         self.threshold = threshold
@@ -212,7 +213,10 @@ class Simulator(object):
         
         # Must recompile the Equations : the functions are not transfered after pickling/unpickling
         self.model.compile_functions()
-        
+#        print refractory, self.max_refractory
+        if  type(refractory) is double:
+            refractory=refractory*second
+            
         self.group = NeuronGroup(self.neurons, # TODO: * slices?
                                  model=self.model,
                                  reset=self.reset,
@@ -299,9 +303,10 @@ class Simulator(object):
         if criterion_name == 'LpError':
             params['p'] = self.criterion.p
             params['varname'] = self.criterion.varname
-            params['cut'] = self.criterion.cut
-            params['cut_steps'] = self.criterion.cut_steps
-            params['cut_indices'] = self.criterion.cut_indices
+            params['method'] = self.criterion.method
+            params['insets'] = self.criterion.insets
+            params['outsets'] = self.criterion.outsets
+            params['points'] = self.criterion.points
             self.criterion_object = LpErrorCriterion(**params)
             
         if criterion_name == 'VanRossum':
@@ -335,6 +340,7 @@ class Simulator(object):
     def run(self, **param_values):
         delays = param_values.pop('delays', zeros(self.neurons))
         
+        print self.refractory,self.max_refractory
         if self.max_refractory is not None:
             refractory = param_values.pop('refractory', zeros(self.neurons))
         else:
@@ -530,15 +536,15 @@ if __name__ == '__main__':
     tau = linspace(25*ms, 30*ms, neurons)
     
     # GAMMA FACTOR
-#    criterion = GammaFactor(delta=2*ms)
-#    spikes= loadtxt('spikes_artificial.txt')
-#    data = spikes
+    criterion = GammaFactor(delta=2*ms)
+    spikes= loadtxt('spikes_artificial.txt')
+    data = spikes
     
     # LP ERROR
-    criterion = LpError(p=2, varname='V')
+#    criterion = LpError(p=2, varname='V')
     
-    input, trace = slice_trace(input, trace, slices = groups, overlap = overlap)
-    data = trace
+#    input, trace = slice_trace(input, trace, slices = groups, overlap = overlap)
+#    data = trace
     
     # SIMULATE, EVALUATE CRITERION AND RECORD TRACES ON GPU
     criterion_values, record_values = simulate( model = equations,
