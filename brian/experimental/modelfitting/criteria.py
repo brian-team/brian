@@ -807,6 +807,7 @@ class VanRossum(CriterionStruct):
 class BretteCriterion(Criterion):
     type = 'spikes'
     def initialize(self,tau_metric):
+#        tau_metric=tau_metric**
         self.delay_range =max(self.delays)- min(self.delays)#delay range
         self.min_delay = abs(min(self.delays))#minimum of possible delay
         self.corr_vector=zeros(self.N) 
@@ -857,7 +858,7 @@ class BretteCriterion(Criterion):
         norm_pop=values[1]
         norm_target=values[2]
         corr_vector[nonzero(self.spikecount==0)] = -inf
-        temp=self.corr_vector/sqrt(norm_pop)/sqrt(norm_target)
+        temp=self.corr_vector/sqrt(norm_pop)/sqrt(norm_target)/self.tau_metric
         temp[isnan(temp)] = -inf
         return temp
 
