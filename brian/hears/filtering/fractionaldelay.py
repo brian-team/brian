@@ -52,7 +52,7 @@ class FractionalDelay(FIRFilterbank):
     '''
     def __init__(self, source, delays, filter_length=None, **args):
         delays = array(delays)
-        delay_max = argmax(abs(delays))
+        delay_max = amax(abs(delays))
         delay_max_int = int(ceil(source.samplerate*delay_max))
         if filter_length is None:
             filter_length = 2*int(delay_max_int*1.25)+1
