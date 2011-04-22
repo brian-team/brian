@@ -8,6 +8,8 @@ Minor features:
 * Added new brian.tools.taskfarm.run_tasks function to use multiple CPUs to
   perform multiple runs of a simulation and save results to a DataManager,
   with an optional GUI interface.
+* Added FractionalDelay filterbank to brian.hears
+* Added fractional itds to HeadlessDatabase in brian.hears
 
 Improvements:
 
