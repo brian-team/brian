@@ -343,15 +343,52 @@ class Sound(BaseSound, numpy.ndarray):
             padding = zeros((L - len(self), self.nchannels))
             return Sound(concatenate((self, padding)), samplerate=self.samplerate)
 
-    def shifted(self, duration):
+    def shifted(self, duration, fractional=False, filter_length=31):
         '''
         Returns the sound delayed by duration, which can be the number of
-        samples or a length of time in seconds.
+        samples or a length of time in seconds. Normally, only integer
+        numbers of samples will be used, but if ``fractional=True`` then
+        the filtering method from
+        `http://www.labbookpages.co.uk/audio/beamforming/fractionalDelay.html <http://www.labbookpages.co.uk/audio/beamforming/fractionalDelay.html>`__
+        will be used (introducing some small numerical errors). With this
+        method, you can specify the ``filter_length``, larger values are
+        slower but more accurate. Note that if ``fractional=True`` then
+        ``duration`` is assumed to be a time not a number of samples.
         '''
-        if not isinstance(duration, int):
-            duration = int(rint(duration*self.samplerate))
-        y = vstack((zeros((duration, self.nchannels)), self))
-        return Sound(y, samplerate=self.samplerate)
+        if not fractional:
+            if not isinstance(duration, int):
+                duration = int(rint(duration*self.samplerate))
+            if duration>=0:
+                y = vstack((zeros((duration, self.nchannels)), self))
+                return Sound(y, samplerate=self.samplerate)
+            else:
+                return self[-duration:, :]
+        else:
+            if self.nchannels>1:
+                sounds = [self.channel(i).shifted(duration, fractional=True, filter_length=filter_length) for i in xrange(self.nchannels)]
+                return Sound(array(sounds), samplerate=self.samplerate)
+            # Adapted from
+            # http://www.labbookpages.co.uk/audio/beamforming/fractionalDelay.html
+            delay = duration*self.samplerate
+            if delay>0:
+                idelay = int(delay)
+            elif delay<0:
+                idelay = -int(-delay)
+            delay -= idelay
+            centre_tap = filter_length // 2
+            t = arange(filter_length)
+            x = t-delay
+            if abs(round(delay)-delay)<1e-10:
+                tap_weight = array(x==centre_tap, dtype=float)
+            else:
+                sinc = sin(pi*(x-centre_tap))/(pi*(x-centre_tap))
+                window = 0.54-0.46*cos(2.0*pi*(x+0.5)/filter_length) # Hamming window
+                tap_weight = window*sinc
+            y = convolve(tap_weight, self.flatten())
+            y = y[filter_length/2:-filter_length/2]
+            sound = Sound(y, self.samplerate)
+            sound = sound.shifted(idelay)
+            return sound
 
     def repeat(self, n):
         '''
