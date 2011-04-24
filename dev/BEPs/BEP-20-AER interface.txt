@@ -179,3 +179,12 @@ u, indices = unique(timestamp, return_index=True)
 Then the idea would be to use a SpikeContainer which would not necessarily store
 all timesteps but only non-empty ones (there would also be circular vector
 storing the timestamps).
+
+TODO/Current state
+==================
+* Loading AER files seems fine now.
+* SpikeGeneratorGroup.gather() is too slow, and running a gathered group is
+  too slow. The problem is that the design of SpikeGeneratorThreshold.__call__()
+  is rather bad. It uses a where() function on a N-sized array with ones at
+  positions of spikes. Very inefficient.
+ 

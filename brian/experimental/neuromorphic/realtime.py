@@ -61,6 +61,6 @@ if __name__=='__main__':
     R=RealtimeController(dt=100*ms,verbose=True)
     run(3*second)
     sleep(1*second)
-    R.reinit() # try not comment it!
+    R.reinit() # try to comment it!
     run(2*second)
     

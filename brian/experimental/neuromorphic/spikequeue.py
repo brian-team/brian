@@ -1,70 +1,76 @@
 """
 SpikeQueue
 
-We need to find better names.
 This is really a sketch.
 """
 #from brian.utils.circular import SpikeContainer
 #from brian.neurongroup import NeuronGroup
 #from brian.directcontrol import SpikeGeneratorGroup
 from brian import *
+from numpy import unique
+from time import time
 
-class SpikeQueue(SpikeContainer):
-    '''
-    Implements a vectorised queue of future spikes, as a SpikeContainer.
-    
-    What we want to do: push future spikes, without advancing the cursor.
-    * We must keep track of the time of the current timestep (corresponding to
-    cursor position), which would be used in get_spikes.
-    * We would like to insert multiple timesteps at once, possibly using a
-    list of timestamps and a list of neuron indices.
-    * When we push spikes, sometimes the spikes should be in the same timestep
-    as the last ones.
-    
-    This will then be used for a NeuronGroup, as a replacement of LS.
-    Latency will then be set directly through the Connection object.
-    '''
-    def __init__(self, m, useweave=False, compiler=None):
-        SpikeContainer.__init__(self,m, useweave, compiler)
-        self._offset=0
+__all__=['SpikeQueue']
 
-    def push(self, spikes):
-        SpikeContainer.push(self,spikes)
-        self._offset-=1
-    
-    def advance(self):
-        '''
-        Advances by one timestep
-        '''
-        self._offset+=1
-    
-    def get_spikes(self, delay, origin, N):
-        """
-        Returns those spikes in self[delay] between origin and origin+N
-        """
-        return self.S.get_conditional(self.ind[-delay - 1] - self.S.cursor+self._offset, \
-                                     self.ind[-delay] - self.S.cursor +self._offset+ self.S.n, \
-                                     origin, origin + N, origin)
-
-class SpikeQueueGroup(NeuronGroup):
+class SpikeQueue(NeuronGroup):
     '''
     A group that sends spikes like SpikeGeneratorGroup, but in a vectorised
     way, forgetting past events.
     Initialised with a vector of spike times and a vector of corresponding
     neuron indices.
     '''
-    def __init__(self, N, spiketimes, neurons, clock=None, period=None):
+    def __init__(self, N, spiketimes, neurons, clock=None, check_sorted=True):
         clock = guess_clock(clock)
-        self.period = period
         NeuronGroup.__init__(self, N, model=LazyStateUpdater(), clock=clock)
+        # Check if spike times are sorted
+        if check_sorted: # Sorts the events if necessary
+            if any(diff(spiketimes)<0): # not sorted
+                ind=argsort(spiketimes)
+                neurons,spiketimes=neurons[ind],spiketimes[ind]
+        # Create the spike queue
+        self.set_max_delay(max(spiketimes)) # This leaves space for the next spikes
+        # Push the spikes
+        self.LS.push(neurons) # This takes a bit of time (not sure why)
+        # Set the cursors back
+        self.LS.ind.advance(-1)
+        self.LS.S.cursor=self.LS.ind[0]
+        # Discretize spike times and make them relative to current time step
+        spiketimes=array((spiketimes-clock.t)/clock.dt,dtype=int) # in units of dt
+        # Calculate indices of spike groups
+        u,indices=unique(spiketimes,return_index=True) # determine repeated time indices
+        # Build vector of indices with -1 meaning: same index as previously
+        x=-ones(max(u)+2) # maximum time index
+        x[-1]=len(spiketimes) # last entry
+        ## This is vectorized yet incredibly inefficient 
+        #x[u]=indices
+        #empty_ind=where(x<0)[0] # time bins with no spikes
+        # This is really slow:
+        #x[empty_ind]=indices[digitize(empty_ind,u)] # -1 are replaced with next positive entry
+        
+        # As a loop (This now takes about 30% of the whole construction time):
+        # Perhaps it could be written in C
+        x[u]=indices
+        for i in where(x<0)[0][::-1]: # -1 are replaced with next positive entry
+            x[i]=x[i+1]
+        # x[0] is always 0; maybe this should be dropped
+        self.LS.ind[0:len(x)]=x
+        self.LS.ind[len(x)]=-1 # no more spike at that point
+        self._stopped=False # True when no more spike
 
     def reinit(self):
         super(SpikeQueueGroup, self).reinit()
-        self._threshold.reinit()
 
     def update(self):
-        # We implement it here because we reimplement LS
-        pass
+        # LS.S contains the data (neurons that spike)
+        # LS.ind is a circular vector with pointers to locations in LS.S,
+        # one for each future time bin
+        if (self.LS.ind[1]>=0) & (not self._stopped):
+            ns=self.LS.ind[1]-self.LS.ind[0] # number of spikes in next bin
+            self.LS.S.advance(ns)
+        else:
+            self._stopped=True
+            self.LS.ind[1]=self.LS.ind[0]
+        self.LS.ind.advance(1)
 
     #spiketimes = property(fget=lambda self:self._threshold.spiketimes,
     #                      fset=lambda self, value: self._threshold.set_spike_times(self._threshold.N, value, self._threshold.period))

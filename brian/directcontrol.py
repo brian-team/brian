@@ -255,13 +255,24 @@ class SpikeGeneratorGroup(NeuronGroup):
         NeuronGroup.__init__(self, N, model=LazyStateUpdater(), threshold=thresh, clock=clock)
 
     def gather(self,spiketimes,dt):
-        # Gathers spike events in the same timestep
-        # Assumes spikes are sorted
-        if isinstance(spiketimes, (list, tuple)):
+        '''
+        Gathers spike events occurring in the same timestep.
+        Assumes spikes are sorted (this could be ensured).
+        
+        Returns a new list of spike times (i,t), where i is an array of neurons
+        (not just a single neuron) and t is a single floating value (time).
+        
+        Currently, this is rather slow. There is also a slight inconsistency
+        with the non-gathered mechanism, where spikes are scheduled one timestep
+        later. In addition, running a gathered group is slower! This is because
+        of the bad design of the threshold.__call method.
+        '''
+        if isinstance(spiketimes, (list, tuple)): # First convert to (n,2) array
             spiketimes=array(spiketimes)
         times=array(spiketimes[:,1]/dt,dtype=int) # in units of dt
         neurons=array(spiketimes[:,0],dtype=int)
-        u,indices=numpy.unique(times,return_index=True) # split over timesteps
+        u,indices=numpy.unique(times,return_index=True) # determine repeated time indices
+        # Split over timesteps: list of (i,t) where i is an array of neurons
         new_spiketimes=[]
         for i in range(len(u)-1):
             new_spiketimes.append((neurons[indices[i]:indices[i+1]],float(u[i])*dt))

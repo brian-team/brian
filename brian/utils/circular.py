@@ -171,7 +171,7 @@ class SpikeContainer(object):
     '''
     def __init__(self, m, useweave=False, compiler=None):
         '''
-        n = maximum number of spikes stored
+        n = maximum number of spikes stored (not used anymore)
         m = maximum number of bins stored
         '''
         if m < 2: m = 2
