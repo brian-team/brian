@@ -3,6 +3,8 @@ Monitor AER events with real-time Brian.
 
 I think it works (although not sure) but it's really too slow.
 It needs to be vectorised.
+
+Problems with negative timestamps
 """
 #import brian_no_units
 from brian import *
@@ -23,7 +25,8 @@ defaultclock.dt=1*ms # so that it's fast enough
 
 R=RealtimeController(dt=100*ms)
    
-retina=SpikeGeneratorGroup(128,[])
+#retina=SpikeGeneratorGroup(128,[])
+allspikes=[]
 
 # Listen to AER
 first_event=True
@@ -31,7 +34,7 @@ offset=0.
 latency=200*ms
 @network_operation(EventClock(dt=20*ms))
 def listen():
-    global first_event,offset
+    global first_event,offset,allspikes
     try:
         while True:
             data= sock.recvfrom( 63000 )[0]
@@ -48,17 +51,20 @@ def listen():
                     ts0=timestamp[0]*1e-6
                     offset=t0-ts0
                 _,addr,_=extract_DVS_event(addr)
-                spiketimes=array((addr,timestamp*1e-6+offset+float(latency))).T
-                spiketimes=retina.gather(spiketimes,defaultclock.dt)
-                retina.spiketimes+=spiketimes # not sure this works
+                #spiketimes=array((addr,timestamp*1e-6+offset+float(latency))).T
+                #spiketimes=retina.gather(spiketimes,defaultclock.dt)
+                allspikes+=zip(addr,timestamp*1e-6+offset+float(latency))
     except: # no more events (can we do this in a cleaner way?)
         pass
 
-M=SpikeMonitor(retina)
+#M=SpikeMonitor(retina)
 
+start_time=time()
 run(5*second)
 
 sock.close()
 
-raster_plot(M)
+i,t=zip(*allspikes)
+plot(t,i,'.')
+#raster_plot(M)
 show()

@@ -180,11 +180,23 @@ Then the idea would be to use a SpikeContainer which would not necessarily store
 all timesteps but only non-empty ones (there would also be circular vector
 storing the timestamps).
 
-TODO/Current state
-==================
+Current state
+=============
 * Loading AER files seems fine now.
 * SpikeGeneratorGroup.gather() is too slow, and running a gathered group is
   too slow. The problem is that the design of SpikeGeneratorThreshold.__call__()
   is rather bad. It uses a where() function on a N-sized array with ones at
   positions of spikes. Very inefficient.
- 
+* SpikeQueue now replaces SpikeGeneratorGroup. Running is faster, but construction
+  is slower, and overall it is not faster (why?).
+* monitor_AER_events listens to spikes through UDP.
+
+TODO
+====
+* Write SpikeQueue.push_spiketimes
+* Make SpikeQueue faster for construction
+* Make a cleaner version of SpikeQueue. This could rely on a new
+  SpikeContainer with future events (in addition to past events, or independently)
+  (FutureSpikeContainer).
+* We have some problems with timestamps through UDP which are sometimes <0. Why?
+* monitor_AER_events: feed the SpikeQueue with it. Can we do it in real time?

@@ -30,7 +30,7 @@ class SpikeQueue(NeuronGroup):
         # Create the spike queue
         self.set_max_delay(max(spiketimes)) # This leaves space for the next spikes
         # Push the spikes
-        self.LS.push(neurons) # This takes a bit of time (not sure why)
+        self.LS.push(neurons) # This takes a bit of time (not sure why but this could be enhanced)
         # Set the cursors back
         self.LS.ind.advance(-1)
         self.LS.S.cursor=self.LS.ind[0]
@@ -59,6 +59,13 @@ class SpikeQueue(NeuronGroup):
 
     def reinit(self):
         super(SpikeQueueGroup, self).reinit()
+        
+    def push_spike_times(self,spiketimes,neurons):
+        '''
+        Inserts future spike times
+        For this we need to store the end position of future spikes
+        '''
+        pass
 
     def update(self):
         # LS.S contains the data (neurons that spike)
@@ -71,6 +78,3 @@ class SpikeQueue(NeuronGroup):
             self._stopped=True
             self.LS.ind[1]=self.LS.ind[0]
         self.LS.ind.advance(1)
-
-    #spiketimes = property(fget=lambda self:self._threshold.spiketimes,
-    #                      fset=lambda self, value: self._threshold.set_spike_times(self._threshold.N, value, self._threshold.period))
