@@ -343,7 +343,7 @@ class Sound(BaseSound, numpy.ndarray):
             padding = zeros((L - len(self), self.nchannels))
             return Sound(concatenate((self, padding)), samplerate=self.samplerate)
 
-    def shifted(self, duration, fractional=False, filter_length=31):
+    def shifted(self, duration, fractional=False, filter_length=2048):
         '''
         Returns the sound delayed by duration, which can be the number of
         samples or a length of time in seconds. Normally, only integer
@@ -352,7 +352,11 @@ class Sound(BaseSound, numpy.ndarray):
         `http://www.labbookpages.co.uk/audio/beamforming/fractionalDelay.html <http://www.labbookpages.co.uk/audio/beamforming/fractionalDelay.html>`__
         will be used (introducing some small numerical errors). With this
         method, you can specify the ``filter_length``, larger values are
-        slower but more accurate. Note that if ``fractional=True`` then
+        slower but more accurate, especially at higher frequencies. The large
+        default value of 2048 samples provides good accuracy for sounds with
+        frequencies above 20 Hz, but not for lower frequency sounds. If you are
+        restricted to high frequency sounds, a smaller value will be more
+        efficient. Note that if ``fractional=True`` then
         ``duration`` is assumed to be a time not a number of samples.
         '''
         if not fractional:
@@ -384,7 +388,10 @@ class Sound(BaseSound, numpy.ndarray):
                 sinc = sin(pi*(x-centre_tap))/(pi*(x-centre_tap))
                 window = 0.54-0.46*cos(2.0*pi*(x+0.5)/filter_length) # Hamming window
                 tap_weight = window*sinc
-            y = convolve(tap_weight, self.flatten())
+            if filter_length<256:
+                y = convolve(tap_weight, self.flatten())
+            else:
+                y = fftconvolve(tap_weight, self.flatten())
             y = y[filter_length/2:-filter_length/2]
             sound = Sound(y, self.samplerate)
             sound = sound.shifted(idelay)

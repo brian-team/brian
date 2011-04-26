@@ -35,7 +35,11 @@ class FractionalDelay(FIRFilterbank):
     
         The length of the filter to use. This is automatically determined
         from the delays. Note that ``delay_offset`` should be larger than the
-        maximum positive or negative delay.
+        maximum positive or negative delay. The minimum filter length is
+        by default 2048 samples, which allows for good accuracy for signals
+        with power above 20 Hz. For low frequency analysis, longer filters will
+        be necessary. For high frequency analysis, a shorter filter length could
+        be used for a more efficient computation.
     
     **Notes**
     
@@ -56,8 +60,8 @@ class FractionalDelay(FIRFilterbank):
         delay_max_int = int(ceil(source.samplerate*delay_max))
         if filter_length is None:
             filter_length = 2*int(delay_max_int*1.25)+1
-            if filter_length<31:
-                filter_length = 31
+            if filter_length<2048:
+                filter_length = 2048
         if filter_length/2<=delay_max_int:
             raise ValueError('Filter length not long enough for selected delays.')
         self.delay_offset = (filter_length//2)/source.samplerate
