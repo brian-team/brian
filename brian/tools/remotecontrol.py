@@ -105,10 +105,14 @@ class RemoteControlServer(NetworkOperation):
         global_ns = self.global_ns
         local_ns = self.local_ns
         paused = 1
-        while paused != 0:
+        while conn and paused != 0:
             if paused >= 0 and not conn.poll():
                 return
-            job = conn.recv()
+            try:
+                job = conn.recv()
+            except:
+                self.conn = None
+                break
             jobtype, jobargs = job
             if paused == 1: paused = 0
             try:
