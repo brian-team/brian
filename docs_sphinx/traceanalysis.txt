@@ -1,0 +1,102 @@
+.. currentmodule:: brian
+
+Trace analysis
+==============
+The trace analysis library contains functions to analyse intracellular
+recordings (for example to extract spike times). It is currently experimental.
+To import it::
+
+  from brian.experimental.trace_analysis import *
+
+Miscellaneous
+-------------
+You can low-pass filter a trace as follows::
+
+  v_lp=lowpass(v, tau)
+
+where tau is the time constant (cut-off frequency 1/(2*pi*tau)) and v is
+the trace (a vector of values). By default, tau is in units of the timestep.
+Alternatively, one can specify the timestep::
+
+  v_lp=lowpass(v, tau, dt=0.1*ms)
+
+Spike analysis
+--------------
+Detecting spikes
+^^^^^^^^^^^^^^^^
+The following function returns the time indexes of spike peaks in a trace v::
+
+  peaks=spike_peaks(v, vc=-10*mV)
+
+where vc is the voltage criterion (we consider that there is a spike when v>vc).
+The algorithm works as follows. First, we identify positive crossings of the
+voltage criterion. Then, after each positive crossing, we look for the first
+local maximum (that is, when the voltage first starts decreasing). The last
+spike is treated differently because the peak may occur after the end of the
+recording, in which case the last element is considered as the peak.
+
+It is possible to omit the voltage criterion vc. In this case, it is guessed
+with the following (rather complex) function::
+
+  vc=find_spike_criterion(v)
+  
+The idea of this algorithm is to look at the trace in phase space
+(v,dv/dt). In this space, spikes tend to circle around some area which contains
+no trajectory. It appears that, somewhere in the middle of these circles,
+there is a voltage vc for which trajectories are either increasing (dv>0,
+upstroke of a spike) or decreasing (dv<0, downstroke of a spike) but never
+still (dv=0). This means that a positive crossing of this voltage always leads
+to a spike. We identify this voltage by looking for the largest interval of
+voltages (v1,v2) for which there is no sign change of dv/dt (over two successive
+timesteps), and we set vc=(v1+v2)/2, the middle of this interval.
+  
+As this method is rather complex, it is strongly advised to manually check
+whether it gives reasonable results.
+
+Voltage reset
+^^^^^^^^^^^^^
+The average voltage reset after a spike is calculated as the average
+first minimum after a spike, with the following function::
+
+  reset=reset_potential(v, peaks=None, full=False)
+  
+The time indexes of spike peaks can be given
+(this may save some computation time).
+With the ``full=True`` option, the standard deviation is also returned.
+
+Spike threshold
+^^^^^^^^^^^^^^^
+There are 3 ways to measure the spike threshold. The first derivative method
+uses a threshold criterion on the first derivative dv/dt to identify spike
+onsets::
+
+  onsets=spike_onsets(v, criterion=None, vc=None)
+  
+where ``criterion`` is the derivative criterion and ``vc`` is the voltage criterion
+to detect spikes. Note that the criterion is in units of voltage per time step.
+First, the algorithm detects spike peaks. Then for each spike,
+we look for the maximum of dv/dt since the previous spike, which should be the
+inflexion point of the spike
+(NB: looking for the last local peak might be better).
+Then we identify the last time before the inflexion point when dv/dt is smaller
+than the criterion. The function returns the time indexes of the onsets, not
+their values (which are ``v[onsets]``).
+The derivative criterion may be automatically determined, using the following function::
+
+  criterion=find_onset_criterion(v, guess=0.1, vc=None)
+  
+where ``guess`` is an optional initial guess for the optimization method.
+The algorithm is simple: find the criterion that minimizes the variability
+of onsets.
+
+There are two other methods to measure spike thresholds, but they do not
+always give very good results (perhaps the trace should be preliminary
+filtered)::
+
+  onsets2=spike_onsets_dv2(v, vc=None)
+  onsets3=spike_onsets_dv3(v, vc=None)
+
+The first one finds the maximum of the second derivative d2v/dt2, the second
+one finds the maximum of d3v/dt3. These are global maxima in each interspike
+interval (it could be that looking for the last local maximum gives better
+results).

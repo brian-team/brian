@@ -17,6 +17,7 @@ For example, to import electrophysiology models::
    librarymodels
    randomprocesses
    electrophysiology
+   traceanalysis
    modelfitting
    hears
 
