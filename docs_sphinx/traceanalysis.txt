@@ -100,3 +100,30 @@ The first one finds the maximum of the second derivative d2v/dt2, the second
 one finds the maximum of d3v/dt3. These are global maxima in each interspike
 interval (it could be that looking for the last local maximum gives better
 results).
+
+Spike shape
+^^^^^^^^^^^
+The following function returns the average spike duration, defined as the time
+from onset to reset (next voltage minimum):: 
+
+  duration=spike_duration(v)
+
+The onsets can be passed to save computation time, with the ``onsets``
+keyword. With the option ``full=True``, the function returns:
+the mean time from onset to peak, the mean time from onset down to same value
+(note that this may not be meaningful for some neurons),
+mean time from onset to next minimum, and standard deviations for these 3
+values.
+
+Note: this function may change.
+
+The following function returns the average spike-triggered voltage::
+
+  shape=spike_shape(v, onsets=None, before=100, after=100)
+  
+If ``onsets`` is unspecified, it is calculated with the ``spike_onsets``
+function. Note that you can align spikes on other times, for example peaks.
+The arguments ``before`` and ``after`` specify the number of time steps
+before and after the triger times.
+
+Note: this should not be specific to spikes, it's a spike-triggered average.
