@@ -126,4 +126,4 @@ function. Note that you can align spikes on other times, for example peaks.
 The arguments ``before`` and ``after`` specify the number of time steps
 before and after the triger times.
 
-Note: this should not be specific to spikes, it's a spike-triggered average.
+Note: this should not be specific to spikes, it's a stimulus-triggered average.
