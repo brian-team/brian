@@ -127,7 +127,8 @@ def spike_onsets(v, criterion=None, vc=None):
     l = []
     for i in peaks:
         # Find peak of derivative (alternatively: last sign change of d2v, i.e. last local peak)
-        inflexion = previous_i + argmax(dv[previous_i:i])
+        #inflexion = previous_i + argmax(dv[previous_i:i])
+        inflexion = previous_i + argmax(dv[previous_i:i-1]*dv[previous_i+1:i]<0)
         j += max((dv[j:inflexion] < criterion).nonzero()[0]) + 1
         l.append(j)
         previous_i = i
