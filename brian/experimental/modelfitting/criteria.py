@@ -398,7 +398,8 @@ class LpErrorCriterion(Criterion):
         Call gpuarray.get() on final values, so that get_values() returns updated values.
         """
         self._error = self.error_gpu.get()
-        self.index=self.next_index_past.get()
+        if self.method=='intervals' or self.method=='points':
+            self.index=self.next_index_past.get()
     
     def get_values(self):
         if self.K == 1: error = self._error.flatten()

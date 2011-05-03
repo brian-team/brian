@@ -54,7 +54,7 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
     if reset is None:
         reset = ""
     
-    criterion = LpError(p=p, varname='V', cut=cut, cut_indices=cut_indices, cut_steps=cut_steps)
+    criterion = LpError(p=p, varname='V')
     
     if results is None:
         results = modelfitting( model = equations,
