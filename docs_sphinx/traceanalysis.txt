@@ -75,9 +75,8 @@ onsets::
 where ``criterion`` is the derivative criterion and ``vc`` is the voltage criterion
 to detect spikes. Note that the criterion is in units of voltage per time step.
 First, the algorithm detects spike peaks. Then for each spike,
-we look for the maximum of dv/dt since the previous spike, which should be the
-inflexion point of the spike
-(NB: looking for the last local peak might be better).
+we look for the last local maximum of dv/dt before the spike, which should be the
+inflexion point of the spike.
 Then we identify the last time before the inflexion point when dv/dt is smaller
 than the criterion. The function returns the time indexes of the onsets, not
 their values (which are ``v[onsets]``).
