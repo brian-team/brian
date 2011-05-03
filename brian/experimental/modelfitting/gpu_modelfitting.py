@@ -44,7 +44,7 @@ class ModelfittingGPUCodeGenerator(GPUCodeGenerator):
 
 
 
-BLOCKSIZE = 256
+BLOCKSIZE = 128
 
 def get_cuda_template():
     return """
@@ -132,9 +132,12 @@ __global__ void runsim(
         // RESET
         if(has_spiked||is_refractory)
         {
-            %RESET%
+            %RESET1%
         }
-        
+        if(has_spiked)
+        {
+            %RESET2%
+        }
         if(has_spiked)
             next_allowed_spiketime = T+refractory;
         
@@ -296,12 +299,13 @@ class GPUModelFitting(object):
     def generate_reset_code(self, src):
         eqs = self.eqs
         reset = self.G._resetfun
+        print eqs
         if reset.__class__ is Refractoriness:
             state = reset.state
             if isinstance(state, int):
                 state = eqs._diffeq_names[state]
             reset = state + ' = ' + str(float(reset.resetvalue))
-        if reset.__class__ is Reset:
+        elif reset.__class__ is Reset:
             state = reset.state
             if isinstance(state, int):
                 state = eqs._diffeq_names[state]
@@ -317,11 +321,15 @@ class GPUModelFitting(object):
             all_variables = eqs._eq_names + eqs._diffeq_names + eqs._alias.keys() + ['t']
             expr = optimiser.freeze(expr, all_variables, namespace)
             reset = expr
+
 #        self.reset = reset
         # Substitute reset
         reset = '\n            '.join(line.strip() + ';' for line in reset.split('\n') if line.strip())
-        src = src.replace('%RESET%', reset)
-        
+        reset=reset.split('\n')
+        src = src.replace('%RESET1%', reset[0])
+        reset = '\n            '.join(line.strip()+'\n' for line in reset[1:])
+        src = src.replace('%RESET2%', reset)
+        print src
         return src
             
     def generate_data_code(self, src):
@@ -413,7 +421,7 @@ class GPUModelFitting(object):
         indexvar = dict((v, k) for k, v in self.G.var_index.iteritems() if isinstance(k, str) and k!='I')
         extractions = '\n    '.join('%SCALAR% *'+name+'_arr = state_vars+'+str(i*self.N)+';' for i, name in indexvar.iteritems())
         src = src.replace('%EXTRACT_STATE_VARIABLES%', extractions)
-        
+        #here
         # Substitute load variables
         loadvar_names = self.eqs._diffeq_names + []
         loadvar_names.remove('I') # I is assumed to be a parameter and loaded per time step
@@ -461,7 +469,7 @@ class GPUModelFitting(object):
         src = src.replace('%BLOCKSIZE%', str(BLOCKSIZE))
         # Substitute input var name
         src = src.replace('${input_var}', str(self.input_var))
-        
+#        print src
         self.kernel_src = src
 
     def initialize_spikes(self, spiketimes, spiketimes_indices):
