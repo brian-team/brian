@@ -1,6 +1,7 @@
 '''
 Analysis of voltage traces (current-clamp experiments or HH models).
 '''
+from brian import *
 from numpy import *
 #from brian.stdunits import mV
 from brian.tools.io import *
@@ -122,16 +123,20 @@ def spike_onsets(v, criterion=None, vc=None):
     criterion = criterion or find_onset_criterion(v, vc=vc)
     peaks = spike_peaks(v, vc)
     dv = diff(v)
+    d2v = diff(dv)
     previous_i = 0
     j = 0
     l = []
+
     for i in peaks:
+        
         # Find peak of derivative (alternatively: last sign change of d2v, i.e. last local peak)
-        #inflexion = previous_i + argmax(dv[previous_i:i])
-        inflexion = previous_i + argmax(dv[previous_i:i-1]*dv[previous_i+1:i]<0)
+#        inflexion = previous_i + argmax(dv[previous_i:i])
+        inflexion=where(d2v[previous_i:i-1]*d2v[previous_i+1:i]<0)[0][-1]+2+previous_i
         j += max((dv[j:inflexion] < criterion).nonzero()[0]) + 1
         l.append(j)
         previous_i = i
+
     return array(l)
 
 def spike_onsets_dv2(v, vc=None):
@@ -143,13 +148,17 @@ def spike_onsets_dv2(v, vc=None):
     '''
     vc = vc or find_spike_criterion(v)
     peaks = spike_peaks(v, vc)
+    d2v = diff(diff(v))
     dv3 = diff(diff(diff(v))) # I'm guessing you have to shift v by 1/2 per differentiation
     j = 0
     l = []
+    previous_i=0
     for i in peaks:
-        # Find peak of derivative (alternatively: last sign change of d2v, i.e. last local peak)
-        j += max(((dv3[j:i - 1] > 0) & (dv3[j + 1:i] < 0)).nonzero()[0]) + 2
+        # Find peak of derivative
+        inflexion=where(d2v[previous_i:i-1]*d2v[previous_i+1:i]<0)[0][-1]+2+previous_i
+        j += max(((dv3[j:inflexion - 1] > 0) & (dv3[j + 1:inflexion] < 0)).nonzero()[0]) # +2?
         l.append(j)
+        previous_i=i
     return array(l)
 
 def spike_onsets_dv3(v, vc=None):
