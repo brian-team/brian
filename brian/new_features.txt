@@ -9,9 +9,13 @@ Minor features:
   perform multiple runs of a simulation and save results to a DataManager,
   with an optional GUI interface.
 * Added FractionalDelay filterbank to brian.hears, fractional itds to
-  HeadlessDatabase and fractional shifts to Sound.shifted. 
+  HeadlessDatabase and fractional shifts to Sound.shifted.
 
 Improvements:
+
+* Added RemoteControlClient.set(var, name) to allow sending data to the server
+  from the client (previously you could only receive data from the server but
+  not send it, except in string form).
 
 Bug fixes:
 

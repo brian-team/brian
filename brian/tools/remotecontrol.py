@@ -121,6 +121,9 @@ class RemoteControlServer(NetworkOperation):
                     exec jobargs in global_ns, local_ns
                 elif jobtype == 'eval':
                     result = eval(jobargs, global_ns, local_ns)
+                elif jobtype == 'setvar':
+                    varname, varval = jobargs
+                    local_ns[varname] = varval
                 elif jobtype == 'pause':
                     paused = -1
                 elif jobtype == 'go':
@@ -165,6 +168,15 @@ class RemoteControlClient(object):
         If it raises an
         exception, the server process will catch it and reraise it in the
         client process.
+        
+    .. method:: set(name, value)
+    
+        Sets the variable ``name`` (a string) to the given value (can be an
+        array, etc.). Note that the variable is set in the local namespace, not
+        the global one, and so this cannot be used to modify global namespace
+        variables. To do that, set a local namespace variable and then
+        call :meth:`~RemoteControlClient.execute` with an instruction to change
+        the global namespace variable.
 
     .. method:: pause()
     
@@ -212,6 +224,12 @@ class RemoteControlClient(object):
         if isinstance(result, Exception):
             raise result
         return result
+    
+    def set(self, name, value):
+        self.client.send(('setvar', (name, value)))
+        result = self.client.recv()
+        if isinstance(result, Exception):
+            raise result
 
     def pause(self):
         self.client.send(('pause', ''))
