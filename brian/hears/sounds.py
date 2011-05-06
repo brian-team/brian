@@ -972,22 +972,21 @@ class Sound(BaseSound, numpy.ndarray):
             import aifc as sndmodule
         else:
             raise NotImplementedError('Can only load aif or wav soundfiles')
-        def everyOther (v, offset=0, channels=2):
-            return [v[i] for i in range(offset, len(v), channels)]
-        wav = sndmodule.open (filename, "r")
-        (nchannels, sampwidth, framerate, nframes, comptype, compname) = wav.getparams ()
-        frames = wav.readframes (nframes * nchannels)
+        wav = sndmodule.open(filename, "r")
+        nchannels, sampwidth, framerate, nframes, comptype, compname = wav.getparams()
+        frames = wav.readframes(nframes * nchannels)
         typecode = {2:'h', 1:'B'}[sampwidth]
-        out = struct.unpack_from ("%d%s" % (nframes * nchannels,typecode), frames)
+        out = frombuffer(frames, dtype=dtype(typecode))
         scale = {2:2 ** 15, 1:2 ** 7-1}[sampwidth]
         meanval = {2:0, 1:2**7}[sampwidth]
         
-        data=zeros((nframes,nchannels))
+        data = zeros((nframes, nchannels))
         for i in range(nchannels):
-            data[:,i]=array(everyOther(out,offset=i,channels=nchannels))
-            data[:,i]/=scale
-            data[:,i]-=meanval
-        return Sound(data,samplerate=framerate*Hz)
+            data[:, i] = out[i::nchannels]
+            data[:, i] /= scale
+            data[:, i] -= meanval
+        
+        return Sound(data, samplerate=framerate*Hz)
 
     def __reduce__(self):
         return (_load_Sound_from_pickle, (asarray(self), float(self.samplerate)))
