@@ -245,33 +245,43 @@ class Sound(BaseSound, numpy.ndarray):
         return self.__setitem__(slice(start, stop), seq)
     
     def __getitem__(self,key):
-        channel=slice(None)
-        if isinstance(key,tuple):
-            channel=key[1]
-            key=key[0]
+        channel = slice(None)
+        if isinstance(key, tuple):
+            channel = key[1]
+            key = key[0]
 
-        if isinstance(key,int):
-            return np.ndarray.__getitem__(self,key)
-        if isinstance(key,Quantity):
-            return np.ndarray.__getitem__(self,round(key*self.samplerate))
+        if isinstance(key, int):
+            return np.ndarray.__getitem__(self, key)
+        if isinstance(key, float):
+            return np.ndarray.__getitem__(self, round(key*self.samplerate))
 
         sliceattr = [v for v in [key.start, key.stop] if v is not None]
-        slicedims = array([units.have_same_dimensions(flag,second) for flag in sliceattr])
+        slicedims = array([units.have_same_dimensions(flag, second) for flag in sliceattr])
 
-        if not slicedims.any():
+        attrisint = array([isinstance(v, int) for v in sliceattr])
+        s = sum(attrisint)
+        if s!=0 and s!=len(sliceattr):
+            raise ValueError('Slice attributes must be all ints or all times')
+        if s==len(sliceattr): # all ints
             start = key.start or 0
             stop = key.stop or self.shape[0]
             step = key.step or 1
-            if start >= 0 and stop <= self.shape[0]:
-                return Sound(np.ndarray.__getitem__(self,(key,channel)),self.samplerate)
+            if start>=0 and stop<=self.shape[0]:
+                return Sound(np.ndarray.__getitem__(self, (key, channel)),
+                             self.samplerate)
             else:
-                bpad = Sound(zeros((-start,self.shape[1])))
-                apad = Sound(zeros((stop-self.shape[0],self.shape[1])))
-                if step==-1:
-                    return Sound(vstack((apad,flipud(asarray(self)),bpad)),self.samplerate)
-                return Sound(vstack((bpad,asarray(self),apad)),self.samplerate)
+                startpad = max(-start, 0)
+                endpad = max(stop-self.shape[0], 0)
+                startmid = max(start, 0)
+                endmid = min(stop, self.shape[0])
+                atstart = zeros((startpad, self.shape[1]))
+                atend = zeros((endpad, self.shape[1]))
+                return Sound(vstack((atstart,
+                                     asarray(self)[startmid:endmid:step],
+                                     atend)), self.samplerate)
         if not slicedims.all():
-            raise DimensionMismatchError('Slicing',*[units.get_unit(d) for d in sliceattr])
+            raise DimensionMismatchError('Slicing',
+                                        *[units.get_unit(d) for d in sliceattr])
         
         start = key.start or 0*msecond
         stop = key.stop or self.duration
@@ -639,7 +649,7 @@ class Sound(BaseSound, numpy.ndarray):
         if when == 'onset' or when == 'both':
             target[:sz, :] *= multiplier
         if when == 'offset' or when == 'both':
-            target[-sz:, :] *= multiplier[::-1]
+            target[target.nsamples-sz:, :] *= multiplier[::-1]
         return target
     
     def ramped(self, when='onset', duration=10*ms, envelope=None):
