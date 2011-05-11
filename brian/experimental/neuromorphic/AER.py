@@ -11,12 +11,18 @@ from brian.directcontrol import SpikeGeneratorGroup
 from brian.units import *
 from brian.neurongroup import *
 from brian.directcontrol import SpikeGeneratorThreshold
-from brian.clock import guess_clock
-from brian.stateupdater import *
+from brian.monitor import SpikeMonitor
+from brian.clock import guess_clock
+from brian.stateupdater import *
 
 import os
 
-__all__=['load_AER','extract_DVS_event', 'AERSpikeGeneratorGroup', 'load_multiple_AER']
+__all__=['load_AER', 'load_multiple_AER',
+         'extract_DVS_event', 'extract_AMS_event',
+         'AERSpikeGeneratorGroup']
+
+################# Fast Direct Control ###############################
+# TODO: this could probably be moved to the main directcontrol module
 
 class AERSpikeGeneratorGroup(NeuronGroup):
     '''
@@ -27,6 +33,13 @@ class AERSpikeGeneratorGroup(NeuronGroup):
     
     Sample usage:
     Gin = AERSpikeGeneratorGroup('/path/to/file/samplefile.dat')
+    or
+    Gin = AERSpikeGeneratorGroup((addr,timestamps))
+    or
+    Gin = AERSpikeGeneratorGroup(pickled_spike_monitor)
+
+    Attributes:
+    maxtime : is the timing of the last spike of the object
     '''
     def __init__(self, data, clock = None, timeunit = 1*usecond):
         if isinstance(data, str):
@@ -35,15 +48,22 @@ class AERSpikeGeneratorGroup(NeuronGroup):
                 raise ValueError('Cannot create a single AERSpikeGeneratorGroup with aeidx files. Consider using load_AER first and manually create multiple AERSpikeGeneratorGroups.')
             else:
                 data = load_AER(data, relative_time = True, check_sorted = True)
-        addr, timestamps = data
+        if isinstance(data, SpikeMonitor):
+            addr, time = zip(*data.spikes)
+            addr = np.array(list(addr))
+            timestamps = np.array(list(time))
+        elif isinstance(data, tuple):
+            addr, timestamps = data
+            
         self.tmax = max(timestamps)*timeunit
         N = max(addr) + 1
-        clock = guess_clock(clock)
+        clock = guess_clock(clock)
         threshold = FastDCThreshold(addr, timestamps*timeunit, dt = clock.dt)
         NeuronGroup.__init__(self, N, model = LazyStateUpdater(), threshold = threshold, clock = clock)
     
     @property
     def maxtime(self):
+        # this should be kept for AER generated groups, because then one can use run(group.maxtime)
         if not isinstance(self.tmax, Quantity):
             return self.tmax*second
         return self.tmax
@@ -86,6 +106,8 @@ class FastDCThreshold(SpikeGeneratorThreshold):
             return array([], dtype=int)
         return self.I[self.offsets[t]:self.offsets[t+1]]
 
+########### AER loading stuff ######################
+
 def load_multiple_AER(filename, check_sorted = False, relative_time = False, directory = '.'):
     f=open(filename,'rb')
     line = f.readline()
@@ -104,7 +126,7 @@ def load_AER(filename, check_sorted = False, relative_time = False):
     Returns a list containing tuples with a vector of addresses and a vector of timestamps (ints, unit is usually usecond).
 
     It can load any kind of .dat, or .aedat files.
-    For index files (that point to multiple .(ae)dat files) it will return a list containing tuples as for single files.
+    Note: For index files (that point to multiple .(ae)dat files) it will return a list containing tuples as for single files.
     
     Keyword Arguments:
     If check_sorted is True, checks if timestamps are sorted,
@@ -112,7 +134,7 @@ def load_AER(filename, check_sorted = False, relative_time = False):
     If relative_time is True, it will set the first spike time to zero and all others relatively to that precise time (avoid negative timestamps, is definitely a good idea).
     
     Hence to use those data files in Brian, one should do:
-    
+
     addr, timestamp =  load_AER(filename, relative_time = True)
     G = AERSpikeGeneratorGroup((addr, timestamps))
     '''
@@ -125,7 +147,6 @@ def load_AER(filename, check_sorted = False, relative_time = False):
         return load_multiple_AER(filename, check_sorted = check_sorted, relative_time = relative_time, directory = directory)
     elif not (ext == 'dat' or ext == 'aedat'):
         raise ValueError('Wrong extension for AER data, should be dat, or aedat, it was '+ext)
-
     
     # This is inspired by the following Matlab script:
     # http://jaer.svn.sourceforge.net/viewvc/jaer/trunk/host/matlab/loadaerdat.m?revision=2001&content-type=text%2Fplain
@@ -151,7 +172,7 @@ def load_AER(filename, check_sorted = False, relative_time = False):
         #nevents=len(line)/6
         #for n in range(nevents):
         #    events.append(unpack('>HI',line[n*6:(n+1)*6])) # address,timestamp
-        x=fromstring(line,dtype=int16) # or uint16?
+        x=fromstring(line, dtype=int16) # or uint16?
         x=x.reshape((len(x)/3,3))
         addr=x[:,0].newbyteorder('>')
         timestamp=x[:,1:].copy()
@@ -184,6 +205,8 @@ def load_AER(filename, check_sorted = False, relative_time = False):
     
     return addr,timestamp
 
+########### AER addressing stuff ######################
+
 def extract_DVS_event(addr):
     '''
     Extracts retina event from an address or a vector of addresses.
@@ -194,19 +217,100 @@ def extract_DVS_event(addr):
     Returns: x, y, polarity (ON/OFF: 1/-1)
     '''
     retina_size=128
+
     xmask = 0xfE # x are 7 bits (64 cols) ranging from bit 1-8
     ymask = 0x7f00 # y are also 7 bits
     xshift=1 # bits to shift x to right
     yshift=8 # bits to shift y to right
     polmask=1 # polarity bit is LSB
 
-    x=retina_size-1-((addr & xmask) >> xshift)
-    y=(addr & ymask) >> yshift
-    pol=1-2*(addr & polmask) # 1 for ON, -1 for OFF
+    x = retina_size - 1 - ((addr & xmask) >> xshift)
+    y = (addr & ymask) >> yshift
+    pol = 1 - 2*(addr & polmask) # 1 for ON, -1 for OFF
     return x,y,pol
 
+def extract_AMS_event(addr):
+    '''
+    Extracts cochlea event from an address or a vector of addresses
+
+    Chip: Silicon Cochlea (AMS)
+    
+    Returns: side, channel, filternature
+    
+    More precisely:
+    side: 0 is left, 1 is right
+    channel: apex (LF) is 63, base (HF) is 0
+    filternature: 0 is lowpass, 1 is bandpass
+    '''
+    # Reference:
+    # ch.unizh.ini.jaer.chip.cochlea.CochleaAMSNoBiasgen.Extractor in the jAER package (look in the javadoc)
+    # also the cochlea directory in jAER/host/matlab has interesting stuff
+    # the matlab code was used to write this function. I don't understand the javadoc stuff
+    cochlea_size = 64
+
+    xmask = 31 # x are 5 bits 32 channels) ranging from bit 1-5 
+    ymask = 32 # y (one bit) determines left or right cochlea
+    xshift=0 # bits to shift x to right
+    yshift=5 # bits to shift y to right
+    
+    channel = 1 + ((addr & xmask) >> xshift)
+    side = (addr & ymask) >> yshift
+    lpfBpf = mod(addr, 2)
+#    leftRight = mod(addr, 4)
+    return (lpfBpf, side, channel)
+
+######## I SHOULD REMOVE THAT:
+# class TopologyMap(object):
+#     '''
+#     Tool to get views on NeuronGroups that are arranged in some sort
+#     of topology. 
+#     Apparently doesn't work, so what can I do.
+#     '''
+#     def __init__(self, table, group):
+#         if not isinstance(table, tuple):
+#             table = (table,)
+#         if len(table[0]) != len(group):
+#             raise ValueError('Map should have the same length as the NeuronGroup')
+        
+#         self.table = table
+#         self.sortedvalues = []
+#         for i in range(len(table)):
+#             self.sortedvalues.append(sort(unique(table[i])))
+#         self.sortedvalues = tuple(self.sortedvalues)
+#         self.group = group
+
+#     def __getitem__(self, key):
+#         if not isinstance(key, tuple):
+#             key = (key,)
+#         if not len(key) == len(self.table):
+#             raise IndexError('Map called with the wrong number of indices')
+#         else:
+#             for i in range(len(key)):
+#                 # iterate over dimensions
+#                 if i == 0:
+#                     # create possiblematches
+#                     possiblematches = ones(len(self.group), dtype = bool)
+#                 # print 'for dimension '+str(i)
+#                 # print 'you requested slice '+str(key[i])
+#                 # print 'that is values '+str(self.sortedvalues[i][key[i]])
+#                 wantedvalues = self.sortedvalues[i][key[i]]
+#                 for k in nonzero(possiblematches)[0]:
+#                     # for all neurons that are still in line
+#                     neuronvalue = array(self.table[i])[k]
+# #                    print 'neuron '+str(k)+' has value '+str(neuronvalue)+' for dimension '+str(i)
+#                     if not (neuronvalue in array(wantedvalues)):
+# #                        print 'thus it is not in'
+#                         possiblematches[k] = 0
+# #        print 'in the end, possiblematches is '+str(possiblematches)
+#         return self.group[nonzero(possiblematches)]
+
+# class DVSTopologyMap(TopologyMap):
+#     def __init__(self, group):
+#         table = extract_DVS_event(arange(len(group)))
+#         super(DVSTopologyMap, self).__init__(table, group)
+
 if __name__=='__main__':
-    path=r'C:\Users\Romain\Desktop\jaerSampleData\DVS128'
+    path=r'C:Users\Romain\Desktop\jaerSampleData\DVS128'
     filename=r'\Tmpdiff128-2006-02-03T14-39-45-0800-0 tobi eye.dat'
 
     addr,timestamp=load_AER(path+filename)
