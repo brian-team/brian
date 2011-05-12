@@ -223,6 +223,12 @@ class STDP(NetworkOperation):
 
         # additional dependencies are used to ensure that if there are multiple
         # pre/post separated equations they are grouped together as one
+        # We should replace with this code here, in case there are no pre/post synaptic variables
+        #additional_deps =[]
+        #if len(vars_pre)>0:
+        #    additional_deps.append('__pre_deps='+'+'.join(vars_pre))
+        #if len(vars_post)>0:
+        #    additional_deps.append('__post_deps='+'+'.join(vars_post))
         additional_deps = ['__pre_deps='+'+'.join(vars_pre),
                            '__post_deps='+'+'.join(vars_post)]
         separated_equations = separate_equations(eqs_obj, additional_deps)
