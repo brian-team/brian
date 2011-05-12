@@ -19,7 +19,7 @@ Vr=-70.6*mV
 
 #For the sinusoidal stim current
 ampl = 1.0*nA#*nS*mV
-f=10/ms#*Hz
+f=10/second#*Hz
 
 eqs="""
 dvm/dt=(gL*(EL-vm)+gL*DeltaT*exp((vm-VT)/DeltaT)+I-w + ampl*sin(2*pi*f*t))/C : volt
@@ -27,9 +27,12 @@ dw/dt=(a*(vm-EL)-w)/tauw : amp
 I : amp
 """
 
-neuron=NeuronGroup(N,model=eqs,threshold=Vcut,reset="vm=Vr;w+=b",freeze=True,compile=True)
+neuron=NeuronGroup(N,model=eqs,threshold=Vcut,reset="vm=Vr;w+=b",freeze=True)
 neuron.vm=EL
 trace=StateMonitor(neuron,'vm',record=0)
 spikes=SpikeMonitor(neuron)
 
 run(100*ms)
+
+plot(trace.times/ms,trace[0]/mV)
+show()
