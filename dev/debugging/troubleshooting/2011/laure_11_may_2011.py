@@ -27,7 +27,7 @@ dw/dt=(a*(vm-EL)-w)/tauw : amp
 I : amp
 """
 
-neuron=NeuronGroup(N,model=eqs,threshold=Vcut,reset="vm=Vr;w+=b",freeze=True)
+neuron=NeuronGroup(N,model=eqs,threshold=Vcut,reset="vm=Vr;w+=b",freeze=True,compile=True)
 neuron.vm=EL
 trace=StateMonitor(neuron,'vm',record=0)
 spikes=SpikeMonitor(neuron)

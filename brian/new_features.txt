@@ -19,6 +19,7 @@ Improvements:
 
 Bug fixes:
 
+* Fixed bug with frozen equations and time variable in equations
 * Fixed bug with loading sounds using Sound('filename.wav')
 
 New features since 1.2.1

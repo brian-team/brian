@@ -483,6 +483,7 @@ class NonlinearStateUpdater(StateUpdater):
         self._first_time = True
         if freeze:
             self.eqs.compile_functions(freeze=freeze)
+        self._frozen=freeze
         if compile:
             self._code = self.eqs.forward_euler_code()
 
@@ -518,7 +519,10 @@ class NonlinearStateUpdater(StateUpdater):
             #for var in self.eqs.dynamicvars:
             for var in self.eqs._diffeq_names:
                 states[var] = P.state_(var)
-            states['t'] = P.clock.t #time
+            if self._frozen:
+                states['t']=P.clock._t # without units
+            else:
+                states['t'] = P.clock.t #time
             self.eqs.forward_euler(states, P.clock._dt)
 
     def __repr__(self):
@@ -548,6 +552,7 @@ class RK2StateUpdater(NonlinearStateUpdater):
         self._first_time = True
         if freeze:
             self.eqs.compile_functions(freeze=freeze)
+        self._frozen=freeze
         if compile:
             warnings.warn('Compilation is not implemented yet for RK2 integration.')
 
@@ -562,7 +567,10 @@ class RK2StateUpdater(NonlinearStateUpdater):
         #for var in self.eqs.dynamicvars:
         for var in self.eqs._diffeq_names:
             states[var] = P.state_(var)
-        states['t'] = P.clock.t #time
+        if self._frozen:
+            states['t']=P.clock._t # without units
+        else:
+            states['t'] = P.clock.t #time
         self.eqs.Runge_Kutta2(states, P.clock._dt)
 
 
@@ -577,6 +585,7 @@ class ExponentialEulerStateUpdater(NonlinearStateUpdater):
         self._first_time = True
         if freeze:
             self.eqs.compile_functions(freeze=freeze)
+        self._frozen=freeze
         if compile:
             self._code = self.eqs.exponential_euler_code()
 
@@ -598,7 +607,10 @@ class ExponentialEulerStateUpdater(NonlinearStateUpdater):
             states = dict.fromkeys(self.eqs._diffeq_names) #={}?
             for var in self.eqs._diffeq_names:
                 states[var] = P.state_(var)
-            states['t'] = P.clock.t #time
+            if self._frozen:
+                states['t']=P.clock._t # without units
+            else:
+                states['t'] = P.clock.t #time
             self.eqs.exponential_euler(states, P.clock._dt)
 
 
