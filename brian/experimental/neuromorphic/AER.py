@@ -15,9 +15,9 @@ from brian.monitor import SpikeMonitor
 from brian.clock import guess_clock
 from brian.stateupdater import *
 
-import os
-
-__all__=['load_AER', 'load_multiple_AER',
+import os, datetime, struct
+o__all__=['load_AER', 'load_multiple_AER',
+         'save_AER',
          'extract_DVS_event', 'extract_AMS_event',
          'AERSpikeGeneratorGroup']
 
@@ -41,13 +41,14 @@ class AERSpikeGeneratorGroup(NeuronGroup):
     Attributes:
     maxtime : is the timing of the last spike of the object
     '''
-    def __init__(self, data, clock = None, timeunit = 1*usecond):
+    def __init__(self, data, clock = None, timeunit = 1*usecond, relative_time = True):
         if isinstance(data, str):
-            ext = data.split('.').strip('\n')
+            l = data.split('.')
+            ext = l[-1].strip('\n')
             if ext == 'aeidx':
                 raise ValueError('Cannot create a single AERSpikeGeneratorGroup with aeidx files. Consider using load_AER first and manually create multiple AERSpikeGeneratorGroups.')
             else:
-                data = load_AER(data, relative_time = True, check_sorted = True)
+                data = load_AER(data, relative_time = relative_time, check_sorted = True)
         if isinstance(data, SpikeMonitor):
             addr, time = zip(*data.spikes)
             addr = np.array(list(addr))
@@ -56,6 +57,7 @@ class AERSpikeGeneratorGroup(NeuronGroup):
             addr, timestamps = data
             
         self.tmax = max(timestamps)*timeunit
+        self._nspikes = len(addr)
         N = max(addr) + 1
         clock = guess_clock(clock)
         threshold = FastDCThreshold(addr, timestamps*timeunit, dt = clock.dt)
@@ -67,7 +69,11 @@ class AERSpikeGeneratorGroup(NeuronGroup):
         if not isinstance(self.tmax, Quantity):
             return self.tmax*second
         return self.tmax
-
+    
+    @property
+    def nspikes(self):
+        return self._nspikes
+        
 class FastDCThreshold(SpikeGeneratorThreshold):
     '''
     Implementing dan's idea for fast Direct Control Threshold, works like a charm.
@@ -138,8 +144,8 @@ def load_AER(filename, check_sorted = False, relative_time = False):
     addr, timestamp =  load_AER(filename, relative_time = True)
     G = AERSpikeGeneratorGroup((addr, timestamps))
     '''
-    _,ext = filename.split('.')
-    ext = ext.strip('\n')
+    l = filename.split('.')
+    ext = l[-1].strip('\n')
     filename = filename.strip('\n')
     directory = os.path.dirname(filename)
     if ext == 'aeidx':
@@ -190,7 +196,10 @@ def load_AER(filename, check_sorted = False, relative_time = False):
         #    events.append(unpack('>II',line[n*8:(n+1)*8])) # address,timestamp
         x = fromstring(line, dtype=int32).newbyteorder('>')
         addr = x[::2]
-        timestamp = x[1::2]
+        if len(addr) == len(x[1::2]):
+            timestamp = x[1::2]
+        else:
+            timestamp = x[::2]
 
     if check_sorted: # Sorts the events if necessary
         if any(diff(timestamp)<0): # not sorted
@@ -205,6 +214,32 @@ def load_AER(filename, check_sorted = False, relative_time = False):
     
     return addr,timestamp
 
+def save_AER(spikemonitor, f):
+    '''
+    Saves the SpikeMonitor's contents to a file in aedat format
+    File should have 'aedat' extension.
+    One can specifiy an open file, or, alternatively the filename as a string.
+
+    Usage:
+    save_AER(spikemonitor, file)
+    '''
+    if isinstance(f, str):
+        strinput = True
+        f = open(f, 'wb')
+    l = f.name.split('.')
+    if not l[-1] == 'aedat':
+        raise ValueError('File should have aedat extension')
+    header = "#!AER-DAT2.0\n# This is a raw AE data file - do not edit\n# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event\n# Timestamps tick is 1 us\n# created with the Brian simulator on "
+    header += str(datetime.datetime.now()) + '\n'
+    f.write(header)
+    for (i,t) in spikemonitor.spikes:
+        addr = struct.pack('>i', i)
+        f.write(addr)
+        time = struct.pack('>i', int(ceil(t/usecond)))
+        f.write(time)
+    if strinput:
+        f.close()
+        
 ########### AER addressing stuff ######################
 
 def extract_DVS_event(addr):
