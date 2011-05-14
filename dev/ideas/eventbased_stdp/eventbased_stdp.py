@@ -92,6 +92,7 @@ class EventBasedSTDP(NetworkOperation):
         for var in vars+['w']: # presynaptic variables (vectorisation)
             pre = re.sub(r'\b' + var + r'\b', var + '[_i,:]', pre)
             post = re.sub(r'\b' + var + r'\b', var + '[:,_i]', post)
+        # NEED TO ADD tpre/tpost stuff [i]
 
         # Bounds: add one line to pre/post code (clip(w,min,max,w))
         # or actual code? (rather than compiled string)
