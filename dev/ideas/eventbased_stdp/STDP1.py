@@ -8,7 +8,7 @@ from brian import *
 from time import time
 from eventbased_stdp import *
 
-log_level_debug()
+#log_level_debug()
 
 N = 1000
 taum = 10 * ms
@@ -39,16 +39,24 @@ neurons.v = vr
 eqs_stdp = '''
 A_pre : 1
 A_post : 1
+t_pre : second # last update
+t_post : second
 '''
 dA_post *= gmax
 dA_pre *= gmax
 pre = """
-A_pre=dA_pre+A_pre*exp(-(t-t_pre)/tau_pre)
+A_pre=A_pre*exp(-(t-t_pre)/tau_pre)+dA_pre
+A_post=A_post*exp(-(t-t_post)/tau_post)
 w+=A_post # update this as well! *exp(-(t-t_post[:])/tau_pre)
+t_pre = t
+t_post = t
 """
 post = """
-A_post=dA_post+A_post*exp(-(t-t_post)/tau_post)
+A_pre=A_pre*exp(-(t-t_pre)/tau_pre)
+A_post=A_post*exp(-(t-t_post)/tau_post)+dA_post
 w+=A_pre
+t_pre = t
+t_post = t
 """
 stdp = EventBasedSTDP(synapses, eqs=eqs_stdp, pre=pre,post=post, wmax=gmax)
 
@@ -59,17 +67,17 @@ start_time = time()
 #stdp.var['A_post'][0,0]=1.
 #print stdp.var['A_pre'][0,0]
 
-x1,x2=[],[]
-@network_operation
-def record():
-    x1.append(stdp.var['A_post'][0,0])
-    x2.append(stdp.var['A_pre'][0,0])
+#x1,x2=[],[]
+#@network_operation
+#def record():
+#    x1.append(stdp.var['A_post'][0,0])
+#    x2.append(stdp.var['A_pre'][0,0])
 
-run(1000 * msecond, report='text')
+run(1 * second, report='text')
 print "Simulation time:", time() - start_time
 
-plot(x1,'b')
-plot(x2,'r')
+#plot(x1,'b')
+#plot(x2,'r')
 
 figure()
 subplot(311)

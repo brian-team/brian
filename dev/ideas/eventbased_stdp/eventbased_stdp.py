@@ -103,6 +103,7 @@ class EventBasedSTDP(NetworkOperation):
 
         # Create synaptic variables
         self.var=dict()
+        #C.compress()
         for x in vars:
             #self.var[x]=C.W.connection_matrix()
             #self.var[x][:]=0 # reset values
@@ -119,9 +120,9 @@ class EventBasedSTDP(NetworkOperation):
         for var in vars+['w']: # presynaptic variables (vectorisation)
             pre = re.sub(r'\b' + var + r'\b', var + '[_i,:]', pre)
             post = re.sub(r'\b' + var + r'\b', var + '[:,_i]', post)
-        for var in ['t_pre','t_post']:
-            pre = re.sub(r'\b' + var + r'\b', var + '[_i]', pre)
-            post = re.sub(r'\b' + var + r'\b', var + '[_i]', post)
+        #for var in ['t_pre','t_post']:
+        #    pre = re.sub(r'\b' + var + r'\b', var + '[_i]', pre)
+        #    post = re.sub(r'\b' + var + r'\b', var + '[_i]', post)
 
         # Bounds: add one line to pre/post code (clip(w,min,max,w))
         # or actual code? (rather than compiled string)
@@ -129,9 +130,9 @@ class EventBasedSTDP(NetworkOperation):
         post += '\n    w[:,_i]=clip(w[:,_i],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
         
         # Time update
-        pre += '\n    t_pre[_i]=t'
-        post += '\n    t_post[_i]=t'
-                        
+        #pre += '\n    t_pre[_i]=t'
+        #post += '\n    t_post[_i]=t'
+        
         log_debug('brian.stdp', 'PRE CODE:\n'+pre)
         log_debug('brian.stdp', 'POST CODE:\n'+post)
         # Compile code
@@ -151,13 +152,13 @@ class EventBasedSTDP(NetworkOperation):
             if delay_post < 0 * ms: raise AttributeError, "Postsynaptic delay is too large"
 
         # Spike times
-        self._t_pre=zeros(len(C.source))+C.source.clock.t
-        self._t_post=zeros(len(C.target))+C.source.clock.t
+        #self._t_pre=zeros(len(C.source))+C.source.clock.t
+        #self._t_post=zeros(len(C.target))+C.source.clock.t
 
         # Put variables in namespace
         for ns in (pre_namespace,post_namespace):
-            ns['t_pre']=self._t_pre
-            ns['t_post']=self._t_post
+            #ns['t_pre']=self._t_pre
+            #ns['t_post']=self._t_post
             for var in vars:
                 ns[var]=self.var[var]
         
