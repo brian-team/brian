@@ -8,6 +8,32 @@ from brian.equations import *
 from brian.optimiser import freeze
 import re
 
+class EventSTDPUpdater(SpikeMonitor):
+    '''
+    Updates STDP variables at spike times
+    '''
+    def __init__(self, source, C, code, namespace, delay=0 * ms):
+        '''
+        source = source group
+        C = connection
+        vars = variable names
+        M = matrix of the linear differential system
+        code = code to execute for every spike
+        namespace = namespace for the code
+        delay = transmission delay 
+        '''
+        super(EventSTDPUpdater, self).__init__(source, record=False, delay=delay)
+        self._code = code # update code
+        self._namespace = namespace # code namespace
+        self.C = C
+
+    def propagate(self, spikes):
+        if len(spikes):
+            self._namespace['spikes'] = spikes
+            self._namespace['w'] = self.C.W
+            self._namespace['t'] = self.C.source.clock._t
+            exec self._code in self._namespace
+
 class EventBasedSTDP(NetworkOperation):
     '''
     Spike-timing-dependent plasticity
@@ -22,11 +48,11 @@ class EventBasedSTDP(NetworkOperation):
         A_post  : 1
         """
         pre = """
-        A_pre+=delta_A_pre+A_pre*exp(-(t-t_pre)/tau_pre)
+        A_pre=delta_A_pre+A_pre*exp(-(t-t_pre)/tau_pre)
         w+=A_post
         """
         post = """
-        A_post+=delta_A_post+A_post*exp(-(t-t_post)/tau_post)
+        A_post=delta_A_post+A_post*exp(-(t-t_post)/tau_post)
         w+=A_pre
         """
         stdp = EventBasedSTDP(synapses, eqs=eqs_stdp,pre=pre,post=post, wmax=gmax)
@@ -70,7 +96,7 @@ class EventBasedSTDP(NetworkOperation):
         pre_namespace['clip'] = clip
         post_namespace['clip'] = clip
 
-        # freeze pre and post (otherwise units will cause problems)
+        # freeze pre and post (otherwise units will cause problems) [why?]
         all_vars = list(vars) + ['w','t','t_pre','t_post']
         pre = '\n'.join(freeze(line.strip(), all_vars, pre_namespace) for line in pre.split('\n'))
         post = '\n'.join(freeze(line.strip(), all_vars, post_namespace) for line in post.split('\n'))
@@ -78,8 +104,9 @@ class EventBasedSTDP(NetworkOperation):
         # Create synaptic variables
         self.var=dict()
         for x in vars:
-            self.var[x]=C.W.connection_matrix()
-            self.var[x][:]=0 # reset values
+            #self.var[x]=C.W.connection_matrix()
+            #self.var[x][:]=0 # reset values
+            self.var[x]=zeros((len(C.source),len(C.target))) # dense
         
         # Create code
         # Indent and loop
@@ -92,12 +119,19 @@ class EventBasedSTDP(NetworkOperation):
         for var in vars+['w']: # presynaptic variables (vectorisation)
             pre = re.sub(r'\b' + var + r'\b', var + '[_i,:]', pre)
             post = re.sub(r'\b' + var + r'\b', var + '[:,_i]', post)
-        # NEED TO ADD tpre/tpost stuff [i]
+        for var in ['t_pre','t_post']:
+            pre = re.sub(r'\b' + var + r'\b', var + '[_i]', pre)
+            post = re.sub(r'\b' + var + r'\b', var + '[_i]', post)
 
         # Bounds: add one line to pre/post code (clip(w,min,max,w))
         # or actual code? (rather than compiled string)
         pre += '\n    w[_i,:]=clip(w[_i,:],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
         post += '\n    w[:,_i]=clip(w[:,_i],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
+        
+        # Time update
+        pre += '\n    t_pre[_i]=t'
+        post += '\n    t_post[_i]=t'
+                        
         log_debug('brian.stdp', 'PRE CODE:\n'+pre)
         log_debug('brian.stdp', 'POST CODE:\n'+post)
         # Compile code
@@ -115,12 +149,22 @@ class EventBasedSTDP(NetworkOperation):
         elif delay_post is None:
             delay_post = connection_delay - delay_pre
             if delay_post < 0 * ms: raise AttributeError, "Postsynaptic delay is too large"
+
+        # Spike times
+        self._t_pre=zeros(len(C.source))+C.source.clock.t
+        self._t_post=zeros(len(C.target))+C.source.clock.t
+
+        # Put variables in namespace
+        for ns in (pre_namespace,post_namespace):
+            ns['t_pre']=self._t_pre
+            ns['t_post']=self._t_post
+            for var in vars:
+                ns[var]=self.var[var]
         
         # create forward and backward Connection objects or SpikeMonitor objects
-        #pre_updater = STDPUpdater(C.source, C, vars=vars_pre, code=pre_code, namespace=pre_namespace, delay=delay_pre)
-        #post_updater = STDPUpdater(C.target, C, vars=vars_post, code=post_code, namespace=post_namespace, delay=delay_post)
-        #updaters = [pre_updater, post_updater]
-        #self.contained_objects += [pre_updater, post_updater]
+        pre_updater = EventSTDPUpdater(C.source, C, code=pre_code, namespace=pre_namespace, delay=delay_pre)
+        post_updater = EventSTDPUpdater(C.target, C, code=post_code, namespace=post_namespace, delay=delay_post)
+        self.contained_objects += [pre_updater, post_updater]
 
 if __name__ == '__main__':
     pass

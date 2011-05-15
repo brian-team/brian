@@ -8,6 +8,8 @@ from brian import *
 from time import time
 from eventbased_stdp import *
 
+log_level_debug()
+
 N = 1000
 taum = 10 * ms
 tau_pre = 20 * ms
@@ -29,7 +31,7 @@ dge/dt=-ge/taue : 1
 
 input = PoissonGroup(N, rates=F)
 neurons = NeuronGroup(1, model=eqs_neurons, threshold=vt, reset=vr)
-synapses = Connection(input, neurons, 'ge', weight=rand(len(input), len(neurons)) * gmax)
+synapses = Connection(input, neurons, 'ge', weight=rand(len(input), len(neurons)) * gmax, structure='dense')
 neurons.v = vr
 
 #stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,dA_post,wmax=gmax)
@@ -41,11 +43,11 @@ A_post : 1
 dA_post *= gmax
 dA_pre *= gmax
 pre = """
-A_pre+=dA_pre+A_pre*exp(-(t-t_pre)/tau_pre)
-w+=A_post
+A_pre=dA_pre+A_pre*exp(-(t-t_pre)/tau_pre)
+w+=A_post # update this as well! *exp(-(t-t_post[:])/tau_pre)
 """
 post = """
-A_post+=dA_post+A_post*exp(-(t-t_post)/tau_post)
+A_post=dA_post+A_post*exp(-(t-t_post)/tau_post)
 w+=A_pre
 """
 stdp = EventBasedSTDP(synapses, eqs=eqs_stdp, pre=pre,post=post, wmax=gmax)
@@ -53,11 +55,25 @@ stdp = EventBasedSTDP(synapses, eqs=eqs_stdp, pre=pre,post=post, wmax=gmax)
 rate = PopulationRateMonitor(neurons)
 
 start_time = time()
-run(1 * second, report='text')
+
+#stdp.var['A_post'][0,0]=1.
+#print stdp.var['A_pre'][0,0]
+
+x1,x2=[],[]
+@network_operation
+def record():
+    x1.append(stdp.var['A_post'][0,0])
+    x2.append(stdp.var['A_pre'][0,0])
+
+run(1000 * msecond, report='text')
 print "Simulation time:", time() - start_time
 
+plot(x1,'b')
+plot(x2,'r')
+
+figure()
 subplot(311)
-plot(rate.times / second, rate.smooth_rate(100 * ms))
+plot(rate.times / second, rate.smooth_rate(30 * ms))
 subplot(312)
 plot(synapses.W.todense() / gmax, '.')
 subplot(313)
