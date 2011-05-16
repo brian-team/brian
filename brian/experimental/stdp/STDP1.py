@@ -46,7 +46,7 @@ dA_pre *= gmax
 pre = """
 A_pre=A_pre*exp(-(t-t_pre)/tau_pre)+dA_pre
 A_post=A_post*exp(-(t-t_post)/tau_post)
-w+=A_post # update this as well! *exp(-(t-t_post[:])/tau_pre)
+w+=A_post
 t_pre = t
 t_post = t
 """
