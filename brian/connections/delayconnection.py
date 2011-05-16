@@ -220,11 +220,13 @@ class DelayConnection(Connection):
             delayvec = self.delayvec
             # The delayvec[i,:] operation for sparse.lil_matrix format
             # is VERY slow, but the CSR format is fine.
-            if isinstance(delayvec, sparse.lil_matrix):
-                delayvec = delayvec.tocsr()
-            self.delayvec = self.W.connection_matrix(copy=True)
-            for i in xrange(self.W.shape[0]):
-                self.delayvec.set_row(i, array(todense(delayvec[i, :]), copy=False).flatten())
+            #if isinstance(delayvec, sparse.lil_matrix):
+            #    delayvec = delayvec.tocsr()
+            #self.delayvec = self.W.connection_matrix(copy=True)
+            #for i in xrange(self.W.shape[0]):
+            #    self.delayvec.set_row(i, array(todense(delayvec[i, :]), copy=False).flatten())
+                
+            self.delayvec=self.delayvec.connection_matrix()
             Connection.compress(self)
 
     def set_delays(self, source=None, target=None, delay=None):
