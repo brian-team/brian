@@ -1,0 +1,25 @@
+Current state
+-------------
+AER.py:
+* AERSpikeGeneratorGroup: see with Dan for integrating in SpikeGeneratorGroup?
+* FastDCThreshold: other name?
+* load_AER: ok
+* load_multiple_AER: ok, hidden
+* save_AER: mapping, vectorisation, argument possible (addr,timestamp)
+* extract_DVS_event: ok
+* extract_AMS_event: ok
+
+realtime.py:
+  -> network.py
+
+spikequeue.py:
+  unused
+
+Others/TODO:
+* SpikeMonitor.save -> AER? (see with Dan+Tobi). Pb possible avec dt=1 µs.
+  idea: SpikeMonitor.save(filename,dt=1*us)
+  see with PyNN guys et al?
+* Send UDP spikes to jAER
+* Docs
+* (someday) online spike input via AERSpikeGeneratorGroup (use SpikeContainer)
+* A few examples

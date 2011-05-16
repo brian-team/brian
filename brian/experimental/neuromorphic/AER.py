@@ -16,8 +16,7 @@ from brian.clock import guess_clock
 from brian.stateupdater import *
 
 import os, datetime, struct
-o__all__=['load_AER', 'load_multiple_AER',
-         'save_AER',
+o__all__=['load_AER','save_AER',
          'extract_DVS_event', 'extract_AMS_event',
          'AERSpikeGeneratorGroup']
 
@@ -106,7 +105,6 @@ class FastDCThreshold(SpikeGeneratorThreshold):
     def __call__(self, P):
         t = P.clock.t
         dt = P.clock.dt
-        curt = float(t)
         t = int(round(t/dt))
         if t+1>=len(self.offsets):
             return array([], dtype=int)
@@ -117,7 +115,6 @@ class FastDCThreshold(SpikeGeneratorThreshold):
 def load_multiple_AER(filename, check_sorted = False, relative_time = False, directory = '.'):
     f=open(filename,'rb')
     line = f.readline()
-    done = False
     res = []
     line = line.strip('\n')
     while not line == '':
@@ -218,7 +215,7 @@ def save_AER(spikemonitor, f):
     '''
     Saves the SpikeMonitor's contents to a file in aedat format
     File should have 'aedat' extension.
-    One can specifiy an open file, or, alternatively the filename as a string.
+    One can specify an open file, or, alternatively the filename as a string.
 
     Usage:
     save_AER(spikemonitor, file)
@@ -232,6 +229,7 @@ def save_AER(spikemonitor, f):
     header = "#!AER-DAT2.0\n# This is a raw AE data file - do not edit\n# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event\n# Timestamps tick is 1 us\n# created with the Brian simulator on "
     header += str(datetime.datetime.now()) + '\n'
     f.write(header)
+    # i,t=zip(*spikes)
     for (i,t) in spikemonitor.spikes:
         addr = struct.pack('>i', i)
         f.write(addr)
@@ -281,7 +279,7 @@ def extract_AMS_event(addr):
     # ch.unizh.ini.jaer.chip.cochlea.CochleaAMSNoBiasgen.Extractor in the jAER package (look in the javadoc)
     # also the cochlea directory in jAER/host/matlab has interesting stuff
     # the matlab code was used to write this function. I don't understand the javadoc stuff
-    cochlea_size = 64
+    #cochlea_size = 64
 
     xmask = 31 # x are 5 bits 32 channels) ranging from bit 1-5 
     ymask = 32 # y (one bit) determines left or right cochlea
