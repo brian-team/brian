@@ -38,24 +38,21 @@ neurons.v = vr
 eqs_stdp = '''
 A_pre : 1
 A_post : 1
-t_pre : second # last update
-t_post : second
+last_t : second # last update
 '''
 dA_post *= gmax
 dA_pre *= gmax
 pre = """
-A_pre=A_pre*exp(-(t-t_pre)/tau_pre)+dA_pre
-A_post=A_post*exp(-(t-t_post)/tau_post)
+A_pre=A_pre*exp(-(t-last_t)/tau_pre)+dA_pre
+A_post=A_post*exp(-(t-last_t)/tau_post)
 w+=A_post
-t_pre = t
-t_post = t
+last_t = t
 """
 post = """
-A_pre=A_pre*exp(-(t-t_pre)/tau_pre)
-A_post=A_post*exp(-(t-t_post)/tau_post)+dA_post
+A_pre=A_pre*exp(-(t-last_t)/tau_pre)
+A_post=A_post*exp(-(t-last_t)/tau_post)+dA_post
 w+=A_pre
-t_pre = t
-t_post = t
+last_t = t
 """
 stdp = EventBasedSTDP(synapses, eqs=eqs_stdp, pre=pre,post=post, wmax=gmax)
 
