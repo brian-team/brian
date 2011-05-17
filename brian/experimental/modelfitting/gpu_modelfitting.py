@@ -21,7 +21,7 @@ from brian.experimental.codegen.codegen_gpu import *
 import re
 
 __all__ = ['GPUModelFitting',
-           'euler_scheme', 'rk2_scheme', 'exp_euler_scheme'
+           'euler_scheme', 'rk2_scheme', 'exp_euler_scheme','close_cuda'
            ]
 
 if drv.get_version() == (2, 0, 0): # cuda version
@@ -76,6 +76,9 @@ __global__ void runsim(
     // STATEMONITOR DECLARE
     %STATEMONITOR_DECLARE%
     
+    // SPIKEMONITOR DECLARE
+    %SPIKEMONITOR_DECLARE%
+    
     // MISC PARAMETERS
     int onset                         // Time onset (only count spikes from here onwards)
     )
@@ -95,6 +98,9 @@ __global__ void runsim(
     
     // STATEMONITOR INIT
     %STATEMONITOR_INIT%
+    
+    // SPIKEMONITOR INIT
+    %SPIKEMONITOR_INIT%
     
     // CRITERION INITIALIZATION
     %CRITERION_INIT%
@@ -134,13 +140,13 @@ __global__ void runsim(
         {
             %RESET1%
         }
+
         if(has_spiked)
         {
-            %RESET2%
-        }
-        if(has_spiked)
             next_allowed_spiketime = T+refractory;
-        
+            %RESET2%
+            %SPIKEMONITOR_UPDATE%
+        }
         // DATA UPDATE
         %DATA_UPDATE%
         
@@ -156,6 +162,9 @@ __global__ void runsim(
     
     // STATEMONITOR END
     %STATEMONITOR_END%
+    
+    // SPIKEMONITOR END
+    %SPIKEMONITOR_END%
     
     // CRITERION END
     %CRITERION_END%
@@ -247,8 +256,11 @@ class GPUModelFitting(object):
                  onset=0*ms,
                  precision=default_precision,
                  statemonitor_var=None,
+                 spikemonitor = False,
+                 nbr_spikes = 200,
                  duration=None,
-                 scheme=euler_scheme
+                 scheme=euler_scheme,
+                 stand_alone=False
                  ):
         eqs.prepare()
         self.precision = precision
@@ -257,11 +269,14 @@ class GPUModelFitting(object):
             self.mydtype = float64
         else:
             self.mydtype = float32
+        self.stand_alone=stand_alone
         self.N = len(G)
         self.dt = G.clock.dt
         self.onset = onset
         self.eqs = eqs
         self.G = G
+        self.spikemonitor = spikemonitor
+        self.nbr_spikes = nbr_spikes
         self.subpopsize = subpopsize
         self.duration = int(ceil(duration/self.dt))
         self.input_var = input_var
@@ -299,7 +314,7 @@ class GPUModelFitting(object):
     def generate_reset_code(self, src):
         eqs = self.eqs
         reset = self.G._resetfun
-        print eqs
+#        print eqs
         if reset.__class__ is Refractoriness:
             state = reset.state
             if isinstance(state, int):
@@ -329,7 +344,7 @@ class GPUModelFitting(object):
         src = src.replace('%RESET1%', reset[0])
         reset = '\n            '.join(line.strip()+'\n' for line in reset[1:])
         src = src.replace('%RESET2%', reset)
-        print src
+#        print src
         return src
             
     def generate_data_code(self, src):
@@ -385,6 +400,33 @@ class GPUModelFitting(object):
         
         return src
     
+    def generate_spikemonitor_code(self, src):
+        if self.spikemonitor is True:
+            declare = "\n".join(["%SCALAR% *spikemonitor_container,"])
+            declare += """
+                    int *spikemonitor_offsets,
+                        """
+            init = """
+                    int spikemonitor_offset = spikemonitor_offsets[neuron_index];
+                    """
+            update = "".join('spikemonitor_container[spikemonitor_offset] = T;')
+            update += """
+                    spikemonitor_offset++;
+                    """ 
+            end = """
+                spikemonitor_offsets[neuron_index] = spikemonitor_offset;
+                """
+        else:
+            declare = ""
+            init = ""
+            update = ""
+            end = ""
+        src = src.replace('%SPIKEMONITOR_DECLARE%', declare)
+        src = src.replace('%SPIKEMONITOR_INIT%', init)
+        src = src.replace('%SPIKEMONITOR_UPDATE%', update)
+        src = src.replace('%SPIKEMONITOR_END%', end)
+        return src
+        
     def generate_statemonitor_code(self, src):
         if self.statemonitor_var is not None:
             declare = "\n".join(["%SCALAR% *statemonitor_"+state+"_values," for state in self.statemonitor_var])
@@ -442,7 +484,7 @@ class GPUModelFitting(object):
         src = self.generate_reset_code(src)
         src = self.generate_data_code(src)
         src = self.generate_statemonitor_code(src)
-        
+        src = self.generate_spikemonitor_code(src)
         # Substitute state update
         sulines = ModelfittingGPUCodeGenerator(dtype=self.precision).generate(self.eqs, self.scheme)
         
@@ -469,7 +511,8 @@ class GPUModelFitting(object):
         src = src.replace('%BLOCKSIZE%', str(BLOCKSIZE))
         # Substitute input var name
         src = src.replace('${input_var}', str(self.input_var))
-#        print src
+        #print src
+        #return
         self.kernel_src = src
 
     def initialize_spikes(self, spiketimes, spiketimes_indices):
@@ -496,6 +539,13 @@ class GPUModelFitting(object):
         self.statemonitor_offsets = gpuarray.to_gpu(arange(0, self.duration*self.N+1,
                                                            self.duration, 
                                                            dtype=int32))
+    def initialize_spikemonitor(self):
+        self.spikemonitor_values = gpuarray.to_gpu(zeros(self.N*self.nbr_spikes, 
+                                                          dtype=self.precision))
+        self.spikemonitor_offsets = gpuarray.to_gpu(arange(0, self.nbr_spikes*self.N+1,
+                                                   self.nbr_spikes, 
+                                                   dtype=int32))
+
     
     def initialize_kernel_arguments(self):
         self.kernel_func_args = [self.statevars_arr,
@@ -514,6 +564,10 @@ class GPUModelFitting(object):
         if self.statemonitor_var is not None:
             self.kernel_func_args += [val for val in self.statemonitor_values]
             self.kernel_func_args += [self.statemonitor_offsets]
+            
+        if self.spikemonitor is True:
+            self.kernel_func_args += [self.spikemonitor_values,self.spikemonitor_offsets]
+            #self.kernel_func_args += [self.spikemonitor_offsets]
         
         self.kernel_func_args += [int32(rint(self.onset / self.dt))]
 
@@ -554,6 +608,9 @@ class GPUModelFitting(object):
         
         if self.statemonitor_var is not None:
             self.initialize_statemonitor()
+            
+        if self.spikemonitor is True:
+            self.initialize_spikemonitor()
         
         self.initialize_kernel_arguments()
 
@@ -570,13 +627,37 @@ class GPUModelFitting(object):
                 self.kernel_func(int32(Tstart), int32(Tend), int32(duration),
                                  *self.kernel_func_args, **self.kernel_func_kwds)
                 pycuda.context.synchronize()
-
+#        if self.stand_alone and 1:
+##            print 'close stand alone'
+##            drv.init()
+#            pycuda.context.pop()
+#            pycuda.context = None
+            
     def get_statemonitor_values(self):
         values = [val.get().reshape((self.N, -1)) for val in self.statemonitor_values]
         if len(self.statemonitor_var)==1:
             return values[0]
         else:
             return values
+        
+    def get_spikemonitor_values(self):
+        values = self.spikemonitor_values.get().reshape((self.N, -1))
+        return values
+        
+    def close_cuda():
+        """
+        Closes the current PyCUDA context. MUST be called at the end of the
+        script.
+        """
+        print 'close'
+        log_debug("Trying to close current PyCUDA context")
+        if pycuda.context is not None:
+            try:
+                log_debug("Closing current PyCUDA context")
+                pycuda.context.pop()
+                pycuda.context = None
+            except:
+                log_warn("A problem occurred when closing PyCUDA context")
 
 
 
