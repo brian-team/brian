@@ -154,9 +154,17 @@ class Simulator(object):
                  precision = 'double',
                  criterion = None,
                  statemonitor_var=None,
-                 method = 'Euler'
+                 spikemonitor = False,
+                 nbr_spikes = 200,
+                 method = 'Euler',
+#                 stand_alone=False,
+#                 neuron_group=None,
+#                 given_neuron_group=False
                  ):
 #        print refractory, max_refractory
+#        self.neuron_group = neuron_group
+#        self.given_neuron_group = False
+#        self.stand_alone = given_neuron_group
         self.model = model
         self.reset = reset
         self.threshold = threshold
@@ -177,6 +185,8 @@ class Simulator(object):
         if type(statemonitor_var) is not list and statemonitor_var is not None:
             statemonitor_var = [statemonitor_var]
         self.statemonitor_var = statemonitor_var
+        self.spikemonitor=spikemonitor
+        self.nbr_spikes = nbr_spikes
         self.stepsize = stepsize
         self.precision = precision
         self.criterion = criterion
@@ -216,7 +226,7 @@ class Simulator(object):
 #        print refractory, self.max_refractory
         if  type(refractory) is double:
             refractory=refractory*second
-            
+#        if self.give_neuron_group == False:
         self.group = NeuronGroup(self.neurons, # TODO: * slices?
                                  model=self.model,
                                  reset=self.reset,
@@ -229,6 +239,8 @@ class Simulator(object):
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
                 self.group.state(param)[:] = value
+#        else: 
+#            self.group = self.neuron_group
     
     def initialize_gpu(self):
             # Select integration scheme according to method
@@ -241,6 +253,8 @@ class Simulator(object):
                                       self.input_var, self.neurons/self.groups,
                                       self.onset, 
                                       statemonitor_var = self.statemonitor_var,
+                                      spikemonitor = self.spikemonitor,
+                                      nbr_spikes = self.nbr_spikes,
                                       duration = self.sliced_duration,
                                       precision=self.precision, scheme=scheme)
     
@@ -340,7 +354,7 @@ class Simulator(object):
     def run(self, **param_values):
         delays = param_values.pop('delays', zeros(self.neurons))
         
-        print self.refractory,self.max_refractory
+#        print self.refractory,self.max_refractory
         if self.max_refractory is not None:
             refractory = param_values.pop('refractory', zeros(self.neurons))
         else:
@@ -400,6 +414,12 @@ class Simulator(object):
             return [monitor.values for monitor in self.statemonitors]
         else:
             return self.mf.get_statemonitor_values()
+        
+    def get_spikemonitor_values(self):
+        if not self.use_gpu:
+            return [monitor.values for monitor in self.statemonitors]
+        else:
+            return self.mf.get_spikemonitor_values()
 
 
 
@@ -419,7 +439,11 @@ def simulate( model, reset = None, threshold = None,
                  precision = 'double',
                  criterion = None,
                  record = None,
+                 spikemonitor = False,
+                 nbr_spikes = 200,
                  method = 'Euler',
+                 stand_alone=False,
+#                 neuron_group = none,
                  **params):
     
     unit_type = 'CPU'
@@ -482,6 +506,12 @@ def simulate( model, reset = None, threshold = None,
     if use_gpu:
         set_gpu_device(0)
     
+#    if neuron_group is not None:
+#        self.neuron_group = neuron_group
+#        self.given_neuron_group = True
+#    else:
+#        self.given_neuron_group = False
+        
     simulator = Simulator(model, reset, threshold, 
                          inputs,
                          input_var = input_var,
@@ -501,11 +531,21 @@ def simulate( model, reset = None, threshold = None,
                          precision = precision,
                          criterion = criterion,
                          statemonitor_var = record,
-                         method = method)
+                         spikemonitor = spikemonitor,
+                         nbr_spikes = nbr_spikes,
+                         method = method,
+#                         stand_alone=stand_alone,
+#                         self.neuron_group,
+#                         self.given_neuron_group
+                         )
     criterion_values = simulator.run(**params)
-    if record is not None:
+    if record is not None and spikemonitor is False:
         record_values = simulator.get_statemonitor_values()
         return criterion_values, record_values
+    elif record is not None and spikemonitor is True:
+        record_values = simulator.get_statemonitor_values()
+        spike_times = simulator.get_spikemonitor_values()
+        return criterion_values, record_values,spike_times
     else:
         return criterion_values
 
