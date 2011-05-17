@@ -542,7 +542,7 @@ if __name__ == '__main__':
                             gpu = 1,
                             #cpu=4,
                             dt = dt,
-                            popsize = 2000,
+                            popsize = 20000,
                             maxiter = 10,
                             criterion = criterion,
                             R = [1.0e9,1.0e9, 9.0e9, 9.0e9],
