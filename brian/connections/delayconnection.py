@@ -6,6 +6,7 @@ from connectionmatrix import *
 from construction import *
 from connection import *
 from propagation_c_code import *
+import warnings
 network_operation = None # we import this when we need to because of order of import issues
 
 __all__ = [
@@ -218,15 +219,38 @@ class DelayConnection(Connection):
             # the structure is dynamic, it will be the user's
             # responsibility to update them in sequence
             delayvec = self.delayvec
-            # The delayvec[i,:] operation for sparse.lil_matrix format
-            # is VERY slow, but the CSR format is fine.
+            # Special optimisation for the lil_matrix case if the indices
+            # already match. Note that this special optimisation also allows
+            # you to use multiple synapses via a sort of hack (editing the
+            # rows and data attributes of the lil_matrix explicitly)
+            using_lil_matrix = False
             if isinstance(delayvec, sparse.lil_matrix):
-                delayvec = delayvec.tocsr()
+                using_lil_matrix = True
             self.delayvec = self.W.connection_matrix(copy=True)
+            repeated_index_hack = False
             for i in xrange(self.W.shape[0]):
-                self.delayvec.set_row(i, array(todense(delayvec[i, :]), copy=False).flatten())
+                if using_lil_matrix:
+                    try:
+                        row = SparseConnectionVector(self.W.shape[1],
+                                                     array(delayvec.rows[i], dtype=int),
+                                                     array(delayvec.data[i]))
+                        if sum(diff(row.ind)==0)>0:
+                            warnings.warn("You are using the repeated index hack, be careful!")
+                            repeated_index_hack = True
+                        self.delayvec.set_row(i, row)
+                    except ValueError:
+                        if repeated_index_hack:
+                            warnings.warn("You are using the repeated index "
+                                          "hack and not ensuring that weight "
+                                          "and delay indices correspond, this "
+                                          "is almost certainly an error!")
+                        using_lil_matrix = False
+                        # The delayvec[i,:] operation for sparse.lil_matrix format
+                        # is VERY slow, but the CSR format is fine.
+                        delayvec = delayvec.tocsr()
+                if not using_lil_matrix:
+                    self.delayvec.set_row(i, array(todense(delayvec[i, :]), copy=False).flatten())
                 
-            #self.delayvec=self.delayvec.connection_matrix()
             Connection.compress(self)
 
     def set_delays(self, source=None, target=None, delay=None):
