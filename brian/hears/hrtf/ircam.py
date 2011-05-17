@@ -19,7 +19,7 @@ class IRCAM_LISTEN(HRTFDatabase):
     
     ``basedir``
         The directory where the database has been downloaded and extracted,
-        e.g. ``r'D:\HRTF\IRCAM'``.
+        e.g. ``r'D:\HRTF\IRCAM'``. Multiple directories in a list can be provided as well (e.g IRCAM and IRCAM New).
     ``compensated=False``
         Whether to use the raw or compensated impulse responses.
     ``samplerate=None``
@@ -38,25 +38,41 @@ class IRCAM_LISTEN(HRTFDatabase):
     names of the subject, e.g. IRCAM/IRC_1002, etc.
     '''
     def __init__(self, basedir, compensated=False, samplerate=None):
+        if not iterable(basedir):
+            basedir = [basedir]
         self.basedir = basedir
         self.compensated = compensated
-        names = glob(os.path.join(basedir, 'IRC_*'))
+        names = []
+        for basedir in self.basedir:
+            names += glob(os.path.join(basedir, 'IRC_*'))
         splitnames = [os.path.split(name) for name in names]
 
-        self.subjects = [int(name[4:]) for base, name in splitnames]
+#        self.subjects = [int(name[4:8]) for base, name in splitnames]
         if samplerate is not None:
             raise ValueError('Custom samplerate not supported.')
         self.samplerate = samplerate
 
     def load_subject(self, subject, rounddot5 = False):
         subject = str(subject)
-        filename = os.path.join(self.basedir, 'IRC_' + subject)
-        if self.compensated:
-            filename = os.path.join(filename, 'COMPENSATED/MAT/HRIR/IRC_' + subject + '_C_HRIR.mat')
-        else:
-            filename = os.path.join(filename, 'RAW/MAT/HRIR/IRC_' + subject + '_R_HRIR.mat')
         samplerate = 44.1*kHz
-        m = loadmat(filename, struct_as_record=True)
+
+        ok = False
+        k = 0
+        while k < len(self.basedir) and not ok:
+            try:
+                filename = os.path.join(self.basedir[k], 'IRC_' + subject)
+                if self.compensated:
+                    filename = os.path.join(filename, 'COMPENSATED/MAT/HRIR/IRC_' + subject + '_C_HRIR.mat')
+                else:
+                    filename = os.path.join(filename, 'RAW/MAT/HRIR/IRC_' + subject + '_R_HRIR.mat')
+                m = loadmat(filename, struct_as_record=True)
+                ok = True
+            except IOError:
+                ok = False
+            k += 1
+        if not ok:
+            raise IOError("Couldn't find the HRTF files for subject "+str(subject))
+
         if 'l_hrir_S' in m.keys(): # RAW DATA
             affix = '_hrir_S'
         else:                      # COMPENSATED DATA
