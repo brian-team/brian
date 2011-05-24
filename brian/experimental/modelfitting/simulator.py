@@ -312,6 +312,7 @@ class Simulator(object):
         if criterion_name == 'GammaFactor':
             params['delta'] = self.criterion.delta
             params['coincidence_count_algorithm'] = self.criterion.coincidence_count_algorithm
+            params['fr_weight'] = self.criterion.fr_weight
             self.criterion_object = GammaFactorCriterion(**params)
             
         if criterion_name == 'LpError':
@@ -546,6 +547,9 @@ def simulate( model, reset = None, threshold = None,
         record_values = simulator.get_statemonitor_values()
         spike_times = simulator.get_spikemonitor_values()
         return criterion_values, record_values,spike_times
+    elif record is  None and spikemonitor is True:
+        spike_times = simulator.get_spikemonitor_values()
+        return criterion_values,spike_times
     else:
         return criterion_values
 

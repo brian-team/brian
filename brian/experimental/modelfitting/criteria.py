@@ -489,10 +489,10 @@ class GammaFactorCriterion(Criterion):
         The number of spikes in the target spike train associated to each neuron.
     """
     type = 'spikes'
-    def initialize(self, delta, coincidence_count_algorithm):
+    def initialize(self, delta=4*ms, fr_weight=0,coincidence_count_algorithm='exclusive'):
         self.algorithm = coincidence_count_algorithm
         self.delta = int(rint(delta / self.dt))
-        
+        self.fr_weight = fr_weight
         self.spike_count = zeros(self.N, dtype='int')
         self.coincidences = zeros(self.N, dtype='int')
         self.spiketime_index = self.spikes_offset
@@ -672,13 +672,16 @@ class GammaFactorCriterion(Criterion):
         gamma = get_gamma_factor(coincidence_count, spike_count, 
                                  self.target_spikes_count, self.target_spikes_rate, 
                                  delta)
-        
+#        print 'gf',gamma,'gf'
+        gamma = gamma - self.fr_weight*abs(spike_count-self.target_spikes_count)/self.target_spikes_count
+#        print 'fr',abs(spike_count-self.target_spikes_count)/self.target_spikes_count,'fr'
         return gamma
 
 class GammaFactor(CriterionStruct):
-    def __init__(self, delta = 4*ms, coincidence_count_algorithm = 'exclusive'):
+    def __init__(self, delta = 4*ms,fr_weight=0, coincidence_count_algorithm = 'exclusive'):
         self.type = 'spikes'
         self.delta = delta
+        self.fr_weight = fr_weight
         self.coincidence_count_algorithm = coincidence_count_algorithm
 
 
@@ -859,7 +862,7 @@ class BretteCriterion(Criterion):
         norm_pop=values[1]
         norm_target=values[2]
         corr_vector[nonzero(self.spikecount==0)] = -inf
-        temp=self.corr_vector/sqrt(norm_pop)/sqrt(norm_target)/self.tau_metric
+        temp=self.corr_vector/self.tau_metric/sqrt(norm_pop)/sqrt(norm_target)
         temp[isnan(temp)] = -inf
         return temp
 
