@@ -409,7 +409,7 @@ class GPUModelFitting(object):
             init = """
                     int spikemonitor_offset = spikemonitor_offsets[neuron_index];
                     """
-            update = "".join('spikemonitor_container[spikemonitor_offset] = T;')
+            update = "".join('spikemonitor_container[spikemonitor_offset] = T+spikedelay;')
             update += """
                     spikemonitor_offset++;
                     """ 
@@ -511,7 +511,7 @@ class GPUModelFitting(object):
         src = src.replace('%BLOCKSIZE%', str(BLOCKSIZE))
         # Substitute input var name
         src = src.replace('${input_var}', str(self.input_var))
-        #print src
+        print src
         #return
         self.kernel_src = src
 
