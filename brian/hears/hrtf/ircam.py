@@ -3,7 +3,7 @@ from scipy.io import loadmat # NOTE: this requires scipy 0.7+
 from glob import glob
 from copy import copy
 from scipy.io.wavfile import *
-import os
+import os, re
 from hrtf import *
 
 __all__ = ['IRCAM_LISTEN']
@@ -28,7 +28,7 @@ class IRCAM_LISTEN(HRTFDatabase):
     
     The coordinates are pairs ``(azim, elev)`` where ``azim`` ranges from 0
     to 345 degrees in steps of 15 degrees, and elev ranges from -45 to 90 in
-    steps of 15 degrees.
+    steps of 15 degrees. After loading the database, the attribute 'subjects' gives all the subjects number that were detected as installed.
     
     **Obtaining the database**
     
@@ -46,8 +46,10 @@ class IRCAM_LISTEN(HRTFDatabase):
         for basedir in self.basedir:
             names += glob(os.path.join(basedir, 'IRC_*'))
         splitnames = [os.path.split(name) for name in names]
-
-#        self.subjects = [int(name[4:8]) for base, name in splitnames]
+        
+        p = re.compile('IRC_\d{4,4}')
+        self.subjects = [int(name[4:8]) for base, name in splitnames 
+                         if not (p.match(name[-8:]) is None)]
         if samplerate is not None:
             raise ValueError('Custom samplerate not supported.')
         self.samplerate = samplerate
@@ -87,7 +89,7 @@ class IRCAM_LISTEN(HRTFDatabase):
             # - some measures that should be at the same elevation are
             # at very close but different elevations (7.47
             # vs. 7.5). This is annoying for interpolation. Hence I
-            # round the elevations
+            # allow one to round the elevations
             conv = lambda x : x
             if rounddot5:
                 conv = lambda x: np.round(2*x)/2
