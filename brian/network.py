@@ -625,7 +625,7 @@ class NetworkOperation(magic.InstanceTracker, ObjectContainer):
     If your function takes an argument, the clock will be passed
     as that argument.
     """
-    def __init__(self, function, clock=None, when='end'):
+    def __init__(self, function=None, clock=None, when='end'):
         self.clock = guess_clock(clock)
         self.when = when
         self.function = function
@@ -633,6 +633,8 @@ class NetworkOperation(magic.InstanceTracker, ObjectContainer):
             self._has_arg = (self.function.func_code.co_argcount==1)
 
     def __call__(self):
+        if not hasattr(self, 'function') or self.function is None:
+            return
         if self._has_arg:
             self.function(self.clock)
         else:
