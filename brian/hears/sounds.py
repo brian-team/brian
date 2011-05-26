@@ -17,6 +17,7 @@ except (ImportError, ValueError):
 from bufferable import Bufferable
 from prefs import get_samplerate
 from db import dB, dB_type, dB_error, gain
+from scipy.signal import fftconvolve
 
 __all__ = ['BaseSound', 'Sound',
            'pinknoise','brownnoise','powerlawnoise',
