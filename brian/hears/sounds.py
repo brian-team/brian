@@ -385,7 +385,7 @@ class Sound(BaseSound, numpy.ndarray):
             # Adapted from
             # http://www.labbookpages.co.uk/audio/beamforming/fractionalDelay.html
             delay = duration*self.samplerate
-            if delay>0:
+            if delay>=0:
                 idelay = int(delay)
             elif delay<0:
                 idelay = -int(-delay)
