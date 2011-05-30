@@ -120,6 +120,8 @@ class Sound(BaseSound, numpy.ndarray):
     
     .. autoattribute:: level
     .. automethod:: atlevel
+    .. autoattribute:: maxlevel
+    .. automethod:: atmaxlevel
     
     **Ramping**
     
@@ -618,6 +620,31 @@ class Sound(BaseSound, numpy.ndarray):
         '''
         newsound = self.copy()
         newsound.level = level
+        return newsound
+    
+    def get_maxlevel(self):
+        return amax(self.level)*dB
+    
+    def set_maxlevel(self, level):
+        self.level += level-self.maxlevel
+        
+    maxlevel = property(fget=get_maxlevel, fset=set_maxlevel, doc='''
+        Can be used to set or get the maximum level of a sound. For mono
+        sounds, this is the same as the level, but for multichannel sounds
+        it is the maximum level across the channels. Relative level differences
+        will be preserved. The specified level should be a value in dB, and it
+        is assumed that the unit of the sound is Pascals. 
+        ''')
+
+    def atmaxlevel(self, level):
+        '''
+        Returns the sound with the maximum level across channels set to the
+        given level. Relative level differences will be preserved. The specified
+        level should be a value in dB and it is assumed that the unit of the
+        sound is Pascals.
+        '''
+        newsound = self.copy()
+        newsound.maxlevel = level
         return newsound
             
     def ramp(self, when='onset', duration=10*ms, envelope=None, inplace=True):
