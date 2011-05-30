@@ -55,9 +55,15 @@ class IRCAM_LISTEN(HRTFDatabase):
         self.samplerate = samplerate
 
     def load_subject(self, subject, rounddot5 = False):
-        subject = str(subject)
-        samplerate = 44.1*kHz
 
+
+        subject = str(subject)
+        if subject[0] == '3':
+            # this is the case only for stuffed animals recordings
+            # IRC_30..
+            samplerate = 192*kHz
+        else:
+            samplerate = 44.1*kHz
         ok = False
         k = 0
         while k < len(self.basedir) and not ok:
