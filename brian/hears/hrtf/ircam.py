@@ -73,7 +73,6 @@ class IRCAM_LISTEN(HRTFDatabase):
                     filename = os.path.join(filename, 'COMPENSATED/MAT/HRIR/IRC_' + subject + '_C_HRIR.mat')
                 else:
                     filename = os.path.join(filename, 'RAW/MAT/HRIR/IRC_' + subject + '_R_HRIR.mat')
-                print filename
                 m = loadmat(filename, struct_as_record=True)
                 ok = True
             except IOError:
