@@ -38,7 +38,7 @@ class IRCAM_LISTEN(HRTFDatabase):
     names of the subject, e.g. IRCAM/IRC_1002, etc.
     '''
     def __init__(self, basedir, compensated=False, samplerate=None):
-        if not iterable(basedir):
+        if not isinstance(basedir, (list, tuple)):
             basedir = [basedir]
         self.basedir = basedir
         self.compensated = compensated
@@ -73,6 +73,7 @@ class IRCAM_LISTEN(HRTFDatabase):
                     filename = os.path.join(filename, 'COMPENSATED/MAT/HRIR/IRC_' + subject + '_C_HRIR.mat')
                 else:
                     filename = os.path.join(filename, 'RAW/MAT/HRIR/IRC_' + subject + '_R_HRIR.mat')
+                print filename
                 m = loadmat(filename, struct_as_record=True)
                 ok = True
             except IOError:
