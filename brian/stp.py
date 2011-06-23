@@ -96,7 +96,6 @@ class SynapticDepressionUpdater(SpikeMonitor):
     Special case: tauf=0*ms (synaptic depression).
     
       dx/dt=(1-x)/taud  (depression)
-      u<-u+U*(1-u)
       x<-x*(1-U)
 
     NOT FINISHED
