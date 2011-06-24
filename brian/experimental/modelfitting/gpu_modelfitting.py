@@ -44,7 +44,7 @@ class ModelfittingGPUCodeGenerator(GPUCodeGenerator):
 
 
 
-BLOCKSIZE = 128
+BLOCKSIZE = 32
 
 def get_cuda_template():
     return """
