@@ -2,7 +2,7 @@ from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, ze
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
                     arange, sort_spikes, rint, SpikeMonitor, Connection, int32, double,SpikeGeneratorGroup,DelayConnection,\
-                    SpikeCounter,forget,diagflat,inf,sqrt,ones_like,isnan,append
+                    SpikeCounter,forget,diagflat,inf,sqrt,ones_like,isnan,append,repeat,tile,mean,logical_and,where
 from brian.tools.statistics import firing_rate, get_gamma_factor
 from playdoh import *
 try:
@@ -85,17 +85,16 @@ class Criterion(Monitor, NetworkOperation):
     NOTE: traces and spikes have all been sliced before being passed to the criterion object
     """
     def __init__(self, group, traces=None, spikes=None, targets_count=1, duration=None, onset=0*ms, 
-                 spikes_inline=None, spikes_offset=None,
+                 spikes_inline=None, spikes_offset=None,trials_offset=None,
                  traces_inline=None, traces_offset=None,
                  delays=None, when='end', **params):
         NetworkOperation.__init__(self, None, clock=group.clock, when=when)
         self.group = group
-        
         # needed by SpikeMonitor
         self.source = group
         self.source.set_max_delay(0)
         self.delay = 0
-        
+        self.trials_offset=trials_offset
         self.N = len(group) # number of neurons
         self.K = targets_count # number of targets
         self.dt = self.clock.dt
@@ -133,6 +132,7 @@ class Criterion(Monitor, NetworkOperation):
         return int(round(self.clock.t/self.dt))
     
     def get_spikes_count(self, spikes):
+        
         count = zeros(self.K)
         for (i,t) in spikes:
             count[i] += 1
@@ -427,6 +427,295 @@ class LpError(CriterionStruct):
         self.points=points
 
 
+class GammaFactorCriterion2(Criterion):
+
+    type = 'spikes'
+    def initialize(self, delta=4*ms, fr_weight=0,coincidence_count_algorithm='exclusive',nlevels=1,level_duration=100):
+        self.algorithm = coincidence_count_algorithm
+        self.delta = int(rint(delta / self.dt))
+
+        self.fr_weight = fr_weight
+        self.spike_count = zeros(self.N, dtype='int')
+        self.coincidences = zeros(self.N, dtype='int')
+        self.spiketime_index = self.spikes_offset
+
+        self.last_spike_time = array(rint(self.spikes_inline[self.spiketime_index] / self.dt), dtype=int)
+        self.next_spike_time = array(rint(self.spikes_inline[self.spiketime_index + 1] / self.dt), dtype=int)
+        self.ntrials = len(self.trials_offset)
+        self.nlevels = nlevels
+        self.level_duration=rint(level_duration/ self.dt)
+        
+        self.target_count=zeros(self.ntrials)
+        self.target_rate=zeros(self.ntrials)
+        ind_start=nonzero(self.spikes_inline==-1)[0]
+        ind_start=append(ind_start,len(self.spikes_inline))
+        self.trials_offset=tile(self.trials_offset,self.N)
+        for itrial in xrange(self.ntrials):
+            self.target_count[itrial]=ind_start[itrial+1]-ind_start[itrial]-2
+            self.target_rate[itrial]=self.target_count[itrial]/self.spikes_inline[ind_start[itrial+1]-2]
+        
+        self.target_count_level=zeros((self.nlevels,self.ntrials))
+        for ilevel in xrange(self.nlevels):
+            for itrial in xrange(self.ntrials):
+                temp=rint(self.spikes_inline[ind_start[itrial]+1:ind_start[itrial+1]-1]/self.dt)
+#                print ilevel*self.level_duration,(ilevel+1)*self.level_duration,max(temp)
+                ind=logical_and(temp>ilevel*self.level_duration,temp<=(ilevel+1)*self.level_duration)
+#                print where(ind)[0]
+                self.target_count_level[ilevel,itrial]=len(where(ind)[0])
+        # First target spikes (needed for the computation of 
+        #   the target train firing rates)
+#        self.first_target_spike = zeros(self.N)
+
+        self.last_spike_allowed = ones(self.N, dtype='bool')
+        self.next_spike_allowed = ones(self.N, dtype='bool')
+        
+    
+    if 1:
+        #threadIdx.x+blockDim.x*itrial
+        def get_cuda_code(self):
+            block_size=32
+            code = {}
+            
+            #  DECLARATION
+            code['%CRITERION_DECLARE%'] = """
+        int *spikecount,          // Number of spikes produced by each neuron
+        int *num_coincidences,    // Count of coincidences for each neuron
+            """
+            
+            if self.algorithm == 'exclusive':
+                code['%CRITERION_DECLARE%'] += """ 
+        int *sp_trial_indices,   // 
+        int *last_spike_time_arr,  // pass zero array
+        int *next_spike_time_arr,
+        bool *last_spike_allowed_arr,
+        bool *next_spike_allowed_arr,
+        int *spike_count_level,
+        int *current_level_index,
+               """
+            
+            # INITIALIZATION
+            code['%CRITERION_INIT%'] = """
+         int ntrials=%i;//*ntrial;
+         int nlevel=%i;
+         int level_duration=%i;
+        int level_ind = current_level_index[neuron_index];  
+        int nspikes_level = spike_count_level[neuron_index*nlevel+level_ind];
+        
+        int nspikes = spikecount[neuron_index];   
+        __shared__ int ncoinc[%i];
+        __shared__ int sp_trial_indices_temp[%i];
+        __shared__ int last_spike_time[%i];
+        __shared__ int next_spike_time[%i];
+        __shared__ bool last_spike_allowed[%i];
+        __shared__ bool next_spike_allowed[%i];
+    
+       for(int itrial=0;itrial<ntrials;itrial++)
+            {
+            sp_trial_indices_temp[threadIdx.x*ntrials+itrial] = sp_trial_indices[neuron_index*ntrials+itrial];
+            last_spike_time[threadIdx.x*ntrials+itrial] = last_spike_time_arr[neuron_index*ntrials+itrial];
+            next_spike_time[threadIdx.x*ntrials+itrial] =next_spike_time_arr[neuron_index*ntrials+itrial];
+            last_spike_allowed[threadIdx.x*ntrials+itrial] = last_spike_allowed_arr[neuron_index*ntrials+itrial];
+            next_spike_allowed[threadIdx.x*ntrials+itrial] = next_spike_allowed_arr[neuron_index*ntrials+itrial];
+            ncoinc[threadIdx.x*ntrials+itrial] = num_coincidences[neuron_index*ntrials+itrial];
+            }  
+       __syncthreads();
+            """%(self.ntrials,self.nlevels,self.level_duration,self.ntrials*block_size,self.ntrials*block_size,self.ntrials*block_size,self.ntrials*block_size,self.ntrials*block_size,self.ntrials*block_size)
+            
+            
+            # TIMESTEP
+            code['%CRITERION_TIMESTEP%'] = """
+            const int Tspike = T+spikedelay;
+            """
+            
+            if self.algorithm == 'exclusive':
+                code['%CRITERION_TIMESTEP%'] += """
+           for(int itrial=0;itrial<ntrials;itrial++)
+            {
+                bool near_last_spike = last_spike_time[threadIdx.x*ntrials+itrial]+%d>=Tspike;
+                bool near_next_spike = next_spike_time[threadIdx.x*ntrials+itrial]-%d<=Tspike;
+                near_last_spike = near_last_spike && has_spiked;
+                near_next_spike = near_next_spike && has_spiked;
+    
+                ncoinc[threadIdx.x*ntrials+itrial] +=(near_last_spike&&last_spike_allowed[threadIdx.x*ntrials+itrial]) || (near_next_spike&&next_spike_allowed[threadIdx.x*ntrials+itrial]);
+                bool near_both_allowed = (near_last_spike&&last_spike_allowed[threadIdx.x*ntrials+itrial]) && (near_next_spike&&next_spike_allowed[threadIdx.x*ntrials+itrial]);
+                last_spike_allowed[threadIdx.x*ntrials+itrial] = last_spike_allowed[threadIdx.x*ntrials+itrial] && !near_last_spike;
+                next_spike_allowed[threadIdx.x*ntrials+itrial] = (next_spike_allowed[threadIdx.x*ntrials+itrial] && !near_next_spike) || near_both_allowed;
+        
+                if(Tspike>=next_spike_time[threadIdx.x*ntrials+itrial]){
+                    sp_trial_indices_temp[threadIdx.x*ntrials+itrial]++;
+                    last_spike_time[threadIdx.x*ntrials+itrial] = next_spike_time[threadIdx.x*ntrials+itrial];  
+                    next_spike_time[threadIdx.x*ntrials+itrial] = spiketimes[sp_trial_indices_temp[threadIdx.x*ntrials+itrial]+1];
+                }
+                last_spike_allowed[threadIdx.x*ntrials+itrial] = next_spike_allowed[threadIdx.x*ntrials+itrial];
+                next_spike_allowed[threadIdx.x*ntrials+itrial] = true;
+     
+            }
+
+            nspikes += has_spiked*(T>=onset);
+           if (T>(level_ind+1)*level_duration)
+            {
+            spike_count_level[neuron_index*nlevel+level_ind]=nspikes_level;
+            level_ind+=1;
+            nspikes_level=spike_count_level[neuron_index*nlevel+level_ind];
+            }
+            nspikes_level += has_spiked*(T>=onset);
+           
+            """% (self.delta, self.delta)
+            
+            # FINALIZATION
+            code['%CRITERION_END%'] = """
+            spike_count_level[neuron_index*nlevel+level_ind]=nspikes_level;
+            if (Tend>(level_ind+1)*level_duration)
+            {
+            level_ind+=1;
+            }
+            
+            for(int itrial=0;itrial<ntrials;itrial++)
+                {
+                sp_trial_indices[neuron_index*ntrials+itrial] = sp_trial_indices_temp[threadIdx.x*ntrials+itrial];
+                num_coincidences[neuron_index*ntrials+itrial] = ncoinc[threadIdx.x*ntrials+itrial];
+                last_spike_allowed_arr[neuron_index*ntrials+itrial] = last_spike_allowed[threadIdx.x*ntrials+itrial];
+                next_spike_allowed_arr[neuron_index*ntrials+itrial] = next_spike_allowed[threadIdx.x*ntrials+itrial];
+                last_spike_time_arr[neuron_index*ntrials+itrial]=last_spike_time[threadIdx.x*ntrials+itrial];
+                next_spike_time_arr[neuron_index*ntrials+itrial]=next_spike_time[threadIdx.x*ntrials+itrial];
+                }
+            spikecount[neuron_index] = nspikes;
+            current_level_index[neuron_index] = level_ind;
+            __syncthreads();
+                """
+   
+            
+            return code
+    else:
+        def get_cuda_code(self):
+            code = {}
+            
+            #  DECLARATION
+            code['%CRITERION_DECLARE%'] = """
+        int *spikecount,          // Number of spikes produced by each neuron
+        int *num_coincidences,    // Count of coincidences for each neuron
+            """
+            
+            if self.algorithm == 'exclusive':
+                code['%CRITERION_DECLARE%'] += """ 
+        int *sp_trial_indices,   // 
+        int *last_spike_time_arr,  // pass zero array
+        int *next_spike_time_arr,
+        bool *last_spike_allowed_arr,
+        bool *next_spike_allowed_arr,
+               """
+    
+            
+            # INITIALIZATION
+            code['%CRITERION_INIT%'] = """
+         int ntrials=%i;//*ntrial;
+       int nspikes = spikecount[neuron_index];   
+        
+            """%(self.ntrials)
+            
+            # TIMESTEP
+            code['%CRITERION_TIMESTEP%'] = """
+            const int Tspike = T+spikedelay;
+            """
+            
+            if self.algorithm == 'exclusive':
+                code['%CRITERION_TIMESTEP%'] += """
+           for(int itrial=0;itrial<ntrials;itrial++)
+            {
+                bool near_last_spike = last_spike_time_arr[neuron_index*ntrials+itrial]+%d>=Tspike;
+                bool near_next_spike = next_spike_time_arr[neuron_index*ntrials+itrial]-%d<=Tspike;
+                near_last_spike = near_last_spike && has_spiked;
+                near_next_spike = near_next_spike && has_spiked;
+    
+                num_coincidences[neuron_index*ntrials+itrial] +=(near_last_spike&&last_spike_allowed_arr[neuron_index*ntrials+itrial]) || (near_next_spike&&next_spike_allowed_arr[neuron_index*ntrials+itrial]);
+                bool near_both_allowed = (near_last_spike&&last_spike_allowed_arr[neuron_index*ntrials+itrial]) && (near_next_spike&&next_spike_allowed_arr[neuron_index*ntrials+itrial]);
+                last_spike_allowed_arr[neuron_index*ntrials+itrial] = last_spike_allowed_arr[neuron_index*ntrials+itrial] && !near_last_spike;
+                next_spike_allowed_arr[neuron_index*ntrials+itrial] = (next_spike_allowed_arr[neuron_index*ntrials+itrial] && !near_next_spike) || near_both_allowed;
+        
+                if(Tspike>=next_spike_time_arr[neuron_index*ntrials+itrial]){
+                    sp_trial_indices[neuron_index*ntrials+itrial]+=1;
+                    last_spike_time_arr[neuron_index*ntrials+itrial] = next_spike_time_arr[neuron_index*ntrials+itrial];  
+                    next_spike_time_arr[neuron_index*ntrials+itrial] = spiketimes[sp_trial_indices[neuron_index*ntrials+itrial]+1];
+                }
+                last_spike_allowed_arr[neuron_index*ntrials+itrial] = next_spike_allowed_arr[neuron_index*ntrials+itrial];
+                next_spike_allowed_arr[neuron_index*ntrials+itrial] = true;
+     
+            }
+            nspikes += has_spiked*(T>=onset);
+           
+            """% (self.delta, self.delta)
+            
+            # FINALIZATION
+            code['%CRITERION_END%'] = """
+           spikecount[neuron_index] = nspikes;
+            """
+            
+            return code
+    
+    def initialize_cuda_variables(self):
+        """
+        Initialize GPU variables to pass to the kernel
+        """
+        self.spike_count_gpu = gpuarray.to_gpu(zeros(self.N, dtype=int32))
+        self.coincidences_gpu = gpuarray.to_gpu(zeros(self.N*self.ntrials, dtype=int32))
+        self.sp_trial_indices_gpu = gpuarray.to_gpu(array(self.trials_offset,dtype=int32))
+        self.last_spike_time_gpu = gpuarray.to_gpu(zeros(self.N*self.ntrials, dtype=int32))
+        self.next_spike_time_gpu = gpuarray.to_gpu(zeros(self.N*self.ntrials, dtype=int32))
+        self.last_spike_allowed_arr = gpuarray.to_gpu(zeros(self.N*self.ntrials, dtype=bool))
+        self.next_spike_allowed_arr = gpuarray.to_gpu(ones(self.N*self.ntrials, dtype=bool))
+        self.spike_count_level_gpu = gpuarray.to_gpu(zeros(self.N*self.nlevels, dtype=int32))
+        self.current_level_index_gpu = gpuarray.to_gpu(zeros(self.N, dtype=int32))
+
+    def get_kernel_arguments(self):
+        """
+        Return a list of objects to pass to the CUDA kernel.
+        """
+        args = [self.spike_count_gpu, self.coincidences_gpu,self.sp_trial_indices_gpu,self.last_spike_time_gpu,self.next_spike_time_gpu]
+        args += [self.last_spike_allowed_arr,self.next_spike_allowed_arr,self.spike_count_level_gpu,self.current_level_index_gpu]
+        return args
+    
+    def update_gpu_values(self):
+        """
+        Call gpuarray.get() on final values, so that get_values() returns updated values.
+        """
+        self.coincidences = self.coincidences_gpu.get()
+        self.spike_count = self.spike_count_gpu.get()
+        self.spike_count_level = self.spike_count_level_gpu.get()
+#        print self.sp_trial_indices_gpu.get()
+    
+    def get_values(self):
+        return (self.coincidences, self.spike_count)
+    
+    def normalize(self, values):
+        coincidence_count = values[0]
+        spike_count = values[1]
+        spike_count_temp = repeat(spike_count,self.ntrials)
+#        self.target_count_temp = tile(self.target_count,self.N)
+        delta = self.delta*self.dt
+
+        if self.ntrials>1:
+            coincidence_count = sum(reshape(coincidence_count,(self.N,self.ntrials)),axis=1)
+
+        gamma = get_gamma_factor(coincidence_count, spike_count*self.ntrials, 
+                                 sum(self.target_count), array(mean(self.target_rate)), 
+                                 delta)
+        self.spike_count_level=reshape(self.spike_count_level,(self.N,self.nlevels))
+#        print self.target_count_level.shape,sum(self.target_count_level,axis=1)
+#        print self.spike_count_level-sum(self.target_count_level,axis=1)
+#        print abs(self.spike_count_level*self.ntrials-sum(self.target_count_level,axis=1))/sum(self.target_count_level,axis=1)
+#        print self.target_count_level
+        if self.fr_weight!=0:
+            gamma = gamma - self.fr_weight*mean(abs(self.spike_count_level*self.ntrials-sum(self.target_count_level,axis=1))/sum(self.target_count_level,axis=1),axis=1)
+        return gamma
+
+class GammaFactor2(CriterionStruct):
+    def __init__(self, delta = 4*ms,fr_weight=0, coincidence_count_algorithm = 'exclusive',nlevels=1,level_duration=100):
+        self.type = 'spikes'
+        self.delta = delta
+        self.nlevels = nlevels
+        self.fr_weight = fr_weight
+        self.level_duration=level_duration
+        self.coincidence_count_algorithm = coincidence_count_algorithm
 
 
 class GammaFactorCriterion(Criterion):
@@ -672,7 +961,7 @@ class GammaFactorCriterion(Criterion):
         gamma = get_gamma_factor(coincidence_count, spike_count, 
                                  self.target_spikes_count, self.target_spikes_rate, 
                                  delta)
-#        print 'gf',gamma,'gf'
+
         gamma = gamma - self.fr_weight*abs(spike_count-self.target_spikes_count)/self.target_spikes_count
 #        print 'fr',abs(spike_count-self.target_spikes_count)/self.target_spikes_count,'fr'
         return gamma
