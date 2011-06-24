@@ -23,7 +23,7 @@ import sys, cPickle
 __all__ = ['modelfitting', 'print_table', 'PSO', 'GA', 'CMAES',
            'slice_trace', 'transform_spikes',
            'MAXCPU', 'MAXGPU',
-           'GammaFactor', 'LpError','VanRossum','Brette',
+           'GammaFactor','GammaFactor2', 'LpError','VanRossum','Brette',
            'simulate', 
            'debug_level', 'info_level', 'warning_level', 'open_server']
 
@@ -62,6 +62,7 @@ class ModelFitting(Fitness):
                                    stepsize = self.stepsize,
                                    precision = self.precision,
                                    criterion = self.criterion,
+                                   ntrials=self.ntrials,
                                    method = self.method
                                    )
             
@@ -93,6 +94,7 @@ def modelfitting(model=None,
                  stepsize=100 * ms,
                  unit_type=None,
                  total_units=None,
+                 ntrials=1,
                  cpu=None,
                  gpu=None,
                  precision='double', # set to 'float' or 'double' to specify single or double precision on the GPU
@@ -274,7 +276,11 @@ def modelfitting(model=None,
             data = concatenate((zeros((len(data), 1)), data.reshape((-1, 1))), axis=1)
         spikes = data
         traces = None
-        groups = int(array(data)[:, 0].max() + 1) # number of target trains
+        if ntrials>1:
+            groups = 1
+        else:
+            groups = int(array(data)[:, 0].max() + 1) # number of target trains
+
     elif criterion.type == 'trace':
         if data.ndim == 1:
             data = data.reshape((1,-1))
@@ -338,6 +344,7 @@ def modelfitting(model=None,
                    returninfo=returninfo,
                    precision=precision,
                    stepsize=stepsize,
+                  ntrials=ntrials,
                    method=method,
                    onset=onset)
 

@@ -1,7 +1,7 @@
 from brian import Equations, NeuronGroup, Clock, CoincidenceCounter, Network, zeros, array, \
                     ones, kron, ms, second, concatenate, hstack, sort, nonzero, diff, TimedArray, \
                     reshape, sum, log, Monitor, NetworkOperation, defaultclock, linspace, vstack, \
-                    arange, sort_spikes, rint, SpikeMonitor, Connection, StateMonitor
+                    arange, sort_spikes, rint, SpikeMonitor, Connection, StateMonitor,where
 from brian.tools.statistics import firing_rate, get_gamma_factor
 try:
     from playdoh import *
@@ -29,7 +29,7 @@ class DataTransformer(object):
     i.e. inline vectors (1 dimensional) easily parallelizable.
     """
     def __init__(self, neurons, input, spikes = None, traces = None, dt = defaultclock.dt,
-                 slices = 1, overlap = 0*ms, groups = 1):
+                 slices = 1, overlap = 0*ms, groups = 1,ntrials=1):
         self.neurons = neurons # number of particles on the node
         self.input = input # a IxT array
         self.spikes = spikes # a list of spikes [(i,t)...]
@@ -37,6 +37,7 @@ class DataTransformer(object):
         self.slices = slices
         self.overlap = overlap
         self.groups = groups
+        self.ntrials=ntrials
         self.dt = dt
         # ensure 2 dimensions
         if self.input.ndim == 1:
@@ -57,7 +58,7 @@ class DataTransformer(object):
         self.input = hstack((zeros((self.inputs_count, self.overlap_steps)), self.input)) # add zeros at the beginning because there is no overlap from the previous slice
         
     def slice_spikes(self, spikes):
-        # from standard structure to standard structure
+        # slice the spike trains into different chunks and assign new index
         sliced_spikes = []
         slice_length = self.sliced_steps*self.dt
 #        print self.groups,self.slices, slice_length
@@ -85,7 +86,30 @@ class DataTransformer(object):
             if slice>0:
                 sliced_traces[i0:i1,:self.overlap_steps] = traces[:,j0-self.overlap_steps:j0]
         return sliced_traces
+    
+    def transform_trials(self, spikes):
+        # from standard structure to inline structure
+        i, t = zip(*spikes)
+        i = array(i)
+        t = array(t)
+        alls = []
+        n = 0
+        pointers = []
+        model_target = []
+        pointers.append(0)
+        for j in xrange(self.ntrials):
+            s = sort(t[i == j])
+            s = hstack((-1 * second, s, self.duration + 1 * second))
+            alls.append(s)
+            pointers.append(pointers[j]+len(s))
 
+        pointers.pop()
+        spikes_inline = hstack(alls)
+#        print pointers
+#        print nonzero(spikes_inline==-1)
+#        show()
+        return spikes_inline, pointers 
+    
     def transform_spikes(self, spikes):
         # from standard structure to inline structure
         i, t = zip(*spikes)
@@ -102,6 +126,7 @@ class DataTransformer(object):
             alls.append(s)
             pointers.append(n)
             n += len(s)
+
         pointers = array(pointers, dtype=int)
         model_target = array(hstack(model_target), dtype=int)
         spikes_inline = hstack(alls)
@@ -156,6 +181,7 @@ class Simulator(object):
                  statemonitor_var=None,
                  spikemonitor = False,
                  nbr_spikes = 200,
+                 ntrials=1,
                  method = 'Euler',
 #                 stand_alone=False,
 #                 neuron_group=None,
@@ -179,6 +205,7 @@ class Simulator(object):
         self.groups = groups
         self.slices = slices
         self.overlap = overlap
+        self.ntrials=ntrials
         self.onset = onset
         self.neurons = neurons
         self.unit_type = unit_type
@@ -199,7 +226,6 @@ class Simulator(object):
         self.initialize_neurongroup()
         self.transform_data()
         self.inject_input()
-
         if self.criterion.__class__.__name__ == 'Brette':
             self.initialize_criterion(delays=zeros(self.neurons),tau_metric=zeros(self.neurons))
         else:
@@ -239,6 +265,7 @@ class Simulator(object):
         if self.initial_values is not None:
             for param, value in self.initial_values.iteritems():
                 self.group.state(param)[:] = value
+
 #        else: 
 #            self.group = self.neuron_group
     
@@ -266,13 +293,17 @@ class Simulator(object):
                                            dt = self.dt,
                                            slices = self.slices,
                                            overlap = self.overlap, 
-                                           groups = self.groups)
+                                           groups = self.groups,ntrials=self.ntrials)
         self.total_steps = self.transformer.total_steps
         self.sliced_duration = self.transformer.sliced_duration
-        
-        self.sliced_inputs = self.transformer.slice_traces(self.inputs)
-        self.inputs_inline, self.inputs_offset = self.transformer.transform_traces(self.sliced_inputs)
-        
+        if self.ntrials>1:
+            self.inputs_inline = self.inputs.flatten()
+            self.sliced_inputs = self.inputs
+            self.inputs_offset  = zeros(self.neurons)
+        else:
+            self.sliced_inputs = self.transformer.slice_traces(self.inputs)
+            self.inputs_inline, self.inputs_offset = self.transformer.transform_traces(self.sliced_inputs)
+
         if self.traces is not None:
             self.sliced_traces = self.transformer.slice_traces(self.traces)
             self.traces_inline, self.traces_offset = self.transformer.transform_traces(self.sliced_traces)
@@ -280,11 +311,18 @@ class Simulator(object):
             self.sliced_traces, self.traces_inline, self.traces_offset = None, None, None
         
         if self.spikes is not None:
-            self.sliced_spikes = self.transformer.slice_spikes(self.spikes)
-            self.spikes_inline, self.spikes_offset = self.transformer.transform_spikes(self.sliced_spikes)
+            if self.ntrials>1:
+                self.sliced_spikes = self.transformer.slice_spikes(self.spikes)
+                self.spikes_inline, self.trials_offset = self.transformer.transform_trials(self.spikes)
+                self.spikes_offset = zeros((self.neurons),dtype=int)
+            else:
+                self.sliced_spikes = self.transformer.slice_spikes(self.spikes)
+                self.spikes_inline, self.spikes_offset = self.transformer.transform_spikes(self.sliced_spikes)
+                self.trials_offset=[0]
         else:
-            self.sliced_spikes, self.spikes_inline, self.spikes_offset = None, None, None
-    
+            self.sliced_spikes, self.spikes_inline, self.spikes_offset,self.trials_offset = None, None, None, None
+        
+        
     def inject_input(self):
         # Injects current in consecutive subgroups, where I_offset have the same value
         # on successive intervals
@@ -303,7 +341,7 @@ class Simulator(object):
         params = dict(group=self.group, traces=self.sliced_traces, spikes=self.sliced_spikes, 
                       targets_count=self.groups*self.slices, duration=self.sliced_duration, onset=self.onset, 
                       spikes_inline=self.spikes_inline, spikes_offset=self.spikes_offset,
-                      traces_inline=self.traces_inline, traces_offset=self.traces_offset)
+                      traces_inline=self.traces_inline, traces_offset=self.traces_offset,trials_offset=self.trials_offset)
         for key,val in criterion_params.iteritems():
             params[key] = val
         criterion_name = self.criterion.__class__.__name__
@@ -315,6 +353,14 @@ class Simulator(object):
             params['fr_weight'] = self.criterion.fr_weight
             self.criterion_object = GammaFactorCriterion(**params)
             
+        if criterion_name == 'GammaFactor2':
+            params['delta'] = self.criterion.delta
+            params['coincidence_count_algorithm'] = self.criterion.coincidence_count_algorithm
+            params['fr_weight'] = self.criterion.fr_weight
+            params['nlevels'] = self.criterion.nlevels
+            params['level_duration'] = self.criterion.level_duration
+            self.criterion_object = GammaFactorCriterion2(**params)
+
         if criterion_name == 'LpError':
             params['p'] = self.criterion.p
             params['varname'] = self.criterion.varname
@@ -439,6 +485,7 @@ def simulate( model, reset = None, threshold = None,
                  stepsize = 128*ms,
                  precision = 'double',
                  criterion = None,
+                 ntrials=1,
                  record = None,
                  spikemonitor = False,
                  nbr_spikes = 200,
@@ -446,7 +493,7 @@ def simulate( model, reset = None, threshold = None,
                  stand_alone=False,
 #                 neuron_group = none,
                  **params):
-    
+
     unit_type = 'CPU'
     if use_gpu: unit_type = 'GPU'
     
@@ -530,6 +577,7 @@ def simulate( model, reset = None, threshold = None,
                          unit_type = unit_type,
                          stepsize = stepsize,
                          precision = precision,
+                         ntrials=ntrials,
                          criterion = criterion,
                          statemonitor_var = record,
                          spikemonitor = spikemonitor,
