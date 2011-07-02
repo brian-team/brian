@@ -4,8 +4,9 @@ Module to deal with the AER (Address Event Representation) format.
 Current state:
 * load_AER seems fine
 * extract_DVS_event is probably fine too, but maybe should be in a "chip" module?
+
 """
-#from struct import *
+
 from numpy import *
 from brian.directcontrol import SpikeGeneratorGroup
 from brian.units import *
@@ -123,7 +124,7 @@ def load_multiple_AER(filename, check_sorted = False, relative_time = False, dir
     f.close()
     return res
 
-def load_AER(filename, check_sorted = False, relative_time = False):
+def load_AER(filename, check_sorted = False, relative_time = True):
     '''
     Loads AER data files for use in Brian.
     Returns a list containing tuples with a vector of addresses and a vector of timestamps (ints, unit is usually usecond).
@@ -213,7 +214,7 @@ def load_AER(filename, check_sorted = False, relative_time = False):
 
 def save_AER(spikemonitor, f):
     '''
-    Saves the SpikeMonitor's contents to a file in aedat format
+    Saves the SpikeMonitor's contents to a file in aedat format.
     File should have 'aedat' extension.
     One can specify an open file, or, alternatively the filename as a string.
 
@@ -291,56 +292,6 @@ def extract_AMS_event(addr):
     lpfBpf = mod(addr, 2)
 #    leftRight = mod(addr, 4)
     return (lpfBpf, side, channel)
-
-######## I SHOULD REMOVE THAT:
-# class TopologyMap(object):
-#     '''
-#     Tool to get views on NeuronGroups that are arranged in some sort
-#     of topology. 
-#     Apparently doesn't work, so what can I do.
-#     '''
-#     def __init__(self, table, group):
-#         if not isinstance(table, tuple):
-#             table = (table,)
-#         if len(table[0]) != len(group):
-#             raise ValueError('Map should have the same length as the NeuronGroup')
-        
-#         self.table = table
-#         self.sortedvalues = []
-#         for i in range(len(table)):
-#             self.sortedvalues.append(sort(unique(table[i])))
-#         self.sortedvalues = tuple(self.sortedvalues)
-#         self.group = group
-
-#     def __getitem__(self, key):
-#         if not isinstance(key, tuple):
-#             key = (key,)
-#         if not len(key) == len(self.table):
-#             raise IndexError('Map called with the wrong number of indices')
-#         else:
-#             for i in range(len(key)):
-#                 # iterate over dimensions
-#                 if i == 0:
-#                     # create possiblematches
-#                     possiblematches = ones(len(self.group), dtype = bool)
-#                 # print 'for dimension '+str(i)
-#                 # print 'you requested slice '+str(key[i])
-#                 # print 'that is values '+str(self.sortedvalues[i][key[i]])
-#                 wantedvalues = self.sortedvalues[i][key[i]]
-#                 for k in nonzero(possiblematches)[0]:
-#                     # for all neurons that are still in line
-#                     neuronvalue = array(self.table[i])[k]
-# #                    print 'neuron '+str(k)+' has value '+str(neuronvalue)+' for dimension '+str(i)
-#                     if not (neuronvalue in array(wantedvalues)):
-# #                        print 'thus it is not in'
-#                         possiblematches[k] = 0
-# #        print 'in the end, possiblematches is '+str(possiblematches)
-#         return self.group[nonzero(possiblematches)]
-
-# class DVSTopologyMap(TopologyMap):
-#     def __init__(self, group):
-#         table = extract_DVS_event(arange(len(group)))
-#         super(DVSTopologyMap, self).__init__(table, group)
 
 if __name__=='__main__':
     path=r'C:Users\Romain\Desktop\jaerSampleData\DVS128'

@@ -39,6 +39,8 @@ class RealtimeController(NetworkOperation):
         real_time=time()+self.offset
         if self.verbose:
             print self.clock.t,real_time
+            if self.clock._t<real_time:
+                print 'Running late'
         if self.clock._t>real_time: # synchronize real time and clock
             sleep(self.clock._t-real_time)
             
