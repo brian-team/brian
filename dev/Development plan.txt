@@ -1,0 +1,45 @@
+Brian Development plan
+----------------------
+
+How about we launch a survey? We can easily create a web form with google, and
+have questions about what users would like to see in next versions.
+
+1) GPU
+------
+* Start with Brian Hears. Essentially, GPU kernels are done but we need
+to remove all GPU<->CPU transfers. Ideally, we would just transfer spikes
+(and so it would be good if neuron groups can include noise/Poisson firing).
+* For Brian: maybe have a first version that is not entirely transparent to
+the user?
+
+2) Synapses:
+------------
+Currently missing:
+* nonlinear synapses (NMDA)
+* probabilistic synapses - implications for STP/STDP
+* multiple synapses (with different delays) between the same pre/post neurons
+* STDP: access to postsynaptic variables
+* STDP: rules with local synaptic variables 
+
+First, we should at least provide a way, even not clean and elegant, to implement
+these things. Then essentially what will be needed is: 1) local synaptic variables
+(distinct from weights), 2) event-driven synaptic dynamics (taken delays into
+account).
+
+3) Miscellaneous
+----------------
+* Refractoriness
+* Cyrille's new LinearStateUpdater code
+* Stochastic DE integrators
+* Compound integrators (linear/nonlinear parts)
+* Multilinear state updater (new syntax for Equations)
+* Code generation
+* Cluster simulations
+* Cable equations (a lot is done, but we need to implement the integration method)
+
+4) Examples and docs
+--------------------
+* More examples from our papers.
+* Examples from papers should also be posted in modeldb.
+* Examples using Playdoh.
+* Electrode compensation example.
