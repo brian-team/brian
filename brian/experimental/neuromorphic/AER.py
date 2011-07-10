@@ -17,7 +17,7 @@ from brian.clock import guess_clock
 from brian.stateupdater import *
 
 import os, datetime, struct
-o__all__=['load_AER','save_AER',
+__all__=['load_AER','save_AER',
          'extract_DVS_event', 'extract_AMS_event',
          'AERSpikeGeneratorGroup', 'AERSpikeMonitor']
 
