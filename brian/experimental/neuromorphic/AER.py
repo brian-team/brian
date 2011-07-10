@@ -12,14 +12,14 @@ from brian.directcontrol import SpikeGeneratorGroup
 from brian.units import *
 from brian.neurongroup import *
 from brian.directcontrol import SpikeGeneratorThreshold
-from brian.monitor import SpikeMonitor
+from brian.monitor import SpikeMonitor, FileSpikeMonitor
 from brian.clock import guess_clock
 from brian.stateupdater import *
 
 import os, datetime, struct
 o__all__=['load_AER','save_AER',
          'extract_DVS_event', 'extract_AMS_event',
-         'AERSpikeGeneratorGroup']
+         'AERSpikeGeneratorGroup', 'AERSpikeMonitor']
 
 ################# Fast Direct Control ###############################
 # TODO: this could probably be moved to the main directcontrol module
@@ -197,7 +197,8 @@ def load_AER(filename, check_sorted = False, relative_time = True):
         if len(addr) == len(x[1::2]):
             timestamp = x[1::2]
         else:
-            timestamp = x[::2]
+            print """It seems there was a problem with the AER file, timestamps and addr don't have the same length!"""
+            timestamp = x[1::2]
 
     if check_sorted: # Sorts the events if necessary
         if any(diff(timestamp)<0): # not sorted
@@ -211,6 +212,8 @@ def load_AER(filename, check_sorted = False, relative_time = True):
         timestamp -= t0
     
     return addr,timestamp
+
+HEADER = """#!AER-DAT2.0\n# This is a raw AE data file - do not edit\n# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event\n# Timestamps tick is 1 us\n# created with the Brian simulator on """
 
 def save_AER(spikemonitor, f):
     '''
@@ -227,18 +230,51 @@ def save_AER(spikemonitor, f):
     l = f.name.split('.')
     if not l[-1] == 'aedat':
         raise ValueError('File should have aedat extension')
-    header = "#!AER-DAT2.0\n# This is a raw AE data file - do not edit\n# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event\n# Timestamps tick is 1 us\n# created with the Brian simulator on "
+    header = HEADER
     header += str(datetime.datetime.now()) + '\n'
     f.write(header)
     # i,t=zip(*spikes)
     for (i,t) in spikemonitor.spikes:
         addr = struct.pack('>i', i)
         f.write(addr)
-        time = struct.pack('>i', int(ceil(t/usecond)))
+        time = struct.pack('>i', int(ceil(float(t/usecond))))
         f.write(time)
     if strinput:
         f.close()
-        
+    
+class AERSpikeMonitor(FileSpikeMonitor):
+    """Records spikes to an AER file
+    
+    Initialised as::
+    
+        FileSpikeMonitor(source, filename[, record=False])
+    
+    Does everything that a :class:`SpikeMonitor` does except ONLY records
+    the spikes to the named file in AER format. 
+
+    
+    Has one additional method:
+    
+    ``close_file()``
+        Closes the file manually (will happen automatically when
+        the program ends).
+    """
+    def __init__(self, source, filename, record=False, delay=0):
+        super(FileSpikeMonitor, self).__init__(source, record, delay)
+        self.filename = filename
+        self.f = open(filename, 'w')
+        header = HEADER
+        header += str(datetime.datetime.now()) + '\n'
+        self.f.write(header)
+
+    def propagate(self, spikes):
+#        super(AERSpikeMonitor, self).propagate(spikes)
+        for i in spikes:
+            addr = struct.pack('>i', i)
+            self.f.write(addr)
+            time = struct.pack('>i', int(ceil(float(self.source.clock.t/usecond))))
+            self.f.write(time)
+    
 ########### AER addressing stuff ######################
 
 def extract_DVS_event(addr):
