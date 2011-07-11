@@ -224,6 +224,10 @@ def save_AER(spikemonitor, f):
     Usage:
     save_AER(spikemonitor, file)
     '''
+    if isinstance(spikemonitor, SpikeMonitor):
+        spikes = spikemonitor.spikes
+    else:
+        spikes = spikemonitor
     if isinstance(f, str):
         strinput = True
         f = open(f, 'wb')
@@ -234,7 +238,7 @@ def save_AER(spikemonitor, f):
     header += str(datetime.datetime.now()) + '\n'
     f.write(header)
     # i,t=zip(*spikes)
-    for (i,t) in spikemonitor.spikes:
+    for (i,t) in spikes:
         addr = struct.pack('>i', i)
         f.write(addr)
         time = struct.pack('>i', int(ceil(float(t/usecond))))
@@ -269,6 +273,9 @@ class AERSpikeMonitor(FileSpikeMonitor):
 
     def propagate(self, spikes):
 #        super(AERSpikeMonitor, self).propagate(spikes)
+        # TODO do it better, no struct.pack! check numpy doc for 
+        
+#        addr = array(spikes).newbyteorder('>')
         for i in spikes:
             addr = struct.pack('>i', i)
             self.f.write(addr)
