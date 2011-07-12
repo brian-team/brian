@@ -1,0 +1,204 @@
+BEP-22: Brian Hears on GPU
+Abstract: Brian Hears should be updated to run on the GPU without transferring
+data to/from the CPU frequently to remove the data transfer bottleneck.
+
+Issues
+======
+
+* Final operation should be seemless, the user shouldn't need to have to do
+  anything except install PyCUDA.
+* GPU operations should be extensible, i.e. the user can provide GPU code to
+  avoid reintroducing a CPU<->GPU bottleneck
+* Output data should be allowed to connect straightforwardly with Brian, this
+  could be just via GPUNeuronGroup possibly. However, that means implementing
+  reset/threshold on GPU.
+
+Avoiding the bottleneck
+-----------------------
+
+The simplest way to avoid the GPU/CPU bottleneck would be to allow data to stay
+in the global memory of the GPU. This could be achieved by adding a keyword
+argument to buffer_fetch, say allow_gpu. This would make everything transparent
+to implement and allow for mixed GPU/CPU operation and backwards compatibility.
+
+However, in chains of filterbanks it may not be efficient, because it involves
+a read/write to global memory for each filterbank in the chain, and this gives
+us a global memory bottleneck.
+
+A more complicated solution would be to allow the automatic merging of
+compatible filterbanks to avoid read/writes to global memory. There are
+several possible ways to do this, each involving a merged kernel. One
+possibility is to work sample by sample, that is we write a per-sample operation
+and combine the loops together. So, for example if we combined say, a
+LinearFilterbank with a FunctionFilterbank to half-wave rectify and compress
+we might have something like this for the LinearFilterbank:
+
+	__global__ void filt(SCALAR *_b, SCALAR *_a, SCALAR *_x, SCALAR *_zi,
+	                     SCALAR *_y, int numsamples)
+	{
+	    int j = blockIdx.x * blockDim.x + threadIdx.x;
+	    if(j>=n) return;
+	    for(int s=0; s<numsamples; s++)
+	    {
+	       // linear filterbank update code here
+		}
+	}
+
+We don't currently have a FunctionFilterbank on GPU, and in fact it's
+non-trivial to turn it into code that can run on GPU, particularly if it uses
+lambda functions whose (string) code can't be inspected. (A way to address this
+is to use symbolic variables, e.g. using sympy, and apply the lambda function
+to them - doesn't work in every case but probably would in many cases. This
+could be combined with code generation, see more on that below.) However, the
+C++ representation of the operation would be something like:
+
+	x = (x>0)*x;
+	x = fpow(x, 1.0/3.0);
+	
+So, the sample-by-sample approach would be to have a template:
+
+	__global__ void filt(int numsamples, SCALAR *x,
+	                     %(ARGUMENT_DECLARATIONS)
+	                     )
+	{
+	    int j = blockIdx.x * blockDim.x + threadIdx.x;
+	    if(j>=n) return;
+	    %(FILTER_INIT_CODE)
+	    for(int s=0; s<numsamples; s++)
+	    {
+	       %(FILTER_SAMPLE_CODE)
+		}
+		%(FILTER_END_CODE)
+	}
+
+The %(...) syntax can be used to insert the specific code for each filter, one
+after the other. This is the same approach used by GPUModelfitting. This
+approach makes it relatively straightforward for users to supply their own
+code if it works sample-by-sample. If the code is necessarily buffered, for
+example a buffered correlator or something like that, it may be more 
+complicated.
+
+With this approach you might end up with things like:
+
+	fb = FunctionFilterbank(source, lambda x: x*x)
+	
+Using the sympy symbolic codegen approach this could be easily converted to:
+
+	x = x*x;
+	
+for use on the GPU. In more complicated cases where sympy failed, you could
+provide your own GPU code, e.g.:
+
+	fb = FunctionFilterbank(source, lambda x: clip(x, 0, Inf)**(1.0/3.0),
+	                        gpu_code='''
+	                        x = (x>0)*x;
+	                        x = fpow(x, 1.0/3.0);
+	                        ''')
+
+For maximum flexibility, all approaches could be implemented, i.e. combining
+kernels either sample-by-sample or in terms of buffers; and allowing
+buffer_fetch to return either CPU or GPU data (if a switch is provided). The
+more efficient methods would be preferred if they existed, but otherwise not.
+
+Another major issue is how to handle filterbanks which change the number of
+channels, and ones which have multiple inputs/outputs. In these cases, kernel
+combining may be impossible, and we may have to use writes to global memory.
+However, optimisations that use kernel combination may be possible in some
+cases. I imagine what we will need to do is have some sort of graph analyser
+that generates a graph of the filters and selects the approach according to
+the topology.
+
+Issues:
+
+* Providing code that is not sample-by-sample but works on buffers
+* Handling filters with different min/max buffer sizes
+* Using shared memory for code that works on buffers? How to do it?
+* Syntax for users to provide code
+* Method for passing arguments to the filt function, e.g. specifying a
+  namespace along with the code.
+* FFT based filtering on the GPU?
+* How to handle filters which change the number of channels on the GPU? e.g.
+  Interleave, etc.
+* How to handle filters with multiple inputs/outputs
+* How to handle feedback
+
+Code generation
+---------------
+
+Mostly, complicated code generation issues can be ignored for Brian Hears,
+however there are a few cases where it might be relevant.
+
+Filter code may require access to variables, and the way to do this is probably
+to provide a namespace for the code. This is the approach I'm planning for the
+code generation generally. So it might be worth outlining the approach here
+briefly:
+
+The idea is to have a Code object, or something like it, which has two major
+properties, a code string, or compiled code object, and a namespace. The code
+can be in several different languages (Python, CPU C, GPU C, etc.). In Python,
+it is simply a case of doing:
+
+	exec code_str in namespace
+	
+In C on CPU it would be:
+
+	weave.inline(code_str, local_dict=namespace)
+	
+And on GPU it would be more complicated because you would need to parse the
+namespace into an argument list and then pass this to the kernel function, etc.
+
+Code objects may also be combined, for example you might want to do a bit of
+initialisation in Python before running the main code in C, so the Code object
+should have some way of allowing combinations, shared namespaces, etc.
+
+That's a brief outline of how I see the code generation stuff working, and it
+might be good to use this for Brian Hears. Maybe just implementing a design for
+the approach above would be a good start, without worrying about the more
+complicated issues of generating the code strings themselves.
+
+The other code generation issue is the generation of code from user specified
+functions. One way to do this is to inspect the function source code, which
+might be possible in some cases. For lambda functions, the approach I mentioned
+before of using sympy Symbol objects might be possible. In other cases, we
+might just have to force the user to specify the code explicitly.
+
+Plan
+====
+
+This is a first draft of the implementation plan:
+
+(1) Write a very simple code generation module as described above, that only
+    handles the framework, i.e. the Code object. I'll do this (Dan).
+
+(2) Design a framework that is able to handle all the problems described above
+    (e.g. different numbers of channels, multiple inputs/outputs). This
+    framework should allow for the possibility of optimisations, but doesn't
+    necessarily have to include an implementation. At this stage, the design
+    should be not too detailed.
+    
+(3) Go through all of the filterbanks that we know about, and all the examples
+    we have and see if the framework could handle them. If not, redesign and
+    iterate (2-3).
+    
+(4) Implement the design, starting with the simplest cases such as linear
+    filterbank chains and then moving on to the more complicated cases.
+    
+(5) Performance testing.
+    
+(6) Implement the code generation stuff for users to write extended filters,
+    or filters with feedback.
+    
+(7) More performance testing.
+
+Separate to this, we need to implement GPU reset/threshold, and this can be
+folded into GPUNeuronGroup when it is done.
+
+Framework
+=========
+
+Very sketchy ideas:
+
+* Use Code object as in code generation
+* Generate a filterbank graph and analyser
+* Add a gpu=True/False flag to buffer_fetch
+* Use per-sample and per-buffer kernel combination via templates
