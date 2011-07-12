@@ -18,7 +18,7 @@ Meeting notes:
 
 * Survey on comp-neuro + at installation time + analysis of user's code
 -> October
-This is in google form:
+This is in a google form (check in your google docs to edit it):
 https://spreadsheets.google.com/spreadsheet/viewform?formkey=dEVlaTVFczBDS1FtZW5wYXl3cmFpVFE6MQ
 
 * Test new model fitting
