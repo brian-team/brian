@@ -15,12 +15,15 @@ Abstract:
 Missing features and a few ideas
 ================================
 * Nonlinear synapses (e.g. NMDA). These require one conductance variable per
-  synapse, and separate dynamics.
+  synapse, and separate dynamics. The idea is to
+  define differential equations on synaptic weights.
   We could use a fake NeuronGroup as a proxy to synaptic weights + state updater.
   We could use a slower clock to speed up the simulation.
-  Issues: 1) several synaptic variables, 2) heterogeneous delays.
-	using a slower clocks?
-	(then we can define differential equations on synaptic weights)
+  Issues: 1) several synaptic variables, 2) heterogeneous delays, 3) routing
+  spikes (now presynaptic neurons act on different variables).
+  A priori, it is not possible to do event-driven dynamics, because of the
+  interaction of the conductances with the membrane equation. But maybe there is
+  a trick to be found.
 
 * Probabilistic synapses.
   The main difficulty here is to integrate it with STP and STDP.
@@ -28,14 +31,23 @@ Missing features and a few ideas
 * Multiple synapses (with different delays) between the same pre/post neurons
   This is almost done, except we need to check if it works with STDP.
   We also need to think of a nice syntax.
-	
+  
 * STDP: access to postsynaptic variables
   This is probably not a major problem (and can be done with the current version,
   although not in an elegant way), unless it is coupled with local synaptic
-  variables.
+  variables. We have one example (Fusi's STDP rule) from people in the mailing
+  list.
 
 * STDP: rules with local synaptic variables
   Here we need event-driven dynamics. But one issue is dealing with heterogeneous
-  delays. We should start with an existing example (STDP1/2).
+  delays. We should start with an existing example (STDP1/2). Then the most
+  interesting rule is Graupner/Brunel's.
 
-The main technical difficulty, I think, is dealing with heterogeneous delays.
+The main technical difficulty, I think, is dealing with heterogeneous delays,
+which might require event queues.
+
+The simplest things at this stage seem to be:
+1) Nonlinear synapses
+2) Multiple synapses
+
+Perhaps we should start with 2), which is the most useful for us.
