@@ -65,7 +65,7 @@ Currently missing:
 
 First, we should at least provide a way, even not clean and elegant, to implement
 these things. Then essentially what will be needed is: 1) local synaptic variables
-(distinct from weights), 2) event-driven synaptic dynamics (taken delays into
+(distinct from weights), 2) event-driven synaptic dynamics (taking delays into
 account).
 
 3) Miscellaneous
