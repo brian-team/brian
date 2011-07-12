@@ -1,0 +1,41 @@
+BEP-21-Synaptic dynamics
+
+Abstract:
+	Currently, synaptic dynamics are only handled at the pre or post-synaptic
+	neuron, rather than at the local synapse. For example, for a given
+	postsynaptic neuron, there is a single
+	equation for all synapses with the same dynamics (e.g. AMPA excitatory
+	current) and all presynaptic spikes impact the same variable. In STDP,
+	synaptic variables are considered as either presynaptic or postsynaptic,
+	not specific of each synapse.
+	This design implies strong constraint on synaptic models (kinetics
+	and plasticity).
+	This BEP aims at overcoming these limitations.
+
+Missing features and a few ideas
+================================
+* Nonlinear synapses (e.g. NMDA). These require one conductance variable per
+  synapse, and separate dynamics.
+  We could use a fake NeuronGroup as a proxy to synaptic weights + state updater.
+  We could use a slower clock to speed up the simulation.
+  Issues: 1) several synaptic variables, 2) heterogeneous delays.
+	using a slower clocks?
+	(then we can define differential equations on synaptic weights)
+
+* Probabilistic synapses.
+  The main difficulty here is to integrate it with STP and STDP.
+
+* Multiple synapses (with different delays) between the same pre/post neurons
+  This is almost done, except we need to check if it works with STDP.
+  We also need to think of a nice syntax.
+	
+* STDP: access to postsynaptic variables
+  This is probably not a major problem (and can be done with the current version,
+  although not in an elegant way), unless it is coupled with local synaptic
+  variables.
+
+* STDP: rules with local synaptic variables
+  Here we need event-driven dynamics. But one issue is dealing with heterogeneous
+  delays. We should start with an existing example (STDP1/2).
+
+The main technical difficulty, I think, is dealing with heterogeneous delays.
