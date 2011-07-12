@@ -149,6 +149,8 @@ class DCGC(CombinedFilterbank):
         #bank of passive gammachirp filters. As the control path uses the same passive filterbank than the signal path (buth shifted in frequency)
         #this filterbanl is used by both pathway.
         pGc=LogGammachirp(source,cf,b=parameters['b1'], c=parameters['c1'])
+        self.gc.filt_b=pGc.filt_b
+        self.gc.filt_a=pGc.filt_a
         fp1 = cf + parameters['c1']*parameters['ERBwidth']*parameters['b1']/parameters['order_gc']
         nbr_cf=len(cf)
         #### Control Path ####
@@ -162,7 +164,8 @@ class DCGC(CombinedFilterbank):
         #### Signal Path ####
         fr1=fp1*parameters['frat0']
         signal_path= AsymmetricCompensation(pGc, fr1,b=parameters['b2'], c=parameters['c2'])
-
+        self.asym_comp.filt_b=signal_path.filt_b
+        self.asym_comp.filt_a=signal_path.filt_a
         #### Controler #### 
         updater = AsymCompUpdate(signal_path,source.samplerate,fp1,parameters)   #the updater
         control = ControlFilterbank(signal_path, [pGc_control,asym_comp_control], signal_path, updater, update_interval)  
