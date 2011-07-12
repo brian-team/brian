@@ -16,8 +16,10 @@ Meeting notes:
 * Examples for our papers
 [R]* BEP on event-driven STDP / nonlinear synapses + examples
 
-* Survey on comp-neuro + at installation time + analysis of user's code -> fill survey.txt
+* Survey on comp-neuro + at installation time + analysis of user's code
 -> October
+This is in google form:
+https://spreadsheets.google.com/spreadsheet/viewform?formkey=dEVlaTVFczBDS1FtZW5wYXl3cmFpVFE6MQ
 
 * Test new model fitting
 
