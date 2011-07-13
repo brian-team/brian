@@ -13,6 +13,8 @@ Meeting notes:
 	-> start a BEP
 
 [R]* Analyse weblogs on documentation's website
+I uploaded brian_docs_analysis.txt with this information.
+
 * Examples for our papers
 [R]* BEP on event-driven STDP / nonlinear synapses + examples
 
