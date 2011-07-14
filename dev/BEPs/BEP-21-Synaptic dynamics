@@ -113,30 +113,43 @@ There may also be yet another trick using a variable representing xg
 Thinking about it, we may be able to include everything (STDP, STP, nonlinear
 conductances) in the same setting.
 
-The general problem
--------------------
+The general problem - a proposition
+-----------------------------------
 First, we need to be able to have local synaptic variables. These cannot be
 defined in the neuron group since it will depend on the connection.
 So they have to defined for a specific connection object, either when the
-Connection is created, or after.
+Connection is created, or after. Then we need to define what happens when
+a presynaptic/postsynaptic spike occurs. I suggest that we define a new
+Connection object which will handle the most general cases. The underlying
+structure will be sparse. If we can define variables (possibly with equations)
+and what happens at pre/post times, then we can handle pretty much
+everything, including the problem of probabilistic synapses. We also need
+to have pre and post synaptic delays.
 
-This implies passing equations:
+This should resemble the current STDP class, with equations:
 eqs="""
 dg/dt=-a*g+b*x*(1-g) : 1
 dx/dt=-c*x : 1
-W : 1
+w : 1 # synaptic weight
 """
+where all variables are considered synaptic.
 
 We could define parameters there, just in the same way as a NeuronGroup.
 We then need to define what happens with pre and post-synaptic spikes:
 pre="""
-x -> x+w
+x -> x+w # transmission of spikes
+# here we can have STP event-driven updates
 """
 post="""
+# here we can have STDP event-driven updates
 """
-This could include event-driven update.
+This could include event-driven updates, if t and tpre/tpost (last update
+times) are in the namespace.
 Other example:
 pre="v -> v+w"
-When the variable is not defined, we look for it in the postsynaptic group.
+When a variable is not defined, we look for it in the postsynaptic group.
+We could also include rand().
+We also need to add lumped variables (sum of variables, to be updated
+at every timestep).
 
-With this, we can define STDP and STP.
+This might make code generation relatively easy too.
