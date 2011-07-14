@@ -51,3 +51,92 @@ The simplest things at this stage seem to be:
 2) Multiple synapses
 
 Perhaps we should start with 2), which is the most useful for us.
+
+Multiple synapses
+-----------------
+Having multiple synapses (for a given pre/post pair) is entirely possible
+with the current sparse connection structure (although STDP should be checked).
+What is really needed is a nice syntax to create these synapses and
+access the weights.
+
+Nonlinear synapses
+------------------
+The classic example is NMDA synapses.
+Reference:
+Probabilistic decision making by slow reverberation in cortical circuits.
+XJ Wang, Neuron 2002.
+
+Model:
+dg/dt=-a*g+b*x*(1-g)
+dx/dt=-c*x
+and spikes act on x (addition).
+
+The conductance then enters the membrane equation.
+The problem here is that it is a nonlinear system (product of x and g),
+and therefore we cannot simply simulate the total conductance, as we do
+with linear synapses ("lumped variable"). Each synapse must be individually
+simulated. This implies a huge computational cost (proportional to
+number of synapses/dt for each second). It cannot be event-driven because the
+value of the total conductance is needed at each time step.
+
+There is an example in the support list, where people used a NetworkOperation
+to do it.
+
+Tricks
+^^^^^^
+Example x(t) should be close to 0 most of the time, because 1/c represents the
+rise time, which is short. When x=0, the equations are linear (linear decay
+of g), and therefore we only need to simulate the lumped variable gtot(t)
+corresponding to the sum of all conductances for which x=0. This could however be
+quite painful to code.
+
+Another approach is to use an approximation of NMDA dynamics:
+dg/dt=-a*g+b*x
+dx/dt=-c*x
+and x->x+(1-g)*w
+
+This makes sense because g(t) changes slowly relatively to x(t).
+If we do that, the equations are linear and we only need to simulate
+the lumped variables. However, we still need individual synaptic values
+for g (not lumped) at spike time. Here we could use event-driven updates
+of g - this is possible because the equations are linear. The cost is now
+proportional to the number of transmitted spikes.
+(N.B.: actually if we can do that this could make a short paper).
+
+Again, we need 1) local synaptic variables, 2) event-driven updates.
+In addition, we need to be able to modulate synaptic weights with
+synaptic variables (perhaps implement a synaptic reset: "x=x+(1-g)*w").
+
+There may also be yet another trick using a variable representing xg
+(approximation only).
+
+Thinking about it, we may be able to include everything (STDP, STP, nonlinear
+conductances) in the same setting.
+
+The general problem
+-------------------
+First, we need to be able to have local synaptic variables. These cannot be
+defined in the neuron group since it will depend on the connection.
+So they have to defined for a specific connection object, either when the
+Connection is created, or after.
+
+This implies passing equations:
+eqs="""
+dg/dt=-a*g+b*x*(1-g) : 1
+dx/dt=-c*x : 1
+W : 1
+"""
+
+We could define parameters there, just in the same way as a NeuronGroup.
+We then need to define what happens with pre and post-synaptic spikes:
+pre="""
+x -> x+w
+"""
+post="""
+"""
+This could include event-driven update.
+Other example:
+pre="v -> v+w"
+When the variable is not defined, we look for it in the postsynaptic group.
+
+With this, we can define STDP and STP.
