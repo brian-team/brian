@@ -191,3 +191,35 @@ it is better to do it from scratch, but perhaps it would save some time).
 Main things to think about at this point:
 * Nice syntax
 * How to handle delays in an efficient way
+
+My post to the development mailing list:
+----------------------------------------
+Hi everyone,
+
+On the support mailing list and in personal conversations, we have seen a lot of interest from users to simulate synaptic models that are currently difficult to do with Brian. These include:
+* NMDA (nonlinear) synapses
+* probabilistic synapses
+* a number of STDP rules with local synaptic variables, requiring event-driven updates
+
+I think the most important issue is the last one, because most recent STDP rules require that and there is no simple trick.
+Currently, Brian can only simulate STDP rules where synaptic variables are separable between pre and post, that is, presynaptic variables are simulated (clock-driven) on the presynaptic side, postsynaptic variables on the postsynaptic side. This is efficient because the cost scales as the number of neurons rather than the number of synapses. But it puts strong restrictions on the kind of models we can simulate. There is a trick to do event-driven updates with local synaptic variables, that I posted on the main support list, but I think it's time to have a more general and elegant solution.
+
+My proposition is that we have a new Connection class, which I'll call Synapses for now, which all handle everything synaptic, kinetics and plasticity (long-term and short-term). It will use concepts from NeuronGroup and STDP, that is, you define synaptic variables (including the weights), possibly with their dynamics, and what happens at the time of pre and post synaptic spikes. I wrote a few ideas in BEP-21.
+
+Example 1:
+S=Synapses(source,target,eqs="w : 1",pre="v->v+w")
+
+This would be equivalent to S=Connection(source,target,'v'). In the pre code, all the variables not defined in the equations are first looked for in the postsynaptic group (then in the global namespace if not found). As in STDP, the pre code would be internally vectorized. In the namespace of the user code, we would add t, the clock time, and t_pre/t_post, which would hold the time of the previous pre/post spikes. This will enable event-driven code. If we add a post code, then we can write anything that is currently done by STP and STDP.
+In the equations, we may have anything that is in NeuronGroup, such as differential equations. For now, these could be clock-driven simulated, but we can also imagine to have an automatic event-driven solver for linear equations.
+
+The variables in this class could be accessed as in NeuronGroup, that is: S.w. The only difference is the indexing (which is 2D instead of 1D). Internally, we could still have a state matrix with the value of all variables (one row = one variable, stored as a vector), plus a variable with the connection structure (target neurons). We can use StateMonitor on these objects.
+This will require to change the current ConnectionMatrix structures to handle multiple variables.
+
+This has a number of advantages. It is general and flexible, it really extends the number of things you will be able to simulate with Brian. It could be more efficient, because it minimizes the number of objects. It will make it easier to port to GPU as it's a single object.
+
+The main technical problem is see is with heterogeneous delays. The current solution will not work because it relies on the idea that all presynaptic spikes act on the same variable. What we need is really to execute the pre and post code at the time of spikes, and it could be tricky to vectorize. One possibility is to have event queues. The main change is that we now won't be able to vectorize over contiguous rows of the connection matrix. But maybe it's not such a big issue, because this is what happens already with STDP (for postsynaptic spikes). The main difficulty I see with implementing an efficient event queue is when a postsynaptic neuron receives simultaneous events.
+
+So I would say we first need to solve the problem of delays!
+
+Romain
+
