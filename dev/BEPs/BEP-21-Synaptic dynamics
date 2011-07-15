@@ -42,15 +42,15 @@ Missing features and a few ideas
   Here we need event-driven dynamics. But one issue is dealing with heterogeneous
   delays. We should start with an existing example (STDP1/2). Then the most
   interesting rule is Graupner/Brunel's.
+  
+* Neuromodulation. There is a question on this in the Brian support list. This
+  is also something that NEST supports. There are two issues here: 1) continuous
+  weight dynamics, which should be computed with event-driven updates, 2)
+  modulation by an external signal, which is a trace of spikes from other neurons.
+  At this point, I'm familiar enough with this to address point 2.
 
 The main technical difficulty, I think, is dealing with heterogeneous delays,
 which might require event queues.
-
-The simplest things at this stage seem to be:
-1) Nonlinear synapses
-2) Multiple synapses
-
-Perhaps we should start with 2), which is the most useful for us.
 
 Multiple synapses
 -----------------
@@ -113,15 +113,18 @@ There may also be yet another trick using a variable representing xg
 Thinking about it, we may be able to include everything (STDP, STP, nonlinear
 conductances) in the same setting.
 
-The general problem - a proposition
+Proposition: a new Connection class
 -----------------------------------
-First, we need to be able to have local synaptic variables. These cannot be
+In all these cases, we need to be able to have local synaptic variables.
+These cannot be
 defined in the neuron group since it will depend on the connection.
 So they have to defined for a specific connection object, either when the
 Connection is created, or after. Then we need to define what happens when
 a presynaptic/postsynaptic spike occurs. I suggest that we define a new
 Connection object which will handle the most general cases. The underlying
-structure will be sparse. If we can define variables (possibly with equations)
+structure will be sparse. This is the most general case and it does not
+incur a very strong penalty in the specific cases (dense connections).
+If we can define variables (possibly with equations)
 and what happens at pre/post times, then we can handle pretty much
 everything, including the problem of probabilistic synapses. We also need
 to have pre and post synaptic delays.
@@ -148,8 +151,43 @@ times) are in the namespace.
 Other example:
 pre="v -> v+w"
 When a variable is not defined, we look for it in the postsynaptic group.
-We could also include rand().
+We could also include rand() to have probabilistic synapses.
 We also need to add lumped variables (sum of variables, to be updated
-at every timestep).
+at every timestep). There are several possibilities for the syntax.
+We could use something like linked_var, for example:
+P.g=lumped_var(synapses.g)
+where P is the NeuronGroup, and g must have been defined as a parameter
+in P.
 
-This might make code generation relatively easy too.
+Having everything synaptic in the same object
+might make code generation (C/GPU) easier too, because we will only need
+to port one class, which includes spike propagation, STDP and STP. It should
+also make it more efficient in this case.
+
+This calls for a complete rewrite of the Connection class (which could have
+a different name). Let's call it Synapses for now. We can keep the current
+classes for the underlying structures (ConnectionMatrix etc).
+
+We will need to rethink:
+* Heterogeneous delays (and delays should be handled as local variables). We
+  may need event queues.
+* connect methods (now that we may have many variables)
+* Accessing weights is replaced by accessing synaptic variables: just as in
+  a NeuronGroup, except we have a two dimensional index.
+* Including multiple synapses.
+* Extending StateMonitor to Synapses.
+* Event-driven updates: this is easy if the user does it explicitly (just some
+  custom code as in STDP pre/post). This is more complicated if we want to do
+  this automatically from the differential equations (but it's possible).
+
+I think we can reuse lots of things from NeuronGroup. We could actually have
+a state matrix as in NeuronGroup. This way we can also use StateMonitor.
+
+So my view is that the Synapses class should be a mix between Connection and
+NeuronGroup (this way we get StateMonitor for almost free).
+In fact, the Synapse class could inherit from both these classes (I would think
+it is better to do it from scratch, but perhaps it would save some time).
+
+Main things to think about at this point:
+* Nice syntax
+* How to handle delays in an efficient way
