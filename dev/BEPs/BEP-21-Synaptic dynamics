@@ -107,12 +107,6 @@ Again, we need 1) local synaptic variables, 2) event-driven updates.
 In addition, we need to be able to modulate synaptic weights with
 synaptic variables (perhaps implement a synaptic reset: "x=x+(1-g)*w").
 
-There may also be yet another trick using a variable representing xg
-(approximation only).
-
-Thinking about it, we may be able to include everything (STDP, STP, nonlinear
-conductances) in the same setting.
-
 Proposition: a new Connection class
 -----------------------------------
 In all these cases, we need to be able to have local synaptic variables.
