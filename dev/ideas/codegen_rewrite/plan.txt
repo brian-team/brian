@@ -1,0 +1,25 @@
+Main parts:
+
+* Basic Code object, handles the generated strings for different languages,
+  compiling and running the code, namespaces
+  
+* Common code generation tools:
+  - String analysis tools, e.g. extracting variable names, substitutions,
+    dedenting Python code, etc.
+  - Templating tools
+
+* Equations tools
+  - Expression evaluation and rewriting
+  - Analysis of Equations objects
+  - Dependency graphs
+
+* Numerical integration
+  - Schemes
+
+* Vectorisation tools, how to convert loops to/from vector operations. Don't
+  try to do it generally, but some tools for this might be useful (maybe do
+  this in an emergent way).
+  
+* Extensibility tools
+  - Method for provision of C/GPU versions of Python methods (e.g.
+    for TimedArray.__call__, or user provided code)
