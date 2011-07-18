@@ -243,13 +243,19 @@ I would see a structure like that:
 * To feed events is a bit trickier. Each presynaptic neuron has a corresponding
   array of target synapses et corresponding delays. We must push each target
   synapse (index) on top of the row corresponding to the delay. If all synapses
-  have different delays, this is relatively easy to vectorize. It is more difficult
-  if there are synapses with the same delays, or if we want to insert all spikes
-  from all presynaptic neurons at once.
+  have different delays, this is relatively easy to vectorize. It is slightly
+  more difficult if there are synapses with the same delays, but not that much.
+  For a given presynaptic neuron, each synaptic delay corresponds to coordinates
+  (i,j) in the circular array of stacks, where i is the delay (stack index) and
+  j is index relative to the top of the stack (0=top, 1=1 above top).
+  The absolute location in the structure is then calculated as n[i]+j, where
+  n[i] is the location of the top of stack i.
 * We probably want to have a possibility to extend the 2D array, using standard
-  tricks (e.g. doubling the number of columns when we exceed the size).
+  tricks (e.g. doubling the number of columns when we exceed the size). This
+  structure should be quite memory consuming, but perhaps not much more than
+  the connection structure.
 
-I think it is possible to vectorize it in Python. But if it is not or if we want
+It seems possible to vectorize it in Python. But if it is not or if we want
 to make the code faster, we should have C version of this class, or perhaps just
 of the event feeding method.
 
