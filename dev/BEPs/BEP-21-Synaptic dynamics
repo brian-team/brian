@@ -268,6 +268,10 @@ Advantages with this class:
 * No more difference between homogeneous and heterogeneous delays. When delays
   are homogeneous, the code is (maybe) automatically faster because we have
   contiguous synaptic indexes.
-* We can vectorize synaptic operations over synapses, not just over postsysnaptic
+* We can vectorize synaptic operations over synapses, not just over postsynaptic
   neurons, and therefore we can expect a speed gain.
 * Could be good for GPU/C code generation.
+* We can now use NEST's trick: if all delays and refractory periods are greater
+  than a period delta, then we only need to transfer spikes to synapses
+  every delta rather than every timestep. This should provide speed-ups for GPU
+  and code generation, perhaps also cluster simulations if we want to do that.
