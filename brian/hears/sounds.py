@@ -958,7 +958,7 @@ class Sound(BaseSound, numpy.ndarray):
         normalised to 1. The samplewidth keyword can be 1 or 2 to save the data as
         8 or 16 bit samples.
         '''
-        ext=filename.split('.')[-1]
+        ext = filename.split('.')[-1].lower()
         if ext=='wav':
             import wave as sndmodule
         elif ext=='aiff' or ext=='aifc':
@@ -1003,7 +1003,7 @@ class Sound(BaseSound, numpy.ndarray):
         Load the file given by filename and returns a Sound object. 
         Sound file can be either a .wav or a .aif file.
         '''
-        ext=filename.split('.')[-1]
+        ext = filename.split('.')[-1].lower()
         if ext=='wav':
             import wave as sndmodule
         elif ext=='aif' or ext=='aiff':
