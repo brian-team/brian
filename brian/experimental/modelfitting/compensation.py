@@ -4,14 +4,16 @@ import time, os
 
 dt = defaultclock.dt
 
-def compensate(current, trace, popsize = 1000, maxiter = 2,
+def compensate(current, trace, popsize = 100, maxiter = 10,
                equations = None, reset = None, threshold = None,
-                  slice_duration = None, overlap = 0*ms,
+                  slice_duration = 1 * second, overlap = 100*ms,
                   initial = None, dt = defaultclock.dt,
                   cpu = None, gpu = 1, record=['V','Ve'],
                   cut = None, cut_length = 0.0,
-                  p = 1., results=None,
+                  p = 0.5, results=None,
                   **params):
+    
+    trace0 = trace.copy()
     
     if initial is None: 
         initial = trace[0]
@@ -37,22 +39,28 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
     
     if equations is None:
         equations = Equations('''
-            V=V0+Ve : 1
-            dV0/dt=(R*I-V0+Vr)/tau : 1
-            dVe/dt=(Re*I-Ve)/taue : 1
-            I : 1
-            R : 1
-            tau : second
-            taue : second
-            Re : 1
-            Vr : 1
-        ''')
+                dV0/dt=(R*Iinj-V0+Vr)/tau : 1
+                Iinj=(V-V0)/Re : 1
+                dV/dt=Re*(I-Iinj)/taue : 1
+                Ve=V-V0 : 1
+                I : 1
+                R : 1
+                Re : 1
+                Vr : 1
+                tau : second
+                taue : second
+            ''')
     if threshold is None:
-        threshold = """
-                    V>100000
-                    """
+        threshold = "V>100000"
     if reset is None:
         reset = ""
+    
+    if len(params) == 0:
+        params = dict(R =  [1.0e3, 1.0e6, 1000.0e6, 1.0e12],
+                      Re = [1.0e3, 1.0e6, 1000.0e6, 1.0e12],
+                      Vr = [-100.0e-3, -80e-3, -40e-3, -10.0e-3],
+                      tau =  [.1*ms, 1*ms, 30*ms, 200*ms],
+                      taue = [.01*ms, .1*ms, 5*ms, 20*ms])
     
     criterion = LpError(p=p, varname='V')
     
@@ -100,29 +108,6 @@ def compensate(current, trace, popsize = 1000, maxiter = 2,
     traceV = record_values[0][:,int(overlap/dt):].flatten()
     traceVe = record_values[1][:,int(overlap/dt):].flatten()
     
-    return traceV, traceVe, results
-
-if __name__ == '__main__':
     
-    current = loadtxt('current.txt')
-    trace = loadtxt('trace_artificial.txt')
-    
-    params = dict(  R = [1e6, 1e9, 1e10, 1e10],
-                    Re = [0,0,0.1,0.1],
-                    Vr = [0., 1.],
-                    tau =  [1*ms, 5*ms, 50*ms, 200*ms],
-                    taue = [1*ms, 1*ms, 2*ms, 2*ms])
-    
-    traceV, traceVe, results = compensate(current, trace, threshold=1,reset=0,
-                                            popsize=100, maxiter=1,
-                                            **params)
-    print traceV.shape
-    print traceVe.shape
-    
-    plot(trace)
-    plot(traceV)
-    plot(trace-traceVe)
-    grid()
-    show()
-    
-    
+#    return traceV, traceVe, results
+    return trace0 - traceVe, traceV, traceVe, results
