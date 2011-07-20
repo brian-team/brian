@@ -10,7 +10,7 @@ def compensate(current, trace, popsize = 100, maxiter = 10,
                   initial = None, dt = defaultclock.dt,
                   cpu = None, gpu = 1, record=['V','Ve'],
                   cut = None, cut_length = 0.0,
-                  p = 0.5, results=None,
+                  p = 0.5, best_params=None,
                   **params):
     
     trace0 = trace.copy()
@@ -64,7 +64,7 @@ def compensate(current, trace, popsize = 100, maxiter = 10,
     
     criterion = LpError(p=p, varname='V')
     
-    if results is None:
+    if best_params is None:
         results = modelfitting( model = equations,
                                 reset = reset,
                                 threshold = threshold,
@@ -80,13 +80,10 @@ def compensate(current, trace, popsize = 100, maxiter = 10,
                                 initial_values = initial_values,
                                 **params
                                 )
-    
-    print_table(results)
-    
-    try:
+        print_table(results)
         best_params = results.best_params
-    except:
-        best_params = results.best_pos
+    else:
+        results = best_params
         for key in best_params.keys():
             best_params[key] = [best_params[key]]
     
