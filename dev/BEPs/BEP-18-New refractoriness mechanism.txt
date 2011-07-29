@@ -134,3 +134,107 @@ refractory=('x', 5*ms) to mean clamp variable 'x' for 5*ms, or
 refractory=('x', 'y', 5*ms*rand(N)) to mean clamp variables 'x' and 'y' for
 5*ms*rand(N), or refractory=('x=x0', 5*ms). My feeling is that this probably
 ends up being more confusing in the long run though. 
+
+Romain's proposal
+-----------------
+[from briansupport]
+Maybe one way to see the problem is that we are trying to specify
+spiking models (=hybrid systems) with two states, active and refractory.
+Each of these two states may be defined by a separate set of
+differential equations, and transitions are defined by conditions
+(=threshold) and discrete operations (=reset). In other words,
+refractoriness could be defined in exactly the same way as a standard
+model, with equations, threshold and reset. We could provide a special
+variable, "lastspike" or something like that, which would store the time
+of the last spike (i.e., last transition active->refractory).
+
+Here is how Dan's examples could be done in this way (keyword names are
+not great):
+
+> G = NeuronGroup(N, eqs, reset=Vr, refractory=5*ms)
+
+G=NeuronGroup(N, eqs, reset=Vr, refractory_eqs='dv/dt=0*volt/second :
+volt', refractory_threshold='t>lastspike+5*ms')
+
+or without clamping v:
+
+G=NeuronGroup(N, eqs, reset=Vr, threshold='(v>Vt) & (t>lastspike+5*ms)')
+
+> G = NeuronGroup(N, eqs, reset=Vr, refractory=5*ms*rand(N))
+
+G=NeuronGroup(N, eqs, reset='v=Vr;refractory=5*ms*rand(N)',
+refractory_eqs='dv/dt=0*volt/second : volt',
+refractory_threshold='t>lastspike+refractory')
+
+and eqs contain the line "refractory : second".
+
+> G = NeuronGroup(N, eqs, reset='x=x0', refractory=5*ms)
+> G = NeuronGroup(N, eqs, reset='V=Vr; Vt+=deltaVt', refractory=5*ms)
+> G = NeuronGroup(N, eqs, reset='x=x0; y+=deltay', refractory=5*ms,
+> refractoriness='x')
+> G = NeuronGroup(N, eqs, reset='x=x0; y+=deltay', refractory=5*ms,
+> refractoriness='x=x0')
+
+All these can be done exactly in the same way, e.g.:
+G=NeuronGroup(N, eqs, reset='x=x0; y+=deltay',
+refractory_eqs='dx/dt=0*volt/second : volt',
+refractory_threshold='t>lastspike+5*ms')
+
+Keywords are not great (maybe refractory_end instead of
+refractory_threshold? and perhaps simply "refractory" instead of
+"refractory_eqs"?).
+
+The variables for the refractory state should be the same as for the
+active state, since it's the same neuron. So I suggest that
+1) all variables must be defined in the model equations (eqs) (possibly
+as parameters),
+2) by default, unspecified variables in the refractory equations have
+the same dynamics as in the active state.
+
+For the implementation:
+* At construction time, we make a stateupdater, a threshold and a reset
+for the refractory state, almost exactly as for the active state. These
+must modified so that "lastspike" contains the time of the last spike time.
+* We add an extra boolean array in each group, which says which neurons
+are active or refractory (.refractory?).
+* At run time, we apply each state updater, threshold and reset to their
+corresponding subgroup. It's almost as if we had 2 groups instead of 1,
+except the partition is dynamic.
+
+It is not very different from Dan's proposition, but I think it's
+conceptually simpler and therefore might be easier to use/understand.
+It's also slightly more general as you can have differential equations
+during the refractory state. I think having code called during
+refractoriness is not very elegant, because it means artifically
+introducing clock-based events. 
+
+Syntax
+------
+There are two states, active and refractory. So we need:
+* equations for active state (A)
+* equations for refractory state (R) (unspecified = same as active)
+* transition A->R (threshold and reset)
+* transition R->A (threshold and reset)
+Spikes are produced at the A->R transition. In the namespace, one variable
+stores the time of the last spike (lastspike?).
+
+I'm not sure the two sets of equations should be in the same string, because
+they need to be turned into Equation objects. Or, it should be possible
+to pass the two sets separately (possibly as Equation objects).
+
+Example:
+'''
+active:
+dv/dt=-v/tau : volt
+
+refractory:
+dv/dt=0 # should the units be specified?
+'''
+
+or:
+model='...', refractory='...'
+
+How to set the transitions?
+We already have the reset and threshold keywords for the A->R transition.
+We probably don't really need a reset for the R->A transition (right?).
+We need a keyword for the transition from refractory to active.
