@@ -44,10 +44,18 @@ class OnlineWhiteNoise(OnlineSound):
         if sigma==None:
             self.sigma=1
         self.tomux=tomux
+        self.nchannels = 1
 
+    def buffer_init(self):
+        pass
         
-    def update(self):
-        return (self.mu+sqrt(self.sigma)*randn(1))*self.tomux
+    def buffer_fetch(self, start, end):
+        samples = end-start
+        temp = (self.mu+sqrt(self.sigma)*randn(samples))*self.tomux
+        temp = temp.reshape(len(temp),1)
+        return temp
+
+
 
 class OnlineWhiteNoiseBuffered(OnlineSound):
     def __init__(self,samplerate,mu,sigma,max_abs_itd): 
