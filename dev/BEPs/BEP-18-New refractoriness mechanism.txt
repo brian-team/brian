@@ -228,7 +228,7 @@ active:
 dv/dt=-v/tau : volt
 
 refractory:
-dv/dt=0 # should the units be specified?
+dv/dt=0 # should the units be specified? (I'd say yes to keep the same syntax)
 '''
 
 or:
@@ -237,4 +237,16 @@ model='...', refractory='...'
 How to set the transitions?
 We already have the reset and threshold keywords for the A->R transition.
 We probably don't really need a reset for the R->A transition (right?).
-We need a keyword for the transition from refractory to active.
+We need a keyword for the transition from refractory to active (threshold
+only).
+
+Suggestions:
+* to_active
+* refractory_threshold
+* unrefractory
+* activate
+* refractory_end
+* refractory_until
+
+My favorite is the last one for the moment, but I'd like something better
+(shorter).
