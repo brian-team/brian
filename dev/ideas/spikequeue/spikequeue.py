@@ -2,6 +2,7 @@
 Spike queues following BEP-21
 """
 from brian import *
+from time import time
 
 # This is a 2D circular array
 class SpikeQueue(object):
@@ -49,7 +50,7 @@ class SpikeQueue(object):
         # (it's O(n*log(n)))
         # (not tested!)
         n_synapses_per_timestep=bincount(delays)
-        ofs=hstack([arange(x) for x in n_synapses_per_timestep])
+        ofs=hstack([arange(x) for x in n_synapses_per_timestep]) #very slow
         return ofs[argsort(delay)]
         # argsort is wrong (it's the converse) - multiply and add arange maybe?
         
@@ -89,5 +90,9 @@ if __name__=='__main__':
     queue=SpikeQueue(5,30)
     delays=array([1,1,3,9,2,2,2,8,7])
     print argsort(delays)
-    print queue.offsets(delays)
-    
+    t1=time()
+    for _ in range(10000):
+        d=queue.offsets(delays)
+    t2=time()
+    print d
+    print t2-t1
