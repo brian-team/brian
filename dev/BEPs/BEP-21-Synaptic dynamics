@@ -108,117 +108,171 @@ In addition, we need to be able to modulate synaptic weights with
 synaptic variables (perhaps implement a synaptic reset: "x=x+(1-g)*w").
 
 Proposition: a new Connection class
------------------------------------
-In all these cases, we need to be able to have local synaptic variables.
-These cannot be
-defined in the neuron group since it will depend on the connection.
-So they have to defined for a specific connection object, either when the
-Connection is created, or after. Then we need to define what happens when
-a presynaptic/postsynaptic spike occurs. I suggest that we define a new
-Connection object which will handle the most general cases. The underlying
-structure will be sparse. This is the most general case and it does not
-incur a very strong penalty in the specific cases (dense connections).
-If we can define variables (possibly with equations)
-and what happens at pre/post times, then we can handle pretty much
-everything, including the problem of probabilistic synapses. We also need
-to have pre and post synaptic delays.
+===================================
+I propose a new Connection class, let's call it Synapses for now.
+It follows a similar syntax as STDP, but defines everything synaptic.
+I propose that this should be the class used for code generation (GPU/C),
+because it is a single class for everything synaptic.
 
-This should resemble the current STDP class, with equations:
-eqs="""
-dg/dt=-a*g+b*x*(1-g) : 1
-dx/dt=-c*x : 1
-w : 1 # synaptic weight
-"""
-where all variables are considered synaptic.
+Examples
+--------
+S=Synapses(source,target,model="w : 1",pre="v+=w") # standard synapse
 
-We could define parameters there, just in the same way as a NeuronGroup.
-We then need to define what happens with pre and post-synaptic spikes:
-pre="""
-x -> x+w # transmission of spikes
-# here we can have STP event-driven updates
-"""
-post="""
-# here we can have STDP event-driven updates
-"""
-This could include event-driven updates, if t and tpre/tpost (last update
-times) are in the namespace.
-Other example:
-pre="v -> v+w"
-When a variable is not defined, we look for it in the postsynaptic group.
-We could also include rand() to have probabilistic synapses.
-We also need to add lumped variables (sum of variables, to be updated
-at every timestep). There are several possibilities for the syntax.
+S=Synapses(source,target,
+           model='''dg/dt=-a*g+b*x*(1-g) : 1
+                    dx/dt=-c*x : 1
+                    w : 1 # synaptic weight
+                 ''',
+           pre='x+=w') # NMDA synapses
+
+S=Synapses(source,target,
+           model='''dA_pre/dt=-A_pre/tau_pre : 1
+                    dA_post/dt=-A_post/tau_post : 1
+                    w : 1 # synaptic weight
+                 ''',
+           pre='''x+=w
+                  A_pre+=dA_pre;w+=A_post'''
+           post='''A_post+=dA_post;w+=A_pre''') # STDP
+           
+S=Synapses(source,target,
+           model='''dA_pre/dt=-A_pre/tau_pre : 1
+                    dA_post/dt=-A_post/tau_post : 1
+                    w : 1 # synaptic weight
+                 ''',
+           pre='''v+=w
+                  A_pre+=dA_pre;w=clip(w+A_post,0,inf)'''
+           post='''A_post+=dA_post;w=clip(w+A_pre,0,inf)''') # STDP with clipping
+
+S=Synapses(source,target,
+           model='''dx/dt=(1-x)/taud : 1
+                    du/dt=(U-u)/tauf : 1
+                    w : 1''',
+           pre='''v=v+w*u*x
+                  x=x*(1-u)
+                  u=u+U*(1-u)
+                  ''') # STP
+                  
+S=Synapses(source,target,
+           model='''x : 1
+                    u : 1
+                    w : 1''',
+           pre='''u=U+(u-U)*exp((t-lastspike)/tauf)
+                  x=1+(x-1)*exp((t-lastspike)/taud)
+                  x*=(1-u)
+                  u+=U*(1-u)                  
+                  ''') # Event-driven STP
+
+S=Synapses(source,target,model="""w : 1
+                                  p : 1 # transmission probability""",
+                         pre="v+=w*(rand()<p)") # probabilistic synapse
+
+Description
+-----------
+The keywords are basically the same as in STDP.
+In the model (or eqs) string, we define equations and variables. All variables
+are local synaptic variables, stored with an underlying sparse structure
+(see below).
+
+Data structure
+--------------
+When the equations are specified, synaptic variables are created. The structure
+is a sparse matrix, but with multiple values. This means for each row:
+* an array (or list, for construction) of target neurons.
+* an array for each synaptic variable.
+We also add a lastspike (or last_update) variable, which holds the time
+of the last update of the synapse. This is useful for probabilistic synapses
+(update is conditional on a random number). This could be optional (we just
+check whether lastspike is modified in pre/post code), and if not used, it
+could be calculated based on the last spikes of pre- and post-synaptic neurons
+and delays (I would not advise it, though).
+
+We also add two variables: delay_pre and delay_post. Delay_post is optional,
+and is 0 by default. But these variables should be in the spike queues.
+
+At construction time, these are list of rows.
+At run time, rows are concatenated into single arrays. It makes a 2D matrix,
+where each row correspond to one variable (target neuron or synaptic variable).
+The column index is the synapse index, and is used by spike queues.
+Two additional arrays give the starting point and length of the rows. For
+post->pre spikes, we also add a concatenated array of columns (for each column,
+we have the array of presynaptic neurons, and we concatenate everything),
+with two additional arrays with starting point and length of the columns.
+
+Memory consumption for N neurons, K synapses (total, not per neuron):
+* K*(1 + number of synaptic variables + 2(delays, possibly 1) + 1 (lastspike))
+* Nsource*2
+* K+Ntarget*2 (reverse access)
+
+If we assume 8 bytes for double, 4 bytes for indexes (but could be 2 in many cases),
+2 bytes for delays (in timesteps), 4 bytes for lastspike (in timesteps):
+* K*(4 + 8*number of synaptic variables + 2(1)*2 + 4)
+* Nsource*2*4
+* K*4+Ntarget*2*4
+
+So in total, including reverse access (only if there is a post code):
+K*8*(n+2)+(Nsource+Ntarget)*8
+
+For example, this is about 40 bytes per synapse for an STDP synapse
+with pre and post delays. For a static synapse, this would be 14 bytes.
+
+This does not include spike queues (to hold spike events), which should take
+about K*4 bytes (this assumes that one neuron cannot spike twice given the
+maximum delay).
+
+The memory consumption does not seem unreasonable (apparently slightly lower
+than NEST).
+
+Equations
+---------
+Equations define in the model should work as in NeuronGroup, except on
+synaptic variables. Pre/post code should work as in STDP.
+A few specificities:
+* a non-defined variable is first assumed to be postsynaptic (otherwise global)
+* t holds the current time
+* lastspike holds the time of last update of the synapse
+* rand() is redefined or rewritten for vectorisation (this allows probabilistic
+  synapses)
+
+One subtlety for the Python code (which is not an issue for GPU/C) is that
+when executing something like 'v+=w', this will be interpreted as
+'v[targets[synapses]]+=w[synapses]', but then there might be repeted indexes
+in targets[synapses]. This does not work with Numpy. Therefore, I suggest v
+(in fact all postsynaptic variables) be an instance of a new class where
+self addition and multiplication are overloaded (and possibly direct assignment
+is forbidden). We then use a trick (see posts on the development list) using
+sorting to implement it.
+
+Event-driven updates
+--------------------
+Event-driven updates can be specified by the user. But it would be nice to
+be able to write the differential equations, and let Brian calculate the
+event-driven operations. This seems possible with linear equations, either
+with sympy or by calculating the matrix exponential.
+
+Lumped variables
+----------------
+For nonlinear synapses, we need to be able to define a "lumped variable",
+generally the total conductance, that is updated at every timestep as the
+sum of all presynaptic values for each neuron (is there a fast way do it
+in scipy.sparse?).
+
+There are several possibilities for the syntax.
 We could use something like linked_var, for example:
 P.g=lumped_var(synapses.g)
 where P is the NeuronGroup, and g must have been defined as a parameter
 in P.
 
-Having everything synaptic in the same object
-might make code generation (C/GPU) easier too, because we will only need
-to port one class, which includes spike propagation, STDP and STP. It should
-also make it more efficient in this case.
-
-This calls for a complete rewrite of the Connection class (which could have
-a different name). Let's call it Synapses for now. We can keep the current
-classes for the underlying structures (ConnectionMatrix etc).
-
-We will need to rethink:
-* Heterogeneous delays (and delays should be handled as local variables). We
-  may need event queues.
+Construction and access
+-----------------------
+(TODO)
 * connect methods (now that we may have many variables)
 * Accessing weights is replaced by accessing synaptic variables: just as in
   a NeuronGroup, except we have a two dimensional index.
 * Including multiple synapses.
 * Extending StateMonitor to Synapses.
-* Event-driven updates: this is easy if the user does it explicitly (just some
-  custom code as in STDP pre/post). This is more complicated if we want to do
-  this automatically from the differential equations (but it's possible).
 
-I think we can reuse lots of things from NeuronGroup. We could actually have
-a state matrix as in NeuronGroup. This way we can also use StateMonitor.
-
-So my view is that the Synapses class should be a mix between Connection and
-NeuronGroup (this way we get StateMonitor for almost free).
-In fact, the Synapse class could inherit from both these classes (I would think
-it is better to do it from scratch, but perhaps it would save some time).
-
-Main things to think about at this point:
-* Nice syntax
-* How to handle delays in an efficient way
-
-My post to the development mailing list:
-----------------------------------------
-Hi everyone,
-
-On the support mailing list and in personal conversations, we have seen a lot of interest from users to simulate synaptic models that are currently difficult to do with Brian. These include:
-* NMDA (nonlinear) synapses
-* probabilistic synapses
-* a number of STDP rules with local synaptic variables, requiring event-driven updates
-
-I think the most important issue is the last one, because most recent STDP rules require that and there is no simple trick.
-Currently, Brian can only simulate STDP rules where synaptic variables are separable between pre and post, that is, presynaptic variables are simulated (clock-driven) on the presynaptic side, postsynaptic variables on the postsynaptic side. This is efficient because the cost scales as the number of neurons rather than the number of synapses. But it puts strong restrictions on the kind of models we can simulate. There is a trick to do event-driven updates with local synaptic variables, that I posted on the main support list, but I think it's time to have a more general and elegant solution.
-
-My proposition is that we have a new Connection class, which I'll call Synapses for now, which all handle everything synaptic, kinetics and plasticity (long-term and short-term). It will use concepts from NeuronGroup and STDP, that is, you define synaptic variables (including the weights), possibly with their dynamics, and what happens at the time of pre and post synaptic spikes. I wrote a few ideas in BEP-21.
-
-Example 1:
-S=Synapses(source,target,eqs="w : 1",pre="v->v+w")
-
-This would be equivalent to S=Connection(source,target,'v'). In the pre code, all the variables not defined in the equations are first looked for in the postsynaptic group (then in the global namespace if not found). As in STDP, the pre code would be internally vectorized. In the namespace of the user code, we would add t, the clock time, and t_pre/t_post, which would hold the time of the previous pre/post spikes. This will enable event-driven code. If we add a post code, then we can write anything that is currently done by STP and STDP.
-In the equations, we may have anything that is in NeuronGroup, such as differential equations. For now, these could be clock-driven simulated, but we can also imagine to have an automatic event-driven solver for linear equations.
-
-The variables in this class could be accessed as in NeuronGroup, that is: S.w. The only difference is the indexing (which is 2D instead of 1D). Internally, we could still have a state matrix with the value of all variables (one row = one variable, stored as a vector), plus a variable with the connection structure (target neurons). We can use StateMonitor on these objects.
-This will require to change the current ConnectionMatrix structures to handle multiple variables.
-
-This has a number of advantages. It is general and flexible, it really extends the number of things you will be able to simulate with Brian. It could be more efficient, because it minimizes the number of objects. It will make it easier to port to GPU as it's a single object.
-
-The main technical problem is see is with heterogeneous delays. The current solution will not work because it relies on the idea that all presynaptic spikes act on the same variable. What we need is really to execute the pre and post code at the time of spikes, and it could be tricky to vectorize. One possibility is to have event queues. The main change is that we now won't be able to vectorize over contiguous rows of the connection matrix. But maybe it's not such a big issue, because this is what happens already with STDP (for postsynaptic spikes). The main difficulty I see with implementing an efficient event queue is when a postsynaptic neuron receives simultaneous events.
-
-So I would say we first need to solve the problem of delays!
-
-Romain
-
-Handling delays
----------------
+Spike queues
+------------
 In the Synapses class, pre/post operations must be applied at the right times,
 not in advance. Therefore, in a given time step, with heterogeneous delays,
 it a Synapses object must receive spike events as a list (array) of non-contiguous
