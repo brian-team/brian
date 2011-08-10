@@ -1,4 +1,5 @@
 * library.ionic_currents: might not work if units are off (looks for amp to recognize the current)
+
 * eqs = MembraneEquation(C=200*pF) + leak + K_current + Na_current
 works, but not eqs = leak + K_current + Na_current + MembraneEquation(C=200*pF).
 Solution: have a new class that is a set of currents, or (easier) use a new variable with the sum of currents.
