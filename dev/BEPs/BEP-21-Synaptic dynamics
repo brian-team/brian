@@ -267,12 +267,55 @@ Construction and access
 We need some nice methods to build the connection structure and access synaptic
 variables.
 
-(TODO)
-* connect methods (now that we may have many variables)
-* Accessing weights is replaced by accessing synaptic variables: just as in
-  a NeuronGroup, except we have a two dimensional index.
-* Including multiple synapses.
-* Extending StateMonitor to Synapses.
+Currently, we can do things like:
+* S[2,5]=1*nS
+* S.connect_random(group1[0:20],group2[10:40],sparseness=0.02,weight=5*nS)
+* S.connect_full(group1,group2,weight=lambda i,j:(1+cos(i-j))*2*nS)
+and delays can also be set.
+
+But now we may have more synaptic variables. One difficulty is that they have
+a sparse structure, but with the same non-zero elements.
+
+For direct access, I suggest to use a similar syntax as for NeuronGroups:
+* S.w[2,5]=1*nS
+* S.w[1,:]=2*nS
+The first instruction creates a new non-zero element (if not already there) and
+sets the variable w. The second instruction may be ambiguous: should all
+elements be created, or should only non-zero elements be assigned?
+One possibility is to have a switch to freeze the structure (non-zero elements),
+for example: S.freeze() (and S.unfreeze()). This would change the semantics of
+the second instruction.
+
+I propose to replace connect_full with this:
+  S.w[group1,group2]="(1+cos(i-j))*2*nS"
+The advantage this last syntax is that it can be used for code generation
+(e.g. on GPU).
+
+We could still have connect_random, and possibly this new instruction:
+  S.connect_sparse(group1,group2,connect=lambda i,j: abs(i-j)<4,w=2*nS)
+The connect keyword (not a great name, could be changed) gives a boolean condition
+on (i,j) to be connected. It would be nice to have a direct assignment syntax.
+One possibility is something like:
+  S.w[one_to_one(group1,group2)]=2*ns
+  S.w[sparse(group1,group2,"abs(i-j)<4")]="(1+cos(i-j))*2*nS"
+that is, the instructions in the brackets would return sets of indexes. One
+advantage of these instructions is that they could be also used for monitoring.
+
+It should also be possible to set different variables in separate instructions,
+but then we have the same problem as above with the ambiguous semantics.
+
+We also want multiple synapses. One possibility is to allow something like this:
+  S.w[2,5]=(1*nS,2*nS)
+This would create to synapses for the same pre/post pair. How to access a
+specific synapse? One possibility is to have triplets:
+  S.w[2,5,3]  # this is the 4th synapse on (2,5)
+  S.w[2,5,2*ms]  # this is the synapse with delay 2*ms
+
+Synapse monitors
+----------------
+We use a StateMonitor. For example:
+M = StateMonitor(S,'w',record=[(2,3),(7,1),(3,3)])
+The main issue to set record indexes.
 
 Spike queues
 ------------
