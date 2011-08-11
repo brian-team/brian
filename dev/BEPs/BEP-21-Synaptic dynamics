@@ -189,7 +189,7 @@ and delays (I would not advise it, though).
 We also add two variables: delay_pre and delay_post. Delay_post is optional,
 and is 0 by default. But these variables should be in the spike queues.
 
-At construction time, these are list of rows.
+At construction time, these are lists of rows.
 At run time, rows are concatenated into single arrays. It makes a 2D matrix,
 where each row correspond to one variable (target neuron or synaptic variable).
 The column index is the synapse index, and is used by spike queues.
@@ -264,6 +264,9 @@ in P.
 
 Construction and access
 -----------------------
+We need some nice methods to build the connection structure and access synaptic
+variables.
+
 (TODO)
 * connect methods (now that we may have many variables)
 * Accessing weights is replaced by accessing synaptic variables: just as in
@@ -275,43 +278,50 @@ Spike queues
 ------------
 In the Synapses class, pre/post operations must be applied at the right times,
 not in advance. Therefore, in a given time step, with heterogeneous delays,
-it a Synapses object must receive spike events as a list (array) of non-contiguous
-indexes (i,j). In fact, we only need to know the index in the synapse structure,
-which is a single index. From that point, if we have an object (a sort of event
-queue) which provides at each time step an array of indexes of synapses, then
-we can directly apply vectorized operations, and it could even be faster than
-the current implementation (which includes a for loop over presynaptic spikes).
+a Synapses object must receive spike events as a list of synapse indexes.
+This is done by the spike queue class, which stores future synaptic events
+produced by a given presynaptic neuron group.
 
-So what is needed is a synaptic event class, which would take spikes from the
-presynaptic group (an analog object would be used for the postsynaptic group),
-store the corresponding future synaptic events (targets and delays) at the
-right place, and output the array of events at the current time.
-I would see a structure like that:
-* A 2D array, where row is the time bin and column is the position in that bin
-  (each row is a stack) (or the converse). The array is circular in the time
-  dimension. There is a 1D array giving the position of the last added event in
-  each time bin.
-* To output the current events, we simply get the first (or last) row (up to the
+The structure is a 2D array, where row is the time bin and column
+is the position in that bin (each row is a stack) (or the converse).
+The array is circular in the time dimension. There is a 1D array giving the
+position of the last added event in each time bin.
+
+Main methods:
+* Output the current events: we simply get the first (or last) row (up to the
   last added event), so this is fast. We then shift the cursor of the circular
   array by one row.
-* To feed events is a bit trickier. Each presynaptic neuron has a corresponding
+* Feed events. Each presynaptic neuron has a corresponding
   array of target synapses et corresponding delays. We must push each target
   synapse (index) on top of the row corresponding to the delay. If all synapses
-  have different delays, this is relatively easy to vectorize. It is slightly
-  more difficult if there are synapses with the same delays, but not that much.
+  have different delays, this is relatively easy to vectorize. It is a bit
+  more difficult if there are synapses with the same delays.
   For a given presynaptic neuron, each synaptic delay corresponds to coordinates
   (i,j) in the circular array of stacks, where i is the delay (stack index) and
   j is index relative to the top of the stack (0=top, 1=1 above top).
   The absolute location in the structure is then calculated as n[i]+j, where
-  n[i] is the location of the top of stack i.
-* We probably want to have a possibility to extend the 2D array, using standard
-  tricks (e.g. doubling the number of columns when we exceed the size). This
-  structure should be quite memory consuming, but perhaps not much more than
-  the connection structure.
+  n[i] is the location of the top of stack i. The only difficulty is to calculate
+  j, and in Python this requires sorting (see development mailing list).
+  It can be preprocessed if event feeding involves a loop over presynaptic spikes
+  (if it's vectorized then it's not possible anymore). In this case it takes K*4
+  bytes.
+* Resizing. When a stack is full (row size exceeded), we double (or multiply
+  by 1.5 or other) the size of the 2D array (number of columns). I note that if
+  the 2D array is implemented in the other direction (columns instead of rows),
+  this only means resizing the array without having to copy anything. On the
+  other hand, it makes getting the current events a bit slower (because not
+  continuous).
 
-It seems possible to vectorize it in Python. But if it is not or if we want
-to make the code faster, we should have C version of this class, or perhaps just
-of the event feeding method.
+The whole class should also have a C version, which would be much faster.
+
+Memory consumption: this is essentially the 2D circular array, which is dynamic.
+Each entry is 4B (synapse index). The total size should be the maximum number
+of synaptic events within the time span of the queue (max delay - min delay).
+Within that time span, each neuron can spike no more than
+p=(max delay - min delay)/refractory period, and therefore a given synapse index
+cannot be present more than p times in the array. Thus, memory consumption is
+always smaller than K*4*p. This does not seem very large (compare with K*40 for
+an STDP synapse).
 
 Advantages with this class:
 * It concentrates all the hard to vectorize/time consuming part of the simulation.
@@ -321,7 +331,7 @@ Advantages with this class:
   event-driven updates).
 * No more difference between homogeneous and heterogeneous delays. When delays
   are homogeneous, the code is (maybe) automatically faster because we have
-  contiguous synaptic indexes.
+  contiguous indexes in the 2D array.
 * We can vectorize synaptic operations over synapses, not just over postsynaptic
   neurons, and therefore we can expect a speed gain.
 * Could be good for GPU/C code generation.
@@ -329,3 +339,15 @@ Advantages with this class:
   than a period delta, then we only need to transfer spikes to synapses
   every delta rather than every timestep. This should provide speed-ups for GPU
   and code generation, perhaps also cluster simulations if we want to do that.
+
+Tasks
+=====
+A number of things can be done independently.
+* Spike queue, Python version.
+* Spike queue, C version.
+* Array class with overloaded self addition/multiplication.
+* Turning differential equations into event-driven code.
+* Lumped variable code.
+* Sparse matrix structure with multiple values.
+* Synaptic monitoring
+* Main Synapse code
