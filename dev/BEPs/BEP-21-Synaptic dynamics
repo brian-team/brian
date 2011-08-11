@@ -300,7 +300,10 @@ One possibility is something like:
   S.w[sparse(group1,group2,"abs(i-j)<4")]="(1+cos(i-j))*2*nS"
 that is, the instructions in the brackets would return sets of indexes. One
 advantage of these instructions is that they could be also used for monitoring.
+They could also easily be extended (including by users).
 We could be inspired by Mikael Djurfeldt's "connection set algebra".
+We may consider for example that these index sets are boolean sparse matrices,
+and use boolean operators such as not, and, or, etc.
 
 It should also be possible to set different variables in separate instructions,
 but then we have the same problem as above with the ambiguous semantics. So
