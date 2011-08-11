@@ -300,9 +300,11 @@ One possibility is something like:
   S.w[sparse(group1,group2,"abs(i-j)<4")]="(1+cos(i-j))*2*nS"
 that is, the instructions in the brackets would return sets of indexes. One
 advantage of these instructions is that they could be also used for monitoring.
+We could be inspired by Mikael Djurfeldt's "connection set algebra".
 
 It should also be possible to set different variables in separate instructions,
-but then we have the same problem as above with the ambiguous semantics.
+but then we have the same problem as above with the ambiguous semantics. So
+we probably really need freeze/unfreeze methods.
 
 We also want multiple synapses. One possibility is to allow something like this:
   S.w[2,5]=(1*nS,2*nS)
@@ -392,5 +394,6 @@ A number of things can be done independently.
 * Turning differential equations into event-driven code.
 * Lumped variable code.
 * Sparse matrix structure with multiple values.
-* Synaptic monitoring
-* Main Synapse code
+* Access and construction.
+* Synaptic monitoring.
+* Main Synapse code.
