@@ -400,3 +400,4 @@ A number of things can be done independently.
 * Access and construction.
 * Synaptic monitoring.
 * Main Synapse code.
+* GPU code
