@@ -242,6 +242,11 @@ self addition and multiplication are overloaded (and possibly direct assignment
 is forbidden). We then use a trick (see posts on the development list) using
 sorting to implement it.
 
+Alternative idea for this problem: we separate the synapse indexes (spikes during
+the current timestep) in groups of indexes with no repeted postsynaptic neurons,
+then we execute the code sequentially for each group. The idea is in most cases,
+there should be no repetition.
+
 Event-driven updates
 --------------------
 Event-driven updates can be specified by the user. But it would be nice to
@@ -282,9 +287,13 @@ For direct access, I suggest to use a similar syntax as for NeuronGroups:
 The first instruction creates a new non-zero element (if not already there) and
 sets the variable w. The second instruction may be ambiguous: should all
 elements be created, or should only non-zero elements be assigned?
-One possibility is to have a switch to freeze the structure (non-zero elements),
-for example: S.freeze() (and S.unfreeze()). This would change the semantics of
-the second instruction.
+The idea is that the semantics is always that
+assignment does not create synapses, and we use a special syntax to create
+synapses:
+  S[2,3:5]=True # or an array
+
+We could also have several synapses per pre/post pair:
+  S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
 
 I propose to replace connect_full with this:
   S.w[group1,group2]="(1+cos(i-j))*2*nS"
@@ -292,22 +301,16 @@ The advantage this last syntax is that it can be used for code generation
 (e.g. on GPU).
 
 We could still have connect_random, and possibly this new instruction:
-  S.connect_sparse(group1,group2,connect=lambda i,j: abs(i-j)<4,w=2*nS)
+  S.connect_sparse(group1,group2,connect="abs(i-j)<4",w=2*nS)
 The connect keyword (not a great name, could be changed) gives a boolean condition
 on (i,j) to be connected. It would be nice to have a direct assignment syntax.
 One possibility is something like:
-  S.w[one_to_one(group1,group2)]=2*ns
-  S.w[sparse(group1,group2,"abs(i-j)<4")]="(1+cos(i-j))*2*nS"
-that is, the instructions in the brackets would return sets of indexes. One
-advantage of these instructions is that they could be also used for monitoring.
-They could also easily be extended (including by users).
+  S[P,Q]=one_to_one(P,Q)
+that is, the right hand side is a sparse boolean matrix (or possibly int matrix).
+These boolean matrices could be also used for monitoring.
 We could be inspired by Mikael Djurfeldt's "connection set algebra".
 We may consider for example that these index sets are boolean sparse matrices,
 and use boolean operators such as not, and, or, etc.
-
-It should also be possible to set different variables in separate instructions,
-but then we have the same problem as above with the ambiguous semantics. So
-we probably really need freeze/unfreeze methods.
 
 We also want multiple synapses. One possibility is to allow something like this:
   S.w[2,5]=(1*nS,2*nS)
@@ -315,6 +318,9 @@ This would create to synapses for the same pre/post pair. How to access a
 specific synapse? One possibility is to have triplets:
   S.w[2,5,3]  # this is the 4th synapse on (2,5)
   S.w[2,5,2*ms]  # this is the synapse with delay 2*ms
+
+For creation, we could use this:
+  S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
 
 Synapse monitors
 ----------------
@@ -391,13 +397,15 @@ Advantages with this class:
 Tasks
 =====
 A number of things can be done independently.
+* Write a few examples
+* Sparse matrix structure with multiple values.
 * Spike queue, Python version.
-* Spike queue, C version.
-* Array class with overloaded self addition/multiplication.
+* Main Synapse code.
+* Array class with overloaded self addition/multiplication or the iteration
+  idea (splitting synapse indexes in groups of non-repeating neurons)
+* Access and construction.
 * Turning differential equations into event-driven code.
 * Lumped variable code.
-* Sparse matrix structure with multiple values.
-* Access and construction.
 * Synaptic monitoring.
-* Main Synapse code.
 * GPU code
+* Spike queue, C version.
