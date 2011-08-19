@@ -224,28 +224,39 @@ than NEST).
 
 Equations
 ---------
-Equations define in the model should work as in NeuronGroup, except on
+Equations defined in the model should work as in NeuronGroup, except on
 synaptic variables. Pre/post code should work as in STDP.
 A few specificities:
-* a non-defined variable is first assumed to be postsynaptic (otherwise global)
+* a non-defined variable is first assumed to be postsynaptic (otherwise global).
+  One potential issue here is if we want to consider (dendritic) delays for
+  postsynaptic variables (soma->synapse and converse).
 * t holds the current time
 * lastspike holds the time of last update of the synapse
 * rand() is redefined or rewritten for vectorisation (this allows probabilistic
-  synapses)
+  synapses). We may want to have other random distributions such as binomial.
+* We may also want a way to access presynaptic variables, for example to code
+  gap junctions. One possibility is the explicit suffix _pre (e.g. v_pre).
 
 One subtlety for the Python code (which is not an issue for GPU/C) is that
 when executing something like 'v+=w', this will be interpreted as
 'v[targets[synapses]]+=w[synapses]', but then there might be repeted indexes
-in targets[synapses]. This does not work with Numpy. Therefore, I suggest v
-(in fact all postsynaptic variables) be an instance of a new class where
+in targets[synapses]. This does not work with Numpy. There are two options to
+solve this problem:
+
+1) v (in fact all postsynaptic variables) is an instance of a new class where
 self addition and multiplication are overloaded (and possibly direct assignment
 is forbidden). We then use a trick (see posts on the development list) using
-sorting to implement it.
+sorting to implement it. This is not great because we can't implement everything
+with this.
 
-Alternative idea for this problem: we separate the synapse indexes (spikes during
-the current timestep) in groups of indexes with no repeted postsynaptic neurons,
-then we execute the code sequentially for each group. The idea is in most cases,
-there should be no repetition.
+2) we separate 'synapses' in groups of synapse indexes with no repeated
+postsynaptic neurons, then we execute the code sequentially for each group.
+The idea is that in most practical cases, there should be no repetition. This
+would not be so for very dense networks with cortex-like connectivity
+(10,000 synapses per neuron), but there we will probably need to use code
+generation anyway.
+
+Option 2 looks efficient enough.
 
 Event-driven updates
 --------------------
@@ -256,7 +267,8 @@ with sympy or by calculating the matrix exponential.
 
 Lumped variables
 ----------------
-For nonlinear synapses, we need to be able to define a "lumped variable",
+For nonlinear synapses (and also gap junctions),
+we need to be able to define a "lumped variable",
 generally the total conductance, that is updated at every timestep as the
 sum of all presynaptic values for each neuron (is there a fast way do it
 in scipy.sparse?).
@@ -266,6 +278,10 @@ We could use something like linked_var, for example:
 P.g=lumped_var(synapses.g)
 where P is the NeuronGroup, and g must have been defined as a parameter
 in P.
+
+Can we come up with a better syntax? I don't think it could be in the model
+definition of the neuron group, because the Synapses object is usually not
+defined at that time.
 
 Construction and access
 -----------------------
@@ -284,49 +300,51 @@ a sparse structure, but with the same non-zero elements.
 For direct access, I suggest to use a similar syntax as for NeuronGroups:
 * S.w[2,5]=1*nS
 * S.w[1,:]=2*nS
-The first instruction creates a new non-zero element (if not already there) and
-sets the variable w. The second instruction may be ambiguous: should all
+The first instruction sets w=1*nS for synapse 2->5.
+The second instruction may be ambiguous: should all
 elements be created, or should only non-zero elements be assigned?
-The idea is that the semantics is always that
-assignment does not create synapses, and we use a special syntax to create
-synapses:
+If we have several synaptic variables, creating elements by these instructions,
+or having different semantics depending on the variable, is dangerous.
+Therefore the semantics is that assignment never creates synapses,
+and we use a special syntax to create synapses:
   S[2,3:5]=True # or an array
+This creates synapses 2->3 and 2->4.
 
 We could also have several synapses per pre/post pair:
   S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
+Then access is with a third coordinate:
+  S.w[2,3,1]  # this is the 2nd synapse on 2->3
+And we can write:
+  S.w[2,3]=(1*nS,2*nS)
 
-I propose to replace connect_full with this:
+I propose to allow this syntax:
   S.w[group1,group2]="(1+cos(i-j))*2*nS"
-The advantage this last syntax is that it can be used for code generation
-(e.g. on GPU).
+The advantage this syntax is that it can be used for code generation
+(e.g. on GPU). Here we need two special names for pre and post indexes. These
+could be i/j or pre/post.
+This also works to create connections:
+  S[group1,group2]='rand()<0.2'
+which creates a sparse connection structure. One problem with this is that
+it won't be efficient, as it requires O(N*N) operations, rather then the number
+of synapses. There are two (possibly complementary) options to solve this.
 
-We could still have connect_random, and possibly this new instruction:
-  S.connect_sparse(group1,group2,connect="abs(i-j)<4",w=2*nS)
-The connect keyword (not a great name, could be changed) gives a boolean condition
-on (i,j) to be connected. It would be nice to have a direct assignment syntax.
-One possibility is something like:
+1) We still have connect_random, connect_one_to_one, etc. But I suggest that at
+least we replace lambda functions with strings. Also the weight keyword should
+be replaced by synaptic variable names.
+2) We use sparse boolean matrices (or integer matrices) on right hand sides:
   S[P,Q]=one_to_one(P,Q)
 that is, the right hand side is a sparse boolean matrix (or possibly int matrix).
 These boolean matrices could be also used for monitoring.
 We could be inspired by Mikael Djurfeldt's "connection set algebra".
-We may consider for example that these index sets are boolean sparse matrices,
-and use boolean operators such as not, and, or, etc.
-
-We also want multiple synapses. One possibility is to allow something like this:
-  S.w[2,5]=(1*nS,2*nS)
-This would create to synapses for the same pre/post pair. How to access a
-specific synapse? One possibility is to have triplets:
-  S.w[2,5,3]  # this is the 4th synapse on (2,5)
-  S.w[2,5,2*ms]  # this is the synapse with delay 2*ms
-
-For creation, we could use this:
-  S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
 
 Synapse monitors
 ----------------
 We use a StateMonitor. For example:
 M = StateMonitor(S,'w',record=[(2,3),(7,1),(3,3)])
-The main issue to set record indexes.
+The main issue is to set record indexes. I suggest we use exactly the same
+synax as for access/construction above. This way, we can simply use a method
+in the synapse object which turns (2,3) etc. into synapse indexes. It makes
+coding the new monitor for Synapses trivial.
 
 Spike queues
 ------------
@@ -397,15 +415,20 @@ Advantages with this class:
 Tasks
 =====
 A number of things can be done independently.
+
+High priority:
 * Write a few examples
 * Sparse matrix structure with multiple values.
-* Spike queue, Python version.
-* Main Synapse code.
-* Array class with overloaded self addition/multiplication or the iteration
-  idea (splitting synapse indexes in groups of non-repeating neurons)
+* Separation of an array of synapse index into a list of arrays with no
+  repeated postsynaptic neurons (synapse_separation.py)
+* Spike queue, Python version (spikequeue.py, see also scheduled_events.py).
+* Main Synapse code (could be adapted from NeuronGroup, Connection and STDP).
 * Access and construction.
+
+Low priority:
+* Possibly, array class with overloaded self addition/multiplication
 * Turning differential equations into event-driven code.
 * Lumped variable code.
-* Synaptic monitoring.
+* Synaptic monitoring (should be trivial after access/construction is done).
 * GPU code
 * Spike queue, C version.
