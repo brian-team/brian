@@ -4,6 +4,10 @@ cases, the network is presented with many stimuli (e.g. sounds) sequentially.
 I propose to present the stimuli in parallel, and either have a shared connection
 matrix or regularly collect the weight changes.
 
+* This BEP is considered obsolete *
+(I don't think that it's a good idea any more, the learning timescale might be
+faster than we previously thought)
+
 One simple idea
 ---------------
 * Create a big group.
