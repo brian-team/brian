@@ -158,6 +158,7 @@ S=Synapses(source,target,
                     w : 1''',
            pre='''u=U+(u-U)*exp((t-lastspike)/tauf)
                   x=1+(x-1)*exp((t-lastspike)/taud)
+                  v=v+w*u*x
                   x*=(1-u)
                   u+=U*(1-u)                  
                   ''') # Event-driven STP

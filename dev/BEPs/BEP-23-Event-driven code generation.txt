@@ -1,0 +1,53 @@
+BEP-23-Event-driven code generation.txt
+
+Abstract: For the Synapses class (see BEP-21), we need to be able to turn
+differential equations into event-driven update code. This BEP describes
+how it can be done.
+
+Example
+=======
+This is the Synapses code for STP:
+
+S=Synapses(source,target,
+           model='''dx/dt=(1-x)/taud : 1
+                    du/dt=(U-u)/tauf : 1
+                    w : 1''',
+           pre='''v=v+w*u*x
+                  x=x*(1-u)
+                  u=u+U*(1-u)
+                  ''') # STP
+
+We want to turn it into this:
+
+S=Synapses(source,target,
+           model='''x : 1
+                    u : 1
+                    w : 1''',
+           pre='''u=U+(u-U)*exp((t-lastspike)/tauf)
+                  x=1+(x-1)*exp((t-lastspike)/taud)
+                  v=v+w*u*x
+                  x*=(1-u)
+                  u+=U*(1-u)                  
+                  ''') # Event-driven STP
+
+Ideas
+=====
+I can see two ways to do this:
+1) Use Sympy do symbolically solve the equations at construction time, and rewrite
+   the pre/post code.
+2) Calculate the matrix form of the equations: dX/dt=A*X+B, and then use the
+   matrix exponential at update time.
+
+The second idea is simpler because we already have all the code to do it, it's
+essentially the same as the LinearStateUpdater for NeuronGroup.
+But in the long run, the first idea might make things simpler (plus we may be
+able to treat more cases), and directly usable for C/GPU code generation.
+
+Subtleties
+==========
+There are several subtleties:
+* Sometimes we need to keep to continuous updates. This is the case if there
+  is a lumped variable (e.g. gtot=sum of g for all synapses).
+* If only part of the equations can be turned into event-driven code, then we
+  need to make sure that the other variables are independent, otherwise we will
+  have to keep continuous updates for all dependent variables.
