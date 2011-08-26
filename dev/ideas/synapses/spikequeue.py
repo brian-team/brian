@@ -1,5 +1,7 @@
 """
 Spike queues following BEP-21
+
+TODO: Dynamic structure
 """
 from brian import *
 from time import time
@@ -28,12 +30,12 @@ class SpikeQueue(object):
     are determined at run time, then it may be possible to also vectorize over
     presynaptic spikes.
     '''
-    def __init__(self,nsteps,maxevents):
+    def __init__(self, nsteps, maxevents):
         # number of time steps, maximum number of spikes per time step
-        self.X=zeros((nsteps,maxevents),dtype=int) # target synapses
-        self.X_flat=self.X.reshape(nsteps*maxevents,)
-        self.currenttime=0
-        self.n=zeros(nsteps,dtype=int) # number of events in each time step
+        self.X = zeros((nsteps, maxevents), dtype = int) # target synapses
+        self.X_flat = self.X.reshape(nsteps*maxevents,)
+        self.currenttime = 0
+        self.n = zeros(nsteps, dtype = int) # number of events in each time step
         
     def next(self):
         # Advance by one timestep
@@ -74,7 +76,17 @@ class SpikeQueue(object):
         # Update the size of the stacks
         self.n[timesteps]+=offset+1 # that's a trick
         # There should a re-sizing operation, if overflow
+        
+    def plot(self, display = True):
+        for i in range(self.X.shape[0]):
+            idx = (i + self.currenttime ) % self.X.shape[0]
+            data = self.X[idx, :self.n[idx]]
+            plot(idx * ones(len(data)), data, '.')
+        if display:
+            show()
 
+
+    
 '''
 The connection has arrays of synaptic variables (same as state matrix of
 neuron groups). Two synaptic variables are the index of the postsynaptic neuron
@@ -109,5 +121,6 @@ if __name__=='__main__':
         queue.insert(delays,d,targets)
         queue.next()
         events=queue.peek()
+        queue.plot()
     t2=time()
     print t2-t1
