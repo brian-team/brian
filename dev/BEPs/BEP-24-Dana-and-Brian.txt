@@ -2,3 +2,12 @@ BEP-24: Dana and Brian
 
 Abstract:
 
+Random ideas
+============
+* See if we integrate it with the new Synapses object
+* Other option: derive from Connection and overload propagate()
+* Group -> NeuronGroup
+* in Group: N=(50,100)-> N =50*100 and store the shape of the group somewhere
+* Construction of sparse connection matrices with kernels
+* Discrete time updates: find a syntax (V(n+1)=f(V(n),...)); update with Euler
+  and dt=1.
