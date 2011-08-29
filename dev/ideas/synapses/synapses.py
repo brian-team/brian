@@ -23,108 +23,6 @@ import re
 
 __all__ = ['Synapses']
 
-
-########################## SynapseUpdater ##########################
-
-class EventSynapseUpdater(SpikeMonitor):
-    '''
-    Mimicked after the eventstdpupdater in dev/ideas/stdp/eventdriven_stdp
-    
-    A SpikeMonitor that executes the code it's given at initialization.
-    
-    The interesting code is rather in the Synapses object itself (search for pre_code)
-    '''
-    def __init__(self, source, S, code, namespace, delay=0 * ms):
-        '''
-        source = source group
-        S = base Synapse object
-        vars = variable names
-        M = matrix of the linear differential system
-        code = code to execute for every spike
-        namespace = namespace for the code
-        delay = transmission delay 
-        '''
-        super(EventSynapseUpdater, self).__init__(source, 
-                                                  record = False)
-        self._code = code # update code
-        self._namespace = namespace # code namespace
-        self.S = S
-        
-    def propagate(self, spikes):
-        if len(spikes):
-            synapses = []
-            for i in spikes:
-                synapses += list(nonzero(self.S._S._pre == i)[0])
-                
-            self._namespace['_synapses'] = np.array(synapses)
-            for var in self.S.vars:
-                self._namespace[var] = self.S._S[var]
-            self._namespace['t'] = self.S.source.clock._t
-            self._namespace['_post'] = self.S._S._post
-            exec self._code in self._namespace
-
-
-INTIAL_MAXSPIKESPER_DT = 10 # Because SpikeQueue doesn't have a dynamic structure (yet)
-class DelayEventSynapseUpdater(SpikeMonitor):
-    '''
-    Same as above but includes delays (yay!)
-    '''
-    def __init__(self, source, S, code, namespace, max_delay):
-        '''
-
-        source = source group
-        S = base Synapse object
-        vars = variable names
-        M = matrix of the linear differential system
-        code = code to execute for every spike
-        namespace = namespace for the code
-
-        max_delay = maximum delay
-        '''
-        super(DelayEventSynapseUpdater, self).__init__(source, 
-                                                  record = False)
-        self._code = code # update code
-        self._namespace = namespace # code namespace
-        self.S = S
-        # SpikeQueue initialization
-        nsteps = int(np.ceil((max_delay)/(self.S.source.clock.dt)))
-        self.spike_queue = SpikeQueue(nsteps, INTIAL_MAXSPIKESPER_DT)
-        
-    def propagate(self, spikes):
-        # Should do:
-        # - put spikes in the event queue when spikes are received
-        # - pull current spikes from cue and do something
-
-        # step 1: insert spikes in the event queue           
-        if len(spikes):
-            print 'spikes', spikes
-            # synapse identification, 
-            # this seems ok in terms of speed even though I dont like the for loop. 
-            # any idea? see stest_fastsynapseidentification.py
-            synapses = []
-            for i in spikes:
-                synapses += list(nonzero(self.S._S._pre == i)[0]) 
-
-
-            # delay getting:
-            delays = self.S._S.delay[synapses]
-            offsets = self.spike_queue.offsets(delays)
-            self.spike_queue.insert(delays, offsets, synapses)
-            
-        # step 2: execute code on current spikes
-        synapses_current = self.spike_queue.peek()
-        if len(synapses_current):
-            print type(synapses_current)
-            self._namespace['_synapses'] = np.array(synapses_current)
-            for var in self.S.vars:
-                self._namespace[var] = self.S._S[var]
-            self._namespace['t'] = self.S.source.clock._t
-            self._namespace['_post'] = self.S._S._post
-            exec self._code in self._namespace
-            
-        self.spike_queue.next()
-
-
 class Synapses(NetworkOperation):
     '''
     Synapses object
@@ -134,10 +32,9 @@ class Synapses(NetworkOperation):
     - only the 'pre' code is implemented 
     - multiple synapses (between same pair of neurons), with multiple delays seem to work fine!
     
-    
     TODO:
     - postsynaptic delays
-    - 
+
 
     ** Initialization **
     
@@ -195,7 +92,6 @@ class Synapses(NetworkOperation):
     '''
     def __init__(self, *args, **kwdargs):
         # sorry this code might be a bit of a mess.
-
         # Arguments parsing
         if len(args) == 1 and isinstance(args[0], NeuronGroup):
             self.source = self.target = args[0]
@@ -206,13 +102,12 @@ class Synapses(NetworkOperation):
             self.post_len = len(args[0])
         else:
             raise ValueError('A Synapse object must be instantiated with one or two NeuronGroups as arguments')
+
+        clock = kwdargs.get('clock', None)
         
         ## KWD arguments parsing
         max_delay = kwdargs.get('max_delay', 0)
 
-        # Network operation subclassing
-        clock = kwdargs.get('clock', None)
-        NetworkOperation.__init__(self, lambda:None, clock=clock)
 
         ########### CODE PARSING
         # model equations parsing
@@ -226,7 +121,25 @@ class Synapses(NetworkOperation):
             elif ';' in model:
                 model = '\n'.join([line.strip() for line in model.split(';')])
             model_obj = Equations(model, level = level + 1)
-        
+            
+        # stolen from NeuronGroup
+        unit_checking = kwdargs.get('check_units', True)
+        method = kwdargs.get('method', None)
+        freeze = kwdargs.get('freeze', False)
+        implicit = kwdargs.get('implicit', False)
+        order = kwdargs.get('order', 1)
+        if isinstance(model_obj, StateUpdater):
+            self._state_updater = model_obj
+            self._all_units = defaultdict() # what is that
+        elif isinstance(model_obj, Equations):
+            self._eqs = model_obj
+            self._state_updater, var_names = magic_state_updater(model_obj, clock=clock, order=order,
+                                                                 check_units=unit_checking, implicit=implicit,
+                                                                 compile=compile, freeze=freeze,
+                                                                 method=method)
+            
+        # NOW WHAT?!!!!!            
+            
         # pre/post code parsing
         pre = kwdargs.get('pre', '')
         post = kwdargs.get('pre', '')
@@ -250,12 +163,8 @@ class Synapses(NetworkOperation):
 
         ############# Setting up the data structure
         # Mandatory fields: 3 for pre/post/delay_pre, all int32 TODO: finer pick of dtype!
-        if max_delay:
-            dtypes = (np.int32, ) * 3
-            default_labels = ['_pre', '_post', 'delay']
-        else:
-            dtypes = (np.int32, ) * 2
-            default_labels = ['_pre', '_post']
+        dtypes = (np.int32, ) * 3
+        default_labels = ['_pre', '_post', 'delay']
         # Equation defined fields (float32)
         dtypes += (np.float32, ) * self.n_vars
 
@@ -271,6 +180,7 @@ class Synapses(NetworkOperation):
         pre_namespace['nonzero'] = np.nonzero
         pre_namespace['_pre'] = self._S._pre
         pre_namespace['_post'] = self._S._post
+
         
         for var in self.vars:
             pre_namespace[var] = self._S[var]
@@ -298,13 +208,18 @@ class Synapses(NetworkOperation):
         
         pre_code = compile(pre_code, "Presynaptic code", "exec")
         
-        if max_delay == 0:
-            self.pre_updater = EventSynapseUpdater(self.source, self, code = pre_code, namespace = pre_namespace)
-        else:
-            self.pre_updater = DelayEventSynapseUpdater(self.source, self, code = pre_code, namespace = pre_namespace, max_delay = max_delay)
         
+        self.pre_namespace = pre_namespace
+        self.pre_code = pre_code
+        self.pre_queue = SpikeQueue(self.source, self, max_delay = max_delay)
 
-        self.contained_objects = [self.pre_updater] # wtf is this for
+        self.contained_objects = [self.pre_queue] # wtf is this for
+        
+        
+        # Network operation subclassing
+
+        NetworkOperation.__init__(self, lambda:None, clock=clock)
+
         
     def __setitem__(self, key, value):
         if not (value is True):
@@ -360,6 +275,20 @@ class Synapses(NetworkOperation):
         Returns the number of existing synapses.
         '''
         return self._S.nvalues
+    
+    def __call__(self):
+        # presynaptic spikes
+        synapses_current = self.pre_queue.peek()
+        if len(synapses_current):
+            _namespace = self.pre_namespace
+            _namespace['_synapses'] = np.array(synapses_current)
+            for var in self.vars:
+                _namespace[var] = self._S[var]
+            _namespace['t'] = self.source.clock._t
+            _namespace['_post'] = self._S._post
+            exec self.pre_code in _namespace
+            
+        self.pre_queue.next()
 
     @property
     def existing_synapses(self):
@@ -370,4 +299,98 @@ class Synapses(NetworkOperation):
         s+= str(self.existing_synapses)
         return s
 
+# DEPRECATED STUFF:
+#
+# ########################## SynapseUpdater ##########################
 
+# class EventSynapseUpdater(SpikeMonitor):
+#     '''
+#     Mimicked after the eventstdpupdater in dev/ideas/stdp/eventdriven_stdp
+    
+#     A SpikeMonitor that executes the code it's given at initialization.
+    
+#     The interesting code is rather in the Synapses object itself (search for pre_code)
+#     '''
+#     def __init__(self, source, S, code, namespace, delay=0 * ms):
+#         '''
+#         source = source group
+#         S = base Synapse object
+#         vars = variable names
+#         M = matrix of the linear differential system
+#         code = code to execute for every spike
+#         namespace = namespace for the code
+#         delay = transmission delay 
+#         '''
+#         super(EventSynapseUpdater, self).__init__(source, 
+#                                                   record = False)
+#         self._code = code # update code
+#         self._namespace = namespace # code namespace
+#         self.S = S
+        
+#     def propagate(self, spikes):
+#         if len(spikes):
+#             synapses = []
+#             for i in spikes:
+#                 synapses += list(nonzero(self.S._S._pre == i)[0])
+                
+#             self._namespace['_synapses'] = np.array(synapses)
+#             for var in self.S.vars:
+#                 self._namespace[var] = self.S._S[var]
+#             self._namespace['t'] = self.S.source.clock._t
+#             self._namespace['_post'] = self.S._S._post
+#             exec self._code in self._namespace
+
+
+# INTIAL_MAXSPIKESPER_DT = 10 # Because SpikeQueue doesn't have a dynamic structure (yet)
+# class DelayEventSynapseUpdater(SpikeMonitor):
+#     '''
+#     Same as above but includes delays (yay!)
+#     '''
+#     def __init__(self, source, S, code, namespace, max_delay):
+#         '''
+
+#         source = source group
+#         S = base Synapse object
+#         vars = variable names
+#         M = matrix of the linear differential system
+#         code = code to execute for every spike
+#         namespace = namespace for the code
+
+#         max_delay = maximum delay
+#         '''
+#         super(DelayEventSynapseUpdater, self).__init__(source, 
+#                                                   record = False)
+#         self._code = code # update code
+#         self._namespace = namespace # code namespace
+#         self.S = S
+#         # SpikeQueue initialization
+#         nsteps = int(np.ceil((max_delay)/(self.S.source.clock.dt)))
+#         self.spike_queue = SpikeQueue(source, INTIAL_MAXSPIKESPER_DT)
+        
+#     def propagate(self, spikes):
+#         # step 1: insert spikes in the event queue           
+#         if len(spikes):
+#             # synapse identification, 
+#             # this seems ok in terms of speed even though I dont like the for loop. 
+#             # any idea? see stest_fastsynapseidentification.py
+#             synapses = []
+#             for i in spikes:
+#                 synapses += list(nonzero(self.S._S._pre == i)[0]) 
+
+
+#             # delay getting:
+#             delays = self.S._S.delay[synapses]
+#             offsets = self.spike_queue.offsets(delays)
+#             self.spike_queue.insert(delays, offsets, synapses)
+            
+#         # step 2: execute code on current spikes
+#         synapses_current = self.spike_queue.peek()
+#         if len(synapses_current):
+#             self._namespace['_synapses'] = np.array(synapses_current)
+#             for var in self.S.vars:
+#                 self._namespace[var] = self.S._S[var]
+#             self._namespace['t'] = self.S.source.clock._t
+#             self._namespace['_post'] = self.S._S._post
+#             exec self._code in self._namespace
+            
+#         self.spike_queue.next()

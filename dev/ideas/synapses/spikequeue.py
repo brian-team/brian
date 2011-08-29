@@ -1,22 +1,35 @@
 """
 Spike queues following BEP-21
-
-TODO: Dynamic structure
 """
 from brian import *
 from time import time
 
-# This is a 2D circular array
-class SpikeQueue(object):
+INITIAL_MAXSPIKESPER_DT = 1
+# This is a 2D circular array, but also a SpikeMonitor
+
+class SpikeQueue(SpikeMonitor):
     '''
-    A spike queue, implemented as a circular 2D array.
+    * Initialization * 
+
+    Initialized with a source NeuronGroup, a Synapses object (from which it fetches the delays), a maximum delay
     
-    * Initialize with the number of timesteps and the maximum number of spikes
-      in each timestep: queue=SpikeQueue(nsteps,maxevents)
+    Arguments
+    ``source'' self explanatory
+    ``synapses'' self explanatory
+
+    Keywords
+    ``max_delay'' in seconds
+    ``maxevents'' Maximum intial number of events in each timestep. Notice that the structure will grow dynamically of there are more events than that, so you shouldn't bother. 
+
+
+    * Circular 2D array structure * 
+    
+    A spike queue is implemented as a circular 2D array.
+    
     * At the beginning or end of each timestep: queue.next()
     * To get all spikes: events=queue.peek()
       It returns the indexes of all synapses receiving an event.
-    * When a presynaptic spike is emitted:
+    * When a presynaptic spike is emitted, the following is executed:
       queue.insert(delay,offset,target)
       where delay is the array of synaptic delays of targets in timesteps,
       offset is the array of offsets within each timestep,
@@ -29,14 +42,31 @@ class SpikeQueue(object):
     (faster), or determined at run time (saves memory). Note that if they
     are determined at run time, then it may be possible to also vectorize over
     presynaptic spikes.
+    
+    * SpikeMonitor structure * 
+    
+    It automatically updates the underlying structure by instantiating the propagate() method of the SpikeMonitor
     '''
-    def __init__(self, nsteps, maxevents):
+    def __init__(self, source, synapses, 
+                 max_delay = 0, maxevents = INITIAL_MAXSPIKESPER_DT):
+        # SpikeMonitor structure
+        self.source = source #NeuronGroup
+        self.synapses = synapses #NeuronGroup
+        
+        self.max_delay = max_delay
+        nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
+
         # number of time steps, maximum number of spikes per time step
         self.X = zeros((nsteps, maxevents), dtype = int) # target synapses
         self.X_flat = self.X.reshape(nsteps*maxevents,)
         self.currenttime = 0
         self.n = zeros(nsteps, dtype = int) # number of events in each time step
         
+        super(SpikeQueue, self).__init__(source, 
+                                         record = False)
+        
+
+    ################################ SPIKE QUEUE DATASTRUCTURE ######################
     def next(self):
         # Advance by one timestep
         self.n[self.currenttime]=0 # erase
@@ -46,7 +76,7 @@ class SpikeQueue(object):
         # Events in the current timestep
         return self.X[self.currenttime,:self.n[self.currenttime]]
     
-    def offsets(self,delay):
+    def offsets(self, delay):
         # Calculates offsets corresponding to a delay array
         # That's not a very efficient way to do it
         # (it's O(n*log(n)))
@@ -64,19 +94,59 @@ class SpikeQueue(object):
         ofs[I] = ei
         return ofs
         
-    def insert(self,delay,offset,target):
+    def insert(self, delay, offset, target):
         # Vectorized insertion of spike events
         # delay = delay in timestep
         # offset = offset within timestep
         # target = target synaptic index
-        timesteps=(self.currenttime+delay) % len(self.n)
-        self.X_flat[(self.currenttime*self.X.shape[1]+offset+\
-                     self.n[timesteps])\
-                     % len(self.X)]=target
-        # Update the size of the stacks
-        self.n[timesteps]+=offset+1 # that's a trick
-        # There should a re-sizing operation, if overflow
         
+        timesteps = (self.currenttime + delay) % len(self.n)
+        
+        # Compute new stack sizes:
+        old_nevents = self.n[timesteps].copy() # because we need this for the final assignation, but we need to precompute the  new one to check for overflow
+        self.n[timesteps] += offset+1 # that's a trick, plus we pre-compute it to check for overflow
+        
+        m = max(self.n[timesteps]) # If overflow, then at least one self.n is bigger than the size
+        if (m >= self.X.shape[1]):
+            self.resize(m)
+        
+        self.X_flat[(self.currenttime*self.X.shape[1]+offset+\
+                     old_nevents)\
+                     % len(self.X)]=target
+        
+    def resize(self, maxevents):
+        # resize the underlying data structure
+        # max events will be rounded to the closest power of 2
+        
+        # old and new sizes
+        old_maxevents = self.X.shape[1]
+        new_maxevents = 2**ceil(log2(maxevents))
+        # new array
+        newX = zeros((self.X.shape[0], new_maxevents), dtype = self.X.dtype)
+        newX[:, :old_maxevents] = self.X[:, :old_maxevents] # copy old data
+        
+        self.X = newX
+        self.X_flat = self.X.reshape(self.X.shape[0]*new_maxevents,)
+        
+        log_debug('spikequeue', 'Resizing SpikeQueue')
+        
+    ######################################## SpikeMonitor Structure
+    def propagate(self, spikes):
+        if len(spikes):
+            # synapse identification, 
+            # this seems ok in terms of speed even though I dont like the for loop. 
+            # any idea? see stest_fastsynapseidentification.py
+            synapses = []
+            for i in spikes:
+                synapses += list(nonzero(self.synapses._S._pre == i)[0]) 
+
+            if len(synapses):
+                # delay getting:
+                delay = self.synapses.delay[synapses]
+                offsets = self.offsets(delay)
+                self.insert(delay, offsets, synapses)
+            
+    ######################################## UTILS    
     def plot(self, display = True):
         for i in range(self.X.shape[0]):
             idx = (i + self.currenttime ) % self.X.shape[0]
@@ -88,6 +158,9 @@ class SpikeQueue(object):
 
     
 '''
+NOTE: the test code below is probably not working anymore since I changed the way it is created
+
+
 The connection has arrays of synaptic variables (same as state matrix of
 neuron groups). Two synaptic variables are the index of the postsynaptic neuron
 and of the presynaptic neuron (i,j). (int32 or int16).

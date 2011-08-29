@@ -12,6 +12,9 @@ accordingly in the Synapses code
 - More thorough test of set/get
 
 
+- think about the issue discussed with Romain: hashtable for lookup of values? keep sorted spikes?
+
+
 ** ParameterVector (worst name in the world)
 
 It is only returned by the getattr method of the Synapse object and is
@@ -159,12 +162,12 @@ class ConstructionSparseStateVector(object):
     ``_values_dict''
     
     Internally the arrays of the different dtypes are stored into a
-    dictionnary (, and values of the same type in the
+    dictionnary, and values of the same type in the
     same array.
     
     The function dtype2str converts the dtype object into a string
     (int32 -> 'int32') and the int32 values of the structure are
-    accessed by self._values_dict['int32']
+    accessed internally by self._values_dict['int32']
     
     ``nvalues''
     
@@ -336,7 +339,6 @@ class ParameterVector(object):
                     for id in index:
                         indices.append(id)
             if self.delay_dt:
-                print value, self.delay_dt
                 value = np.array(np.round(value/self.delay_dt), dtype = self.data.dtype)
             self.data[indices] = value
         else:
