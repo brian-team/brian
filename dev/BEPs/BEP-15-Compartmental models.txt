@@ -51,6 +51,10 @@ a binary tree, except perhaps at the soma (e.g. 1 axon + 2 dendritic trees)
 * maybe somatic equations, possibly as point currents
 * optionnally, threshold condition
 
+One point we may want to think about is calcium dynamics: we should check whether
+it can be incorporated in the same framework (Ca dynamics follows a sort of
+cable equation).
+
 Data structure
 ==============
 I can imagine that there are at least two matrices:
