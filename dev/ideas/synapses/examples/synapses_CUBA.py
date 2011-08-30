@@ -39,6 +39,8 @@ if True:
     Si = syn.Synapses(Pi, P, model = 'we : 1', pre = 'ge += we')
     Se[:,:] = '''rand() < .02'''
     Si[:,:] = '''rand() < .02'''
+#    Se.we[:,:] = we
+#    Se.wi[:,:] = wi
 else:
     Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02)
     Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02)

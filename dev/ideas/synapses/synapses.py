@@ -193,10 +193,14 @@ class Synapses(NetworkOperation):
             pre_namespace[var] = self._statevector[var]
 
         def update_code(pre, indices):
+            res = pre
             # given the synapse indices, write the update code,
             # this is here because in the code we generate we need to write this twice (because of the multiple presyn spikes for the same postsyn neuron problem)
-            
-            res = re.sub(r'\b' + 'v' + r'\b', 'target.' + 'v' + '[_post['+indices+']]', pre)# postsyn variable, indexed by post syn neuron numbers
+            for postsyn_var in self.target.var_index:
+                if isinstance(postsyn_var, str):
+                    print 'postsyn', postsyn_var
+                    res = re.sub(r'\b' + postsyn_var + r'\b', 'target.' + postsyn_var + '[_post['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
+                
             for var in self.vars:
                 res = re.sub(r'\b' + var + r'\b', var + '['+indices+']', res) # synaptic variable, indexed by the synapse number
             return res
@@ -211,7 +215,7 @@ class Synapses(NetworkOperation):
         pre_code += "    while (len(_u) < len(_post_neurons)) & (_post_neurons>-1).any():\n"
         pre_code += "        _u, _i = unique(_post_neurons, return_index = True)\n"
         pre_code += "        " + update_code(pre, '_synapses[_i[1:]]') + "\n"
-        pre_code += "        _post_neurons[_i[1:]] = -1\n"
+        pre_code += "        _post_neurons[_i[1:]] = -1 \n"
         log_debug('brian.synapses', '\nPRE CODE:\n'+pre_code)
         
         pre_code = compile(pre_code, "Presynaptic code", "exec")
