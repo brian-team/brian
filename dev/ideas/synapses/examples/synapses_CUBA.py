@@ -36,7 +36,7 @@ wi = (-20 * 4.5 / 10) * mV # inhibitory synaptic weight
 if True:
 ########### NEW SYNAPSE CODE
     Se = syn.Synapses(Pe, P, model = 'we : 1', pre = 'ge += we')
-    Si = syn.Synapses(Pi, P, model = 'we : 1', pre = 'ge += we')
+    Si = syn.Synapses(Pi, P, model = 'wi : 1', pre = 'gi += wi')
     Se[:,:] = '''rand() < .02'''
     Si[:,:] = '''rand() < .02'''
 #    Se.we[:,:] = we

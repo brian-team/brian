@@ -20,7 +20,6 @@ from dev.ideas.synapses.statevectors import *
 from dev.ideas.synapses.spikequeue import *
 import re
 
-
 __all__ = ['Synapses']
 
 class Synapses(NetworkOperation):
@@ -90,7 +89,10 @@ class Synapses(NetworkOperation):
     synapses.delay[:,0] = 5*ms
 
     '''
-    def __init__(self, *args, **kwdargs):
+    def __init__(self, *args, **kwdargs): # aargh!!
+        clock = kwdargs.get('clock', None)
+        NetworkOperation.__init__(self, lambda:None, clock=clock)
+
         # sorry this code might be a bit of a mess.
         # Arguments parsing
         if len(args) == 1 and isinstance(args[0], NeuronGroup):
@@ -102,8 +104,6 @@ class Synapses(NetworkOperation):
             self.post_len = len(args[0])
         else:
             raise ValueError('A Synapse object must be instantiated with one or two NeuronGroups as arguments')
-
-        clock = kwdargs.get('clock', None)
         
         ## KWD arguments parsing
         max_delay = kwdargs.get('max_delay', 0)
@@ -123,6 +123,7 @@ class Synapses(NetworkOperation):
             model_obj = Equations(model, level = level + 1)
             
         # stolen from NeuronGroup
+        # !! This will not work with postsynaptic variables in the model eqs !!
         unit_checking = kwdargs.get('check_units', True)
         method = kwdargs.get('method', None)
         freeze = kwdargs.get('freeze', False)
@@ -133,7 +134,6 @@ class Synapses(NetworkOperation):
             self._all_units = defaultdict() # what is that
         elif isinstance(model_obj, Equations):
             self._eqs = model_obj
-            unit_checking = False
             self._state_updater, var_names = magic_state_updater(model_obj, clock=clock, order=order,
                                                                  check_units=unit_checking, implicit=implicit,
                                                                  compile=compile, freeze=freeze,
@@ -149,7 +149,7 @@ class Synapses(NetworkOperation):
             
         # pre/post code parsing
         pre = kwdargs.get('pre', '')
-        post = kwdargs.get('pre', '')
+        post = kwdargs.get('post', '')
         # handle multi-line pre, post equations and multi-statement equations separated by ;
         if '\n' in pre:
             pre = flattened_docstring(pre)
@@ -164,9 +164,9 @@ class Synapses(NetworkOperation):
         model_obj.compile_functions()
         #model_obj.check_units()
         # Get variable names
-        self.vars = model_obj._diffeq_names
+        self.vars = model_obj._diffeq_names # !! there are also static variables and aliases !!
         
-        self.n_vars = len(self.vars)
+        self.n_vars = len(self.vars) # ! not very useful
 
         ############# Setting up the data structure
         # Mandatory fields: 3 for pre/post/delay_pre, all int32 TODO: finer pick of dtype!
@@ -191,6 +191,7 @@ class Synapses(NetworkOperation):
         
         for var in self.vars:
             pre_namespace[var] = self._statevector[var]
+        # !! also add postsynaptic variables !!
 
         def update_code(pre, indices):
             res = pre
@@ -212,7 +213,7 @@ class Synapses(NetworkOperation):
         pre_code += update_code(pre, '_synapses[_i]') + "\n"
         pre_code += "if len(_u) < len(_post_neurons):\n"
         pre_code += "    _post_neurons[_i] = -1\n"
-        pre_code += "    while (len(_u) < len(_post_neurons)) & (_post_neurons>-1).any():\n"
+        pre_code += "    while (len(_u) < len(_post_neurons)) & (_post_neurons>-1).any():\n" # !! the any() is time consuming (len(u)>=1??)
         pre_code += "        _u, _i = unique(_post_neurons, return_index = True)\n"
         pre_code += "        " + update_code(pre, '_synapses[_i[1:]]') + "\n"
         pre_code += "        _post_neurons[_i[1:]] = -1 \n"
@@ -225,13 +226,7 @@ class Synapses(NetworkOperation):
         self.pre_code = pre_code
         self.pre_queue = SpikeQueue(self.source, self, max_delay = max_delay)
 
-        self.contained_objects = [self.pre_queue] # wtf is this for
-        
-        
-        # Network operation subclassing
-
-        NetworkOperation.__init__(self, lambda:None, clock=clock)
-
+        self.contained_objects = [self.pre_queue] # wtf is this for      
         
     def __setitem__(self, key, value):
         if not isinstance(key, tuple):
@@ -242,21 +237,24 @@ class Synapses(NetworkOperation):
             # Simple case, either one or multiple synapses between different neurons
             if not (value is True):
                 n_synapses = value
-            else:
+            else: # !! and False? !!
                 n_synapses = 1
         
             pre_slice = slice2range(key[0], len(self.source))
             post_slice = slice2range(key[1], len(self.target))
-            n_added = len(pre_slice) * len(post_slice)
         
             # Construction of the pre/post neurons indices list
             # This needs speed up!!!!
             # BTW not sure that lists are really necessary, maybe at build time though
             pre, post = [], []
             for i in pre_slice:
-                pre += [i]*len(post_slice)*n_synapses
+                pre += [i]*len(post_slice)*n_synapses # transposed?
                 post += list(post_slice)*n_synapses
         elif isinstance(value, str):
+            # !! Other more efficient option for memory consumption: !!
+            # vectorize only over post neurons, loop over pre
+            # transform boolean to sparse vector after every pre neuron
+            #
             # more complex case where the value is specified as a string, hence code
             # The code is evaluated and this yields a matrix that is then passed 
             code = re.sub(r'\b' + 'rand\(\)', 'rand(len(_i), len(_j))', value) # replacing rand()
@@ -295,7 +293,8 @@ class Synapses(NetworkOperation):
                     n_syn -= 1
                     n_syn[n_syn < 0] = 0
                     _pre, _post = np.nonzero(n_syn)
-            
+        # !! add: sparse matrices
+        
         total_n = len(pre)
         # values for the other fields (0)
         pre = np.array(pre, dtype = np.int32)
