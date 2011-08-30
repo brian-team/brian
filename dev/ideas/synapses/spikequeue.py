@@ -19,7 +19,7 @@ class SpikeQueue(SpikeMonitor):
 
     Keywords
     ``max_delay'' in seconds
-    ``maxevents'' Maximum intial number of events in each timestep. Notice that the structure will grow dynamically of there are more events than that, so you shouldn't bother. 
+    ``maxevents'' Maximum initial number of events in each timestep. Notice that the structure will grow dynamically of there are more events than that, so you shouldn't bother. 
 
 
     * Circular 2D array structure * 
@@ -46,12 +46,17 @@ class SpikeQueue(SpikeMonitor):
     * SpikeMonitor structure * 
     
     It automatically updates the underlying structure by instantiating the propagate() method of the SpikeMonitor
+    
+    Ideas:
+    ------
+    * remove the max_delay keyword and have the structure created with another
+      method (at run time)
     '''
     def __init__(self, source, synapses, 
                  max_delay = 0, maxevents = INITIAL_MAXSPIKESPER_DT):
         # SpikeMonitor structure
         self.source = source #NeuronGroup
-        self.synapses = synapses #NeuronGroup
+        self.synapses = synapses #Synapses
         
         self.max_delay = max_delay
         nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
@@ -64,7 +69,6 @@ class SpikeQueue(SpikeMonitor):
         
         super(SpikeQueue, self).__init__(source, 
                                          record = False)
-        
 
     ################################ SPIKE QUEUE DATASTRUCTURE ######################
     def next(self):
@@ -78,9 +82,8 @@ class SpikeQueue(SpikeMonitor):
     
     def offsets(self, delay):
         # Calculates offsets corresponding to a delay array
-        # That's not a very efficient way to do it
-        # (it's O(n*log(n)))
-        # (not tested!)
+        #
+        # Maybe it could be precalculated? (an int16 array?)
         I = argsort(delay)
         xs = delay[I]
         J = xs[1:]!=xs[:-1]
@@ -103,8 +106,8 @@ class SpikeQueue(SpikeMonitor):
         timesteps = (self.currenttime + delay) % len(self.n)
         
         # Compute new stack sizes:
-        old_nevents = self.n[timesteps].copy() # because we need this for the final assignation, but we need to precompute the  new one to check for overflow
-        self.n[timesteps] += offset+1 # that's a trick, plus we pre-compute it to check for overflow
+        old_nevents = self.n[timesteps].copy() # because we need this for the final assignment, but we need to precompute the  new one to check for overflow
+        self.n[timesteps] += offset+1 # that's a trick (to update stack size), plus we pre-compute it to check for overflow
         
         m = max(self.n[timesteps]) # If overflow, then at least one self.n is bigger than the size
         if (m >= self.X.shape[1]):
@@ -115,8 +118,10 @@ class SpikeQueue(SpikeMonitor):
                      % len(self.X)]=target
         
     def resize(self, maxevents):
-        # resize the underlying data structure
-        # max events will be rounded to the closest power of 2
+        '''
+        Resizes the underlying data structure (number of columns = spikes per dt).
+        max events will be rounded to the closest power of 2.
+        '''
         
         # old and new sizes
         old_maxevents = self.X.shape[1]
@@ -130,7 +135,6 @@ class SpikeQueue(SpikeMonitor):
         
         log_debug('spikequeue', 'Resizing SpikeQueue')
         
-    ######################################## SpikeMonitor Structure
     def propagate(self, spikes):
         if len(spikes):
             # synapse identification, 
@@ -138,7 +142,11 @@ class SpikeQueue(SpikeMonitor):
             # any idea? see stest_fastsynapseidentification.py
             synapses = []
             for i in spikes:
-                synapses += list(nonzero(self.synapses._statevector._pre == i)[0]) 
+                # use hstack with arrays instead of lists
+                synapses += list(nonzero(self.synapses._statevector._pre == i)[0]) # this is crazy!
+                # we need a list/array of synapses for each presynaptic neuron
+                # should we use array of arrays as objects?
+                # and it could perhaps be on the SpikeQueue object
 
             if len(synapses):
                 # delay getting:
@@ -181,6 +189,7 @@ Total memory:
 + synaptic variables (weights)
 '''
 
+# We need to write some speed tests
 if __name__=='__main__':
     queue=SpikeQueue(5,30)
     Nsynapses=4000*80 # in the CUBA example
