@@ -138,7 +138,7 @@ class SpikeQueue(SpikeMonitor):
             # any idea? see stest_fastsynapseidentification.py
             synapses = []
             for i in spikes:
-                synapses += list(nonzero(self.synapses._S._pre == i)[0]) 
+                synapses += list(nonzero(self.synapses._statevector._pre == i)[0]) 
 
             if len(synapses):
                 # delay getting:

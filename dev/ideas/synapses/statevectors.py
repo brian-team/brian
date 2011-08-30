@@ -272,12 +272,15 @@ class ConstructionSparseStateVector(object):
         
      
     def __getattr__(self, name, default = ''):
+        if name == '_allstates':
+            return self._values_dict['float32']
         if name in self.labels:
             i = self.labels.index(name)
             # where to look
             cur_typ = self.dtypes[i]
             row = self.row_indices[i]
             return self._values_dict[dtype2str(cur_typ)][row, :self.nvalues]
+        
         try:
             self.__dict__[name]
         except KeyError:

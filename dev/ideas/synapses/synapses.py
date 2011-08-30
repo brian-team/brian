@@ -133,12 +133,19 @@ class Synapses(NetworkOperation):
             self._all_units = defaultdict() # what is that
         elif isinstance(model_obj, Equations):
             self._eqs = model_obj
+            unit_checking = False
             self._state_updater, var_names = magic_state_updater(model_obj, clock=clock, order=order,
                                                                  check_units=unit_checking, implicit=implicit,
                                                                  compile=compile, freeze=freeze,
                                                                  method=method)
+            self._state_updater_varnames = var_names
+            
             
         # NOW WHAT?!!!!!            
+        # I think I should call the state updater with StateVector.states
+        # TODO: 
+        # - Maybe stateupdaters should be aware of the dtype of the data (or else my state vectors thing is sort of useless
+        # - or ensure fast access to different data types in a vectorized way?
             
         # pre/post code parsing
         pre = kwdargs.get('pre', '')
@@ -155,7 +162,7 @@ class Synapses(NetworkOperation):
 
         # Check units
         model_obj.compile_functions()
-        model_obj.check_units()
+        #model_obj.check_units()
         # Get variable names
         self.vars = model_obj._diffeq_names
         
@@ -169,7 +176,7 @@ class Synapses(NetworkOperation):
         dtypes += (np.float32, ) * self.n_vars
 
         # construction of the structure
-        self._S = ConstructionSparseStateVector(len(dtypes), dtype = dtypes, labels = default_labels+self.vars)
+        self._statevector = ConstructionSparseStateVector(len(dtypes), dtype = dtypes, labels = default_labels+self.vars)
         
 
         ############# Code!!!
@@ -178,16 +185,17 @@ class Synapses(NetworkOperation):
         pre_namespace['target'] = self.target
         pre_namespace['unique'] = np.unique
         pre_namespace['nonzero'] = np.nonzero
-        pre_namespace['_pre'] = self._S._pre
-        pre_namespace['_post'] = self._S._post
+        pre_namespace['_pre'] = self._statevector._pre
+        pre_namespace['_post'] = self._statevector._post
 
         
         for var in self.vars:
-            pre_namespace[var] = self._S[var]
+            pre_namespace[var] = self._statevector[var]
 
         def update_code(pre, indices):
             # given the synapse indices, write the update code,
             # this is here because in the code we generate we need to write this twice (because of the multiple presyn spikes for the same postsyn neuron problem)
+            
             res = re.sub(r'\b' + 'v' + r'\b', 'target.' + 'v' + '[_post['+indices+']]', pre)# postsyn variable, indexed by post syn neuron numbers
             for var in self.vars:
                 res = re.sub(r'\b' + var + r'\b', var + '['+indices+']', res) # synaptic variable, indexed by the synapse number
@@ -222,40 +230,89 @@ class Synapses(NetworkOperation):
 
         
     def __setitem__(self, key, value):
-        if not (value is True):
-            n_synapses = value
-        else:
-            n_synapses = 1
         if not isinstance(key, tuple):
             # do they?
             raise ValueError('Synapses behave as 2-D objects')
+
+        if isinstance(value, (int, bool)):
+            # Simple case, either one or multiple synapses between different neurons
+            if not (value is True):
+                n_synapses = value
+            else:
+                n_synapses = 1
         
-        pre_slice = slice2range(key[0], len(self.source))
-        post_slice = slice2range(key[1], len(self.target))
-        n_added = len(pre_slice) * len(post_slice)
+            pre_slice = slice2range(key[0], len(self.source))
+            post_slice = slice2range(key[1], len(self.target))
+            n_added = len(pre_slice) * len(post_slice)
         
-        # Construction of the pre/post neurons indices list
-        # This needs speed up!!!!
-        # BTW not sure that lists are really necessary, maybe at build time though
-        pre, post = [], []
-        for i in pre_slice:
-            pre += [i]*len(post_slice)*n_synapses
-            post += list(post_slice)*n_synapses
+            # Construction of the pre/post neurons indices list
+            # This needs speed up!!!!
+            # BTW not sure that lists are really necessary, maybe at build time though
+            pre, post = [], []
+            for i in pre_slice:
+                pre += [i]*len(post_slice)*n_synapses
+                post += list(post_slice)*n_synapses
+        elif isinstance(value, str):
+            # more complex case where the value is specified as a string, hence code
+            # The code is evaluated and this yields a matrix that is then passed 
+            code = re.sub(r'\b' + 'rand\(\)', 'rand(len(_i), len(_j))', value) # replacing rand()
+
+            pre_slice = slice2range(key[0], len(self.source))
+            post_slice = slice2range(key[1], len(self.target))
+
+            pre_grid, post_grid = np.meshgrid(pre_slice, post_slice)
+            
+            namespace = {'_i' : pre_slice,
+                         '_j' : post_slice,
+                         'i' : pre_grid,
+                         'j' : post_grid,
+                         'rand': np.random.rand}
+            log_debug('synapses.setitem', code)
+            
+            res = eval(code, namespace)
+            
+            log_debug('synapses.setitem', 'created synapses: \n '+ str(res))
+            
+            self[key] = res
+            return
+        elif isinstance(value, np.ndarray):
+            n_syn = array(value.copy(), dtype = int)
+            pre, post = np.nonzero(n_syn)
+            if (n_syn >= 1).any():
+                # no need to go through this if there is never multiple synapses
+                pre = list(pre)
+                post = list(post)
+                n_syn -= 1
+                n_syn[n_syn < 0] = 0
+                _pre, _post = np.nonzero(n_syn)
+                while len(_pre) != 0:
+                    pre += list(_pre)
+                    post += list(_post)
+                    n_syn -= 1
+                    n_syn[n_syn < 0] = 0
+                    _pre, _post = np.nonzero(n_syn)
+            
+        total_n = len(pre)
+        # values for the other fields (0)
         pre = np.array(pre, dtype = np.int32)
         post = np.array(post, dtype = np.int32)
-        delays = np.zeros(n_added*n_synapses, dtype = np.int32)
+        delays = np.zeros(total_n, dtype = np.int32)
         
         values = [pre, post, delays]
-        values += [np.zeros(n_added*n_synapses, dtype = typ) for typ in self._S.dtypes[3:]]
+        values += [np.zeros(total_n, dtype = typ) for typ in self._statevector.dtypes[3:]]
 
-        self._S.append(values)
+        self._statevector.append(values)
         
+        return total_n
 
     def __getattr__(self, name):
-        if hasattr(self, '_S'):
-            if name in self._S.labels:
+        if hasattr(self, '_statevector'):
+            if name == '_S':
+                # for the state updater
+                return self._statevector._allstates
+            if name in self._statevector.labels:
                 # Have to return a special kind of Vector, for the slicing to work
-                data = getattr(self._S, name)
+                data = getattr(self._statevector, name)
                 groups_shape = (self.pre_len, self.post_len)
 
                 # dt handling (see the ParameterVector doc)
@@ -274,7 +331,7 @@ class Synapses(NetworkOperation):
         '''
         Returns the number of existing synapses.
         '''
-        return self._S.nvalues
+        return self._statevector.nvalues
     
     def __call__(self):
         # presynaptic spikes
@@ -283,16 +340,19 @@ class Synapses(NetworkOperation):
             _namespace = self.pre_namespace
             _namespace['_synapses'] = np.array(synapses_current)
             for var in self.vars:
-                _namespace[var] = self._S[var]
+                _namespace[var] = self._statevector[var]
             _namespace['t'] = self.source.clock._t
-            _namespace['_post'] = self._S._post
+            _namespace['_post'] = self._statevector._post
             exec self.pre_code in _namespace
             
         self.pre_queue.next()
+        
+        # state update
+        self._state_updater(self)
 
     @property
     def existing_synapses(self):
-        return np.vstack((self._S._pre, self._S._post))
+        return np.vstack((self._statevector._pre, self._statevector._post))
     
     def __repr__(self):
         s = 'Synapses:\n'
@@ -331,13 +391,13 @@ class Synapses(NetworkOperation):
 #         if len(spikes):
 #             synapses = []
 #             for i in spikes:
-#                 synapses += list(nonzero(self.S._S._pre == i)[0])
+#                 synapses += list(nonzero(self.S._statevector._pre == i)[0])
                 
 #             self._namespace['_synapses'] = np.array(synapses)
 #             for var in self.S.vars:
-#                 self._namespace[var] = self.S._S[var]
+#                 self._namespace[var] = self.S._statevector[var]
 #             self._namespace['t'] = self.S.source.clock._t
-#             self._namespace['_post'] = self.S._S._post
+#             self._namespace['_post'] = self.S._statevector._post
 #             exec self._code in self._namespace
 
 
@@ -375,11 +435,11 @@ class Synapses(NetworkOperation):
 #             # any idea? see stest_fastsynapseidentification.py
 #             synapses = []
 #             for i in spikes:
-#                 synapses += list(nonzero(self.S._S._pre == i)[0]) 
+#                 synapses += list(nonzero(self.S._statevector._pre == i)[0]) 
 
 
 #             # delay getting:
-#             delays = self.S._S.delay[synapses]
+#             delays = self.S._statevector.delay[synapses]
 #             offsets = self.spike_queue.offsets(delays)
 #             self.spike_queue.insert(delays, offsets, synapses)
             
@@ -388,9 +448,9 @@ class Synapses(NetworkOperation):
 #         if len(synapses_current):
 #             self._namespace['_synapses'] = np.array(synapses_current)
 #             for var in self.S.vars:
-#                 self._namespace[var] = self.S._S[var]
+#                 self._namespace[var] = self.S._statevector[var]
 #             self._namespace['t'] = self.S.source.clock._t
-#             self._namespace['_post'] = self.S._S._post
+#             self._namespace['_post'] = self.S._statevector._post
 #             exec self._code in self._namespace
             
 #         self.spike_queue.next()
