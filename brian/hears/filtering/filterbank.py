@@ -523,19 +523,21 @@ class FunctionFilterbank(Filterbank):
     the number of channels), set the ``nchannels`` keyword argument to the
     number of output channels.
     '''
-    def __init__(self, source, func, nchannels=None):
+    def __init__(self, source, func, nchannels=None,**params):
         if isinstance(source, Bufferable):
             source = (source,)
         Filterbank.__init__(self, source)
         self.func = func
         if nchannels is not None:
             self.nchannels = nchannels
+        self.params = params
 
     def buffer_fetch_next(self, samples):
         start = self.cached_buffer_end
         end = start+samples
         inputs = tuple(s.buffer_fetch(start, end) for s in self.source)
-        return self.func(*inputs)
+#        print inputs,self.params
+        return self.func(*inputs,**self.params)
 
 
 class SumFilterbank(FunctionFilterbank):
