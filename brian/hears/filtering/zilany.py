@@ -102,6 +102,7 @@ class Chirp_Coefficients:
             
         self.Cinitphase = zeros(len(cf)) 
         self.Cgain_norm = zeros(len(cf)) 
+        self.norm_gain = zeros(len(cf)) 
         self.phase = zeros(len(cf)) 
         
         self.preal,self.pimg = self.analog_poles(0*ones(self.nch),1*ones(self.nch))
@@ -110,11 +111,13 @@ class Chirp_Coefficients:
               -arctan((self.CF[ich]-self.pimg[ich,[0,2,4,6,8]])/(-self.preal[ich,[0,2,4,6,8]]))\
                             -arctan((self.CF[ich]+self.pimg[ich,[0,2,4,6,8]])/(-self.preal[ich,[0,2,4,6,8]])))
             self.Cgain_norm[ich] = prod((self.CF[ich]-self.pimg[ich,:10])**2+self.preal[ich,:10]**2)
-    
+            self.norm_gain[ich] = sqrt(self.Cgain_norm[ich])/sqrt(self.CF[ich]**2+self.rzero[ich]**2)**5
+        print self.norm_gain
+        
     def return_coefficients(self):
         self.preal,self.pimg = self.analog_poles(self.rsigma,self.fcohc)
         for ich in xrange(self.nch):
-            norm_gain = sqrt(self.Cgain_norm[ich])/sqrt(self.CF[ich]**2+self.rzero[ich]**2)**5
+            
     #        print norm_gain
             self.phase[ich] = sum(-arctan((self.CF[ich]-self.pimg[ich,[0,2,4,6,8]])/(-self.preal[ich,[0,2,4,6,8]]))\
                                 -arctan((self.CF[ich]+self.pimg[ich,[0,2,4,6,8]])/(-self.preal[ich,[0,2,4,6,8]])))
@@ -128,7 +131,7 @@ class Chirp_Coefficients:
                 self.filt_b[ich,:,ind] = array([(-self.rzero[ich]+self.fs_bilinear[ich]),(-2*self.rzero[ich]),\
                                                 (-self.rzero[ich]-self.fs_bilinear[ich])]/temp)
                 if ind==4:
-                    self.filt_b[ich,:,ind] = norm_gain/4.*self.filt_b[ich,:,ind]
+                    self.filt_b[ich,:,ind] = self.norm_gain[ich]/4.*self.filt_b[ich,:,ind]
 #        print self.filt_a.flags,self.filt_b.flags
         return self.filt_b,self.filt_a
 
@@ -146,6 +149,7 @@ class Chirp_Coefficients:
             self.preal[ich,8] =  self.preal[ich,4]
             self.preal[ich,9] =  self.preal[ich,5]
             
+            #that only 
             self.pimg[ich,0] = self.ipw[ich]
             self.pimg[ich,4] = self.pimg[ich,0] - self.ipb[ich]
             self.pimg[ich,2] = (self.pimg[ich,0]+self.pimg[ich,4])*0.5
@@ -173,7 +177,7 @@ class Filter_Update:
         bmplace = 11.9 * log10(0.80 + cf / 456.0)
         self.centerfreq = 456.0*(pow(10,(bmplace+1.2)/11.9)-0.80)
         self.c1_coefficients=c1_coefficients
-
+        self.rsigma=[]
     def __call__(self,input):  
       
 
@@ -181,6 +185,7 @@ class Filter_Update:
         tauc1    = self.cohc*(tmptauc1-self.bmTaumin)+self.bmTaumin
         #signal path update
         self.c1_coefficients.rsigma   = 1/tauc1-1/self.bmTaumax
+        self.rsigma.append(self.c1_coefficients.rzero[0])
         self.target[0].filt_b,self.target[0].filt_a = self.c1_coefficients.return_coefficients() 
 #        #control path update
 #        tauwb = self.TauWBMax+(tauc1-self.bmTaumax)*(self.TauWBMax-self.TauWBMin)/(self.bmTaumax-self.bmTaumin)
@@ -379,26 +384,27 @@ class ZILANY(CombinedFilterbank):
         C1_filter = LinearFilterbank(source,filt_b,filt_a)
         C1_IHC = FunctionFilterbank(C1_filter,IHC_transduction,slope = 0.1,asym = ihcasym,sign=1) 
         #### C2  ####
-        c2_coefficients = Chirp_Coefficients(cf, bmTaumax, samplerate, 0*ones(len(cf)),1./ratiobm)
-        [filt_b,filt_a] = c2_coefficients.return_coefficients()
-        C2_filter = LinearFilterbank(source,filt_b,filt_a)
-        def pre_gain(x,cf=array([1000])):
-            out=zeros_like(x)
-            for ix in xrange(len(x)):
-                out[ix,:] = x[ix,:]*abs(x[ix,:])*cf**2/2e4
-            return out
-        C2_IHC_pre = FunctionFilterbank(C2_filter,pre_gain,cf=cf)
-#        C2_IHC_pre = FunctionFilterbank(C2_filter,lambda x:x*abs(x)*cf**2/2e4)
-        C2_IHC = FunctionFilterbank(C2_IHC_pre,IHC_transduction,slope = 0.2,asym = 1.0,sign=-1) 
-#        
-        C_IHC = C1_IHC + C2_IHC
-#        
-        C_IHC_lp = LowPass_filter(C_IHC,cf,3000,1.0,7)
-# 
-#        #controlers definition
+#        c2_coefficients = Chirp_Coefficients(cf, bmTaumax, samplerate, 0*ones(len(cf)),1./ratiobm)
+#        [filt_b,filt_a] = c2_coefficients.return_coefficients()
+#        C2_filter = LinearFilterbank(source,filt_b,filt_a)
+#        def pre_gain(x,cf=array([1000])):
+#            out=zeros_like(x)
+#            for ix in xrange(len(x)):
+#                out[ix,:] = x[ix,:]*abs(x[ix,:])*cf**2/2e4
+#            return out
+#        C2_IHC_pre = FunctionFilterbank(C2_filter,pre_gain,cf=cf)
+##        C2_IHC_pre = FunctionFilterbank(C2_filter,lambda x:x*abs(x)*cf**2/2e4)
+#        C2_IHC = FunctionFilterbank(C2_IHC_pre,IHC_transduction,slope = 0.2,asym = 1.0,sign=-1) 
+##        
+#        C_IHC = C1_IHC + C2_IHC
+##        
+#        C_IHC_lp = LowPass_filter(C_IHC,cf,3000,1.0,7)
+## 
+##        #controlers definition
         updater=Filter_Update([C1_filter],c1_coefficients,samplerate,cf,bmTaumax,bmTaumin,cohc,TauWBMax,TauWBMin) #instantiation of the updater for the control path
-        output = ControlFilterbank(C_IHC_lp, NL2_control, [C1_filter],updater, update_interval)  #controler for the band pass filter of the control path
-#        
+        output = ControlFilterbank(C1_filter, NL2_control, [C1_filter],updater, update_interval)  #controler for the band pass filter of the control path
+        self.rsigma = updater.rsigma
         self.set_output(output)
+
         
         #line 354
