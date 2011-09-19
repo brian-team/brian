@@ -74,79 +74,61 @@ def get_tauwb(cf,CAgain,order):
 
 
 ### function to initialize the chirp filters
-class Chirp_Coefficients:
+class Control_Coefficients:
     
-    def __init__(self,cf,taumax,samplerate,rsigma,fcohc):
+    def __init__(self,cf,samplerate):
         self.nch=len(cf)
-        self.T = 1./ samplerate  
-        self.TWOPI = 2*pi
-        self.sigma0 = 1/taumax
-        self.rsigma = rsigma
-        self.fcohc = fcohc
-        self.ipw    = 1.01*cf*self.TWOPI-50
-        self.ipb    = 0.2343*self.TWOPI*cf-1104
-        self.rpa    = pow(10, log10(cf)*0.9 + 0.55)+ 2000
-        self.pzero  = pow(10,log10(cf)*0.7+1.6)+500
-        
-        self.order_of_pole = 10             
-        self.half_order_pole = self.order_of_pole/2
-        self.order_of_zero  = self.half_order_pole
-        
-        self.fs_bilinear = self.TWOPI*cf/tan(self.TWOPI*cf*self.T/2)
-        self.fs_bilinear =tile(self.fs_bilinear.reshape(self.nch,-1),5)
-        self.rzero       = -self.pzero
-        self.CF = self.TWOPI*cf
-        self.nch=len(self.CF)
-        self.filt_a = zeros((len(cf),3,self.half_order_pole), order='F')
+        self.fs_bilinear = 2.0*samplerate;
+        self.x_cf=11.9*log10(0.8+cf/456);
+        self.f_shift=(pow(10,((x_cf+1.2)/11.9))-0.8)*456-cf
+        self.wbw=cf/4.0
+        self.filt_a = zeros((len(cf),3,4), order='F')
         self.filt_a[:,0,:] = 1
-        self.filt_b = zeros((len(cf),3,self.half_order_pole), order='F')
-        self.preal = zeros((self.nch,3))
-        self.pimg = zeros((self.nch,6))
-        
-        self.preal = self.analog_poles_real(0*ones(self.nch),1*ones(self.nch))
-        self.pimg = self.analog_poles_img()
-        self.CFmat = tile(self.CF.reshape(self.nch,-1),5)
-        self.rzeromat = tile(self.rzero.reshape(self.nch,-1),5)
-        self.Cinitphase = sum(arctan(self.CFmat/(-self.rzeromat))\
-          -arctan((self.CFmat-self.pimg[:,[0,2,1,0,1]])/(-self.preal[:,[0,2,1,0,1]]))\
-                        -arctan((self.CFmat+self.pimg[:,[0,2,1,0,1]])/(-self.preal[:,[0,2,1,0,1]])),axis=1)
-        self.CFmat10 = tile(self.CF.reshape(self.nch,-1),10)
-        self.Cgain_norm = prod((self.CFmat10-self.pimg[:,[0,1,2,3,4,5,0,3,1,5]])**2+self.preal[:,[0,1,2,0,2,1,0,0,1,1]]**2,axis=1)
-        self.norm_gain = sqrt(self.Cgain_norm)/sqrt(self.CF**2+self.rzero**2)**5
-        self.norm_gain= tile(self.norm_gain.reshape(self.nch,-1),3)
+        self.filt_b = zeros((len(cf),3,4), order='F')
         
     def return_coefficients(self):
-        self.preal = self.analog_poles_real(self.rsigma,self.fcohc)
-        self.phase = sum(-arctan((self.CFmat-self.pimg[:,[0,2,1,0,1]])/(-self.preal[:,[0,2,1,0,1]]))\
-                            -arctan((self.CFmat+self.pimg[:,[0,2,1,0,1]])/(-self.preal[:,[0,2,1,0,1]])),axis=1)
-        self.rzero = -self.CF/tan((self.Cinitphase-self.phase)/self.order_of_zero)
-        self.rzero = tile(self.rzero.reshape(self.nch,-1),5)
         
+        self.preal,self.pimg = self.analog_poles()
+        self.wbw=-(self.preal[:,0] - control_nl)/self.PI2
+        self.gain_norm_bp=(self.PI2**2*sqrt(self.wbw**2 + self.f_shift**2)*sqrt( (2*self.cf+self.f_shift)**2 + wbw**2 ))**3
+#        gain_norm_bp=gain_norm_bp/
+#                 pow( sqrt(2*PI*z[1]*2*PI*z[1] + 2*PI*cf*2*PI*cf), z_order );
         iord = [0,2,1,0,1]
-        temp = (self.fs_bilinear-self.preal[:,iord])**2+self.pimg[:,iord]**2       
-        self.filt_a[:,0,:] = 1
-        self.filt_a[:,1,:] = -2*(self.fs_bilinear**2-self.preal[:,iord]**2-self.pimg[:,iord]**2)/temp            
-        self.filt_a[:,2,:] = ((self.fs_bilinear+self.preal[:,iord])**2+self.pimg[:,iord]**2)/temp
-        self.filt_b[:,0,:] = (-self.rzero+self.fs_bilinear)/temp
-        self.filt_b[:,1,:] = (-2*self.rzero)/temp
-        self.filt_b[:,2,:] = (-self.rzero-self.fs_bilinear)/temp
-        self.filt_b[:,:,4] = self.norm_gain/4.*self.filt_b[:,:,4]                    
+        temp=(fs_bilinear-preal)**2 + pimg**2;    
+        self.filt_a[:,0,0:2] = 1
+        self.filt_a[:,1,0:2]= -2*(self.fs_bilinear**2-self.preal[:,iord]**2-self.pimg[:,iord]**2)/temp            
+        self.filt_a[:,2,0:2] = ((self.fs_bilinear+self.preal[:,iord])**2+self.pimg[:,iord]**2)/temp
+        self.filt_b[:,0,0:2] = 1/temp
+        self.filt_b[:,1,0:2] = 2./temp  
+        self.filt_b[:,2,0:2] = 1./temp
+        
+        self.filt_a[:,0,3] = 1
+        self.filt_a[:,1,3]= 0           
+        self.filt_a[:,2,3] = 0
+        self.filt_b[:,0,3] = 1
+        self.filt_b[:,1,3] = 0
+        self.filt_b[:,2,3] = 0
+        
+        self.filt_b[:,:,4] = self.gain_norm_bp*self.filt_b[:,:,4]           
+                 
         return self.filt_b,self.filt_a
 
-    def analog_poles_real(self,rsigma,fcohc):
-        self.preal[:,0] = -self.sigma0*fcohc-rsigma  #0
-        self.preal[:,1] = self.preal[:,0] - self.rpa #4
-        self.preal[:,2] = (self.preal[:,0]+self.preal[:,1])*0.5 #2
-        return self.preal
-    
-    def analog_poles_img(self):
-        self.pimg[:,0] = self.ipw #0
-        self.pimg[:,1] = self.pimg[:,0] - self.ipb #4
-        self.pimg[:,2] = (self.pimg[:,0]+self.pimg[:,1])*0.5 #2
-        self.pimg[:,3] = -self.pimg[:,0]  #1
-        self.pimg[:,4] = -self.pimg[:,2]  #3
-        self.pimg[:,5] = -self.pimg[:,1]  #5
-        return self.pimg
+    def analog_poles(self):
+        self.preal[:,0] = self.PI2*self.wbw  #0
+        self.preal[:,1] = -self.PI2*self.wbw
+        self.preal[:,2] = self.preal[:,0]
+        self.preal[:,3] = self.preal[:,1]
+        self.preal[:,4] = sself.preal[:,0]
+        self.preal[:,5] = self.preal[:,1]
+
+        self.pimg[:,0] = self.PI2*(self.cf+self.f_shift)
+        self.pimg[:,1] = -self.PI2*(self.cf+self.f_shift)
+        self.pimg[:,2] = self.pimg[:,0]
+        self.pimg[:,3] = self.pimg[:,1]
+        self.pimg[:,4] = self.pimg[:,0]
+        self.pimg[:,5] = self.pimg[:,1]
+        
+        return self.preal,self.pimg
     
 #### controlers #####         
 #definition of the class updater for the signal path bandpass filter
@@ -322,27 +304,27 @@ class ZILANY(CombinedFilterbank):
         
         
 #        ##### Control Path ####
-#        print tauwb*pi*centerfreq
-#        gt_control = BiQuadratic(source, centerfreq,tauwb*2*pi*centerfreq)
-        gt_control = ApproximateGammatone(source, centerfreq, 1./(2*pi*tauwb), order=3) 
-#        gt_control = LinearGammachirp(source, centerfreq,tauwb, c=0)
-#        gt_control = Gammatone(source, centerfreq, b=1./(pi*tauwb))
-#        def wb_gain(x,cf=array([1000]),tauwb=array([.0003]),TauWBMax=array([.0003]),wborder=3):
-#            print x.shape,cf.shape
-#            out=zeros_like(x)
-#            for ix in xrange(len(x)):
-#                out[ix,:] = (tauwb/TauWBMax)**wborder*x[ix,:]*10e3*maximum(ones(len(cf)),cf/5e3)
-#            return out
-#        gt_control1 = FunctionFilterbank(gt_control,wb_gain,cf=cf,tauwb=tauwb,TauWBMax=TauWBMax,wborder=wborder) 
-        max_temp = (tauwb/TauWBMax)**wborder*10e3*maximum(ones(len(cf)),cf/5e3)
-        gt_control1 = FunctionFilterbank(gt_control,lambda x:x*max_temp)
-
+        control_coef = Control_Coefficients(cf, samplerate)
+        [filt_b,filt_a] = control_coef.return_coefficients()
+        BP_control = LinearFilterbank(source,filt_b,filt_a)
+        
         # first non linearity of control path
-        NL1_control=FunctionFilterbank(gt_control1,boltzman,asym=ohcasym,s0=12.0,s1=5.0,x1=5.0)        
-#        #control low pass filter (its output will be used to control the signal path)
-        LP_control = LowPass_filter(NL1_control,cf,600,1.0,2)        
-#        # second non linearity of control path
-        NL2_control=FunctionFilterbank(LP_control,OHC_transduction,taumin=bmTaumin, taumax=bmTaumax, asym=ohcasym) 
+        Acp,Bcp,Ccp=100.,2.5,0.60 
+        func_NL1_control=lambda x:sign(x)*Bcp*log(1.+Acp*abs(x)**Ccp)
+        NL1_control=FunctionFilterbank(BP_control,func_NL1_control)        
+        
+        # second non linearity of control path
+        asym,s0,x1,s1=7.,8.,5.,3. 
+        shift = 1./(1.+asym)
+        x0 = s0*log((1.0/shift-1)/(1+exp(x1/s1)))
+        func_NL2_control=lambda x:(1.0/(1.0+exp(-(x-x0)/s0)*(1.0+exp(-(x-x1)/s1)))-shift)*parameters['nlgain']
+        NL2_control=FunctionFilterbank(NL1_control,func_NL2_control)      
+        
+        #control low pass filter (its output will be used to control the signal path)
+        LP_control=Butterworth(NL2_control, nbr_cf, 3, parameters['fc_LP_control'], btype='low')       
+        
+        #low pass filter for feedback to control band pass (its output will be used to control the control path)
+        LP_feed_back= Butterworth(LP_control, nbr_cf, 3,parameters['fc_LP_fb'], btype='low')
 #           
 #        #### C1  ####
         rsigma = zeros(len(cf))
@@ -350,17 +332,7 @@ class ZILANY(CombinedFilterbank):
         [filt_b,filt_a] = c1_coefficients.return_coefficients()
         C1_filter = LinearFilterbank(source,filt_b,filt_a)
         C1_IHC = FunctionFilterbank(C1_filter,IHC_transduction,slope = 0.1,asym = ihcasym,sign=1) 
-        #### C2  ####
-        c2_coefficients = Chirp_Coefficients(cf, bmTaumax, samplerate, 0*ones(len(cf)),1./ratiobm)
-        [filt_b,filt_a] = c2_coefficients.return_coefficients()
-        C2_filter = LinearFilterbank(source,filt_b,filt_a)
-        gain_temp = cf**2/2e4
-        C2_IHC_pre = FunctionFilterbank(C2_filter,lambda x:x*abs(x)*gain_temp)
-        C2_IHC = FunctionFilterbank(C2_IHC_pre,IHC_transduction,slope = 0.2,asym = 1.0,sign=-1) 
-#        
-        C_IHC = C1_IHC + C2_IHC
-#        
-        C_IHC_lp = LowPass_filter(C_IHC,cf,3000,1.0,7)
+
  
         #controlers definition
         updater=Filter_Update([C1_filter],c1_coefficients,samplerate,cf,bmTaumax,bmTaumin,cohc,TauWBMax,TauWBMin) #instantiation of the updater for the control path
