@@ -7,3 +7,5 @@ from drnl import DRNL
 from pmfr import PMFR
 from dcgc import DCGC
 from fractionaldelay import *
+from zilany import ZILANY
+from tan import TAN
