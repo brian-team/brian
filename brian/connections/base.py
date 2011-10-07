@@ -3,7 +3,7 @@ from itertools import izip
 import itertools
 from random import sample
 import bisect
-from ..units import second, msecond, check_units
+from ..units import second, msecond, check_units, DimensionMismatchError
 import types
 from .. import magic
 from ..log import log_warn, log_info, log_debug
