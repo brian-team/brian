@@ -187,7 +187,6 @@ class Filter_Update:
         self.target = target
         self.param = []
     def __call__(self,input):  
-
         self.target.filt_b,self.target.filt_a = self.coef.return_coefficients(input[-1,:]) 
         self.param.append(self.coef.control_signal)
 
@@ -305,6 +304,7 @@ class TAN(CombinedFilterbank):
         gain_lp_fb = 500*2*pi *10
         LP_feed_back = LowPass_filter(LP_control,cf,500,gain_lp_fb,1) 
          
+         
         #### signal path  ####
         # band pass filter
         signal_coef = Signal_Coefficients(cf, samplerate)
@@ -313,7 +313,7 @@ class TAN(CombinedFilterbank):
         ## Saturation
         saturation = FunctionFilterbank(BP_signal,saturation_fc,A0=0.1,B=2000,C=1.74,D=6.87e-9)   
         ## low pass IHC     
-        ihc = LowPass_IHC(saturation,cf,3800,1,7)#
+        ihc = LowPass_IHC(saturation,cf,3800,1,7)
         
         ### controlers ###
         updater1=Filter_Update(BP_control,control_coef) #instantiation of the updater for the control path
@@ -322,9 +322,10 @@ class TAN(CombinedFilterbank):
         updater2=Filter_Update(BP_signal,signal_coef) #instantiation of the updater for the control path
         output2 = ControlFilterbank(output1, LP_control, BP_signal,updater2, update_interval)  #controler for the band pass filter of the control path
         
-
-        self.control_cont = updater1.param
-        self.signal_cont = updater2.param
+#
+#        self.control_cont = updater1.param
+#        self.signal_cont = updater2.param
+#        self.set_output(BP_control)
         self.set_output(output2)
 
     
