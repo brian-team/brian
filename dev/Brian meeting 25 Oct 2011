@@ -1,0 +1,55 @@
+Brian meeting, 25 Oct 2011
+--------------------------
+1. Debriefing of Brian survey
+-----------------------------
+Docs and examples:
+* More about using C
+* Clarify the use of freeze (does it cause errors or wrong results?)
+* Example without magic; more about how to turn it off in the docs
+* More docs about model fitting (how to set parameters etc)
+* Examples of extending Brian
+
+Other comments:
+* Memory problems: optimize creation, use floats, have lighter StateMonitors
+  (e.g. with only population-averaged statistics).
+  Here's an idea for StateMonitor: how about having a
+  user-defined function that takes a vector of state variables and returns
+  a single value (or tuple of values)? (e.g. mean or variance) - this would be
+  a PopulationStateMonitor)
+* More flexibility for synapses and parallel computing are high on the list
+* Stiff integration methods
+* Parameters in noise and multiplicative noise
+
+User-contributed examples:
+  Let's do a competition! "Brian twister"?
+  We could announce it at the SfN social, on a Brian poster (oops we have to
+  do one).
+  There could be prizes (maybe 3?), with some Brian merchandise (tee-shirt etc).
+  People have to contribute short scripts that do something cool (possibly an
+  implementation of a model in a paper).
+
+2. Plan for GPU
+---------------
+We might have 1 student in Jan/Feb (from Vilnius). He would work on general
+stuff (spike queues etc).
+I will also ask for 1 more student from March to June (ENS Lyon M1).
+Let's do it by next summer!
+
+3. Next releases
+----------------
+* Version 1.3.1 (10 November)
+	* New SpikeGeneratorGroup: tests
+	* Metrics: syntax/tests/examples
+	* Brian Hears updates (Tan/Carney)
+	* Little bit of docs
+	+ new features (see txt file about this)
+
+* Version 1.4 (January)
+	* New model fitting
+	* MultiLinear...
+	* Refractoriness
+	* Victor's spatializer: syntax
+
+4. Synapses: 2012?
+------------------
+(Dan will have a look at Victor's code)
