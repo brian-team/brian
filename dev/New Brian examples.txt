@@ -1,0 +1,9 @@
+Brian examples to write
+-----------------------
+(should be short examples!)
+* Threshold papers
+* Sensitivity to coincidences
+* Pi-limit
+* Localisation paper (PLoS)
+* AdEx spiking dynamics (w/ JTouboul)
+* Reliability paper
