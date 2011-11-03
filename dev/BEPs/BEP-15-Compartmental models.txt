@@ -2,7 +2,7 @@ BEP-15: Compartmental models
 
 Abstract: I describe a way to implement compartmental models in Brian.
 
-To model a neuron with a morphology, the standard approach to divide the morphology in many
+To model a neuron with a morphology, the standard approach is to divide the morphology in many
 isopotential compartments, with currents flowing through the membrane or through the two sides of
 the compartment. In the limit of infinitely many compartments, we obtain the cable equation.
 If there any many compartments with the same equations (but possibly different parameter values),
@@ -124,6 +124,16 @@ Efficient computation of branched nerve equations.
 Hines M.
 Available on Neuron's website:
 http://www.neuron.yale.edu/neuron/nrnpubs
+
+Another method here:
+http://www.jstor.org/stable/pdfplus/2157690.pdf
+The Backward Euler Method for Numerical Solution of the Hodgkin-Huxley Equations of
+Nerve Conduction.
+Mascagni M. 1990
+
+And:
+Digital computer solutions for excitation and propagation of the nerve impulse.
+Cooley & Dodge 1966
 
 In this method, values of ionic currents are calculated at
 midpoints of time steps as a function of V(t), and the
