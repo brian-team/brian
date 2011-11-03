@@ -70,8 +70,14 @@ def compute_Ab(A, b, dt, nint):
             return dot(expm(-A * u), b)
         else:
             return array([dot(expm(-A * v), b) for v in u])
-    eAtint = dot(eAt, trapezoidal_integration(f, 0, dt, nint))
-    return eAt, eAtint
+
+    # numerical integration
+    #b2 = dot(eAt, trapezoidal_integration(f, 0, dt, nint))
+    
+    # exact calculation when A invertible
+    b2 = dot(dot(inv(A), eAt - eye(len(A))), b)
+
+    return eAt, b2
 
 def compute_exactstep(X0, A, b, t, n, nint):
     dt = t / n
@@ -127,8 +133,8 @@ def test_sim():
         X_exact[:, i] = compute_exact1(X0, b, i * dt)
     print "exact", X_exact[:, -1]
 
-#    X_euler = compute_euler(X0, A, b, T, n)
-#    print "euler error:      ", max(abs(X_euler[:,-1]-X_exact[:,-1]))
+    X_euler = compute_euler(X0, A, b, T, n)
+    print "euler error:      ", max(abs(X_euler[:,-1]-X_exact[:,-1]))
 
     X_exactstep = compute_exactstep(X0, A, b, T, n, nint)
     print "exact steps error:", max(abs(X_exactstep[:, -1] - X_exact[:, -1]))
@@ -147,8 +153,8 @@ def is_equal(x, y, epsilon):
     return (abs(x - y) < abs(x) * epsilon).all()
 
 if __name__ == '__main__':
-#    test_sim()
-
+    test_sim()
+else:
     epsilon = 1.
     while 1. + epsilon > 1.:
         epsilon /= 2
