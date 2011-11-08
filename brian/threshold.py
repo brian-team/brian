@@ -215,7 +215,7 @@ class StringThreshold(Threshold):
         self._Replacer = Replacer
 
     def __call__(self, P):
-        for var in self._vars:
+        for var in self._vars: # couldn't we do this just once?
             self._namespace[var] = P.state(var)
         self._namespace['rand'] = self._Replacer(numpy.random.rand, len(P))
         self._namespace['randn'] = self._Replacer(numpy.random.randn, len(P))
