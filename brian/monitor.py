@@ -140,6 +140,7 @@ class SpikeMonitor(Connection, Monitor):
         """
         self.nspikes = 0
         self.spikes = []
+        self._newspikes = True #recreate self._spiketimes on next access
 
     def propagate(self, spikes):
         '''
@@ -164,7 +165,7 @@ class SpikeMonitor(Connection, Monitor):
         pass
 
     def __getitem__(self, i):
-        return array([t for j, t in self.spikes if j == i])
+        return self.getspiketimes()[i]
 
     def getspiketimes(self):
         if self._newspikes:

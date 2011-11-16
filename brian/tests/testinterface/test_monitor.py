@@ -124,6 +124,20 @@ def test_spikemonitor():
         assert (mi == i)
         assert (is_approx_equal(mt, t))
 
+    # test that the spiketimes are saved and accessed correctly
+    
+    assert(len(M[0]) == len(M.spiketimes[0]) == 2 and 
+           len(M[1]) == len(M.spiketimes[1]) == 1)
+    assert((M.spiketimes[0] == M[0]).all() and (M.spiketimes[1] == M[1]).all())
+
+    # test that spiketimes are cleared on reinit
+    
+    M.reinit()
+    assert (M.nspikes == 0)
+    assert (len(M.spikes) == 0)
+    assert (len(M[0]) == 0 and len(M[1]) == 0)
+    assert (len(M.spiketimes[0]) == 0 and len(M.spiketimes[1]) == 0)
+
     # test that SpikeMonitor function calling usage does what you'd expect    
 
     f_spikes = []
