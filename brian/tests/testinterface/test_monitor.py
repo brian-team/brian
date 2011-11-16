@@ -153,6 +153,26 @@ def test_spikemonitor():
     net.run(10 * ms)
     assert (f_spikes == [0, 1, 0])
 
+    # test that SpikeMonitors in MultiConnection objects do reinitialize
+    # properly
+    G = SpikeGeneratorGroup(2, spikes, clock=defaultclock)
+    G2 = NeuronGroup(1, model='dv/dt = -v / (5*ms) : 1')
+    C = Connection(G, G2, 'v', weight=0)
+    M = SpikeMonitor(G)
+    # Note: Because M and C share the source (G), they are replaced by a 
+    #       MultiConnection 
+    net = Network(G, G2, C, M)
+    net.run(10 * ms)
+    
+    net.reinit() # make sure that the reinit propagates to the SpikeMonitor
+    assert (M.nspikes == 0)
+    assert (len(M.spikes) == 0)
+    assert (len(M[0]) == 0 and len(M[1]) == 0)
+    assert (len(M.spiketimes[0]) == 0 and len(M.spiketimes[1]) == 0)
+    
+    
+    
+
     # test interface for StateMonitor object
 
     dV = 'dV/dt = 0*Hz : 1.'

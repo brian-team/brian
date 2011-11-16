@@ -71,3 +71,9 @@ class MultiConnection(Connection):
             for C in self.connections:
                 C.compress()
             self.iscompressed = True
+
+    def reinit(self):
+        for C in self.connections:
+            # this does nothing for normal connections but is important for
+            # SpikeMonitors
+            C.reinit()   
