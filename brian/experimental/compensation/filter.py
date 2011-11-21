@@ -50,46 +50,31 @@ def get_linear_equations(eqs):
 
     return M, B
 
-def compute_filter(A, U=None):
-    """
-    Returns the lfilter (b,a) from the system X(n+1)=A X(n) + B(n)
-    To simulate the system : y = lfilter(b, a, x) where B(n)=x[n]*U.
-    u is a vector, by default it is [1, 0,...,0], but it can be any vector
-    so that the input x is injected with different scales in the different 
-    variables.
-    All the initial conditions must be 0.
-    """
+def compute_filter(A):
     d = len(A)
-
-    #if rows == 'all':
-    #    rows = range(d)
-        
-    if U is None:
-        U = zeros(d)
-        U[0] = 1.
-    U = array(U).flatten()
 
     # compute a
     a = poly(A)  # directly vector a of the filter, a[0]=1
 
     # compute b recursively
     b = zeros(d+1)
-
     T = eye(d)
-    for k in range(1, d+1):
-        T = a[k]*eye(d) + dot(A, T)
-        b[k] = sum(T[0, :] * U)
+    b[0] = T[0, 0]
+    for i in range(1, d+1):
+        T = a[i]*eye(d) + dot(A, T)
+        b[i] = T[0, 0]
 
     return b, a
 
-def simulate(eqs, I, dt, U=None):
+def simulate(eqs, I, dt):
     """
     I must be normalized (I*Re/taue for example)
     """
     M, B = get_linear_equations(eqs)
     A = linalg.expm(M * dt)
-    b, a = compute_filter(A, U=U)
-    y = lfilter(b, a, I) + B[0]
+    c = dot(inv(M), A - eye(len(M)))[0,0]
+    b, a = compute_filter(A)
+    y = lfilter(b, a, I*c) + B[0]
     return y
 
 def test_simulate():
@@ -105,7 +90,7 @@ def test_simulate():
         dV/dt=Re*(-Iinj)/taue : volt
         dV0/dt=(R*Iinj-V0+Vr)/tau : volt
         Iinj=(V-V0)/R : amp
-    """)
+        """)
     eqs.prepare()
 
 
@@ -122,15 +107,14 @@ def test_simulate():
     G = NeuronGroup(1, eqs2)
     G.V = G.V0 = Vr
     G.I = TimedArray(Is)
-    stm = StateMonitor(G, 'V0', record=True)
+    stm = StateMonitor(G, 'V', record=True)
     t0 = time.clock()
-    run(len(Is)*defaultclock.dt)
+    run(len(Is)*dt)
     t1 = time.clock()-t0
     y0 = stm.values[0]
 
     t0 = time.clock()
-    U = array([Re/taue*dt, 0]) 
-    y = simulate(eqs, Is, defaultclock.dt, U=U)
+    y = simulate(eqs, Is * Re/taue, dt)
     t2 = time.clock()-t0
 
     print t1, t2, t1/t2
