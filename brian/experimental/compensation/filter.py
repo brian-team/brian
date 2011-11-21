@@ -50,7 +50,7 @@ def get_linear_equations(eqs):
 
     return M, B
 
-def compute_filter(A):
+def compute_filter(A, row=0):
     d = len(A)
 
     # compute a
@@ -59,25 +59,25 @@ def compute_filter(A):
     # compute b recursively
     b = zeros(d+1)
     T = eye(d)
-    b[0] = T[0, 0]
+    b[0] = T[row, 0]
     for i in range(1, d+1):
         T = a[i]*eye(d) + dot(A, T)
-        b[i] = T[0, 0]
+        b[i] = T[row, 0]
 
     return b, a
 
-def simulate(eqs, I, dt):
+def simulate(eqs, I, dt, row=0):
     """
     I must be normalized (I*Re/taue for example)
     """
     M, B = get_linear_equations(eqs)
     A = linalg.expm(M * dt)
-    c = dot(inv(M), A - eye(len(M)))[0,0]
-    b, a = compute_filter(A)
-    y = lfilter(b, a, I*c) + B[0]
+    #c = dot(inv(M), A - eye(len(M)))[row,0]
+    b, a = compute_filter(A, row=row)
+    y = lfilter(b, a, I*dt) + B[row]
     return y
 
-def test_simulate():
+if __name__ == '__main__':
     R = 500*Mohm
     Re = 400*Mohm
     tau = 10*ms
@@ -96,7 +96,7 @@ def test_simulate():
 
     
 
-    Is = numpy.load("current1.npy")[:10000]
+    Is = numpy.load("current1.npy")[:50000]
     eqs2 = Equations("""
         dV/dt=Re*(I-Iinj)/taue : volt
         dV0/dt=(R*Iinj-V0+Vr)/tau : volt
@@ -105,7 +105,7 @@ def test_simulate():
     """)
 
     G = NeuronGroup(1, eqs2)
-    G.V = G.V0 = Vr
+    G.V = Vr
     G.I = TimedArray(Is)
     stm = StateMonitor(G, 'V', record=True)
     t0 = time.clock()
@@ -114,7 +114,7 @@ def test_simulate():
     y0 = stm.values[0]
 
     t0 = time.clock()
-    y = simulate(eqs, Is * Re/taue, dt)
+    y = simulate(eqs, Is * Re/taue, dt, row=0)
     t2 = time.clock()-t0
 
     print t1, t2, t1/t2
@@ -126,6 +126,3 @@ def test_simulate():
     plot(y0)
     plot(y)
     show()
-    
-if __name__ == '__main__':
-    test_simulate()

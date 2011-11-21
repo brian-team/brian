@@ -19,7 +19,8 @@ class ElectrodeCompensation (object):
         self.p = p
         self.dt = dt
         self.x0 = self.params_to_vector(*params)
-        self.durslice = durslice
+        self.duration = len(I) * dt
+        self.durslice = min(durslice, self.duration)
         self.slicesteps = int(durslice/dt)
         self.nslices = int(ceil(len(I)*dt/durslice))
         
@@ -48,43 +49,48 @@ class ElectrodeCompensation (object):
 
         return list(x)
 
-    def get_model_trace(self, *x):
+    def get_model_trace(self, row, *x):
         R, tau, Vr, Re, taue = self.vector_to_params(*x)
         eqs = Equations(self.eqs)
         eqs.prepare()
         self._eqs = eqs
-        
-        y = simulate(eqs, self.I_list[self.islice] * Re/taue, self.dt)
+        y = simulate(eqs, self.I_list[self.islice] * Re/taue, self.dt, row=row)
         return y
 
     def fitness(self, x):
         R, tau, Vr,  Re, taue = self.vector_to_params(*x)
-        y = self.get_model_trace(*x)
+        y = self.get_model_trace(0, *x)
         e = self.dt*sum(abs(self.Vraw_list[self.islice]-y)**self.p)
         return e
 
     def compensate_slice(self, x0):
         fun = lambda x: self.fitness(x)
-        x = fmin(fun, x0, maxiter=1000)
+        x = fmin(fun, x0, maxiter=1000, maxfun=1000)
         return x
 
     def compensate(self):
         self.params_list = []
         self.xlist = [self.x0]
+        t0 = time.clock()
         for self.islice in range(self.nslices):
-            print self.islice
             newx = self.compensate_slice(self.xlist[self.islice])
             self.xlist.append(newx)
             self.params_list.append(self.vector_to_params(*newx))
+            print "Slice %d/%d compensated in %.2f seconds" %  \
+                (self.islice+1, self.nslices, time.clock()-t0)
+            t0 = time.clock()
         self.xlist = self.xlist[1:]
         return self.xlist
 
     def get_compensated_trace(self):
-        Vmodel_list = []
+        Vcomp_list = []
         for self.islice in range(self.nslices):
             x = self.xlist[self.islice]
-            Vmodel_list.append(self.get_model_trace(*x))
-        self.Vcomp = hstack(Vmodel_list)
+            V = self.get_model_trace(0, *x)
+            V0 = self.get_model_trace(1, *x)
+            Velec = V-V0
+            Vcomp_list.append(self.Vraw_list[self.islice] - Velec)
+        self.Vcomp = hstack(Vcomp_list)
         return self.Vcomp
 
 def compensate(I, Vraw, 
@@ -105,15 +111,15 @@ def compensate(I, Vraw,
                                  p,
                                  R, tau, Vr, Re, taue)
     comp.compensate()
-    Vmodel = comp.get_compensated_trace()
+    Vcomp = comp.get_compensated_trace()
     params = comp.params_list
-    return Vmodel, params
+    return Vcomp, params
 
 
-def test_compensation():
+if __name__ == '__main__':
 
-    I = numpy.load("current1.npy")[:10000]
-    Vraw = numpy.load("trace1.npy")[:10000]
+    I = numpy.load("current1.npy")[:100000]
+    Vraw = numpy.load("trace1.npy")[:100000]
 
     R = 10000*Mohm
     tau = 10*ms
@@ -121,24 +127,15 @@ def test_compensation():
     Re = 1000*Mohm
     taue = 1*ms
 
-
-    t0 = time.clock()
-    Vmodel, params = compensate(I, Vraw, dt=.1*ms,
+    Vcomp, params = compensate(I, Vraw, dt=.1*ms,
+                                durslice=10*second,
                                 R=R, tau=tau, Vr=Vr, Re=Re, taue=taue)
-    t1 = time.clock()-t0
-
-    print "Compensation took %.2f seconds" % t1
-    print params
 
     subplot(211)
     plot(I)
 
     subplot(212)
     plot(Vraw)
-    plot(Vmodel)
+    plot(Vcomp)
 
     show()
-
-
-if __name__ == '__main__':
-    test_compensation()
