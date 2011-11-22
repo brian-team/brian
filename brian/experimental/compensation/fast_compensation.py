@@ -12,7 +12,7 @@ class ElectrodeCompensation (object):
 
     def __init__(self, I, Vraw,
                  dt=defaultclock.dt, durslice=1*second,
-                  p=2.0, 
+                  p=1.0, 
                  *params):
         self.I = I
         self.Vraw = Vraw

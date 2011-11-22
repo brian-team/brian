@@ -72,7 +72,6 @@ def simulate(eqs, I, dt, row=0):
     """
     M, B = get_linear_equations(eqs)
     A = linalg.expm(M * dt)
-    #c = dot(inv(M), A - eye(len(M)))[row,0]
     b, a = compute_filter(A, row=row)
     y = lfilter(b, a, I*dt) + B[row]
     return y
