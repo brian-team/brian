@@ -1,6 +1,5 @@
 Brian examples to write
 -----------------------
 (should be short examples!)
-* Sensitivity to coincidences
 * Pi-limit
 * AdEx spiking dynamics (w/ JTouboul)
