@@ -1,7 +1,7 @@
 """
 Coincidence detection example
 =============================
-from:
+Fig. 4 from:
 
     Rossant C, Leijon S, Magnusson AK, Brette R (2011).
     "Sensitivity of noisy neurons to coincident inputs".
