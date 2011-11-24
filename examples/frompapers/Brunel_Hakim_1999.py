@@ -8,7 +8,7 @@ Reference:
     "Fast Global Oscillations in Networks of Integrate-and-Fire
     Neurons with Low Firing Rates"
     Nicolas Brunel & Vincent Hakim
-    Neural Computation 11, 1621–1671 (1999)
+    Neural Computation 11, 1621-1671 (1999)
 """
 
 from brian import *
