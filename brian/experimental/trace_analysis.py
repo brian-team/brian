@@ -131,7 +131,7 @@ def spike_onsets(v, criterion=None, vc=None):
     for i in peaks:
         # Find last peak of derivative (commented: point where derivative is largest)
         # inflexion = previous_i + argmax(dv[previous_i:i])
-        inflexion=where(d2v[previous_i:i-1]*d2v[previous_i+1:i]<0)[0][-1]+2+previous_i
+        inflexion=where(d2v[previous_i:i-2]*d2v[previous_i+1:i-1]<0)[0][-1]+2+previous_i
         j += max((dv[j:inflexion] < criterion).nonzero()[0]) + 1
         l.append(j)
         previous_i = i

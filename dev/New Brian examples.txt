@@ -1,9 +1,11 @@
 Brian examples to write
 -----------------------
 (should be short examples!)
-* Threshold papers
+* Threshold paper 2: Fig. 5EF or 10A
 * Sensitivity to coincidences
 * Pi-limit
 * Localisation paper (PLoS)
 * AdEx spiking dynamics (w/ JTouboul)
 * Reliability paper
+
+* Naundorff paper: cooperativity model

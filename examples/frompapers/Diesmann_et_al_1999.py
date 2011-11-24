@@ -1,5 +1,8 @@
 '''
-Synfire chains (from Diesmann et al, 1999)
+Synfire chains
+--------------
+M. Diesmann et al. (1999). Stable propagation of synchronous spiking in cortical
+neural networks. Nature 402, 529-533.
 '''
 from brian import *
 # Neuron model parameters
