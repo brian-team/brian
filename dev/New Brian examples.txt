@@ -3,7 +3,4 @@ Brian examples to write
 (should be short examples!)
 * Sensitivity to coincidences
 * Pi-limit
-* Localisation paper (PLoS)
 * AdEx spiking dynamics (w/ JTouboul)
-
-* Naundorff paper: cooperativity model
