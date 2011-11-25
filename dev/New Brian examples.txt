@@ -1,5 +1,3 @@
 Brian examples to write
 -----------------------
-(should be short examples!)
 * Pi-limit
-* AdEx spiking dynamics (w/ JTouboul)
