@@ -16,11 +16,13 @@ of simulation (to integrate out any initial transients), the STDP rule is turned
 predicted fixed point. As there is some noise in the phase due to the random inputs, the 
 simulation is averaged over trials (50 in Figure 4, though 10 trials should be fine for 
 testing).
+
+The trials run in parallel on all available processors (10 trials take about
+2 minutes on a modern PC).
 """
 
 ### IMPORTS
 from brian import *
-from time import time
 import multiprocessing
 
 ### PARAMETERS
@@ -42,7 +44,7 @@ weights = .001
 ratio=1.50
 dA_pre=.01
 dA_post=.01*ratio 
-trials=2
+trials=10
 
 ### SIMULATION LOOP
 def trial(n): # n is the trial number
@@ -73,26 +75,28 @@ def trial(n): # n is the trial number
         
     return phase
 
-phase = zeros((M,200,trials))
-
-pool=multiprocessing.Pool(2)
-results=pool.map(trial,range(trials))
-for i in range(trials):
-    phase[:,:,i]=results[i]
-
-### PLOTTING
-for b in range(0,M):
-    m = mean(phase[b,:,:],axis=1)
-    st = std(phase[b,:,:],axis=1)/sqrt(trials)
-    errorbar(range(0,135), m[range(0,135)], yerr=st[range(0,135)], xerr=None,
-         fmt='-', ecolor=None, elinewidth=None, capsize=3,
-         barsabove=False, lolims=False, uplims=False,
-         xlolims=False, xuplims=False)
-
-title('STDP + Oscillations Simulation')
-xlabel('Spike Number')
-ylabel('Spike Phase (deg)')
-xlim([0, 135])
-ylim([140, 280])
-
-show()
+if __name__=='__main__': # This is very important on Windows, otherwise the machine crashes!
+    phase = zeros((M,200,trials))
+    
+    print "This will take approximately 2 minutes."
+    pool=multiprocessing.Pool() # uses all available processors b
+    results=pool.map(trial,range(trials))
+    for i in range(trials):
+        phase[:,:,i]=results[i]
+    
+    ### PLOTTING
+    for b in range(0,M):
+        m = mean(phase[b,:,:],axis=1)
+        st = std(phase[b,:,:],axis=1)/sqrt(trials)
+        errorbar(range(0,135), m[range(0,135)], yerr=st[range(0,135)], xerr=None,
+             fmt='-', ecolor=None, elinewidth=None, capsize=3,
+             barsabove=False, lolims=False, uplims=False,
+             xlolims=False, xuplims=False)
+    
+    title('STDP + Oscillations Simulation')
+    xlabel('Spike Number')
+    ylabel('Spike Phase (deg)')
+    xlim([0, 135])
+    ylim([140, 280])
+    
+    show()
