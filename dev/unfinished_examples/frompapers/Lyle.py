@@ -16,21 +16,12 @@ of simulation (to integrate out any initial transients), the STDP rule is turned
 predicted fixed point. As there is some noise in the phase due to the random inputs, the 
 simulation is averaged over trials (50 in Figure 4, though 10 trials should be fine for 
 testing).
-
-Usage: 
-Just run the script. The script uses the pyplot interactive setup (plot.ion()). Feel 
-free to modify the plotting interface as necessary.
- 
-Benchmark:
-50 trials takes ~1.5 hr on 1 core of an AMD Opteron 2GHz Processor
 """
 
 ### IMPORTS
-import numpy
 from brian import *
 from time import time
-import scipy.io,os
-###
+import multiprocessing
 
 ### PARAMETERS
 N=5000
@@ -51,17 +42,12 @@ weights = .001
 ratio=1.50
 dA_pre=.01
 dA_post=.01*ratio 
-trials=1
-###
-
-### INITIALIZATION
-phase = zeros((M,200,trials))
-###
+trials=2
 
 ### SIMULATION LOOP
-for dd in range(0,trials):
-
-    print "Trial:",dd
+def trial(n): # n is the trial number
+    reinit_default_clock()
+    clear(True)
 
     eqs_neurons='''
     dv/dt=((ge*(Ee-vr))+Rm*I+(El-v))/taum : volt   
@@ -69,7 +55,7 @@ for dd in range(0,trials):
     I : amp
     '''
 
-    inputs = PoissonGroup(N,rates=lambda t:((.5-.5*numpy.cos(2*numpy.pi*f*t)))*10*Hz)           
+    inputs = PoissonGroup(N,rates=lambda t:((.5-.5*cos(2*pi*f*t)))*10*Hz)           
     neurons=NeuronGroup(M,model=eqs_neurons,threshold=vt,reset=vr)
     neurons.I = a*pA
     synapses=Connection(inputs,neurons,'ge',weight=weights)
@@ -78,23 +64,26 @@ for dd in range(0,trials):
     S = SpikeMonitor(neurons)
     run(2*second)
     stdp=ExponentialSTDP(synapses,tau_pre,tau_post,dA_pre,-dA_post,wmax=10*weights,interactions='all',update='additive')     
-    run(5*second,report='text')
+    run(5*second)
     
+    phase=zeros((M,200))
     for b in range(0,M):    
-        tmp_phase = (S[b]%theta_period)*(360/theta_period)
-        print "Mean phase:",mean(tmp_phase)
-        print "STD phase:",std(tmp_phase)
-        print "len(tmp_phase):",len(tmp_phase)
-        phase[b,range(0,len(tmp_phase)),dd] = tmp_phase
-        tmp_phase=[]
+        tmp_phase=(S[b]%theta_period)*(360/theta_period)
+        phase[b,range(0,len(tmp_phase))] = tmp_phase
+        
+    return phase
 
-    clear(erase=True)
-###
+phase = zeros((M,200,trials))
+
+pool=multiprocessing.Pool(2)
+results=pool.map(trial,range(trials))
+for i in range(trials):
+    phase[:,:,i]=results[i]
 
 ### PLOTTING
 for b in range(0,M):
     m = mean(phase[b,:,:],axis=1)
-    st = std(phase[b,:,:],axis=1)/numpy.sqrt(trials)
+    st = std(phase[b,:,:],axis=1)/sqrt(trials)
     errorbar(range(0,135), m[range(0,135)], yerr=st[range(0,135)], xerr=None,
          fmt='-', ecolor=None, elinewidth=None, capsize=3,
          barsabove=False, lolims=False, uplims=False,
