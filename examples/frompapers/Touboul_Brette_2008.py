@@ -10,7 +10,6 @@ This shows the bifurcation structure when the reset value is varied
 Vr).
 '''
 from brian import *
-from scipy import optimize
 
 defaultclock.dt=0.01*ms
 
@@ -33,7 +32,6 @@ Vr:volt
 """
 
 neuron=NeuronGroup(N,model=eqs,threshold=Vcut,reset="vm=Vr;w+=b")
-#neuron.vm=optimize.fsolve(lambda v:gL*(EL-v*.001)+gL*DeltaT*exp((v*.001-VT)/DeltaT)-a*(v*.001-EL),EL/mV,xtol=0.00001)*mV
 neuron.vm=EL
 neuron.w=a*(neuron.vm-EL)
 neuron.Vr=linspace(-48.3*mV,-47.7*mV,N) # bifurcation parameter
