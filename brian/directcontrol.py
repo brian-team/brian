@@ -463,7 +463,7 @@ class EmptyGroup(object):
 class PoissonInputs(Connection):
     _record = []
     
-    def __init__(self, target, sameinputs=[], *inputs, **kwds):
+    def __init__(self, target):
         """
         Adds Poisson inputs to a NeuronGroup.
         
@@ -471,52 +471,73 @@ class PoissonInputs(Connection):
         
         ``target``
             The target NeuronGroup
-        
-        ``sameinputs = []``
-            The list of the inputs indices which are assumed to be identical for all neurons.
-        
-        ``inputs``
-            The list of the Poisson inputs, as a list of tuples (n, f, w, state)
-            where n is the number of Poisson spike trains, f their rate, w the
-            synaptic weight, and state the name of the state to connect the input to.
+
+        TODO: more tests...
         """
         self.source = EmptyGroup(target.clock)
         self.target = target
         self.N = len(self.target)
         self.clock = target.clock
-        self.inputs = inputs
+        self.inputs = []  #inputs
         self.delay = None
         self.iscompressed = True
-        self.W = zeros((len(inputs), self.N))
-        self.sameinputs = sameinputs
-        if 'record' in kwds.keys():
-            self._record = kwds['record']
-            if type(self._record) is int:
-                self._record = [self._record]
-
-        self.stateindex = dict()
         self.delays = None # delay to wait for the j-th synchronous spike to occur after the last sync event, for target neuron i
         self.lastevent = -inf * ones(self.N) # time of the last event for target neuron i
-        for i in xrange(len(self.inputs)):
-            state = self.inputs[i][3]
-            if isinstance(state, str): # named state variable
-                self.stateindex[state] = target.get_var_index(state)
-            else:
-                self.stateindex[state] = state
-            w = self.inputs[i][2]
-            if type(w) is tuple:
-                if w[0] == 'jitter':
-                    self.delays = zeros((w[2], self.N))
         self.events = []
         self.recorded_events = []
+
+    def add_input(self, n, rate, w, var,
+                  jitter=None, reliability=None,
+                  record=False,
+                  frozen=False):
+        """
+        Add a Poisson input
+        * n is the number of independent inputs
+        * rate is the rate of each Poisson process
+        * w is the synaptic weight
+        * var is the name or the index of the synaptic variable of the NeuronGroup
+        * jitter is None if there is no time jitter, otherwise it is (p, taujitter)
+          where p is the number of synchronous spikes, and taujitter the jitter in second
+        * reliability is None if the synapses are reliable, otherwise it is
+          (p, alpha) where p is the number of synchronous spikes, and alpha is the
+          reliability of the synapse (between 0 and 1)
+        * record is True if this input has to be recorded
+        * frozen is True if this input must be the same for all neurons of the NeuronGroup
+          """
+        input = dict(n=n,
+                        rate=rate,
+                        w=w,
+                        var=var,
+                        jitter=jitter,
+                        reliability=reliability,
+                        record=record,
+                        frozen=frozen)
+
+        if isinstance(var, str): # named state variable
+            input['index'] = self.target.get_var_index(var)
+        else:
+            input['index'] = var
+
+        if jitter is not None:
+            self.delays = zeros((jitter[0], self.N))
+        
+        self.inputs.append(input)
 
     def propagate(self, spikes):
         current = zeros(self.N)
         i = 0
-        for (n, f, w, state) in self.inputs:
-            state = self.stateindex[state]
-            if type(w) is not tuple:
-                if i in self.sameinputs:
+        for input in self.inputs:
+            jitter = input["jitter"]
+            reliability = input["reliability"]
+            state = input["index"]
+            frozen = input["frozen"]
+            record = input["record"]
+            n = input["n"]
+            f = input["rate"]
+            w = input["w"]
+
+            if (jitter==None) and (reliability==None):
+                if frozen:
                     rnd = binomial(n=n, p=f * self.clock.dt)
                     self.target._S[state, :] += w * rnd
                     if rnd > 0:
@@ -525,34 +546,31 @@ class PoissonInputs(Connection):
                     rnd = binomial(n=n, p=f * self.clock.dt, size=(self.N))
                     self.target._S[state, :] += w * rnd
                     ind = nonzero(rnd>0)[0]
-                    if i in self._record and len(ind)>0:
+                    if record and len(ind)>0:
                         self.recorded_events.append((ind[0], self.clock.t))
-            else:
-                # if w is a tuple, it is ('synapse', w, pmax, alpha) and there are
-                # binomial(pmax, alpha) synchronous spikes then
-                # or it is ('jitter', w, pmax, jitter) and the synchronous
-                # spikes are shifted by an exponential value with parameter jitter
-                if w[0] == 'synapse':
-                    if (w[2] > 0) & (w[3] > 0):
-                        weff = w[1] * binomial(n=w[2], p=w[3])
-                        self.target._S[state, :] += weff * binomial(n=n, p=f * self.clock.dt, size=(self.N))
-                elif w[0] == 'jitter':
-                    p = w[2]
-                    if (p > 0) & (f > 0):
-                        jitter = w[3]
-                        k = binomial(n=n, p=f * self.clock.dt, size=(self.N)) # number of synchronous events here, for every target neuron
-                        syncneurons = (k > 0) # neurons with a syncronous event here
-                        self.lastevent[syncneurons] = self.clock.t
-                        if jitter == 0.0:
-                            self.delays[:, syncneurons] = zeros((p, sum(syncneurons)))
-                        else:
-                            self.delays[:, syncneurons] = exponential(scale=jitter, size=(p, sum(syncneurons)))
-                        # Delayed spikes occur now
-                        lastevent = tile(self.lastevent, (p, 1))
-                        b = (abs(self.clock.t - (lastevent + self.delays)) <= (self.clock.dt / 2) * ones((p, self.N))) # delayed spikes occurring now
-                        weff = sum(b, axis=0) * w[1]
-                        self.target._S[state, :] += weff
-            i += 1
+            elif (jitter is not None):
+                p = jitter[0]
+                taujitter = jitter[1]
+                if (p > 0) & (f > 0):
+                    taujitter = jitter[1]
+                    k = binomial(n=n, p=f * self.clock.dt, size=(self.N)) # number of synchronous events here, for every target neuron
+                    syncneurons = (k > 0) # neurons with a syncronous event here
+                    self.lastevent[syncneurons] = self.clock.t
+                    if taujitter == 0.0:
+                        self.delays[:, syncneurons] = zeros((p, sum(syncneurons)))
+                    else:
+                        self.delays[:, syncneurons] = exponential(scale=taujitter, size=(p, sum(syncneurons)))
+                    # Delayed spikes occur now
+                    lastevent = tile(self.lastevent, (p, 1))
+                    b = (abs(self.clock.t - (lastevent + self.delays)) <= (self.clock.dt / 2) * ones((p, self.N))) # delayed spikes occurring now
+                    weff = sum(b, axis=0) * w
+                    self.target._S[state, :] += weff
+            elif (reliability is not None):
+                p = reliability[0]
+                alpha = reliability[1]
+                if (p > 0) & (alpha > 0):
+                    weff = w * binomial(n=p, p=alpha)
+                    self.target._S[state, :] += weff * binomial(n=n, p=f * self.clock.dt, size=(self.N))
 
 def _test():
     import doctest
