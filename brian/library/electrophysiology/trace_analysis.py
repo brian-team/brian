@@ -4,7 +4,6 @@ Analysis of voltage traces.
 Mainly about analysis of spike shapes.
 """
 from numpy import *
-from brian.tools.io import *
 from scipy import optimize
 from scipy import stats
 from scipy.signal import lfilter
@@ -15,7 +14,7 @@ __all__ = ['find_spike_criterion', 'spike_peaks', 'spike_onsets', 'find_onset_cr
 
 def lowpass(x, tau, dt=1.):
     """
-    Low-pass filter x(t) with time constant tau.
+    Low-pass filters x(t) with time constant tau.
     """
     a = exp(-dt / tau)
     return lfilter([1. - a], [1., -a], x)
@@ -24,7 +23,7 @@ def spike_duration(v, onsets=None, full=False):
     '''
     Average spike duration.
     Default: time from onset to next minimum.
-    If full:
+    If full is True:
     * Time from onset to peak
     * Time from onset down to same value (spike width)
     * Total duration from onset to next minimum
