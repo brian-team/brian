@@ -8,11 +8,11 @@ Comput. Neurosci. 5:45. doi: 10.3389/fncom.2011.00045
 
 Description:
 In this simulation, a group of IF neurons is given a tonic DC input and a tonic AC input.
-The DC input is mediated by current injection (neurons.I, line 61), and the AC input is 
+The DC input is mediated by current injection (neurons.I, line 62), and the AC input is 
 mediated by Poisson processes whose rate parameters are oscillating in time. Each neuron in 
 the group is given a different DC input, ensuring a unique initial phase. After two seconds 
 of simulation (to integrate out any initial transients), the STDP rule is turned on 
-(ExponentialSTDP, line 65), and the population of neurons converges to the theoretically 
+(ExponentialSTDP, line 68), and the population of neurons converges to the theoretically 
 predicted fixed point. As there is some noise in the phase due to the random inputs, the 
 simulation is averaged over trials (50 in Figure 4, though 10 trials should be fine for 
 testing).
