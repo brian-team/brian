@@ -1,0 +1,34 @@
+Next releases
+=============
+Version 1.3.1
+-------------
+Initial deadline: 10 November
+	[DONE] * Brian examples for our papers [add: pi-limit]
+	* New SpikeGeneratorGroup: tests
+		- check syntax
+		- test speed
+		- test bugs
+	* Metrics: syntax/tests/examples
+		- we need a list of those
+	* Brian Hears updates (Tan/Carney)
+		- do we need tests? (against their papers/code?)
+	* More docs (see Brian meeting 25 Oct 2011)
+	* Bug fixes added by Marcel (put in new_features.txt)
+	* Trace analysis library (new electrophysiology library package)
+		- docs
+		- update our own scripts to use this library instead of the experimental code
+		- remove functions taken from experimental/trace_analysis
+		- examples (examples/electrophysiology)
+	* PoissonInputs: docs and syntax
+	* Maybe: Sompolinsky example? (if it doesn't require a sound database)
+	* What is the state of the experimental neuromorphic module, anything stable there?
+	* Check all new features (see svn history) and add in new_features.txt
+
+Version 1.4
+-----------
+Initial deadline: January
+	* Examples from the twister
+	* New model fitting
+	* MultiLinear...
+	* Refractoriness
+	* Victor's spatializer: syntax

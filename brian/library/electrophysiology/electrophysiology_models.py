@@ -1,5 +1,5 @@
 '''
-Electrophysiology library for Brian.
+Electrophysiology models for Brian.
 R. Brette 2008.
 
 Contains:

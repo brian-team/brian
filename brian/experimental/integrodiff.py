@@ -1,7 +1,7 @@
 '''
 Conversion from integral form to differential form.
 See BEP-5.
-
+ 
 TODO:
 * maximum rank
 * better function name
