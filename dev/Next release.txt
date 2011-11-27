@@ -19,6 +19,7 @@ Initial deadline: 10 November
 		- update our own scripts to use this library instead of the experimental code
 		- remove functions taken from experimental/trace_analysis
 		- examples (examples/electrophysiology)
+		- are there other functions we might want to insert? (some used to process Anna's traces?)
 	* PoissonInputs: docs and syntax
 	* Maybe: Sompolinsky example? (if it doesn't require a sound database)
 	* What is the state of the experimental neuromorphic module, anything stable there?
