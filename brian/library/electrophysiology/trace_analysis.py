@@ -5,7 +5,6 @@ Mainly about analysis of spike shapes.
 """
 from numpy import *
 from scipy import optimize
-from scipy import stats
 from scipy.signal import lfilter
 
 __all__ = ['find_spike_criterion', 'spike_peaks', 'spike_onsets', 'find_onset_criterion',
