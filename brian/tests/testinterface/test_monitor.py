@@ -236,6 +236,39 @@ def test_spikemonitor():
 
     reinit_default_clock() # for next test
 
+def test_counter():
+    '''
+    Tests the consistency of :class:`SpikeCounter`,
+    :class:`PopulationSpikeCounter` and :class:`SpikeMonitor`.
+    '''
+    
+    reinit_default_clock()
+    
+    # Test whether all monitors count the same number of spikes
+    
+    spikes = [(0, 3 * ms), (1, 4 * ms), (0, 7 * ms)]
+
+    G = SpikeGeneratorGroup(2, spikes, clock=defaultclock)
+    M = SpikeMonitor(G)
+    C = SpikeCounter(G)
+    P = PopulationSpikeCounter(G)
+    net = Network(G, M, C, P)
+    net.run(10 * ms)
+    
+    # total number of spikes
+    assert(M.nspikes == C.nspikes == P.nspikes == 3)
+    # spikes per neuron
+    assert(len(M[0]) == C[0] == C.count[0] == 2)
+    assert(len(M[1]) == C[1] == C.count[1] == 1)
+    # check for correct reinit
+    net.reinit()
+    assert(M.nspikes == C.nspikes == P.nspikes == 0)
+    assert(len(M[0]) == C[0] == C.count[0] == 0)
+    assert(len(M[1]) == C[1] == C.count[1] == 0)
+    
+    reinit_default_clock() # for next test
+    
+
 def test_coincidencecounter():
     """
     Simulates an IF model with constant input current and checks
@@ -440,4 +473,5 @@ def test_coincidencecounter():
 
 if __name__ == '__main__':
     test_spikemonitor()
+    test_counter()
 #    test_coincidencecounter()

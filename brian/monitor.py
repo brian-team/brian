@@ -150,9 +150,9 @@ class SpikeMonitor(Connection, Monitor):
         '''
         if len(spikes):
             self._newspikes = True
-        self.nspikes += len(spikes)
-        if self.record:
-            self.spikes += zip(spikes, repeat(self.source.clock.t))
+            self.nspikes += len(spikes)
+            if self.record:
+                self.spikes += zip(spikes, repeat(self.source.clock.t))
 
     def origin(self, P, Q):
         '''
@@ -280,8 +280,9 @@ class SpikeCounter(PopulationSpikeCounter):
         return int(self.count[i])
 
     def propagate(self, spikes):
-        PopulationSpikeCounter.propagate(self, spikes)
-        self.count[spikes] += 1
+        if len(spikes):
+            PopulationSpikeCounter.propagate(self, spikes)
+            self.count[spikes] += 1
 
     def reinit(self):
         self.count[:] = 0
@@ -340,9 +341,10 @@ class StateSpikeMonitor(SpikeMonitor):
         self._units = [source.unit(v) for v in var]
 
     def propagate(self, spikes):
-        self.nspikes += len(spikes)
-        recordedstate = [ [x * u for x in v[spikes]] for v, u in izip(self._vars, self._units) ]
-        self.spikes += zip(spikes, repeat(self.source.clock.t), *recordedstate)
+        if len(spikes):
+            self.nspikes += len(spikes)
+            recordedstate = [ [x * u for x in v[spikes]] for v, u in izip(self._vars, self._units) ]
+            self.spikes += zip(spikes, repeat(self.source.clock.t), *recordedstate)
 
     def __getitem__(self, i):
         return NotImplemented # don't use the version from SpikeMonitor
@@ -405,20 +407,21 @@ class ISIHistogramMonitor(HistogramMonitorBase):
         self.LS = 1000 * second * ones(len(self.source))
 
     def propagate(self, spikes):
-        super(ISIHistogramMonitor, self).propagate(spikes)
-        isi = self.source.clock.t - self.LS[spikes]
-        self.LS[spikes] = self.source.clock.t
-        # all this nonsense is necessary to deal with the fact that
-        # numpy changed the semantics of histogram in 1.2.0 or thereabouts
-        try:
-            h, a = histogram(isi, self.bins, new=True)
-        except TypeError:
-            h, a = histogram(isi, self.bins)
-        if len(h) == len(self.count):
-            self.count += h
-        else:
-            self.count[:-1] += h
-            self.count[-1] += len(isi) - sum(h)
+        if len(spikes):
+            super(ISIHistogramMonitor, self).propagate(spikes)
+            isi = self.source.clock.t - self.LS[spikes]
+            self.LS[spikes] = self.source.clock.t
+            # all this nonsense is necessary to deal with the fact that
+            # numpy changed the semantics of histogram in 1.2.0 or thereabouts
+            try:
+                h, a = histogram(isi, self.bins, new=True)
+            except TypeError:
+                h, a = histogram(isi, self.bins)
+            if len(h) == len(self.count):
+                self.count += h
+            else:
+                self.count[:-1] += h
+                self.count[-1] += len(isi) - sum(h)
 
 
 class FileSpikeMonitor(SpikeMonitor):
@@ -452,9 +455,10 @@ class FileSpikeMonitor(SpikeMonitor):
         self.f = open(self.filename, 'w')
 
     def propagate(self, spikes):
-        super(FileSpikeMonitor, self).propagate(spikes)
-        for i in spikes:
-            self.f.write(str(i) + ", " + str(float(self.source.clock.t)) + "\n")
+        if len(spikes):
+            super(FileSpikeMonitor, self).propagate(spikes)
+            for i in spikes:
+                self.f.write(str(i) + ", " + str(float(self.source.clock.t)) + "\n")
 
     def close_file(self):
         self.f.close()
