@@ -129,6 +129,10 @@ def compensate(I, Vraw, dt,
                slice_duration=1*second,
                p=1.0,
                **initial_params):
+    '''
+    * Renvoyer un dictionnaire de paramètres avec des vecteurs
+    * Option full=True: renvoie trace d'électrode etc
+    '''
 
     R = initial_params.get("R", 100*Mohm)
     tau = initial_params.get("tau", 20*ms)
