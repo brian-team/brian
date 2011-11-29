@@ -3,9 +3,12 @@ Electrode compensation
 """
 from brian.stateupdater import get_linear_equations
 from brian.log import log_info
+from brian import second, Mohm, mV, ms, Equations, ohm, volt, second
 from scipy.optimize import fmin
 from scipy.signal import lfilter
 from scipy import linalg
+from numpy import sqrt, ceil, zeros, eye, poly, dot, hstack, array
+import time
 
 __all__=['Lp_compensate'] # more explicit name?
 
@@ -39,17 +42,18 @@ class ElectrodeCompensation (object):
     eqs = """
             dV/dt=Re*(-Iinj)/taue : volt
             dV0/dt=(R*Iinj-V0+Vr)/tau : volt
-            Iinj=(V-V0)/R : amp
+            Iinj=(V-V0)/Re : amp
             """
 
     def __init__(self, I, Vraw,
-                 dt=defaultclock.dt, durslice=1*second,
+                 dt, durslice=1*second,
                   p=1.0, 
                  *params):
         self.I = I
         self.Vraw = Vraw
         self.p = p
         self.dt = dt
+        self.dt_ = float(dt)
         self.x0 = self.params_to_vector(*params)
         self.duration = len(I) * dt
         self.durslice = min(durslice, self.duration)
@@ -83,6 +87,8 @@ class ElectrodeCompensation (object):
 
     def get_model_trace(self, row, *x):
         R, tau, Vr, Re, taue = self.vector_to_params(*x)
+        # put units again
+        R, tau, Vr, Re, taue = R*ohm, tau*second, Vr*volt, Re*ohm, taue*second
         eqs = Equations(self.eqs)
         eqs.prepare()
         self._eqs = eqs
@@ -92,12 +98,12 @@ class ElectrodeCompensation (object):
     def fitness(self, x):
         R, tau, Vr,  Re, taue = self.vector_to_params(*x)
         y = self.get_model_trace(0, *x)
-        e = self.dt*sum(abs(self.Vraw_list[self.islice]-y)**self.p)
+        e = self.dt_*sum(abs(self.Vraw_list[self.islice]-y)**self.p)
         return e
 
     def compensate_slice(self, x0):
         fun = lambda x: self.fitness(x)
-        x = fmin(fun, x0, maxiter=1000, maxfun=1000)
+        x = fmin(fun, x0, maxiter=10000, maxfun=10000)
         return x
 
     def compensate(self):
@@ -116,22 +122,33 @@ class ElectrodeCompensation (object):
 
     def get_compensated_trace(self):
         Vcomp_list = []
+        Vneuron_list = []
+        Velec_list = []
+        
         for self.islice in range(self.nslices):
             x = self.xlist[self.islice]
             V = self.get_model_trace(0, *x)
             V0 = self.get_model_trace(1, *x)
             Velec = V-V0
+            
+            Vneuron_list.append(V0)
+            Velec_list.append(Velec)
             Vcomp_list.append(self.Vraw_list[self.islice] - Velec)
+            
         self.Vcomp = hstack(Vcomp_list)
+        self.Vneuron = hstack(Velec_list)
+        self.Velec = hstack(Vcomp_list)
+        
         return self.Vcomp
 
 def Lp_compensate(I, Vraw, dt, 
                slice_duration=1*second,
                p=1.0,
+               full=False,
                **initial_params):
     '''
-    * Renvoyer un dictionnaire de paramètres avec des vecteurs
-    * Option full=True: renvoie trace d'électrode etc
+    * Renvoyer un dictionnaire de parametres avec des vecteurs
+    * Option full=True: renvoie trace d'electrode etc
     '''
 
     R = initial_params.get("R", 100*Mohm)
@@ -147,5 +164,10 @@ def Lp_compensate(I, Vraw, dt,
                                  R, tau, Vr, Re, taue)
     comp.compensate()
     Vcomp = comp.get_compensated_trace()
-    params = comp.params_list
-    return Vcomp, params
+    params = array(comp.params_list).transpose()
+    if not full:
+        return Vcomp, params
+    else:
+        return dict(Vcompensated=Vcomp, Vneuron=comp.Vneuron,
+                    Velectrode=comp.Velec, params=params)
+
