@@ -7,7 +7,7 @@ class ElectrodeCompensation (object):
     eqs = """
             dV/dt=Re*(-Iinj)/taue : volt
             dV0/dt=(R*Iinj-V0+Vr)/tau : volt
-            Iinj=(V-V0)/R : amp
+            Iinj=(V-V0)/Re : amp
             """
 
     def __init__(self, I, Vraw,
@@ -65,7 +65,7 @@ class ElectrodeCompensation (object):
 
     def compensate_slice(self, x0):
         fun = lambda x: self.fitness(x)
-        x = fmin(fun, x0, maxiter=1000, maxfun=1000)
+        x = fmin(fun, x0, maxiter=10000, maxfun=10000)
         return x
 
     def compensate(self):
@@ -84,14 +84,17 @@ class ElectrodeCompensation (object):
 
     def get_compensated_trace(self):
         Vcomp_list = []
+        Vmodel_list = []
         for self.islice in range(self.nslices):
             x = self.xlist[self.islice]
             V = self.get_model_trace(0, *x)
             V0 = self.get_model_trace(1, *x)
             Velec = V-V0
             Vcomp_list.append(self.Vraw_list[self.islice] - Velec)
+            Vmodel_list.append(V)
         self.Vcomp = hstack(Vcomp_list)
-        return self.Vcomp
+        self.Vmodel = hstack(Vmodel_list)
+        return self.Vcomp, self.Vmodel
 
 def compensate(I, Vraw, 
                dt=defaultclock.dt, 
@@ -111,31 +114,33 @@ def compensate(I, Vraw,
                                  p,
                                  R, tau, Vr, Re, taue)
     comp.compensate()
-    Vcomp = comp.get_compensated_trace()
+    Vcomp, Vmodel = comp.get_compensated_trace()
     params = comp.params_list
-    return Vcomp, params
+    return Vcomp, Vmodel, params
 
 
 if __name__ == '__main__':
 
-    I = numpy.load("current1.npy")[:100000]
+    I = numpy.load("current1.npy")[:100000] * 80
     Vraw = numpy.load("trace1.npy")[:100000]
 
-    R = 10000*Mohm
-    tau = 10*ms
+    R = 200*Mohm
+    tau = 20*ms
     Vr = -70*mV
-    Re = 1000*Mohm
-    taue = 1*ms
+    Re = 50*Mohm
+    taue = .5*ms
 
-    Vcomp, params = compensate(I, Vraw, dt=.1*ms,
-                                durslice=10*second,
-                                R=R, tau=tau, Vr=Vr, Re=Re, taue=taue)
+    Vcomp, Vmodel, params = compensate(I, Vraw, dt=.1*ms,
+                                       p = 1.0,
+                                        durslice=10*second,
+                                        R=R, tau=tau, Vr=Vr, Re=Re, taue=taue)
 
-    subplot(211)
-    plot(I)
+    #subplot(211)
+    #plot(I)
 
-    subplot(212)
-    plot(Vraw)
-    plot(Vcomp)
+    #subplot(212)
+    plot(Vraw, 'k')
+    plot(Vmodel, 'g')
+    plot(Vcomp, 'r')
 
     show()
