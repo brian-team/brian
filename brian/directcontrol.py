@@ -462,6 +462,11 @@ class EmptyGroup(object):
 
 class PoissonInputs(Connection):
     _record = []
+    """
+    poisson_uncorrelated = PoissonInputs(group[0],'ge',weight=we,N=ne,F=lambdae,jitter=...)
+    poisson_uncorrelated.F=lambdae
+    poisson_uncorrelated.jitter=... # utiliser set property
+    """
     
     def __init__(self, target):
         """
@@ -524,7 +529,6 @@ class PoissonInputs(Connection):
         self.inputs.append(input)
 
     def propagate(self, spikes):
-        current = zeros(self.N)
         i = 0
         for input in self.inputs:
             jitter = input["jitter"]
