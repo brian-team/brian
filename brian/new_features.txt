@@ -16,11 +16,15 @@ Improvements:
 * Added RemoteControlClient.set(var, name) to allow sending data to the server
   from the client (previously you could only receive data from the server but
   not send it, except in string form).
+* Monitors do not process empty spike arrays when there have not been any 
+  spikes, increases speed for monitored networks with sparse firing (#78) 
 
 Bug fixes:
 
 * Fixed bug with frozen equations and time variable in equations
 * Fixed bug with loading sounds using Sound('filename.wav')
+* SpikeMonitor now clears spiketimes correctly on reinit (#75)
+* MultiConnection now propagates reinit (important for monitors) (#76)
 
 New features since 1.2.1
 ------------------------
