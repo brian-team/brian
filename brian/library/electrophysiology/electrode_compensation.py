@@ -7,7 +7,7 @@ from scipy.optimize import fmin
 from scipy.signal import lfilter
 from scipy import linalg
 
-__all__=['compensate'] # more explicit name?
+__all__=['Lp_compensate'] # more explicit name?
 
 def compute_filter(A, row=0):
     d = len(A)
@@ -125,7 +125,7 @@ class ElectrodeCompensation (object):
         self.Vcomp = hstack(Vcomp_list)
         return self.Vcomp
 
-def compensate(I, Vraw, dt, 
+def Lp_compensate(I, Vraw, dt, 
                slice_duration=1*second,
                p=1.0,
                **initial_params):
