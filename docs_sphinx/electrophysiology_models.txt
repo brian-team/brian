@@ -1,16 +1,16 @@
 .. currentmodule:: brian
 
-Electrophysiology
-=================
+Electrophysiology: models
+=========================
 The electrophysiology library contains a number of models of electrodes,
 amplifiers and recording protocols to simulate intracellular electrophysiological
 recordings.
 To import the electrophysiology library::
 
   from brian.library.electrophysiology import *
-  
+
 There is a series of example scripts in the examples/electrophysiology folder.
-  
+
 Electrodes
 ----------
 Electrodes are defined as resistor/capacitor (RC) circuits, or multiple
@@ -150,86 +150,3 @@ equation dJ/dt=gain2*(Vcommand-V), so that it ensures perfect clamping in the
 stationary state.
 However, this controller does not improve the settling time of the clamp, but
 only the final voltage value.
-
-Active Electrode Compensation (AEC)
------------------------------------
-The electrophysiology library includes the Active Electrode Compensation (AEC) technique
-described in Brette et al (2008),
-`High-resolution intracellular recordings using a real-time computational model of the electrode
-<http://www.di.ens.fr/~brette/papers/Brette2008Neuron.html>`__,
-Neuron 59(3):379-91.
-
-Offline AEC
-^^^^^^^^^^^
-Given a digital current-clamp recording of the (uncompensated) potential ``v``
-(vector of values) and injected current ``i``, the following instructions
-calculate the full kernel of the system and the electrode kernel::
-
-  K=full_kernel(v,i,ksize)
-  Ke=electrode_kernel_soma(K,start_tail)
-  
-``ksize`` is the size of the full kernel (number of sampling steps; typical size is
-about 15 ms) and ``start_tail`` is the size of the electrode kernel (start point
-of the ''tail'' of the full kernel; typical size if about 4 ms). The electrode
-should be compensated for capacitance (capacitance neutralization)
-but not resistance (bridge compensation). The best choice for the
-input current is a series of independent random values, and the last ``ksize``
-steps of ``v`` should be null (i.e., the injection should stop before the end).
-Here it was assumed that the recording was done at the soma; if it is done in a thin
-process such as a dendrite or axon, the function ``electrode_kernel_dendrite``
-should be used instead. The full kernel can also be obtained from a step current
-injection::
-
-  K=full_kernel_from_step(v,i,ksize)
-  Ke=electrode_kernel_soma(K,start_tail)
-
-where ``i`` is a constant value in this case (note that this is not the best choice for
-real recordings).
-
-Once the electrode kernel has been found, any recording can be compensated as follows::
-
-  vcomp=AEC_compensate(v,i,ke)
-
-where ``v`` is the raw voltage recording, ``i`` is the injected current
-and ``ke`` is the electrode kernel.
-
-Online AEC
-^^^^^^^^^^
-For dynamic-clamp or voltage-clamp recordings, the electrode compensation must be
-done online. An AEC board is initialized in the same way as an acquisition board::
-
-  board=AEC(neuron,'V','I',clock)
-  
-where ``clock`` is the acquisition clock. The estimation phase typically looks like::
-
-  board.start_injection()
-  run(2*second)
-  board.start_injection()
-  run(100*ms)
-  board.estimate()
-
-where white noise is injected for 2 seconds (default amplitude .5 nA).
-You can change the default amplitude and DC current as follows:
-``board.start_injection(amp=.5*nA,DC=1*nA)``.
-After estimation, the kernel is stored in ``board.Ke``.
-The following options can be passed to the function ``estimate``:
-``ksize`` (default 150 sampling steps), ``ktail`` (default 50 sampling steps)
-and ``dendritic`` (default ``False``, use ``True`` is the recording is a thin
-process, i.e., axon or dendrite).
-Online compensation is then switched on with ``board.switch_on()``
-and off with ``board.switch_off()``. For example, to inject a .5 nA current
-pulse for 200 ms, use the following instructions::
-
-  board.switch_on()
-  board.command=.5*nA
-  run(200*ms)
-  board.command=0*nA
-  run(150*ms)
-  board.switch_off()
-
-During the simulation, the variable ``board.record`` stores the compensated
-potential.
-
-Voltage-clamp with AEC
-^^^^^^^^^^^^^^^^^^^^^^
-To be documented!

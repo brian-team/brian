@@ -1,0 +1,11 @@
+.. currentmodule:: brian
+
+Electrophysiology: trace analysis
+=================================
+The electrophysiology library also contains methods to analyze intracellular
+recordings.
+To import the electrophysiology library::
+
+  from brian.library.electrophysiology import *
+
+There is a series of example scripts in the examples/electrophysiology folder.
