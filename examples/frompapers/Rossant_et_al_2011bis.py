@@ -45,15 +45,13 @@ group.v = El
 group.ge = group.gi = 0
 
 # independent E/I Poisson inputs
-poisson_uncorrelated = PoissonInputs(group[0])
-poisson_uncorrelated.add_input(ne, lambdae, we, 'ge')
-poisson_uncorrelated.add_input(ni, lambdai, wi, 'gi')
+p1 = PoissonInput(group[0], n=ne, rate=lambdae, w=we, var='ge')
+p2 = PoissonInput(group[0], n=ni, rate=lambdai, w=wi, var='gi')
 
 # independent E/I Poisson inputs + synchronous E events
-poisson_correlated = PoissonInputs(group[1])
-poisson_correlated.add_input(ne, lambdae-(p*1.0/ne)*lambdac, we, 'ge')
-poisson_correlated.add_input(ni, lambdai, wi, 'gi')
-poisson_correlated.add_input(1, lambdac, p*we, 'ge')
+p3 = PoissonInput(group[1], n=ne, rate=lambdae-(p*1.0/ne)*lambdac, w=we, var='ge')
+p4 = PoissonInput(group[1], n=ni, rate=lambdai, w=wi, var='gi')
+p5 = PoissonInput(group[1], n=1, rate=lambdac, w=p*we, var='ge')
 
 # run the simulation
 reinit_default_clock()
@@ -73,5 +71,3 @@ for i in [0,1]:
     title("%s: %d spikes/second" % (["uncorrelated inputs", "correlated inputs"][i], 
                                     len(M.spiketimes[i])))
 show()
-
-
