@@ -18,8 +18,6 @@ described in Brette et al (2008),
 <http://www.di.ens.fr/~brette/papers/Brette2008Neuron.html>`__,
 Neuron 59(3):379-91.
 
-Offline AEC
-^^^^^^^^^^^
 Given a digital current-clamp recording of the (uncompensated) potential ``v``
 (vector of values) and injected current ``i``, the following instructions
 calculate the full kernel of the system and the electrode kernel::
@@ -52,43 +50,5 @@ Once the electrode kernel has been found, any recording can be compensated as fo
 where ``v`` is the raw voltage recording, ``i`` is the injected current
 and ``ke`` is the electrode kernel.
 
-Online AEC
-^^^^^^^^^^
-For dynamic-clamp or voltage-clamp recordings, the electrode compensation must be
-done online. An AEC board is initialized in the same way as an acquisition board::
-
-  board=AEC(neuron,'V','I',clock)
-  
-where ``clock`` is the acquisition clock. The estimation phase typically looks like::
-
-  board.start_injection()
-  run(2*second)
-  board.start_injection()
-  run(100*ms)
-  board.estimate()
-
-where white noise is injected for 2 seconds (default amplitude .5 nA).
-You can change the default amplitude and DC current as follows:
-``board.start_injection(amp=.5*nA,DC=1*nA)``.
-After estimation, the kernel is stored in ``board.Ke``.
-The following options can be passed to the function ``estimate``:
-``ksize`` (default 150 sampling steps), ``ktail`` (default 50 sampling steps)
-and ``dendritic`` (default ``False``, use ``True`` is the recording is a thin
-process, i.e., axon or dendrite).
-Online compensation is then switched on with ``board.switch_on()``
-and off with ``board.switch_off()``. For example, to inject a .5 nA current
-pulse for 200 ms, use the following instructions::
-
-  board.switch_on()
-  board.command=.5*nA
-  run(200*ms)
-  board.command=0*nA
-  run(150*ms)
-  board.switch_off()
-
-During the simulation, the variable ``board.record`` stores the compensated
-potential.
-
-Voltage-clamp with AEC
-^^^^^^^^^^^^^^^^^^^^^^
-To be documented!
+Lp compensation
+---------------
