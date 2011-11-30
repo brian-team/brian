@@ -33,3 +33,21 @@ Initial deadline: January
 	* MultiLinear...
 	* Refractoriness
 	* Victor's spatializer: syntax
+
+SpikeGeneratorGroup
+-------------------
+Old one is in DirectControl. Slow for many spikes.
+New one is in experimental/neuromorphic/AER and works for fixed arrays of spikes (not iterators).
+
+* Write NewSpikeGeneratorGroup
+* Have new threshold (FastDC???) and choose at init time depending on argument type
+* [Marcel] Tests and make sure it works and is fast enough!
+* Docs
+* FastDCThreshold: other name?
+* AERSpikeMonitor -> in main distribution
+
+(* Syntax that combines MultipleGG and the basic one? (using MultipleSpikeGeneratorThreshold))
+(* Add SpikeMonitor.save?)
+
+Tests: in tests/testinterface/test_directcontrol
+and neuromorphic/test_AERSpikeMonitor.py
