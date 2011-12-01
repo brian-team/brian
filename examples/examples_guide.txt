@@ -65,6 +65,7 @@ frompapers/    (models adapted from published papers)
 * Rothman_Manis_2003: Cochlear neuron model of Rothman & Manis
 * Izhikevich_2006_Polychronization: polychronization
 * Izhikevich_2006_Polychronization_longer: polychronization
+* Guetig_Sompolinsky_2009.py: Time-warp invariant neuronal voltage traces
 
 interface/    (web interface)
 * interface: web interface (requires cherrypy)
