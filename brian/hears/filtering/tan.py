@@ -6,6 +6,7 @@ import warnings
 from scipy.io import loadmat,savemat
 from brian.hears import *
 
+__all__=['TAN']
 
 try:
     from scikits.samplerate import resample

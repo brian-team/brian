@@ -1122,9 +1122,9 @@ class CoincidenceCounter(SpikeMonitor):
         train associated to neuron i are shifted by ``spikedelays[i]``.
         
     ``coincidence_count_algorithm``
-        If set to ``'exclusive'``, the algorithm cannot count more than one
+        If set to ``exclusive``, the algorithm cannot count more than one
         coincidence for each model spike.
-        If set to ``'inclusive'``, the algorithm can count several coincidences
+        If set to ``inclusive``, the algorithm can count several coincidences
         for a single model spike.
     
     ``onset``

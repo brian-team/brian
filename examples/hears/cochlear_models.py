@@ -12,10 +12,10 @@ sound = sound.atlevel(50*dB) # level in rms dB SPL
 cf = erbspace(100*Hz, 1000*Hz, 50) # centre frequencies
 interval = 16  #update interval of the time varying filters
 ## DNRL
-param_drnl = {}
-param_drnl['lp_nl_cutoff_m'] = 1.1
-drnl_filter=DRNL(sound, cf, type='human', param=param_drnl)
-out = drnl_filter.process()
+#param_drnl = {}
+#param_drnl['lp_nl_cutoff_m'] = 1.1
+#drnl_filter=DRNL(sound, cf, type='human', param=param_drnl)
+#out = drnl_filter.process()
 
 ## DCGC
 #param_dcgc = {}
@@ -25,12 +25,8 @@ out = drnl_filter.process()
 #out = dcgc_filter.process()
 
 ## TAN
-#tan_filter = TAN(sound, cf, interval)
-#out = tan_filter.process()
-
-#### ZILANY
-#zinaly_filter = ZILANY(sound, cf, interval)
-#out = zinaly_filter.process()
+tan_filter = TAN(sound, cf, interval)
+out = tan_filter.process()
 
 figure()
 imshow(flipud(out.T), aspect='auto')

@@ -11,7 +11,8 @@ Initial deadline: 10 November
 	* Metrics: syntax/tests/examples
 		- we need a list of those
 	* Brian Hears updates (Tan/Carney)
-		- do we need tests? (against their papers/code?)
+	    - name: TanCarney
+	    - doc
 	* More docs (see Brian meeting 25 Oct 2011)
 	[DONE] * Bug fixes added by Marcel (put in new_features.txt)
 	* Trace analysis library (new electrophysiology library package)
@@ -51,3 +52,28 @@ New one is in experimental/neuromorphic/AER and works for fixed arrays of spikes
 
 Tests: in tests/testinterface/test_directcontrol
 and neuromorphic/test_AERSpikeMonitor.py
+
+Metrics
+-------
+in monitor:
+	CoincidenceCounter: compares each model spike train with the corresponding target spike train (or more complex)
+		data should be: 1 spike train, N spike trains or a dictionary of spike trains with keys = subgroups
+		remove spikedelays
+		model_length -> count (as in SpikeCounter)
+		remove target_length
+	CoincidenceMatrixCounter: compares each model spike train with all model spike trains
+		update docstring
+		group1, group2 (optional) instead of source
+	VanRossumMetric
+	
+in tools/statistics:
+	get_gamma_factor
+		as a method in the class (gamma_factor)
+	get_gamma_factor_matrix
+		as a method in the class
+	gamma_factor
+	
+in Audition/electrophysiology/Joris/utils
+	compute_sac
+	compute_xsac
+	revcor
