@@ -17,13 +17,13 @@ except (ImportError, ValueError):
 from bufferable import Bufferable
 from prefs import get_samplerate
 from db import dB, dB_type, dB_error, gain
-from scipy.signal import fftconvolve
+from scipy.signal import fftconvolve, lfilter
 
 __all__ = ['BaseSound', 'Sound',
            'pinknoise','brownnoise','powerlawnoise',
            'whitenoise', 'irns', 'irno', 
            'tone', 'click', 'clicks', 'silence', 'sequence', 'harmoniccomplex',
-           'loadsound', 'savesound', 'play',
+           'loadsound', 'savesound', 'play', 'vowel'
            ]
 
 
@@ -88,6 +88,7 @@ class Sound(BaseSound, numpy.ndarray):
     .. automethod:: click
     .. automethod:: clicks
     .. automethod:: harmoniccomplex
+    .. automethod:: vowel
     
     **Timing and sequencing**
     
@@ -929,6 +930,71 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
+    def vowel(vowel=None, formants=None, pitch=100*Hz, duration=1*second,
+          samplerate=None, nchannels=1):
+        '''
+        Returns an artifically created spoken vowel sound (following the 
+        source-filter model of speech production) with a given ``pitch``.
+        
+        The vowel can be specified by either providing ``vowel`` as a string
+        ('a', 'i' or 'u') or by setting ``formants`` to a sequence of formant
+        frequencies.
+        
+        The returned sound is normalized to a maximum amplitude of 1.
+        
+        The implementation is based on the MakeVowel function written by Richard
+        O. Duda, part of the Auditory Toolbox for Matlab by Malcolm Slaney:
+        http://cobweb.ecn.purdue.edu/~malcolm/interval/1998-010/                
+        '''    
+        
+        samplerate = get_samplerate(samplerate)
+        duration = get_duration(duration, samplerate)
+        
+        if not (vowel or formants):
+            raise ValueError('Need either a vowel or a list of formants')
+        elif (vowel and formants):
+            raise ValueError('Cannot use both vowel and formants')
+            
+        if vowel:
+            if vowel == 'a' or vowel == '/a/':
+                formants = (730.0*Hz, 1090.0*Hz, 2440.0*Hz)
+            elif vowel == 'i' or vowel == '/i/':
+                formants = (270.0*Hz, 2290.0*Hz, 3010.0*Hz)
+            elif vowel == 'u' or vowel == '/u/':
+                formants = (300.0*Hz, 870.0*Hz, 2240.0*Hz)
+            else:
+                raise ValueError('Unknown vowel: "%s"' % (vowel))            
+        
+        points = np.arange(0, duration - 1, samplerate / pitch)
+            
+        indices = np.floor(points).astype(int)
+        
+        y = np.zeros(duration)
+    
+        y[indices] = (indices + 1) - points
+        y[indices + 1] = points - indices
+        
+        # model the sound source (periodic glottal excitation)  
+        a = np.exp(-250.*Hz * 2 * np.pi / samplerate)
+        y = lfilter([1],[1, 0, -a * a], y.copy())
+        
+        # model the filtering by the vocal tract
+        bandwidth = 50.*Hz
+        
+        for f in formants:
+            cft = f / samplerate
+            q = f / bandwidth
+            rho = np.exp(-np.pi * cft / q)
+            theta = 2 * np.pi * cft * np.sqrt(1 - 1/(4.0 * q * q))
+            a2 = -2 * rho * np.cos(theta)
+            a3 = rho * rho
+            y = lfilter([1 + a2 + a3], [1, a2, a3], y.copy()) 
+        
+        #normalize sound
+        return Sound(np.tile(y / np.max(np.abs(y), axis=0), (nchannels, 1)).T,
+                     samplerate=samplerate)
+
+    @staticmethod
     def sequence(*args, **kwds):
         '''
         Returns the sequence of sounds in the list sounds joined together
@@ -1075,4 +1141,5 @@ click = Sound.click
 clicks = Sound.clicks
 silence = Sound.silence
 sequence = Sound.sequence
+vowel = Sound.vowel
 loadsound = Sound.load

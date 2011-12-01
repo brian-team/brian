@@ -13,6 +13,7 @@ Minor features:
   with an optional GUI interface.
 * Added FractionalDelay filterbank to brian.hears, fractional itds to
   HeadlessDatabase and fractional shifts to Sound.shifted.
+* Added vowel function to brian.hears for creating artificial vowel sounds
 
 Improvements:
 
