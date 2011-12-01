@@ -184,7 +184,7 @@ class ElectrodeCompensation (object):
         Compensate on the current slice, by calling fmin on the fitness function.
         """
         fun = lambda x: self.fitness(x)
-        x = fmin(fun, x0, maxiter=10000, maxfun=10000)
+        x = fmin(fun, x0, maxiter=10000, maxfun=10000, disp=False)
         return x
 
     def compensate(self):
