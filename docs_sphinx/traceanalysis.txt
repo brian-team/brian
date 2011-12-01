@@ -1,12 +1,15 @@
 .. currentmodule:: brian
 
-Trace analysis
-==============
-The trace analysis library contains functions to analyse intracellular
-recordings (for example to extract spike times). It is currently experimental.
-To import it::
+Electrophysiology: trace analysis
+=================================
+The electrophysiology library also contains methods to analyze intracellular
+recordings.
+To import the electrophysiology library::
 
-  from brian.experimental.trace_analysis import *
+  from brian.library.electrophysiology import *
+
+There is a series of example scripts in the examples/electrophysiology folder.
+Currently, most methods are related to the analysis of spike shape.
 
 Miscellaneous
 -------------

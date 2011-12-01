@@ -18,7 +18,6 @@ For example, to import electrophysiology models::
    randomprocesses
    electrophysiology_models
    electrode_compensation
-   trace_analysis
    traceanalysis
    modelfitting
    hears
