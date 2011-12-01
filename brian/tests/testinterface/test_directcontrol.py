@@ -139,6 +139,21 @@ def test():
             assert is_approx_equal(s1 * msecond, s2) # the firing times are (0,1,2,3,4)ms
     test1(spikes)
 
+    # check multiple spike generator group with arrays
+    # NOTE: Units are not checked, array has to be in seconds
+    spiketimes = [array([0.0, 0.002, 0.004]),
+                  array([0.001, 0.003])]
+    spikes = mininet(MultipleSpikeGeneratorGroup, spiketimes)
+    test1(spikes)
+    
+    # multiple spike generator group with generator and period
+    def gen1():
+        yield 0 * msecond
+    def gen2():
+        yield 1 * msecond
+    spikes = mininet(MultipleSpikeGeneratorGroup, [gen1, gen2], period=2*ms)
+    test1(spikes)
+
     # check that given a different clock it works as expected, wrap in a function to stop magic functions from
     # picking up the clock objects we define here
     def testwithclock():
@@ -184,6 +199,54 @@ def test():
             assert is_approx_equal(s1 * msecond, s2) # the firing times are (0,2,2,4,4)ms
     testwithclock()
 
+    # spike generator with a function returning a list
+    def return_spikes():
+        return [(0, 0 * msecond), (1, 1 * msecond), (0, 2 * msecond),
+                (1, 3 * msecond), (0, 4 * msecond) ]
+        
+    spikes = mininet(SpikeGeneratorGroup, 2, return_spikes)
+    test1(spikes)    
+
+    # spike generator with a list of spikes with simultaneous spikes across neurons
+    spiketimes = [(0, 0 * msecond), (1, 0 * msecond), (0, 2 * msecond),
+                (1, 2 * msecond), (0, 4 * msecond), (1, 4 * msecond) ]
+    def test2(spikes):            
+        assert len(spikes) == 6
+        #check both neurons spiked at the correct times
+        for neuron in [0, 1]:
+            for s1, s2 in zip([0, 2, 4], [t for i, t in spikes if i==neuron]):
+                assert is_approx_equal(s1 * msecond, s2) 
+    
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)
+    test2(spikes)    
+
+    # same but using the gather=True option
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes, gather=True)
+    test2(spikes)    
+
+    # same but with index arrays instead of single neuron indices
+    spiketimes = [([0, 1], 0 * msecond), ([0, 1], 2 * msecond),
+                  ([0, 1], 4 * msecond)] 
+    
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)
+    test2(spikes)    
+
+    # spike generator with an array of (non-simultaneous) spikes
+    # NOTE: For an array, the times have to be in seconds and sorted
+    spiketimes = array([[0, 0.0], [1, 0.001], [0, 0.002], [1, 0.003], [0, 0.004]])
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)
+    test1(spikes)
+
+    # # spike generator with an array of (simultaneous) spikes
+    spiketimes = array([[0, 0.0], [1, 0.0], [0, 0.002], [1, 0.002], [0, 0.004], [1, 0.004]])
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)
+    test2(spikes)
+
+    # # spike generator with an array of (simultaneous) spikes, using gather=True
+    spiketimes = array([[0, 0.0], [1, 0.0], [0, 0.002], [1, 0.002], [0, 0.004], [1, 0.004]])
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes, gather=True)
+    test2(spikes)
+    
     # spike generator with generator
     def sg():
         yield (0, 0 * msecond)
@@ -198,6 +261,13 @@ def test():
     spikes1, spikes2 = mininet2(SpikeGeneratorGroup, 2, sg)
     test1(spikes1)
     test1(spikes2)
+
+    # spike generator group with generator and period
+    def gen():
+        yield (0, 0 * msecond)
+        yield (1, 1 * msecond)
+    spikes = mininet(SpikeGeneratorGroup, 2, gen, period=2*ms)
+    test1(spikes)
 
     # pulse packet with 0 spread
     spikes = mininet(PulsePacket, 2.5 * msecond, 10, 0 * msecond)
