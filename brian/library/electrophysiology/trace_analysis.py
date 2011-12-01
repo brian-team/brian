@@ -167,7 +167,7 @@ def spike_onsets_dv3(v, vc=None):
         l.append(j)
     return array(l)
 
-def find_onset_criterion(v, guess=0.1, vc=None):
+def find_onset_criterion(v, guess=0.0001, vc=None):
     '''
     Finds the best criterion on dv/dt to determine spike onsets,
     based on minimum threshold variability.

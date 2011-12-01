@@ -13,12 +13,12 @@ Initial deadline: 10 November
 	* Brian Hears updates (Tan/Carney)
 		- do we need tests? (against their papers/code?)
 	* More docs (see Brian meeting 25 Oct 2011)
-	* Bug fixes added by Marcel (put in new_features.txt)
+	[DONE] * Bug fixes added by Marcel (put in new_features.txt)
 	* Trace analysis library (new electrophysiology library package)
 		- docs
 		- update our own scripts to use this library instead of the experimental code
 		- remove functions taken from experimental/trace_analysis
-		- examples (examples/electrophysiology)
+		[DONE] - examples (examples/electrophysiology)
 		- are there other functions we might want to insert? (some used to process Anna's traces?)
 	* PoissonInputs: docs and syntax
 	* Maybe: Sompolinsky example? (if it doesn't require a sound database)

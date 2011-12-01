@@ -5,6 +5,9 @@ Major features:
 
 Minor features:
 
+* Many more examples from papers
+* New electrode compensation module (in library.electrophysiology)
+* New trace analysis module (in library.electrophysiology)
 * Added new brian.tools.taskfarm.run_tasks function to use multiple CPUs to
   perform multiple runs of a simulation and save results to a DataManager,
   with an optional GUI interface.
