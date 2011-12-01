@@ -5,6 +5,8 @@ Major features:
 
 Minor features:
 
+* New PoissonInput class
+* New auditory model: TanCarney (brian.hears)
 * Many more examples from papers
 * New electrode compensation module (in library.electrophysiology)
 * New trace analysis module (in library.electrophysiology)
@@ -17,6 +19,7 @@ Minor features:
 
 Improvements:
 
+* SpikeGeneratorGroup is much faster.
 * Added RemoteControlClient.set(var, name) to allow sending data to the server
   from the client (previously you could only receive data from the server but
   not send it, except in string form).
