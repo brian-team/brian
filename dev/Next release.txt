@@ -21,7 +21,7 @@ Initial deadline: 10 November
 		[DONE] - examples (examples/electrophysiology)
 		- are there other functions we might want to insert? (some used to process Anna's traces?)
 	* PoissonInputs: docs and syntax
-	* Maybe: Sompolinsky example? (if it doesn't require a sound database)
+	[DONE] * Maybe: Sompolinsky example? (if it doesn't require a sound database)
 	* What is the state of the experimental neuromorphic module, anything stable there?
 	* Check all new features (see svn history) and add in new_features.txt
 
