@@ -15,9 +15,9 @@ Initial deadline: 10 November
 	* More docs (see Brian meeting 25 Oct 2011)
 	[DONE] * Bug fixes added by Marcel (put in new_features.txt)
 	* Trace analysis library (new electrophysiology library package)
-		- docs
-		- update our own scripts to use this library instead of the experimental code
-		- remove functions taken from experimental/trace_analysis
+		[DONE] - docs
+		[DONE] - update our own scripts to use this library instead of the experimental code
+		[DONE] - remove functions taken from experimental/trace_analysis
 		[DONE] - examples (examples/electrophysiology)
 		- are there other functions we might want to insert? (some used to process Anna's traces?)
 	* PoissonInputs: docs and syntax

@@ -103,6 +103,20 @@ one finds the maximum of d3v/dt3. These are global maxima in each interspike
 interval (it could be that looking for the last local maximum gives better
 results).
 
+The following function returns the depolarization slope preceding each spike
+as an array::
+
+  slopes=slope_threshold(v, onsets=None, T=None)
+
+In this function, spike onset indexes are passed through the ``onset``
+keyword. The depolarization slope is calculated by linear regression over the
+``T`` time bins preceding each spike. The result is in units of the time bin.
+
+In a similar way, the following function returns the average membrane
+potential preceding each spike as an array::
+
+  vm_threshold(v, onsets=None, T=None):
+
 Spike shape
 ^^^^^^^^^^^
 The following function returns the average spike duration, defined as the time
@@ -129,3 +143,17 @@ The arguments ``before`` and ``after`` specify the number of time steps
 before and after the triger times.
 
 Note: this should not be specific to spikes, it's a stimulus-triggered average.
+
+Spike mask
+^^^^^^^^^^
+It is often useful to discard spikes from the trace to analyse it. The following
+function returns an array of booleans which are True in spikes::
+
+  spike_mask(v, spikes=None, T=None)
+
+The starting point of each spike (time bin) is given by the ``spikes`` variable
+(default: onsets), and ``T`` is the duration of each spike in time bins.
+This function can then be used to select the subthreshold trace or the spikes::
+
+  v_subthreshold=v[-spike_mask(v,T=100)]
+  v_spikes=v[spike_mask(v,T=100)]

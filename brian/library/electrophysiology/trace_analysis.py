@@ -204,7 +204,7 @@ def vm_threshold(v, onsets=None, T=None):
 def slope_threshold(v, onsets=None, T=None):
     '''
     Slope of membrane potential before spike threshold (T steps).
-    Returns all slopes as a list.
+    Returns all slopes as an array.
     '''
     if onsets is None: onsets = spike_onsets(v)
     l = []
