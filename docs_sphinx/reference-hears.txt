@@ -76,7 +76,7 @@ Cochlear model library
 ----------------------
 .. autoclass:: DRNL
 .. autoclass:: DCGC
-.. autoclass:: PMFR
+.. autoclass:: TanCarney
 
 Filterbank group
 ----------------
