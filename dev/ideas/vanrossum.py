@@ -56,8 +56,6 @@ plot(trace.times / ms, trace[50])
 subplot(223)
 imshow(VR.get_distance())
 subplot(224)
-#c=counter.count*ones((N,1))
-#M=c+c.T-2*synapses.W#.todense()
 imshow(VR2.get_distance())
 
 show()
