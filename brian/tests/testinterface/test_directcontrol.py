@@ -188,6 +188,16 @@ def test():
     spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)
     test1(spikes)
 
+    # spike generator with list (already sorted so pass sort=False)
+    spiketimes = [(0, 0 * msecond), (1, 1 * msecond), (0, 2 * msecond), (1, 3 * msecond), (0, 4 * msecond) ]
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes, sort=False)
+    test1(spikes)
+
+    # spike generator with unsorted (inversely sorted) list (sort=True is default)
+    spiketimes = [(0, 4 * msecond), (1, 3 * msecond), (0, 2 * msecond), (1, 1 * msecond), (0, 0 * msecond) ]
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)
+    test1(spikes)
+
     # check that it works with a clock
     def testwithclock():
         spikes = mininet(SpikeGeneratorGroup, 2, spiketimes, clock=Clock(dt=0.1 * msecond))
