@@ -34,6 +34,8 @@ Initial deadline: January
 	* MultiLinear...
 	* Refractoriness
 	* Victor's spatializer: syntax
+	* ReverseCorrelationOnline (with online stimulus using RecentStateMonitor)
+	* VanRossum
 
 SpikeGeneratorGroup
 -------------------
@@ -55,25 +57,37 @@ and neuromorphic/test_AERSpikeMonitor.py
 
 Metrics
 -------
+Examples
 in monitor:
 	CoincidenceCounter: compares each model spike train with the corresponding target spike train (or more complex)
-		data should be: 1 spike train, N spike trains or a dictionary of spike trains with keys = subgroups
+		data should be:
+			1 spike train
+			N spike trains
+			dictionary of spike trains with keys = subgroups
 		remove spikedelays
 		model_length -> count (as in SpikeCounter)
 		remove target_length
+		gamma_factor method
 	CoincidenceMatrixCounter: compares each model spike train with all model spike trains
+		name: PopulationCoincidenceCounter
 		update docstring
 		group1, group2 (optional) instead of source
-	VanRossumMetric
+		gamma_factor method
+	VanRossumMetric: leave it here for the moment (no docs)
 	
 in tools/statistics:
-	get_gamma_factor
-		as a method in the class (gamma_factor)
-	get_gamma_factor_matrix
-		as a method in the class
-	gamma_factor
+	get_gamma_factor: remove and copy in gamma_factor and CoincidenceCounter.gamma_factor()
+	get_gamma_factor_matrix: move to CoincidenceMatrixCounter.gamma_factor()
 	
 in Audition/electrophysiology/Joris/utils
+	-> in tools/statistics
 	compute_sac
+		same keywords as in correlogram
+		spike_times -> spiketrains
 	compute_xsac
+		same thing
 	revcor
+		ignore_transient -> onset
+		only one spike train
+		spike_times -> spikes
+		name: spike_triggered_average
