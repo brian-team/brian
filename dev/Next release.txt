@@ -10,7 +10,7 @@ Initial deadline: 10 November
 		- test bugs
 	* Metrics: syntax/tests/examples
 		- we need a list of those
-	* Brian Hears updates (Tan/Carney)
+	[DONE] * Brian Hears updates (Tan/Carney)
 	    - name: TanCarney
 	    - doc
 	* More docs (see Brian meeting 25 Oct 2011)
