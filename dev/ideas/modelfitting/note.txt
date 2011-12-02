@@ -1,0 +1,2 @@
+
+Bertrand: maybe the monitor like CoincidenceCounter should take the same input format as modelffiting. It would be much easier if someone wants to use those monitor alone.
