@@ -255,6 +255,7 @@ class LinearFilterbank(Filterbank):
         self.filt_state[:] = 0
     
     def buffer_apply(self, input):
+        
         return apply_linear_filterbank(self.filt_b, self.filt_a, input,
                                        self.filt_state)
         
