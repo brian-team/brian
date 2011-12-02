@@ -15,6 +15,7 @@ __all__ = ['Cascade',
            'AsymmetricCompensation',
            'LowPass',
            'asymmetric_compensation_coeffs',
+           'BiQuadratic'
            ]
 
 
@@ -74,6 +75,8 @@ class Gammatone(LinearFilterbank):
         self.b,self.erb_order,self.EarQ,self.min_bw=b,erb_order,ear_Q,min_bw
         erb = ((cf/ear_Q)**erb_order + min_bw**erb_order)**(1/erb_order)
         B = b*2*pi*erb
+#        B = 2*pi*b
+
         A0 = T
         A2 = 0
         B0 = 1
@@ -129,7 +132,7 @@ class ApproximateGammatone(LinearFilterbank):
     
     The filter is derived from the sampled version of the complex analog
     gammatone impulse response
-    :math:`g_{\gamma}(t)=t^{\gamma-1} \lambda e^{i \eta t}` 
+    :math:`g_{\gamma}(t)=t^{\gamma-1} (\lambda e^{i \eta t})^{\gamma}` 
     where :math:`\gamma` corresponds to ``order``, :math:`\eta` defines the
     oscillation frequency ``cf``, and :math:`\lambda` defines the bandwidth
     parameter.
@@ -335,7 +338,8 @@ class LinearGammachirp(FIRFilterbank):
         for ich in xrange(len(f)):
             env=(t-t_start)**3*exp(-(t-t_start)/time_constant[ich])        
             self.impulse_response[ich,:]=env*cos(2*pi*(f[ich]*t+c[ich]/2*t**2)+phase[ich])
-            self.impulse_response[ich,:]=self.impulse_response[ich,:]/sqrt(sum(self.impulse_response[ich,:]**2))    
+#            self.impulse_response[ich,:]=self.impulse_response[ich,:]/sqrt(sum(self.impulse_response[ich,:]**2))
+            self.impulse_response[ich,:]=self.impulse_response[ich,:]/sum(abs(self.impulse_response[ich,:]))        
 
 
         FIRFilterbank.__init__(self,source, self.impulse_response)
@@ -644,34 +648,24 @@ class BiQuadratic(LinearFilterbank):
         
     '''
       
-    def __init__(self, source, f,b=1.019,c=1,ncascades=4):
-        f = atleast_1d(f)
-        self.f = f
+    def __init__(self, source, cf,Q):
+        cf=cf[0]
+        Q=Q[0]
+#        Q=1
+#        cf = atleast_1d(cf)
         self.samplerate= source.samplerate
+        w0 = 2*pi*cf/self.samplerate/second
+        BW = 2./log(2)*arcsinh((1./2/Q))
+        alpha = sin(w0)*sinh(log(2)/2 * BW * w0/sin(w0) )
         
-        self.c=c
-        self.b=b
-        gammatone=Gammatone(source, f,b)
-
-        self.gammatone_filt_b=gammatone.filt_b
-        self.gammatone_filt_a=gammatone.filt_a
-
-        ERBw=24.7*(4.37e-3*f+1.)
-
-        p0=2
-        p1=1.7818*(1-0.0791*b)*(1-0.1655*abs(c))
-        p2=0.5689*(1-0.1620*b)*(1-0.0857*abs(c))
-        p3=0.2523*(1-0.0244*b)*(1+0.0574*abs(c))
-        p4=1.0724
-
-        self.asymmetric_filt_b=zeros((len(f),3, ncascades))
-        self.asymmetric_filt_a=zeros((len(f),3, ncascades))
-
-        self.asymmetric_filt_b,self.asymmetric_filt_a=asymmetric_compensation_coeffs(self.samplerate,f,self.asymmetric_filt_b,self.asymmetric_filt_a,b,c,p0,p1,p2,p3,p4)
-
-        #concatenate the gammatone filter coefficients so that everything is in cascade in each frequency channel
-        self.filt_b=concatenate([self.gammatone_filt_b, self.asymmetric_filt_b],axis=2)
-        self.filt_a=concatenate([self.gammatone_filt_a, self.asymmetric_filt_a],axis=2)
+        
+        
+        b_temp =   array([alpha,0,-alpha])/(1 + alpha)
+        a_temp = array([1 + alpha,-2*cos(w0),1 - alpha])/(1 + alpha)
+        
+        print  b_temp,a_temp
+        self.filt_b = tile(b_temp.reshape([3,1]),[1,1,1])               
+        self.filt_a = tile(a_temp.reshape([3,1]),[1,1,1]) 
         
         LinearFilterbank.__init__(self, source, self.filt_b,self.filt_a)
 
