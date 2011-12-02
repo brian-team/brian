@@ -24,8 +24,8 @@ interval = 16  #update interval of the time varying filters
 #dcgc_filter = DCGC(sound, cf, interval, param=param_dcgc)
 #out = dcgc_filter.process()
 
-## TAN
-tan_filter = TAN(sound, cf, interval)
+## Tan and Carney 2003
+tan_filter = TanCarney(sound, cf, interval)
 out = tan_filter.process()
 
 figure()
