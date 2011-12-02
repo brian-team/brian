@@ -1,6 +1,9 @@
 """
 Van Rossum metric.
 We express the metric as an STDP rule + counter.
+
+I think for Poisson inputs we get (Fi+Fj)*tau/2 (after normalization by the
+duration).
 """
 from brian import *
 
