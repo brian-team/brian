@@ -268,6 +268,8 @@ class STDP(NetworkOperation):
         post_namespace = namespace(post, level=level + 1)
         pre_namespace['clip'] = clip
         post_namespace['clip'] = clip
+        pre_namespace['Inf'] = Inf
+        post_namespace['Inf'] = Inf
         pre_namespace['enumerate'] = enumerate
         post_namespace['enumerate'] = enumerate
 
@@ -383,8 +385,12 @@ class STDP(NetworkOperation):
 
             # Bounds: add one line to pre/post code (clip(w,min,max,w))
             # or actual code? (rather than compiled string)
-            pre += '\n    w[_i,:]=clip(w[_i,:],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
-            post += '\n    w[:,_i]=clip(w[:,_i],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
+            if wmax==Inf:
+                pre += '\n    w[_i,:]=clip(w[_i,:],%(min)e,Inf)' % {'min':wmin}
+                post += '\n    w[:,_i]=clip(w[:,_i],%(min)e,Inf)' % {'min':wmin}
+            else:
+                pre += '\n    w[_i,:]=clip(w[_i,:],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
+                post += '\n    w[:,_i]=clip(w[:,_i],%(min)e,%(max)e)' % {'min':wmin, 'max':wmax}
             log_debug('brian.stdp', 'PRE CODE:\n'+pre)
             log_debug('brian.stdp', 'POST CODE:\n'+post)
             # Compile code
