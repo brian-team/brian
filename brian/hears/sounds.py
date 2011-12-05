@@ -455,7 +455,8 @@ class Sound(BaseSound, numpy.ndarray):
         x = array((2 ** 15 - 1) * clip(self / a, -1, 1), dtype=int16)
         if self.nchannels==1:
             x.shape = x.size
-        x = pygame.sndarray.make_sound(x)
+        # Make sure pygame receives an array in C-order        
+        x = pygame.sndarray.make_sound(ascontiguousarray(x))
         x.play()
         if sleep:
             time.sleep(self.duration)
