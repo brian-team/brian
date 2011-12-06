@@ -250,6 +250,7 @@ class NewSpikeGeneratorGroup(NeuronGroup):
     def __init__(self, N, spiketimes, clock=None, period=None, 
                  sort=True, gather=None):
         clock = guess_clock(clock)
+        self.N = N
         self.period = period
         if gather:
             log_warn('brian.SpikeGeneratorGroup', 'SpikeGeneratorGroup\'s gather keyword use is deprecated')
@@ -259,7 +260,7 @@ class NewSpikeGeneratorGroup(NeuronGroup):
             if len(spiketimes):
                 idx, times = zip(*spiketimes)
             else:
-                return
+                idx, times = [], []
             # the following try ... handles the case where spiketimes has index arrays
             # e.g spiketimes = [([0, 1], 0 * msecond), ([0, 1, 2], 2 * msecond)]
             # Notes:
@@ -299,7 +300,7 @@ class NewSpikeGeneratorGroup(NeuronGroup):
             fallback = True
 
         if not fallback:
-            thresh = FastSpikeGeneratorThreshold(N, idx, times, dt = clock.dt)
+            thresh = FastSpikeGeneratorThreshold(N, idx, times, dt=clock.dt, period=period)
         else:
             thresh = SpikeGeneratorThreshold(N, spiketimes, period=period, sort=sort)
         
@@ -324,7 +325,7 @@ class FastSpikeGeneratorThreshold(Threshold):
     '''
     ## Notes:
     #  - N is ignored (should it not?)
-    def __init__(self, N, addr, timestamps, dt = None, period = None):
+    def __init__(self, N, addr, timestamps, dt = None, period=None):
         self.set_offsets(addr, timestamps, dt = dt)
         self.period = period
         self.dt = dt
@@ -350,7 +351,10 @@ class FastSpikeGeneratorThreshold(Threshold):
         # to see why this works. Since T is sorted, and bincount[i] returns the
         # number of elements of T equal to i, then j=cumsum(bincount(T))[t]
         # gives the first index in T where T[j]=t.
-        self.offsets = hstack((0, cumsum(bincount(T))))
+        if len(T):
+            self.offsets = hstack((0, cumsum(bincount(T))))
+        else:
+            self.offsets = array([])
     
     def __call__(self, P):
         t = P.clock.t

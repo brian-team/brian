@@ -1,5 +1,6 @@
 from brian import *
 from brian.utils.approximatecomparisons import *
+SpikeGeneratorGroup = NewSpikeGeneratorGroup
 from nose.tools import *
 
 def test():
@@ -247,15 +248,31 @@ def test():
     spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)
     test1(spikes)
 
-    # # spike generator with an array of (simultaneous) spikes
+    # spike generator with an array of (simultaneous) spikes
     spiketimes = array([[0, 0.0], [1, 0.0], [0, 0.002], [1, 0.002], [0, 0.004], [1, 0.004]])
     spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)
     test2(spikes)
 
-    # # spike generator with an array of (simultaneous) spikes, using gather=True
+    # spike generator with an array of (simultaneous) spikes, using gather=True
     spiketimes = array([[0, 0.0], [1, 0.0], [0, 0.002], [1, 0.002], [0, 0.004], [1, 0.004]])
     spikes = mininet(SpikeGeneratorGroup, 2, spiketimes, gather=True)
     test2(spikes)
+    
+    # test the handling of an empty initialization and direct setting of spiketimes
+    def test_attribute_setting():
+        reinit_default_clock()        
+        G = SpikeGeneratorGroup(2, [])
+        M = SpikeMonitor(G, True)
+        net = Network(G, M)
+        net.run(5 * msecond)
+        assert len(M.spikes) == 0
+        reinit_default_clock()  
+        net.reinit()
+        G.spiketimes = [(0, 0 * msecond), (1, 1 * msecond), (0, 2 * msecond),
+                        (1, 3 * msecond), (0, 4 * msecond)]
+        net.run(5 * msecond)
+        test1(M.spikes)
+    test_attribute_setting()
     
     # spike generator with generator
     def sg():
@@ -277,6 +294,12 @@ def test():
         yield (0, 0 * msecond)
         yield (1, 1 * msecond)
     spikes = mininet(SpikeGeneratorGroup, 2, gen, period=2*ms)
+    test1(spikes)
+
+    # spike generator group with list and period
+    spiketimes = [(0, 0 * msecond), (1, 1 * msecond)]
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes, period=2*ms)
+    print spikes
     test1(spikes)
 
     # pulse packet with 0 spread
