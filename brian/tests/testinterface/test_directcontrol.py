@@ -1,6 +1,6 @@
 from brian import *
 from brian.utils.approximatecomparisons import *
-SpikeGeneratorGroup = NewSpikeGeneratorGroup
+
 from nose.tools import *
 
 def test():
