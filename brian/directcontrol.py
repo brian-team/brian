@@ -316,6 +316,7 @@ class FastSpikeGeneratorThreshold(Threshold):
     def __init__(self, N, addr, timestamps, dt = None, period = None):
         self.set_offsets(addr, timestamps, dt = dt)
         self.period = period
+        self.reinit()
         
     def set_offsets(self, I, T, dt = 1000):
         # Convert times into integers
@@ -354,7 +355,7 @@ class FastSpikeGeneratorThreshold(Threshold):
         return self.I[self.offsets[t]:self.offsets[t+1]]
     
     def reinit(self):
-        pass
+        self.curperiod = -1
     
 class SpikeGeneratorGroup(NeuronGroup):
     """Emits spikes at given times
