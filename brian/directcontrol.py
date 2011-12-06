@@ -256,7 +256,10 @@ class NewSpikeGeneratorGroup(NeuronGroup):
         fallback = False # fall back on old SpikeGeneratorThreshold or not
         if isinstance(spiketimes, list):
             # spiketimes is a list of (i,t)
-            idx, times = zip(*spiketimes)
+            if len(spiketimes):
+                idx, times = zip(*spiketimes)
+            else:
+                return
             # the following try ... handles the case where spiketimes has index arrays
             # e.g spiketimes = [([0, 1], 0 * msecond), ([0, 1, 2], 2 * msecond)]
             # Notes:
