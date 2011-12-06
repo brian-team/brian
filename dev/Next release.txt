@@ -5,9 +5,10 @@ Version 1.3.1
 Initial deadline: 10 November
 	[DONE] * Brian examples for our papers [add: pi-limit]
 	* New SpikeGeneratorGroup: tests
-		- check syntax
+	[DONE]	- check syntax
 		- test speed
-		- test bugs
+	[DONE]	- test bugs
+	[V] : I haven't tested speed yet. but as far as I remember the gain is quite big.
 	* Metrics: syntax/tests/examples
 		- we need a list of those
 	[DONE] * Brian Hears updates (Tan/Carney)
@@ -24,6 +25,9 @@ Initial deadline: 10 November
 	* PoissonInputs: docs and syntax
 	[DONE] * Maybe: Sompolinsky example? (if it doesn't require a sound database)
 	* What is the state of the experimental neuromorphic module, anything stable there?
+	[V] : We could add the ability to save spikes from a SpikeMonitor, and load the same files. This is implemented, and works on linux and mac, not on windows.
+	    -> Marcel suggested we drop the support for windows.
+
 	* Check all new features (see svn history) and add in new_features.txt
 
 Version 1.4
