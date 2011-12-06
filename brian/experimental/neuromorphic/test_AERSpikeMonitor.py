@@ -7,7 +7,7 @@ g = PoissonGroup(100, 100*Hz)
 #g = SpikeGeneratorGroup(1, [(0,t*ms) for t in range(int(runtime/defaultclock.dt))])
 
 Maer = AERSpikeMonitor(g, './dummy.aedat')
-M = SpikeMonitor(g)
+
 
 run(100*ms)
 
@@ -20,5 +20,11 @@ if len(addr) == len(M.spikes):
 else:
     print 'glub'
     print 'addr, M.spikes',len(addr),len(M.spikes)
+
+# Check for NewSpikeGeneratorGroup
+N = max(addr)
+group = NewSpikeGeneratorGroup(N, (addr, timestamps), time_unit = 1*usecond)
+
 plot(timestamps, addr, '.')
+
 show()
