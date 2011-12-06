@@ -50,7 +50,7 @@ class TimeWarpModel(object):
             
         # every input neuron fires once in a random interval
         self.unwarped_spiketimes = zip(range(0, self.N),
-                                       250*ms * rand(self.N, 1))
+                                       250*ms * rand(self.N))
         # final spiketimes will be set in the run function
         self.input = SpikeGeneratorGroup(self.N, [])
                 
