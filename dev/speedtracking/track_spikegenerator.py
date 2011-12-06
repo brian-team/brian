@@ -2,7 +2,7 @@ speedtrack_desc = 'SpikeGeneratorGroup with a fixed array of spiketimes'
 
 from brian import *
 from tracking import *
-import gc
+import gc, time
 
 # All neurons fire simultaneously with the given rate
 # The spiketimes are either given as a list of (index, time) pairs or as an 
@@ -12,7 +12,7 @@ import gc
 rates = [1, 500, 1000, 2000, 5000] #Hz
 
 # Spike times are given as pairs, as pairs but using gather=True, or as an array 
-stim_types = ['pairs', 'pairs_gather', 'array']
+stim_types = ['pairs', 'array']
 
 def run_barrage():
     results = []
@@ -52,21 +52,22 @@ class TrackSpeed(object):
         
         if stim_type == 'pairs':            
             spiketimes = [(idx, t*second +dt/2) for idx in xrange(N) for t in times]            
-        elif stim_type == 'pairs_gather':
-            spiketimes = [(idx, t*second +dt/2) for idx in xrange(N) for t in times]
-            gather = True
         elif stim_type == 'array':
             spiketimes = vstack([array([n, t]) for t in times for n in xrange(N)])          
         else:
-            raise ValueError('Unknown stim_type (should be "pairs",' + \
-                             '"pairs_gather", "array", or "multi")')            
+            raise ValueError('Unknown stim_type (should be "pairs" or "array)')            
         
+        start = time.time()
         G = SpikeGeneratorGroup(N, spiketimes, gather=gather)
+        self.init_time = time.time() - start
 
         self.net = Network(G)
         self.net.prepare()
 
     def run(self):
+        #simulate the initialization time by waiting...        
+        time.sleep(self.init_time)        
+        
         self.net.run(self.duration * second)
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ speedtrack_desc = 'MultiSpikeGeneratorGroup with a fixed array of spiketimes'
 
 from brian import *
 from tracking import *
-import gc
+import gc, time
 
 # All neurons fire simultaneously with the given rate
 # The spiketimes are either given as a list of (index, time) pairs or as an 
@@ -41,12 +41,17 @@ class TrackSpeed(object):
         times = arange(0, duration, 1./rate)             
         spiketimes = [[t*second + dt/2 for t in times] for n in xrange(N)]          
         
+        start = time.time()
         G = MultipleSpikeGeneratorGroup(spiketimes)
-
+        self.init_time = time.time() - start
+        
         self.net = Network(G)
         self.net.prepare()
 
     def run(self):
+        #simulate the initialization time by waiting...        
+        time.sleep(self.init_time)      
+                
         self.net.run(self.duration * second)
 
 if __name__ == '__main__':
