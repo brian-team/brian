@@ -46,7 +46,7 @@ from threshold import *
 from stateupdater import *
 from units import *
 import random as pyrandom
-from numpy import where, array, zeros, ones, inf, nonzero, tile, sum, isscalar, cumsum
+from numpy import where, array, zeros, ones, inf, nonzero, tile, sum, isscalar, cumsum, hstack, bincount
 from copy import copy
 from clock import guess_clock
 from utils.approximatecomparisons import *
@@ -167,6 +167,70 @@ class MultipleSpikeGeneratorThreshold(Threshold):
         return where(firing)[0]
 
 
+class NewSpikeGeneratorGroup(NeuronGroup):
+    """
+    New version of the SpikeGeneratorGroup
+    
+    
+    Note: think about implementation of period, gather.
+    """
+    def __init__(self, N, spiketimes, clock=None, period=None, 
+                 time_unit = 1*second, sort=True):
+        clock = guess_clock(clock)
+        
+        if isinstance(spiketimes, list):
+            # spiketimes is a list of (i,t)
+            idx, times = zip(*spiketimes)
+            idx = array(list(idx))
+            times = array(list(times))
+        if isinstance(spiketimes, tuple):
+            # spike times is a tuple with idx, times in arrays
+            idx = spiketimes[0]
+            times = spiketimes[1]
+        thresh = FastSpikeGeneratorThreshold(N, idx, times*time_unit, dt = clock.dt)
+        NeuronGroup.__init__(self, N, model = LazyStateUpdater(), threshold = thresh, clock = clock)
+    
+class FastSpikeGeneratorThreshold(Threshold):
+    '''
+    A faster version of the SpikeGeneratorThreshold where spikes are processed prior to the run (offline).
+    
+    N is ignored (should it not?)
+    '''
+    def __init__(self, N, addr, timestamps, dt = None):
+        self.set_offsets(addr, timestamps, dt = dt)
+        
+    def set_offsets(self, I, T, dt = 1000):
+        # Convert times into integers
+        T = array(T/dt, dtype=int)
+        # Put them into order
+        # We use a field array to sort first by time and then by neuron index
+        spikes = zeros(len(I), dtype=[('t', int), ('i', int)])
+        spikes['t'] = T
+        spikes['i'] = I
+        spikes.sort(order=('t', 'i'))
+        T = spikes['t']
+        self.I = spikes['i']
+        # Now for each timestep, we find the corresponding segment of I with
+        # the spike indices for that timestep.
+        # The idea of offsets is that the segment offsets[t]:offsets[t+1]
+        # should give the spikes with time t, i.e. T[offsets[t]:offsets[t+1]]
+        # should all be equal to t, and so then later we can return
+        # I[offsets[t]:offsets[t+1]] at time t. It might take a bit of thinking
+        # to see why this works. Since T is sorted, and bincount[i] returns the
+        # number of elements of T equal to i, then j=cumsum(bincount(T))[t]
+        # gives the first index in T where T[j]=t.
+        self.offsets = hstack((0, cumsum(bincount(T))))
+    
+    def __call__(self, P):
+        print 'oui'
+        t = P.clock.t
+        dt = P.clock.dt
+        t = int(round(t/dt))
+        if t+1>=len(self.offsets):
+            return array([], dtype=int)
+        return self.I[self.offsets[t]:self.offsets[t+1]]
+
+    
 class SpikeGeneratorGroup(NeuronGroup):
     """Emits spikes at given times
     
