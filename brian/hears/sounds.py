@@ -18,6 +18,7 @@ from bufferable import Bufferable
 from prefs import get_samplerate
 from db import dB, dB_type, dB_error, gain
 from scipy.signal import fftconvolve, lfilter
+from scipy.misc import factorial
 
 __all__ = ['BaseSound', 'Sound',
            'pinknoise','brownnoise','powerlawnoise',
@@ -723,7 +724,9 @@ class Sound(BaseSound, numpy.ndarray):
             frequency.shape = (nchannels, 1)
         if phase.size==nchannels:
             phase.shape =(nchannels, 1)
-        x = sin(phase+2.0*pi*frequency*tile(arange(0, duration, 1)/samplerate,(nchannels,1))).T
+        t = arange(0, duration, 1)/samplerate
+        t.shape = (t.size, 1) # ensures C-order (in contrast to tile(...).T )
+        x = sin(phase + 2.0 * pi * frequency * tile(t, (1, nchannels)))
         return Sound(x, samplerate)
 
     @staticmethod
@@ -992,8 +995,9 @@ class Sound(BaseSound, numpy.ndarray):
             y = lfilter([1 + a2 + a3], [1, a2, a3], y.copy()) 
         
         #normalize sound
-        return Sound(np.tile(y / np.max(np.abs(y), axis=0), (nchannels, 1)).T,
-                     samplerate=samplerate)
+        data = y / np.max(np.abs(y), axis=0)        
+        data.shape = (data.size, 1)
+        return Sound(np.tile(data, (nchannels, 1)),  samplerate=samplerate)
 
     @staticmethod
     def sequence(*args, **kwds):
