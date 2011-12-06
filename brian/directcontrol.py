@@ -307,8 +307,16 @@ class NewSpikeGeneratorGroup(NeuronGroup):
  
     def reinit(self):
         super(NewSpikeGeneratorGroup, self).reinit()
-        self._threshold.reinit()           
+        self._threshold.reinit()
+
+    @property
+    def spiketimes(self):
+        return self._threshold.spiketimes
     
+    @spiketimes.setter
+    def spiketimes(self, values):
+        self.__init__(self.N, values, period = self.period)
+
 class FastSpikeGeneratorThreshold(Threshold):
     '''
     A faster version of the SpikeGeneratorThreshold where spikes are processed prior to the run (offline).
@@ -319,6 +327,7 @@ class FastSpikeGeneratorThreshold(Threshold):
     def __init__(self, N, addr, timestamps, dt = None, period = None):
         self.set_offsets(addr, timestamps, dt = dt)
         self.period = period
+        self.dt = dt
         self.reinit()
         
     def set_offsets(self, I, T, dt = 1000):
@@ -359,7 +368,17 @@ class FastSpikeGeneratorThreshold(Threshold):
     
     def reinit(self):
         self.curperiod = -1
-    
+        
+    @property
+    def spiketimes(self):
+        # this is a pain to do! retrieve spike times from offsets
+        res = []
+        for k in range(len(self.offsets)-1):
+            idx = self.I[self.offsets[k]:self.offsets[k+1]]
+            ts = [k*self.dt]*len(idx)
+            res += zip(idx, ts)
+        return res
+
 class SpikeGeneratorGroup(NeuronGroup):
     """Emits spikes at given times
     
