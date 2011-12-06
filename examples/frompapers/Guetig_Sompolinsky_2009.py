@@ -49,8 +49,9 @@ class TimeWarpModel(object):
         neuron = NeuronGroup(1, model=eqs, threshold=None)
             
         # every input neuron fires once in a random interval
-        self.unwarped_spiketimes = zip(range(0, self.N),
-                                       250*ms * rand(self.N))
+        self.unwarped_spiketimes = [(i, t * 250 * ms) for i, t in 
+                                    zip(range(0, self.N), rand(self.N))]
+        
         # final spiketimes will be set in the run function
         self.input = SpikeGeneratorGroup(self.N, [])
                 
@@ -123,7 +124,7 @@ if __name__ == '__main__':
     xlabel('Time (ms)')
     xticks([0, 250, 500])
     yticks([-1, 1])
-    
+    show()
     # #########################################################################
     # Reproduce Fig. 3(C) from Gütig and Sompolinsky (2009), but for random
     # spike trains and not in a speech recognition task
@@ -155,4 +156,4 @@ if __name__ == '__main__':
     title('conductance based')
     subplot(1,2,2)  
     title('current based')
-    plt.show()
+    show()
