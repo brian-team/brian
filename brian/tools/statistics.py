@@ -9,7 +9,7 @@ from brian.stdunits import ms, Hz
 from operator import itemgetter
 
 __all__ = ['firing_rate', 'CV', 'correlogram', 'autocorrelogram', 'CCF', 'ACF', 'CCVF', 'ACVF', 'group_correlations', 'sort_spikes',
-         'total_correlation', 'vector_strength', 'gamma_factor', 'get_gamma_factor_matrix', 'get_gamma_factor']
+         'total_correlation', 'vector_strength', 'gamma_factor', 'get_gamma_factor_matrix', 'get_gamma_factor','spike_triggered_average']
 
 # First-order statistics
 def firing_rate(spikes):
@@ -120,6 +120,39 @@ def ACVF(T0, width=20 * ms, bin=1 * ms, T=None):
     N.B.: units are discarded.
     '''
     return CCVF(T0, T0, width, bin, T)
+
+
+def spike_triggered_average(spikes,stimulus,max_interval,dt,onset=None,display=False):
+    '''
+    Spike triggered average reverse correlation. 
+    spikes is an array containing spike times
+    stimulus is an array containing the stimulus
+    max_interval (second) is the duration of the averaging window
+    dt (second) is the sampling period
+    onset (second) before which the spikes are discarded. Note: it will be at least as long as max_interval
+    display (default=False) display the number of spikes processed out of the total number
+    output the spike triggered average and the corresponding time axis
+    '''
+    stimulus = stimulus.flatten()
+    if onset < max_interval or onset == None:
+        onset = max_interval
+    nspikes = len(spikes)
+    sta_length = int(max_interval/dt)
+    spike_triggered_ensemble=zeros((nspikes,sta_length))
+    time_axis = linspace(0*ms,max_interval,sta_length)
+    onset = float(onset)
+    for ispike,spike in enumerate(spikes):
+        if display==True:
+            print 'sta: spike #',ispike,' out of :',nspikes
+        if spike>onset:
+            spike = int(spike/dt) 
+            print stimulus[spike-sta_length:spike].shape
+            spike_triggered_ensemble[ispike,:] = stimulus[spike-sta_length:spike]
+            ispike +=1
+            
+    return sum(spike_triggered_ensemble,axis=0)[::-1]/(nspikes-1),time_axis
+
+
 
 def total_correlation(T1, T2, width=20 * ms, T=None):
     '''
