@@ -1,5 +1,6 @@
 from brian import *
 import numpy, os
+import pylab
 
 """
 An implementation of a simple topographical network, like those used in Mehring 2005 or Yger 2011. 
@@ -167,4 +168,4 @@ for time in xrange(int(simtime/(tau_ref))):
 
     manager.canvas.draw()
     
-    
+show()
