@@ -1,6 +1,5 @@
 from brian import *
-import numpy, os
-import pylab
+import numpy, os, pylab
 
 """
 An implementation of a simple topographical network, like those used in Mehring 2005 or Yger 2011. 
@@ -62,14 +61,14 @@ max_delay          = max_distance/velocity   # Needed for the connectors
 
 ### Generate the images with the letters B, R, I, A, N
 ### To do that, we create a png image and read it as a matrix
-figure()
-text(0.125, 0.4, "B R I A N", size=80)
-setp(gca(), xticks=[], yticks=[])
-savefig("BRIAN.png")
+pylab.figure()
+pylab.text(0.125, 0.4, "B R I A N", size=80)
+pylab.setp(gca(), xticks=[], yticks=[])
+pylab.savefig("BRIAN.png")
 brian_letters = imread("BRIAN.png")
 os.remove("BRIAN.png")
 brian_letters = numpy.flipud(mean(brian_letters,2)).T
-close()
+pylab.close()
 
 ### We create the cells and generate random positons in [0, size]x[0, size]
 all_cells          = NeuronGroup(n_cells, model=eqs, threshold=Vt, reset=Vr, refractory=tau_ref)
@@ -128,13 +127,15 @@ print "Setting the recorders..."
 v_exc   = RecentStateMonitor(exc_cells, 'v', record=True)
 s_exc   = SpikeCounter(exc_cells)
 
+
+ion() # To enter the interactive mode
 print "Initializing the plots..."
-fig1    = subplot(211)
+fig1    = pylab.subplot(211)
 im      = fig1.scatter(all_cells.position[:n_exc, 0], all_cells.position[:n_exc, 1], c=[0]*n_exc)
 im.set_clim(0, 1)
 fig1.set_ylabel("spikes")
 pylab.colorbar(im) 
-fig2    = subplot(212) 
+fig2    = pylab.subplot(212) 
 im      = fig2.scatter(all_cells.position[:n_exc, 0], all_cells.position[:n_exc, 1], c=[0]*n_exc)
 im.set_clim(El, Vt)
 fig2.set_ylabel("v")
@@ -167,5 +168,5 @@ for time in xrange(int(simtime/(tau_ref))):
     setp(fig2, xticks=[], yticks=[])
 
     manager.canvas.draw()
+ioff() # To leave the interactive mode    
     
-show()
