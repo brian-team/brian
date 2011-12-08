@@ -831,6 +831,7 @@ class StateMonitor(NetworkOperation, Monitor):
                     ylim[:] = [ymin, ymax]
                     if redraw:
                         pylab.draw()
+                        pylab.get_current_fig_manager().canvas.flush_events()
             self.contained_objects.append(refresh_state_monitor_plot)
 
     def insert_spikes(self, spikemonitor, value=0):

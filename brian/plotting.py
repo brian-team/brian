@@ -218,6 +218,7 @@ def raster_plot(*monitors, **plotoptions):
                         line.set_ydata(sn)
                     if myopts['redraw']:
                         pylab.draw()
+                        pylab.get_current_fig_manager().canvas.flush_events()
             monitors[0].contained_objects.append(refresh_raster_plot)
 
 
