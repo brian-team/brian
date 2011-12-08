@@ -16,7 +16,7 @@ a wiring scheme such that the word BRIAN will pop up. External rates can be turn
 spontaneous activity of the 2D layer. One can observe that despite the inputs is constant, the network
 is not always responding to it. 
 
-The script will display, while running, the spikes, Vm, and excitatory conductances of the excitatory cells. 
+The script will display, while running, the spikes and Vm of the excitatory cells. 
 
 Varying sigma will show the various activity structures from a random network (s_lat > 1), to a very
 locally connected one (s_lat < 0.1)
@@ -45,19 +45,20 @@ dge/dt = -ge*(1./tau_exc) : uS
 dgi/dt = -gi*(1./tau_inh) : uS
 ''')
 
-n_cells            = 12500                   # Total number of cells
-n_exc              = int(0.8 * n_cells)      # 4:1 ratio for exc/inh
-size               = 1.                      # Size of the network
-simtime            = 1000 * ms               # Simulation time
-epsilon            = 0.02                    # Probability density
-s_lat              = 0.2                     # Spread of the lateral connections
-g_exc              = 6.  * nS                # Excitatory conductance
-g_inh              = 60. * nS                # Inhibitory conductance
-g_ext              = 200 * nS                # External drive
-velocity           = 0.3 * mm/ms             # velocity
-ext_rate           = 100 * Hz                # Rate of the external source
-max_distance       = size * mm/numpy.sqrt(2) # Since this is a torus
-max_delay          = max_distance/velocity   # Needed for the connectors
+n_cells       = 12500                   # Total number of cells
+n_exc         = int(0.8 * n_cells)      # 4:1 ratio for exc/inh
+size          = 1.                      # Size of the network
+simtime       = 1000 * ms               # Simulation time
+sim_step      = 1 * ms                  # Display snapshots every sim_step ms
+epsilon       = 0.02                    # Probability density
+s_lat         = 0.2                     # Spread of the lateral connections
+g_exc         = 4.  * nS                # Excitatory conductance
+g_inh         = 64. * nS                # Inhibitory conductance
+g_ext         = 200 * nS                # External drive
+velocity      = 0.3 * mm/ms             # velocity
+ext_rate      = 100 * Hz                # Rate of the external source
+max_distance  = size * mm/numpy.sqrt(2) # Since this is a torus
+max_delay     = max_distance/velocity   # Needed for the connectors
 
 ### Generate the images with the letters B, R, I, A, N
 ### To do that, we create a png image and read it as a matrix
@@ -112,10 +113,10 @@ def is_in_brian(i, j, x, y):
 print "Building network with wrapped 2D gaussian profiles..." 
 Ce = Connection(exc_cells, all_cells, 'ge', weight=g_exc, max_delay=max_delay, 
             sparseness=lambda i, j : probas(i, j, exc_cells.position, all_cells.position), 
-            delay     = 1.5*ms)#lambda i, j : delays(i, j, exc_cells.position, all_cells.position))
+            delay     =lambda i, j : delays(i, j, exc_cells.position, all_cells.position))
 Ci = Connection(inh_cells, all_cells, 'gi', weight=g_inh, max_delay=max_delay, 
             sparseness=lambda i, j : probas(i, j, inh_cells.position, all_cells.position), 
-            delay     = 1.5*ms)#lambda i, j : delays(i, j, inh_cells.position, all_cells.position))
+            delay     =lambda i, j : delays(i, j, inh_cells.position, all_cells.position))
 Cext = Connection(sources, all_cells, 'ge', weight=g_ext, max_delay=max_delay, 
             sparseness=lambda i, j : is_in_brian(i, j, sources.position, all_cells.position))
 
@@ -145,10 +146,10 @@ pylab.colorbar(im)
 manager = pylab.get_current_fig_manager() 
 
 print "Running network ..." 
-for time in xrange(int(simtime/(tau_ref))):
-    run(1*ms)    
+for time in xrange(int((simtime/sim_step)/ms)):
+    run(sim_step)    
     fig1.cla()
-    fig1.set_title("t = %g s" %(time))   
+    fig1.set_title("t = %g s" %((sim_step * time)/ms))   
     idx     = s_exc.count > 0
     if numpy.sum(idx) > 0:
         im = fig1.scatter(all_cells.position[:n_exc, 0][idx], all_cells.position[:n_exc, 1][idx], c=[0]*n_exc)
@@ -168,5 +169,6 @@ for time in xrange(int(simtime/(tau_ref))):
     setp(fig2, xticks=[], yticks=[])
 
     manager.canvas.draw()
+    manager.canvas.flush_events()
 ioff() # To leave the interactive mode    
     
