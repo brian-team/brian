@@ -403,7 +403,7 @@ class STDP(NetworkOperation):
                 delay_post = 0 * ms
             elif delay_pre is None:
                 delay_pre = connection_delay - delay_post
-                if delay_pre < 0 * ms: raise AttributeError, "Postsynaptic delay is too large"
+                if delay_pre < 0 * ms: raise AttributeError, "Presynaptic delay is too large"
             elif delay_post is None:
                 delay_post = connection_delay - delay_pre
                 if delay_post < 0 * ms: raise AttributeError, "Postsynaptic delay is too large"
