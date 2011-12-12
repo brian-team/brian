@@ -47,7 +47,8 @@ from threshold import *
 from stateupdater import *
 from units import *
 import random as pyrandom
-from numpy import where, array, zeros, ones, inf, nonzero, tile, sum, isscalar, cumsum, hstack, bincount,  ceil, ndarray
+from numpy import where, array, zeros, ones, inf, nonzero, tile, sum, isscalar,\
+                  cumsum, hstack, bincount,  ceil, ndarray, ascontiguousarray
 from copy import copy
 from clock import guess_clock
 from utils.approximatecomparisons import *
@@ -340,8 +341,8 @@ class FastSpikeGeneratorThreshold(Threshold):
         spikes['t'] = T
         spikes['i'] = I
         spikes.sort(order=('t', 'i'))
-        T = spikes['t']
-        self.I = spikes['i']
+        T = ascontiguousarray(spikes['t'])
+        self.I = ascontiguousarray(spikes['i'])
         # Now for each timestep, we find the corresponding segment of I with
         # the spike indices for that timestep.
         # The idea of offsets is that the segment offsets[t]:offsets[t+1]
