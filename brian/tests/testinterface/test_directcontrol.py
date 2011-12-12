@@ -274,6 +274,25 @@ def test():
         test1(M.spikes)
     test_attribute_setting()
     
+    # tests a subtle difficulty when setting spiketimes and using a subgroup
+    def test_attribute_setting_subgroup():
+        reinit_default_clock()
+        G = SpikeGeneratorGroup(2, [])
+        subG = G.subgroup(2)
+        M = SpikeMonitor(subG, True)
+        net = Network(G, M)
+        G.spiketimes = [(0, 0 * msecond), (1, 1 * msecond), (0, 2 * msecond),
+                        (1, 3 * msecond), (0, 4 * msecond)]
+        net.run(5 * msecond)
+        test1(M.spikes)
+        reinit_default_clock()
+        net.reinit()
+        G.spiketimes = [(0, 0 * msecond), (1, 1 * msecond), (0, 2 * msecond),
+                        (1, 3 * msecond), (0, 4 * msecond)]
+        net.run(5 * msecond)
+        test1(M.spikes)    
+    test_attribute_setting_subgroup()
+    
     # spike generator with generator
     def sg():
         yield (0, 0 * msecond)
