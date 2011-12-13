@@ -237,10 +237,21 @@ def test():
 
     # same but with index arrays instead of single neuron indices
     spiketimes = [([0, 1], 0 * msecond), ([0, 1], 2 * msecond),
-                  ([0, 1], 4 * msecond)] 
-    
+                  ([0, 1], 4 * msecond)]
     spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)
     test2(spikes)    
+
+    # spike generator with single indices and index arrays of varying length 
+    spiketimes = [([0, 1], 0 * msecond), (0, 1 * msecond), (1, 2 * msecond), ([0], 3 * msecond) ]
+    spikes = mininet(SpikeGeneratorGroup, 2, spiketimes)    
+    def test3(spikes):            
+        assert len(spikes) == 5
+        #check both neurons spiked at the correct times
+        for s1, s2 in zip([0, 1, 3], [t for i, t in spikes if i==0]):
+            assert is_approx_equal(s1 * msecond, s2)
+        for s1, s2 in zip([0, 2], [t for i, t in spikes if i==1]):
+            assert is_approx_equal(s1 * msecond, s2)            
+    test3(spikes)
 
     # spike generator with an array of (non-simultaneous) spikes
     # NOTE: For an array, the times have to be in seconds and sorted
@@ -280,15 +291,11 @@ def test():
         G = SpikeGeneratorGroup(2, [])
         subG = G.subgroup(2)
         M = SpikeMonitor(subG, True)
+        G.spiketimes = [(0, 0 * msecond), (1, 1 * msecond), (0, 2 * msecond),
+                        (1, 3 * msecond), (0, 4 * msecond)]
+        G.spiketimes = [(0, 0 * msecond), (1, 1 * msecond), (0, 2 * msecond),
+                        (1, 3 * msecond), (0, 4 * msecond)]
         net = Network(G, M)
-        G.spiketimes = [(0, 0 * msecond), (1, 1 * msecond), (0, 2 * msecond),
-                        (1, 3 * msecond), (0, 4 * msecond)]
-        net.run(5 * msecond)
-        test1(M.spikes)
-        reinit_default_clock()
-        net.reinit()
-        G.spiketimes = [(0, 0 * msecond), (1, 1 * msecond), (0, 2 * msecond),
-                        (1, 3 * msecond), (0, 4 * msecond)]
         net.run(5 * msecond)
         test1(M.spikes)    
     test_attribute_setting_subgroup()
