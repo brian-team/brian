@@ -305,7 +305,11 @@ class NewSpikeGeneratorGroup(NeuronGroup):
         else:
             thresh = SpikeGeneratorThreshold(N, spiketimes, period=period, sort=sort)
         
-        NeuronGroup.__init__(self, N, model=LazyStateUpdater(), threshold=thresh, clock=clock)
+        if not hasattr(self, '_initialized'):
+            NeuronGroup.__init__(self, N, model=LazyStateUpdater(), threshold=thresh, clock=clock)
+            self._initialized = True
+        else:
+            self._threshold = thresh
  
     def reinit(self):
         super(NewSpikeGeneratorGroup, self).reinit()
