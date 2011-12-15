@@ -5,6 +5,7 @@ from constructionmatrix import *
 from connectionmatrix import *
 from construction import *
 from propagation_c_code import *
+from scipy.sparse import issparse
 # we do this at the bottom because of order of import issues
 #from delayconnection import * 
 
@@ -206,7 +207,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
                 weight = 1.0
             if sparseness is None:
                 sparseness = 1
-            if isinstance(weight, sparse.lil_matrix) or isinstance(weight, ndarray):
+            if issparse(weight) or isinstance(weight, ndarray):
                 self.connect(W=weight)
             elif sparseness == 1:
                 self.connect_full(weight=weight)
