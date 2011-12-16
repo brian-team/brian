@@ -26,7 +26,7 @@ or::
   r0=linspace(0*Hz,10*Hz,100)
   group=PoissonGroup(100,rates=lambda t:(1+cos(t))*r0)
 
-There is another object for Poisson inputs: :class:`PoissonInput``, which updates
+There is another class for Poisson inputs: :class:`PoissonInput``, which updates
 the state variable of a :class:`NeuronGroup` dynamically without storing in memory all 
 the Poisson events. It can be used like this::
 
