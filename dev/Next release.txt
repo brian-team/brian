@@ -58,7 +58,8 @@ Initial deadline: January
 	* More docs (see Brian meeting 25 Oct 2011)
 	* Trace analysis: are there other functions we might want to insert? (some used to process Anna's traces?)
 	* Saving spikes from a SpikeMonitor
-	* IRNS/IRNO
+	* IRNS/IRNO (in Sound, by Jonathan) 
+	* Example: model fitting
 
 SpikeGeneratorGroup
 -------------------

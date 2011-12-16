@@ -9,12 +9,14 @@ Authors:
 	Dan Goodman
 		http://thesamovar.net/neuroscience
 Team:
-	Cyrille Rossant (brian.library.modelfitting)
+	Cyrille Rossant
 		http://cyrille.rossant.net/
-	Bertrand Fontaine (brian.hears)
+	Bertrand Fontaine
 		http://lpp.psycho.univ-paris5.fr/person.php?name=BertrandF
-	Victor Benichoux (brian.hears)
-	Boris Gourevitch (brian.hears)
+	Victor Benichoux
+	Marcel Stimberg
+	Jonathan Laudanski
+	Boris Gourevitch
 		http://pi314.net/
 
 ==== Installation ==========================================================
@@ -50,6 +52,44 @@ See the documentation in the extras download, or online:
 	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.3.0 to 1.3.1
+----------------------
+
+Minor features:
+
+* New PoissonInput class
+* New auditory model: TanCarney (brian.hears)
+* Many more examples from papers
+* New electrode compensation module (in library.electrophysiology)
+* New trace analysis module (in library.electrophysiology)
+* Added new brian.tools.taskfarm.run_tasks function to use multiple CPUs to
+  perform multiple runs of a simulation and save results to a DataManager,
+  with an optional GUI interface.
+* Added FractionalDelay filterbank to brian.hears, fractional itds to
+  HeadlessDatabase and fractional shifts to Sound.shifted.
+* Added vowel function to brian.hears for creating artificial vowel sounds
+
+Improvements:
+
+* SpikeGeneratorGroup is much faster.
+* Added RemoteControlClient.set(var, name) to allow sending data to the server
+  from the client (previously you could only receive data from the server but
+  not send it, except in string form).
+* Monitors do not process empty spike arrays when there have not been any 
+  spikes, increases speed for monitored networks with sparse firing (#78) 
+* Various speed optimisations
+
+Bug fixes:
+
+* Fixed bug with frozen equations and time variable in equations
+* Fixed bug with loading sounds using Sound('filename.wav')
+* SpikeMonitor now clears spiketimes correctly on reinit (#75)
+* MultiConnection now propagates reinit (important for monitors) (#76)
+* Fixed bug in realtime plotting
+* Fixed various bugs in Sound
+* Fixed bugs in STDP
+* Bow propagates spikes only if spikes exist (#78)
 
 Version 1.2.1 to 1.3.0
 ----------------------
