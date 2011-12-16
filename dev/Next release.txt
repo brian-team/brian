@@ -4,7 +4,7 @@ Version 1.3.1
 -------------
 TODO:
 	[OK] * check Brian Hears docs
-	[OK?] * check PoissonInput
+	[OK] * check PoissonInput
 		[OK (Rossantetal2011bis)] do we have an example? 
 		[OK] do we have docs? (should be documented in inputs.txt)
 		[OK] init(**kwargs) should be avoided: does not show in help() and no argument control
@@ -16,7 +16,7 @@ TODO:
 		[OK: removed] is add_input needed now?
 		[OK: should be clearer now] jitter, reliability: not clear what is meant by "number of synchronous spikes",
 							 plus it is doubly defined (jitter + reliability)
-	* SpikeGeneratorGroup: replace with new class
+	[OK] * SpikeGeneratorGroup: replace with new class
 	* run tests/examples (Marcel?) + generate docs
 	* check svn history for new features
 
