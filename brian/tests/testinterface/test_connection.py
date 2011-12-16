@@ -119,16 +119,5 @@ def test():
 
     reinit_default_clock()
 
-def test_poissoninputs():
-    eqs = Equations("dv/dt=(1-v)/(1*second) : 1")
-    group = NeuronGroup(N=1, model=eqs, reset=0, threshold=1)
-    input = PoissonInputs(group, [], (10, 50 * Hz, .11, 'v'))
-    m = SpikeCounter(group)
-    sm = StateMonitor(group, 'v', record=True)
-    net = Network(group, input, m, sm)
-    net.run(500 * ms)
-    assert (m.nspikes >= 1)
-
 if __name__ == '__main__':
     test()
-    test_poissoninputs()

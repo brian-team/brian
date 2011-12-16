@@ -337,5 +337,17 @@ def test():
     # do not attempt to verify the behaviour of PulsePacket here, this is
     # an interface test only
 
+def test_poissoninput():
+    eqs = Equations("dv/dt=(1-v)/(1*second) : 1")
+    group = NeuronGroup(N=1, model=eqs, reset=0, threshold=1)
+    input = PoissonInput(group)
+    input.add_input(n = 10, rate=50 * Hz, w = .11, var='v')
+    m = SpikeCounter(group)
+    net = Network(group, input, m)
+    net.run(500 * ms)
+    #only checks that there some spikes
+    assert (m.nspikes >= 1)
+
 if __name__ == '__main__':
     test()
+    test_poissoninput()
