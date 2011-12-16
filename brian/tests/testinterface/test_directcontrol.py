@@ -325,7 +325,6 @@ def test():
     # spike generator group with list and period
     spiketimes = [(0, 0 * msecond), (1, 1 * msecond)]
     spikes = mininet(SpikeGeneratorGroup, 2, spiketimes, period=2*ms)
-    print spikes
     test1(spikes)
 
     # pulse packet with 0 spread
@@ -340,8 +339,7 @@ def test():
 def test_poissoninput():
     eqs = Equations("dv/dt=(1-v)/(1*second) : 1")
     group = NeuronGroup(N=1, model=eqs, reset=0, threshold=1)
-    input = PoissonInput(group)
-    input.add_input(n = 10, rate=50 * Hz, w = .11, var='v')
+    input = PoissonInput(group, n = 10, rate=50 * Hz, weight = .11, state='v')
     m = SpikeCounter(group)
     net = Network(group, input, m)
     net.run(500 * ms)
