@@ -458,7 +458,7 @@ two-tones suppression, peak position level dependency, etc.
 +------------------------------------+---------------------------------------------------------------------------------------------------+----------------------------------------------+
 | :class:`DCGC`                      |Compressive gammachirp auditory filter as described in  Irino and Patterson, JASA 2001             |    :ref:`example-hears_dcgc`                 |
 +------------------------------------+---------------------------------------------------------------------------------------------------+----------------------------------------------+
-| :class:`TanCarney`                 |Auditory phenomenological model as described in  Tan and Carney, JASA 2003                         |              |
+| :class:`TanCarney`                 |Auditory phenomenological model as described in  Tan and Carney, JASA 2003                         |                                              |
 +------------------------------------+---------------------------------------------------------------------------------------------------+----------------------------------------------+
 
 .. index::
