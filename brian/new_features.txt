@@ -25,6 +25,7 @@ Improvements:
   not send it, except in string form).
 * Monitors do not process empty spike arrays when there have not been any 
   spikes, increases speed for monitored networks with sparse firing (#78) 
+* Various speed optimisations
 
 Bug fixes:
 
@@ -32,6 +33,10 @@ Bug fixes:
 * Fixed bug with loading sounds using Sound('filename.wav')
 * SpikeMonitor now clears spiketimes correctly on reinit (#75)
 * MultiConnection now propagates reinit (important for monitors) (#76)
+* Fixed bug in realtime plotting
+* Fixed various bugs in Sound
+* Fixed bugs in STDP
+* Bow propagates spikes only if spikes exist (#78)
 
 New features since 1.2.1
 ------------------------

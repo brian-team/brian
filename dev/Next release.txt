@@ -43,7 +43,7 @@ Initial deadline: 10 November
 	[V] : We could add the ability to save spikes from a SpikeMonitor, and load the same files. This is implemented, and works on linux and mac, not on windows.
 	    -> Marcel suggested we drop the support for windows.
 
-	* Check all new features (see svn history) and add in new_features.txt
+	[DONE] * Check all new features (see svn history) and add in new_features.txt
 
 Version 1.4
 -----------
@@ -58,6 +58,7 @@ Initial deadline: January
 	* More docs (see Brian meeting 25 Oct 2011)
 	* Trace analysis: are there other functions we might want to insert? (some used to process Anna's traces?)
 	* Saving spikes from a SpikeMonitor
+	* IRNS/IRNO
 
 SpikeGeneratorGroup
 -------------------
