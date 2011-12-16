@@ -26,6 +26,18 @@ or::
   r0=linspace(0*Hz,10*Hz,100)
   group=PoissonGroup(100,rates=lambda t:(1+cos(t))*r0)
 
+There is another object for Poisson inputs: :class:`PoissonInput``, which updates
+the state variable of a :class:`NeuronGroup` dynamically without storing in memory all 
+the Poisson events. It can be used like this::
+
+  input = PoissonInput(group, n=n, rate=rate, weight=w, state='I')
+
+In this case, the variable ``I`` represents the sum of ``n`` independent Poisson 
+spike inputs with rate ``rate``, where each individual synaptic event increases 
+the variable ``I`` by ``w``. Several :class:`PoissonInput` objects can be
+created for a given :class:`NeuronGroup`, in which case all the independent
+inputs are linearly superimposed. 
+
 Correlated inputs
 -----------------
 Generation of correlated spike trains is partially implemented, using algorithms from the

@@ -45,13 +45,13 @@ group.v = El
 group.ge = group.gi = 0
 
 # independent E/I Poisson inputs
-p1 = PoissonInput(group[0], n=ne, rate=lambdae, w=we, var='ge')
-p2 = PoissonInput(group[0], n=ni, rate=lambdai, w=wi, var='gi')
+p1 = PoissonInput(group[0], n=ne, rate=lambdae, weight=we, state='ge')
+p2 = PoissonInput(group[0], n=ni, rate=lambdai, weight=wi, state='gi')
 
 # independent E/I Poisson inputs + synchronous E events
-p3 = PoissonInput(group[1], n=ne, rate=lambdae-(p*1.0/ne)*lambdac, w=we, var='ge')
-p4 = PoissonInput(group[1], n=ni, rate=lambdai, w=wi, var='gi')
-p5 = PoissonInput(group[1], n=1, rate=lambdac, w=p*we, var='ge')
+p3 = PoissonInput(group[1], n=ne, rate=lambdae-(p*1.0/ne)*lambdac, weight=we, state='ge')
+p4 = PoissonInput(group[1], n=ni, rate=lambdai, weight=wi, state='gi')
+p5 = PoissonInput(group[1], n=1, rate=lambdac, weight=p*we, state='ge')
 
 # run the simulation
 reinit_default_clock()

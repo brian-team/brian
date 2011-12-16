@@ -684,7 +684,9 @@ class EmptyGroup(object):
 class PoissonInput(Connection):
     _record = []
     
-    def __init__(self, target, **kwargs):
+    def __init__(self, target, n=None, rate=None, weight=None, state=None,
+                  jitter=None, reliability=None,
+                  record=False, freeze=False):
         """
         Adds a Poisson input to a NeuronGroup. Allows to efficiently simulate a large number of 
         independent Poisson inputs to a NeuronGroup variable, without simulating every synapse
@@ -695,23 +697,26 @@ class PoissonInput(Connection):
         There is the possibility to consider time jitter in the presynaptic spikes, and
         synaptic unreliability. The inputs can also be recorded if needed. Finally, all
         neurons from the NeuronGroup receive independent realizations of Poisson spike trains,
-        except if the keyword frozen=True is used, in which case all neurons receive the same
+        except if the keyword freeze=True is used, in which case all neurons receive the same
         Poisson input.
         
         Initialized with arguments:
         
-        * target is the target NeuronGroup
-        * n is the number of independent Poisson inputs
-        * rate is the rate of each Poisson process
-        * w is the synaptic weight
-        * var is the name or the index of the synaptic variable of the NeuronGroup
-        * jitter is None if there is no time jitter, otherwise it is (p, taujitter)
-          where p is the number of synchronous spikes, and taujitter the jitter in second
-        * reliability is None if the synapses are reliable, otherwise it is
-          (p, alpha) where p is the number of synchronous spikes, and alpha is the
-          reliability of the synapse (between 0 and 1)
-        * record is True if the input has to be recorded
-        * frozen is True if the input must be the same for all neurons of the NeuronGroup
+        * ``target`` is the target :class:`NeuronGroup`
+        * ``n`` is the number of independent Poisson inputs
+        * ``rate`` is the rate of each Poisson process
+        * ``weight`` is the synaptic weight
+        * ``state`` is the name or the index of the synaptic variable of the :class:`NeuronGroup`
+        * ``jitter`` is ``None`` by default. There is the possibility to consider ``p`` presynaptic
+          spikes at each Poisson event, randomly shifted according to an exponential law
+          with parameter ``taujitter`` (in second). In this case, ``jitter=(p, taujitter)``.
+        * ``reliability`` is ``None`` by default. There is the possibility to consider ``p`` presynaptic
+          spikes at each Poisson event, where each of these spikes is unreliable, i.e. it occurs
+          with probability ``alpha``. In this case, ``jitter=(p, alpha)``.
+        * ``record`` is ``True`` if the input has to be recorded. In this case, the recorded events are
+          stored in the ``recorded_events`` attribute, as a list of pairs ``(i,t)`` where ``i`` is the
+          neuron index and ``t`` is the event time.
+        * ``freeze`` is ``True`` if the input must be the same for all neurons of the :class:`NeuronGroup`
         """
         self.source = EmptyGroup(target.clock)
         self.target = target
@@ -724,40 +729,19 @@ class PoissonInput(Connection):
         self.events = []
         self.recorded_events = []
 
-        self.add_input(**kwargs)
-
-    def add_input(self, n=None, rate=None, w=None, var=None,
-                  jitter=None, reliability=None,
-                  record=False,
-                  frozen=False):
-        """
-        Add a Poisson input
-        * n is the number of independent inputs
-        * rate is the rate of each Poisson process
-        * w is the synaptic weight
-        * var is the name or the index of the synaptic variable of the NeuronGroup
-        * jitter is None if there is no time jitter, otherwise it is (p, taujitter)
-          where p is the number of synchronous spikes, and taujitter the jitter in second
-        * reliability is None if the synapses are reliable, otherwise it is
-          (p, alpha) where p is the number of synchronous spikes, and alpha is the
-          reliability of the synapse (between 0 and 1)
-        * record is True if this input has to be recorded
-        * frozen is True if this input must be the same for all neurons of the NeuronGroup
-          """
-
         self.n = n
         self.rate = rate
-        self.w = w
-        self.var = var
+        self.w = weight
+        self.var = state
         self._jitter = jitter
         self.reliability = reliability
         self.record = record
-        self.frozen = frozen
+        self.frozen = freeze
 
-        if isinstance(var, str): # named state variable
-            self.index = self.target.get_var_index(var)
+        if isinstance(state, str): # named state variable
+            self.index = self.target.get_var_index(state)
         else:
-            self.index = var
+            self.index = state
 
         #if jitter is not None:
         #    self.delays = zeros((jitter[0], self.N))
