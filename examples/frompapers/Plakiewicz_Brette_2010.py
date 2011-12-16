@@ -13,7 +13,7 @@ The script demonstrates that the spike threshold is proportional to the logarith
 '''
 from brian import *
 from scipy import stats
-from brian.experimental.trace_analysis import *
+from brian.library.electrophysiology import *
 
 defaultclock.dt=0.05*ms
 duration=500*ms

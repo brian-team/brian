@@ -12,6 +12,7 @@ from scipy.optimize import fmin
 from scipy.signal import lfilter
 from scipy import linalg
 from numpy import sqrt, ceil, zeros, eye, poly, dot, hstack, array
+from scipy import zeros, array, optimize, mean, arange, diff, rand, exp, sum, convolve, eye, linalg, sqrt
 import time
 
 __all__=['Lp_compensate', 'full_kernel', 'full_kernel_from_step',
