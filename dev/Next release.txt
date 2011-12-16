@@ -3,10 +3,22 @@ Next releases
 Version 1.3.1
 -------------
 TODO:
-	* check Brian Hears example + docs
-	* check PoissonInputs
-	* review syntax
+	[OK] * check Brian Hears docs
+	* check PoissonInput
+		do we have an example?
+		do we have docs? (should be documented in inputs.txt)
+		init(**kwargs) should be avoided: does not show in help() and no argument control
+		argument names should be consistent with other functions:
+			n -> N
+			w -> weight
+			var -> state
+			frozen -> freeze
+		is add_input needed now?
+		jitter, reliability: not clear what is meant by "number of synchronous spikes",
+							 plus it is doubly defined (jitter + reliability)
+	* SpikeGeneratorGroup: replace with new class
 	* run tests/examples (Marcel?) + generate docs
+	* check svn history for new features
 
 Initial deadline: 10 November
 	[DONE] * Brian examples for our papers [add: pi-limit]
@@ -18,7 +30,6 @@ Initial deadline: 10 November
 	[DONE] * Brian Hears updates (Tan/Carney)
 	    - name: TanCarney
 	    - doc
-	    ** where is the example **
 	[DONE] * Bug fixes added by Marcel (put in new_features.txt)
 	* Trace analysis library (new electrophysiology library package)
 		[DONE] - docs

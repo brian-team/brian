@@ -686,7 +686,7 @@ class PoissonInput(Connection):
     
     def __init__(self, target, **kwargs):
         """
-        Add a Poisson input to a NeuronGroup. Allows to efficiently simulate a large number of 
+        Adds a Poisson input to a NeuronGroup. Allows to efficiently simulate a large number of 
         independent Poisson inputs to a NeuronGroup variable, without simulating every synapse
         individually. The synaptic events are generated randomly during the simulation and
         are not preloaded and stored in memory (unless record=True is used).
