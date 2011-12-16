@@ -567,8 +567,8 @@ class EmptyGroup(object):
 class PoissonInput(Connection):
     _record = []
     
-    def __init__(self, target, n=None, rate=None, weight=None, state=None,
-                  jitter=None, reliability=None,
+    def __init__(self, target, N=None, rate=None, weight=None, state=None,
+                  jitter=None, reliability=None, copies=1,
                   record=False, freeze=False):
         """
         Adds a Poisson input to a NeuronGroup. Allows to efficiently simulate a large number of 
@@ -586,7 +586,7 @@ class PoissonInput(Connection):
         Initialized with arguments:
         
         * ``target`` is the target :class:`NeuronGroup`
-        * ``n`` is the number of independent Poisson inputs
+        * ``N`` is the number of independent Poisson inputs
         * ``rate`` is the rate of each Poisson process
         * ``weight`` is the synaptic weight
         * ``state`` is the name or the index of the synaptic variable of the :class:`NeuronGroup`
@@ -612,12 +612,13 @@ class PoissonInput(Connection):
         self.events = []
         self.recorded_events = []
 
-        self.n = n
+        self.n = N
         self.rate = rate
         self.w = weight
         self.var = state
         self._jitter = jitter
         self.reliability = reliability
+        self.copies = copies
         self.record = record
         self.frozen = freeze
 
@@ -665,10 +666,9 @@ class PoissonInput(Connection):
                 if record and len(ind)>0:
                     self.recorded_events.append((ind[0], self.clock.t))
         elif (jitter is not None):
-            p = jitter[0]
-            taujitter = jitter[1]
+            p = self.copies
+            taujitter = jitter
             if (p > 0) & (f > 0):
-                taujitter = jitter[1]
                 k = binomial(n=n, p=f * self.clock.dt, size=(self.N)) # number of synchronous events here, for every target neuron
                 syncneurons = (k > 0) # neurons with a syncronous event here
                 self.lastevent[syncneurons] = self.clock.t
@@ -682,8 +682,8 @@ class PoissonInput(Connection):
                 weff = sum(b, axis=0) * w
                 self.target._S[state, :] += weff
         elif (reliability is not None):
-            p = reliability[0]
-            alpha = reliability[1]
+            p = self.copies
+            alpha = reliability
             if (p > 0) & (alpha > 0):
                 weff = w * binomial(n=p, p=alpha)
                 self.target._S[state, :] += weff * binomial(n=n, p=f * self.clock.dt, size=(self.N))

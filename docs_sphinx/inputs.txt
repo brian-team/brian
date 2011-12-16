@@ -30,9 +30,9 @@ There is another class for Poisson inputs: :class:`PoissonInput``, which updates
 the state variable of a :class:`NeuronGroup` dynamically without storing in memory all 
 the Poisson events. It can be used like this::
 
-  input = PoissonInput(group, n=n, rate=rate, weight=w, state='I')
+  input = PoissonInput(group, N=N, rate=rate, weight=w, state='I')
 
-In this case, the variable ``I`` represents the sum of ``n`` independent Poisson 
+In this case, the variable ``I`` represents the sum of ``N`` independent Poisson 
 spike inputs with rate ``rate``, where each individual synaptic event increases 
 the variable ``I`` by ``w``. Several :class:`PoissonInput` objects can be
 created for a given :class:`NeuronGroup`, in which case all the independent
