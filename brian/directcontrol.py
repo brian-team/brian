@@ -198,7 +198,7 @@ class SpikeGeneratorGroup(NeuronGroup):
         with a period as they cannot be reinitialised.
     ``gather=False``
         Set to True if you want to gather spike events that fall in the same
-        timestep (makes the simulation faster if you have many events).
+        timestep. (Deprecated since Brian 1.3.1)
     ``sort=True``
         Set to False if your spike events are already sorted.
     
@@ -235,7 +235,7 @@ class SpikeGeneratorGroup(NeuronGroup):
     :class:`MultipleSpikeGeneratorGroup` object instead. A warning will be issued if this
     is detected.
 
-    Also, if you want to use a SpikeGeneratorGroup with many spikes and/or neurons, please use an initialization with arrays
+    Also, if you want to use a SpikeGeneratorGroup with many spikes and/or neurons, please use an initialization with arrays.
     
     Also note that if you pass a generator, then reinitialising the group will not have the
     expected effect because a generator object cannot be reinitialised. Instead, you should
