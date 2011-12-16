@@ -38,6 +38,15 @@ the variable ``I`` by ``w``. Several :class:`PoissonInput` objects can be
 created for a given :class:`NeuronGroup`, in which case all the independent
 inputs are linearly superimposed. 
 
+Other features of the :class:`PoissonInput` class include the following (see the reference):
+  * record the individual Poisson events (``record=True`` keyword),
+  * having identical Poisson events for all neurons, instead of having
+    independent copies for every neuron (``freeze=True`` keyword)
+  * copying every Poisson input a specified number of times (``copies=p`` keyword). This
+    is equivalent of specifying ``weight=p*w``, except that those copies can be randomly shifted
+    (``jitter`` keyword), or can be unreliable to model synapse unreliability (``reliability``
+    keyword). The latter case corresponds to a Binomial synaptic weight.
+
 Correlated inputs
 -----------------
 Generation of correlated spike trains is partially implemented, using algorithms from the

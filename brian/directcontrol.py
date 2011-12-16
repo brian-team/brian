@@ -590,12 +590,14 @@ class PoissonInput(Connection):
         * ``rate`` is the rate of each Poisson process
         * ``weight`` is the synaptic weight
         * ``state`` is the name or the index of the synaptic variable of the :class:`NeuronGroup`
-        * ``jitter`` is ``None`` by default. There is the possibility to consider ``p`` presynaptic
+        * ``copies`` is the number of copies of each Poisson event. This is identical to ``weight=copies*w``, except
+          if ``jitter`` or ``reliability`` are specified.
+        * ``jitter`` is ``None`` by default. There is the possibility to consider ``copies`` presynaptic
           spikes at each Poisson event, randomly shifted according to an exponential law
-          with parameter ``taujitter`` (in second). In this case, ``jitter=(p, taujitter)``.
-        * ``reliability`` is ``None`` by default. There is the possibility to consider ``p`` presynaptic
+          with parameter ``jitter=taujitter`` (in second).
+        * ``reliability`` is ``None`` by default. There is the possibility to consider ``copies`` presynaptic
           spikes at each Poisson event, where each of these spikes is unreliable, i.e. it occurs
-          with probability ``alpha``. In this case, ``jitter=(p, alpha)``.
+          with probability ``jitter=alpha`` (between 0 and 1).
         * ``record`` is ``True`` if the input has to be recorded. In this case, the recorded events are
           stored in the ``recorded_events`` attribute, as a list of pairs ``(i,t)`` where ``i`` is the
           neuron index and ``t`` is the event time.
@@ -617,18 +619,22 @@ class PoissonInput(Connection):
         self.w = weight
         self.var = state
         self._jitter = jitter
+        
+        if jitter is not None:
+            self.delays = zeros((copies, self.N))
+        
         self.reliability = reliability
         self.copies = copies
         self.record = record
         self.frozen = freeze
+        
+        if (jitter is not None) and (reliability is not None):
+            raise Exception("Specifying both jitter and reliability is currently not supported.")
 
         if isinstance(state, str): # named state variable
             self.index = self.target.get_var_index(state)
         else:
             self.index = state
-
-        #if jitter is not None:
-        #    self.delays = zeros((jitter[0], self.N))
 
     @property
     def jitter(self):
@@ -638,7 +644,7 @@ class PoissonInput(Connection):
     def jitter(self, value):
         self._jitter = value
         if value is not None:
-            self.delays = zeros((value[0], self.N))
+            self.delays = zeros((self.copies, self.N))
 
     def propagate(self, spikes):
         i = 0
