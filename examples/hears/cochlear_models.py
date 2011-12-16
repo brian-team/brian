@@ -1,6 +1,6 @@
 '''
-Example of the use of the cochlear models (:class:`~brian.hears.DRNL` and
-:class:`~brian.hears.DCGC`) available in the library.
+Example of the use of the cochlear models (:class:`~brian.hears.DRNL`,
+:class:`~brian.hears.DCGC` and :class:`~brian.hears.TanCarney`) available in the library.
 '''
 from brian import *
 from brian.hears import *
