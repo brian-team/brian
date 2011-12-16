@@ -17,8 +17,7 @@ TODO:
 		[OK: should be clearer now] jitter, reliability: not clear what is meant by "number of synchronous spikes",
 							 plus it is doubly defined (jitter + reliability)
 	[OK] * SpikeGeneratorGroup: replace with new class
-	* run tests/examples (Marcel?) + generate docs
-	* check svn history for new features
+	[OK] * check svn history for new features
 
 Initial deadline: 10 November
 	[DONE] * Brian examples for our papers [add: pi-limit]
