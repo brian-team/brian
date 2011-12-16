@@ -565,44 +565,58 @@ class EmptyGroup(object):
 
 
 class PoissonInput(Connection):
+    """
+    Adds a Poisson input to a NeuronGroup. Allows to efficiently simulate a large number of 
+    independent Poisson inputs to a NeuronGroup variable, without simulating every synapse
+    individually. The synaptic events are generated randomly during the simulation and
+    are not preloaded and stored in memory (unless record=True is used).
+    All the inputs must target the same variable, have the same frequency and same synaptic
+    weight. You can use as many PoissonInput objects as you want, even targetting a same NeuronGroup.
+    There is the possibility to consider time jitter in the presynaptic spikes, and
+    synaptic unreliability. The inputs can also be recorded if needed. Finally, all
+    neurons from the NeuronGroup receive independent realizations of Poisson spike trains,
+    except if the keyword freeze=True is used, in which case all neurons receive the same
+    Poisson input.
+    
+    **Initialised as:** ::
+    
+        PoissonInput(target[, N][, rate][, weight][, state][, jitter][, reliability][, copies][, record][, freeze])
+    
+    with arguments:
+    
+    ``target``
+        The target :class:`NeuronGroup`
+    ``N``
+        The number of independent Poisson inputs
+    ``rate``
+        The rate of each Poisson process
+    ``weight``
+        The synaptic weight
+    ``state``
+        The name or the index of the synaptic variable of the :class:`NeuronGroup`      
+    ``jitter``
+        is ``None`` by default. There is the possibility to consider ``copies`` presynaptic
+        spikes at each Poisson event, randomly shifted according to an exponential law
+        with parameter ``jitter=taujitter`` (in second).
+    ``reliability`` 
+        is ``None`` by default. There is the possibility to consider ``copies`` presynaptic
+        spikes at each Poisson event, where each of these spikes is unreliable, i.e. it occurs
+        with probability ``jitter=alpha`` (between 0 and 1).
+    ``copies``
+        The number of copies of each Poisson event. This is identical to ``weight=copies*w``, except
+        if ``jitter`` or ``reliability`` are specified.
+    ``record``
+        ``True`` if the input has to be recorded. In this case, the recorded events are
+        stored in the ``recorded_events`` attribute, as a list of pairs ``(i,t)`` where ``i`` is the
+        neuron index and ``t`` is the event time.
+    ``freeze``
+        ``True`` if the input must be the same for all neurons of the :class:`NeuronGroup`
+    """    
     _record = []
     
     def __init__(self, target, N=None, rate=None, weight=None, state=None,
                   jitter=None, reliability=None, copies=1,
                   record=False, freeze=False):
-        """
-        Adds a Poisson input to a NeuronGroup. Allows to efficiently simulate a large number of 
-        independent Poisson inputs to a NeuronGroup variable, without simulating every synapse
-        individually. The synaptic events are generated randomly during the simulation and
-        are not preloaded and stored in memory (unless record=True is used).
-        All the inputs must target the same variable, have the same frequency and same synaptic
-        weight. You can use as many PoissonInput objects as you want, even targetting a same NeuronGroup.
-        There is the possibility to consider time jitter in the presynaptic spikes, and
-        synaptic unreliability. The inputs can also be recorded if needed. Finally, all
-        neurons from the NeuronGroup receive independent realizations of Poisson spike trains,
-        except if the keyword freeze=True is used, in which case all neurons receive the same
-        Poisson input.
-        
-        Initialized with arguments:
-        
-        * ``target`` is the target :class:`NeuronGroup`
-        * ``N`` is the number of independent Poisson inputs
-        * ``rate`` is the rate of each Poisson process
-        * ``weight`` is the synaptic weight
-        * ``state`` is the name or the index of the synaptic variable of the :class:`NeuronGroup`
-        * ``copies`` is the number of copies of each Poisson event. This is identical to ``weight=copies*w``, except
-          if ``jitter`` or ``reliability`` are specified.
-        * ``jitter`` is ``None`` by default. There is the possibility to consider ``copies`` presynaptic
-          spikes at each Poisson event, randomly shifted according to an exponential law
-          with parameter ``jitter=taujitter`` (in second).
-        * ``reliability`` is ``None`` by default. There is the possibility to consider ``copies`` presynaptic
-          spikes at each Poisson event, where each of these spikes is unreliable, i.e. it occurs
-          with probability ``jitter=alpha`` (between 0 and 1).
-        * ``record`` is ``True`` if the input has to be recorded. In this case, the recorded events are
-          stored in the ``recorded_events`` attribute, as a list of pairs ``(i,t)`` where ``i`` is the
-          neuron index and ``t`` is the event time.
-        * ``freeze`` is ``True`` if the input must be the same for all neurons of the :class:`NeuronGroup`
-        """
         self.source = EmptyGroup(target.clock)
         self.target = target
         self.N = len(self.target)
