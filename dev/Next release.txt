@@ -5,6 +5,7 @@ Version 1.3.1
 TODO:
 	* check Brian Hears example + docs
 	* check PoissonInputs
+	* review syntax
 	* run tests/examples (Marcel?) + generate docs
 
 Initial deadline: 10 November
@@ -14,20 +15,16 @@ Initial deadline: 10 November
 		- test speed
 	[DONE]	- test bugs
 	[V] : I haven't tested speed yet. but as far as I remember the gain is quite big.
-	* Metrics: syntax/tests/examples
-		- we need a list of those
 	[DONE] * Brian Hears updates (Tan/Carney)
 	    - name: TanCarney
 	    - doc
 	    ** where is the example **
-	* More docs (see Brian meeting 25 Oct 2011)
 	[DONE] * Bug fixes added by Marcel (put in new_features.txt)
 	* Trace analysis library (new electrophysiology library package)
 		[DONE] - docs
 		[DONE] - update our own scripts to use this library instead of the experimental code
 		[DONE] - remove functions taken from experimental/trace_analysis
 		[DONE] - examples (examples/electrophysiology)
-		- are there other functions we might want to insert? (some used to process Anna's traces?)
 	* PoissonInputs: docs and syntax
 	** check this, is it done? **
 	[DONE] * Maybe: Sompolinsky example? (if it doesn't require a sound database)
@@ -47,6 +44,9 @@ Initial deadline: January
 	* Victor's spatializer: syntax
 	* ReverseCorrelationOnline (with online stimulus using RecentStateMonitor)
 	* VanRossum
+	* More docs (see Brian meeting 25 Oct 2011)
+	* Trace analysis: are there other functions we might want to insert? (some used to process Anna's traces?)
+	* Saving spikes from a SpikeMonitor
 
 SpikeGeneratorGroup
 -------------------
