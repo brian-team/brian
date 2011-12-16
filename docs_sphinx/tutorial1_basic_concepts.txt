@@ -45,9 +45,9 @@ The best place to start learning Python is the official tutorial:
    :maxdepth: 2
 
    tutorial_1a_the_simplest_brian_program
+   tutorial_1f_recording_spikes
+   tutorial_1d_introducing_randomness
+   tutorial_1g_recording_membrane_potentials
    tutorial_1b_counting_spikes
    tutorial_1c_making_some_activity
-   tutorial_1d_introducing_randomness
    tutorial_1e_connecting_neurons
-   tutorial_1f_recording_spikes
-   tutorial_1g_recording_membrane_potentials

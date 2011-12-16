@@ -14,7 +14,10 @@
 Example: Diesmann_et_al_1999 (frompapers)
 =========================================
 
-Synfire chains (from Diesmann et al, 1999)
+Synfire chains
+--------------
+M. Diesmann et al. (1999). Stable propagation of synchronous spiking in cortical
+neural networks. Nature 402, 529-533.
 
 ::
 
