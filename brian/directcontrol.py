@@ -39,8 +39,7 @@ control over the behaviour of neurons.
 """
 
 __all__ = ['MultipleSpikeGeneratorGroup', 'SpikeGeneratorGroup', 'PulsePacket',
-           'PoissonGroup', 'OfflinePoissonGroup', 'PoissonInput',
-           'NewSpikeGeneratorGroup']
+           'PoissonGroup', 'OfflinePoissonGroup', 'PoissonInput']
 
 from neurongroup import *
 from threshold import *
@@ -169,7 +168,7 @@ class MultipleSpikeGeneratorThreshold(Threshold):
         return where(firing)[0]
 
 
-class NewSpikeGeneratorGroup(NeuronGroup):
+class SpikeGeneratorGroup(NeuronGroup):
     """Emits spikes at given times
     
     Initialised as::
@@ -312,7 +311,7 @@ class NewSpikeGeneratorGroup(NeuronGroup):
             self._threshold = thresh
  
     def reinit(self):
-        super(NewSpikeGeneratorGroup, self).reinit()
+        super(SpikeGeneratorGroup, self).reinit()
         self._threshold.reinit()
 
     @property
@@ -325,8 +324,7 @@ class NewSpikeGeneratorGroup(NeuronGroup):
 
 class FastSpikeGeneratorThreshold(Threshold):
     '''
-    A faster version of the SpikeGeneratorThreshold where spikes are processed prior to the run (offline).
-    
+    A faster version of the SpikeGeneratorThreshold where spikes are processed prior to the run (offline). It replaces the SpikeGeneratorThreshold as of 1.3.1.
     '''
     ## Notes:
     #  - N is ignored (should it not?)
@@ -388,130 +386,15 @@ class FastSpikeGeneratorThreshold(Threshold):
             res += zip(idx, ts)
         return res
 
-class SpikeGeneratorGroup(NeuronGroup):
-    """Emits spikes at given times
-    
-    Initialised as::
-    
-        SpikeGeneratorGroup(N,spiketimes[,clock[,period]])
-    
-    with arguments:
-    
-    ``N``
-        The number of neurons in the group.
-    ``spiketimes``
-        An object specifying which neurons should fire and when. It can be a container
-        such as a ``list``, containing tuples ``(i,t)`` meaning neuron ``i`` fires at
-        time ``t``, or a callable object which returns such a container (which
-        allows you to use generator objects, see below). ``i`` can be an integer
-        or an array (list of neurons that spike at the same time).
-        If ``spiketimes`` is not a list or tuple, the pairs ``(i,t)`` need to be
-        sorted in time. You can also pass a numpy array
-        ``spiketimes`` where the first column of the array
-        is the neuron indices, and the second column is the times in
-        seconds. WARNING: units are not checked in this case, and you need to
-        ensure that the spikes are sorted.
-    ``clock``
-        An optional clock to update with (omit to use the default clock).
-    ``period``
-        Optionally makes the spikes recur periodically with the given
-        period. Note that iterator objects cannot be used as the ``spikelist``
-        with a period as they cannot be reinitialised.
-    ``gather=False``
-        Set to True if you want to gather spike events that fall in the same
-        timestep (makes the simulation faster if you have many events).
-    ``sort=True``
-        Set to False if your spike events are already sorted.
-    
-    Has an attribute:
-    
-    ``spiketimes``
-        This can be used to reset the list of spike times, however the values of
-        ``N``, ``clock`` and ``period`` cannot be changed. 
-        
-    **Sample usages**
-    
-    The simplest usage would be a list of pairs ``(i,t)``::
-    
-        spiketimes = [(0,1*ms), (1,2*ms)]
-        SpikeGeneratorGroup(N,spiketimes)
-    
-    A more complicated example would be to pass a generator::
-
-        import random
-        def nextspike():
-            nexttime = random.uniform(0*ms,10*ms)
-            while True:
-                yield (random.randint(0,9),nexttime)
-                nexttime = nexttime + random.uniform(0*ms,10*ms)
-        P = SpikeGeneratorGroup(10,nextspike())
-    
-    This would give a neuron group ``P`` with 10 neurons, where a random one
-    of the neurons fires at an average rate of one every 5ms.
+class SpikeGeneratorThreshold(Threshold):
+    """
+    Old threshold object for the SpikeGeneratorGroup
     
     **Notes**
-    
-    Note that if a neuron fires more than one spike in a given interval ``dt``, additional
-    spikes will be discarded. If you want them to stack, consider using the less efficient
-    :class:`MultipleSpikeGeneratorGroup` object instead. A warning will be issued if this
-    is detected.
-    
-    Also note that if you pass a generator, then reinitialising the group will not have the
-    expected effect because a generator object cannot be reinitialised. Instead, you should
-    pass a callable object which returns a generator. In the example above, that would be
-    done by calling::
-    
-        P = SpikeGeneratorGroup(10,nextspike)
-        
-    Whenever P is reinitialised, it will call ``nextspike()`` to create the required spike
-    container.
+
+    This version of the SpikeGeneratorThreshold object is deprecated, since version 1.3.1 of Brian it has been replaced in most cases by the FastSpikeGeneratorThreshold. 
+    This is kept only as a fallback object for when a SpikeGeneratorGroup object is initialized with a generator or an iterator object (see the doc for SpikeGeneratorGroup for more details). Please note that since this implementation is slower, using a static data structure as an input to a SpikeGeneratorGroup is advised.
     """
-    def __init__(self, N, spiketimes, clock=None, period=None, gather=False, sort=True):
-        clock = guess_clock(clock)
-        if gather: # assumes spike times are sorted
-            spiketimes=self.gather(spiketimes,clock.dt)
-            sort=False
-        thresh = SpikeGeneratorThreshold(N, spiketimes, period=period, sort=sort)
-        self.period = period
-        NeuronGroup.__init__(self, N, model=LazyStateUpdater(), threshold=thresh, clock=clock)
-
-    def gather(self,spiketimes,dt):
-        '''
-        Gathers spike events occurring in the same timestep.
-        Assumes spikes are sorted (this could be ensured).
-        
-        Returns a new list of spike times (i,t), where i is an array of neurons
-        (not just a single neuron) and t is a single floating value (time).
-        
-        Currently, this is rather slow. There is also a slight inconsistency
-        with the non-gathered mechanism, where spikes are scheduled one timestep
-        later. In addition, running a gathered group is slower! This is because
-        of the bad design of the threshold.__call method.
-        '''
-        if isinstance(spiketimes, (list, tuple)): # First convert to (n,2) array
-            spiketimes=array(spiketimes)
-        times=array(spiketimes[:,1]/dt,dtype=int) # in units of dt
-        neurons=array(spiketimes[:,0],dtype=int)
-        u,indices=numpy.unique(times,return_index=True) # determine repeated time indices
-        # Split over timesteps: list of (i,t) where i is an array of neurons
-        new_spiketimes=[]
-        for i in range(len(u)-1):
-            new_spiketimes.append((neurons[indices[i]:indices[i+1]],float(u[i])*dt))
-        new_spiketimes.append((neurons[indices[-1]:],float(u[-1])*dt))
-        return new_spiketimes
-
-    def reinit(self):
-        super(SpikeGeneratorGroup, self).reinit()
-        self._threshold.reinit()
-
-    spiketimes = property(fget=lambda self:self._threshold.spiketimes,
-                          fset=lambda self, value: self._threshold.set_spike_times(self._threshold.N, value, self._threshold.period))
-
-    def __repr__(self):
-        return "SpikeGeneratorGroup"
-
-
-class SpikeGeneratorThreshold(Threshold):
     def __init__(self, N, spiketimes, period=None, sort=True):
         self.set_spike_times(N, spiketimes, period=period, sort=sort)
 
