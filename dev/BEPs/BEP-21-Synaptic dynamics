@@ -48,6 +48,10 @@ Missing features and a few ideas
   weight dynamics, which should be computed with event-driven updates, 2)
   modulation by an external signal, which is a trace of spikes from other neurons.
   At this point, I'm familiar enough with this to address point 2.
+  
+* Heterosynaptic modifications (see eg. Kempter et al. PNAS 2001). Synaptic modifications
+  may not be local, for example may affect all synapses from the same presynaptic
+  neuron.
 
 The main technical difficulty, I think, is dealing with heterogeneous delays,
 which might require event queues.

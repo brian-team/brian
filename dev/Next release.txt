@@ -1,49 +1,5 @@
 Next releases
 =============
-Version 1.3.1
--------------
-TODO:
-	[OK] * check Brian Hears docs
-	[OK] * check PoissonInput
-		[OK (Rossantetal2011bis)] do we have an example? 
-		[OK] do we have docs? (should be documented in inputs.txt)
-		[OK] init(**kwargs) should be avoided: does not show in help() and no argument control
-		[OK] argument names should be consistent with other functions:
-			[? here, n is the number of independent Poisson inputs, not the number of neurons in the NeuronGroup] n -> N
-			[OK] w -> weight
-			[OK] var -> state
-			[OK] frozen -> freeze
-		[OK: removed] is add_input needed now?
-		[OK: should be clearer now] jitter, reliability: not clear what is meant by "number of synchronous spikes",
-							 plus it is doubly defined (jitter + reliability)
-	[OK] * SpikeGeneratorGroup: replace with new class
-	[OK] * check svn history for new features
-
-Initial deadline: 10 November
-	[DONE] * Brian examples for our papers [add: pi-limit]
-	[DONE] * New SpikeGeneratorGroup: tests
-	[DONE]	- check syntax
-		- test speed
-	[DONE]	- test bugs
-	[V] : I haven't tested speed yet. but as far as I remember the gain is quite big.
-	[DONE] * Brian Hears updates (Tan/Carney)
-	    - name: TanCarney
-	    - doc
-	[DONE] * Bug fixes added by Marcel (put in new_features.txt)
-	* Trace analysis library (new electrophysiology library package)
-		[DONE] - docs
-		[DONE] - update our own scripts to use this library instead of the experimental code
-		[DONE] - remove functions taken from experimental/trace_analysis
-		[DONE] - examples (examples/electrophysiology)
-	* PoissonInputs: docs and syntax
-	** check this, is it done? **
-	[DONE] * Maybe: Sompolinsky example? (if it doesn't require a sound database)
-	* What is the state of the experimental neuromorphic module, anything stable there?
-	[V] : We could add the ability to save spikes from a SpikeMonitor, and load the same files. This is implemented, and works on linux and mac, not on windows.
-	    -> Marcel suggested we drop the support for windows.
-
-	[DONE] * Check all new features (see svn history) and add in new_features.txt
-
 Version 1.4
 -----------
 Initial deadline: January
@@ -59,6 +15,7 @@ Initial deadline: January
 	* Saving spikes from a SpikeMonitor
 	* IRNS/IRNO (in Sound, by Jonathan) 
 	* Example: model fitting
+	* PositiveCrossing (currently in dev/ideas/multiple_events)
 
 SpikeGeneratorGroup
 -------------------
@@ -114,3 +71,46 @@ in Audition/electrophysiology/Joris/utils
 		only one spike train
 		spike_times -> spikes
 		name: spike_triggered_average
+
+-------------
+Version 1.3.1
+-------------
+TODO:
+	[OK] * check Brian Hears docs
+	[OK] * check PoissonInput
+		[OK (Rossantetal2011bis)] do we have an example? 
+		[OK] do we have docs? (should be documented in inputs.txt)
+		[OK] init(**kwargs) should be avoided: does not show in help() and no argument control
+		[OK] argument names should be consistent with other functions:
+			[? here, n is the number of independent Poisson inputs, not the number of neurons in the NeuronGroup] n -> N
+			[OK] w -> weight
+			[OK] var -> state
+			[OK] frozen -> freeze
+		[OK: removed] is add_input needed now?
+		[OK: should be clearer now] jitter, reliability: not clear what is meant by "number of synchronous spikes",
+							 plus it is doubly defined (jitter + reliability)
+	[OK] * SpikeGeneratorGroup: replace with new class
+	[OK] * check svn history for new features
+
+Initial deadline: 10 November
+	[DONE] * Brian examples for our papers [add: pi-limit]
+	[DONE] * New SpikeGeneratorGroup: tests
+	[DONE]	- check syntax
+		- test speed
+	[DONE]	- test bugs
+	[V] : I haven't tested speed yet. but as far as I remember the gain is quite big.
+	[DONE] * Brian Hears updates (Tan/Carney)
+	    - name: TanCarney
+	    - doc
+	[DONE] * Bug fixes added by Marcel (put in new_features.txt)
+	* Trace analysis library (new electrophysiology library package)
+		[DONE] - docs
+		[DONE] - update our own scripts to use this library instead of the experimental code
+		[DONE] - remove functions taken from experimental/trace_analysis
+		[DONE] - examples (examples/electrophysiology)
+	[DONE] * PoissonInputs: docs and syntax
+	[DONE] * Maybe: Sompolinsky example? (if it doesn't require a sound database)
+	* What is the state of the experimental neuromorphic module, anything stable there?
+	[V] : We could add the ability to save spikes from a SpikeMonitor, and load the same files. This is implemented, and works on linux and mac, not on windows.
+	    -> Marcel suggested we drop the support for windows.
+	[DONE] * Check all new features (see svn history) and add in new_features.txt

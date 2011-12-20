@@ -1,3 +1,13 @@
+* Multiple events (not just spike initiation): currently in dev/ideas/multiple_events
+
+* Brian examples: Abbott delayed STDP (PLoS CB), Gerstner 1996
+
+* Progress reporting could report memory usage as well, and warn if we might run out of memory
+
+* Online saving for monitors (direct to disk), possibly with a buffer
+
+* Save/load methods for objects and Network (perhaps starting with monitors)
+
 * library.ionic_currents: might not work if units are off (looks for amp to recognize the current)
 
 * eqs = MembraneEquation(C=200*pF) + leak + K_current + Na_current
