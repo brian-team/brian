@@ -72,8 +72,8 @@ from stp import *
 from timedarray import *
 from tests.simpletest import *
 
-__version__ = '1.3.1'
-__release_date__ = '2011-12-16'
+__version__ = '1.4.0dev'
+__release_date__ = '2011-12-22'
 
 ### Define global preferences which are not defined anywhere else
 
