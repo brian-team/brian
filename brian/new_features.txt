@@ -26,6 +26,9 @@ Minor features:
 * Added FractionalDelay filterbank to brian.hears, fractional itds to
   HeadlessDatabase and fractional shifts to Sound.shifted.
 * Added vowel function to brian.hears for creating artificial vowel sounds
+* New spike_triggered_average function
+* Added maxlevel and atmaxlevel to Sound
+* New IRNS/IRNO noise functions
 
 Improvements:
 

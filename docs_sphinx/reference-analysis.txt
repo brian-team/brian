@@ -14,3 +14,4 @@ Statistics of spike trains
 .. autofunction:: CCVF
 .. autofunction:: ACVF
 .. autofunction:: total_correlation
+.. autofunction:: spike_triggered_average

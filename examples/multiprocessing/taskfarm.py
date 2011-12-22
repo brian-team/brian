@@ -27,4 +27,3 @@ if __name__=='__main__':
     xlabel('k')
     ylabel('Firing rate (Hz)')
     show()
-    

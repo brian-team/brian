@@ -14,6 +14,6 @@ in Brian.
 .. toctree::
    :maxdepth: 2
 
-   tutorial_2c_the_cuba_network
    tutorial_2a_the_concept_of_a_connection
    tutorial_2b_excitatory_and_inhibitory_currents
+   tutorial_2c_the_cuba_network

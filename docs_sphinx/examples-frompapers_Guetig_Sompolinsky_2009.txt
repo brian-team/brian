@@ -10,10 +10,8 @@ Example: Guetig_Sompolinsky_2009 (frompapers)
 
 Implementation of the basic model (no speech recognition, no learning) 
 described in:
-GA14tig and Sompolinsky (2009): "Time-Warp-Invariant Neuronal Processing"
+Gutig and Sompolinsky (2009): "Time-Warp-Invariant Neuronal Processing"
 PLoS Biology, Vol. 7 (7), e1000141
-Testing the "time-warp invariance" property with conductance based versus
-current based synapses.
 
 ::
 

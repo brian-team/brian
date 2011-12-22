@@ -13,17 +13,18 @@ in the extras package.
    :maxdepth: 1
 
 
-.. _examples-audition:
+.. _examples-plasticity:
 
-audition
---------
+plasticity
+----------
 
 .. toctree::
    :maxdepth: 1
 
-   examples-audition_licklider
-   examples-audition_jeffress
-   examples-audition_filterbank
+   examples-plasticity_short_term_plasticity
+   examples-plasticity_short_term_plasticity2
+   examples-plasticity_STDP1
+   examples-plasticity_STDP2
 
 .. _examples-multiprocessing:
 
@@ -33,121 +34,9 @@ multiprocessing
 .. toctree::
    :maxdepth: 1
 
-   examples-multiprocessing_multiple_runs_with_gui
    examples-multiprocessing_multiple_runs_simple
+   examples-multiprocessing_multiple_runs_with_gui
    examples-multiprocessing_taskfarm
-
-.. _examples-plasticity:
-
-plasticity
-----------
-
-.. toctree::
-   :maxdepth: 1
-
-   examples-plasticity_short_term_plasticity2
-   examples-plasticity_STDP1
-   examples-plasticity_STDP2
-   examples-plasticity_short_term_plasticity
-
-.. _examples-hears:
-
-hears
------
-
-.. toctree::
-   :maxdepth: 1
-
-   examples-hears_sounds
-   examples-hears_ircam_hrtf
-   examples-hears_butterworth
-   examples-hears_time_varying_filter2
-   examples-hears_time_varying_filter1
-   examples-hears_dcgc
-   examples-hears_artificial_vowels
-   examples-hears_IIRfilterbank
-   examples-hears_gammatone
-   examples-hears_cochleagram
-   examples-hears_simple_anf
-   examples-hears_sound_localisation_model
-   examples-hears_linear_gammachirp
-   examples-hears_online_computation
-   examples-hears_log_gammachirp
-   examples-hears_drnl
-   examples-hears_cochlear_models
-   examples-hears_approximate_gammatone
-
-.. _examples-electrophysiology:
-
-electrophysiology
------------------
-
-.. toctree::
-   :maxdepth: 1
-
-   examples-electrophysiology_bridge
-   examples-electrophysiology_SEVC
-   examples-electrophysiology_threshold_analysis
-   examples-electrophysiology_AEC
-   examples-electrophysiology_lp_compensation
-   examples-electrophysiology_DCC
-   examples-electrophysiology_offline_electrode_compensation
-   examples-electrophysiology_voltageclamp
-
-.. _examples-misc:
-
-misc
-----
-
-.. toctree::
-   :maxdepth: 1
-
-   examples-misc_rate_model
-   examples-misc_I-F_curve
-   examples-misc_COBAHH
-   examples-misc_timed_array
-   examples-misc_pulsepacket
-   examples-misc_stim2d
-   examples-misc_I-F_curve2
-   examples-misc_current_clamp
-   examples-misc_CUBA
-   examples-misc_non_reliability
-   examples-misc_poisson
-   examples-misc_multipleclocks
-   examples-misc_two_neurons
-   examples-misc_phase_locking
-   examples-misc_realtime_plotting
-   examples-misc_van_rossum_metric
-   examples-misc_remotecontrolclient
-   examples-misc_adaptive_threshold
-   examples-misc_delays
-   examples-misc_heterogeneous_delays
-   examples-misc_expIF_network
-   examples-misc_spike_triggered_average
-   examples-misc_noisy_ring
-   examples-misc_correlated_inputs
-   examples-misc_HodgkinHuxley
-   examples-misc_correlated_inputs2
-   examples-misc_gap_junctions
-   examples-misc_transient_sync
-   examples-misc_adaptive
-   examples-misc_topographic_map
-   examples-misc_linked_var
-   examples-misc_named_threshold
-   examples-misc_minimalexample
-   examples-misc_stopping
-   examples-misc_using_classes
-   examples-misc_poissongroup
-   examples-misc_topographic_map2
-   examples-misc_leaky_if
-   examples-misc_mirollo_strogatz
-   examples-misc_COBA
-   examples-misc_ring
-   examples-misc_after_potential
-   examples-misc_cable
-   examples-misc_reliability
-   examples-misc_if
-   examples-misc_remotecontrolserver
 
 .. _examples-modelfitting:
 
@@ -157,35 +46,64 @@ modelfitting
 .. toctree::
    :maxdepth: 1
 
+   examples-modelfitting_modelfitting
    examples-modelfitting_modelfitting_groups
    examples-modelfitting_modelfitting_machines
-   examples-modelfitting_modelfitting
 
-.. _examples-frompapers:
+.. _examples-misc:
 
-frompapers
-----------
+misc
+----
 
 .. toctree::
    :maxdepth: 1
 
-   examples-frompapers_Brunel_Hakim_1999
-   examples-frompapers_Brette_Gerstner_2005
-   examples-frompapers_Rothman_Manis_2003
-   examples-frompapers_Plakiewicz_Brette_2010
-   examples-frompapers_Goodman_Brette_2010
-   examples-frompapers_Brette_2004
-   examples-frompapers_Rossant_et_al_2011
-   examples-frompapers_Diesmann_et_al_1999_longer
-   examples-frompapers_Diesmann_et_al_1999
-   examples-frompapers_Platkiewicz_Brette_2011
-   examples-frompapers_Sturzl_et_al_2000
-   examples-frompapers_Guetig_Sompolinsky_2009
-   examples-frompapers_Brette_Guigon_2003
-   examples-frompapers_Muller_et_al_2011
-   examples-frompapers_Rossant_et_al_2011bis
-   examples-frompapers_Touboul_Brette_2008
-   examples-frompapers_Kremer_et_al_2011
+   examples-misc_adaptive
+   examples-misc_adaptive_threshold
+   examples-misc_after_potential
+   examples-misc_cable
+   examples-misc_COBA
+   examples-misc_COBAHH
+   examples-misc_correlated_inputs
+   examples-misc_correlated_inputs2
+   examples-misc_CUBA
+   examples-misc_current_clamp
+   examples-misc_delays
+   examples-misc_expIF_network
+   examples-misc_gap_junctions
+   examples-misc_heterogeneous_delays
+   examples-misc_HodgkinHuxley
+   examples-misc_I-F_curve
+   examples-misc_I-F_curve2
+   examples-misc_if
+   examples-misc_leaky_if
+   examples-misc_linked_var
+   examples-misc_minimalexample
+   examples-misc_mirollo_strogatz
+   examples-misc_multipleclocks
+   examples-misc_named_threshold
+   examples-misc_noisy_ring
+   examples-misc_non_reliability
+   examples-misc_phase_locking
+   examples-misc_poisson
+   examples-misc_poissongroup
+   examples-misc_pulsepacket
+   examples-misc_rate_model
+   examples-misc_realtime_plotting
+   examples-misc_reliability
+   examples-misc_remotecontrolclient
+   examples-misc_remotecontrolserver
+   examples-misc_ring
+   examples-misc_spike_triggered_average
+   examples-misc_stim2d
+   examples-misc_stopping
+   examples-misc_timed_array
+   examples-misc_topographic_map
+   examples-misc_topographic_map2
+   examples-misc_transient_sync
+   examples-misc_two_neurons
+   examples-misc_using_classes
+   examples-misc_van_rossum_metric
 
 .. _examples-interface:
 
@@ -196,3 +114,85 @@ interface
    :maxdepth: 1
 
    examples-interface_interface
+
+.. _examples-hears:
+
+hears
+-----
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-hears_approximate_gammatone
+   examples-hears_artificial_vowels
+   examples-hears_butterworth
+   examples-hears_cochleagram
+   examples-hears_cochlear_models
+   examples-hears_dcgc
+   examples-hears_drnl
+   examples-hears_gammatone
+   examples-hears_IIRfilterbank
+   examples-hears_ircam_hrtf
+   examples-hears_linear_gammachirp
+   examples-hears_log_gammachirp
+   examples-hears_online_computation
+   examples-hears_simple_anf
+   examples-hears_sounds
+   examples-hears_sound_localisation_model
+   examples-hears_time_varying_filter1
+   examples-hears_time_varying_filter2
+
+.. _examples-frompapers:
+
+frompapers
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-frompapers_Brette_2004
+   examples-frompapers_Brette_Gerstner_2005
+   examples-frompapers_Brette_Guigon_2003
+   examples-frompapers_Brunel_Hakim_1999
+   examples-frompapers_Diesmann_et_al_1999
+   examples-frompapers_Diesmann_et_al_1999_longer
+   examples-frompapers_Goodman_Brette_2010
+   examples-frompapers_Guetig_Sompolinsky_2009
+   examples-frompapers_Kremer_et_al_2011
+   examples-frompapers_Muller_et_al_2011
+   examples-frompapers_Plakiewicz_Brette_2010
+   examples-frompapers_Platkiewicz_Brette_2011
+   examples-frompapers_Rossant_et_al_2011
+   examples-frompapers_Rossant_et_al_2011bis
+   examples-frompapers_Rothman_Manis_2003
+   examples-frompapers_Sturzl_et_al_2000
+   examples-frompapers_Touboul_Brette_2008
+
+.. _examples-electrophysiology:
+
+electrophysiology
+-----------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-electrophysiology_AEC
+   examples-electrophysiology_bridge
+   examples-electrophysiology_DCC
+   examples-electrophysiology_lp_compensation
+   examples-electrophysiology_offline_electrode_compensation
+   examples-electrophysiology_SEVC
+   examples-electrophysiology_threshold_analysis
+   examples-electrophysiology_voltageclamp
+
+.. _examples-audition:
+
+audition
+--------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-audition_filterbank
+   examples-audition_jeffress
+   examples-audition_licklider

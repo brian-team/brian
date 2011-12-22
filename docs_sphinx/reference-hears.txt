@@ -21,6 +21,8 @@ Sounds
 .. autofunction:: powerlawnoise
 .. autofunction:: brownnoise
 .. autofunction:: pinknoise
+.. autofunction:: irns
+.. autofunction:: irno
 .. autofunction:: tone
 .. autofunction:: click
 .. autofunction:: clicks

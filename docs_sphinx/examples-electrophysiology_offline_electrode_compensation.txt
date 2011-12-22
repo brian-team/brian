@@ -56,5 +56,4 @@ Raw trace: Rothman Mannis model of the cochlear nucleus
         
         show()
     
-        
 

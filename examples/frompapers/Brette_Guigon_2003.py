@@ -12,9 +12,10 @@ on the sign of the input I.
 
 All neurons receive the same fluctuating input, scaled by a parameter p that
 varies across neurons. This shows:
-1) reproducibility of spike timing
-2) robustness with respect to deterministic changes (parameter)
-3) increased reproducibility in the fluctuation-driven regime (input crosses
+
+1. reproducibility of spike timing
+2. robustness with respect to deterministic changes (parameter)
+3. increased reproducibility in the fluctuation-driven regime (input crosses
    the threshold)
 """
 from brian import *

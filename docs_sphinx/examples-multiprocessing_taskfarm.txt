@@ -35,5 +35,5 @@ multiple CPUs and save the results to a
         xlabel('k')
         ylabel('Firing rate (Hz)')
         show()
-        
+    
 

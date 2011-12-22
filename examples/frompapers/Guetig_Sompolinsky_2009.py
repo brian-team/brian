@@ -1,10 +1,10 @@
-# -*- coding: utf8 -*-
+'''
+Implementation of the basic model (no speech recognition, no learning) 
+described in:
+Gutig and Sompolinsky (2009): "Time-Warp-Invariant Neuronal Processing"
+PLoS Biology, Vol. 7 (7), e1000141
+'''
 from brian import *
-
-# Implementation of the basic model (no speech recognition, no learning) 
-# described in:
-# Gütig and Sompolinsky (2009): "Time-Warp-Invariant Neuronal Processing"
-# PLoS Biology, Vol. 7 (7), e1000141
 
 class TimeWarpModel(object):
     '''

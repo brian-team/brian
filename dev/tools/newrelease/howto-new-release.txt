@@ -31,7 +31,10 @@ Update README.txt and brian/new_features.txt
 
 Copy the latest new features from new_features.txt into README.txt
 following the convention there, and make a new section in new_features.txt
-for the next version.
+for the next version. You should also go through the commit log from the time
+of the last release, to check for features that people have forgotten to add to
+new_features.txt. This is also a good way to find things that should be but
+aren't documented, etc.
 
 Also, you might want to update README.txt as well if there are significant
 changes such as new web page, new authors, new requirements, etc.
@@ -44,7 +47,8 @@ minor and major releases.
 
 First of all, run the dev/tools/docs/generate_html.py script. This will
 generate all the relevant HTML files for the documentation other
-than the API documentation.
+than the API documentation. Note that you need to check that no errors are
+raised, and fix them if they are.
 
 Secondly, build the PDF version of the documentation by running
 dev/tools/docs/build_latex.py. Copy the file
