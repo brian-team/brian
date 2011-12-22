@@ -143,7 +143,7 @@ Go to our Trac page:
 	
 Login, go to Admin, click on Downloader. Create a new release under
 Official Releases with the version number as the name of the release.
-Make sure the order is right (I guess it does this automatically). Select
+Make sure the order is right (look at the most recent one and subtract 1). Select
 the release and upload each file as in the examples already there. Make sure
 to edit the Download page on the Trac Wiki to point to the new release.
 
