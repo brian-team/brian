@@ -737,7 +737,7 @@ class Sound(BaseSound, numpy.ndarray):
         The ``amplitude`` and
         ``phase`` keywords can be set to either a single value or an
         array of values. In the former case the value is set for all
-        harmonics, and harmonics up the the sampling frequency are
+        harmonics, and harmonics up to the sampling frequency are
         generated. In the latter each harmonic parameter is set
         separately, and the number of harmonics generated corresponds
         to the length of the array.
