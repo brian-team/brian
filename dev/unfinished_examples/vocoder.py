@@ -7,10 +7,12 @@ from brian import *
 from brian.hears import *
 from scipy.signal import hilbert
 
-S=Sound(r'D:/My Dropbox/Articles/In progress/Chimaeras/102.wav')
+S=Sound(r'D:/My Dropbox/Articles/In progress/Chimaeras/104.wav')
 #S=vowel(vowel='u', pitch=150*Hz, duration=1*second, samplerate=None)
 #S.play()
-noise = whitenoise(S.duration,samplerate=S.samplerate)
+#noise = whitenoise(S.duration,samplerate=S.samplerate)
+#masker = whitenoise(S.duration,samplerate=S.samplerate)*.5*(1+cos())
+noise = harmoniccomplex(100*Hz, S.duration, samplerate=S.samplerate)
 #sound.level = 50*dB
 
 #(S+noise).play()
@@ -34,7 +36,9 @@ TFS=H2/abs(H2) # careful with division by zero
 
 chimaera=sum(envelope*real(TFS),axis=1)
 
-Sound(chimaera,samplerate=S.samplerate).play(normalise=True)
+Sout=Sound(chimaera,samplerate=S.samplerate).atlevel(70*dB)+whitenoise(S.duration,samplerate=S.samplerate).atlevel(70*dB)
+Sout.play(normalise=True)
+Sout.save(filename=r'D:/My Dropbox/Articles/In progress/Chimaeras/104_harmonic_SNR0dB.wav',normalise=True)
 
 figure()
 show()
