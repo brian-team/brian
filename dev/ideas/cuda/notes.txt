@@ -1,0 +1,10 @@
+Notes about Brian on GPU
+========================
+Thresholding and compaction
+---------------------------
+This can be quite slow. To make it faster, one option if there is a refractory
+period of at least R time bins and there is a minimum synaptic transmission delay
+of at least R is to calculate spiketimes every R time bins, and feed them to
+the Synapses object.
+
+This means that when a spike is produced, its timing is stored.
