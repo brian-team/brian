@@ -266,7 +266,7 @@ class AERSpikeMonitor(FileSpikeMonitor):
     def __init__(self, source, filename, record=False, delay=0):
         super(FileSpikeMonitor, self).__init__(source, record, delay)
         self.filename = filename
-        self.f = open(filename, 'w')
+        self.f = open(filename, 'wb')
         header = HEADER
         header += str(datetime.datetime.now()) + '\n'
         self.f.write(header)
