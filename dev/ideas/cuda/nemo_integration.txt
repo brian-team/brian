@@ -66,3 +66,12 @@ in principle.
 STDP
 ^^^^
 Currently, this is done using pre-post STDP functions, but we would need trace-based models.
+
+General stuff
+-------------
+* Local memory is 64KB, while global memory is slow. Theoretical maximum bandwidth for global memory is
+192 GB/s (but in practice it's only a fraction of this). To maximize it, one must used coalesced accesses.
+* Nemo's scatter/gather algorithms are good for a large number of synapses. This suggests to use different
+algorithms depending on the connectivity structure. If we use a single Synapses object, then we could have
+an option to choose the algorithm (e.g. GPU='Nemo').
+* We need to be able to deal with multiple neuron groups and connections.
