@@ -1,2 +1,68 @@
 Integration of NEMO and Brian
 =============================
+Meeting notes, 9 Jan 2012
+-------------------------
+How Nemo works:
+
+Partition
+^^^^^^^^^
+Neurons are partitioned into groups, one group per streaming multiprocessor (SM).
+
+Scatter
+^^^^^^^
+On each SM, there is a local queue for outgoing spikes. Processing is local
+but the queue is stored in global memory. The local queue is very close to
+Brian's SpikeQueue, with a few differences.
+Each column corresponds to a time bin in the future, and is a stack of events.
+Each event is a couple (i,d) meaning: neuron i spiked with delay d (in time bins).
+It is inserted in the time bin in which the event will occur on the postsynaptic side.
+The delay is only used to address the correct set of synapses (all those synapses that
+have presynaptic neuron i and delay d).
+To insert events, each neuron has a list of possible outgoing delays, stored with a bit array
+(64 bits for 64 possible delays).
+
+In the SpikeQueue, only a synapse number is inserted. This means that each event in the local
+queue of Nemo corresponds to a set of synapses (all those synapses that have presynaptic neuron i
+and delay d).
+
+In a second phase, events for the current time bin are communicated between SMs.
+Then each SM gets a list of indexes of synapses that receive spikes. The synapse structure
+(weights) is arranged so that synapses with the same (i,d)
+(synapses that have presynaptic neuron i and delay d) are contiguous in memory.
+
+Together, the local and global phase (without the gather operation below) corresponds to the
+functionality of the SpikeQueue. But, for Brian I think there is no need for a separate SpikeQueue
+object since it will always be attached to a Synapse object. Therefore it seems possible to merge it
+with the gather operation.
+
+Gather
+^^^^^^
+Once we have activated synapses for all neurons in a SM, Nemo calculates the sum of weights for these
+synapses for each postsynaptic neuron. This is the output of the gather operation, that is passed to
+the state update operation.
+This corresponds to one issue (which is problematic in Python) that we discussed for the Synapse
+class.
+
+Update
+^^^^^^
+The update is almost the same as in Brian.
+The main difference is that in Nemo, propagation of spikes does *not* modify target state variables.
+It only gathers the total modification of the target variable (assuming linearity), and passes this
+number to each number. There is a possibility for two possible target states, excitatory and inhibitory.
+The state updater in Nemo then retrieves these numbers and adds them to the corresponding target state.
+
+In Brian, we would rather have the gather operation directly modify the target state variable.
+
+Threshold
+^^^^^^^^^
+In Nemo, the threshold condition is stored as a boolean.
+From this, a compact list of indexes is computed using atomic operations on each SM.
+Then a complete list is obtained from these lists.
+Only the SM-specific compact lists are required for the scatter operation.
+
+For Brian, we would then only need the global compaction for monitoring spikes, but not the propagation
+in principle.
+
+STDP
+^^^^
+Currently, this is done using pre-post STDP functions, but we would need trace-based models.
