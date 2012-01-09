@@ -1,0 +1,27 @@
+GPU week - management
+=====================
+To start with:
+* Try to have Nemo running with Brian GPU groups
+* Try to have a Brian script running with Nemo's scatter-gather operations
+
+How about running a Jeffress model? (has many heterogeneous delays)
+
+Targets:
+* A complete NeuronGroup on GPU (with threshold)
+* A DelayConnection on GPU (could call Nemo behind the scenes, but then we need to get rid of Boost)
+
+Things we need to discuss
+-------------------------
+* How to do STDP with traces. Ideally, this should be integrated in the new Synapse class.
+* How to directly construct networks
+* How to access all variables (monitors)
+
+Things that could be done later
+-------------------------------
+* Stochastic equations
+* New refractory system
+* Brian Hears
+
+Things that could be done in parallel
+-------------------------------------
+* The SpikeQueue and Synapses classes in Python
