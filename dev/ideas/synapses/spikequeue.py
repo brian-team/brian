@@ -1,5 +1,23 @@
 """
-Spike queues following BEP-21
+Spike queues following BEP-21.
+
+Notes
+-----
+A SpikeQueue object will always be attached to a Synapses object. One important point is that delays and
+synapse indexes can be set after the objects are created. Therefore, they cannot be passed at initialization time,
+and this is why the Synapses object is passed.
+To save one indirection, what should be stored is a view on the delay and synapse arrays.
+
+The object is a SpikeMonitor on the source NeuronGroup. When it is called, spikes are fetched from the NeuronGroup
+into the queue. The way it is currently done is highly inefficient, because it only uses the following mappings
+    synapse -> delay
+    synapse -> presynaptic i
+but for effiency, we need the mappings:
+    presynaptic i -> synapse
+    presynaptic i -> delay
+
+We will still need the mapping: synapse -> presynaptic i
+but not: synapse -> delay
 """
 from brian import *
 from time import time
