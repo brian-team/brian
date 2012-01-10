@@ -226,7 +226,7 @@ class Synapses(NetworkOperation):
         self.pre_code = pre_code
         self.pre_queue = SpikeQueue(self.source, self, max_delay = max_delay)
 
-        self.contained_objects = [self.pre_queue] # wtf is this for      
+        self.contained_objects = [self.pre_queue] # wtf is this for: so that pre_queue.propagate is called
         
     def __setitem__(self, key, value):
         if not isinstance(key, tuple):

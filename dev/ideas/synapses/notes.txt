@@ -12,13 +12,27 @@ Synapses variables
 * synapse -> presynaptic i
 * synapse -> postsynaptic j
 	These two are currently in existing_synapses
+	All synaptic mappings are handled by a SparseStateVector (deals with multiple types)
 
 and for backpropagation (STDP):
 * postsynaptic j -> synapse indexes
 * postsynaptic j -> delay
+(do we need synapse -> delay?)
 
-Do we need synapse -> delay?
+Also
+* presynaptic queue (pre_queue)
+* postsynaptic queue
+* presynaptic/postsynaptic code and namespace (pre_code,pre_namespace)
+
+Initialisation
+--------------
+Currently:
+* parse model equations and create a state updater
+* clean pre/post strings
+* create variables (state vector)
+* create and compile pre code
 
 Various notes
 -------------
 * We want to be able to use StateUpdater objects on the synaptic variables.
+This means we need a view on a state matrix.
