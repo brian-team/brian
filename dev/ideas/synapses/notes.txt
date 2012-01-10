@@ -9,7 +9,7 @@ Synapses variables
 * presynaptic i -> synapse indexes
 * presynaptic i -> delay
 * synapse -> variables (w)
-* synapse -> presynaptic i
+* synapse -> presynaptic i (int32 or smaller, based on the size of the presynaptic group)
 * synapse -> postsynaptic j
 	These two are currently in existing_synapses
 	All synaptic mappings are handled by a SparseStateVector (deals with multiple types)

@@ -1,0 +1,21 @@
+Data structure for the Synapses object
+======================================
+* 1 SpikeQueue for pre and post (can be a Brian contained object or could be called by the Synapses object)
+
+Synaptic mappings:
+* synapse -> variables (w) (floats)
+	could be separated between continuously updated variables (i.e., not parameters) to be put in _S and other ones
+	This should be a dynamic state matrix (extendable 2D array).
+* synapse -> presynaptic i (int32 or smaller, based on the size of the presynaptic group)
+	This should be a dynamic vector
+* synapse -> postsynaptic j (same)
+
+Pre/post mappings (useful for construction and spike queues):
+* presynaptic i -> synapse indexes (int32 or more? depending on len(pre)*len(post))
+	List of dynamic arrays
+* presynaptic i -> delay (depending on max delay? but this is not known at the beginning)
+* postsynaptic j -> synapse indexes
+* postsynaptic j -> delay
+
+Code:
+* presynaptic/postsynaptic code and namespace (pre_code,pre_namespace)

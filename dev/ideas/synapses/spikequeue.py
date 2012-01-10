@@ -106,9 +106,9 @@ class SpikeQueue(SpikeMonitor):
         return self.X[self.currenttime,:self.n[self.currenttime]]
     
     def compute_all_offsets(self, all_delays):
-        t0 = time.time()
+        #t0 = time.time()
         self._all_offsets = self.offsets(all_delays)
-        log_debug('spikequeue.offsets', 'Offsets computed in '+str(time.time()-t0))
+        #log_debug('spikequeue.offsets', 'Offsets computed in '+str(time.time()-t0))
     
     def offsets(self, delay):
         # Calculates offsets corresponding to a delay array
