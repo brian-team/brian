@@ -1,0 +1,8 @@
+Creation
+--------
+S[2,3:5]=True
+
+Modification and access
+-----------------------
+S.w[2,5]=1*nS
+S.w[1,:]=2*nS
