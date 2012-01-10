@@ -212,7 +212,7 @@ class GPUNeuronGroup(NeuronGroup):
 
 if __name__ == '__main__':
 
-    from brian.experimental.ccodegen import AutoCompiledNonlinearStateUpdater
+    #from brian.experimental.ccodegen import AutoCompiledNonlinearStateUpdater
     set_global_preferences(usecodegen=False)
 
     #duration = 10*second
