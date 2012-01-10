@@ -192,46 +192,6 @@ class SpikeQueue(SpikeMonitor):
         if display:
             show()
 
-
-    
-'''
-NOTE: the test code below is probably not working anymore since I changed the way it is created
-
-
-The connection has arrays of synaptic variables (same as state matrix of
-neuron groups). Two synaptic variables are the index of the postsynaptic neuron
-and of the presynaptic neuron (i,j). (int32 or int16).
-
-In addition, the connection must have, for each presynaptic neuron:
-* list of target synapses (int32)
-* corresponding delays in timesteps (int16)
-* corresponding offsets (int16 is probably sufficient, or less)
-
-These types (int32 etc) could be determined at construction time, or
-at the time of conversion construction->connection (run time).
-
-Same thing for postsynaptic neuron (for STDP)
-This could also be determined at run time (depending on whether post=None or not)
-
-Total memory:
-* number of synapses * 12 * 2 (if bidirectional)
-+ synaptic variables (weights)
-'''
-
 # We need to write some speed tests
 if __name__=='__main__':
-    queue=SpikeQueue(5,30)
-    Nsynapses=4000*80 # in the CUBA example
-    nspikes=160
-    delays=randint(160,size=nspikes) # average number of spikes per dt in CUBA
-    targets=randint(Nsynapses,size=nspikes)
-    #print queue.offsets(delays)
-    t1=time()
-    for _ in range(10000): # 10000 timesteps per second
-        d=queue.offsets(delays)
-        queue.insert(delays,d,targets)
-        queue.next()
-        events=queue.peek()
-        queue.plot()
-    t2=time()
-    print t2-t1
+    pass
