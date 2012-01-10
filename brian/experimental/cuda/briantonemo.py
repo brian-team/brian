@@ -1,7 +1,15 @@
 from brian import *
-from gpucodegen import *
 import nemo
 import ctypes
+try:
+    import pycuda
+    import pycuda.autoinit as autoinit
+    import pycuda.driver as drv
+    import pycuda.compiler as compiler
+    from pycuda import gpuarray
+except ImportError:
+    log_warn('brian.experimental.cuda.gpucodegen', 'Cannot import pycuda')
+from brian.experimental.codegen.rewriting import rewrite_to_c_expression
 
 __all__ = ['NemoConnection']
 
@@ -55,7 +63,7 @@ class NemoConnection(DelayConnection):
         if self.nemo_use_gpu:
             self.nemo_conf.set_cuda_backend(0)
         else:
-            self.nemo_conf.set_cpu_backend(-1)
+            self.nemo_conf.set_cpu_backend()
         # simulation object
         self.nemo_sim = nemo.Simulation(self.nemo_net, self.nemo_conf)
 
