@@ -58,14 +58,8 @@ the above:
 * Make sure you have a HOME environment variable set
 
 
-
-
-
-
-
-
-
-** ALTERNATIVE INSTALLATION ** [UNTESTED]
+ALTERNATIVE INSTALLATION
+------------------------
 This installation uses cygwin for compiling pypar, as explained here:
 http://boodebr.org/main/python/build-windows-extensions
 MS Visual Studio is used for compiling cuda files.
@@ -94,3 +88,12 @@ LDFLAGS = []
 C:\Program Files\Microsoft Visual Studio 9.0\Common7\IDE
 C:\Program Files\Microsoft Visual Studio 9.0\VC\bin
 [check with your configuration]
+
+INSTALLING PYCUDA ON WINDOWS 7 64 bits
+--------------------------------------
+* Install 64 bits versions of all programs (remove all previous 32 bits first),
+following instructions there:
+http://wiki.tiker.net/PyCuda/Installation/Windows#Windows_7_64-bit_with_Visual_Studio_Professional_2008_.28Strictly_Binary_Versions.29
+* There will probably be missing DLLs. When you run into an error, find the
+dependencies using Dependency Walker. Search the files on your drive and copy them
+in C:\Windows\SysWOW64.
