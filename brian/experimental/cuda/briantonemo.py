@@ -73,7 +73,7 @@ class NemoConnection(DelayConnection):
         if self.nemo_use_gpu:
             raise NotImplementedError("GPU version not yet implemented.")
         else:
-            self.propagate(self.source.get_spikes(self.delay))
+            self.propagate(self.source.get_spikes(0))
         
     def propagate(self, spikes):
         if len(spikes)==0:
