@@ -1,24 +1,25 @@
 from brian import *
 
-layerfanout = 3
-layerdepth = 3
-numperlayer = 100
+layerfanout = 3   # each layer connects to this many other layers
+layerdepth = 3    # length of chain of layers
+numperlayer = 100 # number of neurons in each layer
 
 tau = 10*ms
 Vr = 0
 Vt = 1
-Vrest0 = 2
-tauVrest = 200*ms
+Vrest0 = 2 # resting potential of first layer (greater than Vt to force spikes)
 delaymin, delaymax = 5*ms, 15*ms
 weight = 0.02
-layerp = 1.0
+layerp = 1.0 # probability of connection from layer to layer
 refractory = 1*second
 
 eqs = '''
 dV/dt = -(V-Vrest)/tau : 1
-dVrest/dt = -Vrest/tauVrest : 1
+Vrest : 1
 '''
 
+# Graph structure of the connections, each layer connects to three other layers
+# and we store the summed delays between layers so that we can plot it
 layers = {}
 layerdelay = {0:0*second}
 nextlayer = 1
@@ -34,12 +35,14 @@ for i in xrange(layerdepth):
             nextlayer += 1
     curlayers = nextcurlayers
 
+# Geometric series!
 numlayers = (layerfanout**(layerdepth+1)-1)/(layerfanout-1)
 N = numlayers*numperlayer
 
 G = NeuronGroup(N, eqs, reset=Vr, threshold=Vt, refractory=refractory)
 G.V = rand(N)*(Vt-Vr)+Vr
 G.Vrest = 0
+# Initialise layer 0 to fire spikes
 G.Vrest[0:numperlayer] = Vrest0
 
 C = Connection(G, G, 'V', delay=True, max_delay=delaymax)
