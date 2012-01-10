@@ -6,9 +6,16 @@ Synaptic mappings:
 * synapse -> variables (w) (floats)
 	could be separated between continuously updated variables (i.e., not parameters) to be put in _S and other ones
 	This should be a dynamic state matrix (extendable 2D array).
+	For now it's in _S.
 * synapse -> presynaptic i (int32 or smaller, based on the size of the presynaptic group)
-	This should be a dynamic vector
+	This should be a dynamic vector.
+	I call it 'presynaptic' for now.
 * synapse -> postsynaptic j (same)
+	I call it 'postsynaptic' for now.
+
+The synaptic mappings should be addressable by (pre,post) number (2D or 3D).
+This could be done using separate objects, one per synaptic variable. There would be a dictionary
+of these objects.
 
 Pre/post mappings (useful for construction and spike queues):
 * presynaptic i -> synapse indexes (int32 or more? depending on len(pre)*len(post))

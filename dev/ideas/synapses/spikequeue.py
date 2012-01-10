@@ -170,7 +170,7 @@ class SpikeQueue(SpikeMonitor):
             # this seems ok in terms of speed even though I dont like the for loop. 
             # any idea? see test_fastsynapseidentification.py
             
-            synapses = self.synapses.pre2synapses(spikes)
+            synapses = self.synapses.pre2synapses(spikes) # These are the synaptic events
             
             if len(synapses):
                 # delay getting:
