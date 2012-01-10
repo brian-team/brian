@@ -40,7 +40,7 @@ class NemoConnection(DelayConnection):
 
         # now upload to nemo
         self.nemo_net = nemo.Network()
-        if isinstance(self.source, GPUNeuronGroup):
+        if False:#isinstance(self.source, GPUNeuronGroup):
             self.nemo_use_gpu = True
         else:
             self.nemo_use_gpu = False
