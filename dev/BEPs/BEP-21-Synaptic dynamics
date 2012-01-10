@@ -424,11 +424,15 @@ A number of things can be done independently.
 High priority:
 * Write a few examples
 * Sparse matrix structure with multiple values.
+  [V] : Sort of done, by the state vector, even though it may not be completely efficient
 * Separation of an array of synapse index into a list of arrays with no
   repeated postsynaptic neurons (synapse_separation.py)
+  [V] : Done
 * Spike queue, Python version (spikequeue.py, see also scheduled_events.py).
+  [V] : Done
 * Main Synapse code (could be adapted from NeuronGroup, Connection and STDP).
 * Access and construction.
+  [V] : Done
 
 Low priority:
 * Possibly, array class with overloaded self addition/multiplication
