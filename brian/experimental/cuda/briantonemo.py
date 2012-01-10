@@ -84,7 +84,7 @@ class NemoConnection(DelayConnection):
         else:
             spikes_ptr = spikes.ctypes.data#spikes.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
             spikes_len = len(spikes)
-            exc_ptr, inh_ptr = self.nemo_sim.propagate(spikes_ptr, spikes_len)
+            exc_ptr, inh_ptr = tuple(self.nemo_sim.propagate(spikes_ptr, spikes_len))
             exc = numpy_array_from_memory(exc_ptr, len(self.source), float32)
             inh = numpy_array_from_memory(inh_ptr, len(self.source), float32)
             self.target._S[self.nstate] += exc
