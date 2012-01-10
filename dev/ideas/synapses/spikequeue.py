@@ -23,7 +23,7 @@ Actually, does this need to be a Brian object? It could directly be called by
 Synapses.
 """
 from brian import *
-from time import time
+import time
 
 INITIAL_MAXSPIKESPER_DT = 1
 # This is a 2D circular array, but also a SpikeMonitor
@@ -74,7 +74,8 @@ class SpikeQueue(SpikeMonitor):
       method (at run time)
     '''
     def __init__(self, source, synapses, 
-                 max_delay = 0, maxevents = INITIAL_MAXSPIKESPER_DT):
+                 max_delay = 0, maxevents = INITIAL_MAXSPIKESPER_DT,
+                 precompute_offsets = False):
         # SpikeMonitor structure
         self.source = source #NeuronGroup
         self.synapses = synapses #Synapses
@@ -87,6 +88,9 @@ class SpikeQueue(SpikeMonitor):
         self.X_flat = self.X.reshape(nsteps*maxevents,)
         self.currenttime = 0
         self.n = zeros(nsteps, dtype = int) # number of events in each time step
+        
+        self._all_offsets = None
+        self.precompute_offsets = precompute_offsets
         
         super(SpikeQueue, self).__init__(source, 
                                          record = False)
@@ -101,9 +105,13 @@ class SpikeQueue(SpikeMonitor):
         # Events in the current timestep
         return self.X[self.currenttime,:self.n[self.currenttime]]
     
+    def compute_all_offsets(self, all_delays):
+        t0 = time.time()
+        self._all_offsets = self.offsets(all_delays)
+        log_debug('spikequeue.offsets', 'Offsets computed in '+str(time.time()-t0))
+    
     def offsets(self, delay):
         # Calculates offsets corresponding to a delay array
-        #
         # Maybe it could be precalculated? (an int16 array?)
         I = argsort(delay)
         xs = delay[I]
@@ -120,7 +128,7 @@ class SpikeQueue(SpikeMonitor):
         
     def insert(self, delay, offset, target):
         # Vectorized insertion of spike events
-        # delay = delay in timestep
+        # delay = delay in timestepp
         # offset = offset within timestep
         # target = target synaptic index
         
@@ -160,20 +168,20 @@ class SpikeQueue(SpikeMonitor):
         if len(spikes):
             # synapse identification, 
             # this seems ok in terms of speed even though I dont like the for loop. 
-            # any idea? see stest_fastsynapseidentification.py
-            synapses = []
-            for i in spikes:
-                # use hstack with arrays instead of lists
-                synapses += list(nonzero(self.synapses._statevector._pre == i)[0]) # this is crazy!
-                # we need a list/array of synapses for each presynaptic neuron
-                # should we use array of arrays as objects?
-                # and it could perhaps be on the SpikeQueue object
-
+            # any idea? see test_fastsynapseidentification.py
+            
+            synapses = self.synapses.pre2synapses(spikes)
+            
             if len(synapses):
                 # delay getting:
                 delay = self.synapses.delay[synapses]
-                offsets = self.offsets(delay)
-                self.insert(delay, offsets, synapses)
+                if self.precompute_offsets:
+                    if self._all_offsets == None:
+                        self.compute_all_offsets(self.synapses._statevector.delay)
+                    self.insert(delay, self._all_offsets[synapses], synapses)
+                else:
+                    offsets = self.offsets(delay)
+                    self.insert(delay, offsets, synapses)
             
     ######################################## UTILS    
     def plot(self, display = True):

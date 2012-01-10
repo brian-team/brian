@@ -89,30 +89,25 @@ class Synapses(NetworkOperation):
     synapses.delay[:,0] = 5*ms
 
     '''
-    def __init__(self, *args, **kwdargs): # aargh!!
-        clock = kwdargs.get('clock', None)
+    def __init__(self, source, target = None, 
+                 clock = None,
+                 max_delay = 0,
+                 level = 0, model = None,
+                 check_units = True, method = None, freeze = False, implicit = False, order = 1, # model (state updater) related
+                 pre = '', post = ''):
+        
         NetworkOperation.__init__(self, lambda:None, clock=clock)
 
-        # sorry this code might be a bit of a mess.
         # Arguments parsing
-        if len(args) == 1 and isinstance(args[0], NeuronGroup):
-            self.source = self.target = args[0]
-        elif len(args) == 2 and isinstance(args[0], NeuronGroup) and isinstance(args[1], NeuronGroup):
-            self.source = args[0]
-            self.pre_len = len(args[0])
-            self.target = args[1]
-            self.post_len = len(args[0])
+        if target is None:
+            self.source = self.target = source
         else:
-            raise ValueError('A Synapse object must be instantiated with one or two NeuronGroups as arguments')
+            self.source = source
+            self.target = target
         
-        ## KWD arguments parsing
-        max_delay = kwdargs.get('max_delay', 0)
-
 
         ########### CODE PARSING
         # model equations parsing
-        level = kwdargs.get('level', 0)
-        model = kwdargs.get('model', None)
         if isinstance(model, Equations):
             model_obj = model
         else:
@@ -124,32 +119,22 @@ class Synapses(NetworkOperation):
             
         # stolen from NeuronGroup
         # !! This will not work with postsynaptic variables in the model eqs !!
-        unit_checking = kwdargs.get('check_units', True)
-        method = kwdargs.get('method', None)
-        freeze = kwdargs.get('freeze', False)
-        implicit = kwdargs.get('implicit', False)
-        order = kwdargs.get('order', 1)
         if isinstance(model_obj, StateUpdater):
             self._state_updater = model_obj
             self._all_units = defaultdict() # what is that
         elif isinstance(model_obj, Equations):
             self._eqs = model_obj
             self._state_updater, var_names = magic_state_updater(model_obj, clock=clock, order=order,
-                                                                 check_units=unit_checking, implicit=implicit,
+                                                                 check_units=check_units, implicit=implicit,
                                                                  compile=compile, freeze=freeze,
                                                                  method=method)
             self._state_updater_varnames = var_names
             
             
-        # NOW WHAT?!!!!!            
-        # I think I should call the state updater with StateVector.states
         # TODO: 
         # - Maybe stateupdaters should be aware of the dtype of the data (or else my state vectors thing is sort of useless
         # - or ensure fast access to different data types in a vectorized way?
             
-        # pre/post code parsing
-        pre = kwdargs.get('pre', '')
-        post = kwdargs.get('post', '')
         # handle multi-line pre, post equations and multi-statement equations separated by ;
         if '\n' in pre:
             pre = flattened_docstring(pre)
@@ -166,14 +151,15 @@ class Synapses(NetworkOperation):
         # Get variable names
         self.vars = model_obj._diffeq_names # !! there are also static variables and aliases !!
         
-        self.n_vars = len(self.vars) # ! not very useful
 
         ############# Setting up the data structure
         # Mandatory fields: 3 for pre/post/delay_pre, all int32 TODO: finer pick of dtype!
+        
+        # REPLACE THAT BY MORE SENSIBLE DATA STRUCTURE
         dtypes = (np.int32, ) * 3
         default_labels = ['_pre', '_post', 'delay']
         # Equation defined fields (float32)
-        dtypes += (np.float32, ) * self.n_vars
+        dtypes += (np.float32, ) * len(self.vars)
 
         # construction of the structure
         self._statevector = ConstructionSparseStateVector(len(dtypes), dtype = dtypes, labels = default_labels+self.vars)
@@ -188,7 +174,6 @@ class Synapses(NetworkOperation):
         pre_namespace['_pre'] = self._statevector._pre
         pre_namespace['_post'] = self._statevector._post
 
-        
         for var in self.vars:
             pre_namespace[var] = self._statevector[var]
         # !! also add postsynaptic variables !!
@@ -199,7 +184,6 @@ class Synapses(NetworkOperation):
             # this is here because in the code we generate we need to write this twice (because of the multiple presyn spikes for the same postsyn neuron problem)
             for postsyn_var in self.target.var_index:
                 if isinstance(postsyn_var, str):
-                    print 'postsyn', postsyn_var
                     res = re.sub(r'\b' + postsyn_var + r'\b', 'target.' + postsyn_var + '[_post['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
                 
             for var in self.vars:
@@ -228,6 +212,11 @@ class Synapses(NetworkOperation):
 
         self.contained_objects = [self.pre_queue] # wtf is this for: so that pre_queue.propagate is called
         
+        
+        self._pre_to_synapse = np.zeros(len(self.source), dtype = object)
+        self._post_to_synapse = np.zeros(len(self.target), dtype = object)
+        # presyn neuron to postsyn neuron mapping
+        
     def __setitem__(self, key, value):
         if not isinstance(key, tuple):
             # do they?
@@ -247,9 +236,10 @@ class Synapses(NetworkOperation):
             # This needs speed up!!!!
             # BTW not sure that lists are really necessary, maybe at build time though
             pre, post = [], []
-            for i in pre_slice:
-                pre += [i]*len(post_slice)*n_synapses # transposed?
-                post += list(post_slice)*n_synapses
+            for i in post_slice:
+                post += [i]*len(pre_slice)*n_synapses 
+                pre += list(pre_slice)*n_synapses
+
         elif isinstance(value, str):
             # !! Other more efficient option for memory consumption: !!
             # vectorize only over post neurons, loop over pre
@@ -260,6 +250,7 @@ class Synapses(NetworkOperation):
             code = re.sub(r'\b' + 'rand\(\)', 'rand(len(_i), len(_j))', value) # replacing rand()
 
             pre_slice = slice2range(key[0], len(self.source))
+                
             post_slice = slice2range(key[1], len(self.target))
 
             pre_grid, post_grid = np.meshgrid(pre_slice, post_slice)
@@ -294,42 +285,43 @@ class Synapses(NetworkOperation):
                     n_syn[n_syn < 0] = 0
                     _pre, _post = np.nonzero(n_syn)
         # !! add: sparse matrices
+        values = np.vstack((pre, post))
         
-        total_n = len(pre)
-        # values for the other fields (0)
-        pre = np.array(pre, dtype = np.int32)
-        post = np.array(post, dtype = np.int32)
-        delays = np.zeros(total_n, dtype = np.int32)
+        # append values and get initial index (for the _pre_to_synapse struct)
+        initial_index = self._statevector.append(values) 
         
-        values = [pre, post, delays]
-        values += [np.zeros(total_n, dtype = typ) for typ in self._statevector.dtypes[3:]]
+        # build the synapse reference arrays
+        for i in np.unique(values[0,:]):
+            newindices = initial_index + np.nonzero(values[0,:] == i)[0]
+            self._pre_to_synapse[i] = np.hstack((self._pre_to_synapse[i], 
+                                                 newindices))
 
-        self._statevector.append(values)
+        for i in np.unique(values[1,:]):
+            newindices = initial_index + np.nonzero(values[1,:] == i)[0]
+            self._post_to_synapse[i] = np.hstack((self._post_to_synapse[i], 
+                                                 newindices))
         
-        return total_n
-
     def __getattr__(self, name):
         if hasattr(self, '_statevector'): # always True?
             if name == '_S':
-                # for the state updater
+                # for the state updater, I should do this better I guess
                 return self._statevector._allstates
             if name in self._statevector.labels:
                 # Have to return a special kind of Vector, for the slicing to work
                 data = getattr(self._statevector, name)
-                groups_shape = (self.pre_len, self.post_len)
+                groups_shape = (len(self.source), len(self.target))
 
                 # dt handling (see the ParameterVector doc)
                 dt = None
                 if name == 'delay':
                     dt = float(self.source.clock.dt)
 
-                return ParameterVector(data, groups_shape, self.existing_synapses, delay_dt = dt)
+                return ParameterVector(data, self, delay_dt = dt)
         try:
             self.__dict__[name]
         except KeyError:
             raise AttributeError('Synapses object doesn\'t have a '+name+' attribute')
-        
-    
+
     def __len__(self):
         '''
         Returns the number of existing synapses.
@@ -352,6 +344,12 @@ class Synapses(NetworkOperation):
         
         # state update
         self._state_updater(self)
+        
+    def pre2synapses(self, presyn):
+        return np.hstack(self._pre_to_synapse[presyn])
+
+    def post2synapses(self, postsyn):
+        return np.hstack(self._pre_to_synapse[postsyn])
 
     @property
     def existing_synapses(self):

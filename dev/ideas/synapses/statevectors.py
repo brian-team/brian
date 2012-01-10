@@ -81,6 +81,7 @@ class SparseStateVector(object):
         
         self.row_indices = row_indices
         self._values_dict = data
+
         
     def __getitem__(self, key):
         ## Before going further I have to know exactly how i'll be using those
@@ -98,8 +99,6 @@ class SparseStateVector(object):
     @property
     def shape(self):
         return (self.nrows, self.nvalues)
-            
-            
             
 class ConstructionSparseStateVector(object):
     '''
@@ -202,7 +201,8 @@ class ConstructionSparseStateVector(object):
             if not len(labels) == nrows:
                 raise ValueError('Wrong number of labels')
         self.labels = labels
-     
+        self._var_positions = {}
+
         # take same dtypes and gather them
         nrows_per_typ, self.unique_typ = [], []
         self.row_indices = np.zeros(len(self.dtypes), dtype = int) # will hold the number of the row in the dedicated dtype array
@@ -212,7 +212,14 @@ class ConstructionSparseStateVector(object):
                 nrows_per_typ.append(0)
             idtyp = self.unique_typ.index(typ)
             self.row_indices[i] = nrows_per_typ[idtyp]
+
+            if labels:
+                self._var_positions[labels[i]] = (dtype2str(typ), nrows_per_typ[idtyp])
+
             nrows_per_typ[idtyp] += 1
+            
+
+            
             
 
         self._values_dict = {}
@@ -224,75 +231,59 @@ class ConstructionSparseStateVector(object):
             
         self.nvalues = 0 # initially no values instantiated
         self.datastruct_size = INITIAL_LEN # datastructure size is the size (nrows) of the arrays
-
+        
     def append(self, values):
         '''
-        Values must be a list of 1-D arrays of the right type containing the values to be inserted.
+        Values must be a 2-D array containing the pre/post neuron numbers to be added.
         '''
-        # check the values shapes
-        if not len(values) == self.nrows:
-            raise ValueError('Wrong number of values')
-
         # where to insert the values
         initial_index = self.nvalues
-        final_index = initial_index + len(values[0])
+        final_index = initial_index + values.shape[1]
 
         # if the new size is bigger that the datastruct size, resize the arrays
         if final_index > self.datastruct_size:
-
             newsize = 2**np.ceil(np.log2(final_index))
-
             for typ in self.unique_typ:
-
-                if not dtype2str(typ)[:5] == 'float':
-                    mul = -1
-                else:
-                    mul = np.inf
-                    
-                newarray = mul * np.ones((self._values_dict[dtype2str(typ)].shape[0], 
-                                             newsize), dtype = typ)
+                newarray = np.zeros((self._values_dict[dtype2str(typ)].shape[0], 
+                                     newsize), dtype = typ)
                 newarray[:, :self.nvalues] = self._values_dict[dtype2str(typ)][:, :self.nvalues]
                 
                 self._values_dict[dtype2str(typ)] = newarray
-                #np.resize(self._values_dict[dtype2str(typ)], (self._values_dict[dtype2str(typ)].shape[0], newsize))
-            self.datastruct_size = newsize
-        
-        # insert the values
-        for i, typ in enumerate(self.dtypes):
-            self._values_dict[dtype2str(typ)][self.row_indices[i], initial_index:final_index] = values[i]
 
+            self.datastruct_size = newsize
+
+        # appending the pre/post neuron numbers
+        pre_typ, pre_row = self._var_positions['_pre']
+        post_typ, post_row = self._var_positions['_post']
+        self._values_dict[pre_typ][pre_row, initial_index:final_index] = values[0,:]
+        self._values_dict[post_typ][post_row, initial_index:final_index] = values[1,:]
+        
         self.nvalues = final_index
-            
+        
+        return initial_index
+        
     def compress(self):
         compressed_values_dict = {}
         for i, typ in enumerate(self.dtypes):
             compressed_values_dict[dtype2str(typ)] = self._values_dict[dtype2str(typ)][:, :self.nvalues]
         
         return SparseStateVector(compressed_values_dict, self.dtypes, self.row_indices, self.nvalues, labels = self.labels)
-        
      
     def __getattr__(self, name, default = ''):
         if name == '_allstates':
             return self._values_dict['float32']
         if name in self.labels:
-            i = self.labels.index(name)
-            # where to look
-            cur_typ = self.dtypes[i]
-            row = self.row_indices[i]
-            return self._values_dict[dtype2str(cur_typ)][row, :self.nvalues]
-        
+            pre_typ, pre_row = self._var_positions[name] # where to look
+            return self._values_dict[pre_typ][pre_row, :self.nvalues]
         try:
             self.__dict__[name]
         except KeyError:
             raise AttributeError('State vector object doesn\'t have a '+name+' attribute')
         
     def __getitem__(self, name):
-        if name in self.labels:
-            i = self.labels.index(name)
-            # where to look
-            cur_typ = self.dtypes[i]
-            row = self.row_indices[i]
-            return self._values_dict[dtype2str(cur_typ)][row, :self.nvalues]
+        if name in self.labels: 
+            pre_typ, pre_row = self._var_positions[name] # where to look
+            return self._values_dict[pre_typ][pre_row, :self.nvalues]
         else:
             raise KeyError('Item '+name+' not in statevector')
             
@@ -324,25 +315,26 @@ class ParameterVector(object):
     ``delay_dt'' is here because in the case of delays, then the value (float with unit) must be converted into timesteps (int), hence to do this this object has to know about the dt.
 
     '''
-    def __init__(self, data, groups_shape, existing_synapses, delay_dt = None):
+    def __init__(self, data, synapses, delay_dt = None):
         self.data = data
-        self.groups_shape = groups_shape
-        self.existing_synapses = existing_synapses
+        self.groups_shape = (len(synapses.source), len(synapses.target))
+        self.synapses = synapses
         self.delay_dt = delay_dt
     
     def __setitem__(self, key, value):
         if isinstance(key, tuple):
-            indices = []
-            for pre in slice2range(key[0], self.groups_shape[0]):
-                for post in slice2range(key[1], self.groups_shape[1]):
-                    index = self.existing_synapses == np.array([[pre],[post]])
-                    index = np.nonzero(np.prod(index, axis = 0))[0]
-                    if len(key) > 2:
-                        index = index[slice2range(key[2], len(index))]
-                    for id in index:
-                        indices.append(id)
+            pre_synapses = self.synapses.pre2synapses(slice2range(key[0] , self.groups_shape[0]))
+            post_synapses = self.synapses.post2synapses(slice2range(key[0] , self.groups_shape[0]))
+                                                      
+            indices = np.intersect1d(pre_synapses, post_synapses)
+
+            # Shite! now I do I do that??!
+            if len(key) > 2:
+                indices = indices[slice2range(key[2], len(indices))] 
+
             if self.delay_dt:
                 value = np.array(np.round(value/self.delay_dt), dtype = self.data.dtype)
+
             self.data[indices] = value
         else:
             raise IndexError

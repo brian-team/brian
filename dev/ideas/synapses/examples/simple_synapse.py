@@ -80,7 +80,7 @@ if True:
     
     # set synapses and weights
     synapses[:, 0] = 10
-    synapses.w[0, 0] = 1
+    synapses.w[:, 0] = 1
 
     synapses.delay[:, 0] = 0*ms
     synapses.delay[:, 0, 5:] = 2*ms

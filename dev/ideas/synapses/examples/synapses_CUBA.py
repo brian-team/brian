@@ -39,6 +39,7 @@ if True:
     Si = syn.Synapses(Pi, P, model = 'wi : 1', pre = 'gi += wi')
     Se[:,:] = '''rand() < .02'''
     Si[:,:] = '''rand() < .02'''
+    print 'finished adding synapses'
 #    Se.we[:,:] = we
 #    Se.wi[:,:] = wi
 else:
