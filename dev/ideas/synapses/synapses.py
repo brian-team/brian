@@ -309,7 +309,7 @@ class Synapses(NetworkOperation):
         return total_n
 
     def __getattr__(self, name):
-        if hasattr(self, '_statevector'):
+        if hasattr(self, '_statevector'): # always True?
             if name == '_S':
                 # for the state updater
                 return self._statevector._allstates

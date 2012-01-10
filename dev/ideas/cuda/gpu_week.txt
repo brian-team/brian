@@ -28,3 +28,8 @@ Things that could be done later
 Things that could be done in parallel
 -------------------------------------
 * The SpikeQueue and Synapses classes in Python
+
+Ideas
+-----
+* Can we write a Brian API such that people can easily try their own GPU algorithms to replace ours?
+(e.g. for spike queues etc)

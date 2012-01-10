@@ -34,7 +34,7 @@ INITIAL_LEN = 2 # the initial length of the ConstructionSparseStateVector
 def dtype2str(dtype):
     '''
     Converts a numpy.dtype object into a string for indexing in
-    SparseStateVector's value dictionnary
+    SparseStateVector's value dictionary
     '''
     return str(dtype)[13:-2]
     
@@ -162,7 +162,7 @@ class ConstructionSparseStateVector(object):
     ``_values_dict''
     
     Internally the arrays of the different dtypes are stored into a
-    dictionnary, and values of the same type in the
+    dictionary, and values of the same type in the
     same array.
     
     The function dtype2str converts the dtype object into a string
@@ -171,7 +171,7 @@ class ConstructionSparseStateVector(object):
     
     ``nvalues''
     
-    Because of the dynamic structure, the arrays in the dictionnary
+    Because of the dynamic structure, the arrays in the dictionary
     can be bigger than there is data in them, hence we keep the number
     of relevant values.
     
