@@ -27,7 +27,7 @@ class Synapses(NetworkOperation):
     Synapses object
    
      State:
-    - the model kwdarg can only delare variables for now
+    - the model kwdarg can only declare variables for now
     - only the 'pre' code is implemented 
     - multiple synapses (between same pair of neurons), with multiple delays seem to work fine!
     

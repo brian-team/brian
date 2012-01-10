@@ -5,6 +5,7 @@ To start with:
 * Try to have a Brian script running with Nemo's scatter-gather operations
 
 How about running a Jeffress model? (has many heterogeneous delays)
+Dan wrote a synfire chain example with heterogeneous delays.
 
 Targets:
 * A complete NeuronGroup on GPU (with threshold)
@@ -15,6 +16,8 @@ Things we need to discuss
 * How to do STDP with traces. Ideally, this should be integrated in the new Synapse class.
 * How to directly construct networks
 * How to access all variables (monitors)
+* Automatic partitioning
+* Automatic reordering of the synapses (by delay/pre neuron/SM)
 
 Things that could be done later
 -------------------------------

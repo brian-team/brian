@@ -18,6 +18,9 @@ but for effiency, we need the mappings:
 
 We will still need the mapping: synapse -> presynaptic i
 but not: synapse -> delay
+
+Actually, does this need to be a Brian object? It could directly be called by
+Synapses.
 """
 from brian import *
 from time import time

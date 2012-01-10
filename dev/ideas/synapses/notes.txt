@@ -1,0 +1,24 @@
+Notes
+=====
+TODO:
+* SpikeQueue propagate: use the faster mappings (i->synapse,delay)
+* Synapses init: avoid the ugly **kwargs
+
+Synapses variables
+------------------
+* presynaptic i -> synapse indexes
+* presynaptic i -> delay
+* synapse -> variables (w)
+* synapse -> presynaptic i
+* synapse -> postsynaptic j
+	These two are currently in existing_synapses
+
+and for backpropagation (STDP):
+* postsynaptic j -> synapse indexes
+* postsynaptic j -> delay
+
+Do we need synapse -> delay?
+
+Various notes
+-------------
+* We want to be able to use StateUpdater objects on the synaptic variables.
