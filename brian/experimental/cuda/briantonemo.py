@@ -19,7 +19,7 @@ def numpy_array_from_memory(ptr, N, dtype):
     '''
     buffer_from_memory = ctypes.pythonapi.PyBuffer_FromMemory
     buffer_from_memory.restype = ctypes.py_object
-    buffer = buffer_from_memory(ptr, dtype.itemsize*N)
+    buffer = buffer_from_memory(ptr, dtype().itemsize*N)
     return frombuffer(buffer, dtype)
 
 _created_connection = False
@@ -76,16 +76,16 @@ class NemoConnection(DelayConnection):
             self.propagate(self.source.get_spikes(0))
         
     def propagate(self, spikes):
-        if len(spikes)==0:
-            return
         spikes = array(spikes, dtype=uint32)
         if self.nemo_use_gpu:
             raise NotImplementedError("GPU version not yet implemented.")
         else:
-            spikes_ptr = spikes.ctypes.data#spikes.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
+            spikes_ptr = spikes.ctypes.data
             spikes_len = len(spikes)
             exc_ptr, inh_ptr = tuple(self.nemo_sim.propagate(spikes_ptr, spikes_len))
             exc = numpy_array_from_memory(exc_ptr, len(self.source), float32)
             inh = numpy_array_from_memory(inh_ptr, len(self.source), float32)
             self.target._S[self.nstate] += exc
             self.target._S[self.nstate] += inh
+        #DelayConnection.propagate(self, spikes)
+
