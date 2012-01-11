@@ -9,8 +9,10 @@ TODO:
 TODO (later):
 * State updates and event-driven stuff
 * Max delay should be calculated at run time (compress)
+* Replace spike queue data with a dynamic array object
 '''
 from brian import *
+from brian.utils.dynamicarray import *
 from spikequeue import *
 import numpy as np
 from brian.inspection import *
@@ -36,7 +38,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if source.clock!=target.clock:
             raise ValueError,"Source and target groups must have the same clock"
 
-        NeuronGroup.__init__(self, N,model=model,clock=clock,level=level+1,unit_checking=unit_checking,method=method,freeze=freeze,implicit=implicit,order=order)
+        NeuronGroup.__init__(self, 1,model=model,clock=clock,level=level+1,unit_checking=unit_checking,method=method,freeze=freeze,implicit=implicit,order=order)
         # We might want *not* to use the state updater on all variables, so for now I disable it (see update())
         '''
         At this point we have:
@@ -60,17 +62,18 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         '''
 
         # Pre and postsynaptic indexes
-        self.presynaptic=zeros(len(self),dtype=smallest_inttype(len(self.source))) # this should depend on number of neurons
-        self.postsynaptic=zeros(len(self),dtype=smallest_inttype(len(self.target))) # this should depend on number of neurons
+        self.presynaptic=DynamicArray(len(self),dtype=smallest_inttype(len(self.source))) # this should depend on number of neurons
+        self.postsynaptic=DynamicArray(len(self),dtype=smallest_inttype(len(self.target))) # this should depend on number of neurons
 
-        # Pre and postsynaptic delays
-        self.delay_pre=zeros(len(self),dtype=int16) # max 32767 delays
-        self.delay_post=zeros(len(self),dtype=int16)
+        # Pre and postsynaptic delays (synapse -> delay)
+        self.delay_pre=DynamicArray(len(self),dtype=int16) # max 32767 delays
+        self.delay_post=DynamicArray(len(self),dtype=int16)
         
         # Pre and postsynaptic synapses (i->synapse indexes)
         max_synapses=4294967296 # it could be explicitly reduced by a keyword
-        self.synapses_pre=[zeros(0,dtype=smallest_inttype(max_synapses))]*len(self.source) # list of dynamic arrays
-        self.synapses_post=[zeros(0,dtype=smallest_inttype(max_synapses))]*len(self.target)
+        # dictionaries could be more efficient
+        self.synapses_pre=[DynamicArray(0,dtype=smallest_inttype(max_synapses))]*len(self.source) # list of dynamic arrays
+        self.synapses_post=[DynamicArray(0,dtype=smallest_inttype(max_synapses))]*len(self.target)
 
         self.generate_code(pre,post,level+1) # I moved this in a separate method to clarify the init code
         
@@ -150,7 +153,55 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.pre_code = pre_code
 
     def __setitem__(self, key, value):
-        pass
+        '''
+        Creates new synapses.
+        Caution:
+        1) there is no deletion
+        2) synapses are added, not replaced (e.g. S[1,2]=True;S[1,2]=True creates 2 synapses)
+        '''
+        if not isinstance(key, tuple): # we should check that number of elements is 2 as well
+            raise ValueError('Synapses behave as 2-D objects')
+        pre,post=key # pre and post indexes (can be slices)
+        
+        if isinstance(value, (int, bool)): # ex. S[1,7]=True
+            # Simple case, either one or multiple synapses between different neurons
+            if value is False:
+                raise ValueError('Synapses can be deleted')
+            elif value is True:
+                nsynapses = 1
+            else:
+                nsynapses = value
+        
+            # We need to create:
+            # 1) a list of presynaptic indexes (synapse -> pre)
+            # 2) a list of postsynaptic indexes (synapse -> post)
+            # 3) a mapping pre -> synapse (dictionary)
+            # 4) a mapping post -> synapse
+            #
+            # meshgrid(pre,post) returns (synapse -> pre (array) and synapse -> post)
+        
+            pre_slice = slice_to_array(pre)
+            post_slice = slice_to_array(post)
+            presynaptic,postsynaptic=meshgrid(pre,post) # synapse -> pre, synapse -> post
+            # TODO: pre,post -> synapse
+        
+        # !! add: sparse matrices
+        values = np.vstack((pre, post))
+        
+        # append values and get initial index (for the _pre_to_synapse struct)
+        initial_index = self._statevector.append(values) 
+        
+        # build the synapse reference arrays
+        for i in np.unique(values[0,:]):
+            newindices = initial_index + np.nonzero(values[0,:] == i)[0]
+            self._pre_to_synapse[i] = np.hstack((self._pre_to_synapse[i], 
+                                                 newindices))
+
+        for i in np.unique(values[1,:]):
+            newindices = initial_index + np.nonzero(values[1,:] == i)[0]
+            self._post_to_synapse[i] = np.hstack((self._post_to_synapse[i], 
+                                                 newindices))
+
     
     def __getattr__(self, name):
         return NeuronGroup.__getattr__(self,name)
@@ -199,6 +250,15 @@ def smallest_inttype(N):
         return int32
     else:
         return int64
+
+def slice_to_array(s):
+    '''
+    Converts a slice s or single int to the corresponding array of integers
+    '''
+    if isinstance(s,slice):
+        arange(s.start,s.stop,s.end)
+    else: # if not a slice (e.g. an int) then we return it as an array of a single element
+        return array(s)
 
 if __name__=='__main__':
     log_level_debug()
