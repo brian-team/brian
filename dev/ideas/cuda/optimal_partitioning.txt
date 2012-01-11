@@ -1,0 +1,46 @@
+Optimal partitioning of synapses
+================================
+How to optimize the indexing of synapses such as to minimize the number of block accesses in both
+the forward and backward direction?
+
+Each block contains 32 synapses. When a spike is produced, it will reach synapses at various
+delays. Operations are executed on the synapses after these delays. Therefore there will be
+simultaneous operations for all synapses that have the same presynaptic neuron and presynaptic
+delay. The same holds for the backward propagation problem.
+
+Mathematically, we have two partitions of the synapse indexes. To each index corresponds a block.
+We want to renumber the indexes (permutation) so as to minimize the number of blocks in each set of
+both partitions.
+
+Alternative view (Marcel's idea)
+--------------------------------
+The blocks are a partition of the set of synapses in fixed size groups (32 elements).
+We define a graph by putting an edge between any two synapses that are simultaneously accessed,
+either in the forward or backward direction.
+We then look for the partition that minimizes the number of graph cuts.
+This is a classical graph theory problem:
+http://www.sandia.gov/~bahendr/partitioning.html
+http://en.wikipedia.org/wiki/Graph_partition
+
+There is Python package, PyMetis:
+http://mathema.tician.de/software/pymetis
+This is based on Metis, which uses these algorithms:
+[3] G. Karypis and V. Kumar. Multilevel k-way partitioning scheme for irregular graphs. Journal of Parallel and
+Distributed Computing, 48(1):96–129, 1998.
+[4] G. Karypis and V. Kumar. A fast and high quality multilevel scheme for partitioning irregular graphs. SIAM
+Journal on Scientific Computing, 20(1):359–392, 1999.
+
+Maybe somebody wrote GPU algorithms too?
+
+Maths
+-----
+A cut in the partition corresponds to two synapses belonging to different blocks that are accessed simultaneously,
+either in the forward or backward way.
+
+Consider a forward group of n synapses separated into M blocks (a set of simultaneously accessed synapses).
+The associated cost is M block accesses. To each synapse in a block of p synapses corresponds n-p cuts.
+Therefore the total number of cuts is: M*n-sum(p) = (M-1)*n
+Therefore, in the graph cut view, we minimize: sum((Mi-1)*ni), which is equivalent to minimizing sum(Mi*ni),
+while in the original view, we minimize: sum(Mi).
+Thus the graph cut view is not equivalent, but corresponds to a weighted version of the original cost, giving
+more weight to larger groups of synchronous synapses.
