@@ -95,7 +95,8 @@ class ElectrodeCompensation (object):
 
     def __init__(self, I, Vraw,
                  dt, durslice=10*second,
-                  p=1.0, 
+                 p=1.0, 
+                 criterion=None, 
                  *params):
         """
         Class constructor.
@@ -121,6 +122,11 @@ class ElectrodeCompensation (object):
         self.durslice = min(durslice, self.duration)
         self.slicesteps = int(durslice/dt)
         self.nslices = int(ceil(len(I)*dt/durslice))
+        
+        if criterion is None:
+            self.criterion = self.Lp_error
+        else:
+            self.criterion = criterion
         
         self.islice = 0
         self.I_list = [I[self.slicesteps*i:self.slicesteps*(i+1)] for i in range(self.nslices)]
@@ -169,6 +175,9 @@ class ElectrodeCompensation (object):
         y = simulate(eqs, self.I_list[self.islice] * Re/taue, self.dt, row=row)
         return y
 
+    def Lp_error(self, raw, model):
+        return self.dt_*sum(abs(raw-model)**self.p)
+    
     def fitness(self, x):
         """
         fitness function provided to the fmin optimization procedure.
@@ -177,7 +186,7 @@ class ElectrodeCompensation (object):
         """
         R, tau, Vr,  Re, taue = self.vector_to_params(*x)
         y = self.get_model_trace(0, *x)
-        e = self.dt_*sum(abs(self.Vraw_list[self.islice]-y)**self.p)
+        e = self.criterion(self.Vraw_list[self.islice], y)
         return e
 
     def compensate_slice(self, x0):
@@ -236,6 +245,7 @@ class ElectrodeCompensation (object):
 def Lp_compensate(I, Vraw, dt, 
                slice_duration=1*second,
                p=1.0,
+               criterion=None,
                full=False,
                **initial_params):
     """
@@ -260,6 +270,10 @@ def Lp_compensate(I, Vraw, dt,
     * p=1.0: parameter of the Lp error. In general, p<2, and a 
         smaller value for p (like 0.5) will yield better results, especially if
         there are a lot of action potentials.
+    * compensation=None: custom fitness function used for the optimization. This function
+        must accept two arguments: raw (the raw trace) and model (the model trace), both
+        are vectors of same size. It must return a single number. This function is
+        minimized during the compensation procedure.
     * **initial_params: initial parameters for the optimization: R, tau, Vr, Re, taue.
         * R: neuron resistance, default 100 MOhm
         * tau: neuron membrane time constant, default 20 ms
@@ -276,7 +290,7 @@ def Lp_compensate(I, Vraw, dt,
     comp = ElectrodeCompensation(I, Vraw,
                                  dt,
                                  slice_duration,
-                                 p,
+                                 p, criterion,
                                  R, tau, Vr, Re, taue)
     comp.compensate()
     Vcomp = comp.get_compensated_trace()
