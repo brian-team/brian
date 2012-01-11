@@ -12,6 +12,9 @@ Synaptic mappings:
 	I call it 'presynaptic' for now.
 * synapse -> postsynaptic j (same)
 	I call it 'postsynaptic' for now.
+* synapse -> presynaptic delay (depending on max delay? but this is not known at the beginning)
+	This is better than presynaptic i -> delay for construction.
+* synapse -> postsynaptic delay
 
 The synaptic mappings should be addressable by (pre,post) number (2D or 3D).
 This could be done using separate objects, one per synaptic variable. There would be a dictionary
@@ -20,9 +23,7 @@ of these objects.
 Pre/post mappings (useful for construction and spike queues):
 * presynaptic i -> synapse indexes (int32 or more? depending on len(pre)*len(post))
 	List of dynamic arrays
-* presynaptic i -> delay (depending on max delay? but this is not known at the beginning)
 * postsynaptic j -> synapse indexes
-* postsynaptic j -> delay
 
 Code:
 * presynaptic/postsynaptic code and namespace (pre_code,pre_namespace)

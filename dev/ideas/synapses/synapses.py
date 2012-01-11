@@ -2,7 +2,6 @@
 The Synapses class - see BEP-21
 
 TODO:
-* SpikeQueue.propagate
 * First test (CUBA? or simpler), including speed test
 * Do the TODOs
 * setitem and getattr (includes a special vector class with synaptic access)
@@ -22,12 +21,20 @@ __all__ = ['Synapses']
 
 class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     def __init__(self, source, target = None, model = None, 
-             clock = None,
              max_delay = 0, # is this useful?
              level = 0,
+             clock = None,
              unit_checking = True, method = None, freeze = False, implicit = False, order = 1, # model (state updater) related
              pre = '', post = ''):
         N=len(source) # initial number of synapses = number of presynaptic neurons
+        self.source=source
+        self.target=target or source # default is target=source
+
+        # Check clocks. For the moment we enforce the same clocks for all objects
+        clock = clock or source.clock
+        if source.clock!=target.clock:
+            raise ValueError,"Source and target groups must have the same clock"
+
         NeuronGroup.__init__(self, N,model=model,clock=clock,level=level+1,unit_checking=unit_checking,method=method,freeze=freeze,implicit=implicit,order=order)
         # We might want *not* to use the state updater on all variables, so for now I disable it (see update())
         '''
@@ -50,21 +57,18 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         Things we may need to add:
         * _pre and _post suffixes
         '''
-        
-        self.source=source
-        self.target=target or source # default is target=source
 
         # Pre and postsynaptic indexes
-        self.presynaptic=array(len(self),dtype=smallest_inttype(len(self.source))) # this should depend on number of neurons
-        self.postsynaptic=array(len(self),dtype=smallest_inttype(len(self.target))) # this should depend on number of neurons
+        self.presynaptic=zeros(len(self),dtype=smallest_inttype(len(self.source))) # this should depend on number of neurons
+        self.postsynaptic=zeros(len(self),dtype=smallest_inttype(len(self.target))) # this should depend on number of neurons
 
         # Pre and postsynaptic delays
-        self.delay_pre=[zeros(1,dtype=uint16)]*len(self.source) # list of dynamic arrays
-        self.delay_post=[zeros(1,dtype=uint16)]*len(self.target) # list of dynamic arrays
+        self.delay_pre=zeros(len(self),dtype=int16) # max 32767 delays
+        self.delay_post=zeros(len(self),dtype=int16)
         
         # Pre and postsynaptic synapses (i->synapse indexes)
-        max_synapses=len(self.source)*len(self.target) # it could be explicitly reduced by a keyword
-        self.synapses_pre=[zeros(1,dtype=smallest_inttype(max_synapses))]*len(self.source)
+        max_synapses=4294967296 # it could be explicitly reduced by a keyword
+        self.synapses_pre=[zeros(1,dtype=smallest_inttype(max_synapses))]*len(self.source) # list of dynamic arrays
         self.synapses_post=[zeros(1,dtype=smallest_inttype(max_synapses))]*len(self.target)
 
         self.generate_code(pre,post,level+1) # I moved this in a separate method to clarify the init code
@@ -153,7 +157,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     def update(self): # this is called at every timestep
         '''
         TODO:
-        * Have namespaces partially built at run time (call _state(var)),
+        * Have namespaces partially built at run time (call state_(var)),
           or better, extract synaptic events from the synaptic state matrix;
           same stuff for postsynaptic variables
         * Deal with static variables
@@ -169,7 +173,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             _namespace = self.pre_namespace
             #_namespace['_synapses'] = synaptic_events # not needed any more
             for var in self.var_index: # in fact I should filter out integers ; also static variables are not included here
-                _namespace[var] = self._state(var)[synaptic_events] # could be faster to directly extract a submatrix from _S
+                _namespace[var] = self.state_(var)[synaptic_events] # could be faster to directly extract a submatrix from _S
             _namespace['t'] = self.clock._t
             _namespace['_pre']=self.presynaptic[synaptic_events].copy() # could be faster to have an array already there
             _namespace['_post']=self.postsynaptic[synaptic_events].copy()
@@ -185,16 +189,34 @@ def smallest_inttype(N):
     '''
     Returns the smallest dtype that can store N indexes
     '''
-    if N<=256:
-        return uint8
-    elif N<=65536:
-        return uint16
-    elif N<=4294967296:
-        return uint32
+    if N<=127:
+        return int8
+    elif N<=32727:
+        return int16
+    elif N<=2147483647:
+        return int32
     else:
-        return uint64
+        return int64
 
 if __name__=='__main__':
-    P=NeuronGroup(10,model='v:1')
-    Q=NeuronGroup(5,model='v:1')
+    log_level_debug()
+    P=NeuronGroup(2,model='dv/dt=1/(10*ms):1',threshold=1,reset=0)
+    Q=NeuronGroup(1,model='v:1')
     S=Synapses(P,Q,model='w:1',pre='v+=w')
+    M=StateMonitor(Q,'v',record=True)
+    
+    S.synapses_pre[0]=[0]
+    S.synapses_pre[1]=[1]
+    S.delay_pre[0]=10 # in time bins
+    S.delay_pre[1]=50
+    S.presynaptic[0]=0
+    S.presynaptic[1]=1
+    S.w[0]=1.
+    S.w[1]=0.
+    
+    run(50*ms)
+
+    plot(M.times/ms,M[0])
+    # doesn't work! Delays not taken into account
+    
+    show()

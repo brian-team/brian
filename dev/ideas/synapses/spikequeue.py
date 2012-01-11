@@ -12,7 +12,7 @@ The object is a SpikeMonitor on the source NeuronGroup. When it is called, spike
 into the queue. The way it is currently done is highly inefficient, because it only uses the following mappings
     synapse -> delay
     synapse -> presynaptic i
-but for effiency, we need the mappings:
+but for efficiency, we need the mappings:
     presynaptic i -> synapse
     presynaptic i -> delay
 
@@ -76,6 +76,11 @@ class SpikeQueue(SpikeMonitor):
     def __init__(self, source, synapses, 
                  max_delay = 0, maxevents = INITIAL_MAXSPIKESPER_DT,
                  precompute_offsets = False):
+        '''
+        TODO:
+        * precompute offsets
+        * make it work for both pre/post
+        '''
         # SpikeMonitor structure
         self.source = source #NeuronGroup
         self.synapses = synapses #Synapses
@@ -84,7 +89,7 @@ class SpikeQueue(SpikeMonitor):
         nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
 
         # number of time steps, maximum number of spikes per time step
-        self.X = zeros((nsteps, maxevents), dtype = int) # target synapses
+        self.X = zeros((nsteps, maxevents), dtype = synapses.synapses_pre[0].dtype) # target synapses
         self.X_flat = self.X.reshape(nsteps*maxevents,)
         self.currenttime = 0
         self.n = zeros(nsteps, dtype = int) # number of events in each time step
@@ -123,7 +128,7 @@ class SpikeQueue(SpikeMonitor):
         BJ = hstack((0, B[J]))
         ei = B-BJ[A]
         ofs = zeros_like(delay)
-        ofs[I] = ei
+        ofs[I] = array(ei,dtype=ofs.dtype) # maybe types should be signed?
         return ofs
         
     def insert(self, delay, offset, target):
@@ -154,7 +159,7 @@ class SpikeQueue(SpikeMonitor):
         
         # old and new sizes
         old_maxevents = self.X.shape[1]
-        new_maxevents = 2**ceil(log2(maxevents))
+        new_maxevents = 2**ceil(log2(maxevents)) # maybe 2 is too large
         # new array
         newX = zeros((self.X.shape[0], new_maxevents), dtype = self.X.dtype)
         newX[:, :old_maxevents] = self.X[:, :old_maxevents] # copy old data
@@ -165,23 +170,22 @@ class SpikeQueue(SpikeMonitor):
         log_debug('spikequeue', 'Resizing SpikeQueue')
         
     def propagate(self, spikes):
-        if len(spikes):
-            # synapse identification, 
-            # this seems ok in terms of speed even though I dont like the for loop. 
-            # any idea? see test_fastsynapseidentification.py
-            
-            synapses = self.synapses.pre2synapses(spikes) # These are the synaptic events
-            
-            if len(synapses):
-                # delay getting:
-                delay = self.synapses.delay[synapses]
+        '''
+        TODO:
+        * At this moment it only works in the forward direction. We need to have
+        a specific variable instead of synapses_pre
+        '''
+        for i in spikes: # I don't see a way to avoid this loop at this moment
+            synaptic_events=self.synapses.synapses_pre[i] # but it could be post!    
+            if len(synaptic_events):
+                delay = self.synapses.delay_pre[synaptic_events] # but it could be post!
                 if self.precompute_offsets:
                     if self._all_offsets == None:
                         self.compute_all_offsets(self.synapses._statevector.delay)
-                    self.insert(delay, self._all_offsets[synapses], synapses)
+                    self.insert(delay, self._all_offsets[synaptic_events], synaptic_events)
                 else:
                     offsets = self.offsets(delay)
-                    self.insert(delay, offsets, synapses)
+                    self.insert(delay, offsets, synaptic_events)
             
     ######################################## UTILS    
     def plot(self, display = True):

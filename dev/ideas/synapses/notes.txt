@@ -69,8 +69,16 @@ A state matrix for variables with different dtypes.
 ConstructionSparseStateVector -> StateVector.
 ParameterVector = 1 row of a StateVector. Required for S.w[1,2].
 
+Clock
+-----
+Currently, we initialize the object with the clock of the synaptic state
+updater. At this time, it will not work if the clocks of the neuron groups are
+different. However, it should be possible in principle (but more complex).
+
 Various notes
 -------------
 * We want to be able to use StateUpdater objects on the synaptic variables.
 This means we need a view on a state matrix (only the floats).
-We also need some of the method that are in NeuronGroup.
+We also need some of the methods that are in NeuronGroup.
+* I decided to use signed rather than unsigned ints for indexes, because there
+were some conversion problems.
