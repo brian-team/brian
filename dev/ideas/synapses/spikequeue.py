@@ -21,9 +21,11 @@ but not: synapse -> delay
 
 Actually, does this need to be a Brian object? It could directly be called by
 Synapses.
+
+** There is no resizing for the maximum delay **
 """
-from brian import *
-import time
+from brian import * # remove this
+from brian.stdunits import ms
 
 INITIAL_MAXSPIKESPER_DT = 1
 # This is a 2D circular array, but also a SpikeMonitor
@@ -74,18 +76,19 @@ class SpikeQueue(SpikeMonitor):
       method (at run time)
     '''
     def __init__(self, source, synapses, 
-                 max_delay = 0, maxevents = INITIAL_MAXSPIKESPER_DT,
+                 max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT,
                  precompute_offsets = False):
         '''
         TODO:
         * precompute offsets
         * make it work for both pre/post
+        * either source or synapses is not useful, no?
         '''
         # SpikeMonitor structure
         self.source = source #NeuronGroup
         self.synapses = synapses #Synapses
         
-        self.max_delay = max_delay
+        self.max_delay = max_delay # do we need this?
         nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
 
         # number of time steps, maximum number of spikes per time step
@@ -107,7 +110,7 @@ class SpikeQueue(SpikeMonitor):
         self.currenttime=(self.currenttime+1) % len(self.n)
         
     def peek(self):
-        # Events in the current timestep
+        # Events in the current timestep        
         return self.X[self.currenttime,:self.n[self.currenttime]]
     
     def compute_all_offsets(self, all_delays):
@@ -147,9 +150,11 @@ class SpikeQueue(SpikeMonitor):
         if (m >= self.X.shape[1]):
             self.resize(m)
         
-        self.X_flat[(self.currenttime*self.X.shape[1]+offset+\
-                     old_nevents)\
-                     % len(self.X)]=target
+        self.X_flat[timesteps*self.X.shape[1]+offset+old_nevents]=target
+        # Old code seemed wrong:
+        #self.X_flat[(self.currenttime*self.X.shape[1]+offset+\
+        #             old_nevents)\
+        #             % len(self.X)]=target
         
     def resize(self, maxevents):
         '''
@@ -180,8 +185,8 @@ class SpikeQueue(SpikeMonitor):
             if len(synaptic_events):
                 delay = self.synapses.delay_pre[synaptic_events] # but it could be post!
                 if self.precompute_offsets:
-                    if self._all_offsets == None:
-                        self.compute_all_offsets(self.synapses._statevector.delay)
+                    #if self._all_offsets == None:
+                    #    self.compute_all_offsets(self.synapses._statevector.delay) # change this
                     self.insert(delay, self._all_offsets[synaptic_events], synaptic_events)
                 else:
                     offsets = self.offsets(delay)

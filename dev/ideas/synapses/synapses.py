@@ -2,12 +2,13 @@
 The Synapses class - see BEP-21
 
 TODO:
-* First test (CUBA? or simpler), including speed test
+* CUBA and speed test
 * Do the TODOs
 * setitem and getattr (includes a special vector class with synaptic access)
 
 TODO (later):
 * State updates and event-driven stuff
+* Max delay should be calculated at run time (compress)
 '''
 from brian import *
 from spikequeue import *
@@ -68,8 +69,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
         # Pre and postsynaptic synapses (i->synapse indexes)
         max_synapses=4294967296 # it could be explicitly reduced by a keyword
-        self.synapses_pre=[zeros(1,dtype=smallest_inttype(max_synapses))]*len(self.source) # list of dynamic arrays
-        self.synapses_post=[zeros(1,dtype=smallest_inttype(max_synapses))]*len(self.target)
+        self.synapses_pre=[zeros(0,dtype=smallest_inttype(max_synapses))]*len(self.source) # list of dynamic arrays
+        self.synapses_post=[zeros(0,dtype=smallest_inttype(max_synapses))]*len(self.target)
 
         self.generate_code(pre,post,level+1) # I moved this in a separate method to clarify the init code
         
@@ -168,6 +169,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         #NeuronGroup.update(self) # we don't do it for now
         synaptic_events = self.pre_queue.peek()
         if len(synaptic_events):
+            print synaptic_events
             # Build the namespace - Maybe we should do this only once? (although there is the problem of static equations)
             # Careful: for dynamic arrays you need to get fresh references at run time
             _namespace = self.pre_namespace
