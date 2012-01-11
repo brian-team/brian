@@ -118,7 +118,6 @@ class DynamicArray(object):
         '''
         if isinstance(newshape, int):
             newshape = (newshape,)
-        datashapearr = array(self._data.shape)
         shapearr = array(self.shape)
         newshapearr = array(newshape)
         if (newshapearr<=shapearr).all():
