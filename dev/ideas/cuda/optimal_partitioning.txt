@@ -43,4 +43,5 @@ Therefore the total number of cuts is: M*n-sum(p) = (M-1)*n
 Therefore, in the graph cut view, we minimize: sum((Mi-1)*ni), which is equivalent to minimizing sum(Mi*ni),
 while in the original view, we minimize: sum(Mi).
 Thus the graph cut view is not equivalent, but corresponds to a weighted version of the original cost, giving
-more weight to larger groups of synchronous synapses.
+more weight to larger groups of synchronous synapses. If group size is homogeneous or random, it should be
+approximately equivalent.
