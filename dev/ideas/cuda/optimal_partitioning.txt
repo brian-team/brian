@@ -39,9 +39,10 @@ either in the forward or backward way.
 
 Consider a forward group of n synapses separated into M blocks (a set of simultaneously accessed synapses).
 The associated cost is M block accesses. To each synapse in a block of p synapses corresponds n-p cuts.
-Therefore the total number of cuts is: M*n-sum(p) = (M-1)*n
-Therefore, in the graph cut view, we minimize: sum((Mi-1)*ni), which is equivalent to minimizing sum(Mi*ni),
-while in the original view, we minimize: sum(Mi).
-Thus the graph cut view is not equivalent, but corresponds to a weighted version of the original cost, giving
-more weight to larger groups of synchronous synapses. If group size is homogeneous or random, it should be
-approximately equivalent.
+Therefore the total number of cuts is: n^2-sum(p_i^2), where p_i is the number of synapses in block i
+(with n=sum(p_i)). This is equal to sum(p_i*p_j, i!=j) (for what it's worth).
+
+Therefore, in the graph cut view, we maximize: sum(p_i^2). If we assume that all blocks have roughly the same
+size (which is likely to be false), this means p_i=n/M, so sum(p_i^2)=n^2/M.
+In this case, the graph cut algorithm maximizes: sum(n_k^2/M_k), where M_k is the number of blocks in each group.
+Assuming again homogeneity, this is equivalent to minimizing the number of blocks represented in each group.
