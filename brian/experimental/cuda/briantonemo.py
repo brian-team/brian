@@ -8,6 +8,7 @@ try:
     import pycuda.compiler as compiler
     from pycuda import gpuarray
 except ImportError:
+    pycuda = None
     log_warn('brian.experimental.cuda.gpucodegen', 'Cannot import pycuda')
 from brian.experimental.codegen.rewriting import rewrite_to_c_expression
 
