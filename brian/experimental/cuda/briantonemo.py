@@ -11,6 +11,8 @@ except ImportError:
     log_warn('brian.experimental.cuda.gpucodegen', 'Cannot import pycuda')
 from brian.experimental.codegen.rewriting import rewrite_to_c_expression
 
+use_delay_connection = False
+
 __all__ = ['NemoConnection']
 
 def numpy_array_from_memory(ptr, N, dtype):
@@ -40,7 +42,7 @@ class NemoConnection(DelayConnection):
 
         # now upload to nemo
         self.nemo_net = nemo.Network()
-        if False:#isinstance(self.source, GPUNeuronGroup):
+        if pycuda is not None:
             self.nemo_use_gpu = True
         else:
             self.nemo_use_gpu = False
@@ -68,18 +70,34 @@ class NemoConnection(DelayConnection):
         self.nemo_sim = nemo.Simulation(self.nemo_net, self.nemo_conf)
 
     def do_propagate(self):
+        if use_delay_connection:
+            DelayConnection.do_propagate(self)
+            return
         if not self.iscompressed:
             self.compress()
         if self.nemo_use_gpu:
-            raise NotImplementedError("GPU version not yet implemented.")
+            self.propagate(self.source.get_spikes(0))
         else:
             self.propagate(self.source.get_spikes(0))
         
     def propagate(self, spikes):
-        spikes = array(spikes, dtype=uint32)
+        if use_delay_connection:
+            DelayConnection.propagate(self, spikes)
+            return
         if self.nemo_use_gpu:
-            raise NotImplementedError("GPU version not yet implemented.")
+            spikes_bool = zeros(len(self.source), dtype=bool)
+            spikes_bool[spikes] = True
+            spikes_gpu = pycuda.gpuarray.to_gpu(spikes_bool)
+            spikes_gpu_ptr = int(spikes_gpu.gpudata)
+            exc_ptr, inh_ptr = tuple(self.nemo_sim.propagate(spikes_gpu_ptr))
+            exc = zeros(len(source))
+            inh = zeros(len(source))
+            pycuda.driver.memcpy_dtoh(exc, exc_ptr)
+            pycuda.driver.memcpy_dtoh(inh, inh_ptr)
+            self.target._S[self.nstate] += exc
+            self.target._S[self.nstate] += inh
         else:
+            spikes = array(spikes, dtype=uint32)
             spikes_ptr = spikes.ctypes.data
             spikes_len = len(spikes)
             exc_ptr, inh_ptr = tuple(self.nemo_sim.propagate(spikes_ptr, spikes_len))
@@ -87,5 +105,3 @@ class NemoConnection(DelayConnection):
             inh = numpy_array_from_memory(inh_ptr, len(self.source), float32)
             self.target._S[self.nstate] += exc
             self.target._S[self.nstate] += inh
-        #DelayConnection.propagate(self, spikes)
-
