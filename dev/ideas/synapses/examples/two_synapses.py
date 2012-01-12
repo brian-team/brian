@@ -1,9 +1,6 @@
 '''
 One synapse within several possibilities.
 Synapse from 0->2,3.
-
-Works in non simultaneous and identical delays.
-Also works with 0->2 and 1->3
 '''
 from brian import *
 from dev.ideas.synapses.synapses import *
@@ -15,11 +12,12 @@ Q=NeuronGroup(4,model='v:1')
 S=Synapses(P,Q,model='w:1',pre='v+=w',max_delay=1*ms)
 M=StateMonitor(Q,'v',record=True)
 
-S.synapses_pre[0]=array([0,1],dtype=S.synapses_pre[0].dtype)
-S.w[0:2]=[1.,.7]
-S.delay_pre[0:2]=[5,7] # in timebins
-S.presynaptic[0:2]=[0,0]
-S.postsynaptic[0:2]=[2,3]
+S[0,2]=True
+S[0,3]=True
+S.w[0,2]=1.
+S.w[0,3]=.7
+S.delay[0,2]=.5*ms
+S.delay[0,3]=.7*ms
 
 run(40*ms)
 

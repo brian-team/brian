@@ -11,11 +11,9 @@ Q=NeuronGroup(1,model='v:1')
 S=Synapses(P,Q,model='w:1',pre='v+=w',max_delay=1*ms)
 M=StateMonitor(Q,'v',record=True)
 
-S.synapses_pre[0]=array([0],dtype=S.synapses_pre[0].dtype)
-S.w[0]=1.
-S.delay_pre[0]=5 # in timebins
-S.presynaptic[0]=0
-S.postsynaptic[0]=0
+S[0,0]=True
+S.w[0,0]=1.
+S.delay[0,0]=.5*ms
 
 run(40*ms)
 

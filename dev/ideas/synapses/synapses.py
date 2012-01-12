@@ -18,6 +18,7 @@ TODO (later):
 from brian import *
 from brian.utils.dynamicarray import *
 from spikequeue import *
+from synapticvariable import *
 import numpy as np
 from brian.inspection import *
 from brian.equations import *
@@ -77,8 +78,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.postsynaptic=DynamicArray(len(self),dtype=smallest_inttype(len(self.target))) # this should depend on number of neurons
 
         # Pre and postsynaptic delays (synapse -> delay_pre/delay_post)
-        self.delay_pre=DynamicArray(len(self),dtype=int16) # max 32767 delays
-        self.delay_post=DynamicArray(len(self),dtype=int16)
+        self._delay_pre=DynamicArray(len(self),dtype=int16) # max 32767 delays
+        self._delay_post=DynamicArray(len(self),dtype=int16)
         
         # Pre and postsynaptic synapses (i->synapse indexes)
         max_synapses=4294967296 # it could be explicitly reduced by a keyword
@@ -92,8 +93,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.generate_code(pre,post,level+1) # I moved this in a separate method to clarify the init code
         
         # Event queues
-        self.pre_queue = SpikeQueue(self.source, self, max_delay = max_delay)
-        #self.post_queue = SpikeQueue(self.target, self, max_delay = max_delay)
+        self.pre_queue = SpikeQueue(self.source, self.synapses_pre, self._delay_pre, max_delay = max_delay)
+        #self.post_queue = SpikeQueue(self.target, self.synapses_post, self.delay_post, max_delay = max_delay)
 
         self.contained_objects = [self.pre_queue]
       
@@ -245,26 +246,34 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         '''
         # Resize dynamic arrays and push new values
         newsynapses=len(presynaptic) # number of new synapses
-        nvars,nsynapses=self._S.shape
-        self._S.resize((nvars,nsynapses+newsynapses))
-        self.presynaptic.resize(nsynapses+newsynapses)
-        self.presynaptic[nsynapses:]=presynaptic
-        self.postsynaptic.resize(nsynapses+newsynapses)
-        self.postsynaptic[nsynapses:]=postsynaptic
-        self.delay_pre.resize(nsynapses+newsynapses)
-        self.delay_post.resize(nsynapses+newsynapses)
+        nvars,nsynapses_all=self._S.shape
+        self._S.resize((nvars,nsynapses_all+newsynapses))
+        self.presynaptic.resize(nsynapses_all+newsynapses)
+        self.presynaptic[nsynapses_all:]=presynaptic
+        self.postsynaptic.resize(nsynapses_all+newsynapses)
+        self.postsynaptic[nsynapses_all:]=postsynaptic
+        self._delay_pre.resize(nsynapses_all+newsynapses)
+        self._delay_post.resize(nsynapses_all+newsynapses)
         for i,synapses in synapses_pre.iteritems():
             nsynapses=len(self.synapses_pre[i])
             self.synapses_pre[i].resize(nsynapses+len(synapses))
-            self.synapses_pre[i][nsynapses:]=synapses+nsynapses # synapse indexes are shifted
+            self.synapses_pre[i][nsynapses:]=synapses+nsynapses_all # synapse indexes are shifted
         if synapses_post is not None:
             for j,synapses in synapses_post.iteritems():
                 nsynapses=len(self.synapses_post[j])
                 self.synapses_post[j].resize(nsynapses+len(synapses))
-                self.synapses_post[j][nsynapses:]=synapses+nsynapses
+                self.synapses_post[j][nsynapses:]=synapses+nsynapses_all
     
     def __getattr__(self, name):
-        return NeuronGroup.__getattr__(self,name)
+        if (name=='delay_pre') or (name=='delay'): # default: delay is presynaptic delay
+            return SynapticDelayVariable(self._delay_pre,self)
+        elif name=='delay_post':
+            return SynapticDelayVariable(self._delay_post,self)
+        try:
+            x=self.state(name)
+            return SynapticVariable(x,self) # specific names: delays
+        except KeyError:
+            return NeuronGroup.__getattr__(self,name)
         
     def update(self): # this is called at every timestep
         '''
@@ -358,7 +367,7 @@ def smallest_inttype(N):
 
 def slice_to_array(s,N=None):
     '''
-    Converts a slice s or single int to the corresponding array of integers.
+    Converts a slice s, single int or array to the corresponding array of integers.
     N is the maximum number of elements, this is used to handle negative numbers
     in the slice.
     '''
@@ -369,8 +378,10 @@ def slice_to_array(s,N=None):
         if stop<0 and N is not None:
             stop=N+stop
         return arange(start,stop,step)
-    else: # if not a slice (e.g. an int) then we return it as an array of a single element
+    elif isscalar(s): # if not a slice (e.g. an int) then we return it as an array of a single element
         return array([s])
+    else: # array or sequence
+        return array(s)
 
 def neuron_indexes(x,P):
     '''

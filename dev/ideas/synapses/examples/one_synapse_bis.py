@@ -13,11 +13,9 @@ S=Synapses(P,Q,model='w:1',pre='v+=w',max_delay=1*ms)
 M=StateMonitor(Q,'v',record=True)
 #P.v[2]=.5
 
-S.synapses_pre[2]=array([0],dtype=S.synapses_pre[0].dtype)
-S.w[0]=1.
-S.delay_pre[0]=5 # in timebins
-S.presynaptic[0]=2
-S.postsynaptic[0]=3
+S[2,3]=True
+S.w[2,3]=1.
+S.delay[2,3]=.5*ms
 
 run(40*ms)
 

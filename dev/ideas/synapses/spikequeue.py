@@ -37,8 +37,9 @@ class SpikeQueue(SpikeMonitor):
     Initialized with a source NeuronGroup, a Synapses object (from which it fetches the delays), a maximum delay
     
     Arguments
-    ``source'' self explanatory
-    ``synapses'' self explanatory
+    ``source'' NeuronGroup that is monitored
+    ``synapses'' List of arrays of synapse indexes
+    ``delays'' Array of delays corresponding to synapse indexes
 
     Keywords
     ``max_delay'' in seconds
@@ -75,7 +76,7 @@ class SpikeQueue(SpikeMonitor):
     * remove the max_delay keyword and have the structure created with another
       method (at run time)
     '''
-    def __init__(self, source, synapses, 
+    def __init__(self, source, synapses, delays,
                  max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT):
         '''
         TODO:
@@ -85,13 +86,14 @@ class SpikeQueue(SpikeMonitor):
         '''
         # SpikeMonitor structure
         self.source = source #NeuronGroup
-        self.synapses = synapses #Synapses
+        self.delays = delays
+        self.synapses = synapses
         
         self.max_delay = max_delay # do we need this?
         nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
 
         # number of time steps, maximum number of spikes per time step
-        self.X = zeros((nsteps, maxevents), dtype = synapses.synapses_pre[0].dtype) # target synapses
+        self.X = zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
         self.X_flat = self.X.reshape(nsteps*maxevents,)
         self.currenttime = 0
         self.n = zeros(nsteps, dtype = int) # number of events in each time step
@@ -114,15 +116,14 @@ class SpikeQueue(SpikeMonitor):
     def precompute_offsets(self):
         #t0 = time.time()
         self._offsets=[]
-        for i in range(len(self.synapses.synapses_pre)):
-            delays=self.synapses.delay_pre[self.synapses.synapses_pre[i].data]
+        for i in range(len(self.synapses)):
+            delays=self.delays[self.synapses[i].data]
             self._offsets.append(self.offsets(delays))
         #log_debug('spikequeue.offsets', 'Offsets computed in '+str(time.time()-t0))
     
     def offsets(self, delay):
         '''
         Calculates offsets corresponding to a delay array
-        Maybe it could be precalculated? (an int16 array?)
         '''
         I = argsort(delay)
         xs = delay[I]
@@ -164,7 +165,6 @@ class SpikeQueue(SpikeMonitor):
         Resizes the underlying data structure (number of columns = spikes per dt).
         max events will be rounded to the closest power of 2.
         '''
-        
         # old and new sizes
         old_maxevents = self.X.shape[1]
         new_maxevents = 2**ceil(log2(maxevents)) # maybe 2 is too large
@@ -177,22 +177,18 @@ class SpikeQueue(SpikeMonitor):
         #log_debug('spikequeue', 'Resizing SpikeQueue')
         
     def propagate(self, spikes):
-        '''
-        TODO:
-        * At this moment it only works in the forward direction. We need to have
-        a specific variable instead of synapses_pre
-        '''
         if len(spikes):
             if self._offsets is None: # vectorise over synaptic events
-                synaptic_events=hstack([self.synapses.synapses_pre[i].data for i in spikes])
-                delay = self.synapses.delay_pre[synaptic_events] # but it could be post!
-                offsets = self.offsets(delay)
-                self.insert(delay, offsets, synaptic_events)
+                synaptic_events=hstack([self.synapses[i].data for i in spikes])
+                if len(synaptic_events):
+                    delay = self.delays[synaptic_events] # but it could be post!
+                    offsets = self.offsets(delay)
+                    self.insert(delay, offsets, synaptic_events)
             else: # offsets are precomputed
                 for i in spikes:
-                    synaptic_events=self.synapses.synapses_pre[i].data # assuming a dynamic array: could change at run time?    
+                    synaptic_events=self.synapses[i].data # assuming a dynamic array: could change at run time?    
                     if len(synaptic_events):
-                        delay = self.synapses.delay_pre[synaptic_events]
+                        delay = self.delays[synaptic_events]
                         offsets = self._offsets[i]
                         self.insert(delay, offsets, synaptic_events)
 
@@ -205,6 +201,5 @@ class SpikeQueue(SpikeMonitor):
         if display:
             show()
 
-# We need to write some speed tests
 if __name__=='__main__':
     pass
