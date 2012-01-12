@@ -7,7 +7,8 @@ try:
     import pycuda.driver as drv
     import pycuda.compiler as compiler
     from pycuda import gpuarray
-except ImportError:
+except ImportError, e:
+    print e
     pycuda = None
     log_warn('brian.experimental.cuda.gpucodegen', 'Cannot import pycuda')
 from brian.experimental.codegen.rewriting import rewrite_to_c_expression
@@ -86,13 +87,13 @@ class NemoConnection(DelayConnection):
             DelayConnection.propagate(self, spikes)
             return
         if self.nemo_use_gpu:
-            spikes_bool = zeros(len(self.source), dtype=bool)
+            spikes_bool = zeros(len(self.source), dtype=uint32)
             spikes_bool[spikes] = True
             spikes_gpu = pycuda.gpuarray.to_gpu(spikes_bool)
-            spikes_gpu_ptr = int(spikes_gpu.gpudata)
-            exc_ptr, inh_ptr = tuple(self.nemo_sim.propagate(spikes_gpu_ptr))
-            exc = zeros(len(source))
-            inh = zeros(len(source))
+            spikes_gpu_ptr = int(int(spikes_gpu.gpudata))
+            exc_ptr, inh_ptr = tuple(self.nemo_sim.propagate(spikes_gpu_ptr, len(self.source)))
+            exc = zeros(len(self.source), dtype=float32)
+            inh = zeros(len(self.source), dtype=float32)
             pycuda.driver.memcpy_dtoh(exc, exc_ptr)
             pycuda.driver.memcpy_dtoh(inh, inh_ptr)
             self.target._S[self.nstate] += exc
@@ -106,3 +107,4 @@ class NemoConnection(DelayConnection):
             inh = numpy_array_from_memory(inh_ptr, len(self.source), float32)
             self.target._S[self.nstate] += exc
             self.target._S[self.nstate] += inh
+

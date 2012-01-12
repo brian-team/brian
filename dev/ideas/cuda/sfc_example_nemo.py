@@ -60,9 +60,13 @@ M = SpikeMonitor(G)
 
 run(.1*second)
 
-raster_plot(M)
-for i, d in layerdelay.items():
-    fill([d/ms, (d+tau)/ms, (d+tau)/ms, d/ms],
-         [i*numperlayer, i*numperlayer, (i+1)*numperlayer, (i+1)*numperlayer],
-         color=(0.5, 0.5, 0.5))
-show()
+print 'total spikes:', M.nspikes
+
+if 1:
+    raster_plot(M)
+    for i, d in layerdelay.items():
+        fill([d/ms, (d+tau)/ms, (d+tau)/ms, d/ms],
+             [i*numperlayer, i*numperlayer, (i+1)*numperlayer, (i+1)*numperlayer],
+             color=(0.5, 0.5, 0.5))
+    show()
+
