@@ -146,7 +146,7 @@ class SpikeQueue(SpikeMonitor):
         old_nevents = self.n[timesteps].copy() # because we need this for the final assignment, but we need to precompute the  new one to check for overflow
         self.n[timesteps] += offset+1 # that's a trick (to update stack size), plus we pre-compute it to check for overflow
         
-        m = max(self.n[timesteps]) # If overflow, then at least one self.n is bigger than the size
+        m = max(self.n[timesteps])+1 # If overflow, then at least one self.n is bigger than the size
         if (m >= self.X.shape[1]):
             self.resize(m+1) # was m previously (not enough)
         

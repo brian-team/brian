@@ -1,13 +1,18 @@
 # coding: latin-1
 """
-copy/paste of the CUBA example script
+CUBA example with delays.
+
+Connection (no delay): 3.5 s
+DelayConnection: 5.2 s (9.1 s with dt=0.05 ms)
+Synapses: 8 s (14.8 s with dt=0.05 ms)
 """
 
 from brian import *
 import time
-import dev.ideas.synapses.synapses as syn
-reload(syn)
-log_level_debug()
+from dev.ideas.synapses.synapses import *
+#log_level_debug()
+
+#defaultclock.dt=0.05*ms
 
 start_time = time.time()
 taum = 20 * ms
@@ -35,16 +40,19 @@ wi = (-20 * 4.5 / 10) * mV # inhibitory synaptic weight
 
 if True:
 ########### NEW SYNAPSE CODE
-    Se = syn.Synapses(Pe, P, model = 'we : 1', pre = 'ge += we')
-    Si = syn.Synapses(Pi, P, model = 'wi : 1', pre = 'gi += wi')
-    Se[:,:] = '''rand() < .02'''
-    Si[:,:] = '''rand() < .02'''
+    Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we', max_delay=2*ms)
+    Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi', max_delay=2*ms)
+    Se.connect_random(sparseness=0.02)
+    Si.connect_random(sparseness=0.02)
+    Se.delay_pre[:]=10
+    Si.delay_pre[:]=10
+    #Se[:,:] = '''rand() < .02'''
+    #Si[:,:] = '''rand() < .02'''
     print 'finished adding synapses'
-#    Se.we[:,:] = we
-#    Se.wi[:,:] = wi
 else:
-    Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02)
-    Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02)
+########### OLD CODE
+    Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02, delay=(1*ms,1*ms))
+    Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02, delay=(1*ms,1*ms))
     
 P.v = Vr + rand(len(P)) * (Vt - Vr)
 

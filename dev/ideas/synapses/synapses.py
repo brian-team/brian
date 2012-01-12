@@ -231,7 +231,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         # Now create the synapses
         self.create_synapses(presynaptic,postsynaptic,synapses_pre,synapses_post)
     
-    def create_synapses(self,presynaptic,postsynaptic,synapses_pre,synapses_post):
+    def create_synapses(self,presynaptic,postsynaptic,synapses_pre,synapses_post=None):
         '''
         Create new synapses.
         * synapses_pre: a mapping from presynaptic neuron to synapse indexes
@@ -241,7 +241,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
         TODO:
         * option to automatically create postsynaptic from synapses_post
-        * most likely I need to shift synapse indexes
         '''
         # Resize dynamic arrays and push new values
         newsynapses=len(presynaptic) # number of new synapses
@@ -256,11 +255,12 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         for i,synapses in synapses_pre.iteritems():
             nsynapses=len(self.synapses_pre[i])
             self.synapses_pre[i].resize(nsynapses+len(synapses))
-            self.synapses_pre[i][nsynapses:]=synapses
-        for j,synapses in synapses_post.iteritems():
-            nsynapses=len(self.synapses_post[j])
-            self.synapses_post[j].resize(nsynapses+len(synapses))
-            self.synapses_post[j][nsynapses:]=synapses        
+            self.synapses_pre[i][nsynapses:]=synapses+nsynapses # synapse indexes are shifted
+        if synapses_post is not None:
+            for j,synapses in synapses_post.iteritems():
+                nsynapses=len(self.synapses_post[j])
+                self.synapses_post[j].resize(nsynapses+len(synapses))
+                self.synapses_post[j][nsynapses:]=synapses+nsynapses
     
     def __getattr__(self, name):
         return NeuronGroup.__getattr__(self,name)
@@ -293,17 +293,20 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.pre_queue.next()
         #self.post_queue.next()
         
-    def connect_random(self,pre,post,sparseness=None):
+    def connect_random(self,pre=None,post=None,sparseness=None):
         '''
-        Creates random connections between pre and post neurons.
+        Creates random connections between pre and post neurons
+        (default: all neurons).
         '''
+        pre=pre or self.source
+        post=post or self.target
         pre,post=self.presynaptic_indexes(pre),self.postsynaptic_indexes(post)
         m=len(post)
         synapses_pre={}
         nsynapses=0
         presynaptic,postsynaptic=[],[]
         for i in pre: # vectorised over post neurons
-            k = random.binomial(m, sparseness, 1)[0] # number of postsynaptic neurons
+            k = binomial(m, sparseness, 1)[0] # number of postsynaptic neurons
             synapses_pre[i]=nsynapses+arange(k)
             presynaptic.append(i*ones(k,dtype=int))
             # Not significantly faster to generate all random numbers in one pass
@@ -319,7 +322,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.create_synapses(presynaptic,postsynaptic,synapses_pre,synapses_post)
         '''
         TODO NOW:
-        * fix create_synapses (index shift)
         * automatic calculation of post->synapse
         '''
         
