@@ -148,7 +148,7 @@ class SpikeQueue(SpikeMonitor):
         
         m = max(self.n[timesteps]) # If overflow, then at least one self.n is bigger than the size
         if (m >= self.X.shape[1]):
-            self.resize(m)
+            self.resize(m+1) # was m previously (not enough)
         
         self.X_flat[timesteps*self.X.shape[1]+offset+old_nevents]=target
         # Old code seemed wrong:
@@ -181,7 +181,7 @@ class SpikeQueue(SpikeMonitor):
         a specific variable instead of synapses_pre
         '''
         for i in spikes: # I don't see a way to avoid this loop at this moment
-            synaptic_events=self.synapses.synapses_pre[i] # but it could be post!    
+            synaptic_events=self.synapses.synapses_pre[i].data # assuming a dynamic array: could change at run time?    
             if len(synaptic_events):
                 delay = self.synapses.delay_pre[synaptic_events] # but it could be post!
                 if self.precompute_offsets:

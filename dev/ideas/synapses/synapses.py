@@ -2,14 +2,17 @@
 The Synapses class - see BEP-21
 
 TODO:
+* connect_random
 * CUBA and speed test
+* getattr (includes a special vector class with synaptic access)
 * Do the TODOs
-* setitem and getattr (includes a special vector class with synaptic access)
+* setitem
 
 TODO (later):
 * State updates and event-driven stuff
 * Max delay should be calculated at run time (compress)
-* Replace spike queue data with a dynamic array object
+* Replace spike queue data with a dynamic array object?
+* Replace NeuronGroup.__init__ with own stuff
 '''
 from brian import *
 from brian.utils.dynamicarray import *
@@ -17,7 +20,9 @@ from spikequeue import *
 import numpy as np
 from brian.inspection import *
 from brian.equations import *
+from numpy.random import binomial
 from brian.utils.documentation import flattened_docstring
+from random import sample
 import re
 
 __all__ = ['Synapses']
@@ -30,15 +35,16 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
              unit_checking = True, method = None, freeze = False, implicit = False, order = 1, # model (state updater) related
              pre = '', post = ''):
         N=len(source) # initial number of synapses = number of presynaptic neurons
+        target=target or source # default is target=source
         self.source=source
-        self.target=target or source # default is target=source
+        self.target=target
 
         # Check clocks. For the moment we enforce the same clocks for all objects
         clock = clock or source.clock
         if source.clock!=target.clock:
             raise ValueError,"Source and target groups must have the same clock"
 
-        NeuronGroup.__init__(self, 1,model=model,clock=clock,level=level+1,unit_checking=unit_checking,method=method,freeze=freeze,implicit=implicit,order=order)
+        NeuronGroup.__init__(self, 0,model=model,clock=clock,level=level+1,unit_checking=unit_checking,method=method,freeze=freeze,implicit=implicit,order=order)
         # We might want *not* to use the state updater on all variables, so for now I disable it (see update())
         '''
         At this point we have:
@@ -60,20 +66,27 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         Things we may need to add:
         * _pre and _post suffixes
         '''
+        # _S is turned to a dynamic array - OK this is probably not good! we may lose references at this point
+        S=self._S
+        self._S=DynamicArray(S.shape)
+        self._S[:]=S
 
-        # Pre and postsynaptic indexes
+        # Pre and postsynaptic indexes (synapse -> pre/post)
         self.presynaptic=DynamicArray(len(self),dtype=smallest_inttype(len(self.source))) # this should depend on number of neurons
         self.postsynaptic=DynamicArray(len(self),dtype=smallest_inttype(len(self.target))) # this should depend on number of neurons
 
-        # Pre and postsynaptic delays (synapse -> delay)
+        # Pre and postsynaptic delays (synapse -> delay_pre/delay_post)
         self.delay_pre=DynamicArray(len(self),dtype=int16) # max 32767 delays
         self.delay_post=DynamicArray(len(self),dtype=int16)
         
         # Pre and postsynaptic synapses (i->synapse indexes)
         max_synapses=4294967296 # it could be explicitly reduced by a keyword
-        # dictionaries could be more efficient
-        self.synapses_pre=[DynamicArray(0,dtype=smallest_inttype(max_synapses))]*len(self.source) # list of dynamic arrays
-        self.synapses_post=[DynamicArray(0,dtype=smallest_inttype(max_synapses))]*len(self.target)
+        # We use a loop instead of *, otherwise only 1 dynamic array is created
+        self.synapses_pre=[DynamicArray(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.source))]
+        self.synapses_post=[DynamicArray(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.target))]
+        # Turn into dictionaries?
+        #self.synapses_pre=dict(enumerate(synapses_pre))
+        #self.synapses_post=dict(enumerate(synapses_post))
 
         self.generate_code(pre,post,level+1) # I moved this in a separate method to clarify the init code
         
@@ -155,14 +168,31 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     def __setitem__(self, key, value):
         '''
         Creates new synapses.
+        Synapse indexes are created such that synapses with the same presynaptic neuron
+        and delay have contiguous indexes.
+        
         Caution:
         1) there is no deletion
         2) synapses are added, not replaced (e.g. S[1,2]=True;S[1,2]=True creates 2 synapses)
+        
+        TODO:
+        * S[:,:]='i<j'
+        * S[:,:]=array (boolean or int)
+        * S.connect_random
+        * S[1,[2,5,7]]=True
+        * S[[0,1],[5,9]]=True # same as in numpy (creates 0->5 and 1->9)
         '''
         if not isinstance(key, tuple): # we should check that number of elements is 2 as well
             raise ValueError('Synapses behave as 2-D objects')
         pre,post=key # pre and post indexes (can be slices)
         
+        '''
+        Each of these sets of statements creates:
+        * synapses_pre: a mapping from presynaptic neuron to synapse indexes
+        * synapses_post: same
+        * presynaptic: an array of presynaptic neuron indexes (synapse->pre)
+        * postsynaptic: same
+        '''
         if isinstance(value, (int, bool)): # ex. S[1,7]=True
             # Simple case, either one or multiple synapses between different neurons
             if value is False:
@@ -171,37 +201,66 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 nsynapses = 1
             else:
                 nsynapses = value
-        
-            # We need to create:
-            # 1) a list of presynaptic indexes (synapse -> pre)
-            # 2) a list of postsynaptic indexes (synapse -> post)
-            # 3) a mapping pre -> synapse (dictionary)
-            # 4) a mapping post -> synapse
-            #
-            # meshgrid(pre,post) returns (synapse -> pre (array) and synapse -> post)
-        
-            pre_slice = slice_to_array(pre)
-            post_slice = slice_to_array(post)
-            presynaptic,postsynaptic=meshgrid(pre,post) # synapse -> pre, synapse -> post
-            # TODO: pre,post -> synapse
-        
-        # !! add: sparse matrices
-        values = np.vstack((pre, post))
-        
-        # append values and get initial index (for the _pre_to_synapse struct)
-        initial_index = self._statevector.append(values) 
-        
-        # build the synapse reference arrays
-        for i in np.unique(values[0,:]):
-            newindices = initial_index + np.nonzero(values[0,:] == i)[0]
-            self._pre_to_synapse[i] = np.hstack((self._pre_to_synapse[i], 
-                                                 newindices))
 
-        for i in np.unique(values[1,:]):
-            newindices = initial_index + np.nonzero(values[1,:] == i)[0]
-            self._post_to_synapse[i] = np.hstack((self._post_to_synapse[i], 
-                                                 newindices))
-
+            pre_slice = self.presynaptic_indexes(pre)
+            post_slice = self.postsynaptic_indexes(post)
+            # Bound checks
+            if pre_slice[-1]>=len(self.source):
+                raise ValueError('Presynaptic index greater than number of presynaptic neurons')
+            if post_slice[-1]>=len(self.target):
+                raise ValueError('Postsynaptic index greater than number of postsynaptic neurons')
+            postsynaptic,presynaptic=meshgrid(post_slice,pre_slice) # synapse -> pre, synapse -> post
+            # Flatten
+            presynaptic.shape=(presynaptic.size,)
+            postsynaptic.shape=(postsynaptic.size,)
+            # pre,post -> synapse index, relative to last synapse
+            # (that's a complex vectorised one!)
+            synapses_pre=arange(len(presynaptic)).reshape((len(pre_slice),len(post_slice)))
+            synapses_post=ones((len(post_slice),1),dtype=int)*arange(0,len(presynaptic),len(post_slice))+\
+                          arange(len(post_slice)).reshape((len(post_slice),1))
+            # Repeat
+            if nsynapses>1:
+                synapses_pre=hstack([synapses_pre+k*len(presynaptic) for k in range(nsynapses)]) # could be vectorised
+                synapses_post=hstack([synapses_post+k*len(presynaptic) for k in range(nsynapses)]) # could be vectorised
+                presynaptic=presynaptic.repeat(nsynapses)
+                postsynaptic=postsynaptic.repeat(nsynapses)
+            # Turn into dictionaries
+            synapses_pre=dict(zip(pre_slice,synapses_pre))
+            synapses_post=dict(zip(post_slice,synapses_post))
+        
+        # Now create the synapses
+        self.create_synapses(presynaptic,postsynaptic,synapses_pre,synapses_post)
+    
+    def create_synapses(self,presynaptic,postsynaptic,synapses_pre,synapses_post):
+        '''
+        Create new synapses.
+        * synapses_pre: a mapping from presynaptic neuron to synapse indexes
+        * synapses_post: same
+        * presynaptic: an array of presynaptic neuron indexes (synapse->pre)
+        * postsynaptic: same
+        
+        TODO:
+        * option to automatically create postsynaptic from synapses_post
+        * most likely I need to shift synapse indexes
+        '''
+        # Resize dynamic arrays and push new values
+        newsynapses=len(presynaptic) # number of new synapses
+        nvars,nsynapses=self._S.shape
+        self._S.resize((nvars,nsynapses+newsynapses))
+        self.presynaptic.resize(nsynapses+newsynapses)
+        self.presynaptic[nsynapses:]=presynaptic
+        self.postsynaptic.resize(nsynapses+newsynapses)
+        self.postsynaptic[nsynapses:]=postsynaptic
+        self.delay_pre.resize(nsynapses+newsynapses)
+        self.delay_post.resize(nsynapses+newsynapses)
+        for i,synapses in synapses_pre.iteritems():
+            nsynapses=len(self.synapses_pre[i])
+            self.synapses_pre[i].resize(nsynapses+len(synapses))
+            self.synapses_pre[i][nsynapses:]=synapses
+        for j,synapses in synapses_post.iteritems():
+            nsynapses=len(self.synapses_post[j])
+            self.synapses_post[j].resize(nsynapses+len(synapses))
+            self.synapses_post[j][nsynapses:]=synapses        
     
     def __getattr__(self, name):
         return NeuronGroup.__getattr__(self,name)
@@ -220,7 +279,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         #NeuronGroup.update(self) # we don't do it for now
         synaptic_events = self.pre_queue.peek()
         if len(synaptic_events):
-            print synaptic_events
             # Build the namespace - Maybe we should do this only once? (although there is the problem of static equations)
             # Careful: for dynamic arrays you need to get fresh references at run time
             _namespace = self.pre_namespace
@@ -234,6 +292,50 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
         self.pre_queue.next()
         #self.post_queue.next()
+        
+    def connect_random(self,pre,post,sparseness=None):
+        '''
+        Creates random connections between pre and post neurons.
+        '''
+        pre,post=self.presynaptic_indexes(pre),self.postsynaptic_indexes(post)
+        m=len(post)
+        synapses_pre={}
+        nsynapses=0
+        presynaptic,postsynaptic=[],[]
+        for i in pre: # vectorised over post neurons
+            k = random.binomial(m, sparseness, 1)[0] # number of postsynaptic neurons
+            synapses_pre[i]=nsynapses+arange(k)
+            presynaptic.append(i*ones(k,dtype=int))
+            # Not significantly faster to generate all random numbers in one pass
+            # N.B.: the sample method is implemented in Python and it is not in Scipy
+            postneurons = sample(xrange(m), k)
+            postneurons.sort()
+            postsynaptic.append(postneurons)
+            nsynapses+=k
+        presynaptic=hstack(presynaptic)
+        postsynaptic=hstack(postsynaptic)
+        synapses_post=None # we ask for automatic calculation of (post->synapse)
+        # this is more or less given by unique
+        self.create_synapses(presynaptic,postsynaptic,synapses_pre,synapses_post)
+        '''
+        TODO NOW:
+        * fix create_synapses (index shift)
+        * automatic calculation of post->synapse
+        '''
+        
+    def presynaptic_indexes(self,x):
+        '''
+        Returns the array of presynaptic neuron indexes corresponding to x,
+        which can be a integer, an array or a subgroup
+        '''
+        return neuron_indexes(x,self.source)
+
+    def postsynaptic_indexes(self,x):
+        '''
+        Returns the array of postsynaptic neuron indexes corresponding to x,
+        which can be a integer, an array or a subgroup
+        '''
+        return neuron_indexes(x,self.target)
     
     def __repr__(self):
         return 'Synapses object with '+ str(len(self))+ ' synapses'
@@ -251,34 +353,41 @@ def smallest_inttype(N):
     else:
         return int64
 
-def slice_to_array(s):
+def slice_to_array(s,N=None):
     '''
-    Converts a slice s or single int to the corresponding array of integers
+    Converts a slice s or single int to the corresponding array of integers.
+    N is the maximum number of elements, this is used to handle negative numbers
+    in the slice.
     '''
     if isinstance(s,slice):
-        arange(s.start,s.stop,s.end)
+        start=s.start or 0
+        stop=s.stop or N
+        step=s.step
+        if stop<0 and N is not None:
+            stop=N+stop
+        return arange(start,stop,step)
     else: # if not a slice (e.g. an int) then we return it as an array of a single element
-        return array(s)
+        return array([s])
+
+def neuron_indexes(x,P):
+    '''
+    Returns the array of neuron indexes corresponding to x,
+    which can be a integer, an array or a subgroup.
+    P is the neuron group.
+    '''
+    if isinstance(x,NeuronGroup): # it should be checked that x is actually a subgroup of P
+        i0=x._origin - P._origin # offset of the subgroup x in P
+        return arange(i0,i0+len(x))
+    else:
+        return slice_to_array(x,N=len(P))      
 
 if __name__=='__main__':
-    log_level_debug()
-    P=NeuronGroup(2,model='dv/dt=1/(10*ms):1',threshold=1,reset=0)
-    Q=NeuronGroup(1,model='v:1')
-    S=Synapses(P,Q,model='w:1',pre='v+=w')
-    M=StateMonitor(Q,'v',record=True)
-    
-    S.synapses_pre[0]=[0]
-    S.synapses_pre[1]=[1]
-    S.delay_pre[0]=10 # in time bins
-    S.delay_pre[1]=50
-    S.presynaptic[0]=0
-    S.presynaptic[1]=1
-    S.w[0]=1.
-    S.w[1]=0.
-    
-    run(50*ms)
-
-    plot(M.times/ms,M[0])
-    # doesn't work! Delays not taken into account
-    
-    show()
+    #log_level_debug()
+    P=NeuronGroup(10,model='v:1')
+    S=Synapses(P,model='w:1')
+    S[0:2,0:3]=True
+    #S[1,2]=True
+    S.w=.5
+    print S.w
+    print S.presynaptic[0]
+    print S.synapses_pre[1]

@@ -27,3 +27,15 @@ Pre/post mappings (useful for construction and spike queues):
 
 Code:
 * presynaptic/postsynaptic code and namespace (pre_code,pre_namespace)
+
+Accessing synaptic variables
+----------------------------
+To do something like S.w[1,2]=1*nS
+we need to have a special vector class that can be indexed with pre/post indexes.
+First, the setattr method can be directly inherited from NeuronGroup, except
+for the delays. It allows things like:
+S.w=[1*nS,2*nS]
+although maybe this should not be allowed.
+
+The import method is getattr. It returns an object with a getitem that allows
+2 and 3D access to an underlying sparse matrix.
