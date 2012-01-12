@@ -1,4 +1,5 @@
 from brian import *
+from brian.utils.dynamicarray import *
 import nemo
 import ctypes
 try:
@@ -8,14 +9,12 @@ try:
     import pycuda.compiler as compiler
     from pycuda import gpuarray
 except ImportError, e:
-    print e
     pycuda = None
-    log_warn('brian.experimental.cuda.gpucodegen', 'Cannot import pycuda')
 from brian.experimental.codegen.rewriting import rewrite_to_c_expression
 
 use_delay_connection = False
 
-__all__ = ['NemoConnection']
+__all__ = ['NemoConnection', 'NemoNetwork']
 
 def numpy_array_from_memory(ptr, N, dtype):
     '''
@@ -24,7 +23,7 @@ def numpy_array_from_memory(ptr, N, dtype):
     buffer_from_memory = ctypes.pythonapi.PyBuffer_FromMemory
     buffer_from_memory.restype = ctypes.py_object
     buffer = buffer_from_memory(ptr, dtype().itemsize*N)
-    return frombuffer(buffer, dtype)
+    return frombuffer(buffer, dtype=dtype)
 
 _created_connection = False
 
@@ -59,7 +58,7 @@ class NemoConnection(DelayConnection):
             Wrow = self.W[i, :]
             Wdelay = self.delay[i, :]
             ind = asarray(Wrow.ind)
-            delay = asarray(Wdelay/ms, dtype=int)
+            delay = asarray(Wdelay/ms, dtype=int)+1
             weight = asarray(Wrow, dtype=float32)
             if len(ind):
                 self.nemo_net.add_synapse(i, ind.tolist(), delay.tolist(),
@@ -112,31 +111,59 @@ class NemoConnection(DelayConnection):
 
 
 class NemoNetworkPropagate(NetworkOperation):
-    def __init__(self, net):
+    def __init__(self, net, clock):
+        NetworkOperation.__init__(self, when='after_connections', clock=clock)
         self.net = net
-        self.when = 'after_connections'
+        self.collected_spikes = DynamicArray(0, dtype=uint32)
+        self.nspikes = 0
+    def prepare(self):
+        self.connection_mappings = []
+        for C in self.net.connections:
+            if isinstance(C, SpikeMonitor):
+                continue
+            target_offset = self.net.group_offset[(id(C.target._owner), C.nstate)]
+            targetvar = C.target._S[C.nstate]
+            targetslice = slice(target_offset, target_offset+len(C.target))
+            self.connection_mappings.append((targetvar, targetslice))
+#            C.target._S[C.nstate] += exc[target_offset:target_offset+len(C.target)]
+#            C.target._S[C.nstate] += inh[target_offset:target_offset+len(C.target)]
+            
+    def addspikes(self, spikes):
+        if self.nspikes+len(spikes)>len(self.collected_spikes):
+            self.collected_spikes.resize(self.nspikes+len(spikes))
+        self.collected_spikes[self.nspikes:self.nspikes+len(spikes)] = spikes
+        self.nspikes += len(spikes)
     def __call__(self):
-        spikes = hstack(self.net.nemo_spikes, dtype=uint32)
-        self.net.nemo_spikes = []
+        spikes = self.collected_spikes[:self.nspikes]
         spikes_ptr = spikes.ctypes.data
         spikes_len = len(spikes)
-        exc_ptr, inh_ptr = tuple(self.nemo_sim.propagate(spikes_ptr, spikes_len))
-        N = self.net.total_neurons
-        exc = numpy_array_from_memory(exc_ptr, N, float32)
-        inh = numpy_array_from_memory(inh_ptr, N, float32)
-        for G in self.net.groups:
-            target_offset = self.net.group_offset[id(G)]
-            #TODO: need to handle different target states with different neurons
-            #self.target._S[self.nstate] += exc
-            #self.target._S[self.nstate] += inh
+        def do_the_nemo_bit():
+            return tuple(self.net.nemo_sim.propagate(spikes_ptr, spikes_len))
+        exc_ptr, inh_ptr = do_the_nemo_bit()
+        #exc_ptr, inh_ptr = tuple(self.net.nemo_sim.propagate(spikes_ptr, spikes_len))
+        def do_dans_bit():
+            N = self.net.total_neurons
+            exc = numpy_array_from_memory(exc_ptr, N, float32)
+            inh = numpy_array_from_memory(inh_ptr, N, float32)
+            for targetvar, targetslice in self.connection_mappings:
+                targetvar += exc[targetslice]
+                targetvar += inh[targetslice]
+#            for C in self.net.connections:
+#                if isinstance(C, SpikeMonitor):
+#                    continue
+#                target_offset = self.net.group_offset[(id(C.target._owner), C.nstate)]
+#                C.target._S[C.nstate] += exc[target_offset:target_offset+len(C.target)]
+#                C.target._S[C.nstate] += inh[target_offset:target_offset+len(C.target)]
+            self.nspikes = 0
+        do_dans_bit()
 
 class NemoNetworkConnectionPropagate(object):
-    def __init__(self, net, source_offset, target_offset):
-        set.net = net
+    def __init__(self, net, source_offset):
+        self.net = net
         self.source_offset = source_offset
-        self.target_offset = target_offset
-    def __call__(self, C, spikes):
-        self.net.nemo_spikes.append(spikes+self.source_offset)
+    def __call__(self, spikes):
+        self.net.nemo_propagate.addspikes(spikes+self.source_offset)
+
 
 class NemoNetwork(Network):
     def prepare(self):
@@ -145,23 +172,38 @@ class NemoNetwork(Network):
             raise NotImplementedError("Current version only supports a single run.")
         _created_network = True
 
-        # add a NetworkOperation that will be used to carry out the propagation
-        # by NeMo
-        nemo_propagate = NemoNetworkPropagate(self)
-        self.add(nemo_propagate)
-        self.nemo_spikes = []
-        
+        for k, v in self._operations_dict.iteritems():
+            v = [f for f in v if not (hasattr(f, '__name__') and f.__name__=='delayed_propagate')]
+            self._operations_dict[k] = v
         Network.prepare(self)
-        
         if hasattr(self, 'clocks') and len(self.clocks)>1:
             raise NotImplementedError("Current version only supports a single clock.")
-        
+
+        # add a NetworkOperation that will be used to carry out the propagation
+        # by NeMo
+        nemo_propagate = NemoNetworkPropagate(self, self.clock)
+        self.nemo_propagate = nemo_propagate
+        self.add(nemo_propagate)
+                
         # combine all groups into one meta-group for NeMo, store the offsets
         self.group_offset = group_offset = {}
-        self.total_neurons = total_neurons = 0
+        total_neurons = 0
         for G in self.groups:
             group_offset[id(G)] = total_neurons
             total_neurons += len(G)
+        for C in self.connections:
+            # check limitations
+            if isinstance(C, SpikeMonitor):
+                continue
+            if C.__class__ is not DelayConnection:
+                raise NotImplementedError("Only DelayConnections supported at the moment.")
+            if not isinstance(C.W[0, :], SparseConnectionVector):
+                raise NotImplementedError("Current version only supports sparse matrix types.")
+            key = (id(C.target._owner), C.nstate)
+            if key not in group_offset:
+                group_offset[key] = total_neurons
+                total_neurons += len(C.target)
+        self.total_neurons = total_neurons
 
         # now upload to nemo
         self.nemo_net = nemo.Network()
@@ -179,29 +221,26 @@ class NemoNetwork(Network):
 
         # add connections and upload synapses to nemo
         for C in self.connections:
-            # check limitations
-            if C.__class__ is not DelayConnection:
-                raise NotImplementedError("Only DelayConnections supported at the moment.")
-            if not isinstance(C.W[0, :], SparseConnectionVector):
-                raise NotImplementedError("Current version only supports sparse matrix types.")
-            
-            source_offset = group_offset[id(C.source)]
-            target_offset = group_offset[id(C.target)]
+            if isinstance(C, SpikeMonitor):
+                continue
+            source_offset = group_offset[id(C.source._owner)]+C.source._origin
+            target_offset = group_offset[(id(C.target._owner), C.nstate)]+C.target._origin
             dt = C.source.clock.dt
-            C.propagate = NemoNetworkConnectionPropagate(self, source_offset,
-                                                         target_offset)
+            C.propagate = NemoNetworkConnectionPropagate(self, source_offset)
             # create synapses
             for i in xrange(len(C.source)):
-                Wrow = self.W[i, :]
-                Wdelay = self.delay[i, :]
+                Wrow = C.W[i, :]
+                Wdelay = C.delay[i, :]
                 ind = (Wrow.ind+target_offset).tolist()
-                delay = asarray(Wdelay/dt, dtype=int).tolist()
-                if amax(delay)>=64:
+                delay = (1+asarray(Wdelay/dt, dtype=int)).tolist()
+                if amax(delay)>64:
                     raise NotImplementedError("Current version of NeMo has a maximum delay of 64 steps.")
                 weight = asarray(Wrow, dtype=float32).tolist()
                 if len(ind):
                     self.nemo_net.add_synapse(i+source_offset, ind, delay,
                                               weight, False)
+        self._build_update_schedule()
+        nemo_propagate.prepare()
 
         # configure
         self.nemo_conf = nemo.Configuration()

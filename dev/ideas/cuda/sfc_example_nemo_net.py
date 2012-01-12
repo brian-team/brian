@@ -42,34 +42,36 @@ for i in xrange(layerdepth):
 numlayers = (layerfanout**(layerdepth+1)-1)/(layerfanout-1)
 N = numlayers*numperlayer
 
-G = NeuronGroup(N, eqs, reset=Vr, threshold=Vt, refractory=refractory)
-G.V = rand(N)*(Vt-Vr)+Vr
-G.Vrest = 0
+G = [NeuronGroup(numperlayer, eqs, reset=Vr, threshold=Vt, 
+                 refractory=refractory) for _ in xrange(numlayers)]
+for g in G:
+    g.V = rand(numperlayer)*(Vt-Vr)+Vr
+    g.Vrest = 0
 # Initialise layer 0 to fire spikes
-G.Vrest[0:numperlayer] = Vrest0
+G[0].Vrest = Vrest0
 
-if 1:
-    C = NemoConnection(G, G, 'V', delay=True, max_delay=delaymax)
-else:
-    C = Connection(G, G, 'V', delay=True, max_delay=delaymax)
-
+C = {}
 for (i, j), d in layers.items():
     # connect neurons in layer i to layer j with delay d
-    C.connect_random(G[i*numperlayer:(i+1)*numperlayer],
-                     G[j*numperlayer:(j+1)*numperlayer],
-                     p=layerp, delay=d, weight=weight)
+    C[i, j] = Connection(G[i], G[j], 'V', delay=(d, d), max_delay=delaymax,
+                         sparseness=layerp, weight=weight, structure='sparse')
 
-M = SpikeMonitor(G)
-
-run(.1*second)
-
-print 'total spikes:', M.nspikes
+M = [SpikeMonitor(g) for g in G]
 
 if 1:
-    raster_plot(M)
+    net = NemoNetwork(G, C.values(), M)
+else:
+    net = Network(G, C.values(), M)
+
+net.run(.1*second)
+
+print 'total spikes:', sum(m.nspikes for m in M)
+
+if 1:
+    raster_plot(*M)
     for i, d in layerdelay.items():
         fill([d/ms, (d+tau)/ms, (d+tau)/ms, d/ms],
-             [i*numperlayer, i*numperlayer, (i+1)*numperlayer, (i+1)*numperlayer],
+             [i, i, i+1, i+1],
              color=(0.5, 0.5, 0.5))
     show()
 
