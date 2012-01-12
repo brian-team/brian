@@ -76,8 +76,7 @@ class SpikeQueue(SpikeMonitor):
       method (at run time)
     '''
     def __init__(self, source, synapses, 
-                 max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT,
-                 precompute_offsets = False):
+                 max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT):
         '''
         TODO:
         * precompute offsets
@@ -97,8 +96,7 @@ class SpikeQueue(SpikeMonitor):
         self.currenttime = 0
         self.n = zeros(nsteps, dtype = int) # number of events in each time step
         
-        self._all_offsets = None
-        self.precompute_offsets = precompute_offsets
+        self._offsets = None # precalculated offsets
         
         super(SpikeQueue, self).__init__(source, 
                                          record = False)
@@ -113,14 +111,19 @@ class SpikeQueue(SpikeMonitor):
         # Events in the current timestep        
         return self.X[self.currenttime,:self.n[self.currenttime]]
     
-    def compute_all_offsets(self, all_delays):
+    def precompute_offsets(self):
         #t0 = time.time()
-        self._all_offsets = self.offsets(all_delays)
+        self._offsets=[]
+        for i in range(len(self.synapses.synapses_pre)):
+            delays=self.synapses.delay_pre[self.synapses.synapses_pre[i].data]
+            self._offsets.append(self.offsets(delays))
         #log_debug('spikequeue.offsets', 'Offsets computed in '+str(time.time()-t0))
     
     def offsets(self, delay):
-        # Calculates offsets corresponding to a delay array
-        # Maybe it could be precalculated? (an int16 array?)
+        '''
+        Calculates offsets corresponding to a delay array
+        Maybe it could be precalculated? (an int16 array?)
+        '''
         I = argsort(delay)
         xs = delay[I]
         J = xs[1:]!=xs[:-1]
@@ -171,8 +174,7 @@ class SpikeQueue(SpikeMonitor):
         
         self.X = newX
         self.X_flat = self.X.reshape(self.X.shape[0]*new_maxevents,)
-        
-        log_debug('spikequeue', 'Resizing SpikeQueue')
+        #log_debug('spikequeue', 'Resizing SpikeQueue')
         
     def propagate(self, spikes):
         '''
@@ -180,18 +182,20 @@ class SpikeQueue(SpikeMonitor):
         * At this moment it only works in the forward direction. We need to have
         a specific variable instead of synapses_pre
         '''
-        for i in spikes: # I don't see a way to avoid this loop at this moment
-            synaptic_events=self.synapses.synapses_pre[i].data # assuming a dynamic array: could change at run time?    
-            if len(synaptic_events):
+        if len(spikes):
+            if self._offsets is None: # vectorise over synaptic events
+                synaptic_events=hstack([self.synapses.synapses_pre[i].data for i in spikes])
                 delay = self.synapses.delay_pre[synaptic_events] # but it could be post!
-                if self.precompute_offsets:
-                    #if self._all_offsets == None:
-                    #    self.compute_all_offsets(self.synapses._statevector.delay) # change this
-                    self.insert(delay, self._all_offsets[synaptic_events], synaptic_events)
-                else:
-                    offsets = self.offsets(delay)
-                    self.insert(delay, offsets, synaptic_events)
-            
+                offsets = self.offsets(delay)
+                self.insert(delay, offsets, synaptic_events)
+            else: # offsets are precomputed
+                for i in spikes:
+                    synaptic_events=self.synapses.synapses_pre[i].data # assuming a dynamic array: could change at run time?    
+                    if len(synaptic_events):
+                        delay = self.synapses.delay_pre[synaptic_events]
+                        offsets = self._offsets[i]
+                        self.insert(delay, offsets, synaptic_events)
+
     ######################################## UTILS    
     def plot(self, display = True):
         for i in range(self.X.shape[0]):

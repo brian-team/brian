@@ -3,16 +3,15 @@
 CUBA example with delays.
 
 Connection (no delay): 3.5 s
-DelayConnection: 5.2 s (9.1 s with dt=0.05 ms)
-Synapses: 8 s (14.8 s with dt=0.05 ms)
+DelayConnection: 5.2 s
+Synapses: 6.9 s
+Synapses with precomputed offsets: 6.2 s
 """
 
 from brian import *
 import time
 from dev.ideas.synapses.synapses import *
 #log_level_debug()
-
-#defaultclock.dt=0.05*ms
 
 start_time = time.time()
 taum = 20 * ms
@@ -46,13 +45,16 @@ if True:
     Si.connect_random(sparseness=0.02)
     Se.delay_pre[:]=10
     Si.delay_pre[:]=10
+    #Se.delay_pre[:]=randint(10,size=(len(Se.delay_pre.data),))
+    #Si.delay_pre[:]=randint(10,size=(len(Si.delay_pre.data),))
+    #Se.pre_queue.precompute_offsets()
+    #Si.pre_queue.precompute_offsets()
     #Se[:,:] = '''rand() < .02'''
     #Si[:,:] = '''rand() < .02'''
-    print 'finished adding synapses'
 else:
 ########### OLD CODE
-    Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02, delay=(1*ms,1*ms))
-    Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02, delay=(1*ms,1*ms))
+    Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02, delay=(0*ms,1*ms))
+    Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02, delay=(0*ms,1*ms))
     
 P.v = Vr + rand(len(P)) * (Vt - Vr)
 

@@ -2,8 +2,9 @@
 The Synapses class - see BEP-21
 
 TODO:
-* connect_random
-* CUBA and speed test
+* Unknown bug somewhere!
+* Faster queue
+* Automatically precompute offsets
 * getattr (includes a special vector class with synaptic access)
 * Do the TODOs
 * setitem
