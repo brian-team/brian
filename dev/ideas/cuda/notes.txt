@@ -8,3 +8,4 @@ of at least R is to calculate spiketimes every R time bins, and feed them to
 the Synapses object.
 
 This means that when a spike is produced, its timing is stored.
+
