@@ -5,7 +5,7 @@ Synapse from 0->2,3.
 from brian import *
 from dev.ideas.synapses.synapses import *
 
-log_level_debug()
+#log_level_debug()
 
 P=NeuronGroup(2,model='dv/dt=1/(10*ms):1',threshold=1,reset=0)
 Q=NeuronGroup(4,model='v:1')
@@ -14,10 +14,8 @@ M=StateMonitor(Q,'v',record=True)
 
 S[0,2]=True
 S[0,3]=True
-S.w[0,2]=1.
-S.w[0,3]=.7
-S.delay[0,2]=.5*ms
-S.delay[0,3]=.7*ms
+S.w[0,:]=[1.,.7]
+S.delay[0,:]=[.5*ms,.7*ms]
 
 run(40*ms)
 

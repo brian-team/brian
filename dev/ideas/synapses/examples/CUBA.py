@@ -43,10 +43,10 @@ if True:
     Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi', max_delay=2*ms)
     Se.connect_random(sparseness=0.02)
     Si.connect_random(sparseness=0.02)
-    Se.delay_pre[:]=10
-    Si.delay_pre[:]=10
-    #Se.delay_pre[:]=randint(10,size=(len(Se.delay_pre.data),))
-    #Si.delay_pre[:]=randint(10,size=(len(Si.delay_pre.data),))
+    Se.delay_pre[:]=1*ms
+    Si.delay_pre[:]=1*ms
+    #Se.delay_pre[:]=rand(len(Se.delay_pre.data))*ms
+    #Si.delay_pre[:]=rand(len(Si.delay_pre.data))*ms
     #Se.pre_queue.precompute_offsets()
     #Si.pre_queue.precompute_offsets()
     #Se[:,:] = '''rand() < .02'''
@@ -55,7 +55,7 @@ else:
 ########### OLD CODE
     Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02, delay=(0*ms,1*ms))
     Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02, delay=(0*ms,1*ms))
-    
+
 P.v = Vr + rand(len(P)) * (Vt - Vr)
 
 # Record the number of spikes

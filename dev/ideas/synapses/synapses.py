@@ -5,7 +5,6 @@ TODO:
 * Unknown bug somewhere!
 * Faster queue
 * Automatically precompute offsets
-* getattr (includes a special vector class with synaptic access)
 * Do the TODOs
 * setitem
 
@@ -82,7 +81,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self._delay_post=DynamicArray(len(self),dtype=int16)
         
         # Pre and postsynaptic synapses (i->synapse indexes)
-        max_synapses=4294967296 # it could be explicitly reduced by a keyword
+        max_synapses=2147483647 # it could be explicitly reduced by a keyword
         # We use a loop instead of *, otherwise only 1 dynamic array is created
         self.synapses_pre=[DynamicArray(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.source))]
         self.synapses_post=[DynamicArray(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.target))]
@@ -226,6 +225,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 synapses_post=hstack([synapses_post+k*len(presynaptic) for k in range(nsynapses)]) # could be vectorised
                 presynaptic=presynaptic.repeat(nsynapses)
                 postsynaptic=postsynaptic.repeat(nsynapses)
+            # Make sure the type is correct
+            synapses_pre=array(synapses_pre,dtype=self.synapses_pre[0].dtype)
+            synapses_post=array(synapses_pre,dtype=self.synapses_post[0].dtype)
             # Turn into dictionaries
             synapses_pre=dict(zip(pre_slice,synapses_pre))
             synapses_post=dict(zip(post_slice,synapses_post))
@@ -322,7 +324,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             # Not significantly faster to generate all random numbers in one pass
             # N.B.: the sample method is implemented in Python and it is not in Scipy
             postneurons = sample(xrange(m), k)
-            postneurons.sort()
+            #postneurons.sort() # sorting is unnecessary
             postsynaptic.append(postneurons)
             nsynapses+=k
         presynaptic=hstack(presynaptic)
@@ -364,36 +366,6 @@ def smallest_inttype(N):
         return int32
     else:
         return int64
-
-def slice_to_array(s,N=None):
-    '''
-    Converts a slice s, single int or array to the corresponding array of integers.
-    N is the maximum number of elements, this is used to handle negative numbers
-    in the slice.
-    '''
-    if isinstance(s,slice):
-        start=s.start or 0
-        stop=s.stop or N
-        step=s.step
-        if stop<0 and N is not None:
-            stop=N+stop
-        return arange(start,stop,step)
-    elif isscalar(s): # if not a slice (e.g. an int) then we return it as an array of a single element
-        return array([s])
-    else: # array or sequence
-        return array(s)
-
-def neuron_indexes(x,P):
-    '''
-    Returns the array of neuron indexes corresponding to x,
-    which can be a integer, an array or a subgroup.
-    P is the neuron group.
-    '''
-    if isinstance(x,NeuronGroup): # it should be checked that x is actually a subgroup of P
-        i0=x._origin - P._origin # offset of the subgroup x in P
-        return arange(i0,i0+len(x))
-    else:
-        return slice_to_array(x,N=len(P))      
 
 if __name__=='__main__':
     #log_level_debug()
