@@ -84,7 +84,7 @@ class DynamicArray(object):
         current data, but should have the same rank, i.e. same number of
         dimensions.
         '''
-        if isinstance(newshape, int):
+        if isscalar(newshape):
             newshape = (newshape,)
         datashapearr = array(self._data.shape)
         shapearr = array(self.shape)
