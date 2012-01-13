@@ -37,7 +37,7 @@ Pi = P.subgroup(800)
 we = (60 * 0.27 / 10) * mV # excitatory synaptic weight (voltage)
 wi = (-20 * 4.5 / 10) * mV # inhibitory synaptic weight
 
-if False:
+if True:
 ########### NEW SYNAPSE CODE
     Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we', max_delay=2*ms)
     Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi', max_delay=2*ms)

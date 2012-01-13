@@ -6,6 +6,7 @@ TODO:
 * Do the TODOs
 
 TODO (later):
+* setattr
 * Faster queue
 * State updates and event-driven stuff
 * Max delay should be calculated at run time (compress)

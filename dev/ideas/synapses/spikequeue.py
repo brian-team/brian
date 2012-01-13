@@ -81,10 +81,9 @@ class SpikeQueue(SpikeMonitor):
     def __init__(self, source, synapses, delays,
                  max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT):
         '''
-        TODO:
-        * precompute offsets
-        * make it work for both pre/post
-        * either source or synapses is not useful, no?
+        ``source'' is the neuron group that sends spikes
+        ``synapses'' is a list of synapses (synapses[i]=array of synapse indexes for neuron i)
+        ``delays'' is an array of delays (delays[k]=delay of synapse k)
         '''
         # SpikeMonitor structure
         self.source = source #NeuronGroup
