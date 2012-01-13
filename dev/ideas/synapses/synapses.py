@@ -124,6 +124,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         pre_namespace['unique'] = np.unique
         pre_namespace['nonzero'] = np.nonzero
 
+        # Replace rand() by vectorised version
+        # TODO: pass number of synapses
+        #pre = re.sub(r'\b' + 'rand\(\)', 'rand(len(_i))', pre)
+        #post = re.sub(r'\b' + 'rand\(\)', 'rand(len(_i))', post)
+
         # Generate the code
         def update_code(pre, indices):
             res = pre

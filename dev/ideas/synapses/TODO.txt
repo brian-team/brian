@@ -1,7 +1,8 @@
 TODO (Synapses)
 ---------------
-* Faster queue: C version of propagate or insert?
 * pre/post code should include rand()
+* Faster queue: C version of propagate or insert?
+* Synapses with same underlying data (synaptic variables) as another Synapses object (for delayed STDP)
 * Have the option to precompute offsets at run time
 	perhaps precompute unless it produces a memory error
 * setattr (S.w=...)
