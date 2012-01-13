@@ -12,6 +12,7 @@ from brian import *
 import time
 from dev.ideas.synapses.synapses import *
 #log_level_debug()
+set_global_preferences(useweave=True,weavecompiler=None)
 
 start_time = time.time()
 taum = 20 * ms

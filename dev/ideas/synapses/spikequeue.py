@@ -103,6 +103,10 @@ class SpikeQueue(SpikeMonitor):
         
         super(SpikeQueue, self).__init__(source, 
                                          record = False)
+        
+        #useweave=get_global_preference('useweave')
+        #compiler=get_global_preference('weavecompiler')
+
 
     ################################ SPIKE QUEUE DATASTRUCTURE ######################
     def next(self):

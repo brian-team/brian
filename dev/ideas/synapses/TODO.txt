@@ -1,8 +1,10 @@
 TODO (Synapses)
 ---------------
-* Have the option to precompute offsets at run time
-* setattr (S.w=...)
 * Faster queue: C version of propagate or insert?
+* pre/post code should include rand()
+* Have the option to precompute offsets at run time
+	perhaps precompute unless it produces a memory error
+* setattr (S.w=...)
 * State updates and event-driven stuff
 * Max delay should be calculated at run time (in SpikeQueue)
 * Replace spike queue data with a dynamic array object?

@@ -2,7 +2,7 @@ GPU week - Debriefing
 =====================
 
 What we have now:
-* a NemoConnection that can run a (non plastic) DelayConnection on Nemo.
+* a NemoConnection that can run a (non plastic) DelayConnection on Nemo (except modulation).
 * a synfire chain example with heterogeneous delays for tests.
 
 What we would like to have:
@@ -29,6 +29,11 @@ Synapses
 --------
 * Finish the Synapses class (Python)
 	> Romain
+* Running multiple connections: run multiple Nemo networks and share neuron variables
+* Backward propagation
+* Code generation, use Pycuda to run kernels (for pre/post code in Synapses)
+* Optimal synapse indexing for forward and backpropagation of spikes
+	> Andrius/Cyrille
 
 Other things
 ------------
