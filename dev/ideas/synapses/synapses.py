@@ -267,6 +267,10 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 self.synapses_post[j][nsynapses:]=synapses+nsynapses_all
     
     def __getattr__(self, name):
+        if name == 'var_index':
+            raise AttributeError
+        if not hasattr(self, 'var_index'):
+            raise AttributeError
         if (name=='delay_pre') or (name=='delay'): # default: delay is presynaptic delay
             return SynapticDelayVariable(self._delay_pre,self)
         elif name=='delay_post':
