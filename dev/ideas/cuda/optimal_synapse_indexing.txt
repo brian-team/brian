@@ -30,6 +30,8 @@ Distributed Computing, 48(1):96–129, 1998.
 [4] G. Karypis and V. Kumar. A fast and high quality multilevel scheme for partitioning irregular graphs. SIAM
 Journal on Scientific Computing, 20(1):359–392, 1999.
 
+Another python package for graph partitioning: http://networkx.lanl.gov/
+
 Maybe somebody wrote GPU algorithms too?
 
 Maths
