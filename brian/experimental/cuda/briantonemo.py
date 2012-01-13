@@ -178,6 +178,14 @@ class NemoNetwork(Network):
         if hasattr(self, 'clocks') and len(self.clocks)>1:
             raise NotImplementedError("Current version only supports a single clock.")
 
+        if pycuda is not None:
+            self.nemo_use_gpu = True
+#            self.nemo_use_gpu = False
+#            log_warn('brian.experimental.cuda.briantonemo',
+#                     'GPU available but not yet supported, using CPU.')
+        else:
+            self.nemo_use_gpu = False
+
         # add a NetworkOperation that will be used to carry out the propagation
         # by NeMo. The individual Connection objects push their spikes into a
         # global queue (this is done by NemoNetworkConnectionPropagate) and then
@@ -243,13 +251,6 @@ class NemoNetwork(Network):
 
         # now upload to nemo
         self.nemo_net = nemo.Network()
-        if pycuda is not None:
-            self.nemo_use_gpu = True
-#            self.nemo_use_gpu = False
-#            log_warn('brian.experimental.cuda.briantonemo',
-#                     'GPU available but not yet supported, using CPU.')
-        else:
-            self.nemo_use_gpu = False
 
         # create dummy neurons
         self.nemo_input_neuron_idx = self.nemo_net.add_neuron_type('Input')
