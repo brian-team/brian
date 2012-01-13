@@ -243,6 +243,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
         TODO:
         * option to automatically create postsynaptic from synapses_post
+          Tip: sort, then unique
         '''
         # Resize dynamic arrays and push new values
         newsynapses=len(presynaptic) # number of new synapses
