@@ -117,6 +117,8 @@ class NemoNetworkPropagate(NetworkOperation):
         self.net = net
         self.collected_spikes = DynamicArray(0, dtype=uint32)
         self.nspikes = 0
+        self.use_gpu = net.nemo_use_gpu
+        self.total_neurons = self.net.total_neurons
         
     def addspikes(self, spikes):
         if self.nspikes+len(spikes)>len(self.collected_spikes):
@@ -126,12 +128,23 @@ class NemoNetworkPropagate(NetworkOperation):
         
     def __call__(self):
         spikes = self.collected_spikes[:self.nspikes]
-        spikes_ptr = spikes.ctypes.data
-        spikes_len = len(spikes)
-        exc_ptr, inh_ptr = tuple(self.net.nemo_sim.propagate(spikes_ptr, spikes_len))
-        N = self.net.total_neurons
-        exc = numpy_array_from_memory(exc_ptr, N, float32)
-        inh = numpy_array_from_memory(inh_ptr, N, float32)
+        if self.use_gpu:
+            spikes_bool = zeros(self.total_neurons, dtype=uint32)
+            spikes_bool[spikes] = True
+            spikes_gpu = pycuda.gpuarray.to_gpu(spikes_bool)
+            spikes_gpu_ptr = int(int(spikes_gpu.gpudata))
+            exc_ptr, inh_ptr = tuple(self.nemo_sim.propagate(spikes_gpu_ptr, self.total_neurons))
+            exc = zeros(self.total_neurons, dtype=float32)
+            inh = zeros(self.total_neurons, dtype=float32)
+            pycuda.driver.memcpy_dtoh(exc, exc_ptr)
+            pycuda.driver.memcpy_dtoh(inh, inh_ptr)
+        else:
+            spikes_ptr = spikes.ctypes.data
+            spikes_len = len(spikes)
+            exc_ptr, inh_ptr = tuple(self.net.nemo_sim.propagate(spikes_ptr, spikes_len))
+            N = self.net.total_neurons
+            exc = numpy_array_from_memory(exc_ptr, N, float32)
+            inh = numpy_array_from_memory(inh_ptr, N, float32)
         for _, targetvar, targetslice in self.net.nemo_propagate_targets:
             targetvar += exc[targetslice]
             targetvar += inh[targetslice]
@@ -231,9 +244,10 @@ class NemoNetwork(Network):
         # now upload to nemo
         self.nemo_net = nemo.Network()
         if pycuda is not None:
-            self.nemo_use_gpu = False
-            log_warn('brian.experimental.cuda.briantonemo',
-                     'GPU available but not yet supported, using CPU.')
+            self.nemo_use_gpu = True
+#            self.nemo_use_gpu = False
+#            log_warn('brian.experimental.cuda.briantonemo',
+#                     'GPU available but not yet supported, using CPU.')
         else:
             self.nemo_use_gpu = False
 
