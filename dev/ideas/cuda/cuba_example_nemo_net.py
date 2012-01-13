@@ -3,6 +3,9 @@ do_callgraph = False
 plot_output = True
 
 from brian import *
+set_global_preferences(useweave=True, usecodegen=True, usecodegenweave=True,
+    usecodegenstateupdate=True, usecodegenthreshold=True, usenewpropagate=True,
+    usecstdp=True)
 if use_nemo:
     from brian.experimental.cuda.briantonemo import *
 import time
@@ -20,9 +23,11 @@ Pi = P.subgroup(800)
 
 Ce = Connection(Pe, P, 'ge', weight=1.62*mV, sparseness=0.02,
                 delay=(0*ms, 0*ms),
+                #structure='dense',
                 )
 Ci = Connection(Pi, P, 'gi', weight=9*mV, sparseness=0.02,
                 delay=(0*ms, 0*ms),
+                #structure='dense',
                 )
 
 M = SpikeMonitor(P)
