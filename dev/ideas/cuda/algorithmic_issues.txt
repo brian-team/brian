@@ -1,0 +1,9 @@
+Algorithmic issues
+==================
+NeuronGroup
+-----------
+The main issue is compaction.
+
+Synapses
+--------
+The main issue is probably coalescence.

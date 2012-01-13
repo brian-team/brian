@@ -1,35 +1,37 @@
-GPU week - management
+GPU week - Debriefing
 =====================
-To start with:
-* Try to have Nemo running with Brian GPU groups
-* Try to have a Brian script running with Nemo's scatter-gather operations
 
-How about running a Jeffress model? (has many heterogeneous delays)
-Dan wrote a synfire chain example with heterogeneous delays.
+What we have now:
+* a NemoConnection that can run a (non plastic) DelayConnection on Nemo.
+* a synfire chain example with heterogeneous delays for tests.
 
-Targets:
-* A complete NeuronGroup on GPU (with threshold)
-* A DelayConnection on GPU (could call Nemo behind the scenes, but then we need to get rid of Boost)
+What we would like to have:
+* the Synapses class on GPU
+	This requires 1) backward spike delivery, 2) execution of user code on multiple synaptic variables.
+* a complete NeuronGroup on GPU (with threshold)
+	For this we can reuse some of Nemo's code.
 
-Things we need to discuss
--------------------------
-* How to do STDP with traces. Ideally, this should be integrated in the new Synapse class.
-* How to directly construct networks
-* How to access all variables (monitors)
-* Automatic partitioning
-* Automatic reordering of the synapses (by delay/pre neuron/SM)
+* Automatic synapse indexing: see the corresponding document. This would be needed to optimize
+global memory transfers for both the forward and backward spike propagation (for STDP)
+	> Andrius/Cyrille
+	(if it's worth it perhaps we could think of a GPU algorithm?)
 
-Things that could be done later
--------------------------------
-* Stochastic equations
+* How to directly construct networks on GPU (could be important in some cases)
+
+NeuronGroup on GPU
+------------------
+* Threshold/compaction
 * New refractory system
+* Stochastic equations
+* Poisson groups
+
+Synapses
+--------
+* Finish the Synapses class (Python)
+	> Romain
+
+Other things
+------------
 * Brian Hears
-
-Things that could be done in parallel
--------------------------------------
-* The SpikeQueue and Synapses classes in Python
-
-Ideas
------
-* Can we write a Brian API such that people can easily try their own GPU algorithms to replace ours?
-(e.g. for spike queues etc)
+* Check other algorithms in the literature (especially for STDP) (e.g. Jayram's)
+* We have Issam's code the di svn (Brian/Issam_BrianToCuda)
