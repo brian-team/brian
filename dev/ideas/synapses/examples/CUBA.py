@@ -4,7 +4,7 @@ CUBA example with delays.
 
 Connection (no delay): 3.5 s
 DelayConnection: 5.2 s, 5.7 s with random delays
-Synapses: 6.9 s, 8 s with random delays
+Synapses: 6.9 s, 7.8 s with random delays
 Synapses with precomputed offsets: 6.2 s, 7.2 s with random delays
 """
 
@@ -47,8 +47,8 @@ if True:
     #Si.delay_pre[:]=1*ms
     Se.delay_pre[:]=rand(len(Se.delay_pre.data))*ms
     Si.delay_pre[:]=rand(len(Si.delay_pre.data))*ms
-    Se.pre_queue.precompute_offsets()
-    Si.pre_queue.precompute_offsets()
+    #Se.pre_queue.precompute_offsets()
+    #Si.pre_queue.precompute_offsets()
     #Se[:,:] = '''rand() < .02'''
     #Si[:,:] = '''rand() < .02'''
 else:

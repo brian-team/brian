@@ -1,0 +1,31 @@
+TODO (Synapses)
+---------------
+* Have the option to precompute offsets at run time
+* setattr (S.w=...)
+* Faster queue
+* State updates and event-driven stuff
+* Max delay should be calculated at run time (in SpikeQueue)
+* Replace spike queue data with a dynamic array object?
+* Replace NeuronGroup.__init__ with own stuff
+* assignment of strings (S.w[P,Q]='...')
+* state updater
+* generate post code
+* include static variables in pre/post code
+* have a list of variable names
+* deal with suffixes (v_post, v_pre)
+* have lastupdate, t
+* S[:,:]='i<j'
+* S[:,:]=array (boolean or int)
+* generate synapses_post from postsynaptic
+* S.connect_random: fixed number of presynaptic neurons
+* S.connect_one_to_one
+* Update: Have namespaces partially built at run time (call state_(var)),
+  or better, extract synaptic events from the synaptic state matrix;
+  same stuff for postsynaptic variables
+* Update: execute post code
+* Update: insert rand()
+* Postsynaptic queues
+* S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
+* S[group1,group2]='rand()<0.2' # careful this is highly inefficient
+* Automatically check if post variables are needed
+* StateMonitor

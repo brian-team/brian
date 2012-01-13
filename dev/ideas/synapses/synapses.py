@@ -123,11 +123,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         pre_namespace['target'] = self.target # maybe we could save one indirection here
         pre_namespace['unique'] = np.unique
         pre_namespace['nonzero'] = np.nonzero
-        #pre_namespace['_pre'] = self._statevector._pre # mapping synapse -> pre (change to dynamic array)
-        #pre_namespace['_post'] = self._statevector._post
-        #varnames=self.units.keys() # not useful because it is done at run time
-        #for var in varnames:
-        #    pre_namespace[var] = self._state(var)
 
         # Generate the code
         def update_code(pre, indices):
@@ -178,9 +173,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         TODO:
         * S[:,:]='i<j'
         * S[:,:]=array (boolean or int)
-        * S.connect_random
-        * S[1,[2,5,7]]=True
-        * S[[0,1],[5,9]]=True # same as in numpy (creates 0->5 and 1->9)
         '''
         if not isinstance(key, tuple): # we should check that number of elements is 2 as well
             raise ValueError('Synapses behave as 2-D objects')
@@ -302,8 +294,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             for var in self.var_index: # in fact I should filter out integers ; also static variables are not included here
                 _namespace[var] = self.state_(var)[synaptic_events] # could be faster to directly extract a submatrix from _S
             _namespace['t'] = self.clock._t
-            _namespace['_pre']=self.presynaptic[synaptic_events].copy() # could be faster to have an array already there
-            _namespace['_post']=self.postsynaptic[synaptic_events].copy()
+            _namespace['_pre']=self.presynaptic[synaptic_events]
+            _namespace['_post']=self.postsynaptic[synaptic_events]
             exec self.pre_code in _namespace
         
         self.pre_queue.next()
