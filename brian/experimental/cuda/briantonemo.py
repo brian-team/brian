@@ -1,5 +1,6 @@
 from brian import *
 from brian.utils.dynamicarray import *
+import new
 import nemo
 import ctypes
 try:
@@ -116,93 +117,115 @@ class NemoNetworkPropagate(NetworkOperation):
         self.net = net
         self.collected_spikes = DynamicArray(0, dtype=uint32)
         self.nspikes = 0
-    def prepare(self):
-        self.connection_mappings = []
-        for C in self.net.connections:
-            if isinstance(C, SpikeMonitor):
-                continue
-            target_offset = self.net.group_offset[(id(C.target._owner), C.nstate)]
-            targetvar = C.target._S[C.nstate]
-            targetslice = slice(target_offset, target_offset+len(C.target))
-            self.connection_mappings.append((targetvar, targetslice))
-#            C.target._S[C.nstate] += exc[target_offset:target_offset+len(C.target)]
-#            C.target._S[C.nstate] += inh[target_offset:target_offset+len(C.target)]
-            
+        
     def addspikes(self, spikes):
         if self.nspikes+len(spikes)>len(self.collected_spikes):
             self.collected_spikes.resize(self.nspikes+len(spikes))
         self.collected_spikes[self.nspikes:self.nspikes+len(spikes)] = spikes
         self.nspikes += len(spikes)
+        
     def __call__(self):
         spikes = self.collected_spikes[:self.nspikes]
         spikes_ptr = spikes.ctypes.data
         spikes_len = len(spikes)
-        def do_the_nemo_bit():
-            return tuple(self.net.nemo_sim.propagate(spikes_ptr, spikes_len))
-        exc_ptr, inh_ptr = do_the_nemo_bit()
-        #exc_ptr, inh_ptr = tuple(self.net.nemo_sim.propagate(spikes_ptr, spikes_len))
-        def do_dans_bit():
-            N = self.net.total_neurons
-            exc = numpy_array_from_memory(exc_ptr, N, float32)
-            inh = numpy_array_from_memory(inh_ptr, N, float32)
-            for targetvar, targetslice in self.connection_mappings:
-                targetvar += exc[targetslice]
-                targetvar += inh[targetslice]
-#            for C in self.net.connections:
-#                if isinstance(C, SpikeMonitor):
-#                    continue
-#                target_offset = self.net.group_offset[(id(C.target._owner), C.nstate)]
-#                C.target._S[C.nstate] += exc[target_offset:target_offset+len(C.target)]
-#                C.target._S[C.nstate] += inh[target_offset:target_offset+len(C.target)]
-            self.nspikes = 0
-        do_dans_bit()
+        exc_ptr, inh_ptr = tuple(self.net.nemo_sim.propagate(spikes_ptr, spikes_len))
+        N = self.net.total_neurons
+        exc = numpy_array_from_memory(exc_ptr, N, float32)
+        inh = numpy_array_from_memory(inh_ptr, N, float32)
+        for _, targetvar, targetslice in self.net.nemo_propagate_targets:
+            targetvar += exc[targetslice]
+            targetvar += inh[targetslice]
+        self.nspikes = 0
 
 class NemoNetworkConnectionPropagate(object):
     def __init__(self, net, source_offset):
         self.net = net
         self.source_offset = source_offset
+        
     def __call__(self, spikes):
         self.net.nemo_propagate.addspikes(spikes+self.source_offset)
 
+
+def get_connection_variable(C):
+    varname = str(C.nstate)
+    for k, v in C.target.var_index.iteritems():
+        if v==C.nstate and isinstance(k, str):
+            varname = k
+    return varname
+    
 
 class NemoNetwork(Network):
     def prepare(self):
         global _created_network
         if _created_network:
-            raise NotImplementedError("Current version only supports a single run.")
+            raise NotImplementedError("Current version only supports a single network object.")
         _created_network = True
 
-        for k, v in self._operations_dict.iteritems():
-            v = [f for f in v if not (hasattr(f, '__name__') and f.__name__=='delayed_propagate')]
-            self._operations_dict[k] = v
         Network.prepare(self)
         if hasattr(self, 'clocks') and len(self.clocks)>1:
             raise NotImplementedError("Current version only supports a single clock.")
 
         # add a NetworkOperation that will be used to carry out the propagation
-        # by NeMo
+        # by NeMo. The individual Connection objects push their spikes into a
+        # global queue (this is done by NemoNetworkConnectionPropagate) and then
+        # the NemoNetworkPropagate NetworkOperation object propagates the
+        # accumulated effect of the spikes to the target NeuronGroup objects.
         nemo_propagate = NemoNetworkPropagate(self, self.clock)
         self.nemo_propagate = nemo_propagate
+        # we add this object to the network and don't need to prepare() again
+        # because we rebuild the update schedule below.
         self.add(nemo_propagate)
                 
-        # combine all groups into one meta-group for NeMo, store the offsets
+        # create virtual neurons for Nemo, the virtual neurons are either source
+        # neurons or target neurons. For each Connection, we create a group of
+        # source neurons (or re-use if it has already been created), and a
+        # group of target neurons. Each target group and target variable has
+        # a corresponding virtual group. In all cases, we work with the _owner
+        # of the NeuronGroup so that we don't create multiple groups for each
+        # subgroup.
+        print 'Nemo network virtual neuron groups:'
         self.group_offset = group_offset = {}
         total_neurons = 0
-        for G in self.groups:
-            group_offset[id(G)] = total_neurons
-            total_neurons += len(G)
+        self.nemo_managed_connections = []
+        self.nemo_propagate_targets = []
+        network_ops_to_remove = []
+        all_connections = []
         for C in self.connections:
-            # check limitations
-            if isinstance(C, SpikeMonitor):
+            if isinstance(C, MultiConnection):
+                all_connections.extend(C.connections)
+            else:
+                all_connections.append(C)
+        for C in all_connections:
+            # We handle only Connection and DelayConnection objects. For the CPU
+            # version at least, we can rely on Brian to fall back to its
+            # default behaviour otherwise.
+            if C.__class__ is not DelayConnection and C.__class__ is not Connection:
                 continue
-            if C.__class__ is not DelayConnection:
-                raise NotImplementedError("Only DelayConnections supported at the moment.")
-            if not isinstance(C.W[0, :], SparseConnectionVector):
-                raise NotImplementedError("Current version only supports sparse matrix types.")
+            # Nemo cannot handle modulation, so we check for this case
+            if C._nstate_mod is not None:
+                log_warn("brian.experimental.cuda.briantonemo",
+                         "Synaptic modulation is not supported in Nemo, skipped this Connection.")
+                continue
+            # Add the source neuron group
+            G = C.source._owner
+            if id(G) not in group_offset:
+                group_offset[id(G)] = total_neurons
+                print '- Source group, length', len(G), 'indices %d:%d'%(total_neurons, total_neurons+len(G))
+                total_neurons += len(G)
+            # Add the (target neuron group, target variable) virtual group              
             key = (id(C.target._owner), C.nstate)
             if key not in group_offset:
                 group_offset[key] = total_neurons
+                varname = get_connection_variable(C)
+                print '- Target group, length', len(G), 'variable', varname, 'indices %d:%d'%(total_neurons, total_neurons+len(G))
+                target_offset = total_neurons
+                targetslice = slice(target_offset, target_offset+len(C.target))
+                targetvar = C.target._S[C.nstate]
+                self.nemo_propagate_targets.append((varname, targetvar, targetslice))
                 total_neurons += len(C.target)
+            self.nemo_managed_connections.append(C)
+            if C.__class__ is DelayConnection:
+                network_ops_to_remove.append(C.delayed_propagate)
         self.total_neurons = total_neurons
 
         # now upload to nemo
@@ -220,27 +243,70 @@ class NemoNetwork(Network):
                                  range(total_neurons))
 
         # add connections and upload synapses to nemo
-        for C in self.connections:
-            if isinstance(C, SpikeMonitor):
-                continue
+        total_synapses = 0
+        print 'Nemo network synapses:'
+        for C in self.nemo_managed_connections:
+            # We handle subgrouping using the source and target offset
             source_offset = group_offset[id(C.source._owner)]+C.source._origin
             target_offset = group_offset[(id(C.target._owner), C.nstate)]+C.target._origin
             dt = C.source.clock.dt
+            # We replace the propagate method of the Connection with a nemo
+            # version, which adds the spikes to a dynamic stack in the
+            # NemoNetworkPropagate object, which is called after the connections
+            # have been processed by Brian. Note that this way of doing things
+            # only works for the CPU, for the GPU we will need to replace
+            # do_propagate instead.
             C.propagate = NemoNetworkConnectionPropagate(self, source_offset)
             # create synapses
+            this_connection_synapses = 0
             for i in xrange(len(C.source)):
+                # Need to handle Connection/DelayConnection, and sparse/dense
+                # matrix types
                 Wrow = C.W[i, :]
-                Wdelay = C.delay[i, :]
-                ind = (Wrow.ind+target_offset).tolist()
+                if C.__class__ is DelayConnection:
+                    Wdelay = C.delay[i, :]
+                else:
+                    Wdelay = zeros(len(Wrow))
+                if isinstance(Wrow, SparseConnectionVector):
+                    ind = (Wrow.ind+target_offset).tolist()
+                else:
+                    ind = range(target_offset, target_offset+len(Wrow))
                 delay = (1+asarray(Wdelay/dt, dtype=int)).tolist()
+                # Need to update this when NeMo gets support for longer delays
                 if amax(delay)>64:
                     raise NotImplementedError("Current version of NeMo has a maximum delay of 64 steps.")
                 weight = asarray(Wrow, dtype=float32).tolist()
+                total_synapses += len(weight)
+                this_connection_synapses += len(weight)
                 if len(ind):
                     self.nemo_net.add_synapse(i+source_offset, ind, delay,
                                               weight, False)
+            print '-', C.__class__.__name__,
+            print 'from source group of', len(C.source), 'neurons',
+            print 'to target group of', len(C.target), 'neurons,',
+            print 'variable %s,'%get_connection_variable(C),
+            print 'matrix type %s,'%C.W.__class__.__name__,
+            print 'number of synapses', this_connection_synapses
+
+        # debug print the propagation targets
+        print 'Nemo network propagation targets:'
+        for varname, targetvar, targetslice in self.nemo_propagate_targets:
+            print '- Variable', varname, 'indices %d:%d'%(targetslice.start, targetslice.stop)
+
+        # remove the delayed_propagate functions which are used by
+        # DelayConnection and will already have been inserted into the network
+        # at this point (as they are in the contained_objects of
+        # DelayConnection).
+        for k, v in self._operations_dict.iteritems():
+            v = [f for f in v if not f in network_ops_to_remove]
+            self._operations_dict[k] = v
+        
+        # We changed lots of propagate functions so we need to rebuild the
+        # update schedule to make use of them
         self._build_update_schedule()
-        nemo_propagate.prepare()
+        
+        print 'Nemo network total neurons:', total_neurons
+        print 'Nemo network total synapses:', total_synapses
 
         # configure
         self.nemo_conf = nemo.Configuration()
@@ -250,3 +316,13 @@ class NemoNetwork(Network):
             self.nemo_conf.set_cpu_backend()
         # simulation object
         self.nemo_sim = nemo.Simulation(self.nemo_net, self.nemo_conf)
+
+# This switches the default behaviour of Brian's Network object to NemoNetwork
+# i.e. if you import this module, then Nemo will be used
+
+def switch_to_nemo_network(self, *args, **kwds):
+    self.__class__ = NemoNetwork
+    Network_init(self, *args, **kwds)
+
+Network_init = Network.__init__    
+Network.__init__ = new.instancemethod(switch_to_nemo_network, None, Network)

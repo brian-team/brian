@@ -117,6 +117,7 @@ class DelayConnection(Connection):
             self._delayedreaction[self._cur_delay_ind, :] = 0.0
             # increase the index for the circular indexing scheme
             self._cur_delay_ind = (self._cur_delay_ind + 1) % self._max_delay
+        self.delayed_propagate = delayed_propagate
         self.contained_objects = [delayed_propagate]
         # this is just used to convert delayvec's which are in ms to integers, precalculating it makes it faster
         self._invtargetdt = 1 / self.target.clock._dt

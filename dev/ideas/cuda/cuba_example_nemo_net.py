@@ -1,5 +1,10 @@
+use_nemo = True
+do_callgraph = False
+plot_output = True
+
 from brian import *
-from brian.experimental.cuda.briantonemo import *
+if use_nemo:
+    from brian.experimental.cuda.briantonemo import *
 import time
 
 eqs = '''
@@ -14,32 +19,27 @@ Pe = P.subgroup(3200)
 Pi = P.subgroup(800)
 
 Ce = Connection(Pe, P, 'ge', weight=1.62*mV, sparseness=0.02,
-                delay=(0*ms, 0*ms)
+                delay=(0*ms, 0*ms),
                 )
 Ci = Connection(Pi, P, 'gi', weight=9*mV, sparseness=0.02,
-                delay=(0*ms, 0*ms)
+                delay=(0*ms, 0*ms),
                 )
 
 M = SpikeMonitor(P)
 
-if 1:
-    net = NemoNetwork(P, Ce, Ci, M)
-else:
-    net = Network(P, Ce, Ci, M)
+net = MagicNetwork()
 
 start = time.time()
 net.prepare()
 net.run(1*ms)
 print 'Preparation time:', time.time()-start
 
-do_callgraph = False
 if do_callgraph:
     import pycallgraph
     def ff(call_stack, module_name, class_name, func_name, full_name):
-        if not 'brian' in module_name and not 'nemo' in module_name: return False
+        if not 'brian' in module_name: return False
         return True
     pycallgraph.start_trace(filter_func=ff)
-#    pycallgraph.start_trace()
 
 start = time.time()
 net.run(1 * second)
@@ -49,6 +49,6 @@ if do_callgraph:
     pycallgraph.stop_trace()
     pycallgraph.make_dot_graph('callgraph.png')
 
-if 1:
+if plot_output:
     raster_plot(M)
     show()
