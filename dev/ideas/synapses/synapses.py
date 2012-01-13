@@ -2,13 +2,11 @@
 The Synapses class - see BEP-21
 
 TODO:
-* Unknown bug somewhere!
-* Faster queue
 * Automatically precompute offsets
 * Do the TODOs
-* setitem
 
 TODO (later):
+* Faster queue
 * State updates and event-driven stuff
 * Max delay should be calculated at run time (compress)
 * Replace spike queue data with a dynamic array object?

@@ -47,7 +47,10 @@ class SynapticVariable(object):
             synapses_post=array(hstack([self.synapses.synapses_post[k] for k in j]),dtype=synapsetype)
             return np.intersect1d(synapses_pre, synapses_post,assume_unique=True)
         elif len(i)==3: # 3rd coordinate is synapse number
-            return self.synapse_index(i[:2])[i[2]]
+            if i[0] is scalar and i[1] is scalar:
+                return self.synapse_index(i[:2])[i[2]]
+            else:
+                raise NotImplementedError,"The first two coordinates must be integers"
         return i
 
 class SynapticDelayVariable(SynapticVariable):

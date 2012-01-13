@@ -3,9 +3,9 @@
 CUBA example with delays.
 
 Connection (no delay): 3.5 s
-DelayConnection: 5.2 s
-Synapses: 6.9 s
-Synapses with precomputed offsets: 6.2 s
+DelayConnection: 5.2 s, 5.7 s with random delays
+Synapses: 6.9 s, 8 s with random delays
+Synapses with precomputed offsets: 6.2 s, 7.2 s with random delays
 """
 
 from brian import *
@@ -37,18 +37,18 @@ Pi = P.subgroup(800)
 we = (60 * 0.27 / 10) * mV # excitatory synaptic weight (voltage)
 wi = (-20 * 4.5 / 10) * mV # inhibitory synaptic weight
 
-if True:
+if False:
 ########### NEW SYNAPSE CODE
     Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we', max_delay=2*ms)
     Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi', max_delay=2*ms)
     Se.connect_random(sparseness=0.02)
     Si.connect_random(sparseness=0.02)
-    Se.delay_pre[:]=1*ms
-    Si.delay_pre[:]=1*ms
-    #Se.delay_pre[:]=rand(len(Se.delay_pre.data))*ms
-    #Si.delay_pre[:]=rand(len(Si.delay_pre.data))*ms
-    #Se.pre_queue.precompute_offsets()
-    #Si.pre_queue.precompute_offsets()
+    #Se.delay_pre[:]=1*ms
+    #Si.delay_pre[:]=1*ms
+    Se.delay_pre[:]=rand(len(Se.delay_pre.data))*ms
+    Si.delay_pre[:]=rand(len(Si.delay_pre.data))*ms
+    Se.pre_queue.precompute_offsets()
+    Si.pre_queue.precompute_offsets()
     #Se[:,:] = '''rand() < .02'''
     #Si[:,:] = '''rand() < .02'''
 else:

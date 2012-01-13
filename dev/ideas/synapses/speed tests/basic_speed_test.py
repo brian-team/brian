@@ -2,7 +2,6 @@
 Speed test for Synapses
 -----------------------
 Results look ok.
-But: I still have an out-of-bounds problem in SpikeQueue
 
 With M = 10
 740 000 spikes/second
@@ -37,7 +36,7 @@ from time import time
 #log_level_debug()
 
 N=100
-M=10
+M=1
 rate=10000*Hz
 duration=1*second
 P=NeuronGroup(1,model='dv/dt=rate :1',threshold=1,reset=0)
@@ -47,8 +46,9 @@ S=Synapses(P,Q,model='w:1',pre='v+=w',max_delay=2*ms)
 #S[0,:]=True
 S[P,Q]=M
 S.w=rand(N*M)
-S.delay_pre[:]=randint(10,size=N*M)
+S.delay_pre[:]=rand(N*M)*1*ms
 
+#S.pre_queue.precompute_offsets()
 run(1*ms)
 t1=time()
 run(duration)
