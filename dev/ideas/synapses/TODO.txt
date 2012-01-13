@@ -2,7 +2,7 @@ TODO (Synapses)
 ---------------
 * Have the option to precompute offsets at run time
 * setattr (S.w=...)
-* Faster queue
+* Faster queue: C version of propagate or insert?
 * State updates and event-driven stuff
 * Max delay should be calculated at run time (in SpikeQueue)
 * Replace spike queue data with a dynamic array object?
@@ -27,5 +27,5 @@ TODO (Synapses)
 * Postsynaptic queues
 * S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
 * S[group1,group2]='rand()<0.2' # careful this is highly inefficient
-* Automatically check if post variables are needed
+* Automatically check if synapses_post is needed
 * StateMonitor
