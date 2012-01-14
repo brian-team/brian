@@ -12,6 +12,7 @@ TODO (later):
 * Max delay should be calculated at run time (compress)
 * Replace spike queue data with a dynamic array object?
 * Replace NeuronGroup.__init__ with own stuff
+* Pull out utility functions
 '''
 from brian import *
 from brian.utils.dynamicarray import *
@@ -147,9 +148,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
  
             return res
  
-        # pre code
-        # *********************** TODO ***************
-        # indentation: sth like re.sub(r'^',r'    ',pre)
         pre_code = ""
         pre_code += "_u, _i = unique(_post, return_index = True)\n"
         pre_code += update_code(pre, '_i') + "\n"
@@ -157,7 +155,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         pre_code += "    _post[_i] = -1\n"
         pre_code += "    while (len(_u) < len(_post)) & (_post>-1).any():\n" # !! the any() is time consuming (len(u)>=1??)
         pre_code += "        _u, _i = unique(_post, return_index = True)\n"
-        pre_code += "        " + update_code(pre, '_i[1:]') + "\n"
+        pre_code += indent(update_code(pre, '_i[1:]'),2) + "\n"
         pre_code += "        _post[_i[1:]] = -1 \n"
         log_debug('brian.synapses', '\nPRE CODE:\n'+pre_code)
                 
@@ -192,6 +190,14 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         * presynaptic: an array of presynaptic neuron indexes (synapse->pre)
         * postsynaptic: same
         '''
+        pre_slice = self.presynaptic_indexes(pre)
+        post_slice = self.postsynaptic_indexes(post)
+        # Bound checks
+        if pre_slice[-1]>=len(self.source):
+            raise ValueError('Presynaptic index greater than number of presynaptic neurons')
+        if post_slice[-1]>=len(self.target):
+            raise ValueError('Postsynaptic index greater than number of postsynaptic neurons')
+
         if isinstance(value, (int, bool)): # ex. S[1,7]=True
             # Simple case, either one or multiple synapses between different neurons
             if value is False:
@@ -201,13 +207,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             else:
                 nsynapses = value
 
-            pre_slice = self.presynaptic_indexes(pre)
-            post_slice = self.postsynaptic_indexes(post)
-            # Bound checks
-            if pre_slice[-1]>=len(self.source):
-                raise ValueError('Presynaptic index greater than number of presynaptic neurons')
-            if post_slice[-1]>=len(self.target):
-                raise ValueError('Postsynaptic index greater than number of postsynaptic neurons')
             postsynaptic,presynaptic=meshgrid(post_slice,pre_slice) # synapse -> pre, synapse -> post
             # Flatten
             presynaptic.shape=(presynaptic.size,)
@@ -229,7 +228,29 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             # Turn into dictionaries
             synapses_pre=dict(zip(pre_slice,synapses_pre))
             synapses_post=dict(zip(post_slice,synapses_post))
-        
+        elif isinstance(value,str): # string code assignment
+            raise NotImplementedError
+            '''
+            This below can be fast but is memory expensive.
+            Alternative: vectorise over post neurons only.
+            One possibility is to do a try/except MemoryError.
+            However this approach should be good for assignment of synaptic variables.
+            '''
+            code = re.sub(r'\b' + 'rand\(\)', 'rand(n)', value) # replacing rand()
+            postsynaptic,presynaptic=meshgrid(post_slice,pre_slice) # synapse -> pre, synapse -> post
+            # Flatten
+            presynaptic.shape=(presynaptic.size,)
+            postsynaptic.shape=(postsynaptic.size,)
+            namespace = {'i' : presynaptic,
+                         'j' : postsynaptic,
+                         'n' : len(presynaptic),
+                         'rand': np.random.rand}
+            res = eval(code, namespace) # mask on synapses
+            # TODO: filter out synapses, build synapse_pre and synapse_post
+        elif isinstance(value, np.ndarray):
+            raise NotImplementedError
+            nsynapses = array(value, dtype = int) 
+            
         # Now create the synapses
         self.create_synapses(presynaptic,postsynaptic,synapses_pre,synapses_post)
     
@@ -370,6 +391,9 @@ def smallest_inttype(N):
         return int32
     else:
         return int64
+
+def indent(s,n=1):
+    return re.compile(r'^',re.M).sub('    '*n,s)
 
 if __name__=='__main__':
     #log_level_debug()

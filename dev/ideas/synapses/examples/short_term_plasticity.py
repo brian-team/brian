@@ -1,5 +1,7 @@
 """
-Example with short term plasticity
+Example with short term plasticity.
+
+Doesn't work yet
 """
 from brian import *
 from dev.ideas.synapses.synapses import *
@@ -34,16 +36,20 @@ if True:
                model='''x : 1
                         u : 1
                         w : 1
-                        laststpike : second''',
-               pre='''u=U+(u-U)*exp((t-lastspike)/tauf)
-x=1+(x-1)*exp((t-lastspike)/taud)
-i+=w*u*x
-x*=(1-u)
-u+=U*(1-u)
-lastspike=t''')
+                        lastspike : second''',
+               pre='''u=U+(u-U)*exp(-(t-lastspike)/tauf)
+                      x=1+(x-1)*exp(-(t-lastspike)/taud)
+                      i+=w*u*x
+                      x*=(1-u)
+                      u+=U*(1-u)
+                      lastspike=t''')
     for i in range(N):
-        S.w[i,i]=True
+        S[i,i]=True
     S.w[:]=A_SE
+    # Initialization of STP variables
+    S.x[:] = 1
+    S.u[:] = U
+    S.lastspike[:]=-1e6
 else:
     C = Connection(input, neuron, 'i')
     C.connect_one_to_one(weight=A_SE)
