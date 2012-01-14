@@ -15,7 +15,7 @@ S.w[group1,group2]="(1+cos(i-j))*2*nS" # or pre/post
 
 High-level functions
 --------------------
-S.connect_random(group1,group2,sparseness=0.1)
+(to finish) S.connect_random(group1,group2,sparseness=0.1)
 S.connect_one_to_one(group1,group2)
 
 Equations

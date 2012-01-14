@@ -301,6 +301,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             _namespace['t'] = self.clock._t
             _namespace['_pre']=self.presynaptic[synaptic_events]
             _namespace['_post']=self.postsynaptic[synaptic_events]
+            _namespace['n'] = len(synaptic_events)
             exec self.pre_code in _namespace
         
         self.pre_queue.next()
