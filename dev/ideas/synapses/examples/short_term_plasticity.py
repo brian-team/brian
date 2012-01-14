@@ -2,6 +2,9 @@
 Example with short term plasticity
 """
 from brian import *
+from dev.ideas.synapses.synapses import *
+
+log_level_debug()
 
 tau_e = 3 * ms
 taum = 10 * ms
@@ -24,23 +27,28 @@ di/dt=-i/tau_e:amp
 neuron = NeuronGroup(N, model=eqs_neuron)
 
 if True:
+    taud=1*ms
+    tauf=100*ms
+    U=.1
     S=Synapses(input,neuron,
                model='''x : 1
                         u : 1
                         w : 1
                         laststpike : second''',
                pre='''u=U+(u-U)*exp((t-lastspike)/tauf)
-                      x=1+(x-1)*exp((t-lastspike)/taud)
-                      v=v+w*u*x
-                      x*=(1-u)
-                      u+=U*(1-u)
-                      lastspike=t
-                      ''')
+x=1+(x-1)*exp((t-lastspike)/taud)
+i+=w*u*x
+x*=(1-u)
+u+=U*(1-u)
+lastspike=t''')
+    for i in range(N):
+        S.w[i,i]=True
+    S.w[:]=A_SE
 else:
     C = Connection(input, neuron, 'i')
     C.connect_one_to_one(weight=A_SE)
     stp = STP(C, taud=1 * ms, tauf=100 * ms, U=.1) # facilitation
-    stp=STP(C,taud=100*ms,tauf=10*ms,U=.6) # depression
+    #stp=STP(C,taud=100*ms,tauf=10*ms,U=.6) # depression
 
 trace = StateMonitor(neuron, 'v', record=[0, N - 1])
 

@@ -148,6 +148,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             return res
  
         # pre code
+        # *********************** TODO ***************
+        # indentation: sth like re.sub(r'^',r'    ',pre)
         pre_code = ""
         pre_code += "_u, _i = unique(_post, return_index = True)\n"
         pre_code += update_code(pre, '_i') + "\n"

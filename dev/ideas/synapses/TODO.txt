@@ -1,5 +1,6 @@
 TODO (Synapses)
 ---------------
+* Problem with indentation in pre/post code
 * pre/post code should include rand()
 * Factor things in code generation
 * Faster queue: C version of propagate or insert?
