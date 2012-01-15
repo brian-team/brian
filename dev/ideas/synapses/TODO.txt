@@ -1,37 +1,34 @@
 TODO (Synapses)
 ---------------
+* Synapses.compress():
+	raise warning if there are no synapses
+	precompute offsets at run time (perhaps precompute unless it produces a memory error
+	calculate max delay (with option for specifying it, to allow dynamic delays)
+	perhaps replace dynamic arrays by arrays
+* Synapses.generate_code: check if postsynaptic variables are modified
+* More careful namespace creation in Synapses.update()(see reset/threshold)
+* SpikeQueue callback (to Synapses): this way the clock is only for state updates
 * Bound checks in setitem/getitem
 * pre/post code should include rand()
 * Factor things in code generation
 * Faster queue: C version of propagate or insert?
 * Faster Synapses.update()
 * Synapses with same underlying data (synaptic variables) as another Synapses object (for delayed STDP)
-* Have the option to precompute offsets at run time
-	perhaps precompute unless it produces a memory error
 * setattr (S.w=...)
 * State updates and event-driven stuff
-* Max delay should be calculated at run time (in SpikeQueue)
 * Replace spike queue data with a dynamic array object?
 * Replace NeuronGroup.__init__ with own stuff
-* assignment of strings (S.w[P,Q]='...')
-* state updater
-* generate post code
 * include static variables in pre/post code
 * have a list of variable names
 * deal with suffixes (v_post, v_pre)
-* have lastupdate, t
 * S[:,:]='i<j'
 * S[:,:]=array (boolean or int)
 * generate synapses_post from postsynaptic
 * S.connect_random: fixed number of presynaptic neurons
-* S.connect_one_to_one
+* S.connect_one_to_one (or 'i==j')
 * Update: Have namespaces partially built at run time (call state_(var)),
   or better, extract synaptic events from the synaptic state matrix;
   same stuff for postsynaptic variables
-* Update: execute post code
-* Update: insert rand()
-* Postsynaptic queues
 * S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
 * S[group1,group2]='rand()<0.2' # careful this is highly inefficient
-* Automatically check if synapses_post is needed
 * StateMonitor

@@ -38,15 +38,12 @@ if True:
     S=Synapses(input,neuron,
                model='''x : 1
                         u : 1
-                        w : 1
-                        lastspike : second''',
-               pre='''u=U+(u-U)*exp(-(t-lastspike)/tauf)
-                      x=1+(x-1)*exp(-(t-lastspike)/taud)
+                        w : 1''',
+               pre='''u=U+(u-U)*exp(-(t-lastupdate)/tauf)
+                      x=1+(x-1)*exp(-(t-lastupdate)/taud)
                       i+=w*u*x
                       x*=(1-u)
-                      u+=U*(1-u)
-                      #i+=w*u*x # after update: this is what seems to be done in STP!!
-                      lastspike=t''')
+                      u+=U*(1-u)''')
     for i in range(N):
         S[i,i]=True
     S.w=A_SE

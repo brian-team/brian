@@ -192,7 +192,7 @@ class SpikeQueue(SpikeMonitor):
             if self._offsets is None: # vectorise over synaptic events
                 synaptic_events=hstack([self.synapses[i].data for i in spikes])
                 if len(synaptic_events):
-                    delay = self.delays[synaptic_events] # but it could be post!
+                    delay = self.delays[synaptic_events]
                     self.insert(delay, synaptic_events)
             else: # offsets are precomputed
                 for i in spikes:

@@ -12,7 +12,7 @@ from brian import *
 import time
 from dev.ideas.synapses.synapses import *
 #log_level_debug()
-set_global_preferences(useweave=True,weavecompiler=None)
+#set_global_preferences(useweave=True,weavecompiler=None)
 
 start_time = time.time()
 taum = 20 * ms
@@ -42,16 +42,12 @@ if True:
 ########### NEW SYNAPSE CODE
     Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we', max_delay=2*ms)
     Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi', max_delay=2*ms)
-    Se.connect_random(sparseness=0.02)
-    Si.connect_random(sparseness=0.02)
-    #Se.delay_pre[:]=1*ms
-    #Si.delay_pre[:]=1*ms
-    Se.delay_pre[:]=rand(len(Se.delay_pre.data))*ms
-    Si.delay_pre[:]=rand(len(Si.delay_pre.data))*ms
+    Se[:,:]=0.02
+    Si[:,:]=0.02
+    Se.delay_pre[:]='rand()*ms'
+    Si.delay_pre[:]='rand()*ms'
     #Se.pre_queue.precompute_offsets()
     #Si.pre_queue.precompute_offsets()
-    #Se[:,:] = '''rand() < .02'''
-    #Si[:,:] = '''rand() < .02'''
 else:
 ########### OLD CODE
     Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02, delay=(0*ms,1*ms))

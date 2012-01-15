@@ -2,6 +2,7 @@
 Synaptic variables
 '''
 from brian import * # ugly import
+from brian.inspection import *
 import numpy as np
 
 __all__=['SynapticVariable','SynapticDelayVariable','slice_to_array','neuron_indexes']
@@ -25,12 +26,38 @@ class SynapticVariable(object):
         '''
         self.data=data
         self.synapses=synapses
+        class Replacer(object): # vectorisation in strings
+            def __init__(self, func, n):
+                self.n = n
+                self.func = func
+            def __call__(self):
+                return self.func(self.n)
+        self._Replacer = Replacer
         
     def __getitem__(self,i):
         return self.data[self.synapse_index(i)]
 
     def __setitem__(self,i,value):
-        self.data[self.synapse_index(i)]=value
+        synapses=self.synapse_index(i)
+        if isinstance(value,str):
+            value=self._interpret(value,synapses)
+        self.data[synapses]=value
+        
+    def _interpret(self,value,synapses):
+        '''
+        Interprets value string in the context of the synaptic indexes synapses
+        '''
+        _namespace, vars = namespace(value, level=2, return_unknowns=True)
+        code = compile(value, "StringAssignment", "eval")
+        synapses=slice_to_array(synapses,N=len(self.synapses))
+        _namespace['n']=len(synapses)
+        _namespace['i']=self.synapses.presynaptic[synapses]
+        _namespace['j']=self.synapses.postsynaptic[synapses]
+        for var in vars: # maybe synaptic variables should have higher priority
+            namespace[var] = self.synapses.state(var)[synapses]
+        _namespace['rand'] = self._Replacer(np.random.rand, len(synapses))
+        _namespace['randn'] = self._Replacer(np.random.randn, len(synapses))
+        return eval(code,_namespace)
 
     def synapse_index(self,i):
         '''
@@ -58,11 +85,14 @@ class SynapticDelayVariable(SynapticVariable):
         SynapticVariable.__init__(self,data,synapses)
         
     def __getitem__(self,i):
-        return SynapticVariable.__getitem__(self.i)*self.synapses.clock.dt
+        return SynapticVariable.__getitem__(self,i)*self.synapses.clock.dt
 
     def __setitem__(self,i,value):
         # will not work with computed values (strings)
-        SynapticVariable.__setitem__(self,i,array(array(value)/self.synapses.clock.dt,dtype=self.data.dtype))
+        synapses=self.synapse_index(i)
+        if isinstance(value,str):
+            value=self._interpret(value,synapses)
+        self.data[synapses]=array(array(value)/self.synapses.clock.dt,dtype=self.data.dtype)
 
 def slice_to_array(s,N=None):
     '''
