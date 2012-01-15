@@ -148,15 +148,15 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
  
             return res
  
-        pre_code = ""
-        pre_code += "_u, _i = unique(_post, return_index = True)\n"
-        pre_code += update_code(pre, '_i') + "\n"
-        pre_code += "if len(_u) < len(_post):\n"
-        pre_code += "    _post[_i] = -1\n"
-        pre_code += "    while (len(_u) < len(_post)) & (_post>-1).any():\n" # !! the any() is time consuming (len(u)>=1??)
-        pre_code += "        _u, _i = unique(_post, return_index = True)\n"
-        pre_code += indent(update_code(pre, '_i[1:]'),2) + "\n"
-        pre_code += "        _post[_i[1:]] = -1 \n"
+        pre_code = "_post_neurons = _post[_synapses]\n"
+        pre_code += "_u, _i = unique(_post_neurons, return_index = True)\n"
+        pre_code += update_code(pre, '_synapses[_i]') + "\n"
+        pre_code += "if len(_u) < len(_post_neurons):\n"
+        pre_code += "    _post_neurons[_i] = -1\n"
+        pre_code += "    while (len(_u) < len(_post_neurons)) & (_post_neurons>-1).any():\n" # !! the any() is time consuming (len(u)>=1??)
+        pre_code += "        _u, _i = unique(_post_neurons, return_index = True)\n"
+        pre_code += indent(update_code(pre, '_synapses[_i[1:]]'),2) + "\n"
+        pre_code += "        _post_neurons[_i[1:]] = -1 \n"
         log_debug('brian.synapses', '\nPRE CODE:\n'+pre_code)
                 
         # Commpile
@@ -319,11 +319,16 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             # Careful: for dynamic arrays you need to get fresh references at run time
             _namespace = self.pre_namespace
             #_namespace['_synapses'] = synaptic_events # not needed any more
-            for var in self.var_index: # in fact I should filter out integers ; also static variables are not included here
-                _namespace[var] = self.state_(var)[synaptic_events] # could be faster to directly extract a submatrix from _S
+            #for var in self.var_index: # in fact I should filter out integers ; also static variables are not included here
+            #    if isinstance(var, str):
+            #        _namespace[var] = self.state_(var)[synaptic_events] # could be faster to directly extract a submatrix from _S
+            for var,i in self.var_index.iteritems(): # no static variables here
+                if isinstance(var, str):
+                    _namespace[var]=self._S[i,:]
+            _namespace['_synapses']=synaptic_events
             _namespace['t'] = self.clock._t
-            _namespace['_pre']=self.presynaptic[synaptic_events]
-            _namespace['_post']=self.postsynaptic[synaptic_events]
+            _namespace['_pre']=self.presynaptic
+            _namespace['_post']=self.postsynaptic
             _namespace['n'] = len(synaptic_events)
             exec self.pre_code in _namespace
         

@@ -1,12 +1,12 @@
 """
 Example with short term plasticity.
 
-Doesn't work yet
+Works!
 """
 from brian import *
 from dev.ideas.synapses.synapses import *
 
-log_level_debug()
+#log_level_debug()
 
 tau_e = 3 * ms
 taum = 10 * ms
@@ -32,6 +32,9 @@ if True:
     taud=1*ms
     tauf=100*ms
     U=.1
+    #taud=100*ms
+    #tauf=10*ms
+    #U=.6
     S=Synapses(input,neuron,
                model='''x : 1
                         u : 1
@@ -42,14 +45,15 @@ if True:
                       i+=w*u*x
                       x*=(1-u)
                       u+=U*(1-u)
+                      #i+=w*u*x # after update: this is what seems to be done in STP!!
                       lastspike=t''')
     for i in range(N):
         S[i,i]=True
-    S.w[:]=A_SE
+    S.w=A_SE
     # Initialization of STP variables
-    S.x[:] = 1
-    S.u[:] = U
-    S.lastspike[:]=-1e6
+    S.x = 1
+    S.u = U
+    S.lastspike=-1e6
 else:
     C = Connection(input, neuron, 'i')
     C.connect_one_to_one(weight=A_SE)
