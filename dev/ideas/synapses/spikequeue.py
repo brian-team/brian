@@ -79,7 +79,8 @@ class SpikeQueue(SpikeMonitor):
       method (at run time)
     '''
     def __init__(self, source, synapses, delays,
-                 max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT):
+                 max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT,
+                 precompute_offsets = True):
         '''
         ``source'' is the neuron group that sends spikes
         ``synapses'' is a list of synapses (synapses[i]=array of synapse indexes for neuron i)
@@ -89,6 +90,7 @@ class SpikeQueue(SpikeMonitor):
         self.source = source #NeuronGroup
         self.delays = delays
         self.synapses = synapses
+        self._precompute_offsets=precompute_offsets
         
         self.max_delay = max_delay # do we need this?
         nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
@@ -107,6 +109,14 @@ class SpikeQueue(SpikeMonitor):
         #useweave=get_global_preference('useweave')
         #compiler=get_global_preference('weavecompiler')
 
+    def compress(self):
+        '''
+        Prepare the structure:
+        * calculate max_delay
+        * calculate offsets
+        '''
+        if (self._offsets is None) and self._precompute_offsets:
+            self.precompute_offsets()
 
     ################################ SPIKE QUEUE DATASTRUCTURE ######################
     def next(self):

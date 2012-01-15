@@ -217,7 +217,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         elif isinstance(value, (int, bool)): # ex. S[1,7]=True
             # Simple case, either one or multiple synapses between different neurons
             if value is False:
-                raise ValueError('Synapses can be deleted')
+                raise ValueError('Synapses cannot be deleted')
             elif value is True:
                 nsynapses = 1
             else:
@@ -416,6 +416,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         which can be a integer, an array or a subgroup
         '''
         return neuron_indexes(x,self.target)
+    
+    def compress(self):
+        pass
     
     def __repr__(self):
         return 'Synapses object with '+ str(len(self))+ ' synapses'

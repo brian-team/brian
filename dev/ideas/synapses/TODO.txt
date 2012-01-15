@@ -1,29 +1,33 @@
 TODO (Synapses)
 ---------------
+High priority:
 * Synapses.compress():
 	raise warning if there are no synapses
-	precompute offsets (perhaps precompute unless it produces a memory error)
 	calculate max delay (with option for specifying it, to allow dynamic delays)
+	-> these 2 could be done in SpikeQueue
 	perhaps replace dynamic arrays by arrays
+* pre/post code should include rand()
+* setattr (S.w=...)
+* deal with suffixes (v_post, v_pre)
+* generate synapses_post from postsynaptic (for connect_random)
+* S[:,:]='i<j'
+* barrel cortex example
+
+Low priority:
 * Synapses.generate_code: check if postsynaptic variables are modified
 * More careful namespace creation in Synapses.update()(see reset/threshold)
 * SpikeQueue callback (to Synapses): this way the clock is only for state updates
 * Bound checks in setitem/getitem
-* pre/post code should include rand()
 * Factor things in code generation
 * Faster queue: C version of propagate or insert?
 * Faster Synapses.update()
 * Synapses with same underlying data (synaptic variables) as another Synapses object (for delayed STDP)
-* setattr (S.w=...)
 * State updates and event-driven stuff
 * Replace spike queue data with a dynamic array object?
 * Replace NeuronGroup.__init__ with own stuff
 * include static variables in pre/post code
 * have a list of variable names
-* deal with suffixes (v_post, v_pre)
-* S[:,:]='i<j'
 * S[:,:]=array (boolean or int)
-* generate synapses_post from postsynaptic (for connect_random)
 * S.connect_random: fixed number of presynaptic neurons
 * S.connect_one_to_one (or 'i==j')
 * Update: Have namespaces partially built at run time (call state_(var)),
