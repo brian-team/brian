@@ -4,7 +4,6 @@ High priority:
 * Synapses.compress():
 	raise warning if there are no synapses
 	calculate max delay (with option for specifying it, to allow dynamic delays)
-	-> these 2 could be done in SpikeQueue
 	perhaps replace dynamic arrays by arrays
 * pre/post code should include rand()
 * setattr (S.w=...)
