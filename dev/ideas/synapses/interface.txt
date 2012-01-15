@@ -11,7 +11,7 @@ Modification and access
 (done) S.w[1,:]=2*nS
 (done) S.w[2,3,1] # 2nd synapse from 2->3
 (done) S.w[2,3]=(1*nS,2*nS)
-S.w[group1,group2]="(1+cos(i-j))*2*nS" # or pre/post
+(done) S.w[group1,group2]="(1+cos(i-j))*2*nS" # or pre/post
 
 High-level functions
 --------------------
@@ -82,8 +82,8 @@ Undefined variables are searched for:
 pre/post variables can be explicitly specified with suffixes _pre and _post.
 
 In pre/post code:
-* t is the current time
-* lastspike holds the time of last update of the synapse
+(done)* t is the current time
+(done)* lastspike holds the time of last update of the synapse
 * rand() is vectorised
 
 How about:
@@ -105,4 +105,3 @@ The Synapses class should be usable by:
 	 	can be accessed with V[(2,3)] (this is more or less the ParameterVector)
 	unit(varname) returns the units of varname
 	state = state_
-	

@@ -2,7 +2,7 @@ TODO (Synapses)
 ---------------
 * Synapses.compress():
 	raise warning if there are no synapses
-	precompute offsets at run time (perhaps precompute unless it produces a memory error
+	precompute offsets (perhaps precompute unless it produces a memory error)
 	calculate max delay (with option for specifying it, to allow dynamic delays)
 	perhaps replace dynamic arrays by arrays
 * Synapses.generate_code: check if postsynaptic variables are modified
@@ -23,7 +23,7 @@ TODO (Synapses)
 * deal with suffixes (v_post, v_pre)
 * S[:,:]='i<j'
 * S[:,:]=array (boolean or int)
-* generate synapses_post from postsynaptic
+* generate synapses_post from postsynaptic (for connect_random)
 * S.connect_random: fixed number of presynaptic neurons
 * S.connect_one_to_one (or 'i==j')
 * Update: Have namespaces partially built at run time (call state_(var)),
