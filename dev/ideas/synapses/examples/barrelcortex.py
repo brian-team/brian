@@ -10,6 +10,7 @@ In this version, STDP is faster than in the paper so that the script runs in jus
 few minutes.
 
 Original time: 4m13 s
+With Synapses: 6m33 s
 '''
 from brian import *
 import time
@@ -149,9 +150,9 @@ run(5*second,report='text')
 
 figure()
 # Preferred direction
-# Below: doesn't work because w[:,i] is the non zero elements only
-# perhaps we need to add presynaptic and postsynaptic
-selectivity=array([mean(array(feedforward.w[:,i])*exp(layer4.selectivity*1j)) for i in range(len(layer23exc))])
+# perhaps we need to add presynaptic and postsynaptic with 2D/3D access
+# This is extremely slow with feedforward.w[:,i]!
+selectivity=array([mean(array(feedforward.w[feedforward.synapses_post[i][:]])*exp(layer4.selectivity[feedforward.presynaptic[feedforward.synapses_post[i][:]]]*1j)) for i in range(len(layer23exc))])
 selectivity=(arctan2(selectivity.imag,selectivity.real) % (2*pi))*180./pi
 
 I=zeros((barrelarraysize*M23exc,barrelarraysize*M23exc))

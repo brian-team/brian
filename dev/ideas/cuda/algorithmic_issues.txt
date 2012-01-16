@@ -7,3 +7,15 @@ The main issue is compaction.
 Synapses
 --------
 The main issue is probably coalescence.
+Consider two connected groups of neurons P and Q, with p synapses per neuron on average.
+
+Let us first consider forward propagation with various conduction delays.
+When a spike is produced by presynaptic neuron i, the spike reaches p synaptic targets,
+at different times. These spikes will then affect synaptic variables, or postsynaptic
+variables.
+We consider that these variables are instantly modified (i.e., no buffering).
+At any given time step, we have to consider a set of incoming spikes from different neurons.
+Assuming that different neurons fire independently, variables
+corresponding to different presynaptic neurons must be considered as non
+contiguous. Therefore, it is enough to examine the case of spikes coming from a single
+presynaptic neuron. Synapses
