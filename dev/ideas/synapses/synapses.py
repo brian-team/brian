@@ -419,7 +419,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             # N.B.: the sample method is implemented in Python and it is not in Scipy
             postneurons = sample(xrange(m), k)
             #postneurons.sort() # sorting is unnecessary
-            postsynaptic.append(postneurons)
+            postsynaptic.append(post[postneurons])
             nsynapses+=k
         presynaptic=hstack(presynaptic)
         postsynaptic=hstack(postsynaptic)

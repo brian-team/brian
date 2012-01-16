@@ -9,7 +9,7 @@ target = NeuronGroup(2, model = '''dv/dt = -v/(10*ms):1''')
 syn = Synapses(source, target, 
                model = 'w:1', pre = 'v+=w')
 
-syn[1,1] = 1.
+syn[1,1] = 1
 syn[2,1] = 1.
 syn[0,0] = 1
 syn[1,0] = 1
@@ -19,6 +19,8 @@ syn.w = 50
 
 M = StateMonitor(target, 'v', record = True)
 print syn
+print syn.w[:],syn.presynaptic,syn.postsynaptic
+
 run(40*ms)
 
 
