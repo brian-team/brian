@@ -1,9 +1,5 @@
 Notes
 =====
-TODO:
-* SpikeQueue propagate: use the faster mappings (i->synapse,delay)
-* Synapses init: avoid the ugly **kwargs
-
 Synapses variables
 ------------------
 * presynaptic i -> synapse indexes
