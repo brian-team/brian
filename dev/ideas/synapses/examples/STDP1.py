@@ -10,6 +10,7 @@ Original time: 278 s
 with DelayConnection: 478 s
 New time: 479 s
     with precomputed offsets: 444 s
+    with fixed delays: 454 s (?)
 '''
 from brian import *
 from dev.ideas.synapses.synapses import *

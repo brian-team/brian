@@ -114,19 +114,26 @@ class SpikeQueue(SpikeMonitor):
         Prepare the structure:
         * calculate maximum delay
         * calculate offsets
+        * check if delays are homogeneous
         '''
-        if (self._offsets is None) and self._precompute_offsets:
-            self.precompute_offsets()
-
         # Adjust the maximum delay and number of events per timestep if necessary
         nsteps=max(self.delays)+1
         maxevents=self.X.shape[1]
         if maxevents==INITIAL_MAXSPIKESPER_DT:
             maxevents=max(INITIAL_MAXSPIKESPER_DT,max([len(targets) for targets in self.synapses]))
+        # Check if homogeneous delays
+        if (nsteps>self.X.shape[0]): 
+            self._homogeneous=(nsteps==min(self.delays)+1)
+        else: # this means that the user has set a larger delay than necessary, which means the delays are not fixed
+            self._homogeneous=False
         if (nsteps>self.X.shape[0]) or (maxevents>self.X.shape[1]):
             self.X = zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
             self.X_flat = self.X.reshape(nsteps*maxevents,)
             self.n = zeros(nsteps, dtype = int) # number of events in each time step
+
+        # Precompute offsets
+        if (self._offsets is None) and self._precompute_offsets:
+            self.precompute_offsets()
 
     ################################ SPIKE QUEUE DATASTRUCTURE ######################
     def next(self):
@@ -191,6 +198,19 @@ class SpikeQueue(SpikeMonitor):
         #             old_nevents)\
         #             % len(self.X)]=target
         
+    def insert_homogeneous(self,delay,target):
+        '''
+        Inserts events at a fixed delay
+        '''
+        timestep = (self.currenttime + delay) % len(self.n)
+        nevents=len(target)
+        m = max(self.n[timestep])+nevents+1 # If overflow, then at least one self.n is bigger than the size
+        if (m >= self.X.shape[1]):
+            self.resize(m+1) # was m previously (not enough)
+        k=timestep*self.X.shape[1]+self.n[timestep]
+        self.X_flat[k:k+nevents]=target
+        self.n[timestep]+=nevents
+        
     def resize(self, maxevents):
         '''
         Resizes the underlying data structure (number of columns = spikes per dt).
@@ -209,7 +229,10 @@ class SpikeQueue(SpikeMonitor):
         
     def propagate(self, spikes):
         if len(spikes):
-            if self._offsets is None: # vectorise over synaptic events
+            if self._homogeneous: # homogeneous delays
+                synaptic_events=hstack([self.synapses[i].data for i in spikes]) # could be not efficient
+                self.insert_homogeneous(self.delays[0],synaptic_events)
+            elif self._offsets is None: # vectorise over synaptic events
                 synaptic_events=hstack([self.synapses[i].data for i in spikes])
                 if len(synaptic_events):
                     delay = self.delays[synaptic_events]

@@ -6,6 +6,7 @@ Connection (no delay): 3.5 s
 DelayConnection: 5.2 s, 5.7 s with random delays
 Synapses: 6.9 s, 7.8 s with random delays
 Synapses with precomputed offsets: 6.2 s, 7.2 s with random delays
+Synapses with fixed delays: 6.4 s
 """
 
 from brian import *

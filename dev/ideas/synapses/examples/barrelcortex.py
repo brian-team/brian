@@ -145,7 +145,7 @@ def stimulation():
 
 new_direction()
 
-run(5*second,report='text')
+run(1*ms,report='text')
 
 figure()
 # Preferred direction
