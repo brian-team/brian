@@ -3,6 +3,7 @@ TODO (Synapses)
 High priority:
 * barrel cortex example
 * More docstrings
+* accelerate Synapses.generate_code() (.any())
 
 Low priority:
 * S[P,Q]='...' : with subgroups, shift the values of i,j

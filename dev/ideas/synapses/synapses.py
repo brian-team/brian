@@ -164,6 +164,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             code_str += "if len(_u) < len(_post_neurons):\n"
             code_str += "    _post_neurons[_i] = -1\n"
             code_str += "    while (len(_u) < len(_post_neurons)) & (_post_neurons>-1).any():\n" # !! the any() is time consuming (len(u)>=1??)
+            #code_str += "    while (len(_u) < len(_post_neurons)) & (len(_u)>1):\n" # !! the any() is time consuming (len(u)>=1??)
             code_str += "        _u, _i = unique(_post_neurons, return_index = True)\n"
             code_str += indent(update_code(code, '_synapses[_i[1:]]'),2) + "\n"
             code_str += "        _post_neurons[_i[1:]] = -1 \n"
@@ -186,7 +187,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         2) synapses are added, not replaced (e.g. S[1,2]=True;S[1,2]=True creates 2 synapses)
         
         TODO:
-        * S[:,:]='i<j'
         * S[:,:]=array (boolean or int)
         '''
         if not isinstance(key, tuple): # we should check that number of elements is 2 as well
