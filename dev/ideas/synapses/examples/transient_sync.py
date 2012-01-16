@@ -4,7 +4,7 @@ with distance-dependent synaptic weights (organised as a ring)
 '''
 from brian import *
 import time
-from dev.ideas.synapses.synapses import *
+from brian.experimental.synapses import *
 
 tau = 10 * ms
 N = 100

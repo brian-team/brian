@@ -3,7 +3,7 @@ One synapse within several possibilities.
 Synapse from 2->3.
 '''
 from brian import *
-from dev.ideas.synapses.synapses import *
+from brian.experimental.synapses import *
 
 #log_level_debug()
 

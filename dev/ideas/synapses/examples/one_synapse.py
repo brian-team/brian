@@ -2,7 +2,7 @@
 One synapse
 '''
 from brian import *
-from dev.ideas.synapses.synapses import *
+from brian.experimental.synapses import *
 
 P=NeuronGroup(1,model='dv/dt=1/(10*ms):1',threshold=1,reset=0)
 Q=NeuronGroup(1,model='v:1')

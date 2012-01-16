@@ -11,7 +11,7 @@ Synapses with fixed delays: 6.4 s
 
 from brian import *
 import time
-from dev.ideas.synapses.synapses import *
+from brian.experimental.synapses import *
 #log_level_debug()
 #set_global_preferences(useweave=True,weavecompiler=None)
 

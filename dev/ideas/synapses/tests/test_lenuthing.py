@@ -1,5 +1,5 @@
 from brian import *
-from dev.ideas.synapses import *
+from brian.experimental.synapses import *
 
 reinit_default_clock()
 

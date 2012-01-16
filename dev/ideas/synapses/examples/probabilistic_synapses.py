@@ -4,7 +4,7 @@ Probabilistic synapses
 Seems to work.
 """
 from brian import *
-from dev.ideas.synapses.synapses import *
+from brian.experimental.synapses import *
 
 #log_level_debug()
 

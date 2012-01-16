@@ -8,7 +8,7 @@ from both ears, with different delays).
 Romain Brette
 '''
 from brian import *
-from dev.ideas.synapses.synapses import *
+from brian.experimental.synapses import *
 from time import time
 
 defaultclock.dt = .02 * ms

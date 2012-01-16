@@ -1,6 +1,6 @@
 from brian import *
 import time
-from dev.ideas.synapses.synapses import *
+from brian.experimental.synapses import *
 
 N=10
 

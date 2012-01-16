@@ -30,13 +30,13 @@ Nemo:  400 000 000 spikes/second
 Jayram: 80 000 000 spikes/second
 """
 from brian import *
-from dev.ideas.synapses.synapses import *
+from brian.experimental.synapses import *
 from time import time
 
 #log_level_debug()
 
 N=100
-M=1
+M=10
 rate=10000*Hz
 duration=1*second
 P=NeuronGroup(1,model='dv/dt=rate :1',threshold=1,reset=0)

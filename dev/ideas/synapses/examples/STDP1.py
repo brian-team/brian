@@ -13,7 +13,7 @@ New time: 479 s
     with fixed delays: 454 s (?)
 '''
 from brian import *
-from dev.ideas.synapses.synapses import *
+from brian.experimental.synapses import *
 from time import time
 
 N = 1000

@@ -8,14 +8,59 @@ Synapses
 --------
 The main issue is probably coalescence.
 Consider two connected groups of neurons P and Q, with p synapses per neuron on average.
+I also consider the most interesting case, when there is STDP and heterogeneous delays.
 
+Forward propagation
+^^^^^^^^^^^^^^^^^^^
 Let us first consider forward propagation with various conduction delays.
 When a spike is produced by presynaptic neuron i, the spike reaches p synaptic targets,
-at different times. These spikes will then affect synaptic variables, or postsynaptic
+at different times. These spikes will then affect synaptic variables, and/or postsynaptic
 variables.
+
 We consider that these variables are instantly modified (i.e., no buffering).
+In particular, synaptic weight is modified by each incoming spike.
 At any given time step, we have to consider a set of incoming spikes from different neurons.
 Assuming that different neurons fire independently, variables
 corresponding to different presynaptic neurons must be considered as non
-contiguous. Therefore, it is enough to examine the case of spikes coming from a single
-presynaptic neuron. Synapses
+contiguous (in the sense that contiguity can only occur by chance).
+Therefore, it is enough to examine the case of spikes coming from a single
+presynaptic neuron. Synapses activated with different delays will not be processed at the
+same time, and therefore can also be considered as non-contiguous (in the sense that
+they will always imply multiple memory accesses). Therefore, synapses that may be
+considered as contiguous are only those with the same presynaptic neuron and delay.
+In summary, optimizing global memory accesses means optimizing the contiguity of
+synaptic variables corresponding the same presynaptic neuron and delay, i.e.,
+minimizing the number of memory blocks occupied by a given presynaptic neuron and delay.
+
+Backward propagation
+^^^^^^^^^^^^^^^^^^^^
+In the most general setting, the same reasoning applies to backward propagation.
+This means simultaneously:
+* minimizing the number of memory blocks occupied by a given presynaptic neuron and delay.
+* minimizing the number of memory blocks occupied by a given postsynaptic neuron and backward delay.
+
+However, in most practical cases, the backward delay is zero or constant.
+This means that the second constraint becomes:
+* minimizing the number of memory blocks occupied by a given postsynaptic neuron.
+
+Swapping
+^^^^^^^^
+What happens if synapse indexes i,j are swapped? I note Sf(i) the forward set of i (set of all synapses
+that are simultaneously modified in the forward direction) and Sb(i) the backward set. I note B(i) the
+memory block of i (which is a set of 32 indexes).
+* A change in cost only occurs if B(i) and B(j) are different.
+* A negative change in cost only occurs if B(i) or B(j) is represented only once in one of Sf(i), Sb(i), Sf(j), Sb(j).
+  (That is, the intersection of B(i) and Sf(i) is just one element).
+* The net change is:
+	* -1 access in each set of (Sf(i),Sb(i)) where B(i) is represented only once 
+	* +1 access in each set of (Sf(j),Sb(j)) where B(i) is not represented
+	* -1 access in each set of (Sf(j),Sb(j)) where B(j) is represented only once 
+	* +1 access in each set of (Sf(i),Sb(i)) where B(j) is not represented
+
+Buffering
+^^^^^^^^^
+Another option is to apply synaptic changes only after some time, so as to access more memory
+at the same time. This is not possible for all cases. In particular, propagation of spikes (v+=w)
+has to be instantaneous. However, in this case we could imagine optimisations, e.g. reading w
+at the time when spikes are produced rather than received (in this case we must minimize the
+number of memory blocks occuper by a given presynaptic neuron).
