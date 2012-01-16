@@ -2,8 +2,7 @@ Creation
 --------
 (done) S[2,3:5]=True # or an array
 S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
-S[group1,group2]='rand()<0.2' # careful this is highly inefficient
-S[P,Q]=one_to_one(P,Q) # sparse boolean matrix
+(done) S[group1,group2]='rand()<0.2' # careful this is highly inefficient
 
 Modification and access
 -----------------------
@@ -15,8 +14,8 @@ Modification and access
 
 High-level functions
 --------------------
-(to finish) S.connect_random(group1,group2,sparseness=0.1)
-S.connect_one_to_one(group1,group2)
+(done) S.connect_random(group1,group2,sparseness=0.1)
+(maybe not necessary) S.connect_one_to_one(group1,group2)
 
 Equations
 ---------

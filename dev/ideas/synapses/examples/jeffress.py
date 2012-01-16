@@ -45,9 +45,9 @@ dv/dt=-v/tau+sigma*(2./tau)**.5*xi : 1
 neurons = NeuronGroup(N, model=eqs_neurons, threshold=1, reset=0)
 
 if True: #20.3 s
-    synapses = Synapses(ears,neurons,model='w:1',pre='v+=w', max_delay=1.1 * max_delay)
+    synapses = Synapses(ears,neurons,model='w:1',pre='v+=w')
     synapses[:,:]=True
-    synapses.w[:]=.5
+    synapses.w=.5
     synapses.delay[0, :] = linspace(0 * ms, 1.1 * max_delay, N)
     synapses.delay[1, :] = linspace(0 * ms, 1.1 * max_delay, N)[::-1]    
 else: #19.7 s

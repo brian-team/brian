@@ -1,18 +1,15 @@
 TODO (Synapses)
 ---------------
 High priority:
-* Synapses.compress():
-	raise warning if there are no synapses
-	calculate max delay (with option for specifying it, to allow dynamic delays)
-	perhaps replace dynamic arrays by arrays
-* pre/post code should include rand()
-* setattr (S.w=...)
-* deal with suffixes (v_post, v_pre)
-* generate synapses_post from postsynaptic (for connect_random)
-* S[:,:]='i<j'
 * barrel cortex example
+* More docstrings
 
 Low priority:
+* S[P,Q]='...' : with subgroups, shift the values of i,j
+* S[:,:]='i<j' : int
+* compress: perhaps replace dynamic arrays by arrays
+* SynapticVariable: should be usable as a numpy array
+* deal with suffixes (v_post, v_pre)
 * Synapses.generate_code: check if postsynaptic variables are modified
 * More careful namespace creation in Synapses.update()(see reset/threshold)
 * SpikeQueue callback (to Synapses): this way the clock is only for state updates
@@ -33,5 +30,4 @@ Low priority:
   or better, extract synaptic events from the synaptic state matrix;
   same stuff for postsynaptic variables
 * S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
-* S[group1,group2]='rand()<0.2' # careful this is highly inefficient
-* StateMonitor
+* StateMonitor (already works with synapse indexes)

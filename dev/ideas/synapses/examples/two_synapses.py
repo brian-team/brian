@@ -9,7 +9,7 @@ from dev.ideas.synapses.synapses import *
 
 P=NeuronGroup(2,model='dv/dt=1/(10*ms):1',threshold=1,reset=0)
 Q=NeuronGroup(4,model='v:1')
-S=Synapses(P,Q,model='w:1',pre='v+=w',max_delay=1*ms)
+S=Synapses(P,Q,model='w:1',pre='v+=w')
 M=StateMonitor(Q,'v',record=True)
 
 S[0,2]=True

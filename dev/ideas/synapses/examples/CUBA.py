@@ -40,14 +40,12 @@ wi = (-20 * 4.5 / 10) * mV # inhibitory synaptic weight
 
 if True:
 ########### NEW SYNAPSE CODE
-    Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we', max_delay=2*ms)
-    Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi', max_delay=2*ms)
+    Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we')
+    Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi')
     Se[:,:]=0.02
     Si[:,:]=0.02
-    Se.delay_pre[:]='rand()*ms'
-    Si.delay_pre[:]='rand()*ms'
-    #Se.pre_queue.precompute_offsets()
-    #Si.pre_queue.precompute_offsets()
+    Se.delay='rand()*ms'
+    Si.delay='rand()*ms'
 else:
 ########### OLD CODE
     Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02, delay=(0*ms,1*ms))

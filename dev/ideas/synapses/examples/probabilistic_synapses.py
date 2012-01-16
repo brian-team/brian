@@ -15,7 +15,7 @@ neurons=NeuronGroup(N,model='dv/dt=-v/tau : 1')
 
 S=Synapses(input,neurons,model="""w : 1
                                   p : 1 # transmission probability""",
-                         pre="v+=w*(rand(n)<p)")
+                         pre="v+=w*(rand()<p)")
 # Transmission probabilities
 S[:,:]=True
 S.w=0.5

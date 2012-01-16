@@ -52,15 +52,12 @@ S = Synapses(input, neurons,
              w=clip(w+A_pre,0,gmax)''')
 neurons.v = vr
 S[:,:]=True
-S.w[:]='rand()*gmax'
-S.lastupdate[:]=-1e6
-#S.pre_queue.precompute_offsets()
-#S.post_queue.precompute_offsets()
+S.w='rand()*gmax'
 
 rate = PopulationRateMonitor(neurons)
 
 start_time = time()
-run(10 * second, report='text')
+run(100 * second, report='text')
 print "Simulation time:", time() - start_time
 
 subplot(311)

@@ -27,7 +27,7 @@ Synapses.
 from brian import * # remove this
 from brian.stdunits import ms
 
-INITIAL_MAXSPIKESPER_DT = 1
+INITIAL_MAXSPIKESPER_DT = 1 # I guess it could be larger no?
 # This is a 2D circular array, but also a SpikeMonitor
 
 __all__=['SpikeQueue']
@@ -73,10 +73,6 @@ class SpikeQueue(SpikeMonitor):
     
     It automatically updates the underlying structure by instantiating the propagate() method of the SpikeMonitor
     
-    Ideas:
-    ------
-    * remove the max_delay keyword and have the structure created with another
-      method (at run time)
     '''
     def __init__(self, source, synapses, delays,
                  max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT,
@@ -85,6 +81,12 @@ class SpikeQueue(SpikeMonitor):
         ``source'' is the neuron group that sends spikes
         ``synapses'' is a list of synapses (synapses[i]=array of synapse indexes for neuron i)
         ``delays'' is an array of delays (delays[k]=delay of synapse k)
+        ``max_delay''
+            The maximum delay (in second) of synaptic events. At run time, the
+            structure is resized to the maximum delay in ``delays'', and thus
+            the ``max_delay'' should only be specified if delays can change
+            during the simulation (in which case offsets should not be
+            precomputed).
         '''
         # SpikeMonitor structure
         self.source = source #NeuronGroup
@@ -92,10 +94,8 @@ class SpikeQueue(SpikeMonitor):
         self.synapses = synapses
         self._precompute_offsets=precompute_offsets
         
-        self.max_delay = max_delay # do we need this?
-        nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
-
         # number of time steps, maximum number of spikes per time step
+        nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
         self.X = zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
         self.X_flat = self.X.reshape(nsteps*maxevents,)
         self.currenttime = 0
@@ -112,11 +112,21 @@ class SpikeQueue(SpikeMonitor):
     def compress(self):
         '''
         Prepare the structure:
-        * calculate max_delay
+        * calculate maximum delay
         * calculate offsets
         '''
         if (self._offsets is None) and self._precompute_offsets:
             self.precompute_offsets()
+
+        # Adjust the maximum delay and number of events per timestep if necessary
+        nsteps=max(self.delays)+1
+        maxevents=self.X.shape[1]
+        if maxevents==INITIAL_MAXSPIKESPER_DT:
+            maxevents=max(INITIAL_MAXSPIKESPER_DT,max([len(targets) for targets in self.synapses]))
+        if (nsteps>self.X.shape[0]) or (maxevents>self.X.shape[1]):
+            self.X = zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
+            self.X_flat = self.X.reshape(nsteps*maxevents,)
+            self.n = zeros(nsteps, dtype = int) # number of events in each time step
 
     ################################ SPIKE QUEUE DATASTRUCTURE ######################
     def next(self):
@@ -125,7 +135,7 @@ class SpikeQueue(SpikeMonitor):
         self.currenttime=(self.currenttime+1) % len(self.n)
         
     def peek(self):
-        # Events in the current timestep        
+        # Events in the current timestep      
         return self.X[self.currenttime,:self.n[self.currenttime]]
     
     def precompute_offsets(self):

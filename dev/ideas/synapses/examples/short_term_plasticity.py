@@ -44,13 +44,11 @@ if True:
                       i+=w*u*x
                       x*=(1-u)
                       u+=U*(1-u)''')
-    for i in range(N):
-        S[i,i]=True
+    S[:,:]='i==j' # one to one connection
     S.w=A_SE
     # Initialization of STP variables
     S.x = 1
     S.u = U
-    S.lastspike=-1e6
 else:
     C = Connection(input, neuron, 'i')
     C.connect_one_to_one(weight=A_SE)

@@ -37,24 +37,25 @@ class SynapticVariable(object):
     def __getitem__(self,i):
         return self.data[self.synapse_index(i)]
 
-    def __setitem__(self,i,value):
+    def __setitem__(self,i,value,level=1):
         synapses=self.synapse_index(i)
         if isinstance(value,str):
-            value=self._interpret(value,synapses)
+            value=self._interpret(value,synapses,level+1)
         self.data[synapses]=value
         
-    def _interpret(self,value,synapses):
+    def _interpret(self,value,synapses,level):
         '''
         Interprets value string in the context of the synaptic indexes synapses
         '''
-        _namespace, vars = namespace(value, level=2, return_unknowns=True)
+        _namespace = namespace(value, level=level)
         code = compile(value, "StringAssignment", "eval")
         synapses=slice_to_array(synapses,N=len(self.synapses))
         _namespace['n']=len(synapses)
         _namespace['i']=self.synapses.presynaptic[synapses]
         _namespace['j']=self.synapses.postsynaptic[synapses]
-        for var in vars: # maybe synaptic variables should have higher priority
-            namespace[var] = self.synapses.state(var)[synapses]
+        for var in self.synapses.var_index: # maybe synaptic variables should have higher priority
+            if isinstance(var,str):
+                _namespace[var] = self.synapses.state(var)[synapses]
         _namespace['rand'] = self._Replacer(np.random.rand, len(synapses))
         _namespace['randn'] = self._Replacer(np.random.randn, len(synapses))
         return eval(code,_namespace)
@@ -87,11 +88,11 @@ class SynapticDelayVariable(SynapticVariable):
     def __getitem__(self,i):
         return SynapticVariable.__getitem__(self,i)*self.synapses.clock.dt
 
-    def __setitem__(self,i,value):
+    def __setitem__(self,i,value,level=1):
         # will not work with computed values (strings)
         synapses=self.synapse_index(i)
         if isinstance(value,str):
-            value=self._interpret(value,synapses)
+            value=self._interpret(value,synapses,level+1)
         self.data[synapses]=array(array(value)/self.synapses.clock.dt,dtype=self.data.dtype)
 
 def slice_to_array(s,N=None):

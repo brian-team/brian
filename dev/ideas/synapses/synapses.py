@@ -1,18 +1,5 @@
 '''
 The Synapses class - see BEP-21
-
-TODO:
-* Automatically precompute offsets
-* Do the TODOs
-
-TODO (later):
-* setattr
-* Faster queue
-* State updates and event-driven stuff
-* Max delay should be calculated at run time (compress)
-* Replace spike queue data with a dynamic array object?
-* Replace NeuronGroup.__init__ with own stuff
-* Pull out utility functions
 '''
 from brian import *
 from brian.utils.dynamicarray import *
@@ -25,6 +12,7 @@ from numpy.random import binomial
 from brian.utils.documentation import flattened_docstring
 from random import sample
 import re
+import warnings
 
 __all__ = ['Synapses']
 
@@ -37,8 +25,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
              pre = None, post = None):
         N=len(source) # initial number of synapses = number of presynaptic neurons
         target=target or source # default is target=source
-        self.source=source
-        self.target=target
 
         # Check clocks. For the moment we enforce the same clocks for all objects
         clock = clock or source.clock
@@ -77,6 +63,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         Things we may need to add:
         * _pre and _post suffixes
         '''
+        self.source=source
+        self.target=target
+        # Set last spike to -infinity
+        if 'lastupdate' in self.var_index:
+            self.lastupdate=-1e6
         # _S is turned to a dynamic array - OK this is probably not good! we may lose references at this point
         S=self._S
         self._S=DynamicArray(S.shape)
@@ -95,9 +86,15 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         # We use a loop instead of *, otherwise only 1 dynamic array is created
         self.synapses_pre=[DynamicArray(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.source))]
         self.synapses_post=[DynamicArray(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.target))]
-        # Turn into dictionaries?
-        #self.synapses_pre=dict(enumerate(synapses_pre))
-        #self.synapses_post=dict(enumerate(synapses_post))
+
+        # Code generation
+        class Replacer(object):
+            def __init__(self, func, n):
+                self.n = n
+                self.func = func
+            def __call__(self):
+                return self.func(self.n)
+        self._Replacer = Replacer
 
         self.contained_objects = []
         self.pre_code,self.pre_namespace=self.generate_code(pre,level+1)
@@ -245,24 +242,32 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             synapses_pre=dict(zip(pre_slice,synapses_pre))
             synapses_post=dict(zip(post_slice,synapses_post))
         elif isinstance(value,str): # string code assignment
-            raise NotImplementedError
-            '''
-            This below can be fast but is memory expensive.
-            Alternative: vectorise over post neurons only.
-            One possibility is to do a try/except MemoryError.
-            However this approach should be good for assignment of synaptic variables.
-            '''
             code = re.sub(r'\b' + 'rand\(\)', 'rand(n)', value) # replacing rand()
-            postsynaptic,presynaptic=meshgrid(post_slice,pre_slice) # synapse -> pre, synapse -> post
-            # Flatten
-            presynaptic.shape=(presynaptic.size,)
-            postsynaptic.shape=(postsynaptic.size,)
-            namespace = {'i' : presynaptic,
-                         'j' : postsynaptic,
-                         'n' : len(presynaptic),
-                         'rand': np.random.rand}
-            res = eval(code, namespace) # mask on synapses
-            # TODO: filter out synapses, build synapse_pre and synapse_post
+            code = re.sub(r'\b' + 'randn\(\)', 'rand(n)', code) # replacing randn()
+            _namespace = namespace(value, level=1)
+            _namespace.update({'j' : post_slice,
+                               'n' : len(post_slice),
+                               'rand': np.random.rand,
+                               'randn': np.random.randn})
+            synapses_pre={}
+            nsynapses=0
+            presynaptic,postsynaptic=[],[]
+            for i in pre_slice:
+                _namespace['i']=i # maybe an array rather than a scalar?
+                result = eval(code, _namespace) # mask on synapses
+                if result.dtype==float: # random number generation
+                    result=rand(len(post_slice))<result
+                indexes=result.nonzero()[0]
+                n=len(indexes)
+                synapses_pre[i]=array(nsynapses+arange(n),dtype=self.synapses_pre[0].dtype)
+                presynaptic.append(i*ones(n,dtype=int))
+                postsynaptic.append(post_slice[indexes])
+                nsynapses+=n
+                    
+            # Make sure the type is correct
+            presynaptic=array(hstack(presynaptic),dtype=self.presynaptic.dtype)
+            postsynaptic=array(hstack(presynaptic),dtype=self.postsynaptic.dtype)
+            synapses_post=None
         elif isinstance(value, np.ndarray):
             raise NotImplementedError
             nsynapses = array(value, dtype = int) 
@@ -270,7 +275,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         # Now create the synapses
         self.create_synapses(presynaptic,postsynaptic,synapses_pre,synapses_post)
     
-    def create_synapses(self,presynaptic,postsynaptic,synapses_pre,synapses_post=None):
+    def create_synapses(self,presynaptic,postsynaptic,synapses_pre=None,synapses_post=None):
         '''
         Create new synapses.
         * synapses_pre: a mapping from presynaptic neuron to synapse indexes
@@ -278,9 +283,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         * presynaptic: an array of presynaptic neuron indexes (synapse->pre)
         * postsynaptic: same
         
-        TODO:
-        * option to automatically create postsynaptic from synapses_post
-          Tip: sort, then unique
+        If synapses_pre or synapses_post is not specified, it is calculated from
+        presynaptic or postsynaptic.       
         '''
         # Resize dynamic arrays and push new values
         newsynapses=len(presynaptic) # number of new synapses
@@ -292,15 +296,18 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.postsynaptic[nsynapses_all:]=postsynaptic
         self._delay_pre.resize(nsynapses_all+newsynapses)
         self._delay_post.resize(nsynapses_all+newsynapses)
+        if synapses_pre is None:
+            synapses_pre=invert_array(presynaptic,dtype=self.synapses_post[0].dtype)
         for i,synapses in synapses_pre.iteritems():
             nsynapses=len(self.synapses_pre[i])
             self.synapses_pre[i].resize(nsynapses+len(synapses))
             self.synapses_pre[i][nsynapses:]=synapses+nsynapses_all # synapse indexes are shifted
-        if synapses_post is not None:
-            for j,synapses in synapses_post.iteritems():
-                nsynapses=len(self.synapses_post[j])
-                self.synapses_post[j].resize(nsynapses+len(synapses))
-                self.synapses_post[j][nsynapses:]=synapses+nsynapses_all
+        if synapses_post is None:
+            synapses_post=invert_array(postsynaptic,dtype=self.synapses_post[0].dtype)
+        for j,synapses in synapses_post.iteritems():
+            nsynapses=len(self.synapses_post[j])
+            self.synapses_post[j].resize(nsynapses+len(synapses))
+            self.synapses_post[j][nsynapses:]=synapses+nsynapses_all
     
     def __getattr__(self, name):
         if name == 'var_index':
@@ -313,9 +320,27 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             return SynapticDelayVariable(self._delay_post,self)
         try:
             x=self.state(name)
-            return SynapticVariable(x,self) # specific names: delays
+            return SynapticVariable(x,self)
         except KeyError:
             return NeuronGroup.__getattr__(self,name)
+        
+    def __setattr__(self, name, val):
+        if (name=='delay_pre') or (name=='delay'):
+            SynapticDelayVariable(self._delay_pre,self)[:]=val
+        elif name=='delay_post':
+            SynapticDelayVariable(self._delay_post,self)[:]=val
+        else: # copied from Group
+            origname = name
+            if len(name) and name[-1] == '_':
+                origname = name[:-1]
+            if not hasattr(self, 'var_index') or (name not in self.var_index and origname not in self.var_index):
+                object.__setattr__(self, name, val)
+            else:
+                if name in self.var_index:
+                    x=self.state(name)
+                else:
+                    x=self.state_(origname)
+                SynapticVariable(x,self).__setitem__(slice(None,None,None),val,level=2)
         
     def update(self): # this is called at every timestep
         '''
@@ -325,8 +350,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
           same stuff for postsynaptic variables
         * Deal with static variables
         * Factor code
-        * Insert lastspike
-        * Insert rand()
         '''
         #NeuronGroup.update(self) # we don't do it for now
         synaptic_events = self.pre_queue.peek()
@@ -346,6 +369,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             _namespace['_pre']=self.presynaptic
             _namespace['_post']=self.postsynaptic
             _namespace['n'] = len(synaptic_events)
+            _namespace['rand'] = self._Replacer(np.random.rand, len(synaptic_events))
+            _namespace['randn'] = self._Replacer(np.random.randn, len(synaptic_events))
             exec self.pre_code in _namespace
         self.pre_queue.next()
         
@@ -367,9 +392,10 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 _namespace['_pre']=self.presynaptic
                 _namespace['_post']=self.postsynaptic
                 _namespace['n'] = len(synaptic_events)
+                _namespace['rand'] = self._Replacer(np.random.rand, len(synaptic_events))
+                _namespace['randn'] = self._Replacer(np.random.randn, len(synaptic_events))
                 exec self.post_code in _namespace
             self.post_queue.next()
-
 
     def connect_random(self,pre=None,post=None,sparseness=None):
         '''
@@ -418,7 +444,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         return neuron_indexes(x,self.target)
     
     def compress(self):
-        pass
+        # Check that the object is not empty
+        if len(self)==0:
+            warnings.warn("Empty Synapses object")
     
     def __repr__(self):
         return 'Synapses object with '+ str(len(self))+ ' synapses'
@@ -439,13 +467,20 @@ def smallest_inttype(N):
 def indent(s,n=1):
     return re.compile(r'^',re.M).sub('    '*n,s)
 
+def invert_array(x,dtype=int):
+    '''
+    Returns a dictionary y of N int arrays such that:
+    y[i]=set of j such that x[j]==i
+    '''
+    I = argsort(x) # ,kind='mergesort') # uncomment for a stable sort
+    xs = x[I]
+    u,indices=unique(xs,return_index=True)
+    y={}
+    for j,i in enumerate(u[:-1]):
+        y[i]=array(I[indices[j]:indices[j+1]],dtype=dtype)
+    y[u[-1]]=array(I[indices[-1]:],dtype=dtype)
+    return y
+
 if __name__=='__main__':
     #log_level_debug()
-    P=NeuronGroup(10,model='v:1')
-    S=Synapses(P,model='w:1')
-    S[0:2,0:3]=True
-    #S[1,2]=True
-    S.w=.5
-    print S.w
-    print S.presynaptic[0]
-    print S.synapses_pre[1]
+    print invert_array(array([7,5,2,2,3,5]))
