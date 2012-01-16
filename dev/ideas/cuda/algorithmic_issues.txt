@@ -65,4 +65,4 @@ Another option is to apply synaptic changes only after some time, so as to acces
 at the same time. This is not possible for all cases. In particular, propagation of spikes (v+=w)
 has to be instantaneous. However, in this case we could imagine optimisations, e.g. reading w
 at the time when spikes are produced rather than received (in this case we must minimize the
-number of memory blocks occuper by a given presynaptic neuron).
+number of memory blocks occupied by a given presynaptic neuron).
