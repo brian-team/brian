@@ -53,11 +53,17 @@ memory block of i (which is a set of 32 indexes).
   (That is, the intersection of B(i) and Sf(i) is just one element).
 * The net change is:
 	* -1 access in each set of (Sf(i),Sb(i)) where B(i) is represented only once 
-	* +1 access in each set of (Sf(j),Sb(j)) where B(i) is not represented
 	* -1 access in each set of (Sf(j),Sb(j)) where B(j) is represented only once 
+	* +1 access in each set of (Sf(j),Sb(j)) where B(i) is not represented
 	* +1 access in each set of (Sf(i),Sb(i)) where B(j) is not represented
+	This means that the net change for i<->j is c(i)+c(j)+c(i->j)+c(j->i)
+	(c for cost).
 
 One idea would be to pick a random synapse, and pick the best synapse to swap with.
+Here is a simple algorithm to start with:
+1) Calculate c(i) for all i.
+2) Pick two random synapse i and j among the ones with c(i)=c(j)=-2. Swap them.
+3) Update c(i) and c(j).
 
 Buffering
 ^^^^^^^^^
