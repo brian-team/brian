@@ -402,8 +402,10 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         Creates random connections between pre and post neurons
         (default: all neurons).
         '''
-        pre=pre or self.source
-        post=post or self.target
+        if pre is None:
+            pre=self.source
+        if post is None:
+            post=self.target
         pre,post=self.presynaptic_indexes(pre),self.postsynaptic_indexes(post)
         m=len(post)
         synapses_pre={}
