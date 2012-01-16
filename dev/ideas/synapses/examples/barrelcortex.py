@@ -145,10 +145,12 @@ def stimulation():
 
 new_direction()
 
-run(1*ms,report='text')
+run(5*second,report='text')
 
 figure()
 # Preferred direction
+# Below: doesn't work because w[:,i] is the non zero elements only
+# perhaps we need to add presynaptic and postsynaptic
 selectivity=array([mean(array(feedforward.w[:,i])*exp(layer4.selectivity*1j)) for i in range(len(layer23exc))])
 selectivity=(arctan2(selectivity.imag,selectivity.real) % (2*pi))*180./pi
 

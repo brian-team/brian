@@ -23,11 +23,12 @@ Low priority:
 * Replace NeuronGroup.__init__ with own stuff
 * include static variables in pre/post code
 * have a list of variable names
-* S[:,:]=array (boolean or int)
+* S[:,:]=array or sequence (boolean or int)
 * S.connect_random: fixed number of presynaptic neurons
 * S.connect_one_to_one (or 'i==j')
 * Update: Have namespaces partially built at run time (call state_(var)),
   or better, extract synaptic events from the synaptic state matrix;
   same stuff for postsynaptic variables
-* S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
-* StateMonitor (already works with synapse indexes)
+* StateMonitor (already works with synapse indexes):
+	what is needed is handling more general indexes in SynapticVariable
+	(e.g. lists of tuples)

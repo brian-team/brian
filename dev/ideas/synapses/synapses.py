@@ -243,7 +243,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             synapses_post=dict(zip(post_slice,synapses_post))
         elif isinstance(value,str): # string code assignment
             code = re.sub(r'\b' + 'rand\(\)', 'rand(n)', value) # replacing rand()
-            code = re.sub(r'\b' + 'randn\(\)', 'rand(n)', code) # replacing randn()
+            code = re.sub(r'\b' + 'randn\(\)', 'randn(n)', code) # replacing randn()
             _namespace = namespace(value, level=1)
             _namespace.update({'j' : post_slice,
                                'n' : len(post_slice),
@@ -263,10 +263,10 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 presynaptic.append(i*ones(n,dtype=int))
                 postsynaptic.append(post_slice[indexes])
                 nsynapses+=n
-                    
+            
             # Make sure the type is correct
             presynaptic=array(hstack(presynaptic),dtype=self.presynaptic.dtype)
-            postsynaptic=array(hstack(presynaptic),dtype=self.postsynaptic.dtype)
+            postsynaptic=array(hstack(postsynaptic),dtype=self.postsynaptic.dtype)
             synapses_post=None
         elif isinstance(value, np.ndarray):
             raise NotImplementedError
