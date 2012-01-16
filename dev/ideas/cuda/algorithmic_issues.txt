@@ -57,6 +57,8 @@ memory block of i (which is a set of 32 indexes).
 	* -1 access in each set of (Sf(j),Sb(j)) where B(j) is represented only once 
 	* +1 access in each set of (Sf(i),Sb(i)) where B(j) is not represented
 
+One idea would be to pick a random synapse, and pick the best synapse to swap with.
+
 Buffering
 ^^^^^^^^^
 Another option is to apply synaptic changes only after some time, so as to access more memory
