@@ -1,0 +1,213 @@
+This is an example of how something should work with code generation.
+
+==================
+Simple propagation
+==================
+
+User specifies:
+
+'V += w'
+
+in the context of synaptic propagation.
+
+Brian decodes:
+
+'V': neuron variable (has index target_index)
+'w': synaptic weight variable (has indices source_index, target_index)
+context for expression:
+	for source index in spike_indices:
+		for target_index in target_indices(source_index):
+			statement
+			
+statement has dependencies on 'V' and 'w'
+
+Dependency for 'V':
+	- Namespace
+		Python:
+			'V':G.V
+		C:
+			'V_arr':G.V
+	- Load
+		Python:
+			nothing
+		C:
+			double &V = V_arr[target_index];
+	- Use (read/write)
+		Python:
+			V[target_index]
+		C:
+			V
+	- Subdependencies:
+		Python:
+			target_index
+		C:
+			target_index
+			
+Dependency for 'w':
+	- Namespace
+		Python/C:
+			'w_alldata':W.alldata
+	- Load
+		Python:
+			w = w_alldata[synapse_slice]
+		C:
+			double &w = w_alldata[synapse_index];
+	- Use (read only)
+		Python/C:
+			w
+	- Subdependencies:
+		Python:
+			synapse_slice
+		C:
+			synapse_index
+			
+
+Additional dependency on synapse_index introduced, but this is resolved by the
+code for the context:
+
+	Python:
+		for source_index in spikes:
+			synapse_slice = slice(w_rowind[source_index], w_rowind[source_index+1])
+			target_index = w_allj[synapse_slice]
+			%RESOLVED(source_index, target_index, synapse_slice)
+			%STATEMENT			
+	C:
+		for(int spike_index=0; spike_index<spikes_len; spike_index++)
+		{
+			int source_index = spikes[spike_index];
+			%RESOLVED(spike_index, source_index)
+			for(int row_index=w_rowind[source_index];
+			        row_index<w_rowind[source_index+1];
+			        row_index++)
+			{
+				int synapse_index = w_allj[row_index];
+				%RESOLVED(spike_index, source_index, row_index, synapse_index)
+				%STATEMENT
+			}
+		}
+
+The context will also load several things into the namespace, including:
+	'spikes':spikes,
+	'spikes_len':len(spikes),
+	'w_rowind':W.rowind,
+	'w_allj':W.allj,
+
+Resolution of dependencies is handled at the %RESOLVED lines and the %STATEMENT
+line. At each %RESOLVED line, a list of variables which have been resolved is
+given, and further variables which depend on these can be inserted here. They
+should, for efficiency, be inserted at the point that minimises the cost, which
+for a looping structure will generally be the outermost loop which will have the
+least number of variables resolved.
+
+This would give rise to the following code:
+
+	Python:
+		namespace = {
+			'V':G.V,
+			'w_alldata':W.alldata,
+			'spikes':spikes,
+			'spikes_len':len(spikes),
+			'w_rowind':W.rowind,
+			'w_allj':W.allj,
+			}
+		Code:
+			for source_index in spikes:
+				synapse_slice = slice(w_rowind[source_index], w_rowind[source_index+1])
+				target_index = w_allj[synapse_slice]
+				w = w_alldata[synapse_slice]
+				V[target_index] += w
+
+	C:
+		namespace = {
+			'V_arr':G.V,
+			'w_alldata':W.alldata,
+			'spikes':spikes,
+			'spikes_len':len(spikes),
+			'w_rowind':W.rowind,
+			'w_allj':W.allj,
+			}
+		Code:
+			for(int spike_index=0; spike_index<spikes_len; spike_index++)
+			{
+				int source_index = spikes[spike_index];
+				for(int row_index=w_rowind[source_index];
+				        row_index<w_rowind[source_index+1];
+				        row_index++)
+				{
+					int synapse_index = w_allj[row_index];
+					double &V = V_arr[target_index];
+					double &w = w_alldata[synapse_index];
+					V += w;
+				}
+			}
+
+================
+Simple threshold
+================
+
+User specifies:
+
+'V>Vt'
+
+in the context of thresholding.
+
+Brian decodes:
+
+'V': neuron variable
+'Vt': neuron variable
+
+Dependency for 'V' as above but with target_index->neuron_index.
+Dependency for 'Vt' as for 'V'
+
+Code template:
+
+	Python:
+		return (%EXPRESSION%).nonzero()[0]
+	C:
+		C block:
+			int &numspikes = _numspikes[0];
+			for(int neuron_index=0; neuron_index<num_neurons; neuron_index++)
+			{
+				%RESOLVED(neuron_index)
+				if(%EXPRESSION%)
+				{
+					spikes[numspikes++] = neuron_index;
+				}
+			}
+		Python block:
+			return spikes[:_numspikes[0]]
+
+The C code has the following namespace code:
+	'num_neurons':len(G),
+	'spikes':zeros(len(G)),
+	'_numspikes':zeros(1, dtype=int),
+	
+This would give rise to:
+
+	Python:
+		namespace = {
+			'V':G.V,
+			'Vt':G.Vt,
+			}
+		Code:
+			return (V>Vt).nonzero()[0]
+			
+	C:
+		namespace = {
+			'V_arr':G.V,
+			'Vt_arr':G.Vt,
+			}
+		Code:
+			C block:
+				int &numspikes = _numspikes[0];
+				for(int neuron_index=0; neuron_index<num_neurons; neuron_index++)
+				{
+					double &V = V_arr[neuron_index];
+					double &Vt = Vt_arr[neuron_index];
+					if(V>Vt)
+					{
+						spikes[numspikes++] = neuron_index;
+					}
+				}
+			Python block:
+				return spikes[:_numspikes[0]]
