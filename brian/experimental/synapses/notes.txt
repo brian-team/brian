@@ -71,6 +71,30 @@ Currently, we initialize the object with the clock of the synaptic state
 updater. At this time, it will not work if the clocks of the neuron groups are
 different. However, it should be possible in principle (but more complex).
 
+Event-driven updates
+--------------------
+A simple start would be to deal with 1D linear differential equations.
+Steps:
+1) identify isolated 1D linear differential equations in model,
+2) remove them from the model string,
+3) compute the update string,
+4) insert at the beginning of pre and post.
+
+Here is how to deal with 3) using sympy. Assuming RHS=a*x+b:
+1) z=brian.optimiser.symbolic_eval(RHS)
+2) z.coeff(Symbol('x')) -> a
+3) z.subs(Symbol('x'),0) or z.coeff(1) -> b
+4) str(...) for the string representation
+
+For step 1):
+1) Look for variable names that are defined by differential equations.
+2) If there is only the one on the LHS, then this is a 1D equation.
+3) Check linearity, either using sympy (I don't know what exactly), or
+the utilities in inspection (is_affine; setting external variables to 0).
+
+All this assumes that some parsing of the equations is already done.
+For this, we will need to bypasse NeuronGroup.__init__.
+
 Various notes
 -------------
 * We want to be able to use StateUpdater objects on the synaptic variables.

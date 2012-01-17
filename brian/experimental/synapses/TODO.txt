@@ -32,3 +32,4 @@ TODO (Synapses)
 * StateMonitor (already works with synapse indexes):
 	what is needed is handling more general indexes in SynapticVariable
 	(e.g. lists of tuples)
+* Code generation
