@@ -71,9 +71,9 @@ Currently, we initialize the object with the clock of the synaptic state
 updater. At this time, it will not work if the clocks of the neuron groups are
 different. However, it should be possible in principle (but more complex).
 
-(done) Event-driven updates
+Event-driven updates
 ---------------------------
-A simple start would be to deal with 1D linear differential equations.
+(done) A simple start would be to deal with 1D linear differential equations.
 Steps:
 1) identify isolated 1D linear differential equations in model,
 2) remove them from the model string,
