@@ -2,6 +2,7 @@ TODO (Synapses)
 ---------------
 * faster S.w[:,i] (more generally, when 1 argument is :)
 	in general, faster synapse_indexes()
+* move synapse_indexes to Synapses
 * More docstrings
 * Synapses.compress(): have the Network object call it for all objects that have it?
 * accelerate Synapses.generate_code() (.any())

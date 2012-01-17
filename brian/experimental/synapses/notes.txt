@@ -92,8 +92,7 @@ For step 1):
 3) Check linearity, either using sympy (I don't know what exactly), or
 the utilities in inspection (is_affine; setting external variables to 0).
 
-All this assumes that some parsing of the equations is already done.
-For this, we will need to bypasse NeuronGroup.__init__.
+All this can be done after parsing by NeuronGroup.
 
 Various notes
 -------------
