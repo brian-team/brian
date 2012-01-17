@@ -8,11 +8,18 @@ from synapticvariable import *
 import numpy as np
 from brian.inspection import *
 from brian.equations import *
+from brian.optimiser import *
 from numpy.random import binomial
 from brian.utils.documentation import flattened_docstring
 from random import sample
 import re
 import warnings
+try:
+    import sympy
+    use_sympy = True
+except:
+    warnings.warn('sympy not installed: some features in Synapses will not be available')
+    use_sympy = False
 
 __all__ = ['Synapses']
 
@@ -31,15 +38,21 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if source.clock!=target.clock:
             raise ValueError,"Source and target groups must have the same clock"
 
-        # Insert the lastupdate variable if necessary
+        if pre is not None:
+            pre=flattened_docstring(pre)
+        if post is not None:
+            post=flattened_docstring(post)
+
+        # Insert the lastupdate variable if necessary (if it is mentioned in pre/post, or if there is a differential equation)
         expr=re.compile(r'\blastupdate\b')
-        if (pre is not None and expr.search(pre) is not None) or \
+        if (re.compile(r'/dt').search(model) is not None) or \
+           (pre is not None and expr.search(pre) is not None) or \
            (post is not None and expr.search(post) is not None):
             model+='\nlastupdate : second\n'
             if pre is not None:
-                pre=flattened_docstring(pre)+'\nlastupdate=t\n'
+                pre=pre+'\nlastupdate=t\n'
             if post is not None:
-                post=flattened_docstring(post)+'\nlastupdate=t\n'
+                post=post+'\nlastupdate=t\n'
 
         NeuronGroup.__init__(self, 0,model=model,clock=clock,level=level+1,unit_checking=unit_checking,method=method,freeze=freeze,implicit=implicit,order=order)
         # We might want *not* to use the state updater on all variables, so for now I disable it (see update())
@@ -65,6 +78,43 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         '''
         self.source=source
         self.target=target
+        
+        # Look for potential event-driven code
+        if use_sympy:
+            eqs=self._eqs # an Equations object
+            vars=eqs._diffeq_names_nonzero # Dynamic variables
+            var_set=set(vars)
+            for var in vars:
+                RHS=eqs._string[var]
+                ids=get_identifiers(RHS)
+                if len(set(list(ids)+[var]).intersection(var_set))==1:
+                    # no external dynamic variable
+                    # Now we test if it is a linear equation
+                    _namespace=dict.fromkeys(ids,1.) # there is a possibility of problems here (division by zero)
+                    # another option is to use random numbers, but that doesn't solve all problems
+                    _namespace[var]=AffineFunction()
+                    try:
+                        eval(RHS,eqs._namespace[var],_namespace)
+                        linear=True
+                    except: # not linear
+                        linear=False
+                    if linear:
+                        z=symbolic_eval(RHS)
+                        symbol_var=sympy.Symbol(var)
+                        symbol_t=sympy.Symbol('t')-sympy.Symbol('lastupdate')
+                        b=z.subs(symbol_var,0)
+                        a=(z.subs(symbol_var,1)-b).simplify()
+                        if a==0:
+                            expr=symbol_var+b*symbol_t
+                        else:
+                            expr=-b/a+sympy.exp(a*symbol_t)*(symbol_var+b/a)
+                        expr=var+'='+str(expr)
+                        # Replace pre and post code
+                        # N.B.: the differential equations are kept, we will probably want to remove them!
+                        pre=expr+'\n'+pre
+                        if post is not None:
+                            post=expr+'\n'+post
+
         # Set last spike to -infinity
         if 'lastupdate' in self.var_index:
             self.lastupdate=-1e6

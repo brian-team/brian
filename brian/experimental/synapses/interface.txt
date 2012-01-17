@@ -28,7 +28,7 @@ S=Synapses(source,target,
                  ''',
            pre='x+=w') # NMDA synapses
 
-S=Synapses(source,target,
+(done) S=Synapses(source,target,
            model='''dA_pre/dt=-A_pre/tau_pre : 1
                     dA_post/dt=-A_post/tau_post : 1
                     w : 1 # synaptic weight
@@ -37,7 +37,7 @@ S=Synapses(source,target,
                   A_pre+=dA_pre;w+=A_post'''
            post='''A_post+=dA_post;w+=A_pre''') # STDP
            
-S=Synapses(source,target,
+(done) S=Synapses(source,target,
            model='''dA_pre/dt=-A_pre/tau_pre : 1
                     dA_post/dt=-A_post/tau_post : 1
                     w : 1 # synaptic weight
@@ -46,7 +46,7 @@ S=Synapses(source,target,
                   A_pre+=dA_pre;w=clip(w+A_post,0,inf)'''
            post='''A_post+=dA_post;w=clip(w+A_pre,0,inf)''') # STDP with clipping
 
-S=Synapses(source,target,
+(done) S=Synapses(source,target,
            model='''dx/dt=(1-x)/taud : 1
                     du/dt=(U-u)/tauf : 1
                     w : 1''',
