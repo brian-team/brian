@@ -30,7 +30,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
              clock = None,
              unit_checking = True, method = None, freeze = False, implicit = False, order = 1, # model (state updater) related
              pre = None, post = None):
-        N=len(source) # initial number of synapses = number of presynaptic neurons
         target=target or source # default is target=source
 
         # Check clocks. For the moment we enforce the same clocks for all objects
@@ -79,7 +78,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.source=source
         self.target=target
         
-        # Look for potential event-driven code
+        # Look for potential event-driven code in the differential equations
         if use_sympy:
             eqs=self._eqs # an Equations object
             vars=eqs._diffeq_names_nonzero # Dynamic variables

@@ -83,7 +83,7 @@ pre/post variables can be explicitly specified with suffixes _pre and _post.
 In pre/post code:
 (done)* t is the current time
 (done)* lastspike holds the time of last update of the synapse
-* rand() is vectorised
+(done)* rand() is vectorised
 
 How about:
 * lumped variables
