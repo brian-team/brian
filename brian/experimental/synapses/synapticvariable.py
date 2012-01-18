@@ -1,26 +1,11 @@
 '''
 Synaptic variables.
-
-Currently, searching synapse indexes for synapse (i,j) is implemented as follows in synapse_index():
-1) get indexes of target synapses of presynaptic neuron(s) i
-2) get indexes of source synapses of postsynaptic neuron(s) j
-3) calculate the intersection
-
-This can be highly inefficient is some cases.
-Alternatives:
-* For slices (e.g. i=1:10:2 or j=:), we can do a faster search as follows:
-    1) get indexes of target synapses of presynaptic neuron(s) i
-    2) get postsynaptic neurons of these synapses
-    3) select those that match the condition of postsynaptic neuron indexes
-    or the reverse. This is simple, but still suboptimal.
-* Use dictionaries (i,j)->synapse index. This is fast but 1) cannot be vectorised,
-2) is very memory expensive.
 '''
 from brian import * # ugly import
 from brian.inspection import *
 import numpy as np
 
-__all__=['SynapticVariable','SynapticDelayVariable','slice_to_array','neuron_indexes']
+__all__=['SynapticVariable','SynapticDelayVariable','slice_to_array']
 
 class SynapticVariable(object):
     '''
@@ -71,10 +56,10 @@ class SynapticVariable(object):
         self._Replacer = Replacer
         
     def __getitem__(self,i):
-        return self.data[self.synapse_index(i)]
+        return self.data[self.synapses.synapse_index(i)]
 
     def __setitem__(self,i,value,level=1):
-        synapses=self.synapse_index(i)
+        synapses=self.synapses.synapse_index(i)
         if isinstance(value,str):
             value=self._interpret(value,synapses,level+1)
         self.data[synapses]=value
@@ -96,28 +81,6 @@ class SynapticVariable(object):
         _namespace['randn'] = self._Replacer(np.random.randn, len(synapses))
         return eval(code,_namespace)
 
-    def synapse_index(self,i):
-        '''
-        Returns the synapse index correspond to i, which can be a tuple or a slice.
-        If i is a tuple (m,n), m and n can be an integer, an array, a slice or a subgroup.
-        '''
-        if not isinstance(i,tuple): # we assume it is directly a synapse index
-            return i
-        if len(i)==2:
-            i,j=i
-            i=neuron_indexes(i,self.synapses.source)
-            j=neuron_indexes(j,self.synapses.target)
-            synapsetype=self.synapses.synapses_pre[0].dtype
-            synapses_pre=array(hstack([self.synapses.synapses_pre[k] for k in i]),dtype=synapsetype)
-            synapses_post=array(hstack([self.synapses.synapses_post[k] for k in j]),dtype=synapsetype)
-            return np.intersect1d(synapses_pre, synapses_post,assume_unique=True)
-        elif len(i)==3: # 3rd coordinate is synapse number
-            if i[0] is scalar and i[1] is scalar:
-                return self.synapse_index(i[:2])[i[2]]
-            else:
-                raise NotImplementedError,"The first two coordinates must be integers"
-        return i
-
 class SynapticDelayVariable(SynapticVariable):
     '''
     A synaptic variable that is a delay.
@@ -135,7 +98,7 @@ class SynapticDelayVariable(SynapticVariable):
 
     def __setitem__(self,i,value,level=1):
         # will not work with computed values (strings)
-        synapses=self.synapse_index(i)
+        synapses=self.synapses.synapse_index(i)
         if isinstance(value,str):
             value=self._interpret(value,synapses,level+1)
         self.data[synapses]=array(array(value)/self.synapses.clock.dt,dtype=self.data.dtype)
@@ -157,15 +120,3 @@ def slice_to_array(s,N=None):
         return array([s])
     else: # array or sequence
         return array(s)
-
-def neuron_indexes(x,P):
-    '''
-    Returns the array of neuron indexes corresponding to x,
-    which can be a integer, an array, a slice or a subgroup.
-    P is the neuron group.
-    '''
-    if isinstance(x,NeuronGroup): # it should be checked that x is actually a subgroup of P
-        i0=x._origin - P._origin # offset of the subgroup x in P
-        return arange(i0,i0+len(x))
-    else:
-        return slice_to_array(x,N=len(P))      

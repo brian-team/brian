@@ -1,5 +1,20 @@
 '''
 The Synapses class - see BEP-21
+
+Currently, searching synapse indexes for synapse (i,j) is implemented as follows in synapse_index():
+1) get indexes of target synapses of presynaptic neuron(s) i
+2) get indexes of source synapses of postsynaptic neuron(s) j
+3) calculate the intersection
+
+This can be highly inefficient is some cases.
+Alternatives:
+* For slices (e.g. i=1:10:2 or j=:), we can do a faster search as follows:
+    1) get indexes of target synapses of presynaptic neuron(s) i
+    2) get postsynaptic neurons of these synapses
+    3) select those that match the condition of postsynaptic neuron indexes
+    or the reverse. This is simple, but still suboptimal.
+* Use dictionaries (i,j)->synapse index. This is fast but 1) cannot be vectorised,
+2) is very memory expensive.
 '''
 from brian import *
 from brian.utils.dynamicarray import *
@@ -74,6 +89,10 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         variable ``var``, with length the number of synapses. The
         vector is an instance of class ``SynapticVariable''.
         
+    .. method:: synapse_index(i)
+        Returns the synapse indexes correspond to i, which can be a tuple or a slice.
+        If i is a tuple (m,n), m and n can be an integer, an array, a slice or a subgroup.
+    
     The following usages are also possible for a Synapses object ``S``:
     
     ``len(S)``
@@ -613,6 +632,28 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if len(self)==0:
             warnings.warn("Empty Synapses object")
     
+    def synapse_index(self,i):
+        '''
+        Returns the synapse indexes correspond to i, which can be a tuple or a slice.
+        If i is a tuple (m,n), m and n can be an integer, an array, a slice or a subgroup.
+        '''
+        if not isinstance(i,tuple): # we assume it is directly a synapse index
+            return i
+        if len(i)==2:
+            i,j=i
+            i=neuron_indexes(i,self.source)
+            j=neuron_indexes(j,self.target)
+            synapsetype=self.synapses_pre[0].dtype
+            synapses_pre=array(hstack([self.synapses_pre[k] for k in i]),dtype=synapsetype)
+            synapses_post=array(hstack([self.synapses_post[k] for k in j]),dtype=synapsetype)
+            return np.intersect1d(synapses_pre, synapses_post,assume_unique=True)
+        elif len(i)==3: # 3rd coordinate is synapse number
+            if i[0] is scalar and i[1] is scalar:
+                return self.synapse_index(i[:2])[i[2]]
+            else:
+                raise NotImplementedError,"The first two coordinates must be integers"
+        return i
+    
     def __repr__(self):
         return 'Synapses object with '+ str(len(self))+ ' synapses'
 
@@ -652,3 +693,15 @@ def invert_array(x,dtype=int):
 if __name__=='__main__':
     #log_level_debug()
     print invert_array(array([7,5,2,2,3,5]))
+
+def neuron_indexes(x,P):
+    '''
+    Returns the array of neuron indexes corresponding to x,
+    which can be a integer, an array, a slice or a subgroup.
+    P is the neuron group.
+    '''
+    if isinstance(x,NeuronGroup): # it should be checked that x is actually a subgroup of P
+        i0=x._origin - P._origin # offset of the subgroup x in P
+        return arange(i0,i0+len(x))
+    else:
+        return slice_to_array(x,N=len(P))      

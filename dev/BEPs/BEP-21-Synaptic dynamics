@@ -47,7 +47,7 @@ Missing features and a few ideas
   is also something that NEST supports. There are two issues here: 1) continuous
   weight dynamics, which should be computed with event-driven updates, 2)
   modulation by an external signal, which is a trace of spikes from other neurons.
-  At this point, I'm familiar enough with this to address point 2.
+  At this point, I'm not familiar enough with this to address point 2.
   
 * Heterosynaptic modifications (see eg. Kempter et al. PNAS 2001). Synaptic modifications
   may not be local, for example may affect all synapses from the same presynaptic
