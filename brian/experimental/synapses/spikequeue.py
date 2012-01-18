@@ -6,8 +6,7 @@ from brian.stdunits import ms
 from brian.globalprefs import *
 from scipy import weave
 
-INITIAL_MAXSPIKESPER_DT = 1 # I guess it could be larger no?
-# This is a 2D circular array, but also a SpikeMonitor
+INITIAL_MAXSPIKESPER_DT = 1
 
 __all__=['SpikeQueue']
 
@@ -34,40 +33,53 @@ class SpikeQueue(SpikeMonitor):
         option is generally not useful.
     ``precompute_offsets = True''
         A flag to precompute offsets. By default, offsets (an internal array
-        derived from ``delays'', used to insert events in the data structure)
+        derived from ``delays'', used to insert events in the data structure,
+        see below)
         are precomputed for all neurons, the first time the object is run.
         This usually results in a speed up but takes memory, which is why it
         can be disabled.
 
     **Data structure** 
     
-    A spike queue is implemented as a 2D array, that is circular in the time
-    direction (rows) and dynamic in the events direction (columns).
+    A spike queue is implemented as a 2D array ``X'' that is circular in the time
+    direction (rows) and dynamic in the events direction (columns). The
+    row index corresponding to the current timestep is ``currentime''.
+    Each element contains the target synapse index.
+
+    The class is implemented as a SpikeMonitor, so that the propagate() method
+    is called at each timestep (of the monitored group).
     
-    * At the beginning or end of each timestep: queue.next()
-    * To get all spikes: events=queue.peek()
-      It returns the indexes of all synapses receiving an event.
-    * When a presynaptic spike is emitted, the following is executed:
-      queue.insert(delay,target,offset)
-      where delay is the array of synaptic delays of targets in timesteps,
-      offset is the array of offsets within each timestep,
-      target is the array of synapse indexes of targets.
-      The offset is used to solve the problem of multiple synapses with the
-      same delay. For example, if there are two target synapses 7 and 9 with delay
-      2 timesteps: queue.insert([2,2],[0,1],[7,9])
+    **Methods**
+            
+    .. method:: next()
     
-    Thus, offsets are determined by delays. They could be either precalculated
+        Advances by one timestep.
+        
+    .. method:: peek()
+    
+        Returns the all the synaptic events corresponding to the current time,
+        as an array of synapse indexes.
+        
+    .. method:: precompute_offsets()
+    
+        Precompute all offsets corresponding to delays. This assumes that
+        delays will not change during the simulation. If they do (between two
+        runs for example), then this method can be called.
+    
+    ** Offsets **
+    
+    Offsets are used to solve the problem of inserting multiple synaptic events with the
+    same delay. This is difficult to vectorise. If there are n synaptic events with the same
+    delay, these events are given an offset between 0 and n-1, corresponding to their
+    relative position in the data structure.
+    They can be either precalculated
     (faster), or determined at run time (saves memory). Note that if they
     are determined at run time, then it is possible to also vectorise over
     presynaptic spikes.
-    
-    The class is implemented as a SpikeMonitor, so that the propagate() method
-    is called at each timestep (of the monitored group).
     '''
     def __init__(self, source, synapses, delays,
                  max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT,
                  precompute_offsets = True):
-        # SpikeMonitor structure
         self.source = source #NeuronGroup
         self.delays = delays
         self.synapses = synapses
@@ -97,10 +109,11 @@ class SpikeQueue(SpikeMonitor):
 
     def compress(self):
         '''
-        Prepare the structure:
-        * calculate maximum delay
-        * calculate offsets
-        * check if delays are homogeneous
+        This is called the first time the network is run. The size of the
+        of the data structure (number of rows) is adjusted to fit the maximum
+        delay in ``delays'', if necessary. Offsets are calculated, unless
+        the option ``precompute_offsets'' is set to False. A flag is set if
+        delays are homogeneous, in which case insertion will use a faster method.
         '''
         # Adjust the maximum delay and number of events per timestep if necessary
         nsteps=max(self.delays)+1
@@ -123,25 +136,40 @@ class SpikeQueue(SpikeMonitor):
 
     ################################ SPIKE QUEUE DATASTRUCTURE ######################
     def next(self):
-        # Advance by one timestep
+        '''
+        Advances by one timestep
+        '''
         self.n[self.currenttime]=0 # erase
         self.currenttime=(self.currenttime+1) % len(self.n)
         
     def peek(self):
-        # Events in the current timestep      
+        '''
+        Returns the all the synaptic events corresponding to the current time,
+        as an array of synapse indexes.
+        '''      
         return self.X[self.currenttime,:self.n[self.currenttime]]
     
     def precompute_offsets(self):
-        #t0 = time.time()
+        '''
+        Precompute all offsets corresponding to delays. This assumes that
+        delays will not change during the simulation. If they do (between two
+        runs for example), then this method can be called.
+        '''
         self._offsets=[]
         for i in range(len(self.synapses)):
             delays=self.delays[self.synapses[i].data]
             self._offsets.append(self.offsets(delays))
-        #log_debug('spikequeue.offsets', 'Offsets computed in '+str(time.time()-t0))
     
     def offsets(self, delay):
         '''
-        Calculates offsets corresponding to a delay array
+        Calculates offsets corresponding to a delay array.
+        If there n identical delays, there are given offsets between
+        0 and n-1.
+        Example:
+        
+            [7,5,7,3,7,5] -> [0,0,1,0,2,1]
+            
+        The code is complex because tricks are needed for vectorisation.
         '''
         # We use merge sort because it preserves the input order of equal
         # elements in the sorted output
@@ -160,17 +188,23 @@ class SpikeQueue(SpikeMonitor):
         
     def insert(self, delay, target, offset=None):
         '''
-        Vectorized insertion of spike events
-        # delay = delay in timesteps
-        # target = target synaptic index
-        # offset = offset within timestep
-        '''
+        Vectorised insertion of spike events.
         
+        ``delay''
+            Delays in timesteps (array).
+            
+        ``target''
+            Target synaptic indexes (array).
+            
+        ``offset''
+            Offsets within timestep (array). If unspecified, they are calculated
+            from the delay array.
+        '''
         if offset is None:
             offset=self.offsets(delay)
         
         timesteps = (self.currenttime + delay) % len(self.n)
-                
+        
         # Compute new stack sizes:
         old_nevents = self.n[timesteps].copy() # because we need this for the final assignment, but we need to precompute the  new one to check for overflow
         self.n[timesteps] += offset+1 # that's a trick (to update stack size), plus we pre-compute it to check for overflow
@@ -189,8 +223,12 @@ class SpikeQueue(SpikeMonitor):
     def insert_C(self,delay,target):
         '''
         Insertion of events using weave
-        # delay = delay in timesteps
-        # target = target synaptic index
+
+        ``delay''
+            Delays in timesteps (array).
+            
+        ``target''
+            Target synaptic indexes (array).
         
         UNFINISHED
         Difficult bit: check whether we need to resize
@@ -208,7 +246,13 @@ class SpikeQueue(SpikeMonitor):
         
     def insert_homogeneous(self,delay,target):
         '''
-        Inserts events at a fixed delay
+        Inserts events at a fixed delay.
+        
+        ``delay''
+            Delay in timesteps (scalar).
+            
+        ``target''
+            Target synaptic indexes (array).
         '''
         timestep = (self.currenttime + delay) % len(self.n)
         nevents=len(target)
@@ -222,7 +266,9 @@ class SpikeQueue(SpikeMonitor):
     def resize(self, maxevents):
         '''
         Resizes the underlying data structure (number of columns = spikes per dt).
-        max events will be rounded to the closest power of 2.
+        
+        ``maxevents''
+            The new number of columns.It will be rounded to the closest power of 2.
         '''
         # old and new sizes
         old_maxevents = self.X.shape[1]
@@ -233,9 +279,12 @@ class SpikeQueue(SpikeMonitor):
         
         self.X = newX
         self.X_flat = self.X.reshape(self.X.shape[0]*new_maxevents,)
-        #log_debug('spikequeue', 'Resizing SpikeQueue')
         
     def propagate(self, spikes):
+        '''
+        Called by the network object at every timestep.
+        Spikes produce synaptic events that are inserted in the queue. 
+        '''
         if len(spikes):
             if self._homogeneous: # homogeneous delays
                 synaptic_events=hstack([self.synapses[i].data for i in spikes]) # could be not efficient
@@ -255,6 +304,9 @@ class SpikeQueue(SpikeMonitor):
 
     ######################################## UTILS    
     def plot(self, display = True):
+        '''
+        Plots the events stored in the spike queue.
+        '''
         for i in range(self.X.shape[0]):
             idx = (i + self.currenttime ) % self.X.shape[0]
             data = self.X[idx, :self.n[idx]]
