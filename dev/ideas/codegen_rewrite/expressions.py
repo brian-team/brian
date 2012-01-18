@@ -2,6 +2,7 @@ from brian import *
 from sympy.printing.ccode import CCodePrinter
 import sympy
 import parser
+from formatting import *
     
 languages = ['Python', 'C', 'GPU']
 
@@ -23,48 +24,55 @@ class Expression(object):
         self.expr = expr
         self.sympy_expr = symbolic_eval(self.expr)
         
-    def convert_to_python(self):
+    def __str__(self):
         return self.expr
     
-    def convert_to_c(self):
-        return CCodePrinter().doprint(self.sympy_expr)
-    
-    convert_to_gpu = convert_to_c
-    
-    def convert_to(self, language):
-        return self.converter[language.strip().lower()](self)
-    
-    converter = {'python':convert_to_python,
-                 'c':convert_to_c,
-                 'gpu':convert_to_gpu,
-                 }
+    def substitute_symbols(self, expr, symbols):
+        substitutions = dict((name, sym.read) for name, sym in symbols.iteritems())
+        return word_substitute(expr, substitutions)
+        
+    def convert_to(self, language, symbols={}):
+        if language.name=='python':
+            return self.substitute_symbols(self.expr, symbols)
+        elif language.name=='c':
+            return self.substitute_symbols(
+                CCodePrinter().doprint(self.sympy_expr),
+                symbols)    
 
 
 class Statement(object):
-    def __init__(self, var, op, expr):
+    def __init__(self, var, op, expr, boolean=False):
         self.var = var.strip()
         self.op = op.strip()
         self.expr = expr
+        self.boolean = boolean
         
-    def convert_to_python(self):
-        if self.op=='=':
-            inplace = '[:]'
+    def __str__(self):
+        return self.var+' '+self.op+' '+str(self.expr)
+            
+    def convert_to(self, language, symbols={}):
+        if self.var in symbols:
+            sym = symbols[self.var]
+            if self.op==':=':
+                initial = sym.define+' = '
+            else:
+                initial = sym.write+' '+self.op+' '
         else:
-            inplace = ''
-        return self.var+inplace+' '+self.op+' '+self.expr.convert_to_python()
+            if self.op==':=':
+                if language.name=='python':
+                    initial = self.var+' = '
+                elif language.name=='c':
+                    if self.boolean:
+                        initial = 'bool '+self.var+' = '
+                    else:
+                        initial = language.scalar+' '+self.var+' = '
+            else:
+                initial = self.var+' '+self.op+' '
+        statementstr = initial+self.expr.convert_to(language, symbols)
+        if language.name=='c':
+            statementstr += ';'
+        return statementstr
     
-    def convert_to_c(self):
-        return self.var+' '+self.op+' '+self.expr.convert_to_c()+';'
-    
-    convert_to_gpu = convert_to_c
-    
-    def convert_to(self, language):
-        return self.converter[language.strip().lower()](self)
-    
-    converter = {'python':convert_to_python,
-                 'c':convert_to_c,
-                 'gpu':convert_to_gpu,
-                 }
     
 if __name__=='__main__':
     stmt = Statement('v', '=', Expression('x**2+v*((v>10)&(v<20))'))

@@ -3,6 +3,7 @@ The basic Code object
 """
 from brian import *
 from brian.globalprefs import get_global_preference
+from scipy import weave
 
 __all__ = ['Code',
            'PythonCode',
@@ -71,7 +72,7 @@ class Code(object):
 
 class PythonCode(Code):
     def compile(self):
-        self.code_compiled = compile(self.code_str, 'PythonCode()')
+        self.code_compiled = compile(self.code_str, 'PythonCode()', 'exec')
     def run(self):
         exec self.code_compiled in self.namespace
 
