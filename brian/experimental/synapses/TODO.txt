@@ -4,6 +4,7 @@ TODO (Synapses)
 	in general, faster synapse_indexes()
 * move synapse_indexes to Synapses
 * More docstrings
+* SpikeQueue: document the algorithm
 * Synapses.compress(): have the Network object call it for all objects that have it?
 * accelerate Synapses.generate_code() (.any())
 * S[P,Q]='...' : with subgroups, shift the values of i,j
