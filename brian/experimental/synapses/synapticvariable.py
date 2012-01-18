@@ -9,21 +9,42 @@ __all__=['SynapticVariable','SynapticDelayVariable','slice_to_array','neuron_ind
 
 class SynapticVariable(object):
     '''
-    A synaptic variable is a vector that is returned by Synapses.__getattr__,
-    and that can be accessed with getitem with 2 or 3 arguments.
+    A vector of synaptic variables that is returned by Synapses.__getattr__,
+    and that can be subscripted with 2 or 3 arguments.
     
-    When accessed with one argument (S.w[12]), the argument is considered as
-    a synapse index (not a presynaptic neuron index). This is not the same
-    behaviour as a sparse array.
+    Example usages, where ``S'' is Synapses object:
     
-    TODO:
-    * assignment of strings
+    ``S.w[12]''
+        Value of variable w for synapse 12. 
+    ``S.w[1,3]''
+        Value of variable w for synapses from neuron 1 to neuron 3. This is an array,
+        as there can be several synapses for a given neuron pair (e.g. with different
+        delays)
+    ``S.w[1,3,4]''
+        Value of variable w for synapse 4 from neuron 1 to neuron 3.
+        
+    Indexes can be integers, slices, arrays or groups.
+    
+    Synaptic variables can be assigned values as follows:
+    
+    ``S.w[P,Q]=x''
+        where x is a float or a 1D array. The number of elements in the array must
+        equal the number of selected synapses.
+    ``S.w[P,Q]=s''
+        where s is a string. The string is Python code that is executed in a single
+        vectorised operation, where ``i'' is the presynaptic neuron index (a vector
+        of length the number of synapses), ``j'' is the postsynaptic neuron index and
+        ``n'' is the number of synapses. The methods ``rand'' and ``randn'' return
+        arrays of n random values.
+        
+    Initialised with arguments:
+
+    ``data''
+        Vector of values.
+    ``synapses''
+        The Synapses object.
     '''
     def __init__(self,data,synapses):
-        '''
-        data: underlying vector
-        synapses: Synapses object
-        '''
         self.data=data
         self.synapses=synapses
         class Replacer(object): # vectorisation in strings
@@ -62,7 +83,8 @@ class SynapticVariable(object):
 
     def synapse_index(self,i):
         '''
-        Returns the synapse index correspond to tuple or slice i
+        Returns the synapse index correspond to i, which can be a tuple or a slice.
+        If i is a tuple (m,n), m and n can be an integer, an array, a slice or a subgroup.
         '''
         if not isinstance(i,tuple): # we assume it is directly a synapse index
             return i
@@ -82,6 +104,14 @@ class SynapticVariable(object):
         return i
 
 class SynapticDelayVariable(SynapticVariable):
+    '''
+    A synaptic variable that is a delay.
+    The main difference with SynapticVariable is that
+    delays are stored as integers (timebins) but
+    accessed as absolute times (in seconds).
+    
+    TODO: pass the clock as argument.
+    '''
     def __init__(self,data,synapses):
         SynapticVariable.__init__(self,data,synapses)
         
@@ -116,7 +146,7 @@ def slice_to_array(s,N=None):
 def neuron_indexes(x,P):
     '''
     Returns the array of neuron indexes corresponding to x,
-    which can be a integer, an array or a subgroup.
+    which can be a integer, an array, a slice or a subgroup.
     P is the neuron group.
     '''
     if isinstance(x,NeuronGroup): # it should be checked that x is actually a subgroup of P

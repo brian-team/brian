@@ -215,8 +215,16 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         '''
         Generates pre and post code.
         
-        If ``direct'' is True, the code is generated assuming that
-        postsynaptic variables are not modified.
+        ``code''
+            The code as a string.
+            
+        ``level''
+            The namespace level in which the code is executed.
+        
+        ``direct=False''
+            If True, the code is generated assuming that
+            postsynaptic variables are not modified. This makes the
+            code faster.
         
         TODO:
         * include static variables
@@ -447,6 +455,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
     def update(self): # this is called at every timestep
         '''
+        Updates the synaptic variables.
+        
         TODO:
         * Have namespaces partially built at run time (call state_(var)),
           or better, extract synaptic events from the synaptic state matrix;
@@ -504,6 +514,18 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         '''
         Creates random connections between pre and post neurons
         (default: all neurons).
+        This is equivalent to::
+        
+            S[pre,post]=sparseness
+        
+        ``pre=None''
+            The set of presynaptic neurons, defined as an integer, an array, a slice or a subgroup.
+
+        ``post=None''
+            The set of presynaptic neurons, defined as an integer, an array, a slice or a subgroup.
+        
+        ``sparseness=None''
+            The probability of connection of a pair of pre/post-synaptic neurons.
         '''
         if pre is None:
             pre=self.source
@@ -529,26 +551,25 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         synapses_post=None # we ask for automatic calculation of (post->synapse)
         # this is more or less given by unique
         self.create_synapses(presynaptic,postsynaptic,synapses_pre,synapses_post)
-        '''
-        TODO NOW:
-        * automatic calculation of post->synapse
-        '''
         
     def presynaptic_indexes(self,x):
         '''
         Returns the array of presynaptic neuron indexes corresponding to x,
-        which can be a integer, an array or a subgroup
+        which can be a integer, an array, a slice or a subgroup.
         '''
         return neuron_indexes(x,self.source)
 
     def postsynaptic_indexes(self,x):
         '''
         Returns the array of postsynaptic neuron indexes corresponding to x,
-        which can be a integer, an array or a subgroup
+        which can be a integer, an array, a slice or a subgroup.
         '''
         return neuron_indexes(x,self.target)
     
     def compress(self):
+        '''
+        Currently, this function is not called by the network.
+        '''
         # Check that the object is not empty
         if len(self)==0:
             warnings.warn("Empty Synapses object")
@@ -558,7 +579,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
 
 def smallest_inttype(N):
     '''
-    Returns the smallest dtype that can store N indexes
+    Returns the smallest signed integer dtype that can store N indexes.
     '''
     if N<=127:
         return int8
@@ -570,6 +591,9 @@ def smallest_inttype(N):
         return int64
 
 def indent(s,n=1):
+    '''
+    Inserts an indentation (4 spaces) or n before the multiline string s.
+    '''
     return re.compile(r'^',re.M).sub('    '*n,s)
 
 def invert_array(x,dtype=int):

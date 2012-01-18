@@ -4,8 +4,6 @@ Adapted from Song, Miller and Abbott (2000) and Song and Abbott (2001)
 
 This simulation takes a long time!
 
-Works!
-
 Original time: 278 s
 with DelayConnection: 478 s
 New time: 479 s
