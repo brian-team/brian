@@ -211,3 +211,45 @@ This would give rise to:
 				}
 			Python block:
 				return spikes[:_numspikes[0]]
+
+=====================================
+Numerical integration with extensions
+=====================================
+
+User specifies:
+
+'dV/dt = (-V+I(t))/tau : 1'
+
+where I is a TimedArray.
+
+Brian decodes:
+
+'V': '(-V+I(t))/tau' diff eq
+'I': TimedArray has GPU properties
+'t': time
+('tau' is a constant)
+
+'V' will have dependencies as above.
+'t' will insert a value for time in the namespace
+
+Dependency for 'I' (only C shown as Python is trivial):
+	- Namespace
+		C:
+			'I_arr':asarray(I),
+			'I_t_init':I._t_init,
+			'I_dt':I._dt,
+			'I_len':len(I),
+	- Support code
+		C:
+			inline double I_get(double t, double *I_arr, double t_init,
+			                    double dt, int I_len)
+			{
+				int ti = (int)(nearbyint((t-t_init)/dt));
+				if(ti<0) ti = 0;
+				if(ti>=I_len) ti = I_len-1;
+				return I_arr[t];
+			}
+			#define I(t) I_get(t, I_arr, I_t_init, I_dt, I_len)
+
+The support code replaces the symbol I with a macro which expands to the
+I_get function which works as expected.
