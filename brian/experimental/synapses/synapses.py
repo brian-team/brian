@@ -24,12 +24,66 @@ except:
 __all__ = ['Synapses']
 
 class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
-    def __init__(self, source, target = None, model = None, 
-             max_delay = 0, # is this useful?
+    '''Set of synapses between two neuron groups
+    
+    Initialised with arguments:
+    
+    ``source''
+        The source NeuronGroup.
+    ``target=None''
+        The target NeuronGroup. By default, target=source.
+    ``model=None''
+        The equations that defined the synaptic variables, as an Equations object or a string.
+        The syntax is the same as for a NeuronGroup.
+    ``pre=None''
+        The code executed when presynaptic spikes arrive at the synapses.
+    ``post=None''
+        The code executed when postsynaptic spikes arrive at the synapses.
+    ``max_delay=0*ms''
+        The maximum pre and postsynaptic delay. This is only useful if the delays can change
+        during the simulation.
+    ``level=0''
+    ``clock=None''
+        The clock for updating synaptic state variables according to ``model''.
+        Currently, this must be identical to both the source and target clocks.
+    ``compile=False``
+        Whether or not to attempt to compile the differential equation
+        solvers (into Python code). Typically, for best performance, both ``compile``
+        and ``freeze`` should be set to ``True`` for nonlinear differential equations.
+    ``freeze=False``
+        If True, parameters are replaced by their values at the time
+        of initialization.
+    ``method=None``
+        If not None, the integration method is forced. Possible values are
+        linear, nonlinear, Euler, exponential_Euler (overrides implicit and order
+        keywords).
+    ``unit_checking=True``
+        Set to ``False`` to bypass unit-checking.
+    ``order=1``
+        The order to use for nonlinear differential equation solvers.
+        TODO: more details.
+    ``implicit=False``
+        Whether to use an implicit method for solving the differential
+        equations. TODO: more details.
+        
+    **Methods**
+    
+    .. method:: state(var)
+
+        Returns the vector of values for state
+        variable ``var``, with length the number of synapses. The
+        vector is an instance of class ``SynapticVariable''.
+        
+    The following usages are also possible for a Synapses object ``S``:
+    
+    ``len(S)``
+        Returns the number of synapses in ``S``.
+    '''
+    def __init__(self, source, target = None, model = None, pre = None, post = None,
+             max_delay = 0*ms, # is this useful?
              level = 0,
              clock = None,
-             unit_checking = True, method = None, freeze = False, implicit = False, order = 1, # model (state updater) related
-             pre = None, post = None):
+             unit_checking = True, method = None, freeze = False, implicit = False, order = 1): # model (state updater) related
         target=target or source # default is target=source
 
         # Check clocks. For the moment we enforce the same clocks for all objects
