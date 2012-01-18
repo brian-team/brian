@@ -1,31 +1,10 @@
 """
 Spike queues following BEP-21.
-
-Notes
------
-A SpikeQueue object will always be attached to a Synapses object. One important point is that delays and
-synapse indexes can be set after the objects are created. Therefore, they cannot be passed at initialization time,
-and this is why the Synapses object is passed.
-To save one indirection, what should be stored is a view on the delay and synapse arrays.
-
-The object is a SpikeMonitor on the source NeuronGroup. When it is called, spikes are fetched from the NeuronGroup
-into the queue. The way it is currently done is highly inefficient, because it only uses the following mappings
-    synapse -> delay
-    synapse -> presynaptic i
-but for efficiency, we need the mappings:
-    presynaptic i -> synapse
-    presynaptic i -> delay
-
-We will still need the mapping: synapse -> presynaptic i
-but not: synapse -> delay
-
-Actually, does this need to be a Brian object? It could directly be called by
-Synapses.
-
-** There is no resizing for the maximum delay **
 """
 from brian import * # remove this
 from brian.stdunits import ms
+from brian.globalprefs import *
+from scipy import weave
 
 INITIAL_MAXSPIKESPER_DT = 1 # I guess it could be larger no?
 # This is a 2D circular array, but also a SpikeMonitor
@@ -33,30 +12,43 @@ INITIAL_MAXSPIKESPER_DT = 1 # I guess it could be larger no?
 __all__=['SpikeQueue']
 
 class SpikeQueue(SpikeMonitor):
-    '''
-    * Initialization * 
-
-    Initialized with a source NeuronGroup, a Synapses object (from which it fetches the delays), a maximum delay
+    '''Spike queue
     
-    Arguments
-    ``source'' NeuronGroup that is monitored
-    ``synapses'' List of arrays of synapse indexes
-    ``delays'' Array of delays corresponding to synapse indexes
+    Initialised with arguments:
 
-    Keywords
-    ``max_delay'' in seconds
-    ``maxevents'' Maximum initial number of events in each timestep. Notice that the structure will grow dynamically of there are more events than that, so you shouldn't bother. 
+    ``source''
+        The neuron group that sends spikes.
+    ``synapses''
+        A list of synapses (synapses[i]=array of synapse indexes for neuron i).
+    ``delays''
+        An array of delays (delays[k]=delay of synapse k).  
+    ``max_delay=0*ms''
+        The maximum delay (in second) of synaptic events. At run time, the
+        structure is resized to the maximum delay in ``delays'', and thus
+        the ``max_delay'' should only be specified if delays can change
+        during the simulation (in which case offsets should not be
+        precomputed).
+    ``maxevents = INITIAL_MAXSPIKESPER_DT''
+        The initial size of the queue for each timestep. Note that the data
+        structure automatically grows to the required size, and therefore this
+        option is generally not useful.
+    ``precompute_offsets = True''
+        A flag to precompute offsets. By default, offsets (an internal array
+        derived from ``delays'', used to insert events in the data structure)
+        are precomputed for all neurons, the first time the object is run.
+        This usually results in a speed up but takes memory, which is why it
+        can be disabled.
 
-
-    * Circular 2D array structure * 
+    **Data structure** 
     
-    A spike queue is implemented as a circular 2D array.
+    A spike queue is implemented as a 2D array, that is circular in the time
+    direction (rows) and dynamic in the events direction (columns).
     
     * At the beginning or end of each timestep: queue.next()
     * To get all spikes: events=queue.peek()
       It returns the indexes of all synapses receiving an event.
     * When a presynaptic spike is emitted, the following is executed:
-      queue.insert(delay,offset,target)
+      queue.insert(delay,target,offset)
       where delay is the array of synaptic delays of targets in timesteps,
       offset is the array of offsets within each timestep,
       target is the array of synapse indexes of targets.
@@ -66,28 +58,15 @@ class SpikeQueue(SpikeMonitor):
     
     Thus, offsets are determined by delays. They could be either precalculated
     (faster), or determined at run time (saves memory). Note that if they
-    are determined at run time, then it may be possible to also vectorize over
+    are determined at run time, then it is possible to also vectorise over
     presynaptic spikes.
     
-    * SpikeMonitor structure * 
-    
-    It automatically updates the underlying structure by instantiating the propagate() method of the SpikeMonitor
-    
+    The class is implemented as a SpikeMonitor, so that the propagate() method
+    is called at each timestep (of the monitored group).
     '''
     def __init__(self, source, synapses, delays,
                  max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT,
                  precompute_offsets = True):
-        '''
-        ``source'' is the neuron group that sends spikes
-        ``synapses'' is a list of synapses (synapses[i]=array of synapse indexes for neuron i)
-        ``delays'' is an array of delays (delays[k]=delay of synapse k)
-        ``max_delay''
-            The maximum delay (in second) of synaptic events. At run time, the
-            structure is resized to the maximum delay in ``delays'', and thus
-            the ``max_delay'' should only be specified if delays can change
-            during the simulation (in which case offsets should not be
-            precomputed).
-        '''
         # SpikeMonitor structure
         self.source = source #NeuronGroup
         self.delays = delays
@@ -103,6 +82,13 @@ class SpikeQueue(SpikeMonitor):
         
         self._offsets = None # precalculated offsets
         
+        # Compiled version
+        self._useweave = get_global_preference('useweave')
+        self._cpp_compiler = get_global_preference('weavecompiler')
+        self._extra_compile_args = ['-O3']
+        if self._cpp_compiler == 'gcc':
+            self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+
         super(SpikeQueue, self).__init__(source, 
                                          record = False)
         
@@ -173,10 +159,12 @@ class SpikeQueue(SpikeMonitor):
         return ofs
         
     def insert(self, delay, target, offset=None):
-        # Vectorized insertion of spike events
+        '''
+        Vectorized insertion of spike events
         # delay = delay in timesteps
-        # offset = offset within timestep
         # target = target synaptic index
+        # offset = offset within timestep
+        '''
         
         if offset is None:
             offset=self.offsets(delay)
@@ -197,6 +185,26 @@ class SpikeQueue(SpikeMonitor):
         #self.X_flat[(self.currenttime*self.X.shape[1]+offset+\
         #             old_nevents)\
         #             % len(self.X)]=target
+        
+    def insert_C(self,delay,target):
+        '''
+        Insertion of events using weave
+        # delay = delay in timesteps
+        # target = target synaptic index
+        
+        UNFINISHED
+        Difficult bit: check whether we need to resize
+        '''
+        nevents=len(target)
+        code='''
+        for(int i=0;i<nevents;i++) {
+            ();
+        }
+        '''
+        weave.inline(code, ['nevents'], \
+             compiler=self._cpp_compiler,
+             type_converters=weave.converters.blitz,
+             extra_compile_args=self._extra_compile_args)
         
     def insert_homogeneous(self,delay,target):
         '''

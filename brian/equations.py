@@ -49,7 +49,6 @@ import inspect
 import optimiser
 import warnings
 import uuid
-import numpy
 from numpy import zeros, ones
 import numpy
 from log import *
