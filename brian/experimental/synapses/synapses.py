@@ -78,6 +78,45 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     
     ``len(S)``
         Returns the number of synapses in ``S``.
+        
+    Attributes:
+    
+    ``delay''
+        The presynaptic delays for all synapses (synapse->delay).
+    ``delay_pre''
+        Same as ``delay''.
+    ``delay_post''
+        The postsynaptic delays for all synapses (synapse->delay post).
+    ``lastupdate''
+        The time of last update of all synapses (synapse->last update). This
+        only exists if there are dynamic synaptic variables.
+    
+    Internal attributes:
+    
+    ``source''
+        The source neuron group.
+    ``target''
+        The target neuron group.
+    ``_S''
+        The state matrix (a 2D dynamical array with values of synaptic variables).
+    ``presynaptic''
+        The (dynamic) array of presynaptic neuron indexes for all synapses (synapse->i).
+    ``postsynaptic''
+        The array of postsynaptic neuron indexes for all synapses (synapse->j).
+    ``synapses_pre''
+        A list of (dynamic) arrays giving the set of synapse indexes for each presynaptic neuron i
+        (i->synapses)
+    ``synapses_post''
+        A list of (dynamic) arrays giving the set of synapse indexes for each postsynaptic neuron j
+        (j->synapses)
+    ``pre_queue''
+        A SpikeQueue for presynaptic spikes.
+    ``pre_code''
+        The compiled code to be executed on presynaptic spikes.
+    ``pre_namespace''
+        The namespace for the presynaptic code.
+    ``post_queue'', ``post_code'', ``post_namespace''
+        Same for the postsynaptic side.
     '''
     def __init__(self, source, target = None, model = None, pre = None, post = None,
              max_delay = 0*ms, # is this useful?

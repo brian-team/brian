@@ -1,5 +1,20 @@
 '''
-Synaptic variables
+Synaptic variables.
+
+Currently, searching synapse indexes for synapse (i,j) is implemented as follows in synapse_index():
+1) get indexes of target synapses of presynaptic neuron(s) i
+2) get indexes of source synapses of postsynaptic neuron(s) j
+3) calculate the intersection
+
+This can be highly inefficient is some cases.
+Alternatives:
+* For slices (e.g. i=1:10:2 or j=:), we can do a faster search as follows:
+    1) get indexes of target synapses of presynaptic neuron(s) i
+    2) get postsynaptic neurons of these synapses
+    3) select those that match the condition of postsynaptic neuron indexes
+    or the reverse. This is simple, but still suboptimal.
+* Use dictionaries (i,j)->synapse index. This is fast but 1) cannot be vectorised,
+2) is very memory expensive.
 '''
 from brian import * # ugly import
 from brian.inspection import *

@@ -1,5 +1,53 @@
 """
 Spike queues following BEP-21.
+
+The spike queue class stores future synaptic events
+produced by a given presynaptic neuron group (or postsynaptic for backward
+propagation in STDP).
+
+The structure X is a 2D array, where row is the time bin and column
+is the position in that bin (each row is a stack) .
+The array is circular in the time dimension. There is a 1D array (n) giving the
+position of the last added event in each time bin.
+The 2D array is dynamic in the column direction.
+The row corresponding to current time is stored in currenttime.
+X_flat is a flattened view of X.
+
+Main methods:
+* peek()
+    Outputs the current events: we simply get the row corresponding to
+    currenttime, so this is fast. We then shift the cursor of the circular
+    array by one row: next().
+* insert(delay, target, offset=None)
+    Insert events in the queue. Each presynaptic neuron has a corresponding
+    array of target synapses and corresponding delays. We must push each target
+    synapse (index) on top of the stack (row) corresponding to the delay. If all synapses
+    have different delays, this is relatively easy to vectorise. It is a bit
+    more difficult if there are synapses with the same delays.
+    For a given presynaptic neuron, each synaptic delay corresponds to coordinates
+    (i,j) in the circular array of stacks, where i is the delay (stack index) and
+    j is index relative to the top of the stack (0=top, 1=1 above top).
+    The absolute location in the structure is then calculated as n[i]+j, where
+    n[i] is the location of the top of stack i. The only difficulty is to calculate
+    j, and in Python this requires sorting (see development mailing list).
+    It can be preprocessed if event feeding involves a loop over presynaptic spikes
+    (if it's vectorised then it's not possible anymore). In this case it takes K*4
+    bytes.
+* offsets(delay)
+    This calculates the offsets j mentionned above, for a given array of delays.
+* precompute_offsets()
+    This precomputes all offsets for all presynaptic neurons.
+* propagate()
+    The class is implemented as a SpikeMonitor, which means the propagate() function is
+    called at each timestep with the spikes produced by the neuron group.
+    The function executes different codes (different strategies) depending on whether
+    offsets are precomputed or not, and on whether delays are heterogeneous or
+    homogeneous.
+
+Insertion should also have a C version, which would be much faster.
+
+TODO:
+* C version of insertion
 """
 from brian import * # remove this
 from brian.stdunits import ms
