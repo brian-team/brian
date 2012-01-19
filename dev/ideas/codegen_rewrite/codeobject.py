@@ -74,7 +74,7 @@ class PythonCode(Code):
     def compile(self):
         self.code_compiled = compile(self.code_str, 'PythonCode()', 'exec')
     def run(self):
-        exec self.code_compiled in self.namespace
+        exec self.code_compiled in globals(), self.namespace
 
 
 class CCode(Code):

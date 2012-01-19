@@ -1,23 +1,17 @@
 from brian import *
+from brian.inspection import get_identifiers
+from brian.optimiser import symbolic_eval
 from sympy.printing.ccode import CCodePrinter
 import sympy
-import parser
 from formatting import *
+import re
+
+__all__ = ['Expression',
+           'Statement',
+           'statements_from_codestring',
+           ]
     
 languages = ['Python', 'C', 'GPU']
-
-def get_identifiers(expr):
-    return parser.suite(expr).compile().co_names
-
-
-def symbolic_eval(expr):
-    # Find all symbols
-    namespace = {}
-    vars = get_identifiers(expr)
-    for var in vars:
-        namespace[var] = sympy.Symbol(var)
-    return eval(expr, namespace)
-
 
 class Expression(object):
     def __init__(self, expr):
@@ -44,6 +38,8 @@ class Statement(object):
     def __init__(self, var, op, expr, boolean=False):
         self.var = var.strip()
         self.op = op.strip()
+        if isinstance(expr, str):
+            expr = Expression(expr)
         self.expr = expr
         self.boolean = boolean
         
@@ -72,10 +68,50 @@ class Statement(object):
         if language.name=='c':
             statementstr += ';'
         return statementstr
-    
-    
+
+
+def statements_from_codestring(code, eqs=None, infer_definitions=False):
+    lines = [line.strip() for line in code.split('\n') if line.strip()]
+    statements = []
+    if eqs is None:
+        defined = set()
+    else:
+        defined = set(eqs._diffeq_names)
+    for line in lines:
+        m = re.search(r'[^><=]=', line)
+        if not m:
+            raise ValueError("Could not extract statement from line: "+line)
+        start, end = m.start(), m.end()
+        op = line[start:end].strip()
+        var = line[:start].strip()
+        expr = line[end:].strip()
+        # var should be a single word
+        if len(re.findall(r'\b\w+\b', var))!=1:
+            raise ValueError("LHS in statement must be single variable name, line: "+line)
+        if op=='=' and infer_definitions and var not in defined:
+            op = ':='
+            defined.add(var)
+        stmt = Statement(var, op, expr)
+        statements.append(stmt)
+    return statements
+
+
 if __name__=='__main__':
-    stmt = Statement('v', '=', Expression('x**2+v*((v>10)&(v<20))'))
-    print 'Python:', stmt.convert_to_python()
-    print 'C:', stmt.convert_to('C')
-    print 'GPU:', stmt.convert_to('GPU')
+    tau = 10*ms
+    Vt0 = 1.0
+    taut = 100*ms
+    eqs = Equations('''
+    dV/dt = (-V+I)/tau : 1
+    dI/dt = -I/tau : 1
+    dVt/dt = (Vt0-Vt)/taut : 1
+    ''')
+    reset = '''
+    Vt += 0.5
+    V = 0
+    I = 0
+    W = 5
+    W = 2
+    '''
+    statements = statements_from_codestring(reset, eqs, infer_definitions=True)
+    for stmt in statements:
+        print stmt

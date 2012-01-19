@@ -2,6 +2,7 @@ from brian import *
 
 __all__ =  ['Symbol',
             'NeuronGroupStateVariableSymbol',
+            'get_neuron_group_symbols',
             ]
 
 class Symbol(object):
@@ -69,6 +70,8 @@ class NeuronGroupStateVariableSymbol(Symbol):
             return self.name
     @property
     def define(self):
+        # TODO: shouldn't calling this be an error? you shouldn't be defining
+        # state variables, only reading/writing
         if self.language.name=='python':
             return self.name
         elif self.language.name=='c':
@@ -79,6 +82,15 @@ class NeuronGroupStateVariableSymbol(Symbol):
             return []
         elif self.language.name=='c':
             return [self.index_name]
+
+def get_neuron_group_symbols(group, language, index_name='_neuron_index'):
+    eqs = group._eqs
+    symbols = dict(
+       (name,
+        NeuronGroupStateVariableSymbol(group, name, name, language,
+               index_name=index_name)) for name in eqs._diffeq_names)
+    return symbols
+    
 
 if __name__=='__main__':
     from languages import *
