@@ -94,6 +94,27 @@ the utilities in inspection (is_affine; setting external variables to 0).
 
 All this can be done after parsing by NeuronGroup.
 
+Lumped variables
+----------------
+With synaptic nonlinearities, we want to simulate differential equations for
+all synaptic variables, then (in general) sum them per postsynaptic neuron and
+add the value to one variable, or set it to some value (e.g. total conductance).
+
+To do this is simple:
+* loop over postsynaptic neurons j
+* ge[j]=sum(S.ge[synapses_post[j]])
+
+The main issue is then the syntax.
+We could use something like linked_var, for example:
+P.ge=lumped_var(synapses.ge)
+where P is the NeuronGroup, and ge must have been defined as a parameter
+in P.
+Or, in fact, we could just use linked_var directly!
+P.ge=linked_var(synapses,"ge")
+Of course we need to modify linked_var a bit.
+Or:
+P.ge=S.ge
+
 Various notes
 -------------
 * We want to be able to use StateUpdater objects on the synaptic variables.
