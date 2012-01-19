@@ -249,13 +249,14 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.synapses_post=[DynamicArray(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.target))]
 
         # Code generation
-        class Replacer(object):
+        class Replacer(object): # vectorises a function
             def __init__(self, func, n):
                 self.n = n
                 self.func = func
             def __call__(self):
                 return self.func(self.n)
         self._Replacer = Replacer
+        self._binomial = lambda n,p:np.random.binomial(array(n,dtype=int),p)
 
         self.contained_objects = []
         self.pre_code,self.pre_namespace=self.generate_code(pre,level+1)
@@ -542,6 +543,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             _namespace['n'] = len(synaptic_events)
             _namespace['rand'] = self._Replacer(np.random.rand, len(synaptic_events))
             _namespace['randn'] = self._Replacer(np.random.randn, len(synaptic_events))
+            _namespace['np']=np
+            _namespace['binomial']=self._binomial
             exec self.pre_code in _namespace
         self.pre_queue.next()
         
@@ -565,6 +568,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 _namespace['n'] = len(synaptic_events)
                 _namespace['rand'] = self._Replacer(np.random.rand, len(synaptic_events))
                 _namespace['randn'] = self._Replacer(np.random.randn, len(synaptic_events))
+                _namespace['np']=np
+                _namespace['binomial']=self._binomial
                 exec self.post_code in _namespace
             self.post_queue.next()
 

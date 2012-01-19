@@ -71,6 +71,8 @@ S=Synapses(source,target,
                          pre="v+=w*(rand()<p)") # probabilistic synapse
 
 Other things to think about: heterosynaptic or non-specific modifications (e.g. synaptic scaling)
+For example, in Kempter et al., each weight modification also affects all
+synapses made by the presynaptic neuron.
 
 Syntax
 ^^^^^^
