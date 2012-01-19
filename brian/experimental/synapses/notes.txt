@@ -114,6 +114,21 @@ P.ge=linked_var(synapses,"ge")
 Of course we need to modify linked_var a bit.
 Or:
 P.ge=S.ge
+This is possible given that S.ge is a SynapticVariable, and therefore
+has all the necessary information.
+We then use link_var with a function that does the sum.
+
+Gap junctions
+-------------
+It could be simple, for example:
+model='''
+g : siemens
+I=g*(V_post-V_pre) : amp
+'''
+P.I=S.I
+
+The only limitation here is that it won't be possible to have
+delays in these connections.
 
 Various notes
 -------------
