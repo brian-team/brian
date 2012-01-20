@@ -94,6 +94,33 @@ the utilities in inspection (is_affine; setting external variables to 0).
 
 All this can be done after parsing by NeuronGroup.
 
+Issues
+^^^^^^
+Event-driven code can be problematic in some cases. In all these cases,
+updates should be continuous.
+1) The equation depends on pre or postsynaptic variables.
+2) Another equation depends on the synaptic variable.
+3) The synaptic variable corresponds to a lumped variable (see below),
+defined later by P.ge=S.ge.
+
+Issues #1 and #2 can be solved by examining the equations.
+Issue #3 is more problematic because it is not known at the time when
+equations are examined.
+
+Several possibilities to solve this problem:
+1) Explicitly ask for event-driven code using some local syntax, e.g.
+'dx/dt=-x : 1 (event-driven)'.
+2) Explicitly allow event-driven code using a global keyword, e.g.
+eventdriven=True.
+3) Examine the equations only at run time, through the compress() method.
+Then the instruction P.ge=S.ge should inform S.
+
+I think the global syntax, although simpler, cannot satisfactorily handle all cases,
+such as NMDA synapses with plasticity. So option #2 seems bad.
+Option #1 seems good because it is explicit, but it implies going into the
+details of parsing Equations. A simple solution is to have a class derived from
+Equations, for which the parsing changes. This would be my first choice.
+
 Lumped variables
 ----------------
 With synaptic nonlinearities, we want to simulate differential equations for
