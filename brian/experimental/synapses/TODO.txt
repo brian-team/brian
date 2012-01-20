@@ -1,5 +1,8 @@
 TODO (Synapses)
 ---------------
+* Issue: event-driven code can be problematic in some cases (P.ge=S.ge, but
+also if there is another equation that uses the variable)
+
 * faster S.w[:,i] (more generally, when 1 argument is :)
 	in general, faster synapse_indexes()
 * Synapses with same underlying data (synaptic variables) as another Synapses object (for delayed STDP)
