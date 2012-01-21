@@ -148,6 +148,8 @@ class SpikeQueue(SpikeMonitor):
         self._extra_compile_args = ['-O3']
         if self._cpp_compiler == 'gcc':
             self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+        if self._useweave:
+            self._precompute_offsets=False
 
         super(SpikeQueue, self).__init__(source, 
                                          record = False)
@@ -219,6 +221,8 @@ class SpikeQueue(SpikeMonitor):
             
         The code is complex because tricks are needed for vectorisation.
         '''
+        if self._useweave:
+            return self.offsets_C(delay)
         # We use merge sort because it preserves the input order of equal
         # elements in the sorted output
         I = argsort(delay,kind='mergesort')
@@ -233,7 +237,28 @@ class SpikeQueue(SpikeMonitor):
         ofs = zeros_like(delay)
         ofs[I] = array(ei,dtype=ofs.dtype) # maybe types should be signed?
         return ofs
-        
+    
+    def offsets_C(self, delay):
+        '''
+        Calculates offsets corresponding to a delay array, optimised C version.
+        '''
+        nevents=len(delay)
+        x=zeros(self.X.shape[1],dtype=int) # a counter for each delay
+        ofs=zeros(nevents,dtype=int)
+        code='''
+        int d;
+        for(int i=0;i<nevents;i++) {
+            d=delay(i);
+            ofs(i)=x(d);
+            x(d)++;
+        }
+        '''
+        weave.inline(code, ['nevents','x','ofs','delay'], \
+             compiler=self._cpp_compiler,
+             type_converters=weave.converters.blitz,
+             extra_compile_args=self._extra_compile_args)
+        return ofs
+       
     def insert(self, delay, target, offset=None):
         '''
         Vectorised insertion of spike events.
@@ -284,7 +309,7 @@ class SpikeQueue(SpikeMonitor):
         nevents=len(target)
         code='''
         for(int i=0;i<nevents;i++) {
-            ();
+            delay(i);
         }
         '''
         weave.inline(code, ['nevents'], \

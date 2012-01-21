@@ -144,6 +144,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
              level = 0,
              clock = None,
              unit_checking = True, method = None, freeze = False, implicit = False, order = 1): # model (state updater) related
+        
         target=target or source # default is target=source
 
         # Check clocks. For the moment we enforce the same clocks for all objects
