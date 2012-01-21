@@ -295,6 +295,11 @@ class Network(object):
         for C in self.connections:
             C.compress()
 
+        # Compress groups that can be compressed
+        for N in self.groups:
+            if hasattr(N,'compress'):
+                N.compress()
+
         # Experimental support for new propagation code
         if get_global_preference('usenewpropagate') and get_global_preference('useweave'):
             from experimental.new_c_propagate import make_new_connection

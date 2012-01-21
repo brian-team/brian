@@ -34,11 +34,9 @@ U=.1
 #tauf=10*ms
 #U=.6
 S=Synapses(input,neuron,
-           model='''x : 1
-                    u : 1
-                    w : 1
-                    dx/dt=(1-x)/taud : 1
-                    du/dt=(U-u)/tauf : 1
+           model='''w : 1
+                    dx/dt=(1-x)/taud : 1 (event-driven)
+                    du/dt=(U-u)/tauf : 1 (event-driven)
                  ''',
            pre='''i+=w*u*x
                   x*=(1-u)

@@ -39,8 +39,8 @@ input = PoissonGroup(N, rates=F)
 neurons = NeuronGroup(1, model=eqs_neurons, threshold=vt, reset=vr)
 S = Synapses(input, neurons,
              model='''w:1
-                      dA_pre/dt=-A_pre/tau_pre : 1
-                      dA_post/dt=-A_post/tau_post : 1''',
+                      dA_pre/dt=-A_pre/tau_pre : 1 (event-driven)
+                      dA_post/dt=-A_post/tau_post : 1 (event-driven)''',
              pre='''ge+=w
                     A_pre+=dA_pre
                     w=clip(w+A_post,0,gmax)''',

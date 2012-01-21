@@ -27,6 +27,7 @@ from brian.optimiser import *
 from numpy.random import binomial
 from brian.utils.documentation import flattened_docstring
 from random import sample
+from synaptic_equations import *
 import re
 import warnings
 try:
@@ -118,6 +119,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         The target neuron group.
     ``_S''
         The state matrix (a 2D dynamical array with values of synaptic variables).
+        At run time, it is transformed into a static 2D array (with compress()).
     ``presynaptic''
         The (dynamic) array of presynaptic neuron indexes for all synapses (synapse->i).
     ``postsynaptic''
@@ -154,9 +156,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if post is not None:
             post=flattened_docstring(post)
 
-        # Insert the lastupdate variable if necessary (if it is mentioned in pre/post, or if there is a differential equation)
+        # Insert the lastupdate variable if necessary (if it is mentioned in pre/post, or if there is event-driven code)
         expr=re.compile(r'\blastupdate\b')
-        if (re.compile(r'/dt').search(model) is not None) or \
+        if (re.compile(r'event\-driven').search(model) is not None) or \
            (pre is not None and expr.search(pre) is not None) or \
            (post is not None and expr.search(post) is not None):
             model+='\nlastupdate : second\n'
@@ -165,6 +167,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             if post is not None:
                 post=post+'\nlastupdate=t\n'
 
+        model=SynapticEquations(model,level=level+1)
         NeuronGroup.__init__(self, 0,model=model,clock=clock,level=level+1,unit_checking=unit_checking,method=method,freeze=freeze,implicit=implicit,order=order)
         # We might want *not* to use the state updater on all variables, so for now I disable it (see update())
         '''
@@ -190,13 +193,14 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.source=source
         self.target=target
         
-        # Look for potential event-driven code in the differential equations
+        # Look for event-driven code in the differential equations
         if use_sympy:
             eqs=self._eqs # an Equations object
-            vars=eqs._diffeq_names_nonzero # Dynamic variables
+            #vars=eqs._diffeq_names_nonzero # Dynamic variables
+            vars=eqs._eventdriven.keys()
             var_set=set(vars)
-            for var in vars:
-                RHS=eqs._string[var]
+            for var,RHS in eqs._eventdriven.iteritems():
+                #RHS=eqs._string[var]
                 ids=get_identifiers(RHS)
                 if len(set(list(ids)+[var]).intersection(var_set))==1:
                     # no external dynamic variable
@@ -209,12 +213,13 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                         linear=True
                     except: # not linear
                         linear=False
+                        raise TypeError,"Cannot turn equation for "+var+" into event-driven code"
                     if linear:
                         z=symbolic_eval(RHS)
                         symbol_var=sympy.Symbol(var)
                         symbol_t=sympy.Symbol('t')-sympy.Symbol('lastupdate')
                         b=z.subs(symbol_var,0)
-                        a=(z.subs(symbol_var,1)-b).simplify()
+                        a=sympy.simplify(z.subs(symbol_var,1)-b)
                         if a==0:
                             expr=symbol_var+b*symbol_t
                         else:
@@ -225,7 +230,12 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                         pre=expr+'\n'+pre
                         if post is not None:
                             post=expr+'\n'+post
+                else:
+                    raise TypeError,"Cannot turn equation for "+var+" into event-driven code"
 
+        if len(self._eqs._diffeq_names_nonzero)==0:
+            self._state_updater=None
+        
         # Set last spike to -infinity
         if 'lastupdate' in self.var_index:
             self.lastupdate=-1e6
@@ -523,7 +533,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         * Deal with static variables
         * Factor code
         '''
-        #NeuronGroup.update(self) # we don't do it for now
+        if self._state_updater is not None:
+            self._state_updater(self)
+        
         synaptic_events = self.pre_queue.peek()
         if len(synaptic_events):
             # Build the namespace - Maybe we should do this only once? (although there is the problem of static equations)
@@ -631,11 +643,13 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     
     def compress(self):
         '''
-        Currently, this function is not called by the network.
+        * Checks that the object is not empty.
+        * Make the state array non-dynamical (important for the state updater)
         '''
         # Check that the object is not empty
         if len(self)==0:
             warnings.warn("Empty Synapses object")
+        self._S=self._S[:,:]
     
     def synapse_index(self,i):
         '''
