@@ -3,10 +3,9 @@
 CUBA example with delays.
 
 Connection (no delay): 3.5 s
-DelayConnection: 5.2 s, 5.7 s with random delays
-Synapses: 6.9 s, 7.8 s with random delays
-Synapses with precomputed offsets: 6.2 s, 7.2 s with random delays
-Synapses with weave (for offsets): 6.8 s with random delays
+DelayConnection: 5.7 s
+Synapses (with precomputed offsets): 6.7 s
+Synapses with weave: 6.5 s
 Synapses with fixed delays: 6.4 s
 """
 
@@ -14,7 +13,7 @@ from brian import *
 import time
 from brian.experimental.synapses import *
 #log_level_debug()
-set_global_preferences(useweave=True)
+set_global_preferences(useweave=False)
 
 start_time = time.time()
 taum = 20 * ms

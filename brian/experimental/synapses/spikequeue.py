@@ -43,11 +43,6 @@ Main methods:
     The function executes different codes (different strategies) depending on whether
     offsets are precomputed or not, and on whether delays are heterogeneous or
     homogeneous.
-
-Insertion should also have a C version, which would be much faster.
-
-TODO:
-* C version of insertion
 """
 from brian import * # remove this
 from brian.stdunits import ms
@@ -148,7 +143,7 @@ class SpikeQueue(SpikeMonitor):
         self._extra_compile_args = ['-O3']
         if self._cpp_compiler == 'gcc':
             self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
-        if self._useweave:
+        if self._useweave: # no need to precompute offsets if weave is used
             self._precompute_offsets=False
 
         super(SpikeQueue, self).__init__(source, 
@@ -168,14 +163,14 @@ class SpikeQueue(SpikeMonitor):
         # Adjust the maximum delay and number of events per timestep if necessary
         nsteps=max(self.delays)+1
         maxevents=self.X.shape[1]
-        if maxevents==INITIAL_MAXSPIKESPER_DT:
+        if maxevents==INITIAL_MAXSPIKESPER_DT: # automatic resize
             maxevents=max(INITIAL_MAXSPIKESPER_DT,max([len(targets) for targets in self.synapses]))
         # Check if homogeneous delays
-        if (nsteps>self.X.shape[0]): 
+        if (nsteps>self.X.shape[0]) or (nsteps==1): 
             self._homogeneous=(nsteps==min(self.delays)+1)
         else: # this means that the user has set a larger delay than necessary, which means the delays are not fixed
             self._homogeneous=False
-        if (nsteps>self.X.shape[0]) or (maxevents>self.X.shape[1]):
+        if (nsteps>self.X.shape[0]) or (maxevents>self.X.shape[1]): # Resize
             self.X = zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
             self.X_flat = self.X.reshape(nsteps*maxevents,)
             self.n = zeros(nsteps, dtype = int) # number of events in each time step
@@ -237,28 +232,7 @@ class SpikeQueue(SpikeMonitor):
         ofs = zeros_like(delay)
         ofs[I] = array(ei,dtype=ofs.dtype) # maybe types should be signed?
         return ofs
-    
-    def offsets_C(self, delay):
-        '''
-        Calculates offsets corresponding to a delay array, optimised C version.
-        '''
-        nevents=len(delay)
-        x=zeros(self.X.shape[1],dtype=int) # a counter for each delay
-        ofs=zeros(nevents,dtype=int)
-        code='''
-        int d;
-        for(int i=0;i<nevents;i++) {
-            d=delay(i);
-            ofs(i)=x(d);
-            x(d)++;
-        }
-        '''
-        weave.inline(code, ['nevents','x','ofs','delay'], \
-             compiler=self._cpp_compiler,
-             type_converters=weave.converters.blitz,
-             extra_compile_args=self._extra_compile_args)
-        return ofs
-       
+           
     def insert(self, delay, target, offset=None):
         '''
         Vectorised insertion of spike events.
@@ -273,49 +247,24 @@ class SpikeQueue(SpikeMonitor):
             Offsets within timestep (array). If unspecified, they are calculated
             from the delay array.
         '''
+        if self._useweave: # C-optimised insertion (minor speed up)
+            self.insert_C(delay,target)
+            return
         if offset is None:
             offset=self.offsets(delay)
         
+        # Calculate row indexes in the data structure
         timesteps = (self.currenttime + delay) % len(self.n)
+        # (Over)estimate the number of events to be stored, to resize the array
+        # It's an overestimation for the current time, but I believe a good one
+        # for future events
+        m=max(self.n)+len(target)
+        if (m >= self.X.shape[1]): # overflow
+            self.resize(m+1)
         
-        # Compute new stack sizes:
-        old_nevents = self.n[timesteps].copy() # because we need this for the final assignment, but we need to precompute the  new one to check for overflow
-        self.n[timesteps] += offset+1 # that's a trick (to update stack size), plus we pre-compute it to check for overflow
-        # Note: the trick can only work if offsets are ordered in the right way
-        
-        m = max(self.n[timesteps])+1 # If overflow, then at least one self.n is bigger than the size
-        if (m >= self.X.shape[1]):
-            self.resize(m+1) # was m previously (not enough)
-        
-        self.X_flat[timesteps*self.X.shape[1]+offset+old_nevents]=target
-        # Old code seemed wrong:
-        #self.X_flat[(self.currenttime*self.X.shape[1]+offset+\
-        #             old_nevents)\
-        #             % len(self.X)]=target
-        
-    def insert_C(self,delay,target):
-        '''
-        Insertion of events using weave
-
-        ``delay''
-            Delays in timesteps (array).
-            
-        ``target''
-            Target synaptic indexes (array).
-        
-        UNFINISHED
-        Difficult bit: check whether we need to resize
-        '''
-        nevents=len(target)
-        code='''
-        for(int i=0;i<nevents;i++) {
-            delay(i);
-        }
-        '''
-        weave.inline(code, ['nevents'], \
-             compiler=self._cpp_compiler,
-             type_converters=weave.converters.blitz,
-             extra_compile_args=self._extra_compile_args)
+        self.X_flat[timesteps*self.X.shape[1]+offset+self.n[timesteps]]=target
+        self.n[timesteps] += offset+1 # that's a trick (to update stack size)
+        # Note: the trick can only work if offsets are ordered in the right way        
         
     def insert_homogeneous(self,delay,target):
         '''
@@ -329,7 +278,7 @@ class SpikeQueue(SpikeMonitor):
         '''
         timestep = (self.currenttime + delay) % len(self.n)
         nevents=len(target)
-        m = max(self.n[timestep])+nevents+1 # If overflow, then at least one self.n is bigger than the size
+        m = self.n[timestep]+nevents+1 # If overflow, then at least one self.n is bigger than the size
         if (m >= self.X.shape[1]):
             self.resize(m+1) # was m previously (not enough)
         k=timestep*self.X.shape[1]+self.n[timestep]
@@ -374,6 +323,62 @@ class SpikeQueue(SpikeMonitor):
                         delay = self.delays[synaptic_events]
                         offsets = self._offsets[i]
                         self.insert(delay, synaptic_events, offsets)
+
+    ######################################## C optimised versions
+    def insert_C(self,delay,target):
+        '''
+        Insertion of events using weave.
+
+        ``delay''
+            Delays in timesteps (array).
+            
+        ``target''
+            Target synaptic indexes (array).
+        '''
+        # Check if we can fit the events (crude check)
+        nevents=len(target)
+        m=max(self.n)+nevents
+        if m>self.X.shape[1]:
+            self.resize(m)
+        Xflat=self.X_flat
+        n=self.n
+        ncols=self.X.shape[1]
+        currentt=self.currenttime
+        ndelays=len(self.n)
+        code='''
+        int d;
+        for(int k=0;k<nevents;k++) {
+            d=delay(k);
+            Xflat(((currentt+d)%ndelays)*ncols+n(d))=target(k);
+            n(d)++;
+        }
+        '''
+        weave.inline(code, ['nevents','n','delay','Xflat','target','ncols','currentt','ndelays'], \
+             compiler=self._cpp_compiler,
+             type_converters=weave.converters.blitz,
+             extra_compile_args=self._extra_compile_args)
+
+    def offsets_C(self, delay):
+        '''
+        Calculates offsets corresponding to a delay array, optimised C version.
+        This function is normally not used (since insert_C does not need it).
+        '''
+        nevents=len(delay)
+        x=zeros(self.X.shape[0],dtype=int) # a counter for each delay
+        ofs=zeros(nevents,dtype=int)
+        code='''
+        int d;
+        for(int i=0;i<nevents;i++) {
+            d=delay(i);
+            ofs(i)=x(d);
+            x(d)++;
+        }
+        '''
+        weave.inline(code, ['nevents','x','ofs','delay'], \
+             compiler=self._cpp_compiler,
+             type_converters=weave.converters.blitz,
+             extra_compile_args=self._extra_compile_args)
+        return ofs
 
     ######################################## UTILS    
     def plot(self, display = True):
