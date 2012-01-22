@@ -1,8 +1,8 @@
 '''
 Synaptic variables.
 '''
-from brian import * # ugly import
-from brian.inspection import *
+from ...inspection import *
+from numpy import *
 import numpy as np
 
 __all__=['SynapticVariable','SynapticDelayVariable','slice_to_array']

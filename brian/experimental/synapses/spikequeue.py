@@ -44,9 +44,12 @@ Main methods:
     offsets are precomputed or not, and on whether delays are heterogeneous or
     homogeneous.
 """
-from brian import * # remove this
-from brian.stdunits import ms
-from brian.globalprefs import *
+from ...monitor import SpikeMonitor
+from ...stdunits import ms
+from ...globalprefs import *
+import numpy as np
+from numpy import *
+from pylab import plot,show
 from scipy import weave
 
 INITIAL_MAXSPIKESPER_DT = 1
@@ -392,7 +395,7 @@ class SpikeQueue(SpikeMonitor):
         if display:
             show()
 
-if __name__=='__main__':
+if __name__=='__main__': # This will not work anymore
     from synapses import *
     P=NeuronGroup(1,model='v:1')
     S=Synapses(P,model='w:1')

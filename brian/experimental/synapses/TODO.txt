@@ -1,5 +1,6 @@
 TODO (Synapses)
 ---------------
+* Clean imports in Synapses / SpikeQueue
 * Multiple pre/post code multiple delays.
 * Lumped variables
 * Gap junctions
