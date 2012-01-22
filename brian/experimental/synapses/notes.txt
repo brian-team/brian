@@ -157,10 +157,25 @@ P.I=S.I
 The only limitation here is that it won't be possible to have
 delays in these connections.
 
+Delayed STDP
+------------
+When we consider delayed STDP, we have 3 delays instead of just two:
+pre->synapse, synapse->post (for STDP variables), pre->post (for v+=w).
+I can see two ways to deal with this:
+1) allow a Synapses object to share state variables with another one,
+2) have multiple codes and delays for the pre (and perhaps post) side.
+
+I think the most elegant, and perhaps simplest, way is #2. Here is how to do
+it:
+* the pre keyword accepts sequences (tuples/lists): pre=('v+=w','Apre+=dApre')
+* we have a list of presynaptic queues and codes,
+* delay_pre is now a list of delay arrays,
+* setattr fails on delay_pre
+
+Since there is no fundamental difference between pre and post sides, we could
+have a unified treatment of queues and codes.
+
 Various notes
 -------------
-* We want to be able to use StateUpdater objects on the synaptic variables.
-This means we need a view on a state matrix (only the floats).
-We also need some of the methods that are in NeuronGroup.
 * I decided to use signed rather than unsigned ints for indexes, because there
 were some conversion problems.

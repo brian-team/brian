@@ -1,35 +1,27 @@
 TODO (Synapses)
 ---------------
-* faster S.w[:,i] (more generally, when 1 argument is :)
-	in general, faster synapse_indexes()
-* Synapses with same underlying data (synaptic variables) as another Synapses object (for delayed STDP)
-  or some other mechanisms maybe.
+* Multiple pre/post code multiple delays.
 * Lumped variables
 * Gap junctions
+* faster S.w[:,i] (more generally, when 1 argument is :)
+	in general, faster synapse_indexes()
 
 * S[P,Q]='...' : with subgroups, shift the values of i,j
 * S[:,:]='i<j' : int
 * S[:,:]=array or sequence (boolean or int)
 
 * Code generation
-* Update: Have namespaces partially built at run time (call state_(var)),
-  or better, extract synaptic events from the synaptic state matrix;
-  same stuff for postsynaptic variables
-* accelerate Synapses.generate_code() (.any())
 * SynapticVariable: should be usable as a numpy array
 * deal with suffixes (v_post, v_pre)
 * Synapses.generate_code: check if postsynaptic variables are modified
-* More careful namespace creation in Synapses.update()(see reset/threshold)
 * SpikeQueue callback (to Synapses): this way the clock is only for state updates
 * Bound checks in setitem/getitem
-* Factor things in code generation
-* Faster queue: C version of propagate or insert?
-* Faster Synapses.update()
-* Replace NeuronGroup.__init__ with own stuff
 * include static variables in pre/post code
-* have a list of variable names
+
 * S.connect_random: fixed number of presynaptic neurons
-* S.connect_one_to_one (or 'i==j')
 * StateMonitor (already works with synapse indexes):
 	what is needed is handling more general indexes in SynapticVariable
 	(e.g. lists of tuples)
+* accelerate Synapses.generate_code()? (.any())
+* Factor things
+* Replace NeuronGroup.__init__ with own stuff?

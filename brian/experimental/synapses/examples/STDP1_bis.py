@@ -8,13 +8,13 @@ Original time: 278 s
 with DelayConnection: 478 s
 New time: 479 s
     with precomputed offsets: 444 s
-    with fixed delays: 424 s
+    with zero delays: 418 s
     with weave: 479 s (??)
 '''
 from brian import *
 from brian.experimental.synapses import *
 from time import time
-set_global_preferences(useweave=True)
+set_global_preferences(useweave=False)
 
 N = 1000
 taum = 10 * ms

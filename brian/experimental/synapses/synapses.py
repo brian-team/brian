@@ -130,14 +130,12 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     ``synapses_post''
         A list of (dynamic) arrays giving the set of synapse indexes for each postsynaptic neuron j
         (j->synapses)
-    ``pre_queue''
-        A SpikeQueue for presynaptic spikes.
-    ``pre_code''
-        The compiled code to be executed on presynaptic spikes.
-    ``pre_namespace''
-        The namespace for the presynaptic code.
-    ``post_queue'', ``post_code'', ``post_namespace''
-        Same for the postsynaptic side.
+    ``queues''
+        List of SpikeQueues for pre and postsynaptic spikes.
+    ``codes''
+        The compiled codes to be executed on pre and postsynaptic spikes.
+    ``namespaces''
+        The namespaces for the pre and postsynaptic codes.
     '''
     def __init__(self, source, target = None, model = None, pre = None, post = None,
              max_delay = 0*ms, # is this useful?
@@ -170,7 +168,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
 
         model=SynapticEquations(model,level=level+1)
         NeuronGroup.__init__(self, 0,model=model,clock=clock,level=level+1,unit_checking=unit_checking,method=method,freeze=freeze,implicit=implicit,order=order)
-        # We might want *not* to use the state updater on all variables, so for now I disable it (see update())
         '''
         At this point we have:
         * a state matrix _S with all variables
@@ -193,6 +190,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         '''
         self.source=source
         self.target=target
+        
+        self._iscompressed=False # True if compress() has already been called
         
         # Look for event-driven code in the differential equations
         if use_sympy:
@@ -233,6 +232,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                             post=expr+'\n'+post
                 else:
                     raise TypeError,"Cannot turn equation for "+var+" into event-driven code"
+        elif len(eqs._eventdriven)>0:
+            raise TypeError,"The Sympy package must be installed to produce event-driven code"
 
         if len(self._eqs._diffeq_names_nonzero)==0:
             self._state_updater=None
@@ -260,26 +261,21 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.synapses_post=[DynamicArray(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.target))]
 
         # Code generation
-        class Replacer(object): # vectorises a function
-            def __init__(self, func, n):
-                self.n = n
-                self.func = func
-            def __call__(self):
-                return self.func(self.n)
-        self._Replacer = Replacer
         self._binomial = lambda n,p:np.random.binomial(array(n,dtype=int),p)
 
         self.contained_objects = []
-        self.pre_code,self.pre_namespace=self.generate_code(pre,level+1)
-        self.pre_queue = SpikeQueue(self.source, self.synapses_pre, self._delay_pre, max_delay = max_delay)
-        self.contained_objects.append(self.pre_queue)
+        code,_namespace=self.generate_code(pre,level+1)
+        self.codes=[code]
+        self.namespaces=[_namespace]
+        self.queues = [SpikeQueue(self.source, self.synapses_pre, self._delay_pre, max_delay = max_delay)]
         
         if post is not None:
-            self.post_code,self.post_namespace=self.generate_code(post,level+1,direct=True)
-            self.post_queue = SpikeQueue(self.target, self.synapses_post, self._delay_post, max_delay = max_delay)
-            self.contained_objects.append(self.post_queue)
-        else:
-            self.post_code=None
+            code,_namespace=self.generate_code(post,level+1,direct=True)
+            self.codes.append(code)
+            self.namespaces.append(_namespace)
+            self.queues.append(SpikeQueue(self.target, self.synapses_post, self._delay_post, max_delay = max_delay))
+
+        self.contained_objects+=self.queues
       
     def generate_code(self,code,level,direct=False):
         '''
@@ -314,9 +310,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         _namespace['unique'] = np.unique
         _namespace['nonzero'] = np.nonzero
 
-        # Replace rand() by vectorised version
-        # TODO: pass number of synapses
-        #pre = re.sub(r'\b' + 'rand\(\)', 'rand(len(_i))', pre)
+        code = re.sub(r'\b' + 'rand\(\)', 'rand(n)', code)
+        code = re.sub(r'\b' + 'randn\(\)', 'randn(n)', code)
 
         # Generate the code
         def update_code(code, indices):
@@ -352,7 +347,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             
         log_debug('brian.synapses', '\nPRE CODE:\n'+code_str)
         
-        # Commpile
+        # Compile
         compiled_code = compile(code_str, "Synaptic code", "exec")
         
         return compiled_code,_namespace
@@ -370,8 +365,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         TODO:
         * S[:,:]=array (boolean or int)
         '''
+        if self._iscompressed:
+            raise AttributeError,"Synapses cannot be added after they have been run"
+        
         if not isinstance(key, tuple): # we should check that number of elements is 2 as well
-            raise ValueError('Synapses behave as 2-D objects')
+            raise AttributeError,'Synapses behave as 2-D objects'
         pre,post=key # pre and post indexes (can be slices)
         
         '''
@@ -528,64 +526,37 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         Updates the synaptic variables.
         
         TODO:
-        * Have namespaces partially built at run time (call state_(var)),
-          or better, extract synaptic events from the synaptic state matrix;
-          same stuff for postsynaptic variables
         * Deal with static variables
-        * Factor code
         '''
         if self._state_updater is not None:
             self._state_updater(self)
-        
-        synaptic_events = self.pre_queue.peek()
-        if len(synaptic_events):
-            # Build the namespace - Maybe we should do this only once? (although there is the problem of static equations)
-            # Careful: for dynamic arrays you need to get fresh references at run time
-            _namespace = self.pre_namespace
-            #_namespace['_synapses'] = synaptic_events # not needed any more
-            #for var in self.var_index: # in fact I should filter out integers ; also static variables are not included here
-            #    if isinstance(var, str):
-            #        _namespace[var] = self.state_(var)[synaptic_events] # could be faster to directly extract a submatrix from _S
-            for var,i in self.var_index.iteritems(): # no static variables here
-                if isinstance(var, str):
-                    _namespace[var]=self._S[i,:]
-            _namespace['_synapses']=synaptic_events
-            _namespace['t'] = self.clock._t
-            _namespace['_pre']=self.presynaptic
-            _namespace['_post']=self.postsynaptic
-            _namespace['n'] = len(synaptic_events)
-            _namespace['rand'] = self._Replacer(np.random.rand, len(synaptic_events))
-            _namespace['randn'] = self._Replacer(np.random.randn, len(synaptic_events))
-            _namespace['np']=np
-            _namespace['binomial']=self._binomial
-            exec self.pre_code in _namespace
-        self.pre_queue.next()
-        
-        if self.post_code is not None: # factor this
-            synaptic_events = self.post_queue.peek()
+
+        for queue,_namespace,code in zip(self.queues,self.namespaces,self.codes):            
+            synaptic_events = queue.peek()
             if len(synaptic_events):
-                # Build the namespace - Maybe we should do this only once? (although there is the problem of static equations)
-                # Careful: for dynamic arrays you need to get fresh references at run time
-                _namespace = self.post_namespace
-                #_namespace['_synapses'] = synaptic_events # not needed any more
-                #for var in self.var_index: # in fact I should filter out integers ; also static variables are not included here
-                #    if isinstance(var, str):
-                #        _namespace[var] = self.state_(var)[synaptic_events] # could be faster to directly extract a submatrix from _S
-                for var,i in self.var_index.iteritems(): # no static variables here
-                    if isinstance(var, str):
-                        _namespace[var]=self._S[i,:]
+                # Build the namespace - Here we don't consider static equations
                 _namespace['_synapses']=synaptic_events
                 _namespace['t'] = self.clock._t
-                _namespace['_pre']=self.presynaptic
-                _namespace['_post']=self.postsynaptic
                 _namespace['n'] = len(synaptic_events)
-                _namespace['rand'] = self._Replacer(np.random.rand, len(synaptic_events))
-                _namespace['randn'] = self._Replacer(np.random.randn, len(synaptic_events))
-                _namespace['np']=np
-                _namespace['binomial']=self._binomial
-                exec self.post_code in _namespace
-            self.post_queue.next()
+                exec code in _namespace
+            queue.next()
 
+    def connect_one_to_one(self,pre=None,post=None):
+        '''
+        Connects each neuron in the ``pre'' group to each corresponding one
+        in the ``post'' group.
+        '''
+        if pre is None:
+            pre=self.source
+        if post is None:
+            post=self.target
+        pre,post=self.presynaptic_indexes(pre),self.postsynaptic_indexes(post)
+        if len(pre)!=len(post):
+            raise TypeError,"Source and target groups do not have the same size"
+            
+        for i,j in zip(pre,post):
+            self[i,j]=True
+    
     def connect_random(self,pre=None,post=None,sparseness=None):
         '''
         Creates random connections between pre and post neurons
@@ -645,13 +616,28 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     def compress(self):
         '''
         * Checks that the object is not empty.
-        * Make the state array non-dynamical (important for the state updater)
+        * Make the state array non-dynamical (important for the state updater).
+        * Updates namespaces of pre and post code.
         '''
         # Check that the object is not empty
         if len(self)==0:
             warnings.warn("Empty Synapses object")
         self._S=self._S[:,:]
-    
+        
+        # Update namespaces of pre/post code        
+        for _namespace in self.namespaces:
+            for var,i in self.var_index.iteritems(): # no static variables here
+                if isinstance(var, str):
+                    _namespace[var]=self._S[i,:]
+            _namespace['_pre']=self.presynaptic
+            _namespace['_post']=self.postsynaptic
+            _namespace['np']=np
+            _namespace['binomial']=self._binomial
+            _namespace['rand']=rand
+            _namespace['randn']=randn
+            
+        self._iscompressed=True
+
     def synapse_index(self,i):
         '''
         Returns the synapse indexes correspond to i, which can be a tuple or a slice.

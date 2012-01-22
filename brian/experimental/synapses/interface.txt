@@ -15,7 +15,7 @@ Modification and access
 High-level functions
 --------------------
 (done) S.connect_random(group1,group2,sparseness=0.1)
-(maybe not necessary) S.connect_one_to_one(group1,group2)
+(done) S.connect_one_to_one(group1,group2)
 
 Equations
 ---------
