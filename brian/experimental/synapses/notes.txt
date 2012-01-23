@@ -175,6 +175,12 @@ it:
 Since there is no fundamental difference between pre and post sides, we could
 have a unified treatment of queues and codes.
 
+How to deal with pre and post suffixes
+--------------------------------------
+For gap junctions and some STDP rules, we need to access pre and post synaptic variables.
+A simple idea to deal with this is to use static variables.
+For example: v_pre=source.v[presynaptic[:]].
+
 Various notes
 -------------
 * I decided to use signed rather than unsigned ints for indexes, because there
