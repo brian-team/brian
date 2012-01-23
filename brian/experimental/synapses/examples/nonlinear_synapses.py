@@ -18,13 +18,10 @@ S=Synapses(input,neurons,
                     w : 1 # synaptic weight
                  ''',
            pre='x+=w') # NMDA synapses
-
+neurons.g=S.g
 S[:,:]=True
 S.w=[1.,10.]
 input.v=[0.,0.5]
-
-neurons.g=linked_var(S,"g",func=lambda x:array([sum(x[S.synapses_post[i].data]) for i in range(len(neurons))]))
-#neurons.g=S.g
 
 M=StateMonitor(S,'g',record=True)
 Mn=StateMonitor(neurons,'v',record=0)

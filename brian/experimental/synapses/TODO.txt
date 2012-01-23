@@ -1,8 +1,6 @@
 TODO (Synapses)
 ---------------
-* Clean imports in Synapses / SpikeQueue
 * Multiple pre/post code multiple delays.
-* Lumped variables
 * Gap junctions
 * faster S.w[:,i] (more generally, when 1 argument is :)
 	in general, faster synapse_indexes()

@@ -44,8 +44,9 @@ class SynapticVariable(object):
     ``synapses''
         The Synapses object.
     '''
-    def __init__(self,data,synapses):
+    def __init__(self,data,synapses,name):
         self.data=data
+        self.name=name
         self.synapses=synapses
         class Replacer(object): # vectorisation in strings
             def __init__(self, func, n):
@@ -90,8 +91,8 @@ class SynapticDelayVariable(SynapticVariable):
     
     TODO: pass the clock as argument.
     '''
-    def __init__(self,data,synapses):
-        SynapticVariable.__init__(self,data,synapses)
+    def __init__(self,data,synapses,name):
+        SynapticVariable.__init__(self,data,synapses,name)
         
     def __getitem__(self,i):
         return SynapticVariable.__getitem__(self,i)*self.synapses.clock.dt

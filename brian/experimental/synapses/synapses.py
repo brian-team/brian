@@ -16,16 +16,20 @@ Alternatives:
 * Use dictionaries (i,j)->synapse index. This is fast but 1) cannot be vectorised,
 2) is very memory expensive.
 '''
-from brian import *
-from brian.utils.dynamicarray import *
+from ...neurongroup import NeuronGroup
+from ...stdunits import *
+from ...utils.dynamicarray import *
+from ...log import *
+from numpy import *
+from scipy import rand,randn
 from spikequeue import *
 from synapticvariable import *
 import numpy as np
-from brian.inspection import *
-from brian.equations import *
-from brian.optimiser import *
+from ...inspection import *
+from ...equations import *
+from ...optimiser import *
 from numpy.random import binomial
-from brian.utils.documentation import flattened_docstring
+from ...utils.documentation import flattened_docstring
 from random import sample
 from synaptic_equations import *
 import re
@@ -494,20 +498,20 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if not hasattr(self, 'var_index'):
             raise AttributeError
         if (name=='delay_pre') or (name=='delay'): # default: delay is presynaptic delay
-            return SynapticDelayVariable(self._delay_pre,self)
+            return SynapticDelayVariable(self._delay_pre,self,name)
         elif name=='delay_post':
-            return SynapticDelayVariable(self._delay_post,self)
+            return SynapticDelayVariable(self._delay_post,self,name)
         try:
             x=self.state(name)
-            return SynapticVariable(x,self)
+            return SynapticVariable(x,self,name)
         except KeyError:
             return NeuronGroup.__getattr__(self,name)
         
     def __setattr__(self, name, val):
         if (name=='delay_pre') or (name=='delay'):
-            SynapticDelayVariable(self._delay_pre,self)[:]=val
+            SynapticDelayVariable(self._delay_pre,self,name)[:]=val
         elif name=='delay_post':
-            SynapticDelayVariable(self._delay_post,self)[:]=val
+            SynapticDelayVariable(self._delay_post,self,name)[:]=val
         else: # copied from Group
             origname = name
             if len(name) and name[-1] == '_':
@@ -519,7 +523,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                     x=self.state(name)
                 else:
                     x=self.state_(origname)
-                SynapticVariable(x,self).__setitem__(slice(None,None,None),val,level=2)
+                SynapticVariable(x,self,name).__setitem__(slice(None,None,None),val,level=2)
         
     def update(self): # this is called at every timestep
         '''

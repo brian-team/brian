@@ -394,19 +394,3 @@ class SpikeQueue(SpikeMonitor):
             plot(idx * ones(len(data)), data, '.')
         if display:
             show()
-
-if __name__=='__main__': # This will not work anymore
-    from synapses import *
-    P=NeuronGroup(1,model='v:1')
-    S=Synapses(P,model='w:1')
-    queue=S.pre_queue
-    #delays=array([4,2,2,1,6,2,5,9,6,9],dtype=int)
-    s="9 6 6 5 1 7 8 2 6 0 9 6 8 3 6 6 1 1 2 6 6 8 6 4 4 1 4 9 4 7 1 3 4 4 8 4 7\
- 1 3 0 4 4 2 5 7 2 5 6 0 6 8 5 7 1 7 0 9 2 1 9 5 9 4 3 5 7 2 5 8 8 7 9 9 8\
- 8 9 1 5 8 3 7 8 4 3 7 4 7 6 2 5 5 3 8 6 1 2 7 5 9 7".split()
-    delays=array([int(x) for x in s])
-    offsets=queue.offsets(delays)
-    n=zeros(max(delays)+1,dtype=int)
-    print offsets
-    n[delays]+=offsets+1
-    print n

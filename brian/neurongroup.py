@@ -62,7 +62,6 @@ from base import *
 from group import *
 from threshold import select_threshold
 from collections import defaultdict
-#from experimental.synapses.synapticvariable import SynapticVariable
 
 timedarray = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
 network = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
@@ -611,9 +610,19 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             self.set_var_by_array(name, val)
         elif isinstance(val, LinkedVar):
             self.link_var(name, val.source, val.var, val.func, val.when, val.clock)
-        #elif isinstance(val, SynapticVariable):
-        #    print "hello"
-        #    #neurons.g=linked_var(S,"g",func=lambda x:array([sum(x[S.synapses_post[i].data]) for i in range(len(neurons))]))
+        elif hasattr(val,"synapses") and not isinstance(val,Equations): # a synaptic variable
+            # This above is a hack because we can't import SynapticVariable (infinite recursion)
+            S=val.synapses
+            if S.target!=self:
+                raise AttributeError,"Can only link a synaptic variable to the target group"
+            global network
+            if network is None:
+                import network
+            selfarr = self.state_(name)
+            @network.network_operation(clock=S.clock)
+            def update_link_var():
+                selfarr[:] = array([sum(S.state_(name)[S.synapses_post[i].data]) for i in range(len(self))])
+            self._owner.contained_objects.append(update_link_var)
         else:
             Group.__setattr__(self, name, val)
 
