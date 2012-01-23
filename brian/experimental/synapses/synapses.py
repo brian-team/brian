@@ -33,6 +33,7 @@ from ...utils.documentation import flattened_docstring
 from random import sample
 from synaptic_equations import *
 import re
+from operator import isSequenceType
 import warnings
 try:
     import sympy
@@ -57,6 +58,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         The syntax is the same as for a NeuronGroup.
     ``pre=None''
         The code executed when presynaptic spikes arrive at the synapses.
+        There can be multiple presynaptic codes, passed as a list or tuple of strings.
     ``post=None''
         The code executed when postsynaptic spikes arrive at the synapses.
     ``max_delay=0*ms''
@@ -106,7 +108,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     Attributes:
     
     ``delay''
-        The presynaptic delays for all synapses (synapse->delay).
+        The presynaptic delays for all synapses (synapse->delay). If there are multiple
+        presynaptic delays (multiple pre codes), this is a list.
     ``delay_pre''
         Same as ``delay''.
     ``delay_post''
@@ -142,7 +145,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         The namespaces for the pre and postsynaptic codes.
     '''
     def __init__(self, source, target = None, model = None, pre = None, post = None,
-             max_delay = 0*ms, # is this useful?
+             max_delay = 0*ms,
              level = 0,
              clock = None,
              unit_checking = True, method = None, freeze = False, implicit = False, order = 1): # model (state updater) related
@@ -154,19 +157,22 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if source.clock!=target.clock:
             raise ValueError,"Source and target groups must have the same clock"
 
-        if pre is not None:
-            pre=flattened_docstring(pre)
+        if isSequenceType(pre) and not isinstance(pre,str): # a list of pre codes
+            pre_list=pre
+        else:
+            pre_list=[pre]
+
+        pre_list=[flattened_docstring(pre) for pre in pre_list]
         if post is not None:
             post=flattened_docstring(post)
 
         # Insert the lastupdate variable if necessary (if it is mentioned in pre/post, or if there is event-driven code)
         expr=re.compile(r'\blastupdate\b')
         if (re.compile(r'event\-driven').search(model) is not None) or \
-           (pre is not None and expr.search(pre) is not None) or \
+           any([expr.search(pre) for pre in pre_list]) or \
            (post is not None and expr.search(post) is not None):
             model+='\nlastupdate : second\n'
-            if pre is not None:
-                pre=pre+'\nlastupdate=t\n'
+            pre_list=[pre+'\nlastupdate=t\n' for pre in pre_list]
             if post is not None:
                 post=post+'\nlastupdate=t\n'
 
@@ -231,7 +237,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                         expr=var+'='+str(expr)
                         # Replace pre and post code
                         # N.B.: the differential equations are kept, we will probably want to remove them!
-                        pre=expr+'\n'+pre
+                        pre_list=[expr+'\n'+pre for pre in pre_list]
                         if post is not None:
                             post=expr+'\n'+post
                 else:
@@ -255,7 +261,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.postsynaptic=DynamicArray(len(self),dtype=smallest_inttype(len(self.target))) # this should depend on number of neurons
 
         # Pre and postsynaptic delays (synapse -> delay_pre/delay_post)
-        self._delay_pre=DynamicArray(len(self),dtype=int16) # max 32767 delays
+        self._delay_pre=[DynamicArray(len(self),dtype=int16) for _ in pre_list] # max 32767 delays
         self._delay_post=DynamicArray(len(self),dtype=int16)
         
         # Pre and postsynaptic synapses (i->synapse indexes)
@@ -268,10 +274,14 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self._binomial = lambda n,p:np.random.binomial(array(n,dtype=int),p)
 
         self.contained_objects = []
-        code,_namespace=self.generate_code(pre,level+1)
-        self.codes=[code]
-        self.namespaces=[_namespace]
-        self.queues = [SpikeQueue(self.source, self.synapses_pre, self._delay_pre, max_delay = max_delay)]
+        self.codes=[]
+        self.namespaces=[]
+        self.queues=[]
+        for i,pre in enumerate(pre_list):
+            code,_namespace=self.generate_code(pre,level+1)
+            self.codes.append(code)
+            self.namespaces.append(_namespace)
+            self.queues.append(SpikeQueue(self.source, self.synapses_pre, self._delay_pre[i], max_delay = max_delay))
         
         if post is not None:
             code,_namespace=self.generate_code(post,level+1,direct=True)
@@ -477,7 +487,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.presynaptic[nsynapses_all:]=presynaptic
         self.postsynaptic.resize(nsynapses_all+newsynapses)
         self.postsynaptic[nsynapses_all:]=postsynaptic
-        self._delay_pre.resize(nsynapses_all+newsynapses)
+        for delay_pre in self._delay_pre:
+            delay_pre.resize(nsynapses_all+newsynapses)
         self._delay_post.resize(nsynapses_all+newsynapses)
         if synapses_pre is None:
             synapses_pre=invert_array(presynaptic,dtype=self.synapses_post[0].dtype)
@@ -498,7 +509,10 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if not hasattr(self, 'var_index'):
             raise AttributeError
         if (name=='delay_pre') or (name=='delay'): # default: delay is presynaptic delay
-            return SynapticDelayVariable(self._delay_pre,self,name)
+            if len(self._delay_pre)>1:
+                return [SynapticDelayVariable(delay_pre,self,name) for delay_pre in self._delay_pre]
+            else:
+                return SynapticDelayVariable(self._delay_pre[0],self,name)
         elif name=='delay_post':
             return SynapticDelayVariable(self._delay_post,self,name)
         try:
@@ -509,7 +523,10 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
     def __setattr__(self, name, val):
         if (name=='delay_pre') or (name=='delay'):
-            SynapticDelayVariable(self._delay_pre,self,name)[:]=val
+            if len(self._delay_pre)==1:
+                SynapticDelayVariable(self._delay_pre[0],self,name)[:]=val
+            else:
+                raise NotImplementedError,"Cannot assign multiple delays at the same time"
         elif name=='delay_post':
             SynapticDelayVariable(self._delay_post,self,name)[:]=val
         else: # copied from Group

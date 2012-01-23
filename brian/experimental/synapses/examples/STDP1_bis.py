@@ -6,10 +6,7 @@ This simulation takes a long time!
 
 Original time: 278 s
 with DelayConnection: 478 s
-New time: 479 s
-    with precomputed offsets: 444 s
-    with zero delays: 418 s
-    with weave: 479 s (??)
+New time: 416 s
 '''
 from brian import *
 from brian.experimental.synapses import *
