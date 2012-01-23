@@ -10,7 +10,7 @@ In this version, STDP is faster than in the paper so that the script runs in jus
 few minutes.
 
 Original time: 4m13 s (without construction)
-With Synapses: 6m33 s
+With Synapses: 4m36 s
 '''
 from brian import *
 import time
