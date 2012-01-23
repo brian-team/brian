@@ -157,7 +157,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if source.clock!=target.clock:
             raise ValueError,"Source and target groups must have the same clock"
 
-        if isSequenceType(pre) and not isinstance(pre,str): # a list of pre codes
+        if pre is None:
+            pre_list=[]
+        elif isSequenceType(pre) and not isinstance(pre,str): # a list of pre codes
             pre_list=pre
         else:
             pre_list=[pre]
@@ -176,7 +178,31 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             if post is not None:
                 post=post+'\nlastupdate=t\n'
 
+        # Pre and postsynaptic indexes (synapse -> pre/post)
+        self.presynaptic=DynamicArray(0,dtype=smallest_inttype(len(source))) # this should depend on number of neurons
+        self.postsynaptic=DynamicArray(0,dtype=smallest_inttype(len(target))) # this should depend on number of neurons
+
         model=SynapticEquations(model,level=level+1)
+        
+        # Identify pre and post variables in the model string
+        ids=[]
+        for RHS in model._string.itervalues():
+            ids.extend(get_identifiers(RHS))
+        pre_ids=[id[:-4] for id in ids if id[-4:]=='_pre']
+        post_ids=[id[:-5] for id in ids if id[-5:]=='_post']
+
+        # Insert static equations for pre and post variables
+        S=self
+        for name in pre_ids:
+            model.add_eq(name+'_pre', 'S.source.'+name+'[S.presynaptic[:]]', source.unit(name),
+                         global_namespace={'S':S})
+        for name in post_ids:
+            model.add_eq(name+'_post', 'S.target.'+name+'[S.postsynaptic[:]]', source.unit(name),
+                         global_namespace={'S':S})
+        
+        self.source=source
+        self.target=target
+        
         NeuronGroup.__init__(self, 0,model=model,clock=clock,level=level+1,unit_checking=unit_checking,method=method,freeze=freeze,implicit=implicit,order=order)
         '''
         At this point we have:
@@ -197,10 +223,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
         Things we may need to add:
         * _pre and _post suffixes
-        '''
-        self.source=source
-        self.target=target
-        
+        '''       
         self._iscompressed=False # True if compress() has already been called
         
         # Look for event-driven code in the differential equations
@@ -255,10 +278,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         S=self._S
         self._S=DynamicArray(S.shape)
         self._S[:]=S
-
-        # Pre and postsynaptic indexes (synapse -> pre/post)
-        self.presynaptic=DynamicArray(len(self),dtype=smallest_inttype(len(self.source))) # this should depend on number of neurons
-        self.postsynaptic=DynamicArray(len(self),dtype=smallest_inttype(len(self.target))) # this should depend on number of neurons
 
         # Pre and postsynaptic delays (synapse -> delay_pre/delay_post)
         self._delay_pre=[DynamicArray(len(self),dtype=int16) for _ in pre_list] # max 32767 delays
