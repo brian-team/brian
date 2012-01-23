@@ -88,8 +88,8 @@ In pre/post code:
 (done)* rand() is vectorised
 
 How about:
-* lumped variables
-* gap junctions
+(done)* lumped variables
+(done)* gap junctions
 * heterosynaptic modifications
 
 Duck typing

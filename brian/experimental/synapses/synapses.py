@@ -185,11 +185,15 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         model=SynapticEquations(model,level=level+1)
         
         # Identify pre and post variables in the model string
+        # They are identified by _pre and _post suffixes
+        # or no suffix for postsynaptic variables
         ids=[]
         for RHS in model._string.itervalues():
             ids.extend(get_identifiers(RHS))
         pre_ids=[id[:-4] for id in ids if id[-4:]=='_pre']
         post_ids=[id[:-5] for id in ids if id[-5:]=='_post']
+        post_vars=[var for var in source.var_index if isinstance(var,str)] # postsynaptic variables
+        post_ids2=list(set(ids).intersection(set(post_vars))) # post variables without the _post suffix
 
         # Insert static equations for pre and post variables
         S=self
@@ -199,6 +203,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         for name in post_ids:
             model.add_eq(name+'_post', 'S.target.'+name+'[S.postsynaptic[:]]', source.unit(name),
                          global_namespace={'S':S})
+        for name in post_ids2: # we have to change the name of the variable to avoid problems with equation processing
+            model.add_eq(name, 'S.target.state_(__'+name+')[S.postsynaptic[:]]', source.unit(name),
+                         global_namespace={'S':S,'__'+name:name})
         
         self.source=source
         self.target=target
@@ -326,7 +333,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             code faster.
         
         TODO:
-        * include static variables
+        * include static variables (substitution)
         * have a list of variable names
         * deal with v_post, v_pre
         '''
@@ -360,7 +367,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             # Replace postsynaptic variables by their value
             for postsyn_var in self.target.var_index: # static variables are not included here
                 if isinstance(postsyn_var, str):
+                    res = re.sub(r'\b' + postsyn_var + r'_post\b', 'target.' + postsyn_var + '[_post['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
                     res = re.sub(r'\b' + postsyn_var + r'\b', 'target.' + postsyn_var + '[_post['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
+            for presyn_var in self.source.var_index: # static variables are not included here
+                if isinstance(presyn_var, str):
+                    res = re.sub(r'\b' + presyn_var + r'_pre\b', 'source.' + presyn_var + '[_pre['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
  
             return res
  
@@ -454,10 +465,19 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             synapses_pre=dict(zip(pre_slice,synapses_pre))
             synapses_post=dict(zip(post_slice,synapses_post))
         elif isinstance(value,str): # string code assignment
+            # For subgroups, origin of i and j are shifted to subgroup origin
+            if isinstance(pre,NeuronGroup):
+                pre_shift=pre_slice[0]
+            else:
+                pre_shift=0
+            if isinstance(post,NeuronGroup):
+                post_shift=post_slice[0]
+            else:
+                post_shift=0
             code = re.sub(r'\b' + 'rand\(\)', 'rand(n)', value) # replacing rand()
             code = re.sub(r'\b' + 'randn\(\)', 'randn(n)', code) # replacing randn()
             _namespace = namespace(value, level=1)
-            _namespace.update({'j' : post_slice,
+            _namespace.update({'j' : post_slice-post_shift,
                                'n' : len(post_slice),
                                'rand': np.random.rand,
                                'randn': np.random.randn})
@@ -465,7 +485,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             nsynapses=0
             presynaptic,postsynaptic=[],[]
             for i in pre_slice:
-                _namespace['i']=i # maybe an array rather than a scalar?
+                _namespace['i']=i-pre_shift # maybe an array rather than a scalar?
                 result = eval(code, _namespace) # mask on synapses
                 if result.dtype==float: # random number generation
                     result=rand(len(post_slice))<result
@@ -669,6 +689,13 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             for var,i in self.var_index.iteritems(): # no static variables here
                 if isinstance(var, str):
                     _namespace[var]=self._S[i,:]
+            for var,i in self.source.var_index.iteritems():
+                if isinstance(var, str):
+                    _namespace[var+'_pre']=self.source._S[i,:]
+            for var,i in self.target.var_index.iteritems():
+                if isinstance(var, str):
+                    _namespace[var+'_post']=self.target._S[i,:]
+                    _namespace[var]=self.target._S[i,:]
             _namespace['_pre']=self.presynaptic
             _namespace['_post']=self.postsynaptic
             _namespace['np']=np

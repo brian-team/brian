@@ -9,7 +9,7 @@ N.B.: network construction can be long.
 In this version, STDP is faster than in the paper so that the script runs in just a
 few minutes.
 
-Original time: 4m13 s
+Original time: 4m13 s (without construction)
 With Synapses: 6m33 s
 '''
 from brian import *
@@ -107,9 +107,9 @@ for i in range(barrelarraysize):
 
 # Excitatory lateral connections
 recurrent_exc=Synapses(layer23exc,layer23,model='w:volt',pre='ge+=w')
-recurrent_exc[layer23exc,layer23exc]='.15*exp(-.5*(((layer23exc.x[i]-layer23.x[j])/.4)**2+((layer23exc.y[i]-layer23.y[j])/.4)**2))'
+recurrent_exc[layer23exc,layer23exc]='.15*exp(-.5*(((layer23exc.x[i]-layer23exc.x[j])/.4)**2+((layer23exc.y[i]-layer23exc.y[j])/.4)**2))'
 recurrent_exc.w[layer23exc,layer23exc]=EPSC*.3
-recurrent_exc[layer23exc,layer23inh]='.15*exp(-.5*(((layer23exc.x[i]-layer23.x[j])/.4)**2+((layer23exc.y[i]-layer23.y[j])/.4)**2))'
+recurrent_exc[layer23exc,layer23inh]='.15*exp(-.5*(((layer23exc.x[i]-layer23inh.x[j])/.4)**2+((layer23exc.y[i]-layer23inh.y[j])/.4)**2))'
 recurrent_exc.w[layer23exc,layer23inh]=EPSC
 
 # Inhibitory lateral connections
