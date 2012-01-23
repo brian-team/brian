@@ -619,9 +619,10 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             if network is None:
                 import network
             selfarr = self.state_(name)
+            nameS=val.name
             @network.network_operation(clock=S.clock)
             def update_link_var():
-                selfarr[:] = array([sum(S.state_(name)[S.synapses_post[i].data]) for i in range(len(self))])
+                selfarr[:] = array([sum(S.state_(nameS)[S.synapses_post[i].data]) for i in range(len(self))])
             self._owner.contained_objects.append(update_link_var)
         else:
             Group.__setattr__(self, name, val)

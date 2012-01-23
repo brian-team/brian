@@ -10,15 +10,15 @@ b=1/(10*ms)
 c=1/(10*ms)
 
 input=NeuronGroup(2,model='dv/dt=1/(10*ms):1', threshold=1, reset=0)
-neurons = NeuronGroup(1, model="""dv/dt=(g-v)/(10*ms) : 1
-                                  g : 1""")
+neurons = NeuronGroup(1, model="""dv/dt=(gtot-v)/(10*ms) : 1
+                                  gtot : 1""")
 S=Synapses(input,neurons,
            model='''dg/dt=-a*g+b*x*(1-g) : 1
                     dx/dt=-c*x : 1
                     w : 1 # synaptic weight
                  ''',
            pre='x+=w') # NMDA synapses
-neurons.g=S.g
+neurons.gtot=S.g
 S[:,:]=True
 S.w=[1.,10.]
 input.v=[0.,0.5]
