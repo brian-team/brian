@@ -1,0 +1,32 @@
+Multicore implementation of Synapses
+====================================
+Option 1: one operation in one core
+-----------------------------------
+Typical sequence of operations:
+1) update neuron groups: neuron state variables -> neuron state variables
+2) identify spikes: neuron state variables -> spikes
+3) push spikes to queues: spikes -> queue
+4) update synaptic variables and target groups:
+   queue, synaptic variables, neuron state variables -> synaptic variables, neuron state variables
+5) reset neuron groups: neuron state variables,spikes -> neuron state variables
+
+First, all spike queues can be run concurrently.
+The following sequences must be respected:
+1 -> 2 -> (3, 5)
+1 -> 4
+In other words, we can
+1) do the resets, then run neuron group updates in parallel
+2) identify spikes and push them to the queues, in parallel with synaptic updates
+We cannot merge 1 and 2.
+
+So each core could:
+* run one queue (there are typically 2 queues in an STDP)
+* run one continuous synapse updater 
+* then: run one code (pre/post), but not concurrently
+
+Option  2: dividing the Synapses object
+---------------------------------------
+Alternatively, the Synapses object (including queues) is divided into smaller pieces,
+each one running in one core.
+Each core would take care of a subset of postsynaptic indexes.
+This requires splitting the data structure and the spike queues in pieces.
