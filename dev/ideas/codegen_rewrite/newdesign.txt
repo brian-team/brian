@@ -1,0 +1,191 @@
+Introduction
+============
+
+Code generation works using code blocks, each code block has a set of used
+symbols and a set of dependencies, namely a set of symbols which have to be
+handled before the current code can run. For example, if we were computing
+
+	V += 1
+
+for a whole NeuronGroup, we would start with that statement, then we would see
+that there was a symbol V not yet resolved. The block is then:
+
+	V += 1
+	Dependencies: V
+
+Depending on the language, we can
+resolve that symbol in many different ways. In Python, we would just copy the
+symbol V directly into the namespace. However, when we modify V we need to
+do an in-place modification, so the Python code would look like:
+
+	V[:] += 1
+	
+In C, we would need to do a loop over the neuron indices. We would handle this
+by resolving the dependency of V by adding a statement as follows, but also
+adding a new dependency:
+
+	double &V = _arr_V[neuron_index];
+	V += 1;
+	Dependencies: _arr_V, neuron_index
+	
+The _arr_V is loaded directly into the namespace, so that dependency is easily
+resolved. The neuron_index dependency is handled by looping:
+
+	for(int neuron_index=0; neuron_index<num_neurons; neuron_index++)
+	{
+		double &V = _arr_V[neuron_index];
+		V += 1;
+	}
+	Dependencies: num_neurons
+	
+Similarly num_neurons is added to the namespace and so now all dependencies are
+resolved.
+
+For GPU, we need to do something slightly different, because we don't loop to
+resolve the dependency, we use the thread index, so when resolving neuron_index
+we do this instead:
+
+	__global__ void f(double *_arr_V)
+	{
+		int neuron_index = blockIdx.x * blockDim.x + threadIdx.x;
+		double &V = _arr_V[neuron_index];
+		V += 1;
+	}
+
+Technical details
+=================
+
+Code blocks consist of a set of dependencies and a sequence of code items, which
+can be any of:
+
+	Code block
+	String
+	Statement
+	Loops??? (want to hard code this structure?)
+	
+Indentation should be handled (it's important in Python).
+
+Statements have the form:
+
+	variable op expression
+	
+Where variable is a variable name, op is an operator and expression is a
+mathematical expression which itself can have many symbols contained in it.
+The operators are:
+
+	=					Set LHS = RHS
+	:=					Define new symbol LHS and set value to RHS
+	*=, +=, etc.		In-place modification of LHS to RHS
+	
+Expressions are given in Python syntax, and converted to C syntax if necessary
+using sympy (e.g. x**2 -> pow(x,2)). Statements are overall in Python syntax
+except that := is not part of Python. We need := for full flexibility, but we
+can infer it in many cases (e.g. when LHS = RHS and LHS is a variable not yet
+defined). We could handle this by requiring its use or by inference.
+
+Statements and code strings can be analysed, their symbols extracted and looked
+up in a table or by value in the calling/defining code namespace, and the
+appropriate actions to resolve them extracted. The appropriate action depends
+on how the symbol is used:
+
+	read		symbol appears in expression
+	write		symbol appears on LHS of statement
+	
+In each case, we may need to apply a context sensitive transformation to the
+symbol. For example, in-place modification of a Python array is done by:
+
+	V = ... -> V[:] = ...
+	
+Or, we might be operating on only a subset of the indices, in which case:
+
+	V = ... -> V[indices] = ...
+	
+There is some space here to think about optimisations, e.g. if I write V*V
+I don't want it transformed to V[indices]*V[indices] but instead have a
+statement V_indices = V[indices] added before, and then V_indices*V_indices.
+
+Code transformations that might be necessary are:
+
+- Introduce a new variable into the namespace
+- Rewrite read/write in a statement, e.g. V->V[:]
+- Add load/save code after statements, e.g. V_indices=V[indices]
+- Introduce a loop, and indent existing statements
+- Move statements out of loops for optimisation reasons?
+	Note that this requires having a notion of a loop doesn't it? And also
+	maintaining slightly finer control over the idea of a statement, e.g.
+	code such as double &V = _arr_V[neuron_index]; would have to be
+	movable, which means keeping an idea of the purpose of the statement
+	(resolves 'V', introduces dependency on 'neuron_index').
+	
+May also consider having a set of standard variable names with context-sensitive
+resolution rules, namely:
+
+	neuron_index
+		Either an int in C, or in Python either a slice or array of ints. Used
+		when iterating over neurons.
+	source_index
+		As neuron_index but used in synaptic event handling, and refers to the
+		source neuron.
+	target_index
+		As neuron_index but used in synaptic event handling, and refers to the
+		target neuron.
+	synapse_index
+		As neuron_index but referring to the index of the synapse in synaptic
+		event handling.
+		
+Types
+=====
+
+	Expression
+		> convert to language
+		> extract symbols (dependencies)
+		> substitute words
+	CodeItem
+		Statement, ScopeBlock or Block
+		> extract dependencies
+		> extract resolved symbol name (LHS)
+	Statement
+		MathematicalStatement
+			+ var op expr
+			> convert to language
+		CodeStatement
+			+ contents: e.g. double &V = _arr_V[neuron_index];
+		> extract dependencies
+		> extract resolved symbol name (LHS)
+		> substitutions
+	ScopeBlock (introduces a level of indentation)
+		+ string definition (start, end)
+		+ contents
+		+ optimisation properties (e.g. prefer to be inside if blocks, but
+		  outside for blocks)
+		> extract dependencies
+		> extract resolved symbol names
+		> extract contents
+	Block
+		+ contents: sequence of Statements, Blocks and ScopeBlocks
+		> extract dependencies
+		> extract resolved symbol names
+		> iterate over contents
+	Symbol
+		+ name, other properties
+		> extract read/write substitutions
+		> extract load/save for read/write situations
+		> update namespace
+		> resolve dependency (returns CodeItem)
+
+Standard Symbol types:
+	Neuron group variable
+		When iterating over neurons
+		When iterating over synapses
+		When iterating over subset of neurons (reset, refractory, etc.)
+	Synaptic variable
+		When iterating over synapses
+	Indices
+		Defined by context (see above), including:
+			neuron_index
+			source_index
+			target_index
+			synapse_index
+	Extensions, e.g.
+		TimedArray
+		noise for stochastic DE integration and other situations?
