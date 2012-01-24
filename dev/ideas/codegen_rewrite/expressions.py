@@ -11,8 +11,6 @@ __all__ = ['Expression',
            'statements_from_codestring',
            ]
     
-languages = ['Python', 'C', 'GPU']
-
 class Expression(object):
     def __init__(self, expr):
         self.expr = expr

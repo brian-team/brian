@@ -132,6 +132,11 @@ resolution rules, namely:
 	synapse_index
 		As neuron_index but referring to the index of the synapse in synaptic
 		event handling.
+
+Dependencies can be:
+
+	read
+	write
 		
 Types
 =====
@@ -141,7 +146,7 @@ Types
 		> extract symbols (dependencies)
 		> substitute words
 	CodeItem
-		Statement, ScopeBlock or Block
+		Statement, ControlBlock or Block
 		> extract dependencies
 		> extract resolved symbol name (LHS)
 	Statement
@@ -153,7 +158,7 @@ Types
 		> extract dependencies
 		> extract resolved symbol name (LHS)
 		> substitutions
-	ScopeBlock (introduces a level of indentation)
+	ControlBlock (introduces a level of indentation)
 		+ string definition (start, end)
 		+ contents
 		+ optimisation properties (e.g. prefer to be inside if blocks, but
@@ -162,7 +167,7 @@ Types
 		> extract resolved symbol names
 		> extract contents
 	Block
-		+ contents: sequence of Statements, Blocks and ScopeBlocks
+		+ contents: sequence of Statements, Blocks and ControlBlocks
 		> extract dependencies
 		> extract resolved symbol names
 		> iterate over contents
@@ -189,3 +194,11 @@ Standard Symbol types:
 	Extensions, e.g.
 		TimedArray
 		noise for stochastic DE integration and other situations?
+
+====================================
+            TODO
+====================================
+
+- Finish basic implementation
+- Dependencies aren't handled correctly (some resolved stay dependent for block)
+- Dependencies from C/Python keywords and namespace (e.g. int, exp)
