@@ -19,6 +19,7 @@ from brian.experimental.synapses import *
 # Uncomment if you have a C compiler
 # set_global_preferences(useweave=True,usecodegen=True,usecodegenweave=True,usenewpropagate=True,usecstdp=True)
 
+t1=time.time()
 # PARAMETERS
 # Neuron numbers
 M4,M23exc,M23inh=22,25,12 # side of each barrel (in neurons)
@@ -146,12 +147,14 @@ def stimulation():
 
 new_direction()
 
+t2=time.time()
+print "Construction time:",t2-t1,"s"
+
 run(5*second,report='text')
 
 figure()
 # Preferred direction
 # perhaps we need to add presynaptic and postsynaptic with 2D/3D access
-# This is extremely slow with feedforward.w[:,i]!
 selectivity=array([mean(array(feedforward.w[feedforward.synapses_post[i][:]])*exp(layer4.selectivity[feedforward.presynaptic[feedforward.synapses_post[i][:]]]*1j)) for i in range(len(layer23exc))])
 selectivity=(arctan2(selectivity.imag,selectivity.real) % (2*pi))*180./pi
 

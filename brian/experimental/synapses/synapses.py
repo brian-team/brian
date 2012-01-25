@@ -466,6 +466,33 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                                'n' : len(post_slice),
                                'rand': np.random.rand,
                                'randn': np.random.randn})
+#            try: # Vectorise over all indexes: not faster! 
+#                post,pre=meshgrid(post_slice-post_shift,pre_slice-pre_shift)
+#                pre=pre.flatten()
+#                post=post.flatten()
+#                _namespace['i']=array(pre,dtype=self.presynaptic.dtype)
+#                _namespace['j']=array(post,dtype=self.postsynaptic.dtype)
+#                _namespace['n']=len(post)
+#                result = eval(code, _namespace) # mask on synapses
+#                if result.dtype==float: # random number generation
+#                    result=rand(len(post))<result
+#                indexes=result.nonzero()[0]
+#                presynaptic=pre[indexes]
+#                postsynaptic=post[indexes]
+#                dtype=self.synapses_pre[0].dtype
+#                synapses_pre={}
+#                nsynapses=0
+#                for i in pre_slice:
+#                    n=sum(result[i*len(post_slice):(i+1)*len(post_slice)])
+#                    synapses_pre[i]=array(nsynapses+arange(n),dtype=dtype)
+#                    nsynapses+=n
+#            except MemoryError: # If not possible, vectorise over postsynaptic indexes
+#                log_info("synapses","Construction of synapses cannot be fully vectorised (too big)")
+            #del pre
+            #del post
+            #_namespace['i']=None
+            #_namespace['j']=post_slice-post_shift
+            #_namespace['n']=len(post_slice)
             synapses_pre={}
             nsynapses=0
             presynaptic,postsynaptic=[],[]
@@ -480,7 +507,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 presynaptic.append(i*ones(n,dtype=int))
                 postsynaptic.append(post_slice[indexes])
                 nsynapses+=n
-            
+                
             # Make sure the type is correct
             presynaptic=array(hstack(presynaptic),dtype=self.presynaptic.dtype)
             postsynaptic=array(hstack(postsynaptic),dtype=self.postsynaptic.dtype)
