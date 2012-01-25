@@ -1,4 +1,6 @@
 from brian import *
+from dependencies import *
+from formatting import *
 
 class CodeItem(object):
     # Some default values to simplify coding, a class deriving from this can
@@ -29,7 +31,11 @@ class CodeItem(object):
         if name=='resolved':
             return self.selfresolved.union(self.subresolved)
         elif name=='dependencies':
-            return self.selfdependencies.union(self.subdependencies)
+            deps = self.selfdependencies.union(self.subdependencies)
+            for name in self.resolved:
+                deps.discard(Read(name))
+                deps.discard(Write(name))
+            return deps
         elif name=='selfdependencies':
             return set()
         elif name=='selfresolved':
@@ -38,5 +44,6 @@ class CodeItem(object):
     def __iter__(self):
         return NotImplemented
     def convert_to(self, language, symbols={}):
-        return '\n'.join(item.convert_to(language,
-                                         symbols=symbols) for item in self)
+        s = '\n'.join(item.convert_to(language,
+                                      symbols=symbols) for item in self)
+        return strip_empty_lines(s)

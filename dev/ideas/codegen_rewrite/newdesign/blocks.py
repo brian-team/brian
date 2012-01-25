@@ -11,7 +11,7 @@ __all__ = [
         'ForBlock',
             'PythonForBlock',
             'CForBlock',
-        'IfBlock'
+        'IfBlock',
             'PythonIfBlock',
             'CIfBlock',
     ]
@@ -34,7 +34,7 @@ class ControlBlock(Block):
     def convert_to(self, language, symbols={}):
         contentcode = Block.convert_to(self, language, symbols=symbols)
         s = self.start+'\n'+indent_string(contentcode)+'\n'+self.end
-        return s
+        return strip_empty_lines(s)
 
 class ForBlock(ControlBlock):
     pass

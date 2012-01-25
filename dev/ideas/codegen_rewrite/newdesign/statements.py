@@ -33,10 +33,22 @@ class CodeStatement(Statement):
 
 class CDefineFromArray(CodeStatement):
     def __init__(self, var, arr, index,
-                 dependencies=None, resolved=None, dtype=None,
-                 reference=True):
+                 dependencies=None, resolved=None,
+                 dtype=None, reference=True):
         if dtype is None:
+            dtype = float64
+        if dtype is int:
+            dtype = array([1]).dtype.type
+        if dtype==float32:
+            dtype = 'float'
+        elif dtype==float64:
             dtype = 'double'
+        elif dtype==int32:
+            dtype = 'int32'
+        elif dtype==int64:
+            dtype = 'int64'
+        elif dtype==bool_:
+            dtype = 'bool'
         if reference:
             ref = '&'
         else:
@@ -74,7 +86,7 @@ class MathematicalStatement(Statement):
             sym = symbols[self.var]
             if self.op==':=':
                 raise ValueError("Trying to redefine existing Symbol.")
-            initial = sym.write+' '+self.op+' '
+            initial = sym.write()+' '+self.op+' '
         else:
             if self.op==':=':
                 if language.name=='python':

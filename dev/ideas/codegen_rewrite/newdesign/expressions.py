@@ -10,7 +10,7 @@ __all__ = ['Expression',
            ]
 
 def substitute_symbols(expr, symbols):
-    substitutions = dict((name, sym.read) for name, sym in symbols.iteritems())
+    substitutions = dict((name, sym.read()) for name, sym in symbols.iteritems())
     return word_substitute(expr, substitutions)
 
 class Expression(object):

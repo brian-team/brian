@@ -4,7 +4,9 @@ import re
 
 __all__ = ['CodeFormatter', 'word_substitute', 'TAB',
            'flattened_docstring', 'indent_string',
-           'get_identifiers']
+           'get_identifiers',
+           'strip_empty_lines',
+           ]
 
 TAB = '    '
 
@@ -27,3 +29,6 @@ def word_substitute(expr, substitutions):
 
 def get_identifiers(expr):
     return re.findall(r'\b[A-Za-z_][A-Za-z0-9_]*\b', expr)
+
+def strip_empty_lines(s):
+    return '\n'.join(line for line in s.split('\n') if line.strip())

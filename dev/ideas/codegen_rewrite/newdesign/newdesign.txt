@@ -137,7 +137,60 @@ Dependencies can be:
 
 	read
 	write
-		
+
+We have to be careful about the order in which symbols are resolved, because
+the resolution of one symbol can make the resolution of another symbol
+impossible. For example, if we have a synaptic propagation statement:
+
+	V += w*mod
+	
+where V is a target variable, w is a synaptic variable, and mod is a source
+variable, then V depends on target_index, w depends on synapse_index and mod
+depends on source_index. Other dependencies are: target_index depends on
+synapse_index, synapse_index depends on source_index. So the dependency graph
+looks something like this (where a->b means that resolving a introduces a
+new symbol b to be resolved):
+
+   'V'      'w'     'mod'
+    |        |        |
+	v        v        v
+  'tgt' -> 'syn' -> 'src'
+  
+If we chose to resolve mod, then src first, then when we came to resolve syn
+we wouldn't be able to, because when we resolve a variable we can only
+introduce changes before or after a block of code, and resolving syn would
+mean reintroducing a dependency on src which is not possible (remember, we
+are working outwards from inner loops to outer loops).
+
+The solution to this problem is to construct the whole dependency graph (which
+means each Symbol has to have a method giving the set of dependencies it
+introduces in its resolution), and then find the resolution order backwards
+(i.e. we find the last symbol to be resolved first) at each stage choosing only
+nodes in the graph with no outgoing edges. We can also perform an optimisation
+by asking each node whether it requires a loop to resolve it, and always
+preferring statements which don't require a loop first. In the above example,
+the reverse order we get is then:
+
+  src mod syn w tgt V (the last three are interchangeable)
+  
+So we resolve in the order:
+
+  V tgt w syn mod src
+  
+Which has this loop structure:
+
+  for src in spikes:
+    mod = ...
+    for syn in row[src]:
+      w = w(syn)
+      tgt = tgt(syn)
+      V = V(tgt)
+      V += w
+      
+The dependency graph is a directed acyclic graph (DAG) and therefore it is
+guaranteed that we will find a suitable order (a topological sorting always
+exists for DAGs).
+
 Types
 =====
 
