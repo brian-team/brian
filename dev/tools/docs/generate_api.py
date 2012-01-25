@@ -11,7 +11,7 @@ def api_command_line(exclude):
     return s
 
 if __name__ == '__main__':
-    basepathname, filename = os.path.split(__file__)
+    basepathname = os.path.abspath(os.path.dirname(__file__))
     os.chdir(basepathname)
     os.chdir('../../../.') # work from root directory
     os.system(api_command_line(exclude))

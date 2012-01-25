@@ -5,15 +5,16 @@ setup.py module
 
 import os
 import glob
-from setup import version, extras_folders
+
 from zipfile import ZipFile
 
+from brian_setup_info import version, extras_folders
+
+pathname = os.path.abspath(os.path.dirname(__file__))
+os.chdir(pathname)
+os.chdir('../../../.')# work from Brian's root
+
 zipfilename = 'dist/brian-' + version + '-extras.zip'
-
-os.chdir('..')
-os.chdir('..')
-os.chdir('..') # work from Brian's root
-
 files = []
 for folder in extras_folders:
     files.extend(glob.glob(folder))

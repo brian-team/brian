@@ -16,13 +16,13 @@ def setversion(version):
     major = docs_release[:docs_release.find('.')]
     minor = docs_release[docs_release.find('.') + 1:docs_release.find('.', docs_release.find('.') + 1)]
     docs_version = major + '.' + minor
-    pathname, filename = os.path.split(__file__)
+    pathname = os.path.abspath(os.path.dirname(__file__))
     os.chdir(pathname)
     os.chdir('../../../')
     # update setup.py
-    setup_py = open('setup.py', 'r').read()
-    setup_py = re.sub("version\s*=\s*'.*?'", "version = '" + version + "'", setup_py)
-    open('setup.py', 'w').write(setup_py)
+    setup_info_py = open('brian_setup_info.py', 'r').read()
+    setup_info_py = re.sub("version\s*=\s*'.*?'", "version = '" + version + "'", setup_info_py)
+    open('brian_setup_info.py', 'w').write(setup_info_py)
     # update __init__.py
     init_py = open('brian/__init__.py', 'r').read()
     init_py = re.sub("__version__\s*=\s*'.*?'", "__version__ = '" + version + "'", init_py)

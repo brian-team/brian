@@ -17,7 +17,7 @@ You can edit these files by hand.
 '''
 import os, sys, re, glob
 
-pathname, filename = os.path.split(__file__)
+pathname = os.path.abspath(os.path.dirname(__file__))
 os.chdir(pathname)
 os.chdir('../../../')
 
@@ -33,13 +33,14 @@ for dirpath, dirs, files in os.walk('.'):
     files = [f.replace('\\', '/') for f in files]
     allfiles.extend(files)
 
-#### Extract the files that setup.py accounts for
+#### Extract the files that setup.py and brian_setup_info.py account for
 
 setup = open('setup.py', 'r').read()
 packages = eval(re.search(r'\bpackages\b\s*=\s*(\[.*?\])', setup, re.S).group(1).replace('\n', '').strip())
 py_modules = eval(re.search(r'\bpy_modules\b\s*=\s*(\[.*?\])', setup, re.S).group(1).replace('\n', '').strip())
 package_data = eval(re.search(r'\bpackage_data\b\s*=\s*(\{.*?\})', setup, re.S).group(1).replace('\n', '').strip())
-extras_folders = eval(re.search(r'\bextras_folders\b\s*=\s*(\[.*?\])', setup, re.S).group(1).replace('\n', '').strip())
+setup_info = open('brian_setup_info.py', 'r').read()
+extras_folders = eval(re.search(r'\bextras_folders\b\s*=\s*(\[.*?\])', setup_info, re.S).group(1).replace('\n', '').strip())
 
 extras_files = []
 for fold in extras_folders:
@@ -67,7 +68,7 @@ for p, pats in package_data.iteritems():
 
 def apply_rules(rulesname, file_list):
     output_file_list = []
-    for rule in open('dev/tools/newrelease/tracking_data/' + rulesname + '_rules.txt', 'r').read().split('\n'):
+    for rule in open('dev/tools/newrelease/tracking_data/' + rulesname + '_rules.txt', 'rU').read().split('\n'):
         if rule.startswith('include'):
             pattern = rule[8:]
             output_file_list.extend([f for f in file_list if re.search(pattern, f) and f not in output_file_list])
@@ -80,7 +81,7 @@ def apply_rules(rulesname, file_list):
 
 def load_files(name, files):
     files = dict((f, '?') for f in files)
-    for t in open('dev/tools/newrelease/tracking_data/' + name + '_files.txt', 'r').read().split('\n'):
+    for t in open('dev/tools/newrelease/tracking_data/' + name + '_files.txt', 'rU').read().split('\n'):
         if t.strip():
             files[t[2:]] = t[0]
     # check unaccounted for files

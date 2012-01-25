@@ -2,7 +2,7 @@ import os, sys, brian, re, datetime
 
 def setreleasedate():
     releasedate = str(datetime.date.today())
-    pathname, filename = os.path.split(__file__)
+    pathname = os.path.abspath(os.path.dirname(__file__))
     os.chdir(pathname)
     os.chdir('../../../')
     # update __init__.py

@@ -1,7 +1,8 @@
 import os, shutil
 # remove old docs
 os.chdir('../../../')
-shutil.rmtree('docs')
+if os.path.exists('docs'):
+    shutil.rmtree('docs')
 os.mkdir('docs')
 # Generate new docs
 os.chdir('docs_sphinx') # work from docs_sphinx/ directory until we make the big change

@@ -7,6 +7,10 @@ equivalent name.
 Also note that manifest.in may not work right with this?
 '''
 import os
+from distutils.core import run_setup
+
+pathname = os.path.abspath(os.path.dirname(__file__))
+os.chdir(pathname)
 os.chdir('../../../.') # work from Brian's root
-os.system('setup.py register')
-os.system('setup.py sdist bdist_wininst upload')
+run_setup('setup.py', ['register'])
+run_setup('setup.py', ['sdist', 'bdist_wininst', 'upload'])

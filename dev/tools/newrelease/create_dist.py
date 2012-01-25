@@ -1,4 +1,8 @@
 import os
+from distutils.core import run_setup
+
+pathname = os.path.abspath(os.path.dirname(__file__))
+os.chdir(pathname)
 os.chdir('../../../.') # work from Brian's root
-os.system('setup.py bdist_wininst')
-os.system('setup.py sdist --formats=gztar,zip')
+run_setup('setup.py', ['bdist_wininst'])
+run_setup('setup.py', ['sdist', '--formats=gztar,zip'])
