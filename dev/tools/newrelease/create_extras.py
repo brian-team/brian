@@ -14,6 +14,9 @@ pathname = os.path.abspath(os.path.dirname(__file__))
 os.chdir(pathname)
 os.chdir('../../../.')# work from Brian's root
 
+if not os.path.exists('dist'):
+    os.mkdir('dist')
+
 zipfilename = 'dist/brian-' + version + '-extras.zip'
 files = []
 for folder in extras_folders:

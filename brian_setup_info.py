@@ -18,7 +18,7 @@ extras_folders = ['tutorials/tutorial1_basic_concepts/*.py',
                   'examples/modelfitting/*.txt',
                   'examples/multiprocessing/*.py',
                   'examples/plasticity/*.py',
-                  'examples/synapses/*.py'
+                  'examples/synapses/*.py',
                   'docs/*.*',
                   'docs/_images/*.jpg',
                   'docs/_sources/*.*',
