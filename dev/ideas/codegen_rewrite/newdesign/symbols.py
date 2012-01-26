@@ -135,10 +135,14 @@ class ArraySymbol(Symbol):
 
 
 class IndexSymbol(Symbol):
-    def __init__(self, name, start, end, language, index_array=None):
+    def __init__(self, name, start, end, language, index_array=None,
+                 forced_dependencies=None):
+        if forced_dependencies is None:
+            forced_dependencies = set()
         self.index_array = index_array
         self.start = start
         self.end = end
+        self.forced_dependencies = forced_dependencies
         Symbol.__init__(self, name, language)
     def supported(self):
         return self.language.name in ['python', 'c']
@@ -175,6 +179,7 @@ class IndexSymbol(Symbol):
             deps.update(set([Read(self.index_array)]))
         deps.update(set(Read(x) for x in get_identifiers(self.start)))
         deps.update(set(Read(x) for x in get_identifiers(self.end)))
+        deps.update(self.forced_dependencies)
         return deps
     def resolution_requires_loop(self):
         return self.language.name=='c'

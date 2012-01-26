@@ -6,8 +6,11 @@ from threshold import *
 from reset import *
 from connection import *
 
-#language = CLanguage()
-language = PythonLanguage()
+language = CLanguage()
+#language = PythonLanguage()
+
+#structure = 'sparse'
+structure = 'dense'
 
 tau = 10*ms
 Vt0 = 1.0
@@ -31,8 +34,8 @@ P = PoissonGroup(1, rates=300*Hz)
 Ci = Connection(P, H, 'V', weight=2)
 H.mod = [1.0, 0.9, 0.1]
 
-#C = Connection(H, G, 'I', modulation='mod', structure='sparse')
-C = CodeGenConnection(H, G, 'I', modulation='mod', structure='sparse',
+#C = Connection(H, G, 'I', modulation='mod', structure=structure)
+C = CodeGenConnection(H, G, 'I', modulation='mod', structure=structure,
                       language=language)
 for i in xrange(len(G)):
     C[i, i] = 1

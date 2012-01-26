@@ -4,6 +4,8 @@ from blocks import *
 from statements import *
 from dependencies import *
 
+__all__ = ['CodeGenConnection']
+
 def get_connection_variable(C, modulation=False):
     if modulation:
         G = C.source
@@ -25,6 +27,12 @@ class CodeGenConnection(Connection):
         if not self.iscompressed:
             self.compress()
         if not hasattr(self, '_use_codegen'):
+            if not self.W.__class__ in [SparseConnectionMatrix,
+                                        DenseConnectionMatrix,
+                                        ]:
+                log_warn('brian.codegen', "Only sparse matrix supported.")
+                self._use_codegen = False
+        if not hasattr(self, '_use_codegen'):
             # allow ourselves the option of disabling codegen for cases where
             # it doesn't yet work (but we ignore this for the moment)
             self._use_codegen = True
@@ -42,7 +50,7 @@ class CodeGenConnection(Connection):
             statements = statements_from_codestring(connection_code,
                                                     defined=set(['w']),
                                                     eqs=self.target._eqs,
-                                                    infer_definitions=True)            
+                                                    infer_definitions=True)      
             symbols = get_neuron_group_symbols(self.target, language,
                                                index='_target_index',
                                                subset=True)
@@ -52,14 +60,22 @@ class CodeGenConnection(Connection):
                                                subset=True,
                                                prefix='_sourcevar_')
                 symbols.update(src_symbols)
-            symbols['_w'] = SparseValue(self.W, '_w', language)
-            symbols['_synapse_index'] = SparseSynapseIndex(self.W,
-                                                           '_synapse_index',
-                                                           '_w', language)
-            symbols['_target_index'] = SparseTargetIndex(self.W,
-                                                         '_target_index',
-                                                         '_w', language)
             symbols['_source_index'] = SpikeSymbol('_source_index', language)
+            if self.W.__class__ is SparseConnectionMatrix:
+                Value, SynapseIndex, TargetIndex = (SparseValue,
+                                                    SparseSynapseIndex,
+                                                    SparseTargetIndex)
+            elif self.W.__class__ is DenseConnectionMatrix:
+                Value, SynapseIndex, TargetIndex = (DenseValue,
+                                                    DenseSynapseIndex,
+                                                    DenseTargetIndex)
+            symbols['_w'] = Value(self.W, '_w', language)
+            symbols['_synapse_index'] = SynapseIndex(self.W,
+                                                     '_synapse_index',
+                                                     '_w', language)
+            symbols['_target_index'] = TargetIndex(self.W,
+                                                   '_target_index',
+                                                   '_w', language)
             block = Block(*statements)
             self.code = block.generate(language, symbols)
             print 'CONNECTION'
@@ -74,6 +90,65 @@ class CodeGenConnection(Connection):
             return
         Connection.propagate(self, spikes)
 
+class DenseValue(ArraySymbol):
+    def __init__(self, M, name, language, index='_synapse_index'):
+        self.M = M
+        ArraySymbol.__init__(self, asarray(M).reshape(-1), name,
+                             language, index=index,
+                             subset=True, array_name='_flattened_'+name)
+        
+class DenseSynapseIndex(IndexSymbol):
+    def __init__(self, M, name, weightname, language,
+                 sourceindex='_source_index', targetlen='_target_len'):
+        self.M = M
+        self.weightname = weightname
+        self.targetlen = targetlen
+        start = '{sourceindex}*{targetlen}'.format(
+                weightname=weightname, sourceindex=sourceindex,
+                targetlen=targetlen)
+        end = '({sourceindex}+1)*{targetlen}'.format(
+                weightname=weightname, sourceindex=sourceindex,
+                targetlen=targetlen)
+        IndexSymbol.__init__(self, name, start, end, language)
+    def resolve(self, read, write, item, namespace):
+        namespace[self.targetlen] = self.M.shape[1]
+        return IndexSymbol.resolve(self, read, write, item, namespace)
+
+class DenseTargetIndex(Symbol):
+    def __init__(self, M, name, weightname, language, index='_synapse_index',
+                 targetlen='_target_len'):
+        self.M = M
+        self.weightname = weightname
+        self.index = index
+        self.targetlen = targetlen
+        self.sourceindex = '_source_index'
+        Symbol.__init__(self, name, language)
+    def supported(self):
+        return self.language.name in ['python', 'c']
+    def update_namespace(self, read, write, namespace):
+        pass
+    def load(self, read, write):
+        if self.language.name=='python':
+            code = '{name} = slice(0, {targetlen})'.format(name=self.name,
+                                                       targetlen=self.targetlen)
+            return CodeStatement(code, set([Read(self.targetlen)]), set())
+        elif self.language.name=='c':
+            # TODO: terrible hack, find a nicer way of doing this
+            code = 'int {name} = {index}-{sourceindex}*{targetlen};'.format(
+                                                   name=self.name,
+                                                   targetlen=self.targetlen,
+                                                   sourceindex=self.sourceindex,
+                                                   index=self.index)
+            return CodeStatement(code,
+                                 set([Read(self.targetlen),
+                                      Read(self.index),
+                                      Read(self.sourceindex)]),
+                                 set())
+    def dependencies(self):
+        if self.language.name=='python':
+            return set()
+        elif self.language.name=='c':
+            return set([Read(self.index), Read(self.sourceindex)])
 
 class SparseValue(ArraySymbol):
     def __init__(self, M, name, language, index='_synapse_index'):
