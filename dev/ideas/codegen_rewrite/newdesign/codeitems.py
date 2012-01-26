@@ -1,6 +1,7 @@
 from brian import *
 from dependencies import *
 from formatting import *
+from codeobject import *
 
 class CodeItem(object):
     # Some default values to simplify coding, a class deriving from this can
@@ -17,6 +18,7 @@ class CodeItem(object):
         except Exception, e:
             print e
             raise
+    
     @property
     def subresolved(self):
         try:
@@ -27,6 +29,7 @@ class CodeItem(object):
         except Exception, e:
             print e
             raise
+    
     def __getattr__(self, name):
         if name=='resolved':
             return self.selfresolved.union(self.subresolved)
@@ -41,9 +44,21 @@ class CodeItem(object):
         elif name=='selfresolved':
             return set()
         raise AttributeError(name)
+    
     def __iter__(self):
         return NotImplemented
+    
     def convert_to(self, language, symbols={}):
         s = '\n'.join(item.convert_to(language,
                                       symbols=symbols) for item in self)
         return strip_empty_lines(s)
+
+    def generate(self, language, symbols, namespace=None):
+        from resolution import resolve
+        block, namespace = resolve(self, symbols, namespace=namespace)
+        codestr = block.convert_to(language, symbols)
+        if language.name=='python':
+            code = PythonCode(codestr, namespace)
+        elif language.name=='c':
+            code = CCode(codestr, namespace)
+        return code

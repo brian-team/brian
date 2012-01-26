@@ -73,7 +73,7 @@ from timedarray import *
 from tests.simpletest import *
 
 __version__ = '1.4.0dev'
-__release_date__ = '2011-12-22'
+__release_date__ = '2012-01-25'
 
 ### Define global preferences which are not defined anywhere else
 

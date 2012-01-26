@@ -13,6 +13,7 @@ __all__ = [
         'ArraySymbol',
             'NeuronGroupStateVariableSymbol',
         'IndexSymbol',
+        'get_neuron_group_symbols',
     ]
 
 class Symbol(object):
@@ -58,12 +59,22 @@ class RuntimeSymbol(Symbol):
 
 
 class ArraySymbol(Symbol):
-    def __init__(self, arr, name, language, index=None, subset=False):
+    def __init__(self, arr, name, language, index=None, subset=False,
+                 array_name=None, readname=None):
         self.arr = arr
         if index is None:
             index = '_index_'+name
+        if array_name is None:
+            if language.name=='c':
+                array_name = '_arr_'+name
+            elif language.name=='python':
+                array_name = name
+        if readname is None:
+            readname = '_read_'+name
         self.index = index
         self.subset = subset
+        self.array_name = array_name
+        self.readname = readname
         Symbol.__init__(self, name, language)
     def supported(self):
         return self.language.name in ['python', 'c']
@@ -71,43 +82,47 @@ class ArraySymbol(Symbol):
         if read or write:
             langname = self.language.name
             if langname=='python':
-                namespace[self.name] = self.arr
+                namespace[self.array_name] = self.arr
             elif langname=='c':
-                namespace['_arr_'+self.name] = self.arr
+                namespace[self.array_name] = self.arr
     def load(self, read, write):
         langname = self.language.name
         if langname=='python':
-            if not self.subset:
-                return Block()
+            if not self.subset or not read:
+                block = Block()
+                if self.subset:
+                    block.dependencies = set([Read(self.index)]) 
+                return block
             read_name = self.read()
-            code = '{read_name} = {name}[{index}]'.format(
+            code = '{read_name} = {array_name}[{index}]'.format(
                 read_name=read_name,
-                name=self.name,
+                array_name=self.array_name,
                 index=self.index)
-            dependencies = set([Read(self.index)])
+            dependencies = set([Read(self.index), Read(self.array_name)])
             resolved = set([read_name])
             return CodeStatement(code, dependencies, resolved)
         elif langname=='c':
-            return CDefineFromArray(self.name, '_arr_'+self.name,
+            return CDefineFromArray(self.name, self.array_name,
                                     self.index, reference=write,
                                     dtype=self.arr.dtype)
     def read(self):
         langname = self.language.name
         if langname=='python':
             if self.subset:
-                return '_read_'+self.name
+                return self.readname
             else:
-                return self.name
+                return self.array_name
         elif langname=='c':
             return self.name
     def write(self):
         langname = self.language.name
         if langname=='python':
-            writename = self.name
+            writename = self.array_name
             if self.subset:
-                writename += '['+self.index_array+']'
+                writename += '['+self.index+']'
             else:
                 writename += '[:]'
+            return writename
         elif langname=='c':
             return self.name
     def dependencies(self):
@@ -120,16 +135,26 @@ class ArraySymbol(Symbol):
 
 
 class IndexSymbol(Symbol):
-    def __init__(self, name, N, language, index_array=None):
+    def __init__(self, name, start, end, language, index_array=None):
         self.index_array = index_array
-        self.N = N
+        self.start = start
+        self.end = end
         Symbol.__init__(self, name, language)
     def supported(self):
         return self.language.name in ['python', 'c']
     def resolve(self, read, write, item, namespace):
         langname = self.language.name
         if langname=='python':
-            return item
+            if self.index_array is None:
+                code = '{name} = slice({start}, {end})'.format(
+                                name=self.name, start=self.start, end=self.end)
+            else:
+                code = '{name} = {index_array}'.format(name=self.name,
+                                                index_array=self.index_array)
+            return Block(
+                CodeStatement(code, self.dependencies(), set()),
+                item,
+                )
         elif langname=='c':
             if self.index_array is None:
                 for_index = self.name
@@ -141,59 +166,34 @@ class IndexSymbol(Symbol):
                                      dtype=int, reference=False),
                     item
                     )
-            spec = '{i}=0; {i}<{N}; {i}++'.format(i=for_index, N=self.N)
+            spec = 'int {i}={start}; {i}<{end}; {i}++'.format(
+                                    i=for_index, start=self.start, end=self.end)
             return CForBlock(for_index, spec, content)
     def dependencies(self):
+        deps = set()
         if self.language.name=='c' and self.index_array is not None:
-            return set(Read(self.index_array))
-        return set()
+            deps.update(set([Read(self.index_array)]))
+        deps.update(set(Read(x) for x in get_identifiers(self.start)))
+        deps.update(set(Read(x) for x in get_identifiers(self.end)))
+        return deps
     def resolution_requires_loop(self):
         return self.language.name=='c'
 
 
 class NeuronGroupStateVariableSymbol(ArraySymbol):
-    def __init__(self, group, varname, name, language, index=None, subset=False):
+    def __init__(self, group, varname, name, language,
+                 index=None, subset=False):
         self.group = group
         self.varname = varname
-        arr = group._var(varname)
+        arr = group.state_(varname)
         ArraySymbol.__init__(self, arr, name, language, index=index,
                              subset=subset)
 
-if __name__=='__main__':
-    item = MathematicalStatement('x', ':=', 'y*y')
-    y = zeros(10)
-    #idx = array([1, 3, 5])
-    subset = True
-    language = PythonLanguage()
-    #language = CLanguage()
-    sym_y = ArraySymbol(y, 'y', language,
-                      index='idx',
-                      subset=subset,
-                      )
-    if subset:
-        N = 'idx_arr_len'
-        sym_idx = IndexSymbol('idx', N, language, index_array='idx_arr')
-    else:
-        N = 'y_len'
-        sym_idx = IndexSymbol('idx', N, language)
-    symbols = {'y':sym_y, 'idx':sym_idx}
-    print 'Code:\n', indent_string(item.convert_to(language, symbols)),
-    print 'Dependencies:', item.dependencies
-    print 'Resolved:', item.resolved
-    print
-    read = Read('y') in item.dependencies
-    write = Write('y') in item.dependencies
-    namespace = {}
-    item = sym_y.resolve(read, write, item, namespace)
-    print 'Code:\n', indent_string(item.convert_to(language, symbols)),
-    print 'Dependencies:', item.dependencies
-    print 'Resolved:', item.resolved
-    print
-    read = Read('idx') in item.dependencies
-    write = Write('idx') in item.dependencies
-    item = sym_idx.resolve(read, write, item, namespace)
-    print 'Code:\n', indent_string(item.convert_to(language, symbols)),
-    print 'Dependencies:', item.dependencies
-    print 'Resolved:', item.resolved
-    print
-    print 'Namespace:', namespace.keys()
+def get_neuron_group_symbols(group, language, index='_neuron_index',
+                             subset=False, prefix=''):
+    eqs = group._eqs
+    symbols = dict(
+       (prefix+name,
+        NeuronGroupStateVariableSymbol(group, name, prefix+name, language,
+               index=index, subset=subset)) for name in eqs._diffeq_names)
+    return symbols

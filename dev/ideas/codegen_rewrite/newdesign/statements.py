@@ -24,6 +24,8 @@ class CodeStatement(Statement):
     def __init__(self, code, dependencies, resolved):
         self.dependencies = dependencies
         self.resolved = resolved
+        if '\n' in code:
+            code = flattened_docstring(code)
         self.code = code
     def __str__(self):
         return self.code
@@ -44,9 +46,9 @@ class CDefineFromArray(CodeStatement):
         elif dtype==float64:
             dtype = 'double'
         elif dtype==int32:
-            dtype = 'int32'
+            dtype = 'int32_t'
         elif dtype==int64:
-            dtype = 'int64'
+            dtype = 'int64_t'
         elif dtype==bool_:
             dtype = 'bool'
         if reference:
