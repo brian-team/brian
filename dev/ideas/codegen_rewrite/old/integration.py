@@ -1,8 +1,7 @@
 from brian import *
 from expressions import *
-from formatting import *
+from formatter import *
 from equations import *
-from statements import *
 
 __all__ = ['EquationsContainer', 'make_integration_step',
            'euler',
@@ -22,53 +21,42 @@ class EquationsContainer(object):
 
 def make_integration_step(method, eqs):
     eqs_container = EquationsContainer(eqs)
-    statements = []
-    for s in method(eqs_container):
-        statements.extend(statements_from_codestring(s))
+    statements = list(method(eqs_container))
     return statements
 
 def euler(eqs):
     for var, expr in eqs.nonzero:
-        yield '_temp_{var} := {expr}'.format(var=var, expr=expr)
+        yield Statement('_temp_'+var, ':=', expr)
     for var, expr in eqs.nonzero:
-        yield '{var} += _temp_{var}*dt'.format(var=var, expr=expr)
+        yield Statement(var, '+=', '_temp_'+var+'*dt')
 
 def rk2(eqs):
     for var, expr in eqs:
-        yield '''
-            _buf_{var} := {expr}
-            _half_{var} := .5*dt*_buf_{var}
-            _half_{var} += {var}
-            '''.format(var=var, expr=expr)
+        yield Statement('_buf_'+var, ':=', expr)
+        yield Statement('_half_'+var, ':=', '.5*dt*_buf_'+var)
+        yield Statement('_half_'+var, '+=', var)
     for var, expr in eqs.nonzero:
         half_subst = dict((var, '_half_'+var) for var in eqs.names)
         expr = word_substitute(expr, half_subst)
-        yield '''
-            _buf_{var} = {expr}
-            {var} += dt*_buf_{var}
-            '''.format(var=var, expr=expr)
+        yield Statement('_buf_'+var, '=', expr)
+        yield Statement(var, '+=', 'dt*_buf_'+var)
 
 def exp_euler(eqs):
     for var, expr in eqs.nonzero:
-        subs = {
-            'expr_B': word_substitute(expr, {var:0}),
-            'expr_A': word_substitute(expr, {var:1}),
-            'var_B': '_B_'+var,
-            'var_A': '_A_'+var,
-            }
-        yield '''
-            {var_B} := {expr_B}
-            {var_A} := {expr_A}
-            {var_A} -= {var_B}
-            {var_B} /= {var_A}
-            {var_A} *= dt
-            '''.format(**subs)
+        expr_B = word_substitute(expr, {var:0})
+        expr_A = word_substitute(expr, {var:1})
+        var_B = '_B_'+var
+        var_A = '_A_'+var
+        yield Statement(var_B, ':=', expr_B)
+        yield Statement(var_A, ':=', expr_A)
+        yield Statement(var_A, '-=', var_B)
+        yield Statement(var_B, '/=', var_A)
+        yield Statement(var_A, '*=', 'dt')
     for var, expr in eqs.nonzero:
-        yield '''
-            {var} += _B_{var}
-            {var} *= exp(_A_{var})
-            {var} -= _B_{var}
-            '''.format(var=var)
+        yield Statement(var, '+=', '_B_'+var)
+        yield Statement(var, '*=', 'exp(_A_{var})'.format(var=var))
+        yield Statement(var, '-=', '_B_'+var)
+
 
 if __name__=='__main__':
     tau = 10*ms
@@ -80,6 +68,6 @@ if __name__=='__main__':
     dVt/dt = (Vt0-Vt)/taut : 1
     ''')
     eqs.prepare()
-    for stmt in make_integration_step(rk2, eqs):
+    for stmt in make_integration_step(exp_euler, eqs):
         print str(stmt)
     

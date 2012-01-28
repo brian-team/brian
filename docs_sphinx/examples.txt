@@ -13,6 +13,35 @@ in the extras package.
    :maxdepth: 1
 
 
+.. _examples-synapses:
+
+synapses
+--------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-synapses_barrelcortex
+   examples-synapses_CUBA
+   examples-synapses_delayed_stdp
+   examples-synapses_gapjunctions
+   examples-synapses_jeffress
+   examples-synapses_multiple_delays
+   examples-synapses_noisy_ring
+   examples-synapses_nonlinear_synapses
+   examples-synapses_one_synapse
+   examples-synapses_one_synapse_bis
+   examples-synapses_probabilistic_synapses
+   examples-synapses_probabilistic_synapses2
+   examples-synapses_short_term_plasticity
+   examples-synapses_short_term_plasticity2
+   examples-synapses_STDP1
+   examples-synapses_STDP1_bis
+   examples-synapses_synapse_construction
+   examples-synapses_transient_sync
+   examples-synapses_two_synapses
+   examples-synapses_weightmonitor
+
 .. _examples-plasticity:
 
 plasticity

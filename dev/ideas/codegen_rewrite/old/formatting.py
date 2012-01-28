@@ -1,14 +1,7 @@
-from brian.utils.documentation import flattened_docstring, indent_string
 from string import Formatter
 import re
 
-__all__ = ['CodeFormatter', 'word_substitute', 'TAB',
-           'flattened_docstring', 'indent_string',
-           'get_identifiers',
-           'strip_empty_lines',
-           ]
-
-TAB = '    '
+__all__ = ['CodeFormatter', 'word_substitute']
 
 class CodeFormatter(Formatter):
     def __init__(self, namespace=None):
@@ -26,9 +19,3 @@ def word_substitute(expr, substitutions):
     for var, replace_var in substitutions.iteritems():
         expr = re.sub(r'\b' + var + r'\b', str(replace_var), expr)
     return expr
-
-def get_identifiers(expr):
-    return re.findall(r'\b[A-Za-z_][A-Za-z0-9_]*\b', expr)
-
-def strip_empty_lines(s):
-    return '\n'.join(line for line in s.split('\n') if line.strip())

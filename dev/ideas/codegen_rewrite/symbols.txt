@@ -1,0 +1,24 @@
+Array:
+	V				Python, whole array, read
+	V[:]			Python, whole array, write
+	V[I]			Python, subset of array, read/write
+	V[i]			Python, element of array, read/write
+	V[a:b]			Python, slice of array, read/write
+
+Integration
+	V, V[:]
+
+Threshold
+	V, V[:]
+
+Reset
+	V[I]
+
+Propagation
+	V[I], V[i], V[a:b]
+	
+Design:
+	ArraySymbol
+	IndexForWholeArray
+	IndexForArraySubset
+	IndexForArraySlice

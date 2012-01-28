@@ -1,3 +1,7 @@
+'''
+An example of constructing synapses.
+'''
+
 from brian import *
 import time
 from brian.experimental.synapses import *
