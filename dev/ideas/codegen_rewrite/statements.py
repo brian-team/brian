@@ -15,6 +15,7 @@ __all__ = [
             'CDefineFromArray',    
        'MathematicalStatement',
     'statements_from_codestring',
+    'c_data_type',
     ]
 
 class Statement(CodeItem):
@@ -30,27 +31,31 @@ class CodeStatement(Statement):
     def __str__(self):
         return self.code
     __repr__ = __str__
-    def convert_to(self, language, symbols={}):
+    def convert_to(self, language, symbols={}, namespace={}):
         return self.code
+
+def c_data_type(dtype):
+    if dtype is None:
+        dtype = float64
+    if dtype is int:
+        dtype = array([1]).dtype.type
+    if dtype==float32:
+        dtype = 'float'
+    elif dtype==float64:
+        dtype = 'double'
+    elif dtype==int32:
+        dtype = 'int32_t'
+    elif dtype==int64:
+        dtype = 'int64_t'
+    elif dtype==bool_ or dtype is bool:
+        dtype = 'bool'
+    return dtype
 
 class CDefineFromArray(CodeStatement):
     def __init__(self, var, arr, index,
                  dependencies=None, resolved=None,
                  dtype=None, reference=True, const=False):
-        if dtype is None:
-            dtype = float64
-        if dtype is int:
-            dtype = array([1]).dtype.type
-        if dtype==float32:
-            dtype = 'float'
-        elif dtype==float64:
-            dtype = 'double'
-        elif dtype==int32:
-            dtype = 'int32_t'
-        elif dtype==int64:
-            dtype = 'int64_t'
-        elif dtype==bool_:
-            dtype = 'bool'
+        dtype = c_data_type(dtype)
         if reference:
             ref = '&'
         else:
@@ -69,13 +74,15 @@ class CDefineFromArray(CodeStatement):
         CodeStatement.__init__(self, code, dependencies, resolved)
 
 class MathematicalStatement(Statement):
-    def __init__(self, var, op, expr, boolean=False):
+    def __init__(self, var, op, expr, dtype=None):
         self.var = var.strip()
         self.op = op.strip()
         if isinstance(expr, str):
             expr = Expression(expr)
         self.expr = expr
-        self.boolean = boolean
+        if dtype is not None:
+            dtype = c_data_type(dtype)
+        self.dtype = dtype
         self.dependencies = self.expr.dependencies
         if self.op==':=':
             self.resolved = set([self.var])
@@ -87,24 +94,26 @@ class MathematicalStatement(Statement):
         return self.var+' '+self.op+' '+str(self.expr)
     __repr__ = __str__
             
-    def convert_to(self, language, symbols={}, tabs=0):
+    def convert_to(self, language, symbols={}, tabs=0, namespace={}):
         if self.var in symbols:
             sym = symbols[self.var]
-            if self.op==':=':
-                raise ValueError("Trying to redefine existing Symbol.")
-            initial = sym.write()+' '+self.op+' '
+            lhs_name = sym.write()
         else:
-            if self.op==':=':
-                if language.name=='python':
-                    initial = self.var+' = '
-                elif language.name=='c':
-                    if self.boolean:
-                        initial = 'bool '+self.var+' = '
-                    else:
-                        initial = language.scalar+' '+self.var+' = '
-            else:
-                initial = self.var+' '+self.op+' '
-        statementstr = initial+self.expr.convert_to(language, symbols)
+            lhs_name = self.var
+        if self.op==':=':
+            if lhs_name in namespace:
+                raise ValueError("Trying to redefine existing Symbol "+self.var)
+            if language.name=='python':
+                initial = lhs_name+' = '
+            elif language.name=='c':
+                dtype = self.dtype
+                if dtype is None:
+                    dtype = language.scalar
+                initial = dtype+' '+lhs_name+' = '
+        else:
+            initial = lhs_name+' '+self.op+' '
+        statementstr = initial+self.expr.convert_to(language, symbols,
+                                                    namespace=namespace)
         if language.name=='c':
             statementstr += ';'
         return TAB*tabs+statementstr

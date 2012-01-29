@@ -52,23 +52,22 @@ class CodeGenConnection(Connection):
                                                     eqs=self.target._eqs,
                                                     infer_definitions=True)      
             symbols = get_neuron_group_symbols(self.target, language,
-                                               index='_target_index',
-                                               subset=True)
+                                               index='_target_index')
             if modulation:
                 src_symbols = get_neuron_group_symbols(self.source, language,
                                                index='_source_index',
-                                               subset=True,
                                                prefix='_sourcevar_')
                 symbols.update(src_symbols)
-            symbols['_source_index'] = SpikeSymbol('_source_index', language)
+            symbols['_source_index'] = ArrayIndex('_source_index', '_spikes',
+                                                  language,
+                                                  array_len='_numspikes')
             if self.W.__class__ is SparseConnectionMatrix:
-                Value, SynapseIndex, TargetIndex = (SparseValue,
-                                                    SparseSynapseIndex,
-                                                    SparseTargetIndex)
+                MatrixSymbols = SparseMatrixSymbols
             elif self.W.__class__ is DenseConnectionMatrix:
-                Value, SynapseIndex, TargetIndex = (DenseValue,
-                                                    DenseSynapseIndex,
-                                                    DenseTargetIndex)
+                MatrixSymbols = DenseMatrixSymbols
+            Value, SynapseIndex, TargetIndex = (MatrixSymbols.Value,
+                                                MatrixSymbols.SynapseIndex,
+                                                MatrixSymbols.TargetIndex)
             symbols['_w'] = Value(self.W, '_w', language)
             symbols['_synapse_index'] = SynapseIndex(self.W,
                                                      '_synapse_index',
@@ -90,107 +89,81 @@ class CodeGenConnection(Connection):
             return
         Connection.propagate(self, spikes)
 
-class DenseValue(ArraySymbol):
-    def __init__(self, M, name, language, index='_synapse_index'):
-        self.M = M
-        ArraySymbol.__init__(self, asarray(M).reshape(-1), name,
-                             language, index=index,
-                             subset=True, array_name='_flattened_'+name)
-        
-class DenseSynapseIndex(IndexSymbol):
-    def __init__(self, M, name, weightname, language,
-                 sourceindex='_source_index', targetlen='_target_len'):
-        self.M = M
-        self.weightname = weightname
-        self.targetlen = targetlen
-        start = '{sourceindex}*{targetlen}'.format(
-                weightname=weightname, sourceindex=sourceindex,
-                targetlen=targetlen)
-        end = '({sourceindex}+1)*{targetlen}'.format(
-                weightname=weightname, sourceindex=sourceindex,
-                targetlen=targetlen)
-        IndexSymbol.__init__(self, name, start, end, language)
-    def resolve(self, read, write, vectorisable, item, namespace):
-        namespace[self.targetlen] = self.M.shape[1]
-        return IndexSymbol.resolve(self, read, write, vectorisable, item, namespace)
+class DenseMatrixSymbols(object):
+    class Value(ArraySymbol):
+        def __init__(self, M, name, language, index='_synapse_index'):
+            self.M = M
+            ArraySymbol.__init__(self, asarray(M).reshape(-1), name,
+                                 language, index=index,
+                                 array_name='_flattened_'+name)
+    
+    class SynapseIndex(SliceIndex):
+        def __init__(self, M, name, weightname, language,
+                     sourceindex='_source_index', targetlen='_target_len'):
+            self.M = M
+            self.weightname = weightname
+            self.targetlen = targetlen
+            start = '({sourceindex})*({targetlen})'.format(
+                    weightname=weightname, sourceindex=sourceindex,
+                    targetlen=targetlen)
+            end = '({sourceindex}+1)*({targetlen})'.format(
+                    weightname=weightname, sourceindex=sourceindex,
+                    targetlen=targetlen)
+            SliceIndex.__init__(self, name, start, end, language)
+        def resolve(self, read, write, vectorisable, item, namespace):
+            namespace[self.targetlen] = self.M.shape[1]
+            return SliceIndex.resolve(self, read, write, vectorisable, item,
+                                      namespace)
+    
+    class TargetIndex(Symbol):
+        supported_languages = ['python', 'c']
+        def __init__(self, M, name, weightname, language, index='_synapse_index',
+                     targetlen='_target_len'):
+            self.M = M
+            self.weightname = weightname
+            self.index = index
+            self.targetlen = targetlen
+            self.sourceindex = '_source_index'
+            Symbol.__init__(self, name, language)
+        # Language invariant implementation
+        def load(self, read, write, vectorisable):
+            if self.language.name=='python' and vectorisable:
+                code = '{name} = slice(None)'.format(name=self.name)
+                return CodeStatement(code, set(), set())
+            expr = '{index}-({sourceindex})*({targetlen})'.format(
+                index=self.index, sourceindex=self.sourceindex,
+                targetlen=self.targetlen)
+            return MathematicalStatement(self.name, ':=', expr, dtype=int)
+        def dependencies(self):
+            return set([Read(self.index), Read(self.sourceindex)])
 
-class DenseTargetIndex(Symbol):
-    supported_languages = ['python', 'c']
-    def __init__(self, M, name, weightname, language, index='_synapse_index',
-                 targetlen='_target_len'):
-        self.M = M
-        self.weightname = weightname
-        self.index = index
-        self.targetlen = targetlen
-        self.sourceindex = '_source_index'
-        Symbol.__init__(self, name, language)
-    # Python implementation
-    def load_python(self, read, write, vectorisable):
-        code = '{name} = slice(0, {targetlen})'.format(name=self.name,
-                                                   targetlen=self.targetlen)
-        return CodeStatement(code, set([Read(self.targetlen)]), set())
-    def dependencies_python(self):
-        return set()
-    # C implementation
-    def load_c(self, read, write, vectorisable):
-        # TODO: terrible hack, find a nicer way of doing this
-        code = 'int {name} = {index}-{sourceindex}*{targetlen};'.format(
-                                               name=self.name,
-                                               targetlen=self.targetlen,
-                                               sourceindex=self.sourceindex,
-                                               index=self.index)
-        return CodeStatement(code,
-                             set([Read(self.targetlen),
-                                  Read(self.index),
-                                  Read(self.sourceindex)]),
-                             set())
-    def dependencies_c(self):
-        return set([Read(self.index), Read(self.sourceindex)])
-    # Language invariant implementation
-    dependencies = language_invariant_method('dependencies',
-        {'c':dependencies_c, 'python':dependencies_python})
-    load = language_invariant_method('load',
-        {'c':load_c, 'python':load_python})
-
-class SparseValue(ArraySymbol):
-    def __init__(self, M, name, language, index='_synapse_index'):
-        self.M = M
-        ArraySymbol.__init__(self, M.alldata, name, language, index=index,
-                             subset=True, array_name='_alldata_'+name)
-                
-class SparseSynapseIndex(IndexSymbol):
-    def __init__(self, M, name, weightname, language, sourceindex='_source_index'):
-        self.M = M
-        self.weightname = weightname
-        start = '_rowind_{weightname}[{sourceindex}]'.format(
-                weightname=weightname, sourceindex=sourceindex)
-        end = '_rowind_{weightname}[{sourceindex}+1]'.format(
-                weightname=weightname, sourceindex=sourceindex)
-        IndexSymbol.__init__(self, name, start, end, language)
-    def resolve(self, read, write, vectorisable, item, namespace):
-        namespace['_rowind_'+self.weightname] = self.M.rowind
-        return IndexSymbol.resolve(self, read, write, vectorisable, item, namespace)
-        
-class SparseTargetIndex(ArraySymbol):
-    def __init__(self, M, name, weightname, language, index='_synapse_index'):
-        self.M = M
-        self.weightname = weightname
-        ArraySymbol.__init__(self, M.allj, name, language, index=index,
-                             subset=True, array_name='_allj_'+weightname,
-                             readname=name)
-
-class SpikeSymbol(IndexSymbol):
-    def __init__(self, name, language, index_array='_spikes',
-                 start='0', end='_numspikes'):
-        IndexSymbol.__init__(self, name, start, end, language,
-                             index_array=index_array)
-    def resolve_python(self, read, write, vectorisable, item, namespace):
-        return PythonForBlock(self.name, self.index_array, item)
-    def resolve_c(self, read, write, vectorisable, item, namespace):
-        return IndexSymbol.resolve(self, read, write, vectorisable, item,
-                                   namespace)
-    resolve = language_invariant_method('resolve',
-        {'c':resolve_c, 'python':resolve_python})
+class SparseMatrixSymbols(object):
+    class Value(ArraySymbol):
+        def __init__(self, M, name, language, index='_synapse_index'):
+            self.M = M
+            ArraySymbol.__init__(self, M.alldata, name, language, index=index,
+                                 array_name='_alldata_'+name)
+                    
+    class SynapseIndex(SliceIndex):
+        def __init__(self, M, name, weightname, language, sourceindex='_source_index'):
+            self.M = M
+            self.weightname = weightname
+            start = '_rowind_{weightname}[{sourceindex}]'.format(
+                    weightname=weightname, sourceindex=sourceindex)
+            end = '_rowind_{weightname}[{sourceindex}+1]'.format(
+                    weightname=weightname, sourceindex=sourceindex)
+            SliceIndex.__init__(self, name, start, end, language)
+        def resolve(self, read, write, vectorisable, item, namespace):
+            namespace['_rowind_'+self.weightname] = self.M.rowind
+            return SliceIndex.resolve(self, read, write, vectorisable, item,
+                                      namespace)
+            
+    class TargetIndex(ArraySymbol):
+        def __init__(self, M, name, weightname, language, index='_synapse_index'):
+            self.M = M
+            self.weightname = weightname
+            ArraySymbol.__init__(self, M.allj, name, language, index=index,
+                                 array_name='_allj_'+weightname)
 
 if __name__=='__main__':
     from languages import *

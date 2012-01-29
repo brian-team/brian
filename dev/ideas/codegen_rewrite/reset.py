@@ -23,8 +23,7 @@ class CodeGenReset(Reset):
                                                     infer_definitions=True)
             block = Block(*statements)
             symbols = get_neuron_group_symbols(P, self.language,
-                                               index='_neuron_index',
-                                               subset=True)
+                                               index='_neuron_index')
             symbols['_neuron_index'] = ArrayIndex('_neuron_index',
                                                   '_spikes',
                                                    self.language,

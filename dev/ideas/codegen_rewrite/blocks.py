@@ -31,8 +31,9 @@ class ControlBlock(Block):
         if isinstance(contents, CodeItem):
             contents = [contents]
         self.contents = contents
-    def convert_to(self, language, symbols={}):
-        contentcode = Block.convert_to(self, language, symbols=symbols)
+    def convert_to(self, language, symbols={}, namespace={}):
+        contentcode = Block.convert_to(self, language, symbols=symbols,
+                                       namespace=namespace)
         s = self.start+'\n'+indent_string(contentcode)+'\n'+self.end
         return strip_empty_lines(s)
 

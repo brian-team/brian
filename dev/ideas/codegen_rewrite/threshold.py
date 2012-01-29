@@ -54,10 +54,12 @@ class CodeGenThreshold(Threshold):
 
 def make_threshold_block(group, threshold, language):
     if language.name=='python':
+        # NOTE: this doesn't work unless the statement is vectorised, but
+        # that's OK because in thresholding we're always vectorised here
         return MathematicalStatement('_spikes_bool', ':=', threshold)
     elif language.name=='c':
         return Block(
-            MathematicalStatement('_spiked', ':=', threshold, boolean=True),
+            MathematicalStatement('_spiked', ':=', threshold, dtype=bool),
             CodeStatement('if(_spiked) _spikes[_numspikes++] = _neuron_index;',
                           set([Write('_spikes'), Read('_numspikes'),
                                Write('_numspikes'), Read('_neuron_index')

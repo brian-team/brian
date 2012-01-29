@@ -48,15 +48,16 @@ class CodeItem(object):
     def __iter__(self):
         return NotImplemented
     
-    def convert_to(self, language, symbols={}):
+    def convert_to(self, language, symbols={}, namespace={}):
         s = '\n'.join(item.convert_to(language,
-                                      symbols=symbols) for item in self)
+                                      symbols=symbols,
+                                      namespace=namespace) for item in self)
         return strip_empty_lines(s)
 
     def generate(self, language, symbols, namespace=None):
         from resolution import resolve
         block, namespace = resolve(self, symbols, namespace=namespace)
-        codestr = block.convert_to(language, symbols)
+        codestr = block.convert_to(language, symbols, namespace=namespace)
         if language.name=='python':
             code = PythonCode(codestr, namespace)
         elif language.name=='c':

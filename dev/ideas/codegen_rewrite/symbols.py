@@ -90,13 +90,15 @@ class ArraySymbol(Symbol):
         Symbol.__init__(self, name, language)
     # Python implementation
     def load_python(self, read, write, vectorisable):
+        dependencies = set([Read(self.index), Read(self.array_name)])
         if not read:
-            return Block()
+            block = Block()
+            block.dependencies = dependencies
+            return block
         code = '{name} = {array_name}[{index}]'.format(
             name=self.name,
             array_name=self.array_name,
             index=self.index)
-        dependencies = set([Read(self.index), Read(self.array_name)])
         return CodeStatement(code, dependencies, set())
     def write_python(self):
         return self.array_name+'['+self.index+']'
@@ -216,7 +218,7 @@ class NeuronGroupStateVariableSymbol(ArraySymbol):
         ArraySymbol.__init__(self, arr, name, language, index=index)
 
 def get_neuron_group_symbols(group, language, index='_neuron_index',
-                             subset=False, prefix=''):
+                             prefix=''):
     eqs = group._eqs
     symbols = dict(
        (prefix+name,

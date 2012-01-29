@@ -23,7 +23,7 @@ class Expression(object):
     def __str__(self):
         return self.expr
             
-    def convert_to(self, language, symbols={}):
+    def convert_to(self, language, symbols={}, namespace={}):
         if language.name=='python':
             return substitute_symbols(self.expr, symbols)
         elif language.name=='c':
