@@ -55,7 +55,7 @@ class CForBlock(ForBlock):
     def __init__(self, var, spec, content, dependencies=None, resolved=None):
         if dependencies is None:
             dependencies = set([Read(x) for x in get_identifiers(spec)])
-            dependencies.remove(Read(var))
+            dependencies.discard(Read(var))
         if resolved is None:
             resolved = set([var])
         start = 'for({spec})\n{{'.format(spec=spec)

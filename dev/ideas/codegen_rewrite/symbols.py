@@ -8,15 +8,18 @@ from dependencies import *
 from formatting import *
 
 __all__ = [
+    'language_invariant_symbol_method',
     'Symbol',
         'RuntimeSymbol',
         'ArraySymbol',
             'NeuronGroupStateVariableSymbol',
-        'IndexSymbol',
-        'get_neuron_group_symbols',
+        'SliceIndex',
+        'ArrayIndex',
+    'get_neuron_group_symbols',
     ]
 
-def language_invariant_method(basemethname, langs, fallback=None):
+
+def language_invariant_symbol_method(basemethname, langs, fallback=None):
     def meth(self, *args, **kwds):
         langname = self.language.name
         if langname in langs:
@@ -76,144 +79,141 @@ class RuntimeSymbol(Symbol):
 
 class ArraySymbol(Symbol):
     supported_languages = ['python', 'c']
-    def __init__(self, arr, name, language, index=None, subset=False,
-                 array_name=None, readname=None):
+    def __init__(self, arr, name, language, index=None, array_name=None):
         self.arr = arr
         if index is None:
             index = '_index_'+name
         if array_name is None:
-            if language.name=='c':
-                array_name = '_arr_'+name
-            elif language.name=='python':
-                array_name = name
-        if readname is None:
-            readname = '_read_'+name
+            array_name = '_arr_'+name
         self.index = index
-        self.subset = subset
         self.array_name = array_name
-        self.readname = readname
         Symbol.__init__(self, name, language)
     # Python implementation
-    def update_namespace_python(self, read, write, vectorisable, namespace):
-        namespace[self.array_name] = self.arr
     def load_python(self, read, write, vectorisable):
-        if not self.subset or not read:
-            block = Block()
-            if self.subset:
-                block.dependencies = set([Read(self.index)]) 
-            return block
-        read_name = self.read()
-        code = '{read_name} = {array_name}[{index}]'.format(
-            read_name=read_name,
+        if not read:
+            return Block()
+        code = '{name} = {array_name}[{index}]'.format(
+            name=self.name,
             array_name=self.array_name,
             index=self.index)
         dependencies = set([Read(self.index), Read(self.array_name)])
-        resolved = set([read_name])
-        return CodeStatement(code, dependencies, resolved)
-    def read_python(self):
-        if self.subset:
-            return self.readname
-        else:
-            return self.array_name
+        return CodeStatement(code, dependencies, set())
     def write_python(self):
-        writename = self.array_name
-        if self.subset:
-            writename += '['+self.index+']'
-        else:
-            writename += '[:]'
-        return writename
-    def dependencies_python(self):
-        if not self.subset:
-            return set()
-        else:
-            return set([Read(self.index)])
-    # C Implementation
-    def update_namespace_c(self, read, write, vectorisable, namespace):
-        namespace[self.array_name] = self.arr
+        return self.array_name+'['+self.index+']'
+    # C implementation
     def load_c(self, read, write, vectorisable):
         return CDefineFromArray(self.name, self.array_name,
-                                self.index, reference=write,
+                                self.index, reference=write, const=(not write),
                                 dtype=self.arr.dtype)
-    def dependencies_c(self):
-        print 'dep_c', self.index
+    # Language invariant implementation
+    def update_namespace(self, read, write, vectorisable, namespace):
+        namespace[self.array_name] = self.arr
+    def dependencies(self):
         return set([Read(self.index)])
-    # Invariant implementation
-    def resolution_requires_loop(self):
-        return False
-    update_namespace = language_invariant_method('update_namespace',
-        {'c':update_namespace_c, 'python':update_namespace_python})
-    load = language_invariant_method('load',
-        {'c':load_c, 'python':load_python})
-    dependencies = language_invariant_method('dependencies',
-        {'c':dependencies_c, 'python':dependencies_python})
-    read = language_invariant_method('read',
-        {'python':read_python}, Symbol.read)
-    write = language_invariant_method('write',
+    write = language_invariant_symbol_method('write',
         {'python':write_python}, Symbol.write)
+    load = language_invariant_symbol_method('load',
+        {'python':load_python, 'c':load_c})
 
 
-class IndexSymbol(Symbol):
+class SliceIndex(Symbol):
     supported_languages = ['python', 'c']
     multiple_values = True
-    def __init__(self, name, start, end, language, index_array=None,
-                 forced_dependencies=None):
-        if forced_dependencies is None:
-            forced_dependencies = set()
-        self.index_array = index_array
+    def __init__(self, name, start, end, language, all=False):
         self.start = start
         self.end = end
-        self.forced_dependencies = forced_dependencies
+        self.all = all
         Symbol.__init__(self, name, language)
     # Python implementation
     def resolve_python(self, read, write, vectorisable, item, namespace):
-        if self.index_array is None:
-            code = '{name} = slice({start}, {end})'.format(
-                            name=self.name, start=self.start, end=self.end)
+        if vectorisable:
+            if self.all:
+                namespace[self.name] = slice(None)
+                return item
+            code = '{name} = slice({start}, {end})'
+            code = code.format(name=self.name, start=self.start, end=self.end)
+            return Block(
+                CodeStatement(code, self.dependencies(), set()),
+                item,
+                )
         else:
-            code = '{name} = {index_array}'.format(name=self.name,
-                                            index_array=self.index_array)
-        return Block(
-            CodeStatement(code, self.dependencies(), set()),
-            item,
-            )
+            container = 'xrange({start}, {end})'.format(
+                                                start=self.start, end=self.end)
+            return PythonForBlock(self.name, container, item)
     # C implementation
     def resolve_c(self, read, write, vectorisable, item, namespace):
-        if self.index_array is None:
-            for_index = self.name
-            content = item
-        else:
-            for_index = '_index_'+self.index_array
-            content = Block(
-                CDefineFromArray(self.name, self.index_array, for_index,
-                                 dtype=int, reference=False),
-                item
-                )
-        spec = 'int {i}={start}; {i}<{end}; {i}++'.format(
-                                i=for_index, start=self.start, end=self.end)
-        return CForBlock(for_index, spec, content)
-    # Language invariant
-    def dependencies(self):
-        deps = set()
-        if self.language.name=='c' and self.index_array is not None:
-            deps.update(set([Read(self.index_array)]))
-        deps.update(set(Read(x) for x in get_identifiers(self.start)))
-        deps.update(set(Read(x) for x in get_identifiers(self.end)))
-        deps.update(self.forced_dependencies)
-        return deps
+        spec ='int {name}={start}; {name}<{end}; {name}++'.format(
+            name=self.name, start=self.start, end=self.end)
+        return CForBlock(self.name, spec, item)
+    # Language invariant implementation
     def resolution_requires_loop(self):
-        return self.language.name=='c'
-    resolve = language_invariant_method('resolve',
+        return self.language.name!='python'
+    resolve = language_invariant_symbol_method('resolve',
+        {'c':resolve_c, 'python':resolve_python})
+
+class ArrayIndex(Symbol):
+    supported_languages = ['python', 'c']
+    multiple_values = True
+    def __init__(self, name, array_name, language, array_len=None,
+                 index_name=None, array_slice=None):
+        if index_name is None:
+            index_name = '_index_'+array_name
+        if array_len is None:
+            array_len = '_len_'+array_name
+        self.array_name = array_name
+        self.array_len = array_len
+        self.index_name = index_name
+        self.array_slice = array_slice 
+        Symbol.__init__(self, name, language)
+    # Python implementation
+    def resolve_python(self, read, write, vectorisable, item, namespace):
+        if vectorisable:
+            code = '{name} = {array_name}'
+            start, end = '', ''
+            if self.array_slice is not None:
+                start, end = self.array_slice
+                code += '[{start}:{end}]'
+            code = code.format(start=start, end=end,
+                name=self.name, array_name=self.array_name)
+            block = Block(
+                CodeStatement(code, set([Read(self.array_name)]), set()),
+                item)
+            return block
+        else:
+            if self.array_slice is None:
+                return PythonForBlock(self.name, self.array_name, item)
+            else:
+                start, end = self.array_slice
+                container = '{array_name}[{start}:{end}]'.format(
+                    array_name=self.array_name, start=start, end=end)
+                return PythonForBlock(self.name, container, item)
+    # C implementation
+    def resolve_c(self, read, write, vectorisable, item, namespace):
+        if self.array_slice is None:
+            start, end = '0', self.array_len
+        else:
+            start, end = self.array_slice
+        spec ='int {index_name}={start}; {index_name}<{end}; {index_name}++'
+        spec = spec.format(
+            index_name=self.index_name, start=start, end=end)
+        block = Block(
+            CDefineFromArray(self.name, self.array_name, self.index_name,
+                             dtype=int, reference=False, const=True),
+            item)
+        return CForBlock(self.name, spec, block)
+    # Language invariant implementation
+    def resolution_requires_loop(self):
+        return self.language.name!='python'
+    resolve = language_invariant_symbol_method('resolve',
         {'c':resolve_c, 'python':resolve_python})
 
 
 class NeuronGroupStateVariableSymbol(ArraySymbol):
-    def __init__(self, group, varname, name, language,
-                 index=None, subset=False):
+    def __init__(self, group, varname, name, language, index=None):
         self.group = group
         self.varname = varname
         arr = group.state_(varname)
-        ArraySymbol.__init__(self, arr, name, language, index=index,
-                             subset=subset)
+        ArraySymbol.__init__(self, arr, name, language, index=index)
 
 def get_neuron_group_symbols(group, language, index='_neuron_index',
                              subset=False, prefix=''):
@@ -221,5 +221,5 @@ def get_neuron_group_symbols(group, language, index='_neuron_index',
     symbols = dict(
        (prefix+name,
         NeuronGroupStateVariableSymbol(group, name, prefix+name, language,
-               index=index, subset=subset)) for name in eqs._diffeq_names)
+               index=index)) for name in eqs._diffeq_names)
     return symbols

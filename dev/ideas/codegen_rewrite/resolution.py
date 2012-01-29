@@ -54,8 +54,6 @@ def resolve(item, symbols, namespace=None):
     vectorisable = True
     for var in resolution_order:
         sym = symbols[var]
-        if sym.multi_valued():
-            vectorisable = False
         read = Read(var) in item.dependencies
         write = Write(var) in item.dependencies
         print 'Resolving', var,
@@ -67,6 +65,8 @@ def resolve(item, symbols, namespace=None):
             print '(vectorisable)',
         print 'dependencies', item.dependencies
         item = sym.resolve(read, write, vectorisable, item, namespace)
+        if sym.multi_valued():
+            vectorisable = False
     return item, namespace
     
 if __name__=='__main__':

@@ -25,11 +25,10 @@ class CodeGenReset(Reset):
             symbols = get_neuron_group_symbols(P, self.language,
                                                index='_neuron_index',
                                                subset=True)
-            symbols['_neuron_index'] = IndexSymbol('_neuron_index',
-                                                   '0',
-                                                   '_num_spikes',
+            symbols['_neuron_index'] = ArrayIndex('_neuron_index',
+                                                  '_spikes',
                                                    self.language,
-                                                   index_array='_spikes')
+                                                   array_len='_numspikes')
             self.code = block.generate(self.language, symbols, namespace=ns)
             print 'RESET'
             print self.code.code_str
@@ -38,6 +37,6 @@ class CodeGenReset(Reset):
             self.prepared = True
         ns = self.code.namespace
         ns['_spikes'] = spikes = P.LS.lastspikes()
-        ns['_num_spikes'] = len(spikes)
+        ns['_numspikes'] = len(spikes)
         ns['t'] = P.clock._t
         self.code()

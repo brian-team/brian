@@ -1,6 +1,5 @@
 from brian import *
 from symbols import *
-from symbols import language_invariant_method
 from blocks import *
 from statements import *
 from dependencies import *

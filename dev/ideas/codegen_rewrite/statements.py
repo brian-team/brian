@@ -36,7 +36,7 @@ class CodeStatement(Statement):
 class CDefineFromArray(CodeStatement):
     def __init__(self, var, arr, index,
                  dependencies=None, resolved=None,
-                 dtype=None, reference=True):
+                 dtype=None, reference=True, const=False):
         if dtype is None:
             dtype = float64
         if dtype is int:
@@ -55,8 +55,12 @@ class CDefineFromArray(CodeStatement):
             ref = '&'
         else:
             ref = ''
-        code = '{dtype} {ref}{var} = {arr}[{index}];'.format(
-            dtype=dtype, ref=ref,
+        if const:
+            const = 'const '
+        else:
+            const = ''
+        code = '{const}{dtype} {ref}{var} = {arr}[{index}];'.format(
+            dtype=dtype, ref=ref, const=const,
             var=var, arr=arr, index=index)
         if dependencies is None:
             dependencies = set([Read(arr), Read(index)])

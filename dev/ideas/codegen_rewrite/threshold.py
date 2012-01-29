@@ -22,10 +22,11 @@ class CodeGenThreshold(Threshold):
             self._inputcode = freeze_with_equations(self.inputcode, P._eqs, ns)
             block = make_threshold_block(P, self.inputcode, self.language)
             symbols = get_neuron_group_symbols(P, self.language)
-            symbols['_neuron_index'] = IndexSymbol('_neuron_index',
-                                                   '0',
-                                                   '_num_neurons',
-                                                   self.language)
+            symbols['_neuron_index'] = SliceIndex('_neuron_index',
+                                                  '0',
+                                                  '_num_neurons',
+                                                  self.language,
+                                                  all=True)
             if self.language.name=='c':
                 symbols['_numspikes'] = NumSpikesSymbol('_numspikes',
                                                         self.language)
@@ -34,13 +35,13 @@ class CodeGenThreshold(Threshold):
             print self.code.code_str
             ns = self.code.namespace
             ns['dt'] = P.clock._dt
+            ns['_num_neurons'] = len(P)
             if self.language.name=='python':
                 def threshold_func(P):
                     code()
                     return ns['_spikes_bool'].nonzero()[0]
             elif self.language.name=='c':
                 ns['_spikes'] = zeros(len(P), dtype=int)
-                ns['_num_neurons'] = len(P)
                 def threshold_func(P):
                     code()
                     return ns['_spikes'][:ns['_arr__numspikes'][0]]

@@ -17,10 +17,11 @@ class CodeGenStateUpdater(StateUpdater):
         if not self.prepared:
             block = Block(*make_integration_step(self.method, self.eqs))            
             symbols = get_neuron_group_symbols(G, self.language)
-            symbols['_neuron_index'] = IndexSymbol('_neuron_index',
-                                                   '0',
-                                                   '_num_neurons',
-                                                   self.language)
+            symbols['_neuron_index'] = SliceIndex('_neuron_index',
+                                                  '0',
+                                                  '_num_neurons',
+                                                  self.language,
+                                                  all=True)
             self.code = block.generate(self.language, symbols)
             print 'STATE UPDATE'
             print self.code.code_str
