@@ -232,3 +232,16 @@ matrix types. So we define a Value, SynapseIndex and TargetIndex symbol for
 each matrix type. For the moment, we only have 'V += w' or 'V += w*mod' so we
 don't need to worry about inferring whether variables are pre- or post-synaptic
 but for the Synapses class we will need to define or infer this somehow.
+
+Issues remaining
+================
+
+- Back propagation, should be simply a matter of creating a few new symbols
+- STDP, should work easily with this system once back propagation is done
+- DelayConnection, works with this scheme but only meaningful to use the
+  delayed_reaction if the synaptic code is purely additive on a single variable
+  without side effects (i.e. V+=w or V+=w*mod basically). So it can be done, but
+  there's not so much advantage to it.
+- GPU, should be more or less the same as C except that we have to treat the
+  variable we vectorise over slightly different because we don't resolve with
+  a loop but rather by using a kernel.
