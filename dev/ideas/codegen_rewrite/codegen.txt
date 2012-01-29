@@ -1,0 +1,234 @@
+Overview
+========
+
+Start with a series of statements we want to evaluate for each neuron, or for
+each synapse, such as:
+
+	State update (for each neuron):
+
+		_temp_V = -V/tau
+		V += _temp_V*dt
+	
+	Threshold (for each neuron):
+	
+		_spiked = V>Vt
+		
+	Reset (for each neuron in _spikes):
+	
+		V = 0
+		
+	Propagation (for each synapse):
+	
+		V += w*mod
+
+We then proceed to construct code to evaluate this for each of the required
+indices (neurons, spikes, synapses), vectorising in Python when possible, or
+inserting loops. This has several components:
+
+Code object
+===========
+
+The Code object is responsible for storing and executing the finished code. It
+consists of a code string and a namespace, and the code is executed inside the
+namespace. There are PythonCode, CCode and GPUCode subclasses. The __call__
+mechanism is used to execute the code, and the keyword arguments provided to
+__call__ are inserted into the namespace.
+
+Expressions and MathematicalStatement
+=====================================
+
+An expression is a mathematical expression such as 'x**2+y', given in Python
+syntax. A statement is something like 'z = x**2+y' or 'z += 1'. We use the
+standard Python syntax with one addition, a new operator := which is used to
+define a new variable. We need this because in both Python and C, defining a
+variable is different to writing to it. When converting to C, we need to
+transform the expression into 'pow(x,2)+y' and this is handled by sympy (which
+also does some algebraic simplification). Similarly, when defining a variable in
+C we do something like 'double z = pow(x,2)+y'.
+
+CodeItem, Block, Statement
+==========================
+
+Each of this is an item of code. A Statement is like a single line or unit of
+code, a CodeItem can be anything, and a Block is a sequence of several code
+items. Loops and if statements are types of blocks too. The key method that each
+of these share is convert_to to return a code string in different languages.
+
+Symbols and Dependencies
+========================
+
+The key element in the whole scheme is the idea of Symbols and Dependencies.
+To illustrate this, in the example of state update we have:
+
+	_temp_V = -V/tau
+	V += _temp_V*dt
+	
+Here, the symbol V 'depends on' the symbol neuron_index. That is, for each
+neuron_index, we have a corresponding value of V. In turn, neuron_index takes
+on multiple values. In Python, we go through the multiple values of
+neuron_index by vectorisation, whereas in C we do it through a loop.
+
+We generate the final code, by going through all the symbols in a code item
+and 'resolving' the symbol, which means transforming the code. For example,
+resolving 'V' in Python would mean 'V = _arr_V[neuron_index]' and in C it would
+be 'double &V = _arr_V[neuron_index];'. Having resolved V it introduces a new
+symbol neuron_index that needs to be resolved. In the case of Python this would
+be 'neuron_index = slice(None)' whereas in C it would involve a loop.
+
+There are two types of dependencies, Read and Write depending on how the symbol
+is used. So, in Python we can read a numpy array just using the symbol name
+directly, whereas to write to it we need to write 'V[:] = ...' to make the
+modification in-place.
+
+A symbol can say whether it is single or multiple valued, so that V is single
+valued because it has a single value for a single value of neuron_index which
+is the variable that takes multiple values.
+
+A symbol can also say whether or not it needs a loop to resolve it or not, this
+information can be used to optimise the code (we prefer to put as much stuff
+outside loops as possible).
+
+In resolving a symbol, we specify whether or not we want to read or write (or
+both), and whether or not we can vectorise. The reason for this is that we can
+only vectorise over one loop, so if we have two loops, then we have to loop over
+one and vectorise over the other. This is determined by the symbol resolution
+algorithm (see below). In resolving a variable we also have a code item and a
+namespace. The symbol resolution returns a new code item and can modify the
+namespace (e.g. adding new values to it, such as _arr_V).
+
+We can also change the read/write names of the variable, for example when
+writing to V we want to do _arr_V[:]=... whereas when reading from it we want
+to just use _arr_V, so the Symbol object has read() and write() methods which
+give the names to use when reading to or writing to a symbol.
+
+In this way, we build up a complete code string iteratively by resolving one
+variable at a time. For example for state update above, we would start by
+resolving V, which would mean:
+
+	Python:
+		V = _arr_V[neuron_index]
+		_temp_V = -V/tau
+		_arr_V[neuron_index] += _temp_V*dt
+	C:
+		double &V = _arr_V[neuron_index];
+		double _temp_V = -V/tau;
+		V += _temp_V*dt;
+
+This introduces a new symbol neuron_index which we need to resolve:
+
+	Python:
+		neuron_index = slice(None)
+		V = _arr_V[neuron_index]
+		_temp_V = -V/tau
+		_arr_V[neuron_index] += _temp_V*dt
+	C:
+		for(int neuron_index=0; neuron_index<num_neurons; neuron_index++)
+		{
+			double &V = _arr_V[neuron_index];
+			double _temp_V = -V/tau;
+			V += _temp_V*dt;
+		}
+
+And this is the final code we execute.
+
+There are two main types of symbols predefined, ArraySymbol and Index. The first
+says that the Symbol is an element of an array, and Index is a multi-valued
+array index. There are two types of Index symbols, SliceIndex which is used
+for operating over a whole array or a slice of an array, and ArrayIndex which
+is used for operating over a subset of the indices of an array, given by an
+index array (e.g. _spikes).
+
+We can extend the code generation by allowing users to provide their own
+symbols, or using this mechanism with built in Brian objects. For example,
+TimedArray can be implemented with this system. Symbols can be extracted from
+the namespace of an Equations object by checking the type of each element in
+the namespace, and, for example, checking if it has a method .codegen_symbol().
+
+Symbol resolution algorithm
+===========================
+
+Consider the synaptic propagation statement:
+
+	V += w*mod
+	
+Here we have that V depends on target_index, w depends on synapse_index and
+mod is a presynaptic variable so it depends on source_index. In turn,
+target_index depends on synapse_index, synapse_index depends on source_index,
+and source_index depends on _spikes (the array of neurons which have spiked).
+Summarising:
+
+	V: depends on target_index, single-valued
+	w: depends on synapse_index, single-valued
+	mod: depends on source_index, single-valued
+	target_index: depends on synapse_index, single-valued
+	synapse_index: depends on source_index, multi-valued
+	source_index: depends on _spikes, multi-valued
+	
+An issue is the order in which we resolve the symbols. Since we can only make
+code modifications iteratively by adding additional code to the beginning and
+ending of a given segment, if we resolved source_index first, we wouldn't then
+be able to resolve synapse_index (because it depends on the value of
+source_index).
+
+The solution to this problem is to construct the whole dependency graph (which
+means each Symbol has to have a method giving the set of dependencies it
+introduces in its resolution), and then find the resolution order backwards
+(i.e. we find the last symbol to be resolved first) at each stage choosing only
+nodes in the graph with no outgoing edges. We can also perform an optimisation
+by asking each node whether it requires a loop to resolve it, and always
+preferring statements which don't require a loop first. In the above example,
+the reverse order we get is then:
+
+  source_index mod synapse_index w target_index V
+  
+So we resolve in the order:
+
+  V target_index w synapse_index mod source_index
+  
+The dependency graph is a directed acyclic graph (DAG) and therefore it is
+guaranteed that we will find a suitable order (a topological sorting always
+exists for DAGs). Since source_index and synapse_index are multi-valued, and
+we resolve in the order above, we only vectorise for these symbols:
+
+	V target_index w synapse_index
+	
+The remaining symbols have to be resolved without vectorisation (which makes
+no difference in C but means Python loops).
+
+Numerical integration
+=====================
+
+For generating code, we first generate an integration scheme for the equations,
+and then create a symbol for each neuron group variable that depends on the
+index neuron_index. To create the integration scheme, we do something like
+this:
+
+	def euler(eqs):
+	    for var, expr in eqs.nonzero:
+	        yield '_temp_{var} := {expr}'.format(var=var, expr=expr)
+	    for var, expr in eqs.nonzero:
+	        yield '{var} += _temp_{var}*dt'.format(var=var, expr=expr)
+
+This generator yields strings which are turned into MathematicalStatements
+by using regular expression analysis of the strings. See integration.py for
+more details (it's simple).
+
+Threshold, Reset
+================
+
+These work similarly to numerical integration. In the case of threshold, we
+construct an array _spiked in the case of Python, then return _spiked.nonzero().
+In the case of C we directly create an array _spikes.
+
+For resets, we do the same as numerical integration, we create symbols for each
+neuron group variable, but the neuron_index symbol is an ArrayIndex to the
+array _spikes.
+
+Propagation
+===========
+
+For propagation, it is a little more complicated because we have different
+matrix types. So we define a Value, SynapseIndex and TargetIndex symbol for
+each matrix type. For the moment, we only have 'V += w' or 'V += w*mod' so we
+don't need to worry about inferring whether variables are pre- or post-synaptic
+but for the Synapses class we will need to define or infer this somehow.

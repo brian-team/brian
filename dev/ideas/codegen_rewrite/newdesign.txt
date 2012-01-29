@@ -252,8 +252,4 @@ Standard Symbol types:
             TODO
 ====================================
 
-- Finish basic implementation
-- Dependencies aren't handled correctly (some resolved stay dependent for block)
 - Dependencies from C/Python keywords and namespace (e.g. int, exp)
-- The definition of some Symbols has become a bit arcane already, think about
-  refactoring
