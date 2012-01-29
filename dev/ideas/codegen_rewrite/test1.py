@@ -9,8 +9,8 @@ from connection import *
 language = CLanguage()
 #language = PythonLanguage()
 
-#structure = 'sparse'
-structure = 'dense'
+structure = 'sparse'
+#structure = 'dense'
 
 tau = 10*ms
 Vt0 = 1.0

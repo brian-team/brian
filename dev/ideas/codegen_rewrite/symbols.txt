@@ -22,3 +22,70 @@ Design:
 	IndexForWholeArray
 	IndexForArraySubset
 	IndexForArraySlice
+
+Propagation dependence issue:
+
+V += w*mod
+
+V -> target_index
+w -> synapse_index
+mod -> source_index
+target_index -> synapse_index
+synapse_index -> source_index
+
+The issue with mod is that it only depends on source_index and we don't want
+to vectorise in Python over source_index because it will be used inside
+another loop which is doing its own vectorisation, i.e.
+
+for source_index in spikes:
+	for synapse_index in f(source_index):
+		target_index = g(synapse_index)
+		V += w*mod
+		
+We want to vectorise this like this:
+
+for source_index in spikes:
+	mod = _mod[source_index]
+	synapse_index = f(source_index)
+	target_index = g(source_index)
+	V, w = ...
+	V += w*mod
+	
+and not like this (which would be an error):
+
+mod = _mod[spikes]
+for source_index in spikes:
+	synapse_index = f(source_index)
+	target_index = g(source_index)
+	V, w = ...
+	V += w*mod
+
+Because here we are using mod in the statement V += w*mod where the
+vectorisation is being done over target_index not source_index. So, essentially
+we want to allow vectorisation over only a single variable, and it should be
+the innermost one. However, there is a slight issue in that we are vectorising
+in a way over both synapse_index AND target_index in the above example, but we
+can resolve this by saying that target_index = f(synapse_index) is itself
+vectorised over synapse_index so we are only really vectorising over
+synapse_index. This gives us the following dependency graph:
+
+V -> target_index (single-value)
+w -> synapse_index (single-value)
+mod -> source_index (single-value)
+target_index -> synapse_index (single-value)
+synapse_index -> source_index (multi-value)
+source_index -> spikes (multi-value)
+
+So there are two loops here, and we vectorise only over synapse_index, the
+innermost loop. This drops out of the dependency graph resolution because we
+sequence the resolution order as
+
+	V w target_index synapse_index(multi) mod source_index(multi)
+
+We just add the condition vectorisable=True to all the variables up to the
+first multi-valued variable, and False afterwards:
+
+	Vectorisable:
+	V w target_index synapse_index(multi)
+	Not vectorisable:
+	                                      mod source_index(multi)

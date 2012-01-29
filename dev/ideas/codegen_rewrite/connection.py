@@ -1,5 +1,6 @@
 from brian import *
 from symbols import *
+from symbols import language_invariant_method
 from blocks import *
 from statements import *
 from dependencies import *
@@ -110,11 +111,12 @@ class DenseSynapseIndex(IndexSymbol):
                 weightname=weightname, sourceindex=sourceindex,
                 targetlen=targetlen)
         IndexSymbol.__init__(self, name, start, end, language)
-    def resolve(self, read, write, item, namespace):
+    def resolve(self, read, write, vectorisable, item, namespace):
         namespace[self.targetlen] = self.M.shape[1]
-        return IndexSymbol.resolve(self, read, write, item, namespace)
+        return IndexSymbol.resolve(self, read, write, vectorisable, item, namespace)
 
 class DenseTargetIndex(Symbol):
+    supported_languages = ['python', 'c']
     def __init__(self, M, name, weightname, language, index='_synapse_index',
                  targetlen='_target_len'):
         self.M = M
@@ -123,32 +125,33 @@ class DenseTargetIndex(Symbol):
         self.targetlen = targetlen
         self.sourceindex = '_source_index'
         Symbol.__init__(self, name, language)
-    def supported(self):
-        return self.language.name in ['python', 'c']
-    def update_namespace(self, read, write, namespace):
-        pass
-    def load(self, read, write):
-        if self.language.name=='python':
-            code = '{name} = slice(0, {targetlen})'.format(name=self.name,
-                                                       targetlen=self.targetlen)
-            return CodeStatement(code, set([Read(self.targetlen)]), set())
-        elif self.language.name=='c':
-            # TODO: terrible hack, find a nicer way of doing this
-            code = 'int {name} = {index}-{sourceindex}*{targetlen};'.format(
-                                                   name=self.name,
-                                                   targetlen=self.targetlen,
-                                                   sourceindex=self.sourceindex,
-                                                   index=self.index)
-            return CodeStatement(code,
-                                 set([Read(self.targetlen),
-                                      Read(self.index),
-                                      Read(self.sourceindex)]),
-                                 set())
-    def dependencies(self):
-        if self.language.name=='python':
-            return set()
-        elif self.language.name=='c':
-            return set([Read(self.index), Read(self.sourceindex)])
+    # Python implementation
+    def load_python(self, read, write, vectorisable):
+        code = '{name} = slice(0, {targetlen})'.format(name=self.name,
+                                                   targetlen=self.targetlen)
+        return CodeStatement(code, set([Read(self.targetlen)]), set())
+    def dependencies_python(self):
+        return set()
+    # C implementation
+    def load_c(self, read, write, vectorisable):
+        # TODO: terrible hack, find a nicer way of doing this
+        code = 'int {name} = {index}-{sourceindex}*{targetlen};'.format(
+                                               name=self.name,
+                                               targetlen=self.targetlen,
+                                               sourceindex=self.sourceindex,
+                                               index=self.index)
+        return CodeStatement(code,
+                             set([Read(self.targetlen),
+                                  Read(self.index),
+                                  Read(self.sourceindex)]),
+                             set())
+    def dependencies_c(self):
+        return set([Read(self.index), Read(self.sourceindex)])
+    # Language invariant implementation
+    dependencies = language_invariant_method('dependencies',
+        {'c':dependencies_c, 'python':dependencies_python})
+    load = language_invariant_method('load',
+        {'c':load_c, 'python':load_python})
 
 class SparseValue(ArraySymbol):
     def __init__(self, M, name, language, index='_synapse_index'):
@@ -165,9 +168,9 @@ class SparseSynapseIndex(IndexSymbol):
         end = '_rowind_{weightname}[{sourceindex}+1]'.format(
                 weightname=weightname, sourceindex=sourceindex)
         IndexSymbol.__init__(self, name, start, end, language)
-    def resolve(self, read, write, item, namespace):
+    def resolve(self, read, write, vectorisable, item, namespace):
         namespace['_rowind_'+self.weightname] = self.M.rowind
-        return IndexSymbol.resolve(self, read, write, item, namespace)
+        return IndexSymbol.resolve(self, read, write, vectorisable, item, namespace)
         
 class SparseTargetIndex(ArraySymbol):
     def __init__(self, M, name, weightname, language, index='_synapse_index'):
@@ -182,11 +185,13 @@ class SpikeSymbol(IndexSymbol):
                  start='0', end='_numspikes'):
         IndexSymbol.__init__(self, name, start, end, language,
                              index_array=index_array)
-    def resolve(self, read, write, item, namespace):
-        if self.language.name=='python':
-            return PythonForBlock(self.name, self.index_array, item)
-        else:
-            return IndexSymbol.resolve(self, read, write, item, namespace)
+    def resolve_python(self, read, write, vectorisable, item, namespace):
+        return PythonForBlock(self.name, self.index_array, item)
+    def resolve_c(self, read, write, vectorisable, item, namespace):
+        return IndexSymbol.resolve(self, read, write, vectorisable, item,
+                                   namespace)
+    resolve = language_invariant_method('resolve',
+        {'c':resolve_c, 'python':resolve_python})
 
 if __name__=='__main__':
     from languages import *

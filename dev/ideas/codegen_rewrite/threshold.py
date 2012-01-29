@@ -65,11 +65,10 @@ def make_threshold_block(group, threshold, language):
             )
 
 class NumSpikesSymbol(Symbol):
-    def supported(self):
-        return self.language.name=='c'
-    def update_namespace(self, read, write, namespace):
+    supported_languages = ['c']
+    def update_namespace(self, read, write, vectorisable, namespace):
         namespace['_arr_'+self.name] = zeros(1, dtype=int)
-    def load(self, read, write):
+    def load(self, read, write, vectorisable):
         code = '''
             long int &{name} = _arr_{name}[0];
             {name} = 0;
