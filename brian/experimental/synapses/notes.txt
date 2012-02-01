@@ -181,6 +181,24 @@ For gap junctions and some STDP rules, we need to access pre and post synaptic v
 A simple idea to deal with this is to use static variables.
 For example: v_pre=source.v[presynaptic[:]].
 
+How to deal with heterosynaptic modifications
+---------------------------------------------
+I can think of two examples:
+1) Synaptic scaling
+2) Axonal propagation (Kempter et al.)
+
+Specific examples:
+1) A postsynaptic spike modifies all weights for that neuron. This is actually
+what happens in STDP, so it is not a problem.
+2) A presynaptic spike modifies all weights for the target neuron.
+3) A presynaptic spike modifies all weights for synapses with the same source
+neuron (Kempter et al).
+
+1 is already implemented, 2 and 3 are more complex. For each synaptic event,
+we need to change a whole set of variables, and there can be overlaps between
+synaptic events. This is a similar problem as for modifying postsynaptic
+variables.
+
 Various notes
 -------------
 * I decided to use signed rather than unsigned ints for indexes, because there

@@ -347,7 +347,7 @@ Synapse monitors
 We use a StateMonitor. For example:
 M = StateMonitor(S,'w',record=[(2,3),(7,1),(3,3)])
 The main issue is to set record indexes. I suggest we use exactly the same
-synax as for access/construction above. This way, we can simply use a method
+syntax as for access/construction above. This way, we can simply use a method
 in the synapse object which turns (2,3) etc. into synapse indexes. It makes
 coding the new monitor for Synapses trivial.
 

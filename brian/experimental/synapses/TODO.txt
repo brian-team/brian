@@ -18,3 +18,9 @@ TODO (Synapses)
 * accelerate Synapses.generate_code()? (.any())
 * Factor things
 * Replace NeuronGroup.__init__ with own stuff?
+
+* Heterosynaptic changes (Kempter et al. PNAS 2001)
+* Neuromodulation (example?)
+* Check what happens when i, j, lastupdate are in user's namespace
+* Check memory consumption
+* Check units when setting S.w[i,j] ?
