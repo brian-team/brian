@@ -25,6 +25,8 @@ class CodeGenStateUpdater(StateUpdater):
             self.code = block.generate(self.language, symbols)
             print 'STATE UPDATE'
             print self.code.code_str
+            print 'STATE UPDATE NAMESPACE KEYS'
+            print self.code.namespace.keys()
             ns = self.code.namespace
             ns['dt'] = G.clock._dt
             ns['_num_neurons'] = len(G)

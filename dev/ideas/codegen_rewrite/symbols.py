@@ -78,7 +78,7 @@ class RuntimeSymbol(Symbol):
 
 
 class ArraySymbol(Symbol):
-    supported_languages = ['python', 'c']
+    supported_languages = ['python', 'c', 'gpu']
     def __init__(self, arr, name, language, index=None, array_name=None):
         self.arr = arr
         if index is None:
@@ -115,11 +115,11 @@ class ArraySymbol(Symbol):
     write = language_invariant_symbol_method('write',
         {'python':write_python}, Symbol.write)
     load = language_invariant_symbol_method('load',
-        {'python':load_python, 'c':load_c})
+        {'python':load_python, 'c':load_c, 'gpu':load_c})
 
 
 class SliceIndex(Symbol):
-    supported_languages = ['python', 'c']
+    supported_languages = ['python', 'c', 'gpu']
     multiple_values = True
     def __init__(self, name, start, end, language, all=False):
         self.start = start
@@ -147,14 +147,24 @@ class SliceIndex(Symbol):
         spec ='int {name}={start}; {name}<{end}; {name}++'.format(
             name=self.name, start=self.start, end=self.end)
         return CForBlock(self.name, spec, item)
+    # GPU implementation
+    def resolve_gpu(self, read, write, vectorisable, item, namespace):
+        if vectorisable:
+            # This just defers the generation of the GPU vector index to the
+            # Code object
+            namespace['_gpu_vector_index'] = self.name
+            namespace['_gpu_vector_slice'] = (self.start, self.end)
+            return item
+        else:
+            return self.resolve_c(read, write, vectorisable, item, namespace)
     # Language invariant implementation
     def resolution_requires_loop(self):
         return self.language.name!='python'
     resolve = language_invariant_symbol_method('resolve',
-        {'c':resolve_c, 'python':resolve_python})
+        {'c':resolve_c, 'python':resolve_python, 'gpu':resolve_gpu})
 
 class ArrayIndex(Symbol):
-    supported_languages = ['python', 'c']
+    supported_languages = ['python', 'c', 'gpu']
     multiple_values = True
     def __init__(self, name, array_name, language, array_len=None,
                  index_name=None, array_slice=None):
@@ -203,6 +213,23 @@ class ArrayIndex(Symbol):
                              dtype=int, reference=False, const=True),
             item)
         return CForBlock(self.name, spec, block)
+    # GPU implementation
+    def resolve_gpu(self, read, write, vectorisable, item, namespace):
+        if not vectorisable:
+            return self.resolve_c(read, write, vectorisable, item, namespace)
+        if self.array_slice is None:
+            start, end = '0', self.array_len
+        else:
+            start, end = self.array_slice
+        # This just defers the generation of the GPU vector index to the
+        # Code object
+        namespace['_gpu_vector_index'] = self.index_name
+        namespace['_gpu_vector_slice'] = (self.start, self.end)
+        block = Block(
+            CDefineFromArray(self.name, self.array_name, self.index_name,
+                             dtype=int, reference=False, const=True),
+            item)
+        return block
     # Language invariant implementation
     def resolution_requires_loop(self):
         return self.language.name!='python'

@@ -105,7 +105,7 @@ class MathematicalStatement(Statement):
                 raise ValueError("Trying to redefine existing Symbol "+self.var)
             if language.name=='python':
                 initial = lhs_name+' = '
-            elif language.name=='c':
+            elif language.name=='c' or language.name=='gpu':
                 dtype = self.dtype
                 if dtype is None:
                     dtype = language.scalar
@@ -114,7 +114,7 @@ class MathematicalStatement(Statement):
             initial = lhs_name+' '+self.op+' '
         statementstr = initial+self.expr.convert_to(language, symbols,
                                                     namespace=namespace)
-        if language.name=='c':
+        if language.name=='c' or language.name=='gpu':
             statementstr += ';'
         return TAB*tabs+statementstr
 

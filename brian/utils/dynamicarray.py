@@ -1,4 +1,5 @@
 from numpy import *
+import gc
 
 __all__ = ['DynamicArray']
 
@@ -69,7 +70,8 @@ class DynamicArray(object):
     is increased to the larger of ``cursize*factor`` and ``newsize``. This
     ensures that the amortized cost of increasing the size of the array is O(1).  
     '''
-    def __init__(self, shape, dtype=float, factor=2):
+    def __init__(self, shape, dtype=float, factor=2,
+                 use_numpy_resize=False, refcheck=True):
         if isinstance(shape, int):
             shape = (shape,)
         self._data = zeros(shape, dtype=dtype)
@@ -77,6 +79,8 @@ class DynamicArray(object):
         self.dtype = dtype
         self.shape = self._data.shape
         self.factor = factor
+        self.use_numpy_resize = use_numpy_resize
+        self.refcheck = refcheck
     
     def resize(self, newshape):
         '''
@@ -100,10 +104,14 @@ class DynamicArray(object):
             newdims = maximum(incdims, dimstoinc+1)
             minnewshapearr[resizedimensions] = newdims
             newshapearr = maximum(newshapearr, minnewshapearr)
-            newdata = zeros(tuple(newshapearr), dtype=self.dtype)
-            slices = getslices(self._data.shape)
-            newdata[slices] = self._data
-            self._data = newdata
+            if self.use_numpy_resize:
+                self.data = None
+                self._data.resize(tuple(newshapearr), refcheck=self.refcheck)
+            else:
+                newdata = zeros(tuple(newshapearr), dtype=self.dtype)
+                slices = getslices(self._data.shape)
+                newdata[slices] = self._data
+                self._data = newdata
         self.data = self._data[getslices(newshape)]
         self.shape = self.data.shape
         
@@ -151,6 +159,28 @@ class DynamicArray(object):
             
 if __name__=='__main__':
     if 1:
+        import time, gc
+        # speed comparison between numpy resize and not numpy resize
+        max_size = 400*1024*1024/8 # 1GB array
+        repeats = 5
+        factor = 1.1
+        collect = False
+        def dotiming(**kwds):
+            tottime = 0
+            for _ in xrange(repeats):
+                sz = 1          
+                x = DynamicArray(sz, dtype=float, factor=factor, **kwds)
+                start = time.time()
+                while sz<max_size:
+                    sz = int(sz*factor)+1
+                    x.resize(sz)
+                    if collect:
+                        gc.collect()
+                tottime += time.time()-start
+            return tottime/repeats
+        print 'numpy resize', dotiming(use_numpy_resize=True)
+        print 'orig', dotiming()
+    if 0:
         x = DynamicArray(3, dtype=int)
         x[:] = [1, 2, 3]
         print x
@@ -158,7 +188,7 @@ if __name__=='__main__':
         print x
         x.shrink(4)
         print x
-    if 1:
+    if 0:
         x = DynamicArray((2, 3), dtype=int)
         x[:] = 1
         x.resize((3, 3))
@@ -169,7 +199,7 @@ if __name__=='__main__':
         x[:] += 1
         x.data[:] = x.data**2
         print x.data        
-    if 1:
+    if 0:
         def doprint():
             print x.data.shape, x._data.shape
             print x.data

@@ -4,6 +4,8 @@ The basic Code object
 from brian import *
 from brian.globalprefs import get_global_preference
 from scipy import weave
+from formatting import *
+from gpu import GPUCode
 
 __all__ = ['Code',
            'PythonCode',
@@ -93,9 +95,8 @@ class CCode(Code):
                      compiler=self._weave_compiler,
                      extra_compile_args=self._extra_compile_args)
 
-
-class GPUCode(Code):
-    pass
+    
+#__global__ void stateupdate
 
 if __name__=='__main__':
     pass

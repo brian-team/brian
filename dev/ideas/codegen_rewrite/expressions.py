@@ -26,7 +26,7 @@ class Expression(object):
     def convert_to(self, language, symbols={}, namespace={}):
         if language.name=='python':
             return substitute_symbols(self.expr, symbols)
-        elif language.name=='c':
+        elif language.name=='c' or language.name=='gpu':
             return substitute_symbols(
                 CCodePrinter().doprint(self.sympy_expr),
                 symbols)

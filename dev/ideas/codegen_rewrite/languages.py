@@ -1,8 +1,10 @@
 from brian import *
 
 __all__ = ['Language',
-           'PythonLanguage',
-           'CLanguage',
+                'PythonLanguage',
+                'CLanguage',
+                'GPULanguage',
+            'GPUFunctionArgument',
            ]
 
 class Language(object):
@@ -17,3 +19,12 @@ class CLanguage(Language):
     def __init__(self, scalar='double'):
         Language.__init__(self, 'c')
         self.scalar = scalar
+
+class GPULanguage(CLanguage):
+    def __init__(self, scalar='double'):
+        Language.__init__(self, 'gpu')
+        self.scalar = scalar
+
+class GPUFunctionArgument(object):
+    def __init__(self, name):
+        self.name = name

@@ -62,4 +62,6 @@ class CodeItem(object):
             code = PythonCode(codestr, namespace)
         elif language.name=='c':
             code = CCode(codestr, namespace)
+        elif language.name=='gpu':
+            code = GPUCode(codestr, namespace)
         return code

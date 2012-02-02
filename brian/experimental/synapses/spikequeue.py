@@ -348,6 +348,8 @@ class SpikeQueue(SpikeMonitor):
         ncols=self.X.shape[1]
         currentt=self.currenttime
         ndelays=len(self.n)
+        # TODO: use delay[k] etc. and don't use type_converters=blitz for
+        # more speed
         code='''
         int d;
         for(int k=0;k<nevents;k++) {
