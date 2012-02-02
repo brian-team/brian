@@ -201,7 +201,11 @@ class SparseConnectionMatrix(ConnectionMatrix):
     This class implements a sparse matrix with a fixed number of nonzero
     entries. Row access is very fast, and if the ``column_access`` keyword
     is ``True`` then column access is also supported (but is not as fast
-    as row access).
+    as row access). If the ``use_minimal_indices`` keyword is ``True`` then
+    the neuron and synapse indices will use the smallest possible integer
+    type (16 bits for neuron indices if the number of neurons is less than
+    ``2**16``, otherwise 32 bits). Otherwise, it will use the word size for the
+    CPU architecture (32 or 64 bits).
     
     The matrix should be initialised with a scipy sparse matrix.
     
@@ -231,8 +235,11 @@ class SparseConnectionMatrix(ConnectionMatrix):
     copy operation rather than a slice operation. Column access increases
     the memory requirements to 20 bytes per entry (4 extra bytes for the
     row indices and 4 extra bytes for the data indices).
+    
+    TODO: update size numbers when use_minimal_indices=True for different
+    architectures.
     '''
-    def __init__(self, val, column_access=True, **kwds):
+    def __init__(self, val, column_access=True, use_minimal_indices=True, **kwds):
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
@@ -240,10 +247,21 @@ class SparseConnectionMatrix(ConnectionMatrix):
             self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
         self.nnz = nnz = val.getnnz()# nnz stands for number of nonzero entries
         alldata = numpy.zeros(nnz)
+        self.neuron_index_dtype = int
+        self.synapse_index_dtype = int
+        if use_minimal_indices:
+            if max(val.shape)<2**16:
+                self.neuron_index_dtype = uint16
+            else:
+                self.neuron_index_dtype = uint32
+            self.synapse_index_dtype = uint32
         if column_access:
-            colind = numpy.zeros(val.shape[1] + 1, dtype=int)
-        allj = numpy.zeros(nnz, dtype=int)
-        rowind = numpy.zeros(val.shape[0] + 1, dtype=int)
+            colind = numpy.zeros(val.shape[1] + 1,
+                                 dtype=self.synapse_index_dtype)
+        allj = numpy.zeros(nnz,
+                           dtype=self.neuron_index_dtype)
+        rowind = numpy.zeros(val.shape[0] + 1,
+                             dtype=self.synapse_index_dtype)
         rowdata = []
         rowj = []
         if column_access:
@@ -272,7 +290,8 @@ class SparseConnectionMatrix(ConnectionMatrix):
         rowind[val.shape[0]] = i
         if column_access:
             # counts the number of nonzero elements in each column
-            counts = zeros(val.shape[1], dtype=int)
+            counts = zeros(val.shape[1],
+                           dtype=self.synapse_index_dtype)
             if len(allj):
                 bincounts = numpy.bincount(allj)
             else:
@@ -287,9 +306,11 @@ class SparseConnectionMatrix(ConnectionMatrix):
                 # curcdi[i] is the current offset into each block. s is
                 # therefore just the cumulative sum of counts.
                 curcdi = numpy.zeros(val.shape[1], dtype=int)
-                allcoldataindices = numpy.zeros(nnz, dtype=int)
+                allcoldataindices = numpy.zeros(nnz,
+                                                dtype=self.synapse_index_dtype)
                 colind[:] = numpy.hstack(([0], cumsum(counts)))
-                colalli = numpy.zeros(nnz, dtype=int)
+                colalli = numpy.zeros(nnz,
+                                      dtype=self.neuron_index_dtype)
                 numrows = val.shape[0]
                 code = '''
                 int i = 0;
@@ -306,7 +327,8 @@ class SparseConnectionMatrix(ConnectionMatrix):
                                     'rowind', 'numrows',
                                     'curcdi', 'colind', 'colalli'],
                              compiler=self._cpp_compiler,
-                             extra_compile_args=self._extra_compile_args)
+                             extra_compile_args=self._extra_compile_args,
+                             )
                 # now store the blocks of allcoldataindices in coldataindices and update coli too
                 for i in xrange(len(colind) - 1):
                     D = allcoldataindices[colind[i]:colind[i + 1]]
@@ -331,12 +353,14 @@ class SparseConnectionMatrix(ConnectionMatrix):
                 # the corresponding row index for each entry enumerated
                 # col-by-col.
                 if len(a):
-                    expanded_row_indices = empty(len(a), dtype=int)
+                    expanded_row_indices = empty(len(a),
+                                                 dtype=self.neuron_index_dtype)
                     for k, (i, j) in enumerate(zip(rowind[:-1], rowind[1:])):
                         expanded_row_indices[i:j] = k
                     colalli = expanded_row_indices[a]
                 else:
-                    colalli = numpy.zeros(nnz, dtype=int)
+                    colalli = numpy.zeros(nnz,
+                                          dtype=self.neuron_index_dtype)
                 # in this loop, I are the data indices where j==i
                 # and alli[I} are the corresponding i coordinates
                 for i in xrange(len(colind) - 1):

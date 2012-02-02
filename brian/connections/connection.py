@@ -6,6 +6,7 @@ from connectionmatrix import *
 from construction import *
 from propagation_c_code import *
 from scipy.sparse import issparse
+import gc
 # we do this at the bottom because of order of import issues
 #from delayconnection import * 
 
@@ -277,6 +278,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         if not self.iscompressed:
             self.W = self.W.connection_matrix()
             self.iscompressed = True
+            gc.collect() # collect after changing matrix type to free up mem
 
     def reinit(self):
         '''
