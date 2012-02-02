@@ -274,7 +274,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
 
         # Pre and postsynaptic delays (synapse -> delay_pre/delay_post)
         self._delay_pre=[DynamicArray(len(self),dtype=int16) for _ in pre_list] # max 32767 delays
-        self._delay_post=DynamicArray(len(self),dtype=int16)
+        self._delay_post=DynamicArray(len(self),dtype=int16) # Actually only useful if there is a post code!
         
         # Pre and postsynaptic synapses (i->synapse indexes)
         max_synapses=2147483647 # it could be explicitly reduced by a keyword
