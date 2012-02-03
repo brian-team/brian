@@ -11,6 +11,8 @@ Abstract:
 	This design implies strong constraint on synaptic models (kinetics
 	and plasticity).
 	This BEP aims at overcoming these limitations.
+	
+Note: this is now the Synapses class
 
 Missing features and a few ideas
 ================================

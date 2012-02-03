@@ -4,6 +4,8 @@ Abstract: For the Synapses class (see BEP-21), we need to be able to turn
 differential equations into event-driven update code. This BEP describes
 how it can be done.
 
+Note: this is partially done in Synapses
+
 Example
 =======
 This is the Synapses code for STP:
@@ -51,3 +53,9 @@ There are several subtleties:
 * If only part of the equations can be turned into event-driven code, then we
   need to make sure that the other variables are independent, otherwise we will
   have to keep continuous updates for all dependent variables.
+
+Current implementation
+======================
+This is currently implemented in Synapses, for 1D linear differential equations.
+We use the flag "(event-driven)" in the definition string, so it is explicit.
+What is missing is a more general mechanism for higher dimensions.

@@ -10,6 +10,8 @@ Abstract:
 	with pure Python, but there are probably significant speed
 	advantages to using C code here.
 
+Note: this is somewhat implemented in SpikeQueue
+
 Scheduled events
 ================
 

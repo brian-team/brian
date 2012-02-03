@@ -22,3 +22,10 @@ Brian-specific plotting functions
 ---------------------------------
 * Add spikes to traces (uses a spike list and a state monitor)
 * Remove reset lines from traces
+
+Saving and restoring
+--------------------
+What would be nice is an elegant way to save a figure, or the data produced by
+a script, and then make the figure in a separate script, with an easy way to
+quickly redo a figure with a different format or new data.
+Perhaps simply saving a dictionary of numpy arrays.
