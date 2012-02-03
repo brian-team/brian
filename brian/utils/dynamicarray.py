@@ -27,6 +27,16 @@ class DynamicArray(object):
     ``factor``
         The resizing factor (see notes below). Larger values tend to lead to
         more wasted memory, but more computationally efficient code.
+    ``use_numpy_resize``, ``refcheck``
+        Normally, when you resize the array it creates a new array and copies
+        the data. Sometimes, it is possible to resize an array without a copy,
+        and if this option is set it will attempt to do this. However, this can
+        cause memory problems if you are not careful so the option is off by
+        default. You need to ensure that you do not create slices of the array
+        so that no references to the memory exist other than the main array
+        object. If you are sure you know what you're doing, you can switch this
+        reference check off. Note that resizing in this way is only done if you
+        resize in the first dimension.
         
     The array is initialised with zeros. The data is stored in the attribute
     ``data`` which is a Numpy array.
@@ -104,7 +114,11 @@ class DynamicArray(object):
             newdims = maximum(incdims, dimstoinc+1)
             minnewshapearr[resizedimensions] = newdims
             newshapearr = maximum(newshapearr, minnewshapearr)
-            if self.use_numpy_resize:
+            do_resize = False
+            if self.use_numpy_resize and self._data.flags['C_CONTIGUOUS']:
+                if sum(resizedimensions)==resizedimensions[0]:
+                    do_resize = True
+            if do_resize:
                 self.data = None
                 self._data.resize(tuple(newshapearr), refcheck=self.refcheck)
             else:
@@ -159,6 +173,15 @@ class DynamicArray(object):
             
 if __name__=='__main__':
     if 1:
+        x = DynamicArray((2, 2), use_numpy_resize=True)
+        x[0, 0] = 0
+        x[0, 1] = 1
+        x[1, 0] = 2
+        x[1, 1] = 3
+        print x
+        x.resize((3, 2))
+        print x
+    if 0:
         import time, gc
         # speed comparison between numpy resize and not numpy resize
         max_size = 400*1024*1024/8 # 1GB array
