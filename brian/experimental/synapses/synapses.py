@@ -336,6 +336,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         _namespace['target'] = self.target # maybe we could save one indirection here
         _namespace['unique'] = np.unique
         _namespace['nonzero'] = np.nonzero
+        _namespace['empty'] = np.empty
+        _namespace['logical_not'] = np.logical_not
+        _namespace['not_equal'] = np.not_equal
 
         code = re.sub(r'\b' + 'rand\(\)', 'rand(n)', code)
         code = re.sub(r'\b' + 'randn\(\)', 'randn(n)', code)
@@ -367,16 +370,41 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if direct: # direct update code, not caring about multiple accesses to postsynaptic variables
             code_str=update_code(code, '_synapses') + "\n"            
         else:
-            code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
-            code_str += "_u, _i = unique(_post_neurons, return_index = True)\n"
-            code_str += update_code(code, '_synapses[_i]') + "\n"
-            code_str += "if len(_u) < len(_post_neurons):\n"
-            code_str += "    _post_neurons[_i] = -1\n"
-            code_str += "    while (len(_u) < len(_post_neurons)) & (_post_neurons>-1).any():\n" # !! the any() is time consuming (len(u)>=1??)
-            #code_str += "    while (len(_u) < len(_post_neurons)) & (len(_u)>1):\n" # !! the any() is time consuming (len(u)>=1??)
-            code_str += "        _u, _i = unique(_post_neurons, return_index = True)\n"
-            code_str += indent(update_code(code, '_synapses[_i[1:]]'),2) + "\n"
-            code_str += "        _post_neurons[_i[1:]] = -1 \n"
+            if False:
+                ## Old version using numpy's unique()
+                code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
+                code_str += "_u, _i = unique(_post_neurons, return_index = True)\n"
+                code_str += update_code(code, '_synapses[_i]') + "\n"
+                code_str += "if len(_u) < len(_post_neurons):\n"
+                code_str += "    _post_neurons[_i] = -1\n"
+                code_str += "    while (len(_u) < len(_post_neurons)) & (_post_neurons>-1).any():\n" # !! the any() is time consuming (len(u)>=1??)
+                #code_str += "    while (len(_u) < len(_post_neurons)) & (len(_u)>1):\n" # !! the any() is time consuming (len(u)>=1??)
+                code_str += "        _u, _i = unique(_post_neurons, return_index = True)\n"
+                code_str += indent(update_code(code, '_synapses[_i[1:]]'),2) + "\n"
+                code_str += "        _post_neurons[_i[1:]] = -1 \n"
+            else:
+                ## New version. 
+                # refactoring the use of numpy unique in a neat way.
+                # look into dev/ideas/synpases/batch_operation.py
+                
+                code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
+                code_str += "_perm = _post_neurons.argsort()\n"
+                code_str += "_aux = _post_neurons[_perm]\n"
+                code_str += "_flag = empty(len(_aux) + 1, dtype = bool)\n"
+                code_str += "_flag[0] = _flag[-1] = True\n"
+                code_str += "not_equal(_aux[1:], _aux[:-1], _flag[1:-1])\n"
+                code_str += "_F = _flag.nonzero()[0][:-1]\n"
+                code_str += "logical_not(_flag, _flag)\n"
+                code_str += "while len(_F):\n"
+                code_str += "    _u = _aux[_F]\n"
+                code_str += "    _i = _perm[_F]\n"
+#                code_str += "    print _u, _i\n"
+#                code_str += "    target.gi[_i]  += wi\n"
+                code_str += indent(update_code(code, '_synapses[_i]'), 1) + "\n"
+                code_str += "    _F += 1\n"
+                code_str += "    _F = _F[_flag[_F]]\n"
+#                print 'here'
+#            print code_str
             
         log_debug('brian.synapses', '\nPRE CODE:\n'+code_str)
         
