@@ -29,21 +29,23 @@ class GPUSymbolMemoryManager(object):
         if not isinstance(symname, str):
             for name in symname:
                 self.copy_to_device(name)
+            return
         devarr = self.device[symname]
         hostarr = self.host[symname]
-        devarr.get(hostarr)
+        devarr.set(hostarr)
     def copy_to_host(self, symname):
         if not isinstance(symname, str):
             for name in symname:
                 self.copy_to_host(name)
+            return
         devarr = self.device[symname]
         hostarr = self.host[symname]
-        devarr.set(hostarr)
+        devarr.get(hostarr)
 
 
 class GPUCode(Code):
     def __init__(self, code_str, namespace, pre_code=None, post_code=None,
-                 maxblocksize=512):
+                 maxblocksize=512, forcesync=True):
         vector_index = namespace.pop('_gpu_vector_index')
         start, end = namespace.pop('_gpu_vector_slice')
         code_str_template = '''
@@ -61,10 +63,12 @@ class GPUCode(Code):
         # TODO: TEMPORARY HACK
         self.scalar = 'double'
         self.maxblocksize = maxblocksize
+        self.forcesync = forcesync
         Code.__init__(self, code_str, namespace, pre_code=pre_code,
                       post_code=post_code)
     def compile(self):
         ns = self.namespace
+        numinds = ns.pop('_num_gpu_indices')
         all_init_arr = ''
         all_arr_ptr = ''
         self.func_args = []
@@ -81,7 +85,7 @@ class GPUCode(Code):
                 init_arr = flattened_docstring(init_arr_template).format(
                                                 scalar=self.scalar, name=name)
                 arr_ptr_template = '''
-                __const__ {scalar} *{name};
+                __device__ {scalar} *{name};
                 '''
                 arr_ptr = flattened_docstring(arr_ptr_template).format(
                                                 scalar=self.scalar, name=name)
@@ -94,16 +98,15 @@ class GPUCode(Code):
                 memman_items.append((symname, hostarr, devname))
             else:
                 if isinstance(value, int):
-                    dtype = array(value).dtype
                     dtype_c = 'int'
                 elif isinstance(value, float):
                     dtype_c = self.scalar
                 else:
                     continue
-                dtype = array(value).dtype
+                dtype = array(value).dtype.type
                 self.func_args.append((name, dtype, dtype_c))
         self.code_str = '__global__ void gpu_func({funcargs})\n'.format(
-            funcargs=', '.join(dtype_c+' '+name for name, dtype, dtype_c in self.func_args))+self.code_str
+            funcargs=', '.join(dtype_c+' '+name for name, dtype, dtype_c in self.func_args))+self.code_str     
         self.code_str = all_arr_ptr+all_init_arr+self.code_str
         print 'GPU modified code:'
         print self.code_str
@@ -114,9 +117,8 @@ class GPUCode(Code):
         self.gpu_func = self.gpu_mod.get_function("gpu_func")
         for symname, hostarr, devname in memman_items:
             f = self.gpu_mod.get_function("set_array_"+devname)
-            f(self.mem_man.device[symname])
+            f(self.mem_man.device[symname], block=(1,1,1))
         self.code_compiled = True
-        numinds = ns['_num_gpu_indices']
         blocksize = self.maxblocksize
         if numinds<blocksize:
             blocksize = numinds
@@ -130,4 +132,9 @@ class GPUCode(Code):
     def run(self):
         ns = self.namespace
         args = [dtype(ns[name]) for name, dtype, _ in self.func_args]
+        if self.forcesync:
+            self.mem_man.copy_to_device(self.mem_man.device.keys())
         self.gpu_func.prepared_call(self._gpu_grid, *args)
+        if self.forcesync:
+            self.mem_man.copy_to_host(self.mem_man.device.keys())
+

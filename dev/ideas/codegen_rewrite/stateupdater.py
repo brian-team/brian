@@ -30,6 +30,7 @@ class CodeGenStateUpdater(StateUpdater):
             ns = self.code.namespace
             ns['dt'] = G.clock._dt
             ns['_num_neurons'] = len(G)
+            ns['_num_gpu_indices'] = len(G)
             self.prepared = True
         code = self.code
         ns = code.namespace

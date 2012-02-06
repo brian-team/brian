@@ -29,29 +29,30 @@ I = 0
 '''
 G = NeuronGroup(3, eqs, threshold=threshold, reset=reset)
 
-su = CodeGenStateUpdater(eqs, euler, language, clock=G.clock)
-su(G)
+#su = CodeGenStateUpdater(eqs, euler, language, clock=G.clock)
+#su(G)
 
-#G.Vt = Vt0
-#
-#H = NeuronGroup(len(G), 'V:1\nmod:1', reset=0, threshold=1)
-#P = PoissonGroup(1, rates=300*Hz)
-#Ci = Connection(P, H, 'V', weight=2)
-#H.mod = [1.0, 0.9, 0.1]
-#
-##C = Connection(H, G, 'I', modulation='mod', structure=structure)
+G.Vt = Vt0
+
+H = NeuronGroup(len(G), 'V:1\nmod:1', reset=0, threshold=1)
+P = PoissonGroup(1, rates=300*Hz)
+Ci = Connection(P, H, 'V', weight=2)
+H.mod = [1.0, 0.9, 0.1]
+
+C = Connection(H, G, 'I', modulation='mod', structure=structure)
 #C = CodeGenConnection(H, G, 'I', modulation='mod', structure=structure,
 #                      language=language)
-#for i in xrange(len(G)):
-#    C[i, i] = 1
+for i in xrange(len(G)):
+    C[i, i] = 1
 #
-#G._state_updater = CodeGenStateUpdater(eqs, euler, language, clock=G.clock)
+G._state_updater = CodeGenStateUpdater(eqs, euler, language, clock=G.clock)
 #G._threshold = CodeGenThreshold(threshold, language)
 #G._resetfun = CodeGenReset(reset, language)
 #
-#M = MultiStateMonitor(G, record=True)
-#Msp = SpikeMonitor(G)
-#run(100*ms)
-#print Msp.spikes
-#M.plot()
-#show()
+M = MultiStateMonitor(G, record=True)
+Msp = SpikeMonitor(G)
+run(100*ms)
+print Msp.spikes
+M.plot()
+show()
+
