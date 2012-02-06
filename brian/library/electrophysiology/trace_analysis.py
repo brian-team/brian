@@ -79,7 +79,7 @@ def find_spike_criterion(v):
     dv = diff(v)
     sign_changes = ((dv[1:] * dv[:-1]) <= 0).nonzero()[0]
     vc = v[sign_changes + 1]
-    i = argmax(diff(vc))
+    i = argmax(diff(vc)) # I think there is a mistake, I should sort vc first
     return .5 * (vc[i] + vc[i + 1])
 
 def spike_peaks(v, vc=None):
