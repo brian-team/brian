@@ -256,6 +256,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                         pre_list=[expr+'\n'+pre for pre in pre_list]
                         if post is not None:
                             post=expr+'\n'+post
+                    else:
+                        raise TypeError,"Cannot turn equation for "+var+" into event-driven code"
                 else:
                     raise TypeError,"Cannot turn equation for "+var+" into event-driven code"
         elif len(eqs._eventdriven)>0:
@@ -321,7 +323,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         TODO:
         * include static variables (substitution)
         * have a list of variable names
-        * deal with v_post, v_pre
         '''
         # Handle multi-line pre, post equations and multi-statement equations separated by ;
         # (this should probably be factored)
@@ -355,6 +356,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 if isinstance(postsyn_var, str):
                     res = re.sub(r'\b' + postsyn_var + r'_post\b', 'target.' + postsyn_var + '[_post['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
                     res = re.sub(r'\b' + postsyn_var + r'\b', 'target.' + postsyn_var + '[_post['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
+            
+            # Replace presynaptic variables by their value
             for presyn_var in self.source.var_index: # static variables are not included here
                 if isinstance(presyn_var, str):
                     res = re.sub(r'\b' + presyn_var + r'_pre\b', 'source.' + presyn_var + '[_pre['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
@@ -715,6 +718,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             _namespace['binomial']=self._binomial
             _namespace['rand']=rand
             _namespace['randn']=randn
+            _namespace['zeros']=zeros
+            _namespace['sum']=sum
             
         self._iscompressed=True
 

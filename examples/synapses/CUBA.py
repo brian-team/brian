@@ -4,7 +4,7 @@ CUBA example with delays.
 
 Connection (no delay): 3.5 s
 DelayConnection: 5.7 s
-Synapses (with precomputed offsets): 6.6 s
+Synapses (with precomputed offsets): 6.6 s # 6.9 s
 Synapses with weave: 6.4 s
 Synapses with zero delays: 5.2 s
 """
