@@ -1,4 +1,6 @@
 from brian import *
+from codeobject import *
+from formatting import *
 try:
     import pycuda
     import pycuda.autoinit as autoinit
@@ -15,6 +17,8 @@ __all__ = ['GPUSymbolMemoryManager',
 
 class GPUSymbolMemoryManager(object):
     def __init__(self, items):
+        if pycuda is None:
+            raise ImportError("Cannot import pycuda.")
         self.device = {}
         self.host = {}
         for symname, hostarr, devname in items:
@@ -40,8 +44,6 @@ class GPUSymbolMemoryManager(object):
 class GPUCode(Code):
     def __init__(self, code_str, namespace, pre_code=None, post_code=None,
                  maxblocksize=512):
-        if pycuda is None:
-            raise ImportError("Cannot import pycuda.")
         vector_index = namespace.pop('_gpu_vector_index')
         start, end = namespace.pop('_gpu_vector_slice')
         code_str_template = '''
@@ -92,14 +94,16 @@ class GPUCode(Code):
                 memman_items.append((symname, hostarr, devname))
             else:
                 if isinstance(value, int):
-                    dtype = 'int'
+                    dtype = array(value).dtype
+                    dtype_c = 'int'
                 elif isinstance(value, float):
-                    dtype = self.scalar
+                    dtype_c = self.scalar
                 else:
                     continue
-                self.func_args.append((name, dtype))
+                dtype = array(value).dtype
+                self.func_args.append((name, dtype, dtype_c))
         self.code_str = '__global__ void gpu_func({funcargs})\n'.format(
-            funcargs=', '.join(dtype+' '+name for name, dtype in self.func_args))+self.code_str
+            funcargs=', '.join(dtype_c+' '+name for name, dtype, dtype_c in self.func_args))+self.code_str
         self.code_str = all_arr_ptr+all_init_arr+self.code_str
         print 'GPU modified code:'
         print self.code_str
@@ -112,27 +116,18 @@ class GPUCode(Code):
             f = self.gpu_mod.get_function("set_array_"+devname)
             f(self.mem_man.device[symname])
         self.code_compiled = True
-#    def _prepare(self, P):
-#        blocksize = self.maxblocksize
-#        if len(P) < blocksize:
-#            blocksize = len(P)
-#        if len(P) % blocksize == 0:
-#            gridsize = len(P) / blocksize
-#        else:
-#            gridsize = len(P) / blocksize + 1
-#        self._prepared = True
-#        self.gpu_func.prepare((int32, self.precision_dtype, 'i'), (blocksize, 1, 1))
-#        self._S_gpu_addr = P._S.gpu_pointer
-#        self._gpu_N = int32(len(P))
-#        self._gpu_grid = (gridsize, 1)
-#    def __call__(self, P):
-#        if not self._prepared:
-#            self._prepare(P)
-#        P._S.sync_to_gpu()
-#        self.gpu_func.prepared_call(self._gpu_grid, self._gpu_N, self.precision_dtype(P.clock._t), self._S_gpu_addr)
-#        P._S.changed_gpu_data()
-#        if self.forcesync:
-#            P._S.sync_to_cpu()
-#            P._S.changed_cpu_data()
+        numinds = ns['_num_gpu_indices']
+        blocksize = self.maxblocksize
+        if numinds<blocksize:
+            blocksize = numinds
+        if numinds%blocksize == 0:
+            gridsize = numinds/blocksize
+        else:
+            gridsize = numinds/blocksize+1
+        self.gpu_func.prepare(tuple(dtype for _, dtype, _ in self.func_args),
+                              (blocksize, 1, 1))
+        self._gpu_grid = (gridsize, 1)
     def run(self):
-        pass
+        ns = self.namespace
+        args = [dtype(ns[name]) for name, dtype, _ in self.func_args]
+        self.gpu_func.prepared_call(self._gpu_grid, *args)

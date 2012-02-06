@@ -2,6 +2,7 @@ from brian import *
 from dependencies import *
 from formatting import *
 from codeobject import *
+from gpu import *
 
 class CodeItem(object):
     # Some default values to simplify coding, a class deriving from this can

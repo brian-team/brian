@@ -5,12 +5,10 @@ from brian import *
 from brian.globalprefs import get_global_preference
 from scipy import weave
 from formatting import *
-from gpu import GPUCode
 
 __all__ = ['Code',
            'PythonCode',
            'CCode',
-           'GPUCode',
            ]
 
 class Code(object):
