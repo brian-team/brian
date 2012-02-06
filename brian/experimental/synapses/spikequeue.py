@@ -250,6 +250,7 @@ class SpikeQueue(SpikeMonitor):
             Offsets within timestep (array). If unspecified, they are calculated
             from the delay array.
         '''
+        delay=array(delay,dtype=int)
         if self._useweave: # C-optimised insertion (minor speed up)
             self.insert_C(delay,target)
             return
@@ -297,7 +298,7 @@ class SpikeQueue(SpikeMonitor):
         '''
         # old and new sizes
         old_maxevents = self.X.shape[1]
-        new_maxevents = 2**ceil(log2(maxevents)) # maybe 2 is too large
+        new_maxevents = int(2**ceil(log2(maxevents))) # maybe 2 is too large
         # new array
         newX = zeros((self.X.shape[0], new_maxevents), dtype = self.X.dtype)
         newX[:, :old_maxevents] = self.X[:, :old_maxevents] # copy old data
