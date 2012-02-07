@@ -7,6 +7,7 @@ from reset import *
 from connection import *
 from blocks import *
 from symbols import *
+from gpu import *
 
 language = GPULanguage()
 
@@ -29,9 +30,6 @@ I = 0
 '''
 G = NeuronGroup(3, eqs, threshold=threshold, reset=reset)
 
-#su = CodeGenStateUpdater(eqs, euler, language, clock=G.clock)
-#su(G)
-
 G.Vt = Vt0
 
 H = NeuronGroup(len(G), 'V:1\nmod:1', reset=0, threshold=1)
@@ -44,9 +42,9 @@ C = Connection(H, G, 'I', modulation='mod', structure=structure)
 #                      language=language)
 for i in xrange(len(G)):
     C[i, i] = 1
-#
-G._state_updater = CodeGenStateUpdater(eqs, euler, language, clock=G.clock)
-#G._threshold = CodeGenThreshold(threshold, language)
+
+#G._state_updater = CodeGenStateUpdater(eqs, euler, language, clock=G.clock)
+G._threshold = CodeGenThreshold(threshold, language)
 #G._resetfun = CodeGenReset(reset, language)
 #
 M = MultiStateMonitor(G, record=True)

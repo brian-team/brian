@@ -1,6 +1,8 @@
 from brian import *
 from codeobject import *
 from formatting import *
+from languages import *
+import statements
 try:
     import pycuda
     import pycuda.autoinit as autoinit
@@ -12,19 +14,22 @@ except ImportError:
 
 __all__ = ['GPUSymbolMemoryManager',
            'GPUCode',
+           'GPULanguage',
            ]
-
+        
 
 class GPUSymbolMemoryManager(object):
-    def __init__(self, items):
-        if pycuda is None:
-            raise ImportError("Cannot import pycuda.")
+    def __init__(self):
         self.device = {}
         self.host = {}
+    def add_symbols(self, items):
+        if pycuda is None:
+            raise ImportError("Cannot import pycuda.")
         for symname, hostarr, devname in items:
-            devarr = pycuda.gpuarray.to_gpu(hostarr)
-            self.device[symname] = devarr
-            self.host[symname] = hostarr
+            if symname not in self.device:
+                devarr = pycuda.gpuarray.to_gpu(hostarr)
+                self.device[symname] = devarr
+                self.host[symname] = hostarr
     def copy_to_device(self, symname):
         if not isinstance(symname, str):
             for name in symname:
@@ -45,7 +50,7 @@ class GPUSymbolMemoryManager(object):
 
 class GPUCode(Code):
     def __init__(self, code_str, namespace, pre_code=None, post_code=None,
-                 maxblocksize=512, forcesync=True):
+                 language=None, maxblocksize=512, forcesync=True):
         vector_index = namespace.pop('_gpu_vector_index')
         start, end = namespace.pop('_gpu_vector_slice')
         code_str_template = '''
@@ -65,7 +70,12 @@ class GPUCode(Code):
         self.maxblocksize = maxblocksize
         self.forcesync = forcesync
         Code.__init__(self, code_str, namespace, pre_code=pre_code,
-                      post_code=post_code)
+                      post_code=post_code, language=language)
+        if language is None:
+            mem_man = GPUSymbolMemoryManager()
+        else:
+            mem_man = language.mem_man
+        self.mem_man = mem_man
     def compile(self):
         ns = self.namespace
         numinds = ns.pop('_num_gpu_indices')
@@ -75,20 +85,21 @@ class GPUCode(Code):
         memman_items = []
         for name, value in ns.iteritems():
             if isinstance(value, ndarray):
+                dtypestr = statements.c_data_type(value.dtype)
                 init_arr_template = '''
-                __global__ void set_array_{name}({scalar} *_{name})
+                __global__ void set_array_{name}({dtypestr} *_{name})
                 {{
                     {name} = _{name};
                 }}
                 ''' 
-                # TODO: doens't have to be scalar type?
+                # TODO: handle double/float
                 init_arr = flattened_docstring(init_arr_template).format(
-                                                scalar=self.scalar, name=name)
+                                                dtypestr=dtypestr, name=name)
                 arr_ptr_template = '''
-                __device__ {scalar} *{name};
+                __device__ {dtypestr} *{name};
                 '''
                 arr_ptr = flattened_docstring(arr_ptr_template).format(
-                                                scalar=self.scalar, name=name)
+                                                dtypestr=dtypestr, name=name)
                 all_init_arr += init_arr
                 all_arr_ptr += arr_ptr
                 # TODO: we should have access to the symbol name so that the
@@ -112,7 +123,7 @@ class GPUCode(Code):
         print self.code_str
         print 'GPU namespace keys:'
         print ns.keys()
-        self.mem_man = GPUSymbolMemoryManager(memman_items)
+        self.mem_man.add_symbols(memman_items)
         self.gpu_mod = compiler.SourceModule(self.code_str)
         self.gpu_func = self.gpu_mod.get_function("gpu_func")
         for symname, hostarr, devname in memman_items:
@@ -138,3 +149,12 @@ class GPUCode(Code):
         if self.forcesync:
             self.mem_man.copy_to_host(self.mem_man.device.keys())
 
+
+class GPULanguage(CLanguage):
+    CodeObjectClass = GPUCode
+    def __init__(self, scalar='double', mem_man=None):
+        Language.__init__(self, 'gpu')
+        self.scalar = scalar
+        if mem_man is None:
+            mem_man = GPUSymbolMemoryManager()
+        self.mem_man = mem_man

@@ -30,6 +30,9 @@ class Code(object):
         languages, and can share partially or wholly the namespace. They are
         called (respectively) before or after the current code object is
         executed.
+    ``language``
+        A :class:`Language` object that stores some global settings and state
+        for all code in that language.
         
     Each language (e.g. PythonCode) extends some or all of the methods::
     
@@ -49,12 +52,14 @@ class Code(object):
         executes the code (calls ``self.run()``) and then calls
         ``post_code(**kwds)``.
     '''
-    def __init__(self, code_str, namespace, pre_code=None, post_code=None):
+    def __init__(self, code_str, namespace, pre_code=None, post_code=None,
+                 language=None):
         self.code_str = code_str
         self.namespace = namespace
         self.code_compiled = None
         self.pre_code = pre_code
         self.post_code = post_code
+        self.language = language
     def compile(self):
         pass
     def run(self):
@@ -78,9 +83,10 @@ class PythonCode(Code):
 
 
 class CCode(Code):
-    def __init__(self, code_str, namespace, pre_code=None, post_code=None):
+    def __init__(self, code_str, namespace, pre_code=None, post_code=None,
+                 language=None):
         Code.__init__(self, code_str, namespace, pre_code=pre_code,
-                      post_code=post_code)
+                      post_code=post_code, language=language)
         self._weave_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._weave_compiler == 'gcc':
@@ -93,8 +99,6 @@ class CCode(Code):
                      compiler=self._weave_compiler,
                      extra_compile_args=self._extra_compile_args)
 
-    
-#__global__ void stateupdate
 
 if __name__=='__main__':
     pass
