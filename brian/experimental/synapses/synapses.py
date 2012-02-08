@@ -365,6 +365,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 if isinstance(presyn_var, str):
                     res = re.sub(r'\b' + presyn_var + r'_pre\b', 'source.' + presyn_var + '[_pre['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
  
+            # Replace n by number of synapses being updated
+            res = re.sub(r'\bn\b','len('+indices+')', res)
+ 
             return res
  
         if direct: # direct update code, not caring about multiple accesses to postsynaptic variables
@@ -641,7 +644,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 # Build the namespace - Here we don't consider static equations
                 _namespace['_synapses']=synaptic_events
                 _namespace['t'] = self.clock._t
-                _namespace['n'] = len(synaptic_events)
                 exec code in _namespace
             queue.next()
 
