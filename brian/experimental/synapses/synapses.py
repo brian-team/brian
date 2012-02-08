@@ -416,8 +416,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                                 _F = extract(_flag.take(_F), _F)
                     '''
                     code_str = flattened_docstring(code_str).format(
-                        code1=indent(update_code(code, '_synapses', '_post_neurons'), 2),
-                        code2=indent(update_code(code, '_synapses[_i]', '_u'), 3))
+                        code1 = indent(update_code(code, '_synapses', '_post_neurons'), 2),
+                        code2 = indent(update_code(code, '_synapses[_i]', '_u'), 3))
                 else:
                     code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
                     code_str += "_perm = _post_neurons.argsort()\n"
@@ -670,11 +670,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         #if self._state_updater is not None:
         #    self._state_updater(self)
 
-        for queue,_namespace,code in zip(self.queues,self.namespaces,self.codes):            
+        for queue, _namespace, code in zip(self.queues, self.namespaces, self.codes):            
             synaptic_events = queue.peek()
             if len(synaptic_events):
                 # Build the namespace - Here we don't consider static equations
-                _namespace['_synapses']=synaptic_events
+                _namespace['_synapses'] = synaptic_events
                 _namespace['t'] = self.clock._t
                 code()
 #                exec code in _namespace
@@ -686,11 +686,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         in the ``post'' group.
         '''
         if pre is None:
-            pre=self.source
+            pre = self.source
         if post is None:
-            post=self.target
-        pre,post=self.presynaptic_indexes(pre),self.postsynaptic_indexes(post)
-        if len(pre)!=len(post):
+            post = self.target
+        pre, post = self.presynaptic_indexes(pre), self.postsynaptic_indexes(post)
+        if len(pre) != len(post):
             raise TypeError,"Source and target groups do not have the same size"
             
         for i,j in zip(pre,post):
