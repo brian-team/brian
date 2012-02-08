@@ -10,6 +10,7 @@ Romain Brette
 from brian import *
 from brian.experimental.synapses import *
 from time import time
+set_global_preferences(usecodegen = False)
 
 defaultclock.dt = .02 * ms
 dt = defaultclock.dt

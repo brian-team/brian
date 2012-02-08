@@ -13,7 +13,7 @@ from brian import *
 import time
 from brian.experimental.synapses import *
 #log_level_debug()
-#set_global_preferences(useweave=False)
+set_global_preferences(useweave=True)
 
 import random as pyrand
 from numpy.random import seed
@@ -77,5 +77,6 @@ duration = time.time() - start_time
 print "Simulation time:", duration, "seconds"
 print Me.nspikes, "excitatory spikes"
 print Mi.nspikes, "inhibitory spikes"
+
 #plot(M.times / ms, M.smooth_rate(2 * ms, 'gaussian'))
 #show()
