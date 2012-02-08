@@ -303,6 +303,10 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             self.namespaces.append(_namespace)
             self.queues.append(SpikeQueue(self.target, self.synapses_post, self._delay_post, max_delay = max_delay))
 
+        self.queues_namespaces_codes = zip(self.queues,
+                                           self.namespaces,
+                                           self.codes)
+
         self.contained_objects+=self.queues
       
     def generate_code(self,code,level,direct=False):
@@ -382,7 +386,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if direct: # direct update code, not caring about multiple accesses to postsynaptic variables
             code_str = '_post_neurons = _post[_synapses]\n'+update_code(code, '_synapses', '_post_neurons') + "\n"            
         else:
-            if False:
+            if True:
                 ## Old version using numpy's unique()
                 code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
                 code_str += "_u, _i = unique(_post_neurons, return_index = True)\n"
@@ -676,6 +680,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             self._state_updater(self)
 
         for queue, _namespace, code in zip(self.queues, self.namespaces, self.codes):
+        #for queue, _namespace, code in self.queues_namespaces_codes:
             synaptic_events = queue.peek()
             if len(synaptic_events):
                 # Build the namespace - Here we don't consider static equations
