@@ -79,6 +79,57 @@ def apply_batched(op, inds, debug=False):
         F += 1
         F = F[flag[F]]
 
+def apply_batched_take(op, inds, debug=False):
+    '''
+    Applies op(tgt, src) in batches, where tgt will have each of the values in
+    inds precisely once, and src will cover each integer from 0 to len(inds)-1
+    precisely once. For each call op(tgt, src) tgt and src are arrays of
+    indices where tgt=inds[src], and it is guaranteed that there are
+    no repeated values in tgt.
+    '''
+    perm = inds.argsort()
+    aux = take(inds, perm)#inds[perm]
+    flag = empty(len(aux)+1, dtype=bool)
+    flag[0] = flag[-1] = True
+    not_equal(aux[1:], aux[:-1], flag[1:-1])
+    F = flag.nonzero()[0][:-1]
+    logical_not(flag, flag)
+    if debug:
+        print '\n'.join(map(str, [inds, perm, aux, array(flag, dtype=int)]))+'\n'
+    while len(F):
+        u = take(aux, F)
+        i = take(perm, F)
+        if debug:
+            print u, i, F
+        op(u, i)
+        F += 1
+        #F = F[take(flag, F)]
+        F = extract(take(flag, F), F)
+
+def apply_batched_take2(op, inds, debug=False):
+    '''
+    Applies op(tgt, src) in batches, where tgt will have each of the values in
+    inds precisely once, and src will cover each integer from 0 to len(inds)-1
+    precisely once. For each call op(tgt, src) tgt and src are arrays of
+    indices where tgt=inds[src], and it is guaranteed that there are
+    no repeated values in tgt.
+    '''
+    perm = inds.argsort()
+    aux = take(inds, perm)
+    flag = empty(len(aux)+1, dtype=bool)
+    flag[0] = flag[-1] = True
+    not_equal(aux[1:], aux[:-1], flag[1:-1])
+    if sum(flag)==len(aux)+1:
+        op(inds, slice(None))
+        return
+    F = flag.nonzero()[0][:-1]
+    logical_not(flag, flag)
+    while len(F):
+        u = take(aux, F)
+        i = take(perm, F)
+        op(u, i)
+        F += 1
+        F = extract(take(flag, F), F)
                        
 if __name__=='__main__':
     if 1:
@@ -111,23 +162,45 @@ if __name__=='__main__':
         import time
         from numpy.random import *
         from scipy import weave
-        ids = randint(1000, size=10000)
-        repeats = 100
+        class AllIDs(object):
+            def __init__(self, indmax, sz, repeats, frac_unique=1.0):
+                self.indmax = indmax
+                self.sz = sz
+                self.repeats_notunique = int((1.0-frac_unique)*repeats)
+                self.repeats_unique = repeats-self.repeats_notunique
+                self.repeats = repeats
+            def __iter__(self):
+                indmax, sz = self.indmax, self.sz
+                def f():
+                    seed(304892)
+                    for _ in xrange(self.repeats_unique):
+                        yield randint(indmax, size=sz)
+                    for _ in xrange(self.repeats_notunique):
+                        yield arange(sz)
+                return f()
+        all_ids = AllIDs(indmax=100000,
+                         sz=10000,
+                         repeats=1000,
+                         frac_unique=0.5
+                         )
+        do_loop = False
         
-        y = randn(len(ids))
+        seed(3402324)
+        y = randn(all_ids.sz)
         
-        x_loop = zeros(amax(ids)+1)
-        start = time.time()
-        for _ in xrange(repeats):
-            ids.copy()
-            for i in xrange(len(ids)):
-                x_loop[ids[i]] += y[i]
-        print 'Loop:', time.time()-start
+        if do_loop:
+            x_loop = zeros(all_ids.indmax)
+            start = time.time()
+            for ids in all_ids:
+                ids.copy()
+                for i in xrange(len(ids)):
+                    x_loop[ids[i]] += y[i]
+            print 'Loop:', time.time()-start
 
-        x_weave = zeros(amax(ids)+1)
-        numinds = len(ids)
+        x_weave = zeros(all_ids.indmax)
+        numinds = all_ids.sz
         start = time.time()
-        for _ in xrange(repeats):
+        for ids in all_ids:
             ids.copy()
             weave.inline('''
                 for(int i=0; i<numinds; i++)
@@ -137,23 +210,30 @@ if __name__=='__main__':
                 compiler='gcc',
                 extra_compile_args=['-O3', '-march=native'],
                 )
-        print 'Weave:', time.time()-start,
+        weave_time = time.time()-start
+        print 'Weave:', weave_time,
+        if not do_loop:
+            x_loop = x_weave
         print 'diff', amax(abs(x_loop-x_weave))#<1e-10
 
-        def dobatchtiming(batchfunc):
+        def dobatchtiming(batchfunc, *args):
             global numops
             numops = 0
-            x_batched = zeros(amax(ids)+1)
+            x_batched = zeros(all_ids.indmax)
             def op(tgt, src):
                 global numops
                 numops += 1
                 x_batched[tgt] += y[src]
             start = time.time()
-            for _ in xrange(repeats):
-                batchfunc(op, ids.copy())
-            print batchfunc.__name__, ':', time.time()-start, '(%d ops)'%(numops/repeats),
-            print 'diff', amax(abs(x_loop-x_batched))
+            for ids in all_ids:
+                batchfunc(op, ids.copy(), *args)
+            batch_time = time.time()-start
+            print batchfunc.__name__, ':', batch_time, '(%0.2f mean ops)'%((1.*numops)/all_ids.repeats),
+            print 'diff', amax(abs(x_loop-x_batched)),
+            print 'weavetime*%.1f'%(batch_time/weave_time)
             
         dobatchtiming(apply_batched_orig)
         dobatchtiming(apply_batched_orig_improved)
         dobatchtiming(apply_batched)
+        dobatchtiming(apply_batched_take)
+        dobatchtiming(apply_batched_take2)

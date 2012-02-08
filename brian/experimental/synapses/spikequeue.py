@@ -351,17 +351,24 @@ class SpikeQueue(SpikeMonitor):
         ndelays=len(self.n)
         # TODO: use delay[k] etc. and don't use type_converters=blitz for
         # more speed
+#        code='''
+#        int d;
+#        for(int k=0;k<nevents;k++) {
+#            d=delay(k);
+#            Xflat(((currentt+d)%ndelays)*ncols+n(d))=target(k);
+#            n(d)++;
+#        }
+#        '''
         code='''
-        int d;
         for(int k=0;k<nevents;k++) {
-            d=delay(k);
-            Xflat(((currentt+d)%ndelays)*ncols+n(d))=target(k);
-            n(d)++;
+            const int d = delay[k];
+            Xflat[((currentt+d)%ndelays)*ncols+n[d]] = target[k];
+            n[d]++;
         }
         '''
         weave.inline(code, ['nevents','n','delay','Xflat','target','ncols','currentt','ndelays'], \
              compiler=self._cpp_compiler,
-             type_converters=weave.converters.blitz,
+#             type_converters=weave.converters.blitz,
              extra_compile_args=self._extra_compile_args)
 
     def offsets_C(self, delay):

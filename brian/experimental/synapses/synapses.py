@@ -339,12 +339,16 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         _namespace['empty'] = np.empty
         _namespace['logical_not'] = np.logical_not
         _namespace['not_equal'] = np.not_equal
+        _namespace['take'] = np.take
+        _namespace['extract'] = np.extract
+        _namespace['add'] = np.add
+        _namespace['hstack'] = np.hstack
 
         code = re.sub(r'\b' + 'rand\(\)', 'rand(n)', code)
         code = re.sub(r'\b' + 'randn\(\)', 'randn(n)', code)
 
         # Generate the code
-        def update_code(code, indices):
+        def update_code(code, indices, postinds):
             res = code
             # given the synapse indices, write the update code,
             # this is here because in the code we generate we need to write this twice (because of the multiple presyn spikes for the same postsyn neuron problem)
@@ -357,8 +361,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             # Replace postsynaptic variables by their value
             for postsyn_var in self.target.var_index: # static variables are not included here
                 if isinstance(postsyn_var, str):
-                    res = re.sub(r'\b' + postsyn_var + r'_post\b', 'target.' + postsyn_var + '[_post['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
-                    res = re.sub(r'\b' + postsyn_var + r'\b', 'target.' + postsyn_var + '[_post['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
+                    res = re.sub(r'\b' + postsyn_var + r'_post\b', 'target.' + postsyn_var + '['+postinds+']', res)# postsyn variable, indexed by post syn neuron numbers
+                    res = re.sub(r'\b' + postsyn_var + r'\b', 'target.' + postsyn_var + '['+postinds+']', res)# postsyn variable, indexed by post syn neuron numbers
             
             # Replace presynaptic variables by their value
             for presyn_var in self.source.var_index: # static variables are not included here
@@ -371,48 +375,76 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             return res
  
         if direct: # direct update code, not caring about multiple accesses to postsynaptic variables
-            code_str=update_code(code, '_synapses') + "\n"            
+            code_str = '_post_neurons = _post[_synapses]\n'+update_code(code, '_synapses', '_post_neurons') + "\n"            
         else:
             if False:
                 ## Old version using numpy's unique()
                 code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
                 code_str += "_u, _i = unique(_post_neurons, return_index = True)\n"
-                code_str += update_code(code, '_synapses[_i]') + "\n"
+                #code_str += update_code(code, '_synapses[_i]', '_u') + "\n"
+                code_str += update_code(code, '_synapses[_i]', '_post[_synapses[_i]]') + "\n"
                 code_str += "if len(_u) < len(_post_neurons):\n"
                 code_str += "    _post_neurons[_i] = -1\n"
                 code_str += "    while (len(_u) < len(_post_neurons)) & (_post_neurons>-1).any():\n" # !! the any() is time consuming (len(u)>=1??)
                 #code_str += "    while (len(_u) < len(_post_neurons)) & (len(_u)>1):\n" # !! the any() is time consuming (len(u)>=1??)
                 code_str += "        _u, _i = unique(_post_neurons, return_index = True)\n"
-                code_str += indent(update_code(code, '_synapses[_i[1:]]'),2) + "\n"
+                code_str += indent(update_code(code, '_synapses[_i[1:]]', '_post[_synapses[_i[1:]]]'),2) + "\n"
                 code_str += "        _post_neurons[_i[1:]] = -1 \n"
             else:
                 ## New version. 
                 # refactoring the use of numpy unique in a neat way.
-                # look into dev/ideas/synpases/batch_operation.py
-                
-                code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
-                code_str += "_perm = _post_neurons.argsort()\n"
-                code_str += "_aux = _post_neurons[_perm]\n"
-                code_str += "_flag = empty(len(_aux) + 1, dtype = bool)\n"
-                code_str += "_flag[0] = _flag[-1] = True\n"
-                code_str += "not_equal(_aux[1:], _aux[:-1], _flag[1:-1])\n"
-                code_str += "_F = _flag.nonzero()[0][:-1]\n"
-                code_str += "logical_not(_flag, _flag)\n"
-                code_str += "while len(_F):\n"
-                code_str += "    _u = _aux[_F]\n"
-                code_str += "    _i = _perm[_F]\n"
-#                code_str += "    print _u, _i\n"
-#                code_str += "    target.gi[_i]  += wi\n"
-                code_str += indent(update_code(code, '_synapses[_i]'), 1) + "\n"
-                code_str += "    _F += 1\n"
-                code_str += "    _F = _F[_flag[_F]]\n"
-#                print 'here'
-#            print code_str
+                # look into dev/ideas/synpases/apply_batch.py
+                if True:
+                    code_str = '''
+                    def _update():
+                        _post_neurons = _post.data.take(_synapses)
+                        _perm = _post_neurons.argsort()
+                        _aux = _post_neurons.take(_perm)
+                        _flag = empty(len(_aux)+1, dtype=bool)
+                        _flag[0] = _flag[-1] = 1
+                        not_equal(_aux[1:], _aux[:-1], _flag[1:-1])
+                        if _flag.sum()==len(_aux)+1:
+                    {code1}
+                        else:
+                            _F = _flag.nonzero()[0][:-1]
+                            logical_not(_flag, _flag)
+                            while len(_F):
+                                _u = _aux.take(_F)
+                                _i = _perm.take(_F)
+                    {code2}
+                                _F += 1
+                                _F = extract(_flag.take(_F), _F)
+                    '''
+                    code_str = flattened_docstring(code_str).format(
+                        code1=indent(update_code(code, '_synapses', '_post_neurons'), 2),
+                        code2=indent(update_code(code, '_synapses[_i]', '_u'), 3))
+                else:
+                    code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
+                    code_str += "_perm = _post_neurons.argsort()\n"
+                    code_str += "_aux = _post_neurons[_perm]\n"
+                    code_str += "_flag = empty(len(_aux) + 1, dtype = bool)\n"
+                    code_str += "_flag[0] = _flag[-1] = True\n"
+                    code_str += "not_equal(_aux[1:], _aux[:-1], _flag[1:-1])\n"
+                    code_str += "_F = _flag.nonzero()[0][:-1]\n"
+                    code_str += "logical_not(_flag, _flag)\n"
+                    code_str += "while len(_F):\n"
+                    code_str += "    _u = _aux[_F]\n"
+                    code_str += "    _i = _perm[_F]\n"
+                    code_str += indent(update_code(code, '_synapses[_i]', '_u'), 1) + "\n"
+                    code_str += "    _F += 1\n"
+                    code_str += "    _F = _F[_flag[_F]]\n"
+#        print code_str
             
         log_debug('brian.synapses', '\nPRE CODE:\n'+code_str)
         
         # Compile
-        compiled_code = compile(code_str, "Synaptic code", "exec")
+        if 'def _update()' in code_str:
+            exec code_str in _namespace
+            compiled_code = _namespace['_update']
+        else:
+            cc = compile(code_str, "Synaptic code", "exec")
+            def compiled_code():
+                exec cc in _namespace
         
         return compiled_code,_namespace
 
@@ -635,8 +667,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         TODO:
         * Deal with static variables
         '''
-        if self._state_updater is not None:
-            self._state_updater(self)
+        #if self._state_updater is not None:
+        #    self._state_updater(self)
 
         for queue,_namespace,code in zip(self.queues,self.namespaces,self.codes):            
             synaptic_events = queue.peek()
@@ -644,7 +676,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 # Build the namespace - Here we don't consider static equations
                 _namespace['_synapses']=synaptic_events
                 _namespace['t'] = self.clock._t
-                exec code in _namespace
+                code()
+#                exec code in _namespace
             queue.next()
 
     def connect_one_to_one(self,pre=None,post=None):
