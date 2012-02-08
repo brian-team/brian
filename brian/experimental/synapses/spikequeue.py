@@ -163,6 +163,9 @@ class SpikeQueue(SpikeMonitor):
         the option ``precompute_offsets'' is set to False. A flag is set if
         delays are homogeneous, in which case insertion will use a faster method.
         '''
+        if hasattr(self, '_iscompressed') and self._iscompressed:
+            return
+        self._iscompressed = True
         # Adjust the maximum delay and number of events per timestep if necessary
         nsteps=max(self.delays)+1
         maxevents=self.X.shape[1]

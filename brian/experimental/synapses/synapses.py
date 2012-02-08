@@ -361,13 +361,18 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             # Replace postsynaptic variables by their value
             for postsyn_var in self.target.var_index: # static variables are not included here
                 if isinstance(postsyn_var, str):
-                    res = re.sub(r'\b' + postsyn_var + r'_post\b', 'target.' + postsyn_var + '['+postinds+']', res)# postsyn variable, indexed by post syn neuron numbers
-                    res = re.sub(r'\b' + postsyn_var + r'\b', 'target.' + postsyn_var + '['+postinds+']', res)# postsyn variable, indexed by post syn neuron numbers
+                    #res = re.sub(r'\b' + postsyn_var + r'_post\b', 'target.' + postsyn_var + '['+postinds+']', res)# postsyn variable, indexed by post syn neuron numbers
+                    #res = re.sub(r'\b' + postsyn_var + r'\b', 'target.' + postsyn_var + '['+postinds+']', res)# postsyn variable, indexed by post syn neuron numbers
+                    res = re.sub(r'\b' + postsyn_var + r'_post\b', '_target_' + postsyn_var + '['+postinds+']', res)# postsyn variable, indexed by post syn neuron numbers
+                    res = re.sub(r'\b' + postsyn_var + r'\b', '_target_' + postsyn_var + '['+postinds+']', res)# postsyn variable, indexed by post syn neuron numbers
+                    _namespace['_target_' + postsyn_var] = self.target.state_(postsyn_var)
             
             # Replace presynaptic variables by their value
             for presyn_var in self.source.var_index: # static variables are not included here
                 if isinstance(presyn_var, str):
-                    res = re.sub(r'\b' + presyn_var + r'_pre\b', 'source.' + presyn_var + '[_pre['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
+                    #res = re.sub(r'\b' + presyn_var + r'_pre\b', 'source.' + presyn_var + '[_pre['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
+                    res = re.sub(r'\b' + presyn_var + r'_pre\b', '_source_' + presyn_var + '[_pre['+indices+']]', res)# postsyn variable, indexed by post syn neuron numbers
+                    _namespace['_source_' + presyn_var] = self.source.state_(presyn_var)
  
             # Replace n by number of synapses being updated
             res = re.sub(r'\bn\b','len('+indices+')', res)
@@ -670,15 +675,19 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if self._state_updater is not None:
             self._state_updater(self)
 
-        for queue, _namespace, code in zip(self.queues, self.namespaces, self.codes):            
+        for queue, _namespace, code in zip(self.queues, self.namespaces, self.codes):
             synaptic_events = queue.peek()
             if len(synaptic_events):
                 # Build the namespace - Here we don't consider static equations
                 _namespace['_synapses'] = synaptic_events
                 _namespace['t'] = self.clock._t
-                code()
+                self.doupdate(code)
+#                code()
 #                exec code in _namespace
             queue.next()
+            
+    def doupdate(self, code):
+        code()
 
     def connect_one_to_one(self,pre=None,post=None):
         '''
@@ -758,6 +767,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         * Make the state array non-dynamical (important for the state updater).
         * Updates namespaces of pre and post code.
         '''
+        if hasattr(self, '_iscompressed') and self._iscompressed:
+            return
+        self._iscompressed = True
         # Check that the object is not empty
         if len(self)==0:
             warnings.warn("Empty Synapses object")

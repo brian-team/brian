@@ -13,7 +13,21 @@ from brian import *
 import time
 from brian.experimental.synapses import *
 #log_level_debug()
-set_global_preferences(useweave=True)
+#set_global_preferences(useweave=True, usecodegen=False)
+set_global_preferences(useweave=False, usecodegen=False)
+
+do_callgraph = False
+if do_callgraph:
+    import pycallgraph
+    cg_func = 'synapses'
+    def ff(pat):
+        def f(call_stack, module_name, class_name, func_name, full_name):
+            if not 'brian' in module_name: return False
+            for n in call_stack + [full_name]:
+                if pat in n:
+                    return True
+            return False
+        return f
 
 import random as pyrand
 from numpy.random import seed
@@ -46,8 +60,10 @@ wi = (-20 * 4.5 / 10) * mV # inhibitory synaptic weight
 
 if True:
 ########### NEW SYNAPSE CODE
+    set_global_preferences(useweave=True)
     Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we')
     Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi')
+    set_global_preferences(useweave=False)
     Se[:,:]=0.02
     Si[:,:]=0.02
     Se.delay='rand()*ms'
@@ -68,12 +84,23 @@ M = PopulationRateMonitor(P)
 print "Network construction time:", time.time() - start_time, "seconds"
 print len(P), "neurons in the network"
 print "Simulation running..."
-run(1 * msecond)
-start_time = time.time()
 
-run(1 * second)
+net = MagicNetwork()
+net.run(100 * msecond)
+#run(100 * msecond)
+
+start_time = time.time()
+if do_callgraph:
+    pycallgraph.start_trace(filter_func=ff(cg_func))
+
+net.run(1 * second)
+#run(1 * second)
 
 duration = time.time() - start_time
+if do_callgraph:
+    pycallgraph.stop_trace()
+    pycallgraph.make_dot_graph('cuba-callgraph.png')
+
 print "Simulation time:", duration, "seconds"
 print Me.nspikes, "excitatory spikes"
 print Mi.nspikes, "inhibitory spikes"
