@@ -667,8 +667,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         TODO:
         * Deal with static variables
         '''
-        #if self._state_updater is not None:
-        #    self._state_updater(self)
+        if self._state_updater is not None:
+            self._state_updater(self)
 
         for queue, _namespace, code in zip(self.queues, self.namespaces, self.codes):            
             synaptic_events = queue.peek()
