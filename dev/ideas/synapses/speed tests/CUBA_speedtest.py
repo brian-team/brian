@@ -16,9 +16,10 @@ from brian.experimental.synapses import *
 #set_global_preferences(useweave=True, usecodegen=False)
 set_global_preferences(useweave=False, usecodegen=False)
 
-use_synapses = False
-
+use_synapses = True
+reproduce_connection = True
 do_callgraph = False
+
 if do_callgraph:
     import pycallgraph
     cg_func = 'synapses'
@@ -61,52 +62,59 @@ Pi = P.subgroup(800)
 we = (60 * 0.27 / 10) * mV # excitatory synaptic weight (voltage)
 wi = (-20 * 4.5 / 10) * mV # inhibitory synaptic weight
 
-Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02, delay=(1*ms, 2*ms))
-Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02, delay=(1*ms, 2*ms))
-Ce.compress()
-Ci.compress()
+if not use_synapses or reproduce_connection:
+    Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02, delay=(1*ms, 2*ms))
+    Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02, delay=(1*ms, 2*ms))
+    Ce.compress()
+    Ci.compress()
 if use_synapses:
     set_global_preferences(useweave=True)
     Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we')
     Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi')
+    if reproduce_connection:
+        for i in xrange(len(Pe)):
+            x = Ce[i, :]
+            Se[i, x.ind] = True
+            Se.delay[i, :] = Ce.delay[i, :]
+            if False:
+                # check that it really is producing the same connection structure
+                # it seems that it is
+                syn = Se.synapses_pre[i].data
+                tgts = Se.postsynaptic.data[syn]
+                delays = Se.delay.data[syn]
+                if not (tgts==x.ind).all():
+                    print 'tgts!=x.ind'
+                if not (delays==asarray(Ce.delay[i, :]/defaultclock.dt, dtype=int)).all():
+                    print 'delays!=Ce.delay'
+        for i in xrange(len(Pi)):
+            x = Ci[i, :]
+            Si[i, x.ind] = True
+            Si.delay[i, :] = Ci.delay[i, :]
+        del x, Ce, Ci
+        import gc
+        gc.collect()
+    else:
+        Se[:,:]=0.02
+        Si[:,:]=0.02
+        Se.delay='rand()*ms'
+        Si.delay='rand()*ms'
     set_global_preferences(useweave=False)
-    for i in xrange(len(Pe)):
-        x = Ce[i, :]
-        Se[i, x.ind] = True
-        Se.delay[i, :] = Ce.delay[i, :]
-        if False:
-            # check that it really is producing the same connection structure
-            # it seems that it is
-            syn = Se.synapses_pre[i].data
-            tgts = Se.postsynaptic.data[syn]
-            delays = Se.delay.data[syn]
-            if not (tgts==x.ind).all():
-                print 'tgts!=x.ind'
-            if not (delays==asarray(Ce.delay[i, :]/defaultclock.dt, dtype=int)).all():
-                print 'delays!=Ce.delay'
-    for i in xrange(len(Pi)):
-        x = Ci[i, :]
-        Si[i, x.ind] = True
-        Si.delay[i, :] = Ci.delay[i, :]
-    del x, Ce, Ci
-    import gc
-    gc.collect()
 
 # Record the number of spikes
 Me = PopulationSpikeCounter(Pe)
 Mi = PopulationSpikeCounter(Pi)
 # A population rate monitor
 M = PopulationRateMonitor(P)
-M0 = RecentStateMonitor(P, 'v', record=[0,1,2,3,4], duration=100*ms)
+#M0 = RecentStateMonitor(P, 'v', record=[0,1,2,3,4], duration=100*ms)
 
 print "Network construction time:", time.time() - start_time, "seconds"
 print len(P), "neurons in the network"
 print "Simulation running..."
 
 if use_synapses:
-    net = Network(P, Se, Si, Me, Mi, M, M0)
+    net = Network(P, Se, Si, Me, Mi, M)#, M0)
 else:
-    net = Network(P, Ce, Ci, Me, Mi, M, M0)
+    net = Network(P, Ce, Ci, Me, Mi, M)#, M0)
 net.run(100 * msecond)
 #M0.plot()
 #show()

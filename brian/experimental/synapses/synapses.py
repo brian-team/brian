@@ -386,7 +386,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if direct: # direct update code, not caring about multiple accesses to postsynaptic variables
             code_str = '_post_neurons = _post[_synapses]\n'+update_code(code, '_synapses', '_post_neurons') + "\n"            
         else:
-            if True:
+            algo = 3
+            if algo==0:
                 ## Old version using numpy's unique()
                 code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
                 code_str += "_u, _i = unique(_post_neurons, return_index = True)\n"
@@ -399,61 +400,88 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 code_str += "        _u, _i = unique(_post_neurons, return_index = True)\n"
                 code_str += indent(update_code(code, '_synapses[_i[1:]]', '_post[_synapses[_i[1:]]]'),2) + "\n"
                 code_str += "        _post_neurons[_i[1:]] = -1 \n"
-            else:
-                ## New version. 
-                # refactoring the use of numpy unique in a neat way.
-                # look into dev/ideas/synpases/apply_batch.py
-                if True:
-                    code_str = '''
-                    def _update():
-                        _post_neurons = _post.data.take(_synapses)
-                        _perm = _post_neurons.argsort()
-                        _aux = _post_neurons.take(_perm)
-                        _flag = empty(len(_aux)+1, dtype=bool)
-                        _flag[0] = _flag[-1] = 1
-                        not_equal(_aux[1:], _aux[:-1], _flag[1:-1])
-                        if _flag.sum()==len(_aux)+1:
-                    {code1}
-                        else:
-                            _F = _flag.nonzero()[0][:-1]
-                            logical_not(_flag, _flag)
-                            while len(_F):
-                                _u = _aux.take(_F)
-                                _i = _perm.take(_F)
-                    {code2}
-                                _F += 1
-                                _F = extract(_flag.take(_F), _F)
-                    '''
-                    code_str = flattened_docstring(code_str).format(
-                        code1 = indent(update_code(code, '_synapses', '_post_neurons'), 2),
-                        code2 = indent(update_code(code, '_synapses[_i]', '_u'), 3))
+            elif algo==1:
+                code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
+                code_str += "_perm = _post_neurons.argsort()\n"
+                code_str += "_aux = _post_neurons[_perm]\n"
+                code_str += "_flag = empty(len(_aux) + 1, dtype = bool)\n"
+                code_str += "_flag[0] = _flag[-1] = True\n"
+                code_str += "not_equal(_aux[1:], _aux[:-1], _flag[1:-1])\n"
+                code_str += "_F = _flag.nonzero()[0][:-1]\n"
+                code_str += "logical_not(_flag, _flag)\n"
+                code_str += "while len(_F):\n"
+                code_str += "    _u = _aux[_F]\n"
+                code_str += "    _i = _perm[_F]\n"
+                code_str += indent(update_code(code, '_synapses[_i]', '_u'), 1) + "\n"
+                code_str += "    _F += 1\n"
+                code_str += "    _F = _F[_flag[_F]]\n"
+            elif algo==2:
+                code_str = '''
+                _post_neurons = _post.data.take(_synapses)
+                _perm = _post_neurons.argsort()
+                _aux = _post_neurons.take(_perm)
+                _flag = empty(len(_aux)+1, dtype=bool)
+                _flag[0] = _flag[-1] = 1
+                not_equal(_aux[1:], _aux[:-1], _flag[1:-1])
+                if 0:#_flag.sum()==len(_aux)+1:
+                {code1}
                 else:
-                    code_str = "_post_neurons = _post[_synapses]\n" # not necessary to do a copy because _synapses is not a slice
-                    code_str += "_perm = _post_neurons.argsort()\n"
-                    code_str += "_aux = _post_neurons[_perm]\n"
-                    code_str += "_flag = empty(len(_aux) + 1, dtype = bool)\n"
-                    code_str += "_flag[0] = _flag[-1] = True\n"
-                    code_str += "not_equal(_aux[1:], _aux[:-1], _flag[1:-1])\n"
-                    code_str += "_F = _flag.nonzero()[0][:-1]\n"
-                    code_str += "logical_not(_flag, _flag)\n"
-                    code_str += "while len(_F):\n"
-                    code_str += "    _u = _aux[_F]\n"
-                    code_str += "    _i = _perm[_F]\n"
-                    code_str += indent(update_code(code, '_synapses[_i]', '_u'), 1) + "\n"
-                    code_str += "    _F += 1\n"
-                    code_str += "    _F = _F[_flag[_F]]\n"
+                    _F = _flag.nonzero()[0][:-1]
+                    logical_not(_flag, _flag)
+                    while len(_F):
+                        _u = _aux.take(_F)
+                        _i = _perm.take(_F)
+                {code2}
+                        _F += 1
+                        _F = extract(_flag.take(_F), _F)
+                '''
+                code_str = flattened_docstring(code_str).format(
+                    code1 = indent(update_code(code, '_synapses', '_post_neurons'), 1),
+                    code2 = indent(update_code(code, '_synapses[_i]', '_u'), 2))
+            elif algo==3:
+                code_str = '''
+                _post_neurons = _post.data.take(_synapses)
+                _perm = _post_neurons.argsort()
+                _aux = _post_neurons.take(_perm)
+                _flag = empty(len(_aux)+1, dtype=bool)
+                _flag[0] = _flag[-1] = 1
+                not_equal(_aux[1:], _aux[:-1], _flag[1:-1])
+                _F = _flag.nonzero()[0][:-1]
+                logical_not(_flag, _flag)
+                while len(_F):
+                    _u = _aux.take(_F)
+                    _i = _perm.take(_F)
+                {code}
+                    _F += 1
+                    _F = extract(_flag.take(_F), _F)
+                '''
+                code_str = flattened_docstring(code_str).format(
+                    code=indent(update_code(code, '_synapses[_i]', '_u'), 1))
+            elif algo==4:
+                code_str = '''
+                _post_neurons = _post[_synapses]
+                _perm = _post_neurons.argsort()
+                _aux = _post_neurons[_perm]
+                _flag = empty(len(_aux)+1, dtype=bool)
+                _flag[0] = _flag[-1] = 1
+                not_equal(_aux[1:], _aux[:-1], _flag[1:-1])
+                _F = _flag.nonzero()[0][:-1]
+                logical_not(_flag, _flag)
+                while len(_F):
+                    _u = _aux[_F]
+                    _i = _perm[_F]
+                {code}
+                    _F += 1
+                    _F = _F[_flag[_F]]
+                '''
+                code_str = flattened_docstring(code_str).format(
+                    code=indent(update_code(code, '_synapses[_i]', '_u'), 1))
 #        print code_str
             
         log_debug('brian.synapses', '\nPRE CODE:\n'+code_str)
         
         # Compile
-        if 'def _update()' in code_str:
-            exec code_str in _namespace
-            compiled_code = _namespace['_update']
-        else:
-            cc = compile(code_str, "Synaptic code", "exec")
-            def compiled_code():
-                exec cc in _namespace
+        compiled_code = compile(code_str, "Synaptic code", "exec")
         
         return compiled_code,_namespace
 
@@ -680,20 +708,14 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             self._state_updater(self)
 
         for queue, _namespace, code in zip(self.queues, self.namespaces, self.codes):
-        #for queue, _namespace, code in self.queues_namespaces_codes:
             synaptic_events = queue.peek()
             if len(synaptic_events):
                 # Build the namespace - Here we don't consider static equations
                 _namespace['_synapses'] = synaptic_events
                 _namespace['t'] = self.clock._t
-                self.doupdate(code)
-#                code()
-#                exec code in _namespace
+                exec code in _namespace
             queue.next()
             
-    def doupdate(self, code):
-        code()
-
     def connect_one_to_one(self,pre=None,post=None):
         '''
         Connects each neuron in the ``pre'' group to each corresponding one
