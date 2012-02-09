@@ -31,6 +31,9 @@ class GPUSymbolMemoryManager(object):
                 self.device[symname] = devarr
                 self.host[symname] = hostarr
     def copy_to_device(self, symname):
+        if symname is True:
+            self.copy_to_device(self.device.keys())
+            return
         if not isinstance(symname, str):
             for name in symname:
                 self.copy_to_device(name)
@@ -39,6 +42,9 @@ class GPUSymbolMemoryManager(object):
         hostarr = self.host[symname]
         devarr.set(hostarr)
     def copy_to_host(self, symname):
+        if symname is True:
+            self.copy_to_host(self.device.keys())
+            return
         if not isinstance(symname, str):
             for name in symname:
                 self.copy_to_host(name)
