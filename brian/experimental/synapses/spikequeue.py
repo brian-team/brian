@@ -354,8 +354,8 @@ class SpikeQueue(SpikeMonitor):
         ndelays=len(self.n)
         code='''
         for(int k=0;k<nevents;k++) {
-            const int d = delay[k];
-            Xflat[((currentt+d)%ndelays)*ncols+n[d]] = target[k];
+            const int d = (currentt+delay[k]) % ndelays;
+            Xflat[d*ncols+n[d]] = target[k];
             n[d]++;
         }
         '''
