@@ -68,7 +68,7 @@ if not use_synapses or reproduce_connection:
     Ce.compress()
     Ci.compress()
 if use_synapses:
-    set_global_preferences(useweave=True)
+    set_global_preferences(useweave=False)
     Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we')
     Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi')
     if reproduce_connection:
