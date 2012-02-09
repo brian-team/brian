@@ -41,6 +41,7 @@ class GPUKernel(object):
         self.index = namespace.pop('_gpu_vector_index')
         self.start, self.end = namespace.pop('_gpu_vector_slice')
         self.gpu_func = None
+        self._gpu_func_is_prepared = False
     def prepare(self):
         if self.prepared:
             return
@@ -52,7 +53,7 @@ class GPUKernel(object):
         memman_items = []
         for name, value in ns.iteritems():
             if isinstance(value, ndarray):
-                # TODO: we should have access to the symbol name so that the
+                # TODO: we shouldself._gpu_func_is_prepared have access to the symbol name so that the
                 # memory manager can be used by the user to get/set values
                 symname = devname = name
                 hostarr = value
@@ -89,8 +90,15 @@ class GPUKernel(object):
             gridsize = numinds/blocksize
         else:
             gridsize = numinds/blocksize+1
+        self.blocksize = blocksize
         self.grid = (gridsize, 1)
+    def prepare_gpu_func(self):
+        self.gpu_func.prepare(tuple(dtype for _, dtype, _ in self.func_args),
+                              (self.blocksize, 1, 1))
+        self._gpu_func_is_prepared = True
     def run(self):
+        if not self._gpu_func_is_prepared:
+            self.prepare_gpu_func()
         ns = self.namespace
         args = [dtype(ns[name]) for name, dtype, _ in self.func_args]
         self.gpu_func.prepared_call(self.grid, *args)

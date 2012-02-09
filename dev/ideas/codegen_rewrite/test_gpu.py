@@ -48,8 +48,8 @@ G._resetfun = CodeGenReset(G, reset, language)
 M = MultiStateMonitor(G, record=True)
 Msp = SpikeMonitor(G)
 
-language.gpu_man.prepare()
-exit()
+#language.gpu_man.prepare()
+#exit()
 
 run(100*ms)
 print Msp.spikes

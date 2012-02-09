@@ -43,6 +43,7 @@ class CodeGenThreshold(Threshold):
         print 'THRESHOLD'
         print self.code.code_str
         ns = self.code.namespace
+        ns['t'] = 1.0 # dummy value
         ns['dt'] = P.clock._dt
         ns['_num_neurons'] = len(P)
         if self.language.name=='python':
@@ -62,7 +63,7 @@ class CodeGenThreshold(Threshold):
             # compaction on the GPU and then return that
             def threshold_func(P):
                 code()
-                code.mem_man.copy_to_host('_arr_spiked_bool')
+                #code.mem_man.copy_to_host('_arr_spiked_bool')
                 return ns['_arr_spiked_bool'].nonzero()[0]
         self.threshold_func = threshold_func
 

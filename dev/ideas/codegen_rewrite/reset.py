@@ -36,6 +36,8 @@ class CodeGenReset(Reset):
             symbols['_spiked'] = _spiked_symbol
             block = CIfBlock('_spiked', [block])
             self.namespace['_num_gpu_indices'] = len(P)
+            self.namespace['t'] = 1.0 # dummy value
+            self.namespace['_num_neurons'] = len(P)
         self.code = block.generate('reset', self.language, symbols,
                                    namespace=ns)
         print 'RESET'

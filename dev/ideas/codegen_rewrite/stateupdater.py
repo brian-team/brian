@@ -27,6 +27,7 @@ class CodeGenStateUpdater(StateUpdater):
         print 'STATE UPDATE NAMESPACE KEYS'
         print self.code.namespace.keys()
         ns = self.code.namespace
+        ns['t'] = 1.0 # dummy value
         ns['dt'] = group.clock._dt
         ns['_num_neurons'] = len(group)
         ns['_num_gpu_indices'] = len(group)
