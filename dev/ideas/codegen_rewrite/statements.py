@@ -47,6 +47,10 @@ def c_data_type(dtype):
         dtype = 'int32_t'
     elif dtype==int64:
         dtype = 'int64_t'
+    elif dtype==uint16:
+        dtype = 'uint16_t'
+    elif dtype==uint32:
+        dtype = 'uint32_t'
     elif dtype==bool_ or dtype is bool:
         dtype = 'bool'
     return dtype

@@ -76,7 +76,7 @@ class CodeGenConnection(Connection):
                                                    '_target_index',
                                                    '_w', language)
             block = Block(*statements)
-            self.code = block.generate(language, symbols)
+            self.code = block.generate('connection', language, symbols)
             print 'CONNECTION'
             print self.code.code_str
             ns = self.code.namespace
@@ -211,7 +211,7 @@ if __name__=='__main__':
     symbols['_source_index'] = SpikeSymbol('_source_index', language)
     
     block = Block(*statements)
-    code = block.generate(language, symbols)
+    code = block.generate('connection', language, symbols)
     print 'Code:\n', indent_string(code.code_str),
     print
     print 'Namespace:', code.namespace.keys()

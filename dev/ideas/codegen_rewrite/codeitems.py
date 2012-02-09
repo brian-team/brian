@@ -55,9 +55,9 @@ class CodeItem(object):
                                       namespace=namespace) for item in self)
         return strip_empty_lines(s)
 
-    def generate(self, language, symbols, namespace=None):
+    def generate(self, name, language, symbols, namespace=None):
         from resolution import resolve
         block, namespace = resolve(self, symbols, namespace=namespace)
         codestr = block.convert_to(language, symbols, namespace=namespace)
-        code = language.code_object(codestr, namespace)
+        code = language.code_object(name, codestr, namespace)
         return code

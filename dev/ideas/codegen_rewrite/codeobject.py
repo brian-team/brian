@@ -52,8 +52,9 @@ class Code(object):
         executes the code (calls ``self.run()``) and then calls
         ``post_code(**kwds)``.
     '''
-    def __init__(self, code_str, namespace, pre_code=None, post_code=None,
+    def __init__(self, name, code_str, namespace, pre_code=None, post_code=None,
                  language=None):
+        self.name = name
         self.code_str = code_str
         self.namespace = namespace
         self.code_compiled = None
@@ -83,9 +84,9 @@ class PythonCode(Code):
 
 
 class CCode(Code):
-    def __init__(self, code_str, namespace, pre_code=None, post_code=None,
+    def __init__(self, name, code_str, namespace, pre_code=None, post_code=None,
                  language=None):
-        Code.__init__(self, code_str, namespace, pre_code=pre_code,
+        Code.__init__(self, name, code_str, namespace, pre_code=pre_code,
                       post_code=post_code, language=language)
         self._weave_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']

@@ -40,9 +40,9 @@ C = CodeGenConnection(H, G, 'I', modulation='mod', structure=structure,
 for i in xrange(len(G)):
     C[i, i] = 1
 
-G._state_updater = CodeGenStateUpdater(eqs, euler, language, clock=G.clock)
-G._threshold = CodeGenThreshold(threshold, language)
-G._resetfun = CodeGenReset(reset, language)
+G._state_updater = CodeGenStateUpdater(G, euler, language, clock=G.clock)
+G._threshold = CodeGenThreshold(G, threshold, language)
+G._resetfun = CodeGenReset(G, reset, language)
 
 M = MultiStateMonitor(G, record=True)
 Msp = SpikeMonitor(G)

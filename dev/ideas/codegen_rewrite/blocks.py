@@ -99,7 +99,7 @@ class PythonIfBlock(IfBlock):
 class CIfBlock(IfBlock):
     def __init__(self, cond, content, dependencies=None, resolved=None):
         if dependencies is None:
-            dependencies = set(get_identifiers(cond))
+            dependencies = set([Read(x) for x in get_identifiers(cond)])
         if resolved is None:
             resolved = set()
         start = 'if({cond})\n{{'.format(cond=cond)

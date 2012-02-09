@@ -9,62 +9,64 @@ from brian.inspection import namespace
 __all__ = ['CodeGenThreshold']
 
 class CodeGenThreshold(Threshold):
-    def __init__(self, inputcode, language, level=0):
+    def __init__(self, group, inputcode, language, level=0):
         inputcode = inputcode.strip()
         self.namespace = namespace(inputcode, level=level+1)
         self.inputcode = inputcode
         self.language = language
         self.prepared = False
+        P = group
+        ns = self.namespace
+        self._inputcode = freeze_with_equations(self.inputcode, P._eqs, ns)
+        block = make_threshold_block(P, self.inputcode, self.language)
+        symbols = get_neuron_group_symbols(P, self.language)
+        symbols['_neuron_index'] = SliceIndex('_neuron_index',
+                                              '0',
+                                              '_num_neurons',
+                                              self.language,
+                                              all=True)
+        if self.language.name=='c':
+            symbols['_numspikes'] = NumSpikesSymbol('_numspikes',
+                                                    self.language)
+        if self.language.name=='gpu':
+            _arr_spiked_bool = zeros(len(P), dtype=bool)
+            symbols['_spiked'] = ArraySymbol(_arr_spiked_bool,
+                                             '_spiked',
+                                             self.language,
+                                             index='_neuron_index',
+                                             array_name='_arr_spiked_bool',
+                                             )
+            self._spiked_symbol = symbols['_spiked']
+            self._arr_spiked_bool = _arr_spiked_bool
+        code = self.code = block.generate('threshold', self.language,
+                                          symbols)
+        print 'THRESHOLD'
+        print self.code.code_str
+        ns = self.code.namespace
+        ns['dt'] = P.clock._dt
+        ns['_num_neurons'] = len(P)
+        if self.language.name=='python':
+            def threshold_func(P):
+                code()
+                return ns['_spikes_bool'].nonzero()[0]
+        elif self.language.name=='c':
+            ns['_spikes'] = zeros(len(P), dtype=int)
+            def threshold_func(P):
+                code()
+                return ns['_spikes'][:ns['_arr__numspikes'][0]]
+        elif self.language.name=='gpu':
+            ns['_arr_spiked_bool'] = _arr_spiked_bool
+            ns['_num_gpu_indices'] = len(P)
+            # TODO: this threshold func should do nothing on GPU unless
+            # we want to force sync, or alternatively we can do a
+            # compaction on the GPU and then return that
+            def threshold_func(P):
+                code()
+                code.mem_man.copy_to_host('_arr_spiked_bool')
+                return ns['_arr_spiked_bool'].nonzero()[0]
+        self.threshold_func = threshold_func
 
     def __call__(self, P):
-        if not self.prepared:
-            ns = self.namespace
-            self._inputcode = freeze_with_equations(self.inputcode, P._eqs, ns)
-            block = make_threshold_block(P, self.inputcode, self.language)
-            symbols = get_neuron_group_symbols(P, self.language)
-            symbols['_neuron_index'] = SliceIndex('_neuron_index',
-                                                  '0',
-                                                  '_num_neurons',
-                                                  self.language,
-                                                  all=True)
-            if self.language.name=='c':
-                symbols['_numspikes'] = NumSpikesSymbol('_numspikes',
-                                                        self.language)
-            if self.language.name=='gpu':
-                _arr_spiked_bool = zeros(len(P), dtype=bool)
-                symbols['_spiked'] = ArraySymbol(_arr_spiked_bool,
-                                                 '_spiked',
-                                                 self.language,
-                                                 index='_neuron_index',
-                                                 array_name='_arr_spiked_bool',
-                                                 )
-            code = self.code = block.generate(self.language, symbols)
-            print 'THRESHOLD'
-            print self.code.code_str
-            ns = self.code.namespace
-            ns['dt'] = P.clock._dt
-            ns['_num_neurons'] = len(P)
-            if self.language.name=='python':
-                def threshold_func(P):
-                    code()
-                    return ns['_spikes_bool'].nonzero()[0]
-            elif self.language.name=='c':
-                ns['_spikes'] = zeros(len(P), dtype=int)
-                def threshold_func(P):
-                    code()
-                    return ns['_spikes'][:ns['_arr__numspikes'][0]]
-            elif self.language.name=='gpu':
-                ns['_arr_spiked_bool'] = _arr_spiked_bool
-                ns['_num_gpu_indices'] = len(P)
-                # TODO: this threshold func should do nothing on GPU unless
-                # we want to force sync, or alternatively we can do a
-                # compaction on the GPU and then return that
-                def threshold_func(P):
-                    code()
-                    code.mem_man.copy_to_host('_arr_spiked_bool')
-                    return ns['_arr_spiked_bool'].nonzero()[0]
-            self.threshold_func = threshold_func
-            self.prepared = True
         ns = self.code.namespace
         ns['t'] = P.clock._t
         return self.threshold_func(P)

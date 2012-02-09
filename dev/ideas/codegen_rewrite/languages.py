@@ -9,8 +9,8 @@ __all__ = ['Language',
 class Language(object):
     def __init__(self, name):
         self.name = name.strip().lower()
-    def code_object(self, code_str, namespace):
-        return self.CodeObjectClass(code_str, namespace, language=self)
+    def code_object(self, name, code_str, namespace):
+        return self.CodeObjectClass(name, code_str, namespace, language=self)
 
 class PythonLanguage(Language):
     CodeObjectClass = PythonCode
