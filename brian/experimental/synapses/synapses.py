@@ -164,8 +164,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 post=post+'\nlastupdate=t\n'
 
         # Pre and postsynaptic indexes (synapse -> pre/post)
-        self.presynaptic=DynamicArray(0,dtype=smallest_inttype(len(source))) # this should depend on number of neurons
-        self.postsynaptic=DynamicArray(0,dtype=smallest_inttype(len(target))) # this should depend on number of neurons
+        self.presynaptic=DynamicArray1D(0,dtype=smallest_inttype(len(source))) # this should depend on number of neurons
+        self.postsynaptic=DynamicArray1D(0,dtype=smallest_inttype(len(target))) # this should depend on number of neurons
 
         model=SynapticEquations(model,level=level+1)
         
@@ -275,14 +275,14 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self._S[:]=S
 
         # Pre and postsynaptic delays (synapse -> delay_pre/delay_post)
-        self._delay_pre=[DynamicArray(len(self),dtype=int16) for _ in pre_list] # max 32767 delays
-        self._delay_post=DynamicArray(len(self),dtype=int16) # Actually only useful if there is a post code!
+        self._delay_pre=[DynamicArray1D(len(self),dtype=int16) for _ in pre_list] # max 32767 delays
+        self._delay_post=DynamicArray1D(len(self),dtype=int16) # Actually only useful if there is a post code!
         
         # Pre and postsynaptic synapses (i->synapse indexes)
         max_synapses=2147483647 # it could be explicitly reduced by a keyword
         # We use a loop instead of *, otherwise only 1 dynamic array is created
-        self.synapses_pre=[DynamicArray(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.source))]
-        self.synapses_post=[DynamicArray(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.target))]
+        self.synapses_pre=[DynamicArray1D(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.source))]
+        self.synapses_post=[DynamicArray1D(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.target))]
 
         # Code generation
         self._binomial = lambda n,p:np.random.binomial(array(n,dtype=int),p)
