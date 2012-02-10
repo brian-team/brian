@@ -34,7 +34,7 @@ try:
 except ImportError:
     raise ImportError('You need to have vbench installed: https://github.com/wesm/vbench')
 
-from benchmark_connections import bench_sparse, bench_dynamic, bench_dense
+import benchmark_connections, benchmark_spikegenerator, benchmark_multiplespikegenerator
 
 # NECESSARY CHANGE HERE: ******************************************************
 # Use an absolute path -- if the directory does not exist it will be created
@@ -70,7 +70,15 @@ START_DATE = datetime(2008, 9, 23) # Brian version 1.0.0
 
 repo = GitRepo(REPO_PATH)
 
-benchmarks = [bench_sparse, bench_dynamic, bench_dense]
+#TODO: Replace this with an automatic search for benchmarks
+benchmarks = [benchmark_connections.bench_sparse,
+              benchmark_connections.bench_dynamic,
+              benchmark_connections.bench_dense,
+              benchmark_spikegenerator.bench_pairs,
+              benchmark_spikegenerator.bench_array,
+              benchmark_spikegenerator.bench_bigarray,
+              benchmark_multiplespikegenerator.bench_multiple]
+
 runner = BenchmarkRunner(benchmarks, REPO_PATH, REPO_URL, BUILD, DB_PATH,
                          TMP_DIR, PREPARE, run_option='eod',
                          start_date=START_DATE)
