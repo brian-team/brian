@@ -16,7 +16,7 @@ from brian.experimental.synapses import *
 #set_global_preferences(useweave=True, usecodegen=False)
 set_global_preferences(useweave=False, usecodegen=False)
 
-use_synapses = True
+use_synapses = False
 reproduce_connection = True
 do_callgraph = False
 
@@ -72,25 +72,19 @@ if use_synapses:
     Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we')
     Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi')
     if reproduce_connection:
+        def f(i, j):
+            x = zeros(len(j), dtype=bool)
+            x[C[i, :].ind] = True
+            return x
+        C = Ce
+        Se[:, :] = 'f(i,j)'
+        C = Ci
+        Si[:, :] = 'f(i,j)'
         for i in xrange(len(Pe)):
-            x = Ce[i, :]
-            Se[i, x.ind] = True
             Se.delay[i, :] = Ce.delay[i, :]
-            if False:
-                # check that it really is producing the same connection structure
-                # it seems that it is
-                syn = Se.synapses_pre[i].data
-                tgts = Se.postsynaptic.data[syn]
-                delays = Se.delay.data[syn]
-                if not (tgts==x.ind).all():
-                    print 'tgts!=x.ind'
-                if not (delays==asarray(Ce.delay[i, :]/defaultclock.dt, dtype=int)).all():
-                    print 'delays!=Ce.delay'
         for i in xrange(len(Pi)):
-            x = Ci[i, :]
-            Si[i, x.ind] = True
             Si.delay[i, :] = Ci.delay[i, :]
-        del x, Ce, Ci
+        del Ce, Ci
         import gc
         gc.collect()
     else:
