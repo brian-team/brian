@@ -1,7 +1,7 @@
 from numpy import *
 import gc
 
-__all__ = ['DynamicArray']
+__all__ = ['DynamicArray', 'DynamicArray1D']
 
 def getslices(shape):
     return tuple(slice(0, x) for x in shape)
@@ -169,10 +169,42 @@ class DynamicArray(object):
     
     def __repr__(self):
         return self.data.__repr__()
+
+
+class DynamicArray1D(DynamicArray):
+    '''
+    Version of :class:`DynamicArray` with specialised ``resize`` method designed
+    to be more efficient.
+    '''
+    def resize(self, newshape):
+        shape, = self.shape # we work with int shapes only
+        if newshape<=shape:
+            return
+        datashape, = self._data.shape
+        if newshape>datashape:
+            newdatashape = max(newshape, int(shape*self.factor)+1)
+            if self.use_numpy_resize and self._data.flags['C_CONTIGUOUS']:
+                self.data = None
+                self._data.resize(newdatashape, refcheck=self.refcheck)
+            else:
+                newdata = zeros(newdatashape, dtype=self.dtype)
+                newdata[:shape] = self.data
+                self._data = newdata
+        self.data = self._data[:newshape]
+        self.shape = (newshape,)      
     
             
 if __name__=='__main__':
     if 1:
+        x = DynamicArray1D(2, use_numpy_resize=True)
+        x[0] = 1
+        x[1] = 2
+        print x
+        x.resize(3)
+        print x, x._data
+        x.resize(4)
+        print x, x._data
+    if 0:
         x = DynamicArray((2, 2), use_numpy_resize=True)
         x[0, 0] = 0
         x[0, 1] = 1
