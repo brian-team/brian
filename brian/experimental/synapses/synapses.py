@@ -913,7 +913,8 @@ def invert_array(x,dtype=int):
     xs = x[I]
     # This below does the same as unique, except the indices point to first time
     # each number appears in the array 
-    indices=hstack(([0],where(diff(xs)!=0)[0]+1))
+    # See also code for unique (doesn't use diff, not sure which one is faster)
+    indices=hstack(([0],where(diff(xs)!=0)[0]+1)) # or concatenate?
     u=xs[indices]
     y={}
     for j,i in enumerate(u[:-1]):
