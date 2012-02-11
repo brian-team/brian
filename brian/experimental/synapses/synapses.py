@@ -27,7 +27,7 @@ except:
     warnings.warn('sympy not installed: some features in Synapses will not be available')
     use_sympy = False
 
-__all__ = ['Synapses','slice_to_test']
+__all__ = ['Synapses','slice_to_test','invert_array']
 
 class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     '''Set of synapses between two neuron groups
@@ -478,7 +478,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                     code=indent(update_code(code, '_synapses[_i]', '_u'), 1))
 #        print code_str
             
-        log_debug('brian.synapses', '\nPRE CODE:\n'+code_str)
+        log_debug('brian.synapses', '\nCODE:\n'+code_str)
         
         # Compile
         compiled_code = compile(code_str, "Synaptic code", "exec")
@@ -911,7 +911,10 @@ def invert_array(x,dtype=int):
     '''
     I = argsort(x) # ,kind='mergesort') # uncomment for a stable sort
     xs = x[I]
-    u,indices=unique(xs,return_index=True)
+    # This below does the same as unique, except the indices point to first time
+    # each number appears in the array 
+    indices=hstack(([0],where(diff(xs)!=0)[0]+1))
+    u=xs[indices]
     y={}
     for j,i in enumerate(u[:-1]):
         y[i]=array(I[indices[j]:indices[j+1]],dtype=dtype)
