@@ -239,7 +239,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
     TODO: update size numbers when use_minimal_indices=True for different
     architectures.
     '''
-    def __init__(self, val, column_access=True, use_minimal_indices=True, **kwds):
+    def __init__(self, val, column_access=True, use_minimal_indices=False, **kwds):
         self._useaccel = get_global_preference('useweave')
         self._cpp_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
