@@ -79,13 +79,14 @@ benchmarks = [benchmark_connections.bench_sparse,
               benchmark_spikegenerator.bench_bigarray,
               benchmark_multiplespikegenerator.bench_multiple]
 
-runner = BenchmarkRunner(benchmarks, REPO_PATH, REPO_URL, BUILD, DB_PATH,
-                         TMP_DIR, PREPARE, run_option='eod',
-                         start_date=START_DATE)
-runner.run()
-
-# Plot the results
-for benchmark in benchmarks:
-    benchmark.plot(DB_PATH)
-
-plt.show()    
+if __name__ == '__main__':
+    runner = BenchmarkRunner(benchmarks, REPO_PATH, REPO_URL, BUILD, DB_PATH,
+                             TMP_DIR, PREPARE, run_option='eod',
+                             start_date=START_DATE)
+    runner.run()
+    
+    # Plot the results
+    for benchmark in benchmarks:
+        benchmark.plot(DB_PATH)
+    
+    plt.show()    
