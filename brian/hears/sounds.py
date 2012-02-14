@@ -720,7 +720,7 @@ class Sound(BaseSound, numpy.ndarray):
         if phase.size>nchannels and nchannels==1:
             nchannels = phase.size
         if frequency.size==nchannels:
-            frequency.shape = (nchannels, 1)
+            frequency.shape = (1, nchannels)
         if phase.size==nchannels:
             phase.shape =(nchannels, 1)
         t = arange(0, duration, 1)/samplerate
