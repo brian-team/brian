@@ -95,7 +95,7 @@ class SpikeMonitor(Connection, Monitor):
         numbers that have fired called each step, to define
         custom spike monitoring.
     
-    Has three attributes:
+    Has attributes:
     
     ``nspikes``
         The number of recorded spikes
@@ -106,6 +106,9 @@ class SpikeMonitor(Connection, Monitor):
         A dictionary with keys the indices of the neurons, and values an
         array of the spike times of that neuron. For example,
         ``t=M.spiketimes[3]`` gives the spike times for neuron 3.
+    ``it``
+        Return a tuple ``(i, t)`` where ``i`` and ``t`` are the arrays of spike
+        indices and corresponding spike times (int and float).
 
     For ``M`` a :class:`SpikeMonitor`, you can also write:
     
@@ -179,6 +182,11 @@ class SpikeMonitor(Connection, Monitor):
                 self._spiketimes[i] = array(self._spiketimes[i])
         return self._spiketimes
     spiketimes = property(fget=getspiketimes)
+    
+    @property
+    def it(self):
+        i, t = zip(*self.spikes)
+        return array(i, dtype=int), array(t, dtype=float)
 
 #    def getvspikes(self):
 #        if isinstance(self.source, VectorizedNeuronGroup):
