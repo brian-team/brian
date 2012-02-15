@@ -25,10 +25,14 @@ bench_sparse = Benchmark(statement,
                          common_setup + (setup_template % {'neurons' : 10,
                                                            'structure' : 'sparse'}),
                          name='sparse connection matrix (10x10)')
+
+# Set a start date here because the benchmark fails for earlier revisions
 bench_dynamic = Benchmark(statement,
                           common_setup + (setup_template % {'neurons' : 5,
                                                             'structure' : 'dynamic'}),
-                          name='dynamic connection matrix (5x5)')
+                          name='dynamic connection matrix (5x5)',
+                          start_date = datetime(2010, 2, 4))
+
 bench_dense = Benchmark(statement,
                         common_setup + (setup_template % {'neurons' : 10,
                                                           'structure' : 'dense'}),

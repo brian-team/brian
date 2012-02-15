@@ -30,56 +30,62 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 
 try:
-    from vbench.api import BenchmarkRunner, GitRepo
+    from vbench.api import Benchmark, BenchmarkRunner, GitRepo
 except ImportError:
     raise ImportError('You need to have vbench installed: https://github.com/wesm/vbench')
-
-import benchmark_connections, benchmark_spikegenerator, benchmark_multiplespikegenerator
 
 # NECESSARY CHANGE HERE: ******************************************************
 # Use an absolute path -- if the directory does not exist it will be created
 PATH = '/home/marcel/data/vbench'
 # *****************************************************************************
 
-SVN_URL = 'https://neuralensemble.org/svn/brian/trunk'
-REPO_PATH = os.path.join(PATH, 'brian-trunk')
-if not os.path.exists(REPO_PATH):
-    # create the repository
-    os.makedirs(REPO_PATH)
-    os.system('git svn clone %s %s' % (SVN_URL, REPO_PATH))
-else:
-    # update the repository (can only be called from the directory...) 
-    os.chdir(REPO_PATH)
-    os.system('git svn fetch')
-    
-REPO_URL = 'file://' + REPO_PATH
 DB_PATH = os.path.join(PATH, 'benchmarks.db')
 
-TMP_DIR = tempfile.mkdtemp(suffix='vbench')
- 
-# Those two are not really needed at the moment as no C extensions are compiled
-# by default 
-PREPARE = """
-python2 setup.py clean
-"""
-BUILD = """
-python2 setup.py build_ext
-"""
+# inspired by https://github.com/wesm/pandas/blob/master/vb_suite/suite.py
+modules = ['benchmark_connections',
+           'benchmark_spikegenerator',
+           'benchmark_multiplespikegenerator']
 
-START_DATE = datetime(2008, 9, 23) # Brian version 1.0.0
+by_module = {}
+benchmarks = []
 
-repo = GitRepo(REPO_PATH)
-
-#TODO: Replace this with an automatic search for benchmarks
-benchmarks = [benchmark_connections.bench_sparse,
-              benchmark_connections.bench_dynamic,
-              benchmark_connections.bench_dense,
-              benchmark_spikegenerator.bench_pairs,
-              benchmark_spikegenerator.bench_array,
-              benchmark_spikegenerator.bench_bigarray,
-              benchmark_multiplespikegenerator.bench_multiple]
+# automatically adds all the benchmarks from the above modules
+for modname in modules:
+    ref = __import__(modname)
+    by_module[modname] = [v for v in ref.__dict__.values()
+                          if isinstance(v, Benchmark)]
+    benchmarks.extend(by_module[modname])
 
 if __name__ == '__main__':
+    SVN_URL = 'https://neuralensemble.org/svn/brian/trunk'
+    REPO_PATH = os.path.join(PATH, 'brian-trunk')
+    if not os.path.exists(REPO_PATH):
+        # create the repository
+        os.makedirs(REPO_PATH)
+        os.system('git svn clone %s %s' % (SVN_URL, REPO_PATH))
+    else:
+        # update the repository (can only be called from the directory...) 
+        os.chdir(REPO_PATH)
+        os.system('git svn rebase')
+        os.system('git svn fetch')
+        
+    REPO_URL = 'file://' + REPO_PATH    
+    
+    TMP_DIR = tempfile.mkdtemp(suffix='vbench')
+     
+    # Those two are not really needed at the moment as no C extensions are compiled
+    # by default 
+    PREPARE = """
+    python2 setup.py clean
+    """
+    BUILD = """
+    python2 setup.py build_ext
+    """
+    
+    START_DATE = datetime(2008, 9, 23) # Brian version 1.0.0
+    
+    repo = GitRepo(REPO_PATH)
+    
     runner = BenchmarkRunner(benchmarks, REPO_PATH, REPO_URL, BUILD, DB_PATH,
                              TMP_DIR, PREPARE, run_option='eod',
                              start_date=START_DATE)
