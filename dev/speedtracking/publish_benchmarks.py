@@ -76,7 +76,10 @@ for idx, benchmark in enumerate(benchmarks):
     # prepare the graph
     print '\tCreating graph'
     tmp_path = tempfile.mktemp(suffix='.png')   
-    benchmark.plot(DB_PATH)        
+    benchmark.plot(DB_PATH)
+    ax = plt.axis()
+    plt.ylim(0, ax[3])
+    # TODO: Better xticks
     plt.savefig(tmp_path, dpi=150)
     
     print '\tUploading graph'

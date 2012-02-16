@@ -23,7 +23,7 @@ treating improvements/regressions in external libraries as numpy/scipy as
 improvements /regressions in Brian.
 '''
 
-import os
+import os, sys
 import tempfile
 from datetime import datetime
 
@@ -68,31 +68,28 @@ if __name__ == '__main__':
         os.chdir(REPO_PATH)
         os.system('git svn rebase')
         os.system('git svn fetch')
-        
-    REPO_URL = 'file://' + REPO_PATH    
-    
+
+    REPO_URL = 'file://' + REPO_PATH
+
     TMP_DIR = tempfile.mkdtemp(suffix='vbench')
-     
+
     # Those two are not really needed at the moment as no C extensions are compiled
-    # by default 
-    PREPARE = """
-    python2 setup.py clean
-    """
-    BUILD = """
-    python2 setup.py build_ext
-    """
-    
+    # by default
+    # TODO: Does using sys.executable here work on Windows? 
+    PREPARE = "%s setup.py clean" % sys.executable
+    BUILD = "%s setup.py build_ext" % sys.executable
+
     START_DATE = datetime(2008, 9, 23) # Brian version 1.0.0
-    
+
     repo = GitRepo(REPO_PATH)
-    
+
     runner = BenchmarkRunner(benchmarks, REPO_PATH, REPO_URL, BUILD, DB_PATH,
-                             TMP_DIR, PREPARE, run_option='eod',
+                             TMP_DIR, PREPARE, run_option=10,
                              start_date=START_DATE)
     runner.run()
-    
+
     # Plot the results
     for benchmark in benchmarks:
         benchmark.plot(DB_PATH)
-    
-    plt.show()    
+
+    plt.show()

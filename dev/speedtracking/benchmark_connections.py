@@ -5,6 +5,11 @@ common_setup = """
 from brian import *
 """
 
+weave_setup = """
+set_global_preferences(useweave=True,
+                       gcc_options=['-march=native', '-Ofast'])
+"""
+
 setup_template = """
 s = arange(%(neurons)d)
 class thr(Threshold):
@@ -21,20 +26,59 @@ net.run(defaultclock.dt)
 
 statement = "net.run(1 * second)"
 
+# Sparse matrices
 bench_sparse = Benchmark(statement,
-                         common_setup + (setup_template % {'neurons' : 10,
-                                                           'structure' : 'sparse'}),
+                         common_setup + \
+                         setup_template % {'neurons' : 10,
+                                           'structure' : 'sparse'},
                          name='sparse connection matrix (10x10)')
 
+bench_sparse100 = Benchmark(statement,
+                            common_setup + \
+                            setup_template % {'neurons' : 100,
+                                              'structure' : 'sparse'},
+                            name='sparse connection matrix (100x100)')
+bench_sparse100w = Benchmark(statement,
+                             common_setup + weave_setup + \
+                             setup_template % {'neurons' : 100,
+                                               'structure' : 'sparse'},
+                             name='sparse connection matrix (100x100) with weave')
+
+# Dynamic matrices
 # Set a start date here because the benchmark fails for earlier revisions
+start_dynamic = datetime(2010, 2, 4)
 bench_dynamic = Benchmark(statement,
-                          common_setup + (setup_template % {'neurons' : 5,
-                                                            'structure' : 'dynamic'}),
+                          common_setup + \
+                          setup_template % {'neurons' : 5,
+                                            'structure' : 'dynamic'},
                           name='dynamic connection matrix (5x5)',
-                          start_date = datetime(2010, 2, 4))
+                          start_date=start_dynamic)
+bench_dynamic50 = Benchmark(statement,
+                            common_setup + \
+                            setup_template % {'neurons' : 50,
+                                              'structure' : 'dynamic'},
+                            name='dynamic connection matrix (50x50)',
+                            start_date=start_dynamic)
+bench_dynamic50w = Benchmark(statement,
+                             common_setup + weave_setup + \
+                             setup_template % {'neurons' : 50,
+                                               'structure' : 'dynamic'},
+                             name='dynamic connection matrix (50x50) with weave',
+                             start_date=start_dynamic)
 
+# Dense matrices
 bench_dense = Benchmark(statement,
-                        common_setup + (setup_template % {'neurons' : 10,
-                                                          'structure' : 'dense'}),
+                        common_setup + \
+                        setup_template % {'neurons' : 10,
+                                          'structure' : 'dense'},
                         name='dense connection matrix (10x10)')
-
+bench_dense100 = Benchmark(statement,
+                           common_setup + \
+                           setup_template % {'neurons' : 100,
+                                             'structure' : 'dense'},
+                           name='dense connection matrix (100x100)')
+bench_dense100w = Benchmark(statement,
+                            common_setup + weave_setup + \
+                            setup_template % {'neurons' : 100,
+                                              'structure' : 'dense'},
+                            name='dense connection matrix (100x100) with weave')
