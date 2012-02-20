@@ -99,7 +99,7 @@ for idx, benchmark in enumerate(benchmarks):
         unit = 's'
     else:
         divider = 1.
-        units = 'ms'
+        unit = 'ms'
     ax.plot(results.index, results / divider, color='#2e3436', linewidth=1.5)
     max_y = ax.get_ylim()[1]
     ax.set_ylim(0, max_y)
