@@ -44,7 +44,8 @@ DB_PATH = os.path.join(PATH, 'benchmarks.db')
 # inspired by https://github.com/wesm/pandas/blob/master/vb_suite/suite.py
 modules = ['benchmark_connections',
            'benchmark_spikegenerator',
-           'benchmark_multiplespikegenerator']
+           'benchmark_multiplespikegenerator',
+           'benchmark_stdp']
 
 by_module = {}
 benchmarks = []
@@ -84,7 +85,7 @@ if __name__ == '__main__':
     repo = GitRepo(REPO_PATH)
 
     runner = BenchmarkRunner(benchmarks, REPO_PATH, REPO_URL, BUILD, DB_PATH,
-                             TMP_DIR, PREPARE, run_option=10,
+                             TMP_DIR, PREPARE, run_option=10, #every 10 revs
                              start_date=START_DATE)
     runner.run()
 
