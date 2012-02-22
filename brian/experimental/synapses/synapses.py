@@ -545,8 +545,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             if nsynapses>1:
                 synapses_pre=hstack([synapses_pre+k*len(presynaptic) for k in range(nsynapses)]) # could be vectorised
                 synapses_post=hstack([synapses_post+k*len(presynaptic) for k in range(nsynapses)]) # could be vectorised
-                presynaptic=presynaptic.repeat(nsynapses)
-                postsynaptic=postsynaptic.repeat(nsynapses)
+                presynaptic=tile(presynaptic,nsynapses)
+                postsynaptic=tile(postsynaptic,nsynapses)
             # Make sure the type is correct
             synapses_pre=array(synapses_pre,dtype=self.synapses_pre[0].dtype)
             synapses_post=array(synapses_post,dtype=self.synapses_post[0].dtype)
