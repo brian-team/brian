@@ -60,6 +60,7 @@ class PythonThreshold(Threshold):
                 ns[var] = P.state(var)
             self._compiled_code = compile(outputcode, "PythonThreshold", "eval")
             self._prepared = True
+        self._ns['t'] = P.clock._t
         return eval(self._compiled_code, self._ns).nonzero()[0]
 
 

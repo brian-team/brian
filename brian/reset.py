@@ -204,6 +204,7 @@ class StringReset(Reset):
         self._namespace['_spikes_'] = spikes
         self._namespace['rand'] = self._Replacer(numpy.random.rand, len(spikes))
         self._namespace['randn'] = self._Replacer(numpy.random.randn, len(spikes))
+        self._namespace['t'] = P.clock._t
         for var in self._vars:
             self._namespace[var] = P.state(var)
         exec self._code in self._namespace
