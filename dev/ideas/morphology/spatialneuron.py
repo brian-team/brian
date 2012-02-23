@@ -16,9 +16,17 @@ from brian.units import *
 from brian.reset import NoReset
 from brian.stateupdater import StateUpdater
 from brian.equations import Equations
+from brian.inspection import *
+from brian.optimiser import *
 from brian.group import Group
 from itertools import count
 from brian.neurongroup import NeuronGroup
+try:
+    import sympy
+    use_sympy = True
+except:
+    warnings.warn('sympy not installed: some features in SpatialNeuron will not be available')
+    use_sympy = False
 
 __all__ = ['SpatialNeuron', 'CompartmentalNeuron']
 
@@ -103,6 +111,25 @@ class SpatialStateUpdater(StateUpdater):
     """
     def __init__(self, eqs, clock=None):
         self.eqs = eqs
+        if use_sympy:
+            '''
+            This extracts the total conductance from Im, and the
+            remaining current.
+            
+            TODO:
+            * First check conditional linearity of Im
+            * Move this to SpatialNeuron (equation crunching)
+            '''
+            eqs=self.eqs # an Equations object
+            membrane_eq=eqs._string['Im'] # the membrane equation
+            z=symbolic_eval(membrane_eq)
+            symbol_v=sympy.Symbol('v')
+            b=z.subs(symbol_v,0)
+            a=-sympy.simplify(z.subs(symbol_v,1)-b)
+            gtot_str="_gtot="+str(a)+": siemens/cm**2"
+            I0_str="_I0="+str(b)+": amp/cm**2"
+            print gtot_str
+            print I0_str
 
     def __len__(self):
         '''
@@ -117,9 +144,13 @@ if __name__ == '__main__':
     morpho = Morphology('oi24rpy1.CNG.swc') # visual L3 pyramidal cell
     print len(morpho), "compartments"
     El = -70 * mV
+    ENa = 50 * mV
     eqs = ''' # The same equations for the whole neuron, but possibly different parameter values
-    Im=gl*(El-v) : amp/cm**2 # distributed transmembrane current
+    Im=gl*(El-v)+gNa*m**3*(ENa-v) : amp/cm**2 # distributed transmembrane current
     gl : siemens/cm**2 # spatially distributed conductance
+    gNa : siemens/cm**2
+    dm/dt=(minf-m)/(0.3*ms) : 1
+    minf=1./(1+exp(-(v+30*mV)/(6*mV))) : 1
     '''
     neuron = SpatialNeuron(morphology=morpho, threshold="axon[50*um].v>0*mV", model=eqs, refractory=4 * ms, cm=0.9 * uF / cm ** 2, Ri=150 * ohm * cm)
     neuron.axon[0 * um:50 * um].gl = 1e-3 * siemens / cm ** 2
