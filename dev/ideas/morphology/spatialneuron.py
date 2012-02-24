@@ -38,11 +38,44 @@ class SpatialNeuron(NeuronGroup):
     def __init__(self, morphology=None, model=None, threshold=None, reset=NoReset(),
                  refractory=0 * ms, level=0,
                  clock=None, unit_checking=True,
-                 compile=False, freeze=False, cm=0.9 * uF / cm ** 2, Ri=150 * ohm * cm):
+                 compile=False, freeze=False, Cm=0.9 * uF / cm ** 2, Ri=150 * ohm * cm):
         clock = guess_clock(clock)
         N = len(morphology) # number of compartments
 
-        # Equations for morphology
+        if isinstance(model, str):
+            model = Equations(model, level=level + 1)
+
+        model += Equations('''
+        v:volt # membrane potential
+        ''')
+
+        # Process model equations (Im) to extract total conductance and the remaining current
+        if use_sympy:
+            try:
+                membrane_eq=model._string['Im'] # the membrane equation
+            except:
+                raise TypeError,"The transmembrane current Im must be defined"
+            # Check conditional linearity
+            ids=get_identifiers(membrane_eq)
+            _namespace=dict.fromkeys(ids,1.) # there is a possibility of problems here (division by zero)
+            _namespace['v']=AffineFunction()
+            eval(membrane_eq,model._namespace['v'],_namespace)
+            try:
+                eval(membrane_eq,model._namespace['v'],_namespace)
+            except: # not linear
+                raise TypeError,"The membrane current must be linear with respect to v"
+            # Extracts the total conductance from Im, and the remaining current
+            z=symbolic_eval(membrane_eq)
+            symbol_v=sympy.Symbol('v')
+            b=z.subs(symbol_v,0)
+            a=-sympy.simplify(z.subs(symbol_v,1)-b)
+            gtot_str="_gtot="+str(a)+": siemens/cm**2"
+            I0_str="_I0="+str(b)+": amp/cm**2"
+            model+=Equations(gtot_str+"\n"+I0_str)
+        else:
+            raise TypeError,"The Sympy package must be installed for SpatialNeuron"
+
+        # Equations for morphology (isn't it a duplicate??)
         eqs_morphology = Equations("""
         diameter : um
         length : um
@@ -52,20 +85,15 @@ class SpatialNeuron(NeuronGroup):
         area : um**2
         """)
 
-        # Create the state updater
-        if isinstance(model, str):
-            model = Equations(model, level=level + 1)
-        model += Equations('''
-        v:volt # membrane potential
-        #Im:amp/cm**2 # membrane current (should we have it?)
-        ''')
         full_model = model + eqs_morphology
+
+        # Create the state updater
         Group.__init__(self, full_model, N, unit_checking=unit_checking)
         self._eqs = model
-        self._state_updater = SpatialStateUpdater(model, clock)
         var_names = full_model._diffeq_names
-        self.cm = cm # could be a vector?
+        self.Cm = Cm # could be a vector?
         self.Ri = Ri
+        self._state_updater = SpatialStateUpdater(self, clock)
         S0 = {}
         # Fill missing units
         for key, value in full_model._units.iteritems():
@@ -109,38 +137,24 @@ class SpatialStateUpdater(StateUpdater):
     """
     State updater for compartmental models.
     """
-    def __init__(self, eqs, clock=None):
-        self.eqs = eqs
-        if use_sympy:
-            '''
-            TODO:
-            * Move this to SpatialNeuron (equation crunching)
-            '''
-            membrane_eq=self.eqs._string['Im'] # the membrane equation
-            # Check conditional linearity
-            ids=get_identifiers(membrane_eq)
-            _namespace=dict.fromkeys(ids,1.) # there is a possibility of problems here (division by zero)
-            _namespace['v']=AffineFunction()
-            try:
-                eval(membrane_eq,eqs._namespace['v'],_namespace)
-            except: # not linear
-                raise TypeError,"The membrane current must be linear with respect to v"
-            '''
-            This extracts the total conductance from Im, and the
-            remaining current.
-            '''
-            z=symbolic_eval(membrane_eq)
-            symbol_v=sympy.Symbol('v')
-            b=z.subs(symbol_v,0)
-            a=-sympy.simplify(z.subs(symbol_v,1)-b)
-            gtot_str="_gtot="+str(a)+": siemens/cm**2"
-            I0_str="_I0="+str(b)+": amp/cm**2"
-            """
-            TODO Here: add this in the equations object, and possibly replace
-            or delete Im.
-            """
-            print gtot_str
-            print I0_str
+    def __init__(self, neuron, clock=None):
+        self.eqs = neuron._eqs
+        self.neuron = neuron
+
+    def prepare(self):
+        '''
+        From Hines 1984 paper, discrete formula is:
+        A_plus*V(i+1)-(A_plus+A_minus)*V(i)+A_minus*V(i-1)=Cm/dt*(V(i,t+dt)-V(i,t))+gtot(i)*V(i)-I0(i)
+       
+        A_plus: i->i+1
+        A_minus: i->i-1
+        
+        This gives the following tridiagonal system:
+        A_plus*V(i+1)-(Cm/dt+gtot(i)+A_plus+A_minus)*V(i)+A_minus*V(i-1)=-Cm/dt*V(i,t)-I0(i)
+        '''
+        mid_diameter=.5*(self.neuron.diameter[:-1]+self.neuron.diameter[1:]) # i -> i+1
+        self.A=mid_diameter**2/(4*self.neuron.diameter*self.neuron.length**2*self.neuron.Ri)
+        # This won't work because of boundary problems
 
     def __len__(self):
         '''
@@ -163,7 +177,7 @@ if __name__ == '__main__':
     dm/dt=(minf-m)/(0.3*ms) : 1
     minf=1./(1+exp(-(v+30*mV)/(6*mV))) : 1
     '''
-    neuron = SpatialNeuron(morphology=morpho, threshold="axon[50*um].v>0*mV", model=eqs, refractory=4 * ms, cm=0.9 * uF / cm ** 2, Ri=150 * ohm * cm)
+    neuron = SpatialNeuron(morphology=morpho, threshold="axon[50*um].v>0*mV", model=eqs, refractory=4 * ms, Cm=0.9 * uF / cm ** 2, Ri=150 * ohm * cm)
     neuron.axon[0 * um:50 * um].gl = 1e-3 * siemens / cm ** 2
     print sum(neuron.axon.gl)
     print neuron.axon[40 * um].gl

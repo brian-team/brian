@@ -22,7 +22,6 @@ And possibly repeat (until convergence) (how many times?).
 
 The discretized longitudinal current is:
 a/(2*R)*(V[i+1]-2*V[i]+V[i-1])/dx**2
-where lambda**2=a/(2*R)
 
 Artificial gridpoints are used so that:
 (V[1]-V[-1])/(2*dx) = dV/dt(0)   # =0 in general
