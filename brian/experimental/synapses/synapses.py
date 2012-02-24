@@ -226,38 +226,33 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             vars=eqs._eventdriven.keys()
             var_set=set(vars)
             for var,RHS in eqs._eventdriven.iteritems():
-                #RHS=eqs._string[var]
                 ids=get_identifiers(RHS)
                 if len(set(list(ids)+[var]).intersection(var_set))==1:
                     # no external dynamic variable
                     # Now we test if it is a linear equation
                     _namespace=dict.fromkeys(ids,1.) # there is a possibility of problems here (division by zero)
+                    # plus units problems? (maybe not since these are identifiers too)
                     # another option is to use random numbers, but that doesn't solve all problems
                     _namespace[var]=AffineFunction()
                     try:
                         eval(RHS,eqs._namespace[var],_namespace)
-                        linear=True
                     except: # not linear
-                        linear=False
                         raise TypeError,"Cannot turn equation for "+var+" into event-driven code"
-                    if linear:
-                        z=symbolic_eval(RHS)
-                        symbol_var=sympy.Symbol(var)
-                        symbol_t=sympy.Symbol('t')-sympy.Symbol('lastupdate')
-                        b=z.subs(symbol_var,0)
-                        a=sympy.simplify(z.subs(symbol_var,1)-b)
-                        if a==0:
-                            expr=symbol_var+b*symbol_t
-                        else:
-                            expr=-b/a+sympy.exp(a*symbol_t)*(symbol_var+b/a)
-                        expr=var+'='+str(expr)
-                        # Replace pre and post code
-                        # N.B.: the differential equations are kept, we will probably want to remove them!
-                        pre_list=[expr+'\n'+pre for pre in pre_list]
-                        if post is not None:
-                            post=expr+'\n'+post
+                    z=symbolic_eval(RHS)
+                    symbol_var=sympy.Symbol(var)
+                    symbol_t=sympy.Symbol('t')-sympy.Symbol('lastupdate')
+                    b=z.subs(symbol_var,0)
+                    a=sympy.simplify(z.subs(symbol_var,1)-b)
+                    if a==0:
+                        expr=symbol_var+b*symbol_t
                     else:
-                        raise TypeError,"Cannot turn equation for "+var+" into event-driven code"
+                        expr=-b/a+sympy.exp(a*symbol_t)*(symbol_var+b/a)
+                    expr=var+'='+str(expr)
+                    # Replace pre and post code
+                    # N.B.: the differential equations are kept, we will probably want to remove them!
+                    pre_list=[expr+'\n'+pre for pre in pre_list]
+                    if post is not None:
+                        post=expr+'\n'+post
                 else:
                     raise TypeError,"Cannot turn equation for "+var+" into event-driven code"
         elif len(eqs._eventdriven)>0:

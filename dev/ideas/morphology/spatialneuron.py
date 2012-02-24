@@ -113,21 +113,32 @@ class SpatialStateUpdater(StateUpdater):
         self.eqs = eqs
         if use_sympy:
             '''
-            This extracts the total conductance from Im, and the
-            remaining current.
-            
             TODO:
-            * First check conditional linearity of Im
             * Move this to SpatialNeuron (equation crunching)
             '''
-            eqs=self.eqs # an Equations object
-            membrane_eq=eqs._string['Im'] # the membrane equation
+            membrane_eq=self.eqs._string['Im'] # the membrane equation
+            # Check conditional linearity
+            ids=get_identifiers(membrane_eq)
+            _namespace=dict.fromkeys(ids,1.) # there is a possibility of problems here (division by zero)
+            _namespace['v']=AffineFunction()
+            try:
+                eval(membrane_eq,eqs._namespace['v'],_namespace)
+            except: # not linear
+                raise TypeError,"The membrane current must be linear with respect to v"
+            '''
+            This extracts the total conductance from Im, and the
+            remaining current.
+            '''
             z=symbolic_eval(membrane_eq)
             symbol_v=sympy.Symbol('v')
             b=z.subs(symbol_v,0)
             a=-sympy.simplify(z.subs(symbol_v,1)-b)
             gtot_str="_gtot="+str(a)+": siemens/cm**2"
             I0_str="_I0="+str(b)+": amp/cm**2"
+            """
+            TODO Here: add this in the equations object, and possibly replace
+            or delete Im.
+            """
             print gtot_str
             print I0_str
 
