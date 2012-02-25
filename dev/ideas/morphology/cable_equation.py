@@ -1,10 +1,9 @@
 '''
 Simulation of a cable equation
 
-Seems to work more or less.
+Seems to work (matches examples/misc/cable).
 
 TODO:
-* Check w.r.t. analytical results for passive cable
 * Add active currents (state updater)
 * Check algorithm (e.g. w/ Hines)
 * Add point processes
@@ -45,28 +44,29 @@ x=scipy.linalg.solve_banded((lower,upper),ab,b)
     a[i,j]=ab[u+i-j,j]
 '''
 
-defaultclock.dt=0.01*ms
+defaultclock.dt=0.1*ms
 
-morpho=Cylinder(length=300*um, diameter=1*um, n=50, type='axon')
+morpho=Cylinder(length=1000*um, diameter=1*um, n=100, type='axon')
 
-El = -70 * mV
-gl = 1e-4 * siemens / cm ** 2
+El = 0 * mV
+gl = 0.02 * msiemens / cm ** 2
 
 # Typical equations
 eqs=''' # The same equations for the whole neuron, but possibly different parameter values
-Im=gl*(El-v) : amp/cm**2 # distributed transmembrane current
+Im=gl*(El-v)+I : amp/cm**2 # distributed transmembrane current
+I : amp/cm**2 # applied current
 '''
 
-neuron = SpatialNeuron(morphology=morpho, model=eqs, refractory=4 * ms, Cm=0.9 * uF / cm ** 2, Ri=150 * ohm * cm)
+neuron = SpatialNeuron(morphology=morpho, model=eqs, refractory=4 * ms, Cm=1 * uF / cm ** 2, Ri=100 * ohm * cm)
 neuron.v=El
-neuron.v[25]=El+100*mV
+neuron.I=0*amp/cm**2
+neuron.I[0]=.05 * nA/neuron.area[0]
 M=StateMonitor(neuron,'v',record=True)
 
-print neuron.Cm/gl
+print 'taum=',neuron.Cm/gl
 
-run(50*ms)
+run(200*ms)
 
-plot(M.times/ms,M[25])
-plot(M.times/ms,M[30])
-plot(M.times/ms,M[-1])
+for i in range(10):
+    plot(M.times/ms,M[i*10]/mV)
 show()

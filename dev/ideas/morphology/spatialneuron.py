@@ -92,7 +92,7 @@ class SpatialNeuron(NeuronGroup):
 
         # Create the state updater
         NeuronGroup.__init__(self, N, model=full_model, threshold=threshold, reset=reset, refractory=refractory,
-                             level=level + 1, clock=clock, unit_checking=unit_checking)
+                             level=level + 1, clock=clock, unit_checking=unit_checking, implicit=True)
 
         #Group.__init__(self, full_model, N, unit_checking=unit_checking, level=level+1)
         #self._eqs = model
@@ -146,6 +146,7 @@ class SpatialStateUpdater(StateUpdater):
         self.eqs = neuron._eqs
         self.neuron = neuron
         self._isprepared = False
+        self._state_updater=neuron._state_updater # to update the currents
 
     def prepare(self):
         '''
@@ -173,6 +174,8 @@ class SpatialStateUpdater(StateUpdater):
         if not self._isprepared:
             self.prepare()
             self._isprepared=True
+        # Update the membrane currents (should it be after (no real difference though))
+        self._state_updater(neuron)
         '''
         x=solve_banded((lower,upper),ab,b)
         lower = number of lower diagonals = 1
