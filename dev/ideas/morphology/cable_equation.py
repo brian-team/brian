@@ -1,15 +1,18 @@
 '''
 Simulation of a cable equation
+
+Seems to work more or less.
+
+TODO:
+* Check w.r.t. analytical results for passive cable
+* Add active currents (state updater)
+* Check algorithm (e.g. w/ Hines)
+* Add point processes
+* Add branches
 '''
 from brian import *
-
-# Typical equations
-eqs=''' # The same equations for the whole neuron, but possibly different parameter values
-Im=gl*(El-v)+gNa*m**3*h*(ENa-v) : amp/cm**2 # distributed transmembrane current
-gNa : siemens/cm**2 # spatially distributed conductance
-dm/dt=(minf-m)/tauinf : 1
-# etc
-'''
+from morphology import *
+from spatialneuron import *
 
 '''
 The simulation is in two stages:
@@ -41,3 +44,29 @@ x=scipy.linalg.solve_banded((lower,upper),ab,b)
         each row is one diagonal
     a[i,j]=ab[u+i-j,j]
 '''
+
+defaultclock.dt=0.01*ms
+
+morpho=Cylinder(length=300*um, diameter=1*um, n=50, type='axon')
+
+El = -70 * mV
+gl = 1e-4 * siemens / cm ** 2
+
+# Typical equations
+eqs=''' # The same equations for the whole neuron, but possibly different parameter values
+Im=gl*(El-v) : amp/cm**2 # distributed transmembrane current
+'''
+
+neuron = SpatialNeuron(morphology=morpho, model=eqs, refractory=4 * ms, Cm=0.9 * uF / cm ** 2, Ri=150 * ohm * cm)
+neuron.v=El
+neuron.v[25]=El+100*mV
+M=StateMonitor(neuron,'v',record=True)
+
+print neuron.Cm/gl
+
+run(50*ms)
+
+plot(M.times/ms,M[25])
+plot(M.times/ms,M[30])
+plot(M.times/ms,M[-1])
+show()

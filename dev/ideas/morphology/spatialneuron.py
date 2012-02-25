@@ -19,8 +19,11 @@ from brian.equations import Equations
 from brian.inspection import *
 from brian.optimiser import *
 from brian.group import Group
+from brian.clock import guess_clock
 from itertools import count
 from brian.neurongroup import NeuronGroup
+from scipy.linalg import solve_banded
+from numpy import zeros
 try:
     import sympy
     use_sympy = True
@@ -71,7 +74,7 @@ class SpatialNeuron(NeuronGroup):
             a=-sympy.simplify(z.subs(symbol_v,1)-b)
             gtot_str="_gtot="+str(a)+": siemens/cm**2"
             I0_str="_I0="+str(b)+": amp/cm**2"
-            model+=Equations(gtot_str+"\n"+I0_str)
+            model+=Equations(gtot_str+"\n"+I0_str,level=level+1) # better: explicit insertion with namespace of v
         else:
             raise TypeError,"The Sympy package must be installed for SpatialNeuron"
 
@@ -88,23 +91,23 @@ class SpatialNeuron(NeuronGroup):
         full_model = model + eqs_morphology
 
         # Create the state updater
-        Group.__init__(self, full_model, N, unit_checking=unit_checking)
-        self._eqs = model
-        var_names = full_model._diffeq_names
+        NeuronGroup.__init__(self, N, model=full_model, threshold=threshold, reset=reset, refractory=refractory,
+                             level=level + 1, clock=clock, unit_checking=unit_checking)
+
+        #Group.__init__(self, full_model, N, unit_checking=unit_checking, level=level+1)
+        #self._eqs = model
+        #var_names = full_model._diffeq_names
         self.Cm = Cm # could be a vector?
         self.Ri = Ri
         self._state_updater = SpatialStateUpdater(self, clock)
-        S0 = {}
+        #S0 = {}
         # Fill missing units
-        for key, value in full_model._units.iteritems():
-            if not key in S0:
-                S0[key] = 0 * value
-        self._S0 = [0] * len(var_names)
-        for var, i in zip(var_names, count()):
-            self._S0[i] = S0[var]
-
-        NeuronGroup.__init__(self, N, model=self._state_updater, threshold=threshold, reset=reset, refractory=refractory,
-                             level=level + 1, clock=clock, unit_checking=unit_checking)
+        #for key, value in full_model._units.iteritems():
+        #    if not key in S0:
+        #        S0[key] = 0 * value
+        #self._S0 = [0] * len(var_names)
+        #for var, i in zip(var_names, count()):
+        #    self._S0[i] = S0[var]
 
         # Insert morphology
         self.morphology = morphology
@@ -136,10 +139,13 @@ class SpatialNeuron(NeuronGroup):
 class SpatialStateUpdater(StateUpdater):
     """
     State updater for compartmental models.
+    
+    For the moment I assume there is a single branch (=axon).
     """
     def __init__(self, neuron, clock=None):
         self.eqs = neuron._eqs
         self.neuron = neuron
+        self._isprepared = False
 
     def prepare(self):
         '''
@@ -151,10 +157,43 @@ class SpatialStateUpdater(StateUpdater):
         
         This gives the following tridiagonal system:
         A_plus*V(i+1)-(Cm/dt+gtot(i)+A_plus+A_minus)*V(i)+A_minus*V(i-1)=-Cm/dt*V(i,t)-I0(i)
+        
+        Boundaries, one simple possibility (sealed ends):
+        -(Cm/dt+gtot(n)+A_minus)*V(n)+A_minus*V(n-1)=-Cm/dt*V(n,t)-I0(n)
+        A_plus*V(1)-(Cm/dt+gtot(0)+A_plus)*V(0)=-Cm/dt*V(0,t)-I0(0)
         '''
         mid_diameter=.5*(self.neuron.diameter[:-1]+self.neuron.diameter[1:]) # i -> i+1
-        self.A=mid_diameter**2/(4*self.neuron.diameter*self.neuron.length**2*self.neuron.Ri)
-        # This won't work because of boundary problems
+        self.Aplus=mid_diameter**2/(4*self.neuron.diameter[:-1]*self.neuron.length[:-1]**2*self.neuron.Ri)
+        self.Aminus=mid_diameter**2/(4*self.neuron.diameter[1:]*self.neuron.length[1:]**2*self.neuron.Ri)
+
+    def __call__(self, neuron):
+        '''
+        Updates the state variables.
+        '''
+        if not self._isprepared:
+            self.prepare()
+            self._isprepared=True
+        '''
+        x=solve_banded((lower,upper),ab,b)
+        lower = number of lower diagonals = 1
+        upper = number of upper diagonals = 1
+        ab = array(l+u+1,M)
+            each row is one diagonal
+        a[i,j]=ab[u+i-j,j]
+        '''
+        b=-neuron.Cm/neuron.clock.dt*neuron.v-neuron._I0
+        ab = zeros((3,len(neuron))) # part of it could be precomputed
+        # a[i,j]=ab[1+i-j,j]
+        # ab[1,:]=main diagonal
+        # ab[0,1:]=upper diagonal
+        # ab[2,:-1]=lower diagonal
+        ab[0,1:]=self.Aplus
+        ab[2,:-1]=self.Aminus
+        ab[1,:]=-neuron.Cm/neuron.clock.dt-neuron._gtot
+        ab[1,1:]-=self.Aplus
+        ab[1,:-1]-=self.Aminus
+        neuron.v=solve_banded((1,1),ab,b) #,overwrite_ab=True,overwrite_b=True
+        # TODO: update other variables
 
     def __len__(self):
         '''
