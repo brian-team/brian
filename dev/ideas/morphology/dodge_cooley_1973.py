@@ -1,5 +1,10 @@
 """
 Dodge and Cooley 1973. Model of a motoneuron.
+
+One problem is that the capacitance is different in the myelin.
+I would need to have a variable capacitance.
+
+Something seems wrong!
 """
 from brian import *
 from morphology import *
@@ -7,19 +12,31 @@ from spatialneuron import *
 
 defaultclock.dt=0.01*ms
 
-morpho=Cylinder(length=1000*um, diameter=10*um, n=100, type='axon')
+morpho=Morphology(n=30+6+5)
+# Dendrites
+morpho.length[:30]=4500*um/30
+morpho.diameter[:30]=30*2*um
+# Soma
+morpho.length[30:36]=300*um/6
+morpho.diameter[30:36]=30*2*um
+# Initial segment
+morpho.length[36:41]=100*um/5
+morpho.diameter[36:41]=5*2*um
+# I don't put it the myelin because the capacitance is different
+morpho.set_area()
+morpho.set_coordinates()
 
 El = 0 * mV
 ENa = 115*mV
 EK = -5 * mV
-gl = 1 * msiemens / cm ** 2
-gNa = 600*gl
-gK = 100*gl
 
 # Typical equations
 eqs=''' # The same equations for the whole neuron, but possibly different parameter values
-Im=gl*(El-v)+gNa*m**3*h*(ENa-v)+gK*n**4*(EK-v)+I : amp/cm**2 # distributed transmembrane current
+Im=gL*(El-v)+gNa*m**3*h*(ENa-v)+gK*n**4*(EK-v)+I : amp/cm**2 # distributed transmembrane current
 I:amp/cm**2 # applied current
+gNa:siemens/cm**2
+gK:siemens/cm**2
+gL:siemens/cm**2
 dm/dt=alpham*(1-m)-betam*m : 1
 dn/dt=alphan*(1-n)-betan*n : 1
 dh/dt=alphah*(1-h)-betah*h : 1
@@ -39,12 +56,22 @@ neuron.n=0
 neuron.I=0*amp/cm**2
 M=StateMonitor(neuron,'v',record=True)
 
-print 'taum=',neuron.Cm/gl
+neuron.gL[0:36] = 0.167 * msiemens / cm ** 2
+neuron.gNa[30:36] = 70* msiemens / cm ** 2
+neuron.gK[30:36] = 17.5* msiemens / cm ** 2
+
+neuron.gL[36:41] = 1 * msiemens / cm ** 2
+neuron.gNa[36:41] = 600* msiemens / cm ** 2
+neuron.gK[36:41] = 100* msiemens / cm ** 2
+
+neuron.gL[36:41] = 1 * msiemens / cm ** 2
+neuron.gNa[36:41] = 600* msiemens / cm ** 2
+neuron.gK[36:41] = 100* msiemens / cm ** 2
 
 run(50*ms)
-neuron.I[0]=100 * nA/neuron.area[0] # current injection at one end
-run(200*ms)
+neuron.I[30:36]=50 * nA/neuron.area[30] # current injection at the soma
+run(200*ms,report='text')
 
 for i in range(10):
-    plot(M.times/ms,M[i*10]/mV)
+    plot(M.times/ms,M[30+i]/mV)
 show()
