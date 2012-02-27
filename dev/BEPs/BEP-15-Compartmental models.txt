@@ -172,6 +172,14 @@ There is pseudo-code in Hines paper.
 Both methods rely on the conditional linearity of the equations, therefore it
 cannot work for all types of models (e.g. exponential model).
 
+To deal with branches, there are two options:
+1) Use Hines method.
+2) Use domain decomposition. This means using the linearity of the problem
+(it is linear once the other variables considered fixed, by conditional linearity)
+to solve the equation separately on each branch and then combine them linearly.
+The big advantage is that this way we can still use the solve_banded method of
+scipy.
+
 Neuron groups
 =============
 How to describe neuron groups with morphologies? Two options:
