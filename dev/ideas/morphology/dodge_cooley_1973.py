@@ -34,6 +34,8 @@ betan=0.25*exp((10*mV-v)/(80*mV))/ms : Hz
 neuron = SpatialNeuron(morphology=morpho, model=eqs, Cm=1 * uF / cm ** 2, Ri=100 * ohm * cm)
 neuron.v=El
 neuron.h=1
+neuron.m=0
+neuron.n=0
 neuron.I=0*amp/cm**2
 M=StateMonitor(neuron,'v',record=True)
 
