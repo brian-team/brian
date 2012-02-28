@@ -183,6 +183,8 @@ class SpatialStateUpdater(StateUpdater):
         ab = array(l+u+1,M)
             each row is one diagonal
         a[i,j]=ab[u+i-j,j]
+        
+        Something is probably wrong below
         '''
         b=-neuron.Cm/neuron.clock.dt*neuron.v-neuron._I0
         ab = zeros((3,len(neuron))) # part of it could be precomputed
