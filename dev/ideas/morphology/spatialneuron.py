@@ -162,6 +162,9 @@ class SpatialStateUpdater(StateUpdater):
         Boundaries, one simple possibility (sealed ends):
         -(Cm/dt+gtot(n)+A_minus)*V(n)+A_minus*V(n-1)=-Cm/dt*V(n,t)-I0(n)
         A_plus*V(1)-(Cm/dt+gtot(0)+A_plus)*V(0)=-Cm/dt*V(0,t)-I0(0)
+        
+        For the domain decomposition idea, most can be precalculated, and only the diagonal
+        elements (gtot(i)) and the RHS will change.
         '''
         mid_diameter=.5*(self.neuron.diameter[:-1]+self.neuron.diameter[1:]) # i -> i+1
         self.Aplus=mid_diameter**2/(4*self.neuron.diameter[:-1]*self.neuron.length[:-1]**2*self.neuron.Ri)
