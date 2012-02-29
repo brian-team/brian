@@ -183,8 +183,6 @@ class SpatialStateUpdater(StateUpdater):
         ab = array(l+u+1,M)
             each row is one diagonal
         a[i,j]=ab[u+i-j,j]
-        
-        Something is probably wrong below
         '''
         b=-neuron.Cm/neuron.clock.dt*neuron.v-neuron._I0
         ab = zeros((3,len(neuron))) # part of it could be precomputed
@@ -195,10 +193,9 @@ class SpatialStateUpdater(StateUpdater):
         ab[0,1:]=self.Aplus
         ab[2,:-1]=self.Aminus
         ab[1,:]=-neuron.Cm/neuron.clock.dt-neuron._gtot
-        ab[1,1:]-=self.Aplus
-        ab[1,:-1]-=self.Aminus
-        neuron.v=solve_banded((1,1),ab,b) #,overwrite_ab=True,overwrite_b=True
-        # TODO: update other variables
+        ab[1,1:]-=self.Aminus
+        ab[1,:-1]-=self.Aplus
+        neuron.v=solve_banded((1,1),ab,b,overwrite_ab=True,overwrite_b=True)
 
     def __len__(self):
         '''

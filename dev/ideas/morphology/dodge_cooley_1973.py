@@ -3,14 +3,12 @@ Dodge and Cooley 1973. Model of a motoneuron.
 
 One problem is that the capacitance is different in the myelin.
 I would need to have a variable capacitance.
-
-Something seems wrong!
 """
 from brian import *
 from morphology import *
 from spatialneuron import *
 
-defaultclock.dt=0.1*ms
+defaultclock.dt=0.01*ms
 
 morpho=Morphology(n=30+6+5)
 # Dendrites
@@ -64,14 +62,10 @@ neuron.gL[36:41] = 1 * msiemens / cm ** 2
 neuron.gNa[36:41] = 600* msiemens / cm ** 2
 neuron.gK[36:41] = 100* msiemens / cm ** 2
 
-neuron.gL[36:41] = 1 * msiemens / cm ** 2
-neuron.gNa[36:41] = 600* msiemens / cm ** 2
-neuron.gK[36:41] = 100* msiemens / cm ** 2
-
 run(50*ms)
-#neuron.I[30:36]=50 * nA/neuron.area[30] # current injection at the soma
-#run(200*ms,report='text')
+neuron.I[30:36]=100 * nA/neuron.area[30] # current injection at the soma
+run(200*ms,report='text')
 
-for i in range(7):
+for i in range(10):
     plot(M.times/ms,M[30+i]/mV)
 show()
