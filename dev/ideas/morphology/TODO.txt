@@ -1,0 +1,10 @@
+TODO
+----
+* Cm should be (optionally) a distributed variable (for myeline). It could be done simply by a check
+that Cm is in the equations (if Cm=None, then we use the distributed variable).
+* Write examples, including point processes
+* Think about point processes. Use the Synapses object?
+* Domain decomposition?
+* Morphology: adding morphologies (at least cylinders)?
+* Find out and specify the underlying electrical circuit (compartments/half-compartments?)
+* Check with what Neuron does

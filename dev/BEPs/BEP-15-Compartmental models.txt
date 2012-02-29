@@ -42,6 +42,7 @@ membrane current:
 eqs='''
 Im=gl*(El-v) : amp/cm**2
 '''
+This second option is better, I think.
 The NeuronGroup is then initialized with:
 * spatial model equations (above)
 * morphology (we need a new module here, maybe using the experimental one); the morphology is
@@ -49,7 +50,7 @@ a binary tree, except perhaps at the soma (e.g. 1 axon + 2 dendritic trees)
 * global parameters
 * point currents (possibly later), which could actually be non-spiking NeuronGroups.
 * maybe somatic equations, possibly as point currents
-* optionnally, threshold condition
+* optionally, threshold condition
 
 One point we may want to think about is calcium dynamics: we should check whether
 it can be incorporated in the same framework (Ca dynamics follows a sort of
@@ -62,7 +63,7 @@ I can imagine that there are at least two matrices:
 would be a (spatially distributed) variable, while columns would correspond to different compartments. A function
 would map location ("LLR.15*um") to compartment index. This would be the standard state matrix.
 * One or several for point processes, each row is a variable, columns index processes. Each such block could
-actually by handled as a NeuronGroup (with spike input, possibly a Connection structure).
+actually be handled as a NeuronGroup (with spike input, possibly a Connection structure).
 
 One also needs to find a simple way to set the distributed parameters, which could be the following:
 neuron["LLR.15*um":"LLR.30*um"] would create a subgroup that corresponds to a branch of the neuron. Internally,
