@@ -37,11 +37,11 @@ class GlobDirectoryWalker:
             except IndexError:
                 # pop next directory from stack
                 self.directory = self.stack.pop()
-                self.files = os.listdir(self.directory)
+                self.files = os.listdir(os.path.abspath(self.directory))
                 self.index = 0
             else:
                 # got a filename
-                fullname = os.path.join(self.directory, file)
+                fullname = os.path.join(os.path.abspath(self.directory), file)
                 if os.path.isdir(fullname) and not os.path.islink(fullname):
                     self.stack.append(fullname)
                 if fnmatch.fnmatch(file, self.pattern):
