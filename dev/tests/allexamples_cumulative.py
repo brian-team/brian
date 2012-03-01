@@ -80,5 +80,6 @@ if exceptions:
         print 'In file', fname, '-', inst
     print
     print len(examplefilenames) - len(exceptions), 'of', len(examplefilenames), 'ran OK, time taken', endtime - starttime, 'seconds'
+    sys.exit(1)
 else:
     print 'OK, time taken', endtime - starttime, 'seconds'

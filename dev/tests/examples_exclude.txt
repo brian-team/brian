@@ -1,8 +1,8 @@
 # Long ones - sometimes want to include these, sometimes not
-#COBAHH.py
-#Izhikevich_2006_Polychronization.py
-#STDP1.py
-#STDP2.py
+COBAHH.py
+Izhikevich_2006_Polychronization.py
+STDP1.py
+STDP2.py
 
 # Short ones
 parallelpython.py
