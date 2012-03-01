@@ -9,11 +9,11 @@ Note: removes all show() commands so that you don't have to wait for user input.
 import os, glob, sys, StringIO, time, gc, fnmatch
 import brian
 
-exclude_list = open('examples_exclude.txt', 'r').read().split('\n')
+exclude_list = open('examples_exclude.txt', 'U').read().split('\n')
 exclude_list = [f for f in exclude_list if not f.startswith('#') and f]
 
 if os.path.exists('examples_completed.txt'):
-    examples_completed = [f for f in open('examples_completed.txt', 'r').read().split('\n') if f]
+    examples_completed = [f for f in open('examples_completed.txt', 'U').read().split('\n') if f]
 else:
     examples_completed = []
 
@@ -55,7 +55,7 @@ stderr, sys.stderr = sys.stderr, StringIO.StringIO()
 for fname in examplefilenames:
     if fname not in examples_completed:
         try:
-            code = open(fname, 'r').read().replace('show()', '')
+            code = open(fname, 'U').read().replace('show()', '')
             ns = {}
             print 'Running example', fname,
             brian.reinit_default_clock()
