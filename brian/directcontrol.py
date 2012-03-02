@@ -313,15 +313,16 @@ class SpikeGeneratorGroup(NeuronGroup):
     def reinit(self):
         super(SpikeGeneratorGroup, self).reinit()
         self._threshold.reinit()
-
-    # changed due to the 2.5 issue
-    spiketimes = property(get_spiketimes, set_spiketimes)
+        
     def get_spiketimes(self):
         return self._threshold.spiketimes
     
     def set_spiketimes(self, values):
         self.__init__(self.N, values, period = self.period)
     
+    # changed due to the 2.5 issue
+    spiketimes = property(get_spiketimes, set_spiketimes)
+
 
 
 class FastSpikeGeneratorThreshold(Threshold):
