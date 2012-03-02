@@ -3,10 +3,17 @@ Runs all of the examples in the examples/ folder.
 
 This version 
 
-Note: removes all show() commands so that you don't have to wait for user input.
+Note: Uses the 'Agg' backend, therefore no plots are displayed on the screen and
+it is possible to run this script on a headless server.
 '''
 
 import os, glob, sys, StringIO, time, gc, fnmatch
+# Use the 'Agg' backend, normally used for saving plots to files
+# this has the advantage of no plots showing up and can be run 
+# without an X server or similar. This has to be done before importing brian
+# because brian imports pylab
+import matplotlib as _mpl
+_mpl.use('Agg')
 import brian
 
 exclude_list = open('examples_exclude.txt', 'U').read().split('\n')
@@ -55,7 +62,7 @@ stderr, sys.stderr = sys.stderr, StringIO.StringIO()
 for fname in examplefilenames:
     if fname not in examples_completed:
         try:
-            code = open(fname, 'U').read().replace('show()', '')
+            code = open(fname, 'U').read()
             ns = {}
             print 'Running example', fname,
             brian.reinit_default_clock()
