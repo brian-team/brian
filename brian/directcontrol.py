@@ -653,15 +653,17 @@ class PoissonInput(Connection):
         else:
             self.index = state
 
-    @property
-    def jitter(self):
+    def get_jitter(self):
         return self._jitter
-
-    @jitter.setter
-    def jitter(self, value):
+    
+    def set_jitter(self, value):
         self._jitter = value
         if value is not None:
             self.delays = zeros((self.copies, self.N))
+    
+    # changed due to the 2.5 issue
+    jitter = property(get_jitter, set_jitter)
+    
 
     def propagate(self, spikes):
         i = 0
