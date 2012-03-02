@@ -2,6 +2,7 @@
 COBAHH.py
 Izhikevich_2006_Polychronization.py
 STDP1.py
+STDP1_bis.py
 STDP2.py
 
 # Short ones
@@ -17,3 +18,15 @@ remotecontrolclient.py
 ircam_hrtf.py
 sound_localisation_model.py
 taskfarm.py
+
+# These need additional files
+Goodman_Brette_2010.py
+threshold_analysis.py
+lp_compensation.py
+
+# Needs graphics
+realtime_plotting.py
+
+# Needs pygame
+artificial_vowels.py
+sounds.py
