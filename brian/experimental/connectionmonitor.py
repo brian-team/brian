@@ -417,4 +417,3 @@ if __name__=='__main__':
                        #interpolation='nearest'
                        )
             show()
-        

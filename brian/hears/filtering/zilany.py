@@ -366,6 +366,3 @@ class ZILANY(CombinedFilterbank):
         updater=Filter_Update([C1_filter],c1_coefficients,samplerate,cf,bmTaumax,bmTaumin,cohc,TauWBMax,TauWBMin) #instantiation of the updater for the control path
         output = ControlFilterbank(C1_filter, NL2_control, [C1_filter],updater, update_interval)  #controler for the band pass filter of the control path
         self.set_output(output)
-
-        
-        #line 354

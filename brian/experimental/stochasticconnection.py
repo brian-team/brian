@@ -49,5 +49,3 @@ class StochasticConnection(Connection):
 
     def compress(self):
         pass
-
-            

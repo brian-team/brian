@@ -283,4 +283,3 @@ if __name__=='__main__':
         x.shrink((4, 2))
         x[:] += 1
         doprint()
-        

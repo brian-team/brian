@@ -45,4 +45,3 @@ if __name__ == '__main__':
     dur = time.clock()-t0
     print dur
     print min(criterion_values), max(criterion_values) 
-    

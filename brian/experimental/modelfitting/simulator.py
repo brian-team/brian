@@ -663,5 +663,3 @@ if __name__ == '__main__':
         plot(trace[i,:])
         plot(record_values[i,:])
     show()
-    
-    

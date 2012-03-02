@@ -329,5 +329,3 @@ class TanCarney(CombinedFilterbank):
 #        self.signal_cont = updater2.param
 #        self.set_output(BP_control)
         self.set_output(output2)
-
-    
