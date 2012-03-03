@@ -27,6 +27,12 @@ lp_compensation.py
 # Needs graphics
 realtime_plotting.py
 
-# Needs pygame
+# Need pygame
 artificial_vowels.py
 sounds.py
+
+# Need playdoh
+offline_electrode_compensation.py
+modelfitting_groups.py
+modelfitting_machines.py
+modelfitting.py
