@@ -153,21 +153,21 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if post is not None:
             post=flattened_docstring(post)
 
+        # Pre and postsynaptic indexes (synapse -> pre/post)
+        self.presynaptic=DynamicArray1D(0,dtype=smallest_inttype(len(source))) # this should depend on number of neurons
+        self.postsynaptic=DynamicArray1D(0,dtype=smallest_inttype(len(target))) # this should depend on number of neurons
+
+        if not isinstance(model,SynapticEquations):
+            model=SynapticEquations(model,level=level+1)
         # Insert the lastupdate variable if necessary (if it is mentioned in pre/post, or if there is event-driven code)
         expr=re.compile(r'\blastupdate\b')
-        if (re.compile(r'event\-driven').search(model) is not None) or \
+        if (len(model._eventdriven)>0) or \
            any([expr.search(pre) for pre in pre_list]) or \
            (post is not None and expr.search(post) is not None):
             model+='\nlastupdate : second\n'
             pre_list=[pre+'\nlastupdate=t\n' for pre in pre_list]
             if post is not None:
                 post=post+'\nlastupdate=t\n'
-
-        # Pre and postsynaptic indexes (synapse -> pre/post)
-        self.presynaptic=DynamicArray1D(0,dtype=smallest_inttype(len(source))) # this should depend on number of neurons
-        self.postsynaptic=DynamicArray1D(0,dtype=smallest_inttype(len(target))) # this should depend on number of neurons
-
-        model=SynapticEquations(model,level=level+1)
         
         # Identify pre and post variables in the model string
         # They are identified by _pre and _post suffixes
