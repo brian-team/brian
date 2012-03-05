@@ -255,7 +255,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                         post=expr+'\n'+post
                 else:
                     raise TypeError,"Cannot turn equation for "+var+" into event-driven code"
-        elif len(eqs._eventdriven)>0:
+        elif len(self._eqs._eventdriven)>0:
             raise TypeError,"The Sympy package must be installed to produce event-driven code"
 
         if len(self._eqs._diffeq_names_nonzero)==0:
