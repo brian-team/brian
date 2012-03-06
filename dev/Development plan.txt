@@ -2,7 +2,7 @@ Brian Development plan
 ----------------------
 
 How about we launch a survey? We can easily create a web form with google, and
-have questions about what users would like to see in next versions.
+have questions about what users would like to see in next versions. 
 
 Meeting notes:
 
