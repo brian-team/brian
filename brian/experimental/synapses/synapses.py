@@ -186,11 +186,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             model.add_eq(name+'_pre', 'S.source.'+name+'[S.presynaptic[:]]', source.unit(name),
                          global_namespace={'S':S})
         for name in post_ids:
-            model.add_eq(name+'_post', 'S.target.'+name+'[S.postsynaptic[:]]', source.unit(name),
+            model.add_eq(name+'_post', 'S.target.'+name+'[S.postsynaptic[:]]', target.unit(name),
                          global_namespace={'S':S})
         for name in post_ids2: # we have to change the name of the variable to avoid problems with equation processing
             if name not in model._string: # check that it is not already defined
-                model.add_eq(name, 'S.target.state_(__'+name+')[S.postsynaptic[:]]', source.unit(name),
+                model.add_eq(name, 'S.target.state_(__'+name+')[S.postsynaptic[:]]', target.unit(name),
                              global_namespace={'S':S,'__'+name:name})
         
         self.source=source
