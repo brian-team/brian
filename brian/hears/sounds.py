@@ -842,14 +842,16 @@ class Sound(BaseSound, numpy.ndarray):
         '''
         Returns pink noise, i.e :func:`powerlawnoise` with alpha=1
         '''
-        return Sound.powerlawnoise(duration,1.0,samplerate=samplerate,normalise=False)
+        return Sound.powerlawnoise(duration, 1.0, samplerate=samplerate,
+                                   nchannels=nchannels, normalise=normalise)
     
     @staticmethod
-    def brownnoise(duration, samplerate=None, nchannels=1,normalise=False):
+    def brownnoise(duration, samplerate=None, nchannels=1, normalise=False):
         '''
         Returns brown noise, i.e :func:`powerlawnoise` with alpha=2
         '''
-        return Sound.powerlawnoise(duration,2.0,samplerate=samplerate,normalise=False)
+        return Sound.powerlawnoise(duration, 2.0, samplerate=samplerate,
+                                   nchannels=nchannels, normalise=normalise)
     
     @staticmethod
     def irns(delay, gain, niter, duration, samplerate=None, nchannels=1):
@@ -858,6 +860,8 @@ class Sound(BaseSound, numpy.ndarray):
         a cascade of gain and delay filtering. 
         For more details: see Yost 1996 or chapter 15 in Hartman Sound Signal Sensation.
         '''
+        if nchannels!=1:
+            raise ValueError("nchannels!=1 not supported.")
         samplerate = get_samplerate(samplerate)
         noise=Sound.whitenoise(duration)
         splrate=noise.samplerate
