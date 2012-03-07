@@ -1,0 +1,39 @@
+Setting up a slave
+------------------
+
+### Linux slave
+It needs all the packages necessary for running brian, compiling numpy, etc. On a Ubuntu/Debian system the following should work (similar to the setup of the build master (see above)):
+# Needed for running brian (including weave support, etc.)
+sudo apt-get install python python-scipy python-sympy build-essential
+# Needed for building numpy etc.
+sudo apt-get build-dep python-numpy python-scipy python-sympy python-matplotlib 
+# Install virtualenv with pip because there are differences in command line arguments
+sudo apt-get install python-pip
+sudo pip install virtualenv
+In addition, install any python version available, e.g.
+# Ubuntu provides a python-all package depending on all supported python versions
+sudo apt-get install python-all
+It does not have to have Jenkins installed, but a java version is needed, try
+sudo apt-get install openjdk-6-jre
+
+Other necessary steps:
+* Prepare the virtual environments (see Master configuration) — the build scripts assume that there is a .jenkins directory in $HOME
+
+### Adding a new slave to Jenkins
+* Go to Manage Jenkins → Manage Nodes
+* Add a new node, for real computers use "Dumb Slave", for virtual machine use "VirtualBox Slave"
+* Set the labels to "linux" and the supported Python versions, e.g. "python2.6 python2.7"
+* Configure the SSH connection, using key-based authentification (copy the key — while being logged in at hal —  with ssh-copy-id username@hostname )
+* For VirtualBox machines, configure them as being started and stopped on demand
+
+Virtual Machines (Linux Client)
+-------------------------------
+http://www.wiredrevolution.com/virtualbox/setup-ssh-access-between-virtualbox-host-and-guest-vms
+Make sure that the Virtual machine is reachable by SSH, the simplest way for a virtual machine on the same machine as the build master is:
+* Add a second network adapter as a "Host-only adapter"
+* Edit /etc/network/interfaces and add something like:
+auto eth1
+iface eth1 inet static
+address 192.168.56.101
+netmask 255.255.255.0
+You can get an IP address if you do iface eth1 inet dhcp and check for the assigned address with ifconfig eth1

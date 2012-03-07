@@ -1,0 +1,205 @@
+Master configuration
+====================
+Created Tuesday 06 March 2012
+
+Setting up the server
+---------------------
+
+### Basic installation
+(Instructions for Ubuntu 10.04 LTS)
+* Install necessary packages:
+# Needed for jenkins
+sudo apt-get install openjdk-6-jdk openjdk-6-jre subversion
+# Needed for running brian (including weave support, etc.)
+sudo apt-get install python python-scipy python-sympy build-essential
+# Needed for building numpy etc.
+sudo apt-get build-dep python-numpy python-scipy python-sympy python-matplotlib
+# Needed for code quality metrics and testing
+sudo apt-get install python-nose python-coverage python-pip pyflakes
+# Install virtualenv with pip because there are differences in command line arguments
+sudo pip install virtualenv
+# Also install pylint (remove distribution package before if it exists), because the old version is buggy...
+sudo pip install pylint
+# For setting up virtual machines
+sudo apt-get install virtualbox virtualbox-dkms
+
+* Install Jenkins from Website (Ubuntu package is too old), following instructions here: https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu
+wget -q -O - http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins-ci.org/debian binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt-get update
+sudo apt-get install jenkins
+
+* Setup authentification via the Unix database (there are other options for this but this server already had some users on it):
+	* Add the jenkins user to the shadow group:
+		usermod -a -G shadow jenkins
+	* Log out and back in and restart the jenkins server (or reboot...):
+		sudo /etc/init.d/jenkins restart
+
+
+### Preparing virtual environments for Python versions
+* Create a directory ~/.jenkins/virtual_envs:
+	mkdir -p ~/.jenkins/virtual_envs
+
+* For every python version (replace $PYTHON by python2.6 for example):
+virtualenv --python=$PYTHON --no-site-packages ~/.jenkins/virtual_envs/$PYTHON/no_global
+virtualenv --python=$PYTHON --system-site-packages ~/.jenkins/virtual_envs/$PYTHON/with_global
+
+This could be done in a script of course:
+#! /bin/sh
+mkdir -p ~/.jenkins/virtual_envs
+for PYTHON in python2.6 python2.7; do
+  virtualenv --python=$PYTHON --no-site-packages ~/.jenkins/virtual_envs/$PYTHON/no_global
+  virtualenv --python=$PYTHON --system-site-packages ~/.jenkins/virtual_envs/$PYTHON/with_global
+done
+
+
+### Jenkins configuration
+(can be mostly done via the browser, browse to http://hal.dec.ens.fr:8080)
+Manage Jenkins → Configure System:
+
+#### Security
+* Enable "Enable Security"
+* Chose Security Realm "Unix user/group database" (use "Test" for checking whether it works)
+* Set Authorization to "Logged-in users can do anything"
+
+#### Email
+* Set SMTP server: lumiere.ens.fr
+* Default user e-mail suffix: @ens.fr
+* Sender E-mail Adress:** Jenkins Build System <noaddress@example.com**
+
+From now on, you have to login (e.g. as user jenkins)
+
+#### Install Plugins
+Go to Manage Jenkins → Manage Plugins
+Choose from "Build reports":
+* Violations, Warnings Plugin, xUnit Plugin
+Choose from "Build tools:
+* ShiningPanda Plugin
+Choose from "Build Wrappers":
+* VirtualBox Plugin
+Choose from "External Site/Tool integration"
+* Trac Plugin
+Choose from "Other post-build actions":
+* Text-finder Plugin
+
+Click "Download now and install after restart"
+When everything is downloaded, restart jenkins from the console 
+sudo /etc/init.d/jenkins restart
+
+### Parsers
+Add Pyflakes, Pyflakes_errors and Brian_examples (see config.xml)
+
+### VirtualBox 
+To start and shutdown virtual machines on demand, the VirtualBox server has to be configured: 
+VBoxManage setproperty websrvauthlibrary null
+vboxwebsrv 
+This disables any authentification, for higher security use a firewall (e.g. ufw) to disable connections to port 18083 from other machines
+Put  a script for vboxwebsrv into /etc/init.d so that it can be started automatically, you can find a script here:
+http://phpvirtualbox.googlecode.com/files/vboxwebsrv
+Make the script executable and add it to the default runlevel:
+sudo update-rc.d vboxcwebsrv defaults
+
+#### Configure Jobs
+necessary scripts are in the SVN ( dev/jenkins/linux_scripts)
+
+##### Linux_Test
+* New Job: 
+	* Job Name: Linux_Test
+	* "Build multi-configuration project"
+* Enter the Trac website: http://neuralensemble.org/trac/brian
+* Set "Source Code Management" to Subversion
+	* Repository URL is: https://neuralensemble.org/svn/brian/trunk
+* Checkout strategy: "Emulate clean checkout by..."
+* Build Triggers: Poll SCM
+	* Schedule: */5 * * * *
+	* include only the brian directory: brian/.*
+
+* Configuration matrix:
+	* Slaves
+		* OS
+			* (only select Linux)
+	* Slaves
+		* PythonVersion
+			* select Python2.5, Python2.6, Python2.7
+	* User-defined axis:
+		* Name: packages
+		* Values: with_global no_global
+	* Check "Combination Filter":
+		* !(PythonVersion=="python2.5" && packages=="with_global")
+
+* Build:
+	* Custom Python Builder
+		* Home ~/.jenkins/virtual_envs/$PythonVersion/$packages 
+		* Nature: Shell
+		* Command:
+		chmod u+x dev/jenkins/linux_scripts/build_brian.sh
+		exec dev/jenkins/linux_scripts/build_brian.sh
+	* Execute shell
+		* Command:
+		chmod u+x dev/jenkins/linux_scripts/test_brian.sh
+		exec dev/jenkins/linux_scripts/test_brian.sh
+* Post-Build Actions
+	* Build other projects:
+		* Projects to build: Code_Quality
+		* Trigger even if the build is unstable
+	* Publish JUnit test result report
+		* Test report XMLs: **/nosetests.xml
+		* Publish coverage.py HTML reports
+		* E-mail Notification
+			* Send e-mail for every unstable build
+			* Send separate e-mails to individuals who broke the build
+
+##### Code_Quality
+* New Job:
+	* Job Name: Code_Quality
+	* "Build a free-style software project"
+* Restrict where this project can be run
+	* Label expression: master
+* Build Triggers:
+	* Build after other projects are built: Linux_Test
+* Build:
+	* Execute Shell
+	* Commands:
+	chmod u+x dev/jenkins/linux_scripts/run_pyflakes.sh
+	exec dev/jenkins/linux_scripts/run_pyflakes.sh
+	* Execute Shell
+	* Commands:
+	chmod u+x dev/jenkins/linux_scripts/run_pylint.sh
+	exec dev/jenkins/linux_scripts/run_pylint.sh
+* Post-build actions:
+	* Scan for compiler warnings
+		* File Pattern: **/pyflakes_warnings.log
+		* Parser: PyFlakes
+		* File Pattern: **/pyflakes_errors.log
+		* Parser: PyFlakes_errors
+	* Report Violations:
+		* pylint.log
+
+##### Linux_Long_Test
+* New Job:
+	* Job Name: Linux_Long_Test
+	* "Build multi-configuration project"
+* Add Trac Website + Subversion repository (see above)
+* Poll SCM: @midnight
+* Configuration Matrix as in Linux_Test
+* Build
+	* Custom Python Builder:
+		* Home ~/.jenkins/virtual_envs/$PythonVersion/$packages 
+		* Nature: Shell
+		* Command:
+		chmod u+x dev/jenkins/linux_scripts/build_brian.sh
+		exec dev/jenkins/linux_scripts/build_brian.sh
+	* Custom Python Builder:
+		* Home ~/.jenkins/virtual_envs/$PythonVersion/$packages 
+		* Nature: Shell
+		* Command:
+		chmod u+x dev/jenkins/linux_scripts/run_examples.sh
+		exec dev/jenkins/linux_scripts/run_examples.sh
+* Post-build actions:
+		* Scan for Compiler warnings
+			* Scan Console Log: Parser "Brian_examples"
+		* Jenkins Text Finder
+			* Also search the console output
+			* Regular expression: Exceptions encountered:
+			* Unstable if found
+        
