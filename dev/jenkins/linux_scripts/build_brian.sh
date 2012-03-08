@@ -2,9 +2,9 @@ echo Using $(which python)
 
 # if no system-wide packages are used, update numpy etc. to newest version
 if [ $packages = no_global ]; then
-  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade numpy 
-  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade scipy sympy
-  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade matplotlib
+  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade -I numpy 
+  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade -I scipy sympy
+  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade -I matplotlib
 fi
 
 # Print the version numbers for the dependencies
