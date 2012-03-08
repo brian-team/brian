@@ -72,6 +72,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     ``implicit=False``
         Whether to use an implicit method for solving the differential
         equations. TODO: more details.
+    ``code_namespace=None''
+        Namespace for the pre and post codes.
         
     **Methods**
     
@@ -132,7 +134,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     def __init__(self, source, target = None, model = None, pre = None, post = None,
              max_delay = 0*ms,
              level = 0,
-             clock = None,
+             clock = None,code_namespace=None,
              unit_checking = True, method = None, freeze = False, implicit = False, order = 1): # model (state updater) related
         
         target=target or source # default is target=source
@@ -287,13 +289,13 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.namespaces=[]
         self.queues=[]
         for i,pre in enumerate(pre_list):
-            code,_namespace=self.generate_code(pre,level+1)
+            code,_namespace=self.generate_code(pre,level+1,code_namespace=code_namespace)
             self.codes.append(code)
             self.namespaces.append(_namespace)
             self.queues.append(SpikeQueue(self.source, self.synapses_pre, self._delay_pre[i], max_delay = max_delay))
         
         if post is not None:
-            code,_namespace=self.generate_code(post,level+1,direct=True)
+            code,_namespace=self.generate_code(post,level+1,direct=True,code_namespace=code_namespace)
             self.codes.append(code)
             self.namespaces.append(_namespace)
             self.queues.append(SpikeQueue(self.target, self.synapses_post, self._delay_post, max_delay = max_delay))
@@ -304,7 +306,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
 
         self.contained_objects+=self.queues
       
-    def generate_code(self,code,level,direct=False):
+    def generate_code(self,code,level,direct=False,code_namespace=None):
         '''
         Generates pre and post code.
         
@@ -318,6 +320,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             If True, the code is generated assuming that
             postsynaptic variables are not modified. This makes the
             code faster.
+            
+        ``code_namespace''
+            Additional namespace (highest priority)
         
         TODO:
         * include static variables (substitution)
@@ -332,6 +337,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
         # Create namespaces
         _namespace = namespace(code, level = level + 1)
+        if code_namespace is not None:
+            _namespace.update(code_namespace)
         _namespace['target'] = self.target # maybe we could save one indirection here
         _namespace['unique'] = np.unique
         _namespace['nonzero'] = np.nonzero
