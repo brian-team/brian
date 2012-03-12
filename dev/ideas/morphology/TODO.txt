@@ -8,3 +8,6 @@ that Cm is in the equations (if Cm=None, then we use the distributed variable).
 * Morphology: adding morphologies (at least cylinders)?
 * Find out and specify the underlying electrical circuit (compartments/half-compartments?)
 * Check with what Neuron does
+* One thing is missing the Morphology: the position of the current branch in the
+  big matrix (Note: all other variables, length etc, are views on the big matrix,
+  for the current branch).
