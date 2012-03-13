@@ -532,7 +532,9 @@ class Sound(BaseSound, numpy.ndarray):
         '''
         if self.nchannels>1:
             raise ValueError('Can only plot spectrum for mono sounds.')
-        sp = numpy.fft.fft(array(self))
+
+        # Flatten array, fft operates on the last axis by default
+        sp = numpy.fft.fft(array(self).flatten())
         freqs = array(range(len(sp)), dtype=float64) / len(sp) * float64(self.samplerate)
         pxx = abs(sp) ** 2
         phase = unwrap(mod(angle(sp), 2 * pi))
