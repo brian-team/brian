@@ -1,8 +1,7 @@
 """
 Dodge and Cooley 1973. Model of a motoneuron.
 
-One problem is that the capacitance is different in the myelin.
-I would need to have a variable capacitance.
+Doesn't seem to work: no propagation of APs.
 """
 from brian import *
 from morphology import *
@@ -10,7 +9,7 @@ from spatialneuron import *
 
 defaultclock.dt=0.01*ms
 
-morpho=Morphology(n=30+6+5)
+morpho=Morphology(n=47)
 # Dendrites
 morpho.length[:30]=4500*um/30
 morpho.diameter[:30]=30*2*um
@@ -20,7 +19,13 @@ morpho.diameter[30:36]=30*2*um
 # Initial segment
 morpho.length[36:41]=100*um/5
 morpho.diameter[36:41]=5*2*um
-# I don't put it the myelin because the capacitance is different
+# Myelin
+morpho.length[41:46]=400*um/5
+morpho.diameter[41:46]=8*2*um
+# Node
+morpho.length[46]=75*um
+morpho.diameter[46]=10*2*um
+
 morpho.set_area()
 morpho.set_coordinates()
 
@@ -35,6 +40,7 @@ I:amp/cm**2 # applied current
 gNa:siemens/cm**2
 gK:siemens/cm**2
 gL:siemens/cm**2
+Cm:farad/cm**2
 dm/dt=alpham*(1-m)-betam*m : 1
 dn/dt=alphan*(1-n)-betan*n : 1
 dh/dt=alphah*(1-h)-betah*h : 1
@@ -62,10 +68,21 @@ neuron.gL[36:41] = 1 * msiemens / cm ** 2
 neuron.gNa[36:41] = 600* msiemens / cm ** 2
 neuron.gK[36:41] = 100* msiemens / cm ** 2
 
-run(50*ms)
-neuron.I[30:36]=100 * nA/neuron.area[30] # current injection at the soma
-run(200*ms,report='text')
+neuron.gL[41:46] = 0.05 * msiemens / cm ** 2
+neuron.Cm[41:46] = 0.05 * uF / cm ** 2 # myelin
+neuron.gNa[41:46] = 0* msiemens / cm ** 2
+neuron.gK[41:46] = 0* msiemens / cm ** 2
 
-for i in range(10):
-    plot(M.times/ms,M[30+i]/mV)
+neuron.gL[46] = 3 * msiemens / cm ** 2
+neuron.gNa[46] = 600* msiemens / cm ** 2
+neuron.gK[46] = 100* msiemens / cm ** 2
+
+run(50*ms)
+neuron.I[30:36]=200 * nA/neuron.area[30] # current injection at the soma
+run(5*ms)
+neuron.I[30:36]=0 * nA/neuron.area[30]
+run(100*ms,report='text')
+
+for i in [33,38,43,46]:
+    plot(M.times/ms,M[i]/mV)
 show()
