@@ -7,7 +7,7 @@ from brian import *
 from morphology import *
 from spatialneuron import *
 
-defaultclock.dt=0.001*ms
+defaultclock.dt=0.01*ms
 
 morpho=Morphology(n=47)
 # Dendrites
@@ -61,6 +61,8 @@ neuron.I=0*amp/cm**2
 M=StateMonitor(neuron,'v',record=True)
 
 neuron.gL[0:36] = 0.167 * msiemens / cm ** 2
+neuron.gNa[0:30] = 0* msiemens / cm ** 2
+neuron.gK[0:30] = 0* msiemens / cm ** 2
 neuron.gNa[30:36] = 70* msiemens / cm ** 2
 neuron.gK[30:36] = 17.5* msiemens / cm ** 2
 
@@ -78,10 +80,10 @@ neuron.gNa[46] = 600* msiemens / cm ** 2
 neuron.gK[46] = 100* msiemens / cm ** 2
 
 run(50*ms)
-neuron.I[46]=100 * nA/neuron.area[46] # current injection at the node (antidromic)
-run(5*ms)
-neuron.I[46]=0 * nA/neuron.area[46]
-run(100*ms,report='text')
+neuron.I[35]=0.5 * uA/neuron.area[30] # current injection at the soma
+run(0.5*ms)
+neuron.I[35]=0 * nA/neuron.area[30]
+run(50*ms,report='text')
 
 for i in [33,38,43,46]:
     plot(M.times/ms,M[i]/mV)
