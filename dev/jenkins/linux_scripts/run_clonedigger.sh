@@ -1,1 +1,1 @@
-clonedigger --cpd-output -o clonedigger.xml brian || :
+clonedigger --cpd-output --ignore-dir=tests --ignore-dir=experimental -o clonedigger.xml brian || :
