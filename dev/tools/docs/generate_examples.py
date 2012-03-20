@@ -51,7 +51,7 @@ for f in examplesfnames:
     filebase, ext = os.path.splitext(file)
     examplespaths.append(path)
     examplesbasenames.append(filebase)
-examplescode = [open(fname, 'r').read() for fname in examplesfnames]
+examplescode = [open(fname, 'rU').read() for fname in examplesfnames]
 examplesdocs = []
 examplesafterdoccode = []
 examplesdocumentablenames = []
