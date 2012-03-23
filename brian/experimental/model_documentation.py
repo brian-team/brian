@@ -342,7 +342,7 @@ class LaTeXDocumentWriter(DocumentWriter):
         for varname in eqs._diffeq_names:
             eq_string = eqs._string[varname]                
             rhs = LaTeXDocumentWriter.latex_equation(eq_string)        
-            lhs = r'\frac{d%s}{dt}' % (varname)        
+            lhs = r'\frac{\mathrm{d}%s}{\mathrm{d}t}' % (varname)        
             equations += LaTeXDocumentWriter.format_equation(lhs, rhs, eqs._units[varname])
     
         for varname in eqs._eq_names:
