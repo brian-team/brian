@@ -88,7 +88,7 @@ def spike_peaks(v, vc=None):
     vc is the spike criterion (voltage above which we consider we have a spike)
     '''
     # Possibly: add refractory criterion
-    vc = vc or find_spike_criterion(v)
+    if vc is None: vc = find_spike_criterion(v)
     dv = diff(v)
     spikes = ((v[1:] > vc) & (v[:-1] < vc)).nonzero()[0]
     peaks = []
@@ -108,7 +108,7 @@ def spike_onsets(v, criterion=None, vc=None):
     vc is the spike criterion (voltage above which we consider we have a spike).
     First derivative criterion (dv>criterion).
     '''
-    vc = vc or find_spike_criterion(v)
+    if vc is None: vc = find_spike_criterion(v)
     criterion = criterion or find_onset_criterion(v, vc=vc)
     peaks = spike_peaks(v, vc)
     dv = diff(v)
@@ -134,7 +134,7 @@ def spike_onsets_dv2(v, vc=None):
     Maximum of 2nd derivative.
     DOESN'T SEEM GOOD
     '''
-    vc = vc or find_spike_criterion(v)
+    if vc is None: vc = find_spike_criterion(v)
     peaks = spike_peaks(v, vc)
     d2v = diff(diff(v))
     d3v = diff(d2v) # I'm guessing you have to shift v by 1/2 per differentiation
@@ -156,7 +156,7 @@ def spike_onsets_dv3(v, vc=None):
     Maximum of 3rd derivative.
     DOESN'T SEEM GOOD
     '''
-    vc = vc or find_spike_criterion(v)
+    if vc is None: vc = find_spike_criterion(v)
     peaks = spike_peaks(v, vc)
     dv4 = diff(diff(diff(diff(v))))
     j = 0
@@ -172,7 +172,7 @@ def find_onset_criterion(v, guess=0.0001, vc=None):
     Finds the best criterion on dv/dt to determine spike onsets,
     based on minimum threshold variability.
     '''
-    vc = vc or find_spike_criterion(v)
+    if vc is None: vc = find_spike_criterion(v)
     return float(optimize.fmin(lambda x:std(v[spike_onsets(v, x, vc)]), guess, disp=0))
 
 def spike_shape(v, onsets=None, before=100, after=100):
