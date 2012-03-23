@@ -184,6 +184,11 @@ class Threshold(object):
             return ((P.state_(self.state) > self.threshold).nonzero())[0]
 
     def __repr__(self):
+        return '%s(threshold=%s, state=%s)' % (self.__class__.__name__,
+                                               repr(self.threshold),
+                                               repr(self.state))
+
+    def __str__(self):
         return 'Threshold mechanism with value=' + str(self.threshold) + " acting on state " + str(self.state)
 
 
@@ -222,7 +227,11 @@ class StringThreshold(Threshold):
         return eval(self._code, self._namespace).nonzero()[0]
 
     def __repr__(self):
-        return "String threshold"
+        return '%s(%s)' % (self.__class__.__name__, repr(self_expr))
+    
+    def __str__(self):
+        return '%s using expression "%s"' % (self.__class__.__name__,
+                                             str(self_expr))
 
 
 class NoThreshold(Threshold):
@@ -373,7 +382,14 @@ class VariableThreshold(Threshold):
             return ((P.state_(self.state) > P.state_(self.threshold_state)).nonzero())[0]
 
     def __repr__(self):
-        return 'Variable threshold mechanism'
+        return '%s(threshold_state=%s, state=%s)' % (self.__class__.__name__, 
+                                                     repr(self._threshold_state),
+                                                     repr(self.state))
+    
+    def __str__(self):
+        return '%s comparing "%s" to the threshold "%s"' % (self.__class__.__name__,
+                                                            self.state,
+                                                            self.threshold_state)
 
 
 class EmpiricalThreshold(Threshold):
@@ -428,10 +444,6 @@ class EmpiricalThreshold(Threshold):
         #P.LS[spikes]=P.clock.t # Time of last spike (this line should be general)
         #return spikes
 
-    def __repr__(self):
-        return 'Empirical threshold with value=' + str(self.threshold) + " acting on state " + str(self.state)
-
-
 class PoissonThreshold(Threshold):
     '''
     Poisson threshold: a spike is produced with some probability S[0]*dt,
@@ -445,7 +457,8 @@ class PoissonThreshold(Threshold):
         return (random.rand(len(P)) < P.state_(self.state)[:] * P.clock.dt).nonzero()[0]
 
     def __repr__(self):
-        return 'Poisson threshold'
+        return '%s(state=%s)' % (self.__class__.__name__,
+                                 repr(self.state))
 
 
 class HomogeneousPoissonThreshold(PoissonThreshold):

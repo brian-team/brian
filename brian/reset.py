@@ -147,7 +147,9 @@ class Reset(object):
         V[P.LS.lastspikes()] = self.resetvalue
 
     def __repr__(self):
-        return 'Reset ' + str(self.resetvalue)
+        return '%s(resetvalue=%s, state=%s)' % (self.__class__.__name__,
+                                                repr(self.resetvalue),
+                                                repr(self.state))
 
 
 class StringReset(Reset):
@@ -210,7 +212,8 @@ class StringReset(Reset):
         exec self._code in self._namespace
 
     def __repr__(self):
-        return "String reset"
+        return "%s(%s)" % (self.__class__.__name__,
+                           repr(self._expr)) 
 
 
 class VariableReset(Reset):
@@ -457,4 +460,7 @@ class NoReset(Reset):
         pass
 
     def __repr__(self):
+        return 'NoReset()'
+
+    def __str__(self):
         return 'No reset'

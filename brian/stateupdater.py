@@ -200,8 +200,13 @@ class StateUpdater(object):
         '''
         P._S[:] *= self.update_factor
 
+    def __str__(self):
+        return '%s with %d state variables' % (self.__class__.__name__,
+                                               len(self))
+
     def __repr__(self):
-        return 'Leaky integrate-and-fire StateUpdater'
+        return '<%s with %d state variables>' % (self.__class__.__name__,
+                                                 len(self))
 
     def __len__(self):
         '''
@@ -455,9 +460,6 @@ class LinearStateUpdater(StateUpdater):
                              type_converters=weave.converters.blitz,
                              extra_compile_args=self._extra_compile_args)
 
-    def __repr__(self):
-        return 'Linear StateUpdater with ' + str(len(self)) + ' state variables'
-
     def __len__(self):
         '''
         Number of state variables
@@ -524,9 +526,6 @@ class NonlinearStateUpdater(StateUpdater):
             else:
                 states['t'] = P.clock.t #time
             self.eqs.forward_euler(states, P.clock._dt)
-
-    def __repr__(self):
-        return 'Nonlinear StateUpdater with ' + str(len(self)) + ' state variables'
 
     def __len__(self):
         '''
@@ -686,8 +685,16 @@ class LazyStateUpdater(StateUpdater):
         '''
         pass
 
+    def __str__(self):
+        return 'Lazy StateUpdater with %d state variables (does nothing)' % len(self)
+    
     def __repr__(self):
-        return 'Lazy StateUpdater (does nothing)'
+        repr_str = '%s(' % self.__class__.__name__
+        if self._N != 1:
+            repr_str += 'numstatevariables=%d' % self._N
+        repr_str += ')'
+        
+        return repr_str
 
     def __len__(self):
         '''

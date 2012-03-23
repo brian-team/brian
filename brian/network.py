@@ -571,7 +571,16 @@ class Network(object):
         return n
 
     def __repr__(self):
-        return 'Network of' + str(len(self)) + 'neurons'
+        return '<%s of %d groups with a total of %d neurons>' % (self.__class__.__name__,
+                                                                 len(self.groups),
+                                                                 len(self))
+    
+    def __str__(self):
+        return '%s of %d groups with a total of %d neurons' % (self.__class__.__name__,
+                                                               len(self.groups),
+                                                               len(self))
+    
+        
 
     # TODO: obscure custom update schedules might still lead to unpicklable Network object
     def __reduce__(self):

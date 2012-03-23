@@ -134,7 +134,8 @@ class SpikeMonitor(Connection, Monitor):
         source.set_max_delay(delay)
         self.delay = int(delay / source.clock.dt) # Synaptic delay in time bins
         self._newspikes = True
-        if function != None:
+        self.custom_function = function is not None
+        if self.custom_function:
             self.propagate = function
 
     def reinit(self):
@@ -187,6 +188,25 @@ class SpikeMonitor(Connection, Monitor):
     def it(self):
         i, t = zip(*self.spikes)
         return array(i, dtype=int), array(t, dtype=float)
+
+    def __repr__(self):
+        repr_str = 'SpikeMonitor(%s, record=%s' % (repr(self.source),
+                                                   repr(self.record)) 
+        if self.delay > 0:
+            repr_str += ', delay=%s' % repr(self.delay * self.source.clock.dt)
+        if self.custom_function:
+            repr_str += ', function_%s' % repr(self.propagate)
+        
+        repr_str += ')'
+        
+        return repr_str 
+
+    def __str__(self):
+        description = "%s monitoring %s" % (self.__class__.__name__, str(self.source))
+        if self.delay > 0:
+            description += ' with a delay of %s' % str(self.delay * self.source.clock.dt)
+        
+        return description
 
 #    def getvspikes(self):
 #        if isinstance(self.source, VectorizedNeuronGroup):
@@ -255,6 +275,14 @@ class PopulationSpikeCounter(SpikeMonitor):
     '''
     def __init__(self, source, delay=0):
         SpikeMonitor.__init__(self, source, record=False, delay=delay)
+        
+    def __repr__(self):
+        repr_str = '%s(%s' % (self.__class__.__name__, repr(self.source))
+        if self.delay > 0:
+            repr_str += ', delay=%s' % repr(self.delay * self.source.clock.dt)
+        repr_str += ')'
+        
+        return repr_str
 
 
 class SpikeCounter(PopulationSpikeCounter):
@@ -372,6 +400,13 @@ class StateSpikeMonitor(SpikeMonitor):
         else:
             return array([x[v] for x in self.spikes])
 
+    def __repr__(self):
+        return 'StateSpikeMonitor(%s, var=%s)' % (repr(self.source),
+                                                  repr(self._varnames))
+
+    def __str__(self):
+        return 'StateSpikeMonitor monitoring variable(s) %s of: %s' % (str(self._varnames),
+                                                                      str(self.source))
 
 class HistogramMonitorBase(SpikeMonitor):
     pass
@@ -430,7 +465,24 @@ class ISIHistogramMonitor(HistogramMonitorBase):
             else:
                 self.count[:-1] += h
                 self.count[-1] += len(isi) - sum(h)
+    
+    def __repr__(self):
+        repr_str = "%s(%s, bins=%s" % (self.__class__.__name__,
+                                       repr(self.source), repr(self.bins))
+        if self.delay > 0:
+            repr_str += ', delay=%s' % repr(self.delay * self.source.clock.dt)
+        
+        repr_str += ')'
+        
+        return repr_str
 
+    def __str__(self):
+        description = '%s monitoring %s' % (self.__class__.__name__,
+                                            str(self.source))
+        if self.delay > 0:
+            description += ' with a delay of %s' % str(self.delay * self.source.clock.dt)
+        
+        return description
 
 class FileSpikeMonitor(SpikeMonitor):
     """Records spikes to a file
@@ -852,6 +904,26 @@ class StateMonitor(NetworkOperation, Monitor):
         for i, neuron in enumerate(self.get_record_indices()):
             values[i,array(spikemonitor[neuron]/dt, dtype=int)] = value
         #self._values = values # or converted back to a list?
+
+    def __repr__(self):        
+        repr_str = "%s(%s, varname=%s, clock=%s, record=%s" % (self.__class__.__name__,
+                                                               repr(self.P), 
+                                                               repr(self.varname),
+                                                               repr(self.clock),
+                                                               self.record)
+        if self.timestep != 1:
+            repr_str += ', timestep=%d' % self.timestep
+        if self.when != 'end':
+            repr_str += ", when='%s'" % self.when
+        
+        repr_str += ')'
+        
+        return repr_str
+    
+    def __str__(self):
+        return "%s monitoring variable '%s' of: %s" % (self.__class__.__name__,
+                                                      str(self.varname),
+                                                      str(self.P)) 
 
 
 class RecentStateMonitor(StateMonitor):

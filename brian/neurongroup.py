@@ -598,9 +598,20 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
 
     def __repr__(self):
         if self._owner == self:
-            return 'Group of ' + str(len(self)) + ' neurons'
+            return '%s(%d, model=%s, threshold=%s, reset=%s)' % (self.__class__.__name__,
+                                                                 len(self),
+                                                                 repr(self._state_updater),
+                                                                 repr(self._threshold),
+                                                                 repr(self._resetfun))
         else:
-            return 'Subgroup of ' + str(len(self)) + ' neurons'
+            return '<Size %d subgroup of %s>' % (len(self), repr(self._owner))
+
+    def __str__(self):
+        if self._owner == self:
+            return '%s of %d neurons' % (self.__class__.__name__, len(self))
+        else:
+            return 'Size %d subgroup of %s' % (len(self), self.__class__.__name__)
+                 
 
     def __setattr__(self, name, val):
         global timedarray

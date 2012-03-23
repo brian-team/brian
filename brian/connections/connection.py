@@ -410,4 +410,16 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         # TODO: unit checking
         self.W.__setitem__(i, x)
 
+    def __repr__(self):
+        return '%s(%s, %s, state=%s)' % (self.__class__.__name__, 
+                                         repr(self.source),
+                                         repr(self.target),
+                                         repr(self.nstate))
+    def __str__(self):
+        return '%s from %s to %s, acting on state variable %d' % (self.__class__.__name__,
+                                                                  str(self.source),
+                                                                  str(self.target),
+                                                                  self.nstate) 
+
+
 from delayconnection import *

@@ -153,9 +153,11 @@ class Clock(magic.InstanceTracker):
         self.__t = int(float(t) / self._dt)
         self._gridoffset = 0.0
 
-    def __repr__(self):
+    def __str__(self):
         return 'Clock: t = ' + str(self.t) + ', dt = ' + str(self.dt)
-    __str__ = __repr__
+    
+    def __repr__(self):
+        return 'Clock(dt=%s, t=%s)' % (repr(self.dt), repr(self.t))
 
     def tick(self):
         self.__t += self.__dt

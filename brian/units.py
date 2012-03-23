@@ -146,6 +146,8 @@ _di = { "Length":0, "length": 0, "metre":0, "metres":0, "metre": 0, "metres":0, 
        "Quantity of Substance":5, "Quantity of substance": 5, "quantity of substance": 5, "Substance":5, "substance":5, "mole":5, "moles":5, "mole": 5, "moles":5, "mol": 5, \
        "Luminosity":6, "luminosity": 6, "candle":6, "candles":6, "candle": 6, "candles":6, "cd": 6 }
 _ilabel = ["m", "kg", "s", "A", "K", "mol", "cd"]
+# The same labels with the names used for constructing them in Python code
+_iclass_label = ["metre", "kilogram", "second", "amp", "kelvin", "mole", "candle"]
 # SI unit _prefixes, see table at end of file
 _siprefixes = {"y":1e-24, "z":1e-21, "a":1e-18, "f":1e-15, "p":1e-12, "n":1e-9, "u":1e-6, "m":1e-3, "c":1e-2, "d":1e-1, \
             "":1, \
@@ -228,20 +230,43 @@ class Dimension(object):
     def is_dimensionless(self):
         """Tells you whether the object is dimensionless."""
         return sum([x == 0 for x in self._dims]) == 7
-    #### REPRESENTATION ####
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        """String representation in basic SI units, or 1 for dimensionless."""
-        s = ""
+    
+    #### REPRESENTATION ####    
+    def _str_representation(self, python_code=False):
+        """String representation in basic SI units, or 1 for dimensionless.
+        Use `python_code=False` for display purposes and `True` for valid
+        Python code."""
+        
+        if python_code:
+            power_operator = " ** "
+        else:
+            power_operator = "^"
+        
+        parts = []
         for i in range(len(self._dims)):
             if self._dims[i]:
-                s += _ilabel[i]
-                if self._dims[i] != 1: s += "^" + str(self._dims[i])
-                s += " "
-        if not len(s): return "1"
+                if python_code:
+                    s = _i_class_label[i]
+                else:
+                    s = _ilabel[i]
+                if self._dims[i] != 1:
+                    s += power_operator + str(self._dims[i])
+        if python_code:
+            s = " * ".join(parts)
+            if not len(s):
+                return "%s()" % self.__class__.__name__
+        else:
+            s = " ".join(parts)
+            if not len(s):
+                return "1"
         return s.strip()
+    
+    def __repr__(self):
+        return self._str_representation(python_code=True)
+
+    def __str__(self):
+        return self._str_representation(python_code=False)
+    
     #### ARITHMETIC ####
     # Note that none of the dimension arithmetic objects do sanity checking
     # on their inputs, although most will throw an exception if you pass the
@@ -583,21 +608,34 @@ class Quantity(numpy.float64):
         """
         return self.dim == get_dimensions(other)
 
-    def in_unit(self, u):
-        """String representation of the object in unit u.
+    def in_unit(self, u, python_code=False):
+        """String representation of the object in unit `u`.
+        If `python_code` is `True`, this will return valid python code, i.e. a
+        string like `5.0 * um ** 2`instead of `5.0 um^2`  
         """
         if not self.has_same_dimensions(u):
             raise DimensionMismatchError("Non-matching unit for method in_unit", self.dim, u.dim)
         s = str(float(self / u)) + " "
         if not u.is_dimensionless():
             if isinstance(u, Unit):
-                s += str(u)
+                if python_code:                    
+                    s += '* ' + repr(u)
+                else:
+                    s += str(u)
             else:
-                s += str(u.dim)
+                if python_code:
+                    s += repr(u.dim)
+                else:
+                    s += str(u.dim)
+        elif python_code == True:  # A quantity without unit is not recognisable otherwise
+            return '%s(%s)' % (self.__class__.__name__, s.strip())
         return s.strip()
 
-    def in_best_unit(self, *regs):
+    def in_best_unit(self, python_code=False, *regs):
         """String representation of the object in the 'best unit'
+        
+        If `python_code` is `True`, this will return valid python code, i.e. a
+        string like `5.0 * um ** 2`instead of `5.0 um^2`  
         
         For more information, see the documentation for the UnitRegistry
         class. Essentially, this looks at the value of the quantity for
@@ -606,7 +644,7 @@ class Quantity(numpy.float64):
         built in, but you can register new units for consideration. 
         """
         u = _get_best_unit(self, *regs)
-        return self.in_unit(u)
+        return self.in_unit(u, python_code)
     #### METHODS (NUMERICAL) ####
     def sqrt(self):
         return self ** 0.5
@@ -685,8 +723,7 @@ class Quantity(numpy.float64):
         raise DimensionMismatchError('tanh', self.dim)
     #### REPRESENTATION ####
     def __repr__(self):
-        #return self.in_best_unit()
-        return self.__str__()
+        return self.in_best_unit(python_code=True)
 
     def __str__(self):
         #s = super(Quantity,self).__str__()
@@ -1048,6 +1085,7 @@ class Unit(Quantity):
         self.dim = Dimension()
         self.scale = [ "", "", "", "", "", "", "" ]
         self.scalefactor = ""
+        self.name = ""
         self.dispname = ""
         self.iscompound = False
 
@@ -1106,9 +1144,26 @@ class Unit(Quantity):
         """Sets the display name for the unit
         """
         self.dispname = name
-    #### REPRESENTATION ####
+
+    #### REPRESENTATION ####  
     def __repr__(self):
-        return self.__str__()
+        if self.name == "":
+            if self.scalefactor:
+                parts = [repr(_siprefixes[self.scalefactor])] 
+            else:
+                parts = []
+            for i in range(7):
+                if self.dim._dims[i]:                
+                    s = self.scale[i] + _iclass_label[i]
+                    if self.dim._dims[i] != 1:
+                        s += ' ** ' + str(self.dim._dims[i])
+                    parts.append(s)
+            s = " * ".join(parts) 
+            if not len(s):
+                return "%s(1)" % self.__class__.__name__
+            return s.strip()
+        else:
+            return self.name
 
     def __str__(self):
         if self.dispname == "":
@@ -1116,17 +1171,20 @@ class Unit(Quantity):
             for i in range(7):
                 if self.dim._dims[i]:
                     s += self.scale[i] + _ilabel[i]
-                    if self.dim._dims[i] != 1: s += "^" + str(self.dim._dims[i])
+                    if self.dim._dims[i] != 1:
+                        s += "^" + str(self.dim._dims[i])
                     s += " "
-            if not len(s): return "1"
+            if not len(s):
+                return "1"
             return s.strip()
         else:
             return self.dispname
+
     #### ARITHMETIC ####
     def __mul__(self, other):
         if isinstance(other, Unit):
             u = Unit(float(self) * float(other))
-            u.name = self.name + other.name
+            u.name = self.name + " * " + other.name
             u.dispname = self.dispname + ' ' + other.dispname
             u.dim = self.dim * other.dim
             u.iscompound = True
@@ -1156,7 +1214,7 @@ class Unit(Quantity):
     def __pow__(self, other):
         if is_scalar_type(other):
             u = Unit(float(self) ** other)
-            u.name = self.name + 'pow_' + str(other) + '_endpow'
+            u.name = self.name + ' ** ' + str(other)
             if self.iscompound:
                 u.dispname = '(' + self.dispname + ')'
             else:
