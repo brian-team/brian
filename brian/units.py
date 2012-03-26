@@ -246,11 +246,12 @@ class Dimension(object):
         for i in range(len(self._dims)):
             if self._dims[i]:
                 if python_code:
-                    s = _i_class_label[i]
+                    s = _iclass_label[i]
                 else:
                     s = _ilabel[i]
                 if self._dims[i] != 1:
                     s += power_operator + str(self._dims[i])
+                parts.append(s)
         if python_code:
             s = " * ".join(parts)
             if not len(s):
@@ -624,7 +625,7 @@ class Quantity(numpy.float64):
                     s += str(u)
             else:
                 if python_code:
-                    s += repr(u.dim)
+                    s += "* " + repr(u.dim)
                 else:
                     s += str(u.dim)
         elif python_code == True:  # A quantity without unit is not recognisable otherwise
@@ -1194,17 +1195,21 @@ class Unit(Quantity):
 
     def __div__(self, other):
         if isinstance(other, Unit):
-            u = Unit(float(self) / float(other))
-            u.name = self.name + 'inv_' + other.name + '_endinv'
+            u = Unit(float(self) / float(other))            
             if other.iscompound:
                 u.dispname = '(' + self.dispname + ')'
+                u.name = '(' + self.name + ')'
             else:
                 u.dispname = self.dispname
+                u.name = self.name
             u.dispname += '/'
+            u.name += ' / '
             if other.iscompound:
                 u.dispname += '(' + other.dispname + ')'
+                u.name += '(' + other.name + ')'
             else:
                 u.dispname += other.dispname
+                u.name += other.name
             u.dim = self.dim / other.dim
             u.iscompound = True
             return u
@@ -1213,13 +1218,14 @@ class Unit(Quantity):
 
     def __pow__(self, other):
         if is_scalar_type(other):
-            u = Unit(float(self) ** other)
-            u.name = self.name + ' ** ' + str(other)
+            u = Unit(float(self) ** other)            
             if self.iscompound:
                 u.dispname = '(' + self.dispname + ')'
+                u.name = '(' + self.name + ')'
             else:
                 u.dispname = self.dispname
             u.dispname += '^' + str(other)
+            u.name += ' ** ' + repr(other)
             u.dim = self.dim ** other
             return u
         else:
