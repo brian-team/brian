@@ -1,4 +1,5 @@
 import itertools
+import string
 
 from sympy import Symbol, Eq, Derivative
 from sympy.printing import latex
@@ -16,7 +17,8 @@ class DocumentWriter(object):
     '''
     
     def document_network(self, net=None, labels=None, sim=True,
-                         groups=True, connections=True, operations=True):
+                         groups=True, connections=True, operations=True,
+                         graph_connections=False):
         '''
         Documents the network `net`, if not network is given, a
         :class:`MagicNetwork` is automatically created and documented, i.e.
@@ -29,8 +31,9 @@ class DocumentWriter(object):
         
         if labels is None:
             labels = {}
-        
-        import string
+
+        self.do_graph_connections = graph_connections
+
         letters = string.uppercase
         letter_count = 0
         
@@ -59,8 +62,8 @@ class DocumentWriter(object):
             if other in labels:
                 self.short_labels[other], self.long_labels[other] = labels[other]
             else:
-                self.short_labels[group] = letters[letter_count]                
-                self.long_labels[group] = str(group)
+                self.short_labels[other] = letters[letter_count]                
+                self.long_labels[other] = str(other)
                 letter_count += 1
         
         self.intro()
@@ -73,6 +76,9 @@ class DocumentWriter(object):
         
         if connections:
             self.document_connections(net.connections)
+
+        if graph_connections:            
+            self.graph_connections(net.connections, net.groups)            
 
         if operations:
             self.document_operations(net.operations)
@@ -104,6 +110,12 @@ class DocumentWriter(object):
         """
         Document the connections of the network (including :class:`SpikeMonitor`
         etc. as they are modeled as :class:`Connection` objects).
+        """
+        pass
+    
+    def graph_connections(self, connections, groups):
+        """
+        Draw a graph visualizing the connection structure of the network.
         """
         pass
     
@@ -159,8 +171,8 @@ class TextDocumentWriter(DocumentWriter):
     Documents the network by printing to stdout, uses `sympy` for formatting
     the equations (including nice Unicode symbols)
     """
-    def __init__(self):
-        DocumentWriter.__init__(self)
+    def __init__(self, **kwargs):
+        DocumentWriter.__init__(self, **kwargs)
         self.pp = PrettyPrinter(settings={'wrap_line': False})
     
     def document_sim(self, network): 
@@ -241,17 +253,32 @@ class LaTeXDocumentWriter(DocumentWriter):
     Documents the network by printing LaTeX code to stdout. Prints a full
     document (i.e. including preamble etc.). The resulting LaTeX file needs
     the `amsmath` package.
+    
+    Note that if you use the `graph_connections=True` option, you additionally
+    need the `tikz` and `dot2texi` packages (part of `texlive-core` and
+    `texlive-pictures` on Linux systems) and the `dot2tex` tool. To make the 
+    conversion from dot code to LaTeX automatically happen on document creation
+    you have to pass the `--shell-escape` option to your LaTeX call, e.g.
+    `pdflatex --shell-escape network_doc.tex`
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
         DocumentWriter.__init__(self)
         self.pp = PrettyPrinter(settings={'wrap_line': False})
     
     def intro(self):
         print r'''
 \documentclass{article}
-\usepackage{amsmath}
-\begin{document}
+\usepackage{amsmath,textcomp}
 '''
+
+        if self.do_graph_connections:
+            print r'''
+\usepackage{dot2texi}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+'''
+            
+        print r'\begin{document}' + '\n'            
         
     def outro(self):
         print r'\end{document}'
@@ -304,6 +331,10 @@ class LaTeXDocumentWriter(DocumentWriter):
                 print '\t\t\t%s (%s)' % (self.long_labels[subgroup],
                                          self.short_labels[subgroup]) 
 
+    def graph_connections(self, connections, groups):
+        dot_text = generate_dot_text(connections, groups, self.short_labels)
+        print r'\begin{dot2tex}' + '\n' + dot_text + '\n' + r'\end{dot2tex}'
+        
     @staticmethod    
     def latex_equation(eq_string):
         """ 
@@ -391,7 +422,42 @@ def labels_from_namespace(namespace):
             labels[obj] = (name, str(obj))
     
     return labels
-                
+
+def generate_dot_text(connections, groups, labels):
+    
+    dot_description = 'digraph network {\n'    
+            
+    conn_strings = []
+    used_groups = set()
+    for c in connections:
+        if c.target is None: # a monitor
+            conn_strings.append('%s -> %s [style=dotted, label="monitoring"];' % (labels[c],
+                                                                                 labels[c.source]))
+        else:
+            #TODO: Label connections with info about connections (e.g. 1:1)
+            #      possible to label arrowhead with target variable?
+            conn_strings.append('%s -> %s;' % (labels[c.source],
+                                              labels[c.target]))
+            used_groups.add(c.target)
+        
+        used_groups.add(c.source)        
+    
+    # Assure that every group is shown (or all subgroups of a group are shown)
+    for group in groups:
+        if group not in used_groups:
+            all_subgroups_used = True
+            for subgroup in group._subgroup_set:
+                if subgroup() not in used_groups:
+                    all_subgroups_used = False
+                    break            
+            if not all_subgroups_used:
+                dot_description += '%s;\n' % (label[group])            
+    
+    dot_description += '\n'.join(conn_strings)
+    
+    dot_description += '\n}'
+    
+    return dot_description                
    
 if __name__ == '__main__':
     # Test with some example code
@@ -423,4 +489,7 @@ if __name__ == '__main__':
     
     M=StateSpikeMonitor(neuron,("Vr","w")) # record Vr and w at spike times
     
-    document_network(output='latex', labels=labels_from_namespace(locals()))
+    # Document the network
+    document_network(output='latex', labels=labels_from_namespace(locals()),
+                     graph_connections=True)
+    
