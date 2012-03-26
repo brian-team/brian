@@ -109,7 +109,7 @@ def spike_onsets(v, criterion=None, vc=None):
     First derivative criterion (dv>criterion).
     '''
     if vc is None: vc = find_spike_criterion(v)
-    criterion = criterion or find_onset_criterion(v, vc=vc)
+    if criterion is None: criterion = find_onset_criterion(v, vc=vc)
     peaks = spike_peaks(v, vc)
     dv = diff(v)
     d2v = diff(dv)
