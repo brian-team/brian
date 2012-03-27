@@ -7,7 +7,7 @@ Note: Uses the 'Agg' backend, therefore no plots are displayed on the screen and
 it is possible to run this script on a headless server.
 '''
 
-import os, nose, warnings
+import os, nose, sys, warnings, unittest
 from nose.plugins import Plugin
 from nose.plugins.capture import Capture
 from nose.plugins.logcapture import LogCapture
@@ -33,10 +33,30 @@ if os.path.exists('examples_completed.txt'):
 else:
     examples_completed = []
 
+class RunTestCase(unittest.TestCase):
+    '''
+    A test case that simply executes a python script and notes the execution of
+    the script in a file `examples_completed.txt`.
+    '''
+    def __init__(self, filename):
+        unittest.TestCase.__init__(self)
+        self.filename = filename
+    
+    def runTest(self):
+        # Make sure the scripts do not have to import everything again and again
+        execfile(self.filename, {'_mpl' : _mpl, 'brian': brian})
+    
+    def tearDown(self):
+        open('examples_completed.txt', 'a').write(self.filename + '\n')
+
+    def __str__(self):
+        return 'Test: ' + self.filename
+
 class SelectFilesPlugin(Plugin):
     '''
     This plugin makes nose descend into all directories but skips files that
     are mentioned in examples_exclude.txt or examples_completed.txt
+    Test cases simply consist of executing the script.
     '''
     # no command line arg needed to activate plugin
     enabled = True
@@ -48,40 +68,29 @@ class SelectFilesPlugin(Plugin):
     def wantDirectory(self, dirname):
         # we want all directories
         return True
-    
-    def wantFile(self, filename):
-        # we only need the filename, not the path
-        filename = os.path.split(filename)[1]
-        if filename in exclude_list or filename in examples_completed:
-            return False
-        elif filename.endswith('.py'):
-            return True
+
+    def find_examples(self, name):
+        short_name = os.path.split(name)[1]
+        examples = []
+        if short_name in exclude_list or name in examples_completed:
+            return []
+        elif os.path.isdir(name):
+            for subname in os.listdir(name):
+                examples.extend(self.find_examples(os.path.join(name, subname))) 
+            return examples
+        elif name.endswith('.py'):  # only execute Python scripts
+            return [name]
         else:
-            return False
+            return []
         
-class RecordCompletionPlugin(Plugin):
-    ''' 
-    This plugin saves the completed examples to the file examples_completed.txt,
-    already completed examples will be skipped on subsequent runs.
-    
-    Note that this is ignored by the automatic testing on the Jenkins server, as
-    the script in dev/jenkins/linux_scripts/run_examples.sh first deletes
-    examples_completed.txt
-    '''
-    
-    enabled = True
-    name = 'record-completion'
-
-    def configure(self, options, conf):
-        pass # always on
-
-    def afterImport(self, filename, module):
-        filename = os.path.split(filename)[1]
-        open('examples_completed.txt', 'a').write(filename + '\n')
+    def loadTestsFromName(self, name, module=None, discovered=False):        
+        all_examples = self.find_examples(name)        
+        return [RunTestCase(example) for example in all_examples]
+        
         
 argv = [__file__, '-v', '--logging-clear-handlers', '--with-xunit',
         '--with-coverage', '--cover-html', '--cover-package=brian',
         '../../examples']
 
-nose.main(argv=argv, plugins=[SelectFilesPlugin(), RecordCompletionPlugin(),
-                              LogCapture(), Capture(), Coverage(), Xunit()])
+nose.main(argv=argv, plugins=[SelectFilesPlugin(), LogCapture(), Capture(),
+                              Coverage(), Xunit()])

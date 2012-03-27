@@ -36,3 +36,6 @@ offline_electrode_compensation.py
 modelfitting_groups.py
 modelfitting_machines.py
 modelfitting.py
+
+# Uses multiprocessing
+Muller_et_all_2011.py
