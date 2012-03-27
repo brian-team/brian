@@ -9,9 +9,9 @@ update the docs, make sure that all the tests run, etc.
 Steps:
 
 * Check files with track_files.py
-* Run create_quickrelease.py
-* Test the generated files in the Brian/dist folder install and run
-  correctly.
+* Run create_quickrelease.py or start the "Quickrelease" job on Jenkins
+* Test the generated files from Jenkins or in the Brian/dist folder install and
+  run correctly.
 * If not, you may need to update setup.py
 * Upload the files to the Trac
  

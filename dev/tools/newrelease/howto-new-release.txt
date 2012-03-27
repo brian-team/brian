@@ -1,7 +1,10 @@
 Creating a new release of Brian
 ===============================
 
-At the moment, these instructions are for Windows computers only.
+Many of these steps can be done now using the Jenkins Continuous Integration
+server (hal.dec.ens.fr:8080) -- for completeness both ways (using Jenkins vs.
+doing it manually) are illustrated under the different subheadings. Note that
+you only have to do one of them!
 
 You need the following packages installed:
 
@@ -11,12 +14,21 @@ You need the following packages installed:
 Regression testing
 ------------------
 
+Using Jenkins
+~~~~~~~~~~~~~
+This should be done automatically:
+The tests are run after every commit, the examples are tested nightly. But it
+certainly does not hurt to do it manually as well:
+
+Manually
+~~~~~~~~
 Run dev/tests/alltests.py and if possible dev/tests/allexamples.py. Note
 that some of the allexamples.py tests will fail for known reasons (check
 individual files to make sure).
 
 Update the version number
 -------------------------
+(Has to be done manually)
 
 Run dev/tools/newrelease/setversion.py, which will prompt you to type
 the new version number. We use the convention:
@@ -28,7 +40,7 @@ minor features or fixes bugs.
 
 Update README.txt and brian/new_features.txt
 --------------------------------------------
-
+(Has to be done manually)
 Copy the latest new features from new_features.txt into README.txt
 following the convention there, and make a new section in new_features.txt
 for the next version. You should also go through the commit log from the time
@@ -45,6 +57,17 @@ Build the documentation
 This probably doesn't need to be done for patch level releases, only
 minor and major releases.
 
+Using Jenkins
+~~~~~~~~~~~~~
+Select "Build Now" for the "Documentation" job. After the job has finished 
+successfully, it should provide a file `docs.zip` containing the HTML and PDF
+documentation, this should be uploaded as the docs folder to the website.
+
+Note that Jenkins does currently not have access to the "More Brian" SVN
+therefore it can't be used to make a new BrianReference.pdf.
+
+Manually
+~~~~~~~~
 First of all, run the dev/tools/docs/generate_html.py script. This will
 generate all the relevant HTML files for the documentation other
 than the API documentation. Note that you need to check that no errors are
@@ -61,7 +84,7 @@ The docs folder should be copied to the website.
 
 Update setup.py
 ---------------
-
+(Has to be done manually)
 The setup.py file is the install script for Brian and also contains
 the information that defines what people see on the pypi site, and
 what the requirements are for easy_install and so forth, so it's
@@ -96,6 +119,14 @@ the setup.py file.
 Create the distribution files
 -----------------------------
 
+Using Jenkins
+~~~~~~~~~~~~~
+Select "Build now" for the "Release" Job -- after it finished it should provide
+the .zip, .tar.gz and .exe files. Note that any changes to the MANIFEST.in
+files (see below) have to be done manually before running the job.
+
+Manually
+~~~~~~~~
 First if you have a copy, delete the MANIFEST file. Next, if necessary,
 update the MANIFEST.in file which specifies which files should be
 included in the distribution. At the moment, we have an inclusive
@@ -113,11 +144,18 @@ on the SVN, but don't take up unnecessary space).
 Create the extras file
 ----------------------
 
+Using Jenkins
+~~~~~~~~~~~~~
+Select "Build now" for the "Extras" jobs.
+
+Manually
+~~~~~~~~
 Just run the create_extras.py file. This should create
 dist/brian-versionname-extras.zip.
 
 Test the distribution
 ---------------------
+(Has to be done manually)
 
 First uninstall any installed copy of Brian you have on your machine,
 but not the SVN version. Do this by going to Add/Remove programs in
@@ -149,6 +187,7 @@ to edit the Download page on the Trac Wiki to point to the new release.
 
 Upload to PyPI
 --------------
+(Has to be done manually)
 
 You use the dev/tools/newrelease/register_pypi.py script to register
 the data on PyPI. Note that you need a PyPI account that is authorised
@@ -167,6 +206,7 @@ home it is C:\DOCUME~1\DANGOO~1.
 
 Commit to SVN
 -------------
+(Has to be done manually)
 
 At this point, make a commit to the SVN with a large notice in the commit
 comment such as ****** BRIAN 1.2.0 ******. Also, create an SVN tag with this
@@ -174,6 +214,7 @@ release (svn copy /trunk to /tags/1.2.0 for example).
 
 Set the version to the next planned release
 -------------------------------------------
+(Has to be done manually)
 
 Run setversion.py and enter the next planned version with 'dev' on the
 end, e.g. 1.1.4dev. This is so that weekly releases will be marked as
