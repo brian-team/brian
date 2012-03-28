@@ -397,6 +397,9 @@ class DimensionMismatchError(Exception):
         dim -- the dimensions of the objects involved in the operation, any
                number of them is possible
         """
+        # Call the base class constructor to make Exception pickable, see:
+        # http://bugs.python.org/issue1692335
+        Exception.__init__(self, description, *dims)
         self._dims = dims
         self.desc = description
 
