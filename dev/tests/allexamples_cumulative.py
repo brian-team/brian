@@ -7,21 +7,14 @@ Note: Uses the 'Agg' backend, therefore no plots are displayed on the screen and
 it is possible to run this script on a headless server.
 '''
 
-import os, nose, sys, warnings, unittest
+import os, nose, sys, subprocess, warnings, unittest
+import tempfile, pickle
 from nose.plugins import Plugin
 from nose.plugins.capture import Capture
 from nose.plugins.logcapture import LogCapture
 from nose.plugins.cover import Coverage
 from nose.plugins.xunit import Xunit
-
-# Use the 'Agg' backend, normally used for saving plots to files
-# this has the advantage of no plots showing up and can be run 
-# without an X server or similar. This has to be done before importing brian
-# because brian imports pylab
-import matplotlib as _mpl
-_mpl.use('Agg')
-
-# Suppress all warnings
+import warnings
 warnings.simplefilter('ignore')
 import brian # It seems if we import brian here, nose can capture the logging
 
@@ -43,11 +36,42 @@ class RunTestCase(unittest.TestCase):
         self.filename = filename
     
     def runTest(self):
-        # Make sure the scripts do not have to import everything again and again
-        execfile(self.filename, {'_mpl' : _mpl, 'brian': brian})
+        # a simpler version of what the nosepipe plugin achieves:
+        # isolate test execution in a subprocess:
+        tempfilename = tempfile.mktemp('exception')
+        
+        # Catch any exception and save it to a temporary file
+        code_string = """
+import matplotlib as _mpl
+_mpl.use('Agg')
+import warnings
+warnings.simplefilter('ignore')
+import pickle
+try:
+    execfile('%s')
+except Exception as ex:
+    print 'an Exception occured:', ex
+    f = open('%s', 'w')
+    pickle.dump(ex, f, -1)
+    f.close()
+""" % (self.filename, tempfilename)
+        
+        args = [sys.executable, '-c',
+                code_string]
+        subprocess.call(args)
+        
+        # Re-raise any exception that occured
+        if os.path.exists(tempfilename):
+            f = open(tempfilename, 'r')
+            ex = pickle.load(f)
+            self.successful = False
+            raise ex
+        else:
+            self.successful = True
     
     def tearDown(self):
-        open('examples_completed.txt', 'a').write(self.filename + '\n')
+        if self.successful:
+            open('examples_completed.txt', 'a').write(self.filename + '\n')
 
     def __str__(self):
         return 'Test: ' + self.filename
