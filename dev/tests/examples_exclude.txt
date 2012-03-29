@@ -10,14 +10,12 @@ parallelpython.py
 parallelpythonised
 interface.py
 Izhikevich_2006_Polychronization_longer.py
-multiple_runs_with_gui.py
 clusterexample_manager.py
 clusterexample_worker.py
 remotecontrolserver.py
 remotecontrolclient.py
 ircam_hrtf.py
 sound_localisation_model.py
-taskfarm.py
 
 # These need additional files
 Goodman_Brette_2010.py
@@ -39,3 +37,6 @@ modelfitting.py
 
 # Uses multiprocessing
 Muller_et_all_2011.py
+taskfarm.py
+multiple_runs_with_gui.py
+multiple_runs_simple.py

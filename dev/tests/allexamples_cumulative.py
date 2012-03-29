@@ -49,7 +49,7 @@ warnings.simplefilter('ignore')
 import pickle
 try:
     execfile('%s')
-except Exception as ex:
+except Exception, ex:
     print 'an Exception occured:', ex
     f = open('%s', 'w')
     pickle.dump(ex, f, -1)
