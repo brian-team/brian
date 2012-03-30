@@ -36,7 +36,7 @@ modelfitting_machines.py
 modelfitting.py
 
 # Uses multiprocessing
-Muller_et_all_2011.py
+Muller_et_al_2011.py
 taskfarm.py
 multiple_runs_with_gui.py
 multiple_runs_simple.py
