@@ -50,13 +50,12 @@ class RunTestCase(unittest.TestCase):
         code_string = """
 import matplotlib as _mpl
 _mpl.use('Agg')
-import warnings
+import warnings, traceback, pickle
 warnings.simplefilter('ignore')
-import pickle
 try:
     execfile('%s')
 except Exception, ex:
-    print 'an Exception occured:', ex
+    traceback.print_exc(file=sys.stderr)
     f = open('%s', 'w')
     pickle.dump(ex, f, -1)
     f.close()
