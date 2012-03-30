@@ -50,7 +50,7 @@ class RunTestCase(unittest.TestCase):
         code_string = """
 import matplotlib as _mpl
 _mpl.use('Agg')
-import warnings, traceback, pickle
+import warnings, traceback, pickle, sys
 warnings.simplefilter('ignore')
 try:
     execfile('%s')
