@@ -32,8 +32,11 @@ class RunTestCase(unittest.TestCase):
         self.filename = filename
     
     def id(self):
-        # Remove the .py because this makes the JUnit output look weird 
-        return self.filename[:-3]
+        # Remove the .py and pretend the dirname is a package and the filename
+        # is a class.
+        name = os.path.splitext(os.path.split(self.filename)[1])[0]
+        pkgname = os.path.split(os.path.split(self.filename)[0])[1]
+        return pkgname + '.' + name.replace('.', '_')          
     
     def shortDescription(self):
         return str(self)
