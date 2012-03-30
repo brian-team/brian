@@ -11,12 +11,8 @@ import os, nose, sys, subprocess, warnings, unittest
 import tempfile, pickle
 from nose.plugins import Plugin
 from nose.plugins.capture import Capture
-from nose.plugins.logcapture import LogCapture
-from nose.plugins.cover import Coverage
 from nose.plugins.xunit import Xunit
-import warnings
 warnings.simplefilter('ignore')
-import brian # It seems if we import brian here, nose can capture the logging
 
 exclude_list = open('examples_exclude.txt', 'U').read().split('\n')
 exclude_list = [f for f in exclude_list if not f.startswith('#') and f]
@@ -34,6 +30,13 @@ class RunTestCase(unittest.TestCase):
     def __init__(self, filename):
         unittest.TestCase.__init__(self)
         self.filename = filename
+    
+    def id(self):
+        # Remove the .py because this makes the JUnit output look weird 
+        return self.filename[:-3]
+    
+    def shortDescription(self):
+        return str(self)
     
     def runTest(self):
         # a simpler version of what the nosepipe plugin achieves:
@@ -58,7 +61,13 @@ except Exception, ex:
         
         args = [sys.executable, '-c',
                 code_string]
-        subprocess.call(args)
+        # Run the example in a new process and make sure that stdout gets 
+        # redirected into the capture plugin
+        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        sys.stdout.write(stdout)
+        sys.stderr.write(stderr) 
         
         # Re-raise any exception that occured
         if os.path.exists(tempfilename):
@@ -74,7 +83,7 @@ except Exception, ex:
             open('examples_completed.txt', 'a').write(self.filename + '\n')
 
     def __str__(self):
-        return 'Test: ' + self.filename
+        return 'Example: ' + self.filename
 
 class SelectFilesPlugin(Plugin):
     '''
@@ -112,9 +121,6 @@ class SelectFilesPlugin(Plugin):
         return [RunTestCase(example) for example in all_examples]
         
         
-argv = [__file__, '-v', '--logging-clear-handlers', '--with-xunit',
-        '--with-coverage', '--cover-html', '--cover-package=brian',
-        '../../examples']
+argv = [__file__, '-v', '--with-xunit', '--verbose', '../../examples']
 
-nose.main(argv=argv, plugins=[SelectFilesPlugin(), LogCapture(), Capture(),
-                              Coverage(), Xunit()])
+nose.main(argv=argv, plugins=[SelectFilesPlugin(), Capture(), Xunit()])
