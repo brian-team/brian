@@ -55,7 +55,7 @@ warnings.simplefilter('ignore')
 try:
     execfile('%s')
 except Exception, ex:
-    traceback.print_exc(file=sys.stderr)
+    traceback.print_exc(file=sys.stdout)
     f = open('%s', 'w')
     pickle.dump(ex, f, -1)
     f.close()
