@@ -1,10 +1,16 @@
 echo Using $(which python)
 
 # if no system-wide packages are used, update numpy etc. to newest version
-if [ $packages = no_global ]; then
+if [ $packages = newest ]; then
+  echo "Using newest available package versions"
   ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade -I numpy 
   ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade -I scipy sympy
   ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade -I matplotlib
+elif [ $packages = oldest ]; then
+  echo "Using oldest available package versions supported by Brian"
+  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install -I numpy==1.3.0 
+  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install -I scipy==0.70 sympy
+  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install -I matplotlib==0.90.1  
 fi
 
 # Print the version numbers for the dependencies
