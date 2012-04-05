@@ -41,17 +41,10 @@ sudo apt-get install jenkins
 	mkdir -p ~/.jenkins/virtual_envs
 
 * For every python version (replace $PYTHON by python2.6 for example):
-virtualenv --python=$PYTHON --no-site-packages ~/.jenkins/virtual_envs/$PYTHON/no_global
-virtualenv --python=$PYTHON --system-site-packages ~/.jenkins/virtual_envs/$PYTHON/with_global
+virtualenv --python=$PYTHON --no-site-packages ~/.jenkins/virtual_envs/$PYTHON/oldest
+virtualenv --python=$PYTHON --system-site-packages ~/.jenkins/virtual_envs/$PYTHON/oldest
 
-This could be done in a script of course:
-#! /bin/sh
-mkdir -p ~/.jenkins/virtual_envs
-for PYTHON in python2.6 python2.7; do
-  virtualenv --python=$PYTHON --no-site-packages ~/.jenkins/virtual_envs/$PYTHON/no_global
-  virtualenv --python=$PYTHON --system-site-packages ~/.jenkins/virtual_envs/$PYTHON/with_global
-done
-
+This could be done in a script of course (see linux_scripts/create_virtualenvs.sh)
 
 ### Jenkins configuration
 (can be mostly done via the browser, browse to http://hal.dec.ens.fr:8080)
