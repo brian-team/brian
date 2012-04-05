@@ -9,8 +9,10 @@ if [ $packages = newest ]; then
 elif [ $packages = oldest ]; then
   echo "Using oldest available package versions supported by Brian"
   ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install -I numpy==1.3.0 
-  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install -I scipy==0.70 sympy
-  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install -I matplotlib==0.90.1  
+  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install -I scipy==0.7.0 sympy
+  # Brian depencies state matplotlib>=0.90.1 but 0.98.1 is the oldest version
+  # available via pypi
+  ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install -I matplotlib==0.98.1  
 fi
 
 # Print the version numbers for the dependencies
