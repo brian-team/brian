@@ -100,7 +100,7 @@ def symbolic_eval(expr):
     vars = get_identifiers(expr)
     for var in vars:
         namespace[var] = sympy.Symbol(var)
-    return eval(expr, namespace)
+    return sympy.sympify(eval(expr, namespace))
 
 def simplify_expr(expr):
     '''

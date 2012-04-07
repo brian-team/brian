@@ -5,6 +5,7 @@ from codeitems import *
 from statements import *
 from formatting import *
 from languages import *
+from dependencies import *
 
 __all__ = ['resolve']
 

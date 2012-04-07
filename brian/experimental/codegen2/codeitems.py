@@ -4,6 +4,8 @@ from formatting import *
 from codeobject import *
 from gpu import *
 
+__all__ = ['CodeItem']
+
 class CodeItem(object):
     # Some default values to simplify coding, a class deriving from this can
     # either define selfdependencies/selfresolved or dependencies/resolved.
