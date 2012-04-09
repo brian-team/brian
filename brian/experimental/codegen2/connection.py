@@ -30,7 +30,7 @@ class CodeGenConnection(Connection):
             if not self.W.__class__ in [SparseConnectionMatrix,
                                         DenseConnectionMatrix,
                                         ]:
-                log_warn('brian.codegen', "Only sparse matrix supported.")
+                log_warn('brian.codegen', "Only sparse and dense matrix supported.")
                 self._use_codegen = False
         if not hasattr(self, '_use_codegen'):
             # allow ourselves the option of disabling codegen for cases where

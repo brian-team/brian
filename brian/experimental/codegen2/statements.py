@@ -19,9 +19,18 @@ __all__ = [
     ]
 
 class Statement(CodeItem):
+    '''
+    Just a base class, supposed to indicate single line statements.
+    '''
     pass
 
 class CodeStatement(Statement):
+    '''
+    A language-specific single line of code, which should only be used in
+    the resolution step by a :class:`Symbol` which knows the language it is
+    resolving to. The string ``code`` and the set of ``dependencies`` and
+    ``resolved`` have to be given explicitly.
+    '''
     def __init__(self, code, dependencies, resolved):
         self.dependencies = dependencies
         self.resolved = resolved
@@ -35,6 +44,12 @@ class CodeStatement(Statement):
         return self.code
 
 def c_data_type(dtype):
+    '''
+    Gives the C language specifier for numpy data types. For example,
+    ``numpy.int32`` maps to ``int32_t`` in C.
+    
+    Perhaps this method is given somewhere in numpy, but I couldn't find it.
+    '''
     if dtype is None:
         dtype = float64
     if dtype is int:
@@ -56,6 +71,35 @@ def c_data_type(dtype):
     return dtype
 
 class CDefineFromArray(CodeStatement):
+    '''
+    Define a variable from an array and an index in C.
+    
+    For example::
+    
+        double &V = __arr_V[neuron_index];
+    
+    Initialisation arguments are:
+    
+    ``var``
+        The variable being defined, a string.
+    ``arr``
+        A string representing the array.
+    ``index``
+        A string giving the index.
+    ``dependencies``
+        Given explicitly, or by default use ``set([Read(arr), Read(index)])``.
+    ``resolved``
+        Given explicitly, or by default use ``set([var])``.
+    ``dtype``
+        The numpy data type of the variable being defined.
+    ``reference``
+        Whether the variable should be treated as a C++ reference (e.g.
+        ``double &V = ...`` rather than ``double V = ...``. If the variable
+        is being written to as well as read from, use ``reference=True``.
+    ``const``
+        Whether the variable can be defined as const, specify this if only
+        reading the value and not writing to it.
+    '''
     def __init__(self, var, arr, index,
                  dependencies=None, resolved=None,
                  dtype=None, reference=True, const=False):
@@ -78,6 +122,29 @@ class CDefineFromArray(CodeStatement):
         CodeStatement.__init__(self, code, dependencies, resolved)
 
 class MathematicalStatement(Statement):
+    '''
+    A single line mathematical statement.
+    
+    The structure is ``var op expr``.
+    
+    ``var``
+        The left hand side of the statement, the value being written to, a
+        string.
+    ``op``
+        The operation, can be any of the standard Python operators (including
+        ``+=`` etc.) or a special operator ``:=`` which means you are defining
+        a new symbol (whereas ``=`` means you are setting the value of an
+        existing symbol).
+    ``expr``
+        A string or an :class:`Expression` object, giving the right hand side
+        of the statement.
+    ``dtype``
+        If you are defining a new variable, you need to specify its numpy dtype.
+        
+    If ``op==':='`` then this statement will resolve ``var``, otherwise it will
+    add a :class:`Write` dependency for ``var``. The other dependencies come
+    from ``expr``.
+    '''
     def __init__(self, var, op, expr, dtype=None):
         self.var = var.strip()
         self.op = op.strip()
@@ -99,6 +166,19 @@ class MathematicalStatement(Statement):
     __repr__ = __str__
             
     def convert_to(self, language, symbols={}, tabs=0, namespace={}):
+        '''
+        When converting to a code string, the following takes place:
+        
+        * If the LHS variable is in the set of ``symbols``, then the LHS
+          is replaced by ``sym.write()``
+        * The expression is converted with :meth:`Expression.convert_to`.
+        * If the operation is definition ``op==':='`` then the output is
+          language dependent. For Python it is ``lhs = rhs`` and for C or
+          GPU it is ``dtype lhs = rhs``.
+        * If the operation is not definition, the statement is converted to
+          ``lhs op rhs``.
+        * If the language is C/GPU the statement has ``;`` appended.
+        '''
         if self.var in symbols:
             sym = symbols[self.var]
             lhs_name = sym.write()
@@ -125,6 +205,29 @@ class MathematicalStatement(Statement):
 
 def statements_from_codestring(code, eqs=None, defined=None,
                                infer_definitions=False):
+    '''
+    Generate a list of statements from a user-defined string.
+    
+    ``code``
+        The input code string, a multi-line string which should be flat, no
+        indents.
+    ``eqs``
+        A Brian :class:`~brian.Equations` object, which is used to specify
+        a set of already defined variable names if you are using
+        ``infer_definitions``.
+    ``defined``
+        A set of symbol names which are already defined, if you are using
+        ``infer_definitions``.
+    ``infer_definitions``
+        Set to ``True`` to guess when a line of the form ``a=b`` should be
+        inferred to be of type ``a:=b``, as user-specified code may not make
+        the distinction between ``a=b`` and ``a:=b``.
+        
+    The rule for definition inference is that you scan through the lines, and
+    a set of already defined symbols is maintained (starting from ``eqs`` and
+    ``defined`` if provided), and an ``=`` op is changed to ``:=`` if the
+    name on the LHS is not already in the set of symbols already defined.
+    '''
     lines = [line.strip() for line in code.split('\n') if line.strip()]
     statements = []
     if defined is None:

@@ -16,7 +16,11 @@ class Code(object):
     The basic Code object used for all Python/C/GPU code generation.
     
     The Code object has the following attributes:
-    
+
+    ``name``
+        The name of the code, should be unique. This matters particularly
+        for GPU code which uses the name attribute for the kernel function
+        names.
     ``code_str``
         A representation of the code in string form
     ``namespace``
@@ -34,7 +38,7 @@ class Code(object):
         A :class:`Language` object that stores some global settings and state
         for all code in that language.
         
-    Each language (e.g. PythonCode) extends some or all of the methods::
+    Each language (e.g. PythonCode) extends some or all of the methods:
     
     ``__init__(...)``
         Unsurprisingly used for initialising the object, should call

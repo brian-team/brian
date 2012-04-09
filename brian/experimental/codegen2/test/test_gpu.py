@@ -1,13 +1,6 @@
 from brian import *
-from languages import *
-from stateupdater import *
-from integration import *
-from threshold import *
-from reset import *
-from connection import *
-from blocks import *
-from symbols import *
-from gpu import *
+from brian.experimental.codegen2 import *
+from brian.experimental.codegen2.gpu import *
 
 language = GPULanguage()
 

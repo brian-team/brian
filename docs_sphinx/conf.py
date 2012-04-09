@@ -29,6 +29,9 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.ifconfig',
               'sphinx.ext.graphviz', 'sphinx.ext.inheritance_diagram',
               'sphinx.ext.pngmath']
 
+# Inheritance diagram options
+inheritance_graph_attrs = {'rankdir':'TB'}
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

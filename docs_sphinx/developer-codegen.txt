@@ -1,0 +1,360 @@
+.. currentmodule:: brian.experimental.codegen2
+
+.. index::
+	pair: code; generation
+	
+Code generation
+^^^^^^^^^^^^^^^
+
+.. warning::
+	This section is a work in progress, documenting the most recent code generation
+	framework, which is in the package ``brian.experimental.codegen2``. 
+
+Overview
+========
+
+Using the code generation package
+---------------------------------
+
+The basic way to use the code generation module is as follows:
+
+1. Create a :class:`Block` of :class:`Statement` objects which you want to
+   execute. You can use :func:`statements_from_codestring` to do this.
+2. Create a dictionary of :class:`Symbol` objects corresponding to the symbols
+   in the block above.
+3. Call :meth:`Block.generate` with the specified language and symbols, to give
+   you a :class:`Code` object.
+4. Optionally, insert additional data into the namespace of the :class:`Code`
+   object.
+5. Use the :class:`Code` object via ``code(name1=val1, name2=val2)`` where the
+   ``name=val`` are to be inserted into the namespace before the code is called.
+
+This process is very clearly illustrated in the source code for
+:class:`CodeGenStateUpdater`.
+
+Structure of the package
+------------------------
+
+The following are the main elements of the code generation package:
+
+:class:`Code`
+	This is the output of the code generation package, a compilable/compiled
+	code fragment, along with a namespace in which it is executed.
+:class:`Language`
+	Used to specify which language the output should have.
+:class:`CodeItem`
+	Before code is converted into a specific language, it is stored in a
+	language-invariant format consisting of :class:`CodeItem` objects, which
+	can in turn contain other :class:`CodeItem` objects. The main derived
+	classes from this are :class:`Block` and :class:`Statement`. The first can
+	contain a series of statements, or it can be a for loop, an if block, etc.
+	A :class:`Statement` can be a :class:`MathematicalStatement` or
+	:class:`CodeStatement`. The former is for things like ``x=y*z`` and the
+	latter for things like ``x = arr[index]``.
+
+Inheritance diagrams
+====================
+
+The overall structure of the classes in the code generation package are
+included below, for reference.
+
+Languages
+---------
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.languages
+	GPULanguage
+	:parts: 2
+
+Code objects
+------------	
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.codeobject
+	GPUCode
+	:parts: 2
+
+Code items
+----------
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.codeitems
+	brian.experimental.codegen2.statements
+	brian.experimental.codegen2.blocks
+	:parts: 2
+	
+Equations
+---------
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.equations
+	brian.experimental.codegen2.expressions
+	:parts: 2
+
+Symbols
+-------
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.symbols
+	:parts: 2
+
+Resolution and code output
+--------------------------
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.dependencies
+	brian.experimental.codegen2.formatting
+	:parts: 2
+
+Integration
+-----------
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.integration
+	:parts: 2
+
+GPU
+---
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.gpu
+	:parts: 2
+
+Brian objects
+-------------
+
+Connection
+~~~~~~~~~~
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.connection
+	:parts: 3
+
+Reset
+~~~~~
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.reset
+	:parts: 3
+
+State updater
+~~~~~~~~~~~~~
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.stateupdater
+	:parts: 3
+
+Threshold
+~~~~~~~~~
+
+.. inheritance-diagram::
+	brian.experimental.codegen2.threshold
+	:parts: 3
+
+Reference
+=========
+
+blocks
+------
+
+.. autoclass:: Block
+	:members:
+	:undoc-members:
+.. autoclass:: ControlBlock
+	:members:
+	:undoc-members:
+.. autoclass:: ForBlock
+	:members:
+	:undoc-members:
+.. autoclass:: PythonForBlock
+	:members:
+	:undoc-members:
+.. autoclass:: CForBlock
+	:members:
+	:undoc-members:
+.. autoclass:: IfBlock
+	:members:
+	:undoc-members:
+.. autoclass:: PythonIfBlock
+	:members:
+	:undoc-members:
+.. autoclass:: CIfBlock
+	:members:
+	:undoc-members:
+
+codeitems
+---------
+
+.. autoclass:: CodeItem
+	:members:
+	:undoc-members:
+
+codeobject
+----------
+
+.. autoclass:: Code
+	:members:
+	:undoc-members:
+.. autoclass:: PythonCode
+	:members:
+	:undoc-members:
+.. autoclass:: CCode
+	:members:
+	:undoc-members:
+
+connection
+----------
+
+.. autoclass:: CodeGenConnection
+	:members:
+	:undoc-members:
+
+dependencies
+------------
+
+.. autoclass:: Dependency
+	:members:
+	:undoc-members:
+.. autoclass:: Read
+	:members:
+	:undoc-members:
+.. autoclass:: Write
+	:members:
+	:undoc-members:
+.. autofunction:: get_read_or_write_dependencies
+
+equations
+---------
+
+.. autofunction:: freeze_with_equations
+.. autofunction:: frozen_equations
+
+expressions
+-----------
+
+.. autoclass:: Expression
+	:members:
+	:undoc-members:
+
+formatting
+----------
+
+.. autoclass:: CodeFormatter
+	:members:
+	:undoc-members:
+.. autofunction:: word_substitute
+.. autofunction:: flattened_docstring
+.. autofunction:: indent_string
+.. autofunction:: get_identifiers
+.. autofunction:: strip_empty_lines
+
+gpu
+---
+
+.. autoclass:: GPUKernel
+	:members:
+	:undoc-members:
+.. autoclass:: GPUManager
+	:members:
+	:undoc-members:
+.. autoclass:: GPUSymbolMemoryManager
+	:members:
+	:undoc-members:
+.. autoclass:: GPUCode
+	:members:
+	:undoc-members:
+.. autoclass:: GPULanguage
+	:members:
+	:undoc-members:
+
+integration
+-----------
+
+.. autoclass:: EquationsContainer
+	:members:
+	:undoc-members:
+.. autofunction:: make_integration_step
+.. autofunction:: euler
+.. autofunction:: rk2
+.. autofunction:: exp_euler
+
+languages
+---------
+
+.. autoclass:: Language
+	:members:
+	:undoc-members:
+.. autoclass:: PythonLanguage
+	:members:
+	:undoc-members:
+.. autoclass:: CLanguage
+	:members:
+	:undoc-members:
+
+reset
+-----
+
+.. autoclass:: CodeGenReset
+	:members:
+	:undoc-members:
+
+resolution
+----------
+
+.. autofunction:: resolve
+
+statements
+----------
+
+.. autoclass:: Statement
+	:members:
+	:undoc-members:
+.. autoclass:: CodeStatement
+	:members:
+	:undoc-members:
+.. autoclass:: CDefineFromArray
+	:members:
+	:undoc-members:
+.. autoclass:: MathematicalStatement
+	:members:
+	:undoc-members:
+.. autofunction:: statements_from_codestring
+.. autofunction:: c_data_type
+
+stateupdater
+------------
+
+.. autoclass:: CodeGenStateUpdater
+	:members:
+	:undoc-members:
+
+symbols
+-------
+
+.. autoclass:: Symbol
+	:members:
+	:undoc-members:
+.. autoclass:: RuntimeSymbol
+	:members:
+	:undoc-members:
+.. autoclass:: ArraySymbol
+	:members:
+	:undoc-members:
+.. autoclass:: NeuronGroupStateVariableSymbol
+	:members:
+	:undoc-members:
+.. autoclass:: SliceIndex
+	:members:
+	:undoc-members:
+.. autoclass:: ArrayIndex
+	:members:
+	:undoc-members:
+.. autofunction:: language_invariant_symbol_method
+.. autofunction:: get_neuron_group_symbols 
+
+threshold
+---------
+
+.. autoclass:: CodeGenThreshold
+	:members:
+	:undoc-members:

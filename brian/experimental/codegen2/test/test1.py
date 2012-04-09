@@ -1,11 +1,5 @@
 from brian import *
 from brian.experimental.codegen2 import *
-#from languages import *
-#from stateupdater import *
-#from integration import *
-#from threshold import *
-#from reset import *
-#from connection import *
 
 language = CLanguage()
 #language = PythonLanguage()
