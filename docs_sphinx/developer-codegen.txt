@@ -8,10 +8,23 @@ Code generation
 
 .. warning::
 	This section is a work in progress, documenting the most recent code generation
-	framework, which is in the package ``brian.experimental.codegen2``. 
+	framework, which is in the package ``brian.experimental.codegen2``.
 
 Overview
 ========
+
+To generate code, we start with a basic statement or set of statements we want
+to evaluate for all neurons, or for all synapses, and then apply various
+transformations to generate code that will do this. We start from a
+structured, language-invariant representation of the set of basic statements.
+We then 'resolve' the unknown symbols in it. This is done recursively, the
+resolution of each symbol can add vectorised statements or loops to the
+current representation, and add data to a namespace that will be associated to
+the final code. Symbols will be things like a :class:`~brian.NeuronGroup` state
+variable, or a synaptic weight value. The output of this process is a new,
+more complicated structured representation, including things like loops if
+necessary. Next, we convert this structured representation into a code
+string. Finally, this code string is JIT-compiled into an executable object.
 
 Using the code generation package
 ---------------------------------
@@ -22,8 +35,8 @@ The basic way to use the code generation module is as follows:
    execute. You can use :func:`statements_from_codestring` to do this.
 2. Create a dictionary of :class:`Symbol` objects corresponding to the symbols
    in the block above.
-3. Call :meth:`Block.generate` with the specified language and symbols, to give
-   you a :class:`Code` object.
+3. Call :meth:`CodeItem.generate` with the specified language and symbols, to
+   give you a :class:`Code` object.
 4. Optionally, insert additional data into the namespace of the :class:`Code`
    object.
 5. Use the :class:`Code` object via ``code(name1=val1, name2=val2)`` where the
@@ -51,6 +64,198 @@ The following are the main elements of the code generation package:
 	A :class:`Statement` can be a :class:`MathematicalStatement` or
 	:class:`CodeStatement`. The former is for things like ``x=y*z`` and the
 	latter for things like ``x = arr[index]``.
+:class:`Symbol`, :func:`resolve`
+	A :class:`CodeItem` with unresolved dependencies needs to be resolved by
+	the function :func:`resolve`. Each unresolved depdendency should correspond
+	to a :class:`Symbol` which knows how to modify a :class:`CodeItem` in order
+	to resolve itself. For example, a :class:`NeuronGroupStateVariableSymbol`
+	will insert the :class:`~brian.NeuronGroup` state variable value into the
+	namespace, create a new array symbol like ``__arr_V`` for symbol ``V``,
+	and resolve itself either by doing nothing (in Python, as the variable is
+	already vectorised), or by introducing a loop (in C++), or by setting the
+	index variable as the kernel thread (for GPU). For more details, see
+	the section on resolution below.
+:func:`make_integration_step`, :func:`euler`, :func:`rk2`, :func:`exp_euler`
+	Numerical integration schemes, each integration scheme (such as
+	:func:`euler`) converts a set of differential equations into a sequence of
+	:class:`MathematicalStatement` objects comprising an integration step.
+:class:`CodeGenStateUpdater`, :class:`CodeGenThreshold`, :class:`CodeGenReset`, :class:`CodeGenConnection`
+	Brian objects using code generation.
+	
+Resolution process
+==================
+
+Example
+-------
+
+We start with a worked example. Consider the statement::
+
+	V = V+1
+	
+Here ``V`` is a :class:`NeuronGroup` state variable. We wish to transform this
+into code that can be executed. In the case of Python, the output would look
+like::
+
+	_neuron_index = slice(None)
+	V = _arr_V[_neuron_index]
+	_arr_V[_neuron_index] = V+1
+	
+The symbol ``_arr_V`` would be added directly to the namespace.
+
+In the case of C++ it would look like::
+
+	for(int _neuron_index=0; _neuron_index<_len__arr_V; _neuron_index++)
+	{
+		double &V = _arr_V[_neuron_index];
+		V = V+1;
+	}
+
+Here the symbols ``_arr_V`` and `_len__arr_V`` would be added to the namespace.
+The reason for these complicated names is to do with making the code as
+generic as possible, not introducing namespace clashes (symbols starting with
+``_`` are reserved), etc.
+
+The way the process works is we start with the statement ``V=V+1`` and a
+:class:`Symbol` object with name ``V``, specifically a
+:class:`NeuronGroupStateVariableSymbol`. The statement ``V=V+1`` depends on
+``V`` with both a :class:`Read` and :class:`Write` dependency. We therefore
+have to 'resolve' the symbol ``V``. To do this we call the method
+:meth:`~ArraySymbol.resolve` on ``V``.
+
+In the case of Python, this gives us::
+
+	V = _arr_V[_neuron_index]
+	_arr_V[_neuron_index] = V+1
+
+It adds ``_arr_V`` to the namespace, and creates a dependency on
+``_neuron_index``. The reason that ``V=V+1`` is translated to
+``_arr_V[_neuron_index] = V+1`` is that on the left hand side we have a write
+variable, and on the right hand side we have a read variable. In Python, when
+vectorising, we have no choice but to give the underlying array with its slice
+when writing to an array. However, at this point the code generation framework
+doesn't know what ``_neuron_index`` will be, so it could be, for example, an
+array of indices. In this case, suppose we did ``V*V`` it would be more
+efficient to compute ``V=_arr_V[_neuron_index]`` and then compute ``V*V`` than
+to compute ``_arr_V[_neuron_index]*_arr_V[_neuron_index]``, and in the case
+where ``_neuron_index=slice(None)`` it is no slower, so we always do this.
+
+In the case of C++, the first resolution step gives us::
+
+	double &V = _arr_V[_neuron_index];
+	V = V+1;
+
+For the second resolution step, we need to resolve ``_neuron_index``, which
+is a symbol of type :class:`SliceIndex`, telling us that ``_neuron_index``
+varies over all neurons. Note that we could also have ``_neuron_index`` being
+an :class:`ArrayIndex`, for examples ``spikes``, and then this could be used
+for a reset operation (we would iterate only over those indices of neurons
+which had spiked). Here though, we iterate over all neurons. In Python, calling
+the :meth:`~ArrayIndex.resolve` method of ``_neuron_index`` gives us:: 
+
+	_neuron_index = slice(None)
+	V = _arr_V[_neuron_index]
+	_arr_V[_neuron_index] = V+1
+
+and in C++::
+
+	for(int _neuron_index=0; _neuron_index<_len__arr_V; _neuron_index++)
+	{
+		double &V = _arr_V[_neuron_index];
+		V = V+1;
+	}
+
+In both cases, the ``_neuron_index`` symbol is resolved and the process is
+complete.
+
+Note that we have actually mixed two stages here, the stage of generating a
+structured representation of the code using :class:`CodeItem` objects, and the
+stage of generating code strings using :meth:`CodeItem.convert_to`. In fact,
+the converting of, for example, ``V`` to ``_arr_V[_neuron_index]`` only happens
+at the second stage.
+
+:func:`resolve`
+---------------
+
+The first stage, acting on the structured representation of nested
+:class:`CodeItem` objects is resolved using the function :func:`resolve`. This
+calls :meth:`Symbol.resolve` for each of the symbols in turn. The resolution
+order is determined by an optimal efficiency algorithm, see the reference
+documentation for :func:`resolve` for the full algorithm description.
+
+:meth:`Symbol.resolve` can do an arbitrary transformation of the input
+:class:`CodeItem`, but typically it will either do something like::
+
+	load()
+	item
+	save()
+	
+Or something like::
+
+	for name in array:
+		item
+		
+See the reference documentation for :meth:`Symbol.resolve`, and the
+documentation for the most important symbols:
+
+* :class:`SliceIndex`
+* :class:`ArraySymbol`
+* :class:`ArrayIndex`
+* :class:`NeuronGroupStateVariableSymbol`
+
+:meth:`~CodeItem.convert_to`
+----------------------------
+
+This step is relatively straightforward, each :class:`CodeItem` object has its
+``convert_to`` method called iteratively. The important one is in
+:class:`MathematicalStatement`, where the left hand side usage is replaced by
+:meth:`Symbol.write` and the right hand side usage is replaced by
+:meth:`Symbol.read`. In addition, at this stage the syntax of mathematical
+statements is corrected, e.g. Python's ``x**y`` is replaced by C++'s
+``pow(x,y)`` using ``sympy``.
+
+Code generation in Brian
+========================
+
+The four objects used for code generation in Brian are:
+
+:class:`CodeGenStateUpdater`
+	Used for numerical integration, see above and reference documentation.
+:class:`CodeGenThreshold`
+	Used for computing a threshold function.
+:class:`CodeGenReset`
+	Used for computing post-spike reset.
+:class:`CodeGenConnection`
+	Used for synaptic propagation.
+
+Numerical integration
+---------------------
+
+TODO: numerical integration, including docstrings and code comments
+
+Synaptic propagation
+--------------------
+
+TODO: synaptic propagation, including docstrings and code comments
+
+GPU
+===
+
+TODO: document GPU, including docstrings and code comments
+
+Extending code generation
+=========================
+
+To extend code generation, you will probably need to add new :class:`Symbol`
+classes. Read the documentation for this class to start, and the documentation
+for the most important symbols:
+
+* :class:`SliceIndex`
+* :class:`ArraySymbol`
+* :class:`ArrayIndex`
+* :class:`NeuronGroupStateVariableSymbol`
+
+See also :class:`CodeItem`, particularly the process described in
+:meth:`CodeItem.generate`.
 
 Inheritance diagrams
 ====================
@@ -208,6 +413,12 @@ connection
 .. autoclass:: CodeGenConnection
 	:members:
 	:undoc-members:
+.. autoclass:: DenseMatrixSymbols
+	:members:
+	:undoc-members:
+.. autoclass:: SparseMatrixSymbols
+	:members:
+	:undoc-members:
 
 dependencies
 ------------
@@ -239,9 +450,6 @@ expressions
 formatting
 ----------
 
-.. autoclass:: CodeFormatter
-	:members:
-	:undoc-members:
 .. autofunction:: word_substitute
 .. autofunction:: flattened_docstring
 .. autofunction:: indent_string

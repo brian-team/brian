@@ -4,7 +4,10 @@ from blocks import *
 from statements import *
 from dependencies import *
 
-__all__ = ['CodeGenConnection']
+__all__ = ['CodeGenConnection',
+           'DenseMatrixSymbols',
+           'SparseMatrixSymbols',
+           ]
 
 def get_connection_variable(C, modulation=False):
     if modulation:

@@ -10,6 +10,32 @@ from dependencies import *
 __all__ = ['resolve']
 
 def resolve(item, symbols, namespace=None):
+    '''
+    Resolves ``symbols`` in ``item`` in the optimal order.
+    
+    The first stage of this algorithm is to construct a dependency graph
+    on the symbols.
+    
+    The optimal order is resolve loops as late as possible.
+    We actually construct the inverse of the resolution order, which is the
+    intuitive order (i.e. if the first thing we do is loop over a variable, then
+    that variable is the last symbol we resolve).
+    
+    We start by
+    finding the set of symbols which have no dependencies. The graph is
+    acyclic so this always possible. Then, among those candidates, if possible
+    we choose loopless symbols first (this corresponds to executing loops as
+    late as possible). With this symbol removed from the graph we repeat until
+    all symbols are placed in order.
+    
+    We then resolve in reverse order (because we start with the inner loop
+    and add code outwards). At the beginning of this stage, vectorisable is
+    set to ``True``. But after we encounter the first multi-valued symbol
+    we set ``vectorisable`` to ``False`` (we can only vectorise one loop, and
+    it has to be the innermost one). This vectorisation is used by both Python
+    and GPU but not C++. Each resolution step calls :meth:`CodeItem.resolve` on
+    the output of the previous stage.
+    '''
     if namespace is None:
         namespace = {}
     # stage 1, build the dependency graph

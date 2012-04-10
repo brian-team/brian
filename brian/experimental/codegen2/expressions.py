@@ -10,10 +10,23 @@ __all__ = ['Expression',
            ]
 
 def substitute_symbols(expr, symbols):
+    '''
+    For each symbol which appears in the dict ``symbols`` and as a word in the
+    expression string ``expr``, replace the symbol with ``sym.read()``.
+    '''
     substitutions = dict((name, sym.read()) for name, sym in symbols.iteritems())
     return word_substitute(expr, substitutions)
 
 class Expression(object):
+    '''
+    A mathematical expression such as ``x*y+z``.
+    
+    Has an attribute ``dependencies`` which is ``Read(var)`` for all words
+    ``var`` in ``expr``.
+    
+    Has a method :meth:`convert_to` defined the same way as
+    :meth:`CodeItem.convert_to`.
+    '''
     def __init__(self, expr):
         self.expr = expr
         self.sympy_expr = symbolic_eval(self.expr)
@@ -24,6 +37,13 @@ class Expression(object):
         return self.expr
             
     def convert_to(self, language, symbols={}, namespace={}):
+        '''
+        Converts expression into a string for the given ``language`` using the
+        given set of ``symbols``. Replaces each :class:`Symbol` appearing in the
+        expression with ``sym.read()``, and if the language is C++ or GPU then
+        uses ``sympy.CCodePrinter().doprint()`` to convert the syntax, e.g.
+        ``x**y`` becomes ``pow(x,y)``.
+        '''
         if language.name=='python':
             return substitute_symbols(self.expr, symbols)
         elif language.name=='c' or language.name=='gpu':
