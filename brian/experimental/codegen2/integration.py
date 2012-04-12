@@ -11,6 +11,31 @@ __all__ = ['EquationsContainer', 'make_integration_step',
            ]
 
 class EquationsContainer(object):
+    '''
+    Utility class for defining numerical integration scheme
+    
+    Initialise with a set of equations ``eqs``. You can now iterate over
+    this object in two ways, firstly over all the differential equations::
+    
+        for var, expr in eqscontainer:
+            yield f(expr)
+    
+    Or over just the differential equations with nonzero expressions (i.e.
+    not including ``dx/dt=0`` for parameters)::        
+    
+        for var, expr in eqscontainer.nonzero:
+            yield f(expr)
+    
+    Here ``var`` is the name of the symbol, and ``expr`` is a string, the
+    right hand side of the differential equation ``dvar/dt=expr``.
+         
+    Also has attributes:
+    
+    ``names``
+        The symbol names for all the differential equations
+    ``names_nonzero``
+        The symbol names for all the nonzero differential equations
+    '''
     def __init__(self, eqs):
         frozen = self.frozen = frozen_equations(eqs)
         self.all = [(var, frozen[var]) for var in eqs._diffeq_names]
@@ -21,6 +46,19 @@ class EquationsContainer(object):
         return iter(self.all)
 
 def make_integration_step(method, eqs):
+    '''
+    Return an integration step from a method and a set of equations.
+    
+    The ``method`` should be a function ``method(eqs)`` which receives a
+    :class:`EquationsContainer` object as its argument, and ``yield`` s
+    statements. For example, the :func:`euler` integration step is defined as::
+
+        def euler(eqs):
+            for var, expr in eqs.nonzero:
+                yield '_temp_{var} := {expr}'.format(var=var, expr=expr)
+            for var, expr in eqs.nonzero:
+                yield '{var} += _temp_{var}*dt'.format(var=var, expr=expr)
+    '''
     eqs_container = EquationsContainer(eqs)
     statements = []
     for s in method(eqs_container):
@@ -28,12 +66,18 @@ def make_integration_step(method, eqs):
     return statements
 
 def euler(eqs):
+    '''
+    Euler integration
+    '''
     for var, expr in eqs.nonzero:
         yield '_temp_{var} := {expr}'.format(var=var, expr=expr)
     for var, expr in eqs.nonzero:
         yield '{var} += _temp_{var}*dt'.format(var=var, expr=expr)
 
 def rk2(eqs):
+    '''
+    2nd order Runge-Kutta integration
+    '''
     for var, expr in eqs:
         yield '''
             _buf_{var} := {expr}
@@ -49,6 +93,9 @@ def rk2(eqs):
             '''.format(var=var, expr=expr)
 
 def exp_euler(eqs):
+    '''
+    Exponential-Euler integration
+    '''
     for var, expr in eqs.nonzero:
         subs = {
             'expr_B': word_substitute(expr, {var:0}),

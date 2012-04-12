@@ -230,17 +230,64 @@ The four objects used for code generation in Brian are:
 Numerical integration
 ---------------------
 
-TODO: numerical integration, including docstrings and code comments
+An integration scheme is generated from an :class:`Equations` object using the
+:func:`make_integration_step` function. See reference documentation for that
+function for details.
+
+This is carried out by :class:`CodeGenStateUpdater`, which can be used as a
+Brian :class:`brian.StateUpdater` object in :class:`brian.NeuronGroup`.
+
+As an example, for Euler integration, the differential equations::
+
+	dx/dt = expr
+	
+are separated by :class:`Equations` into variable ``x`` with expression
+``expr``. This then becomes::
+
+	_temp_x := expr
+	x += _temp_x*dt
+	
+This can then be resolved by the code generation mechanisms described already. 
 
 Synaptic propagation
 --------------------
 
 TODO: synaptic propagation, including docstrings and code comments
 
+NOTE: GPU functionality not included for synaptic propagation yet.
+
 GPU
 ===
 
-TODO: document GPU, including docstrings and code comments
+.. warning::
+	GPU code is highly transitional, many details may change in the future.
+
+GPU code is handled by five classes:
+
+:class:`GPULanguage` (derived from :class:`CLanguage`)
+	Identifies the language as CUDA, and stores a singleton
+	:class:`GPUManager` object which is used to manage the GPU.
+:class:`GPUCode` (derived from :class:`Code`)
+	Returned from the code generation process, but mostly just acts as a proxy
+	to :class:`GPUManager`.
+:class:`GPUKernel`
+	Handles the final stage of taking a partially generated kernel (without the
+	vectorisation over threads) and computing the final kernel (using
+	vectorisation over threads). Also adds data to the
+	:class:`GPUSymbolMemoryManager`.
+:class:`GPUManager`
+	Manages the GPU generally. Stores a set of kernels (:class:`GPUKernel`) and
+	manages memory via :class:`GPUSymbolMemoryManager`. Handles joining the
+	memory management code and kernel code into a single source file, and
+	compiling it.
+:class:`GPUSymbolMemoryManager`
+	Handles allocation of GPU memory for symbols.
+
+For more details, see the reference documentation for the classes in the order
+above.
+
+Note that :class:`CodeGenConnection` is the only code generation version of a
+Brian class which is not GPU enabled at present.
 
 Extending code generation
 =========================
@@ -458,6 +505,9 @@ formatting
 
 gpu
 ---
+
+.. warning::
+	GPU code is highly transitional, many details may change in the future.
 
 .. autoclass:: GPUKernel
 	:members:
