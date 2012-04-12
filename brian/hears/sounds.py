@@ -505,9 +505,11 @@ class Sound(BaseSound, numpy.ndarray):
             Z = 10 * log10(Z)
         Z = flipud(Z)
         if restricted:
-            imshow(Z, extent=(0, amax(bins), freqs[I2[0]], freqs[I2[-1]]), aspect='auto')
+            imshow(Z, extent=(0, amax(bins), freqs[I2[0]], freqs[I2[-1]]),
+                   origin='upper', aspect='auto')
         else:
-            imshow(Z, extent=(0, amax(bins), freqs[0], freqs[-1]), aspect='auto')
+            imshow(Z, extent=(0, amax(bins), freqs[0], freqs[-1]),
+                   origin='upper', aspect='auto')
         xlabel('Time (s)')
         ylabel('Frequency (Hz)')
         return (pxx, freqs, bins, im)
