@@ -1,0 +1,16 @@
+COMPILE
+
+- Create model code for each set of equations
+- Create neuron populations (NeuronGroup)
+- Create synapse populations (Connection) (but not weights, etc.)
+(- Constant values are passed here (but not needed))
+- Compile everything (use a script that does that)
+
+RUNTIME
+
+- Create dense array in the correct format (float/double), pass pointer via API
+- Use API calls to get/send data to state variables (and subset of variables)
+- API initialisation function
+- API run function
+- API get spike times
+- API deallocate

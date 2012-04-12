@@ -26,6 +26,31 @@ more complicated structured representation, including things like loops if
 necessary. Next, we convert this structured representation into a code
 string. Finally, this code string is JIT-compiled into an executable object.
 
+Using numerical integration generation
+--------------------------------------
+
+You can use Brian's equations format to generate C/C++ code for a numerical
+integration step, for example::
+
+    eqs = '''
+    dv/dt = (ge+gi-(v+49*mV))/(20*ms) : volt
+    dge/dt = -ge/(5*ms) : volt
+    dgi/dt = -gi/(10*ms) : volt
+    '''
+    code, vars, params = make_c_integrator(eqs, method=euler, dt=0.1*ms)
+    print code
+
+has output::
+
+	double _temp_v = 50.0*ge + 50.0*gi - 50.0*v - 2.45;
+	double _temp_ge = -200.0*ge;
+	double _temp_gi = -100.0*gi;
+	v += _temp_v*0.0001;
+	ge += _temp_ge*0.0001;
+	gi += _temp_gi*0.0001;
+
+See the documentation for the function :func:`make_c_integrator`.
+
 Using the code generation package
 ---------------------------------
 
@@ -548,6 +573,11 @@ languages
 .. autoclass:: CLanguage
 	:members:
 	:undoc-members:
+
+makeintegrator
+--------------
+
+.. autofunction:: make_c_integrator
 
 reset
 -----

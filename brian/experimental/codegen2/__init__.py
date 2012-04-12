@@ -9,6 +9,7 @@ from formatting import *
 from gpu import *
 from integration import *
 from languages import *
+from makeintegrator import *
 from reset import *
 from resolution import *
 from statements import *
