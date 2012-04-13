@@ -1,0 +1,28 @@
+Install:
+	- git (use cygwin)
+	- cmake
+	- boost
+		+ python
+		+ filesystem
+		+ system
+		+ programoptions
+		+ datetime
+	- (on linux) libltdl-dev
+	- MS VS 2008 Express
+	- NVIDIA stuff obv
+	- OpenMP optional
+
+- git checkout brian
+- git pull
+
+- cmake
+	NEMO_BRIAN_ENABLED = True
+	NEMO_MATLAB_ENABLED = False
+	+ Configure
+	+ Generate for MS VS 2008
+
+Open project in VS and Build target ALL_BUILD
+Then build Install
+	Goes to C:\Program Files\nemo\python
+	If you want to install somewhere else then run the distutils setup.py blah
+

@@ -1,0 +1,81 @@
+EASY PROBLEM
+============
+
+Propagate V += w
+
+API functions:
+	- synapse_type_idx = net.add_synapse_type()
+	OLD:
+		- net.add_neuron_type('Input'): dummy neuron, return neuron_type_idx
+	NEW:
+		- net.add_neuron_type('Input', [synapse_type_idx1, ...])
+			+ Andreas will add new input type 'BrianNeuron', which we will need
+			  to use
+			(+ Andreas will add multiline string with code as an option)
+	- net.add_neuron(neuron_type_idx, ids): ids are a list (array/sequence, see below)
+	OLD:
+		- net.add_synapse(source_neuron_idx, target_neuron_idx, delay, weight, False)
+			+ last option is for plasticity
+	NEW:
+		- net.add_synapse(synapse_type_idx, source_neuron_idx, target_neuron_idx, delay, weight, False)
+			+ last option is whether or not you want to return a list of indices
+	OLD:
+		- acc_ptr = sim.propagate(spikes_ptr, spikes_len)
+	NEW:
+		- acc_ptr = sim.propagate(synapse_type_idx, spikes_ptr, spikes_len)
+
+For API functions expected a sequence type, do this:
+	# for x a numpy array
+	import array as pyarray
+	y = pyarray.array(typecode)
+	y.fromstring(x.data)
+	# pass y
+		- Andreas will add this to his API, so we can just pass numpy arrays
+	
+TODO:
+	- (Andreas) Add support for either numpy or Python buffer protocol, for
+	  efficiency - do buffers work with the sequence protocol? if so, we can
+	  use that. Add a flag telling us whether or not we want to return a list
+	  of synapse indices.
+	- (Andreas, maybe) Add support for specifying an accumulation target pointer
+
+HARD PROBLEM
+============
+
+Three phases of propagation:
+
+	- Local scatter
+		+ source neuron state parameters
+		+ outgoing delays
+	- Global scatter
+		+ target partition
+	- Gather
+		+ synapse state
+		+ target neuron
+		
+Most expensive: getting source neuron
+Two options:
+
+	- Push it through the scatter process, will be coalesced access at gather
+	  stage but pushing more memory and only partially coalesced at scatter
+	  stages.
+	- Push only an index, and look up values at gather stage, uncoalesced
+	  but less memory needs to be pushed around at scatter stages
+
+Backwards propagation:
+
+	- Uncoalesced algorithm (short term)
+		+ but back prop might happen with 0 delay, which might improve it?
+	- Coalesced algorithm (long term)
+
+Stochasticity:
+
+	- Per-synapse randomly generated state?
+
+Andreas needs to add:
+
+	- Support for multiple synapse values
+	- Support for pushing more data through scatter stage
+	- Support for executing code over all synapses (e.g. diff eq updating)
+	- Immediate effect on backwards propagation (i.e. post-code is executed
+	  every time step, and not accumulated and then integrated at a later time)

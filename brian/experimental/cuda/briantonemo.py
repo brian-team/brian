@@ -144,7 +144,8 @@ class NemoNetworkPropagate(NetworkOperation):
                 spikes_gpu = self.spikes_gpu
                 pycuda.driver.memcpy_htod(spikes_gpu.gpudata, spikes_bool)
                 spikes_gpu_ptr = self.spikes_gpu_ptr
-            acc_ptr = self.net.nemo_sim.propagate(spikes_gpu_ptr, total_neurons)
+            acc_ptr = self.net.nemo_sim.propagate(self.synapse_type,
+                                                  spikes_gpu_ptr, total_neurons)
             if not hasattr(self, 'acc'):
                 self.acc = acc = drv.pagelocked_zeros(total_neurons, dtype=float32)
             else:
@@ -153,7 +154,8 @@ class NemoNetworkPropagate(NetworkOperation):
         else:
             spikes_ptr = spikes.ctypes.data
             spikes_len = len(spikes)
-            acc_ptr = self.net.nemo_sim.propagate(spikes_ptr, spikes_len)
+            acc_ptr = self.net.nemo_sim.propagate(self.synapse_type,
+                                                  spikes_ptr, spikes_len)
             acc = numpy_array_from_memory(acc_ptr, total_neurons, float32)
         for _, targetvar, targetslice in self.net.nemo_propagate_targets:
             targetvar += acc[targetslice]
@@ -261,8 +263,13 @@ class NemoNetwork(Network):
         # now upload to nemo
         self.nemo_net = nemo.Network()
 
+        # create dummy synapse type
+        self.synapse_type = self.nemo_net.add_synapse_type()
+        self.nemo_propagate.synapse_type = self.synapse_type
+
         # create dummy neurons
-        self.nemo_input_neuron_idx = self.nemo_net.add_neuron_type('Input')
+        self.nemo_input_neuron_idx = self.nemo_net.add_neuron_type('Input',
+                                                                   [self.synapse_type])
         self.nemo_net.add_neuron(self.nemo_input_neuron_idx,
                                  range(total_neurons))
 
@@ -303,7 +310,8 @@ class NemoNetwork(Network):
                 total_synapses += len(weight)
                 this_connection_synapses += len(weight)
                 if len(ind):
-                    self.nemo_net.add_synapse(i+source_offset, ind, delay,
+                    self.nemo_net.add_synapse(self.synapse_type,
+                                              i+source_offset, ind, delay,
                                               weight, False)
             print '-', C.__class__.__name__,
             print 'from source group of', len(C.source), 'neurons',
