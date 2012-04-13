@@ -1,2 +1,4 @@
 For vectorised Python arrays, a write invalidates the previous read cache, so
 after we write we need to regenerate the read names.
+
+Random numbers and symbol xi
