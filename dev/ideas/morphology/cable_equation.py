@@ -60,13 +60,15 @@ I : amp/cm**2 # applied current
 neuron = SpatialNeuron(morphology=morpho, model=eqs, refractory=4 * ms, Cm=1 * uF / cm ** 2, Ri=100 * ohm * cm)
 neuron.v=El
 neuron.I=0*amp/cm**2
-neuron.I[0]=.05 * nA/neuron.area[0]
+neuron.I[50]=.05 * nA/neuron.area[0]
 M=StateMonitor(neuron,'v',record=True)
 
 print 'taum=',neuron.Cm/gl
 
+run(1*ms)
+neuron.I=0
 run(200*ms)
 
 for i in range(10):
-    plot(M.times/ms,M[i*10]/mV)
+    plot(M.times/ms,M[35+i*3]/mV)
 show()
