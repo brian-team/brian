@@ -1,5 +1,5 @@
 This folder is for work on stage 1 of the code generation rewrite project
-detailed in:
+detailed in: 
 
 http://groups.google.com/group/brian-development/browse_thread/thread/e51958b7785e48ef
 
