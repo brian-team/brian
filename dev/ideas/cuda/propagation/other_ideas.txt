@@ -1,0 +1,19 @@
+Stream compaction / sorting method
+==================================
+
+The idea is to dump all the synaptic operations into a big queue, sort the
+queue by synaptic target, and then fire off a bunch of threads that vectorise
+over the queue.
+
+Questions:
+- if several events in sequence have the same target, how do we do accumulate
+  these? this is essentially the problem of vectorising Synapses in Python,
+  so maybe we can use the same solution? i.e. vectorise over indices without
+  repeats, and loop over repeats.
+
+Benefits:
+- in principle, everything can be coalesced
+Costs:
+- we need to efficiently sort the synaptic operations, which is
+  O(numevents log(numevents)), but there exist efficient sorting algorithms
+  and libraries to do this
