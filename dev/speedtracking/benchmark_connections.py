@@ -10,6 +10,11 @@ set_global_preferences(useweave=True,
                        gcc_options=['-march=native', '-Ofast'])
 """
 
+codegen_setup = """
+set_global_preferences(usecodegenweave=True, usecodegen=True,
+                       gcc_options=['-march=native', '-Ofast'])
+                """
+
 setup_template = """
 s = arange(%(neurons)d)
 class thr(Threshold):
@@ -25,6 +30,9 @@ net.run(defaultclock.dt)
 """
 
 statement = "net.run(1 * second)"
+
+# Code generation was introduced here
+start_codegen = datetime(2010, 2, 6)
 
 # Sparse matrices
 bench_sparse = Benchmark(statement,
@@ -43,7 +51,12 @@ bench_sparse100w = Benchmark(statement,
                              setup_template % {'neurons' : 100,
                                                'structure' : 'sparse'},
                              name='sparse connection matrix (100x100) with weave')
-
+bench_sparse100wc = Benchmark(statement,
+                              common_setup + weave_setup + codegen_setup +\
+                              setup_template % {'neurons' : 100,
+                                                'structure' : 'sparse'},
+                              name='sparse connection matrix (100x100) with weave + codegen',
+                              start_date=start_codegen)
 # Dynamic matrices
 # Set a start date here because the benchmark fails for earlier revisions
 start_dynamic = datetime(2010, 2, 4)
@@ -82,3 +95,9 @@ bench_dense100w = Benchmark(statement,
                             setup_template % {'neurons' : 100,
                                               'structure' : 'dense'},
                             name='dense connection matrix (100x100) with weave')
+bench_dense100wc = Benchmark(statement,
+                             common_setup + weave_setup + codegen_setup +\
+                             setup_template % {'neurons' : 100,
+                                              'structure' : 'dense'},
+                             name='dense connection matrix (100x100) with weave + codegen',
+                             start_date=start_codegen)
