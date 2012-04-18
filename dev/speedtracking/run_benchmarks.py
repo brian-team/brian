@@ -1,14 +1,13 @@
 '''
 Run benchmarks for all revisions of Brian in the repository, starting with
-version 1.0.0 and only using the last revision of a date, if more than one
-commit happened at that day. 
+version 1.0.0 and only using every tenth revision.
 To run the benchmark on your machine you need the following python packages:
 * vbench: https://github.com/wesm/vbench
 You have to download/clone it from the github page and use
 "python setup.py install"
 
 vbench has two more dependencies (those are available on pypi.python.org so 
-you can simply use easy_install) 
+you can simply use easy_install or pip) 
 * sqlalchemy: http://pypi.python.org/pypi/SQLAlchemy/0.7.5
 * pandas: http://pypi.python.org/pypi/pandas/0.7.0rc1
 
@@ -34,13 +33,6 @@ try:
 except ImportError:
     raise ImportError('You need to have vbench installed: https://github.com/wesm/vbench')
 
-# NECESSARY CHANGE HERE: ******************************************************
-# Use an absolute path -- if the directory does not exist it will be created
-PATH = '/home/marcel/data/vbench'
-# *****************************************************************************
-
-DB_PATH = os.path.join(PATH, 'benchmarks.db')
-
 # inspired by https://github.com/wesm/pandas/blob/master/vb_suite/suite.py
 modules = ['benchmark_connections',
            'benchmark_spikegenerator',
@@ -58,6 +50,16 @@ for modname in modules:
     benchmarks.extend(by_module[modname])
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2 or not os.path.isabs(sys.argv[1]):
+        sys.stderr.write('Usage: python run_benchmarks.py PATH\n' +
+                         'where PATH is an absolute path that will be used as the base path for saving results.\n')
+        sys.exit(1)
+
+    # if the directory does not exist it will be created
+    PATH = sys.argv[1]
+    
+    DB_PATH = os.path.join(PATH, 'benchmarks.db')
+    
     SVN_URL = 'https://neuralensemble.org/svn/brian/trunk'
     REPO_PATH = os.path.join(PATH, 'brian-trunk')
     if not os.path.exists(REPO_PATH):
@@ -74,8 +76,8 @@ if __name__ == '__main__':
 
     TMP_DIR = tempfile.mkdtemp(suffix='vbench')
 
-    # Those two are not really needed at the moment as no C extensions are compiled
-    # by default
+    # Those two are not really needed at the moment as no C extensions are
+    # compiled by default
     # TODO: Does using sys.executable here work on Windows? 
     PREPARE = "%s setup.py clean" % sys.executable
     BUILD = "%s setup.py build_ext" % sys.executable
