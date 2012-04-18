@@ -40,10 +40,10 @@ class CodeGenReset(Reset):
             self.namespace['_num_neurons'] = len(P)
         self.code = block.generate('reset', self.language, symbols,
                                    namespace=ns)
-        print 'RESET'
-        print self.code.code_str
         ns = self.code.namespace
         ns['dt'] = P.clock._dt
+        log_info('brian.codegen2.CodeGenReset', 'CODE:\n'+self.code.code_str)
+        log_info('brian.codegen2.CodeGenReset', 'KEYS:\n'+str(ns.keys()))
 
     def __call__(self, P):
         ns = self.code.namespace

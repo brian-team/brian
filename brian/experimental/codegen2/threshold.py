@@ -17,7 +17,7 @@ class CodeGenThreshold(Threshold):
         self.prepared = False
         P = group
         ns = self.namespace
-        self._inputcode = freeze_with_equations(self.inputcode, P._eqs, ns)
+        self.inputcode = freeze_with_equations(self.inputcode, P._eqs, ns)
         block = make_threshold_block(P, self.inputcode, self.language)
         symbols = get_neuron_group_symbols(P, self.language)
         symbols['_neuron_index'] = SliceIndex('_neuron_index',
@@ -40,8 +40,8 @@ class CodeGenThreshold(Threshold):
             self._arr_spiked_bool = _arr_spiked_bool
         code = self.code = block.generate('threshold', self.language,
                                           symbols)
-        print 'THRESHOLD'
-        print self.code.code_str
+        log_info('brian.codegen2.CodeGenThreshold', 'CODE:\n'+self.code.code_str)
+        log_info('brian.codegen2.CodeGenThreshold', 'KEYS:\n'+str(ns.keys()))
         ns = self.code.namespace
         ns['t'] = 1.0 # dummy value
         ns['dt'] = P.clock._dt
@@ -63,7 +63,8 @@ class CodeGenThreshold(Threshold):
             # compaction on the GPU and then return that
             def threshold_func(P):
                 code()
-                #code.mem_man.copy_to_host('_arr_spiked_bool')
+                if not language.force_sync:
+                    code.gpu_man.copy_to_host('_arr_spiked_bool')
                 return ns['_arr_spiked_bool'].nonzero()[0]
         self.threshold_func = threshold_func
 

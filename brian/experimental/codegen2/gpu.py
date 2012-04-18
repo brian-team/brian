@@ -25,8 +25,22 @@ __all__ = ['GPUKernel',
            'GPUSymbolMemoryManager',
            'GPUCode',
            'GPULanguage',
+           'compute_block_grid_size', 'compute_block_grid',
            ]
 
+def compute_block_grid_size(maxblocksize, numinds):
+    blocksize = maxblocksize
+    if numinds<blocksize:
+        blocksize = numinds
+    if numinds%blocksize==0:
+        gridsize = numinds/blocksize
+    else:
+        gridsize = numinds/blocksize+1
+    return int(blocksize), int(gridsize)
+
+def compute_block_grid(maxblocksize, numinds):
+    blocksize, gridsize = compute_block_grid_size(maxblocksize, numinds)
+    return (blocksize, 1, 1), (gridsize, 1)
 
 class GPUKernel(object):
     '''
@@ -43,13 +57,14 @@ class GPUKernel(object):
     as the pair ``(start, end)``.
     '''
     def __init__(self, name, code, namespace, mem_man,
-                 maxblocksize=512, scalar='double'):
+                 maxblocksize=512, scalar='double', force_sync=True):
         self.name = name
         self.code = code
         self.namespace = namespace
         self.mem_man = mem_man
         self.maxblocksize = maxblocksize
         self.scalar = scalar
+        self.force_sync = force_sync
         self.prepared = False
         self.index = namespace.pop('_gpu_vector_index')
         self.start, self.end = namespace.pop('_gpu_vector_slice')
@@ -123,15 +138,8 @@ class GPUKernel(object):
             code_str=indent_string(code_str),
             name=self.name, funcargs=func_args_str)
         self.kernel_code = code_str
-        blocksize = self.maxblocksize
-        if numinds<blocksize:
-            blocksize = numinds
-        if numinds%blocksize == 0:
-            gridsize = numinds/blocksize
-        else:
-            gridsize = numinds/blocksize+1
-        self.blocksize = blocksize
-        self.grid = (gridsize, 1)
+        self.blocksize, self.gridsize = compute_block_grid_size(self.maxblocksize, numinds)
+        self.grid = (self.gridsize, 1)
     def prepare_gpu_func(self):
         '''
         Calls the ``pycuda`` GPU function ``prepare()`` method for low-overhead
@@ -172,12 +180,13 @@ class GPUManager(object):
     memory copies will be handled explicitly by calls to methods
     :meth:`copy_to_device` and :meth:`copy_to_host`.
     '''
-    def __init__(self):
+    def __init__(self, force_sync=True):
         self.numkernels = 0
         self.kernels = {}
         self.combined_kernels = []
         self.mem_man = GPUSymbolMemoryManager()
         self.prepared = False
+        self.force_sync = force_sync
     def add_kernel(self, name, code, namespace):
         '''
         Adds a kernel with the given name, code and namespace. Creates a
@@ -188,7 +197,8 @@ class GPUManager(object):
         while name in self.kernels:
             name = basename+str(suffix)
             suffix += 1
-        self.kernels[name] = GPUKernel(name, code, namespace, self.mem_man)
+        self.kernels[name] = GPUKernel(name, code, namespace, self.mem_man,
+                                       force_sync=self.force_sync)
         return name
     def make_combined_kernel(self, *names):
         '''
@@ -243,8 +253,7 @@ class GPUManager(object):
 #            combined_name = 'combined_'+'_'.join(names)
 #            for name in names:
 #                code, ns, index, _ = self.kernels[name]
-        print 'GENERATED GPU SOURCE CODE'
-        print code
+        log_info('brian.codegen2.gpu.GPUManager', 'GENERATED GPU SOURCE CODE:\n'+code)
         self.code = code
     def compile(self):
         '''
@@ -274,9 +283,11 @@ class GPUManager(object):
         although this is only for the development phase and will change later.
         '''
         kernel = self.kernels[name]
-        self.copy_to_device(True) # TODO: temporary
+        if self.force_sync:
+            self.copy_to_device(True) # TODO: temporary
         kernel.run()
-        self.copy_to_host(True) # TODO: temporary
+        if self.force_sync:
+            self.copy_to_host(True) # TODO: temporary
         # TODO: combined kernels
     # proxies to mem_man        
     def add_symbols(self, items):
@@ -447,9 +458,10 @@ class GPULanguage(CLanguage):
     allocating, copying memory, etc. One is created if you do not specify one.
     '''
     CodeObjectClass = GPUCode
-    def __init__(self, scalar='double', gpu_man=None):
+    def __init__(self, scalar='double', gpu_man=None, force_sync=True):
         Language.__init__(self, 'gpu')
         self.scalar = scalar
         if gpu_man is None:
-            gpu_man = GPUManager()
+            gpu_man = GPUManager(force_sync=force_sync)
         self.gpu_man = gpu_man
+        self.force_sync = force_sync

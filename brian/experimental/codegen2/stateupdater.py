@@ -44,10 +44,8 @@ class CodeGenStateUpdater(StateUpdater):
                                               self.language,
                                               all=True)
         self.code = block.generate('stateupdate', self.language, symbols)
-        print 'STATE UPDATE'
-        print self.code.code_str
-        print 'STATE UPDATE NAMESPACE KEYS'
-        print self.code.namespace.keys()
+        log_info('brian.codegen2.CodeGenStateUpdater', 'STATE UPDATE CODE:\n'+self.code.code_str)
+        log_info('brian.codegen2.CodeGenStateUpdater', 'STATE UPDATE NAMESPACE KEYS:\n'+str(self.code.namespace.keys()))
         ns = self.code.namespace
         ns['t'] = 1.0 # dummy value
         ns['dt'] = group.clock._dt

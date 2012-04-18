@@ -83,14 +83,15 @@ def resolve(item, symbols, namespace=None):
         sym = symbols[var]
         read = Read(var) in item.dependencies
         write = Write(var) in item.dependencies
-        print 'Resolving', var,
+        log_msg = 'Resolving '+var+' '
         if read:
-            print '(read)',
+            log_msg += '(read) '
         if write:
-            print '(write)',
+            log_msg += '(write) '
         if vectorisable:
-            print '(vectorisable)',
-        print 'dependencies', item.dependencies
+            log_msg += '(vectorisable) '
+        log_msg += 'dependencies '+str(item.dependencies)
+        log_info('brian.codegen2.resolve', log_msg)
         item = sym.resolve(read, write, vectorisable, item, namespace)
         if sym.multi_valued():
             vectorisable = False

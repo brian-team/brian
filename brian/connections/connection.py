@@ -177,6 +177,7 @@ class Connection(magic.InstanceTracker, ObjectContainer):
             return
         self.source = source # pointer to source group
         self.target = target # pointer to target group
+        self.state = state
         if isinstance(state, str): # named state variable
             self.nstate = target.get_var_index(state)
         else:
