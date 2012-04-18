@@ -48,14 +48,25 @@ for modname in modules:
     benchmarks.extend(by_module[modname])
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2 or not os.path.isabs(sys.argv[1]):
-        sys.stderr.write('Usage: python run_benchmarks.py PATH\n' +
-                         'where PATH is an absolute path that will be used as the base path for saving results.\n')
+    if len(sys.argv) < 2 or len(sys.argv) > 3 or not os.path.isabs(sys.argv[1]):
+        sys.stderr.write('Usage: python run_benchmarks.py PATH [n]\n' +
+                         'where PATH is an absolute path that will be used as the base path for saving results.\n')            
         sys.exit(1)
 
     # if the directory does not exist it will be created
     PATH = sys.argv[1]
     
+    if len(sys.argv) == 3:
+        try:
+            run_options = int(sys.argv[2])
+            if run_options < 1:
+                raise ValueError()
+        except ValueError:
+            sys.stderr.write('n has to be an integer number > 0 not %r\n' % sys.argv[2])
+            sys.exit(2)
+    else:
+        run_options = 10
+
     DB_PATH = os.path.join(PATH, 'benchmarks.db')
     
     SVN_URL = 'https://neuralensemble.org/svn/brian/trunk'
@@ -85,6 +96,6 @@ if __name__ == '__main__':
     repo = GitRepo(REPO_PATH)
 
     runner = BenchmarkRunner(benchmarks, REPO_PATH, REPO_URL, BUILD, DB_PATH,
-                             TMP_DIR, PREPARE, run_option=10, #every 10 revs
+                             TMP_DIR, PREPARE, run_option=run_option, 
                              start_date=START_DATE)
     runner.run()
