@@ -26,8 +26,6 @@ import os, sys
 import tempfile
 from datetime import datetime
 
-import matplotlib.pyplot as plt
-
 try:
     from vbench.api import Benchmark, BenchmarkRunner, GitRepo
 except ImportError:
@@ -90,9 +88,3 @@ if __name__ == '__main__':
                              TMP_DIR, PREPARE, run_option=10, #every 10 revs
                              start_date=START_DATE)
     runner.run()
-
-    # Plot the results
-    for benchmark in benchmarks:
-        benchmark.plot(DB_PATH)
-
-    plt.show()
