@@ -12,16 +12,17 @@ log_level_info()
 
 ##### TESTING PARAMETERS
 from vectorise_over_postsynaptic_offset import *
-use_gpu = False
-parameters = {}
+use_gpu = True
+parameters = dict(use_atomic=True)
 do_plot = False
 
 ##### PROFILING CODE
 
 if use_gpu:
-    Connection = GPUConnection
+    Conn = GPUConnection
     language = GPULanguage(force_sync=False)
 else:
+    Conn = Connection
     language = CLanguage()
     parameters = {}
 
@@ -47,8 +48,8 @@ P._state_updater = CodeGenStateUpdater(P, euler, language, clock=P.clock)
 P._threshold = CodeGenThreshold(P, threshold, language)
 P._resetfun = CodeGenReset(P, reset, language)
 
-Ce = Connection(Pe, P, 'ge', weight=1.62*mV, sparseness=0.02, **parameters)
-Ci = Connection(Pi, P, 'gi', weight=-9*mV, sparseness=0.02, **parameters)
+Ce = Conn(Pe, P, 'ge', weight=1.62*mV, sparseness=0.02, **parameters)
+Ci = Conn(Pi, P, 'gi', weight=-9*mV, sparseness=0.02, **parameters)
 
 M = SpikeMonitor(P)
 
@@ -64,7 +65,7 @@ end = time.time()
 
 if use_gpu:
     print 'Using GPU'
-    for k, v in parameters:
+    for k, v in parameters.items():
         print '    '+k+':', v
 else:
     print 'Using CPU'

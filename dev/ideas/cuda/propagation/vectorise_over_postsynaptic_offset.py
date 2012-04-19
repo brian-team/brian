@@ -56,7 +56,7 @@ class GPUConnection(Connection):
     Only works with sparse at the moment, no modulation, no delays
     '''
     def __init__(self, *args, **kwds):
-        self.use_atomic = kwds.pop('use_atomic', False)
+        self.use_atomic = kwds.pop('use_atomic', True)
         super(GPUConnection, self).__init__(*args, **kwds)
     def gpu_prepare(self):
         self._gpu_prepared = True
@@ -75,20 +75,6 @@ class GPUConnection(Connection):
         self.gpu_spikes = pycuda.gpuarray.empty(len(self.source), dtype=int)
         # define propagation kernel
         self.gpu_code = '''
-        // Issam's version
-        /*__device__ inline void atomicAdd(double *address, double val)
-        {
-             unsigned long long int i_val = ((unsigned long long int*) &val)[0];
-             unsigned long long int tmp0 = 0;
-             unsigned long long int tmp1;
-             double interm;
-             while( (tmp1 = atomicCAS((unsigned long long int *)address, tmp0, i_val)) != tmp0)
-             {     
-                     tmp0 = tmp1;
-                     interm = val + ((double*) &tmp1 )[0] ;
-                     i_val = ((unsigned long long int*) &interm)[0];             
-             }
-        }*/
         // CUDA manual version
         __device__ double atomicAdd(double* address, double val)
         {
@@ -100,7 +86,7 @@ class GPUConnection(Connection):
                         __double_as_longlong(val + __longlong_as_double(assumed)));
             } while (assumed != old);
             return __longlong_as_double(old);
-        }        
+        }
         // propagate function, modified from Issam's code
         __global__ void propagate(double *v, double *alldata, int64_t *rowind,
                                   int64_t *allj, int64_t *numsynapses,
@@ -130,6 +116,7 @@ class GPUConnection(Connection):
         else:
             self.gpu_code = self.gpu_code.replace('%PROPAGATE%',
                     'v[target] += weight;')
+        log_info('brian.GPUConnection', 'code:\n'+self.gpu_code)
         self.gpu_module = pycuda.compiler.SourceModule(self.gpu_code)
         self.gpu_func = self.gpu_module.get_function('propagate')
         log_info('brian.GPUConnection',  'local size: '+str(self.gpu_func.local_size_bytes))
