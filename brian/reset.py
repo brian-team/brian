@@ -200,6 +200,7 @@ class StringReset(Reset):
             for var in unknowns:
                 expr = re.sub("\\b" + var + "\\b", var + '[_spikes_]', expr)
             self._code = compile(expr, "StringReset", "exec")
+            unknowns.extend(P.staticvars) # make non-differential equations accessible
             self._vars = unknowns
             self._prepared = True
         spikes = P.LS.lastspikes()
