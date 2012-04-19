@@ -35,9 +35,7 @@ Theoretical analysis of performance:
       inefficient?
 - writing to target state variable is atomic, inefficient
     + this cost depends on the number of conflicts, but in many cases may not
-      be too bad
-      
-TODO: redo the timings without copying spikes to CPU (work on CodeGenThreshold gpu version)
+      be too bad      
 '''
 
 from brian import *
@@ -77,7 +75,8 @@ class GPUConnection(Connection):
         self.gpu_spikes = pycuda.gpuarray.empty(len(self.source), dtype=int)
         # define propagation kernel
         self.gpu_code = '''
-        __device__ inline void atomic_add_double(double *address, double val)
+        // Issam's version
+        /*__device__ inline void atomicAdd(double *address, double val)
         {
              unsigned long long int i_val = ((unsigned long long int*) &val)[0];
              unsigned long long int tmp0 = 0;
@@ -89,7 +88,20 @@ class GPUConnection(Connection):
                      interm = val + ((double*) &tmp1 )[0] ;
                      i_val = ((unsigned long long int*) &interm)[0];             
              }
-        }
+        }*/
+        // CUDA manual version
+        __device__ double atomicAdd(double* address, double val)
+        {
+            unsigned long long int* address_as_ull = (unsigned long long int*)address;
+            unsigned long long int old = *address_as_ull, assumed;
+            do {
+                assumed = old;
+                old = atomicCAS(address_as_ull, assumed,
+                        __double_as_longlong(val + __longlong_as_double(assumed)));
+            } while (assumed != old);
+            return __longlong_as_double(old);
+        }        
+        // propagate function, modified from Issam's code
         __global__ void propagate(double *v, double *alldata, int64_t *rowind,
                                   int64_t *allj, int64_t *numsynapses,
                                   int64_t target_offset,
@@ -107,14 +119,14 @@ class GPUConnection(Connection):
                     const double weight = alldata[rowind[spike]+synaptic_offset]; // coalesced
                     %PROPAGATE%
                     //v[target] += weight; // uncoalesced, incorrect, but no atomics
-                    //atomic_add_double(v+target, weight); // uncoalesced, correct
+                    //atomicAdd(v+target, weight); // uncoalesced, correct
                 }
             }
         }
         '''
         if self.use_atomic:
             self.gpu_code = self.gpu_code.replace('%PROPAGATE%',
-                    'atomic_add_double(v+target, weight);')
+                    'atomicAdd(v+target, weight);')
         else:
             self.gpu_code = self.gpu_code.replace('%PROPAGATE%',
                     'v[target] += weight;')
@@ -145,171 +157,10 @@ class GPUConnection(Connection):
             return
         if not isinstance(spikes, numpy.ndarray):
             spikes = array(spikes, dtype=int)
-        #gpu_spikes = pycuda.gpuarray.to_gpu(spikes)
         pycuda.driver.memcpy_htod(int(self.gpu_spikes.gpudata), spikes)
         if self.gpuman.force_sync:
             self.memman.copy_to_device(True)
-#        args = self.gpu_args+(numpy.intp(gpu_spikes.gpudata),
-#                              numpy.int64(len(spikes)))
         args = self.gpu_args+(numpy.int64(len(spikes)),)
         self.gpu_func.prepared_call(self.grid, *args)
         if self.gpuman.force_sync:
             self.memman.copy_to_host(True)
-
-'''
-Some timings:
-
-Using CPU
-N = 4000 p = 0.02 numsynapses = 80
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 22966
-Firing rate: 5.7 Hz
-Time: 1.53084421158
-
-Using GPU
-N = 4000 p = 0.02 numsynapses = 80
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 22966
-Firing rate: 5.7 Hz
-Time: 3.83805704117
-
-Using GPU (without atomics - incorrect)
-N = 4000 p = 0.02 numsynapses = 80
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 22590
-Firing rate: 5.6 Hz
-Time: 3.7799680233
-
----
-
-Using CPU
-N = 8000 p = 0.02 numsynapses = 160
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 32635
-Firing rate: 4.1 Hz
-Time: 1.8069870472
-
-Using GPU
-N = 8000 p = 0.02 numsynapses = 160
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 32635
-Firing rate: 4.1 Hz
-Time: 4.33909010887
-
-Using GPU (without atomics - incorrect)
-N = 8000 p = 0.02 numsynapses = 160
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 31758
-Firing rate: 4.0 Hz
-Time: 4.24397182465
-
----
-
-Using CPU
-N = 20000 p = 0.02 numsynapses = 400
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 45356
-Firing rate: 2.3 Hz
-Time: 2.49684691429
-
-Using GPU
-N = 20000 p = 0.02 numsynapses = 400
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 45356
-Firing rate: 2.3 Hz
-Time: 5.67528915405
-
-Using GPU (without atomics - incorrect)
-N = 20000 p = 0.02 numsynapses = 400
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 46175
-Firing rate: 2.3 Hz
-Time: 5.70541095734
-
----
-
-Using CPU
-N = 10000 p = 0.1 numsynapses = 1000
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 253455
-Firing rate: 25.3 Hz
-Time: 2.68831110001
-
-Using GPU
-N = 10000 p = 0.1 numsynapses = 1000
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 253455
-Firing rate: 25.3 Hz
-Time: 5.42281198502
-
-Using GPU (without atomics - incorrect)
-N = 10000 p = 0.1 numsynapses = 1000
-we_base = 1.62 mV wi_base = -9.0 mV
-duration = 1.0 s
-Num spikes: 95966
-Firing rate: 9.6 Hz
-Time: 4.02827692032
-
----
-
-Using CPU
-N = 4000 p = 0.02 numsynapses = 80
-we_base = 1.62 mV wi_base = 0.0 V
-duration = 0.1 s
-Num spikes: 3246854
-Firing rate: 811.7 Hz
-Time: 0.964715003967
-
-Using GPU
-N = 4000 p = 0.02 numsynapses = 80
-we_base = 1.62 mV wi_base = 0.0 V
-duration = 0.1 s
-Num spikes: 3246854
-Firing rate: 811.7 Hz
-Time: 8.04835987091
-
-Using GPU (without atomics - incorrect)
-N = 4000 p = 0.02 numsynapses = 80
-we_base = 1.62 mV wi_base = 0.0 V
-duration = 0.1 s
-Num spikes: 3246400
-Firing rate: 811.6 Hz
-Time: 6.14857196808
-
----
-
-Using CPU
-N = 4000 p = 1.0 numsynapses = 4000
-we_base = 1.62 mV wi_base = 0.0 V
-duration = 0.1 s
-Num spikes: 3996315
-Firing rate: 999.1 Hz
-Time: 33.0275440216
-
-Using GPU
-N = 4000 p = 1.0 numsynapses = 4000
-we_base = 1.62 mV wi_base = 0.0 V
-duration = 0.1 s
-Num spikes: 3996315
-Firing rate: 999.1 Hz
-Time: 42.2296721935
-
-Using GPU (without atomics - incorrect)
-N = 4000 p = 1.0 numsynapses = 4000
-we_base = 1.62 mV wi_base = 0.0 V
-duration = 0.1 s
-Num spikes: 3996315
-Firing rate: 999.1 Hz
-Time: 5.27317285538
-'''
