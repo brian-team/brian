@@ -2,7 +2,7 @@
 Run benchmarks for all revisions of Brian in the repository, starting with
 version 1.0.0 and only using every tenth revision.
 To run the benchmark on your machine you need the following python packages:
-* vbench: https://github.com/wesm/vbench
+* vbench: https://github.com/pydata/vbench
 You have to download/clone it from the github page and use
 "python setup.py install"
 
@@ -29,7 +29,7 @@ from datetime import datetime
 try:
     from vbench.api import Benchmark, BenchmarkRunner, GitRepo
 except ImportError:
-    raise ImportError('You need to have vbench installed: https://github.com/wesm/vbench')
+    raise ImportError('You need to have vbench installed: https://github.com/pydata/vbench')
 
 # inspired by https://github.com/wesm/pandas/blob/master/vb_suite/suite.py
 modules = ['benchmark_connections',
