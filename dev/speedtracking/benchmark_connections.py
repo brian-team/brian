@@ -7,12 +7,12 @@ from brian import *
 
 weave_setup = """
 set_global_preferences(useweave=True,
-                       gcc_options=['-march=native', '-Ofast'])
+                       gcc_options=['-march=native', '-ffast-math', '-O3'])
 """
 
 codegen_setup = """
 set_global_preferences(usecodegenweave=True, usecodegen=True,
-                       gcc_options=['-march=native', '-Ofast'])
+                       gcc_options=['-march=native', '-ffast-math', '-O3'])
                 """
 
 setup_template = """
