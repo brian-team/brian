@@ -8,8 +8,12 @@ You have to download/clone it from the github page and use
 
 vbench has two more dependencies (those are available on pypi.python.org so 
 you can simply use easy_install or pip) 
-* sqlalchemy: http://pypi.python.org/pypi/SQLAlchemy/0.7.5
-* pandas: http://pypi.python.org/pypi/pandas/0.7.0rc1
+* sqlalchemy: http://pypi.python.org/pypi/SQLAlchemy
+* pandas: http://pypi.python.org/pypi/pandas
+
+vbench also needs the pstats module that is part of the Python standard library
+but sometimes has to be installed seperately, e.g. as part of the
+python-profiler package on Debian/Ubuntu systems.
 
 vbench currently only supports git repositories. As Brian uses a SVN repository,
 it has to use "git svn clone" first to convert it to git -- this should be done
@@ -25,6 +29,17 @@ improvements /regressions in Brian.
 import os, sys
 import tempfile
 from datetime import datetime
+import pstats
+
+try:
+    import sqlalchemy
+except ImportError:
+    raise ImportError('You need to have sqlalchemy installed: http://pypi.python.org/pypi/SQLAlchemy/')
+
+try:
+    import pandas    
+except ImportError:
+    raise ImportError('You need to have pandas installed: http://pypi.python.org/pypi/pandas')
 
 try:
     from vbench.api import Benchmark, BenchmarkRunner, GitRepo
