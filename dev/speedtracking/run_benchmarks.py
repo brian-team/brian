@@ -12,12 +12,13 @@ you can simply use easy_install or pip)
 * pandas: http://pypi.python.org/pypi/pandas
 
 vbench also needs the pstats module that is part of the Python standard library
-but sometimes has to be installed seperately, e.g. as part of the
+but sometimes has to be installed separately, e.g. as part of the
 python-profiler package on Debian/Ubuntu systems.
 
 vbench currently only supports git repositories. As Brian uses a SVN repository,
 it has to use "git svn clone" first to convert it to git -- this should be done
-automatically but you obviously need a working installation of git.
+automatically but you obviously need a working installation of git together
+with the git-svn extension.
 
 Benchmark results are saved in a database, therefore if you add new benchmarks
 or if new revisions appear, only the new things will be run. It might make sense
@@ -73,14 +74,14 @@ if __name__ == '__main__':
     
     if len(sys.argv) == 3:
         try:
-            run_options = int(sys.argv[2])
-            if run_options < 1:
+            run_option = int(sys.argv[2])
+            if run_option < 1:
                 raise ValueError()
         except ValueError:
             sys.stderr.write('n has to be an integer number > 0 not %r\n' % sys.argv[2])
             sys.exit(2)
     else:
-        run_options = 10
+        run_option = 10
 
     DB_PATH = os.path.join(PATH, 'benchmarks.db')
     
