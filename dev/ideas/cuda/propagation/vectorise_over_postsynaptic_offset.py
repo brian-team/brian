@@ -50,25 +50,16 @@ try:
     import pycuda
 except ImportError:
     pycuda = None    
-log_level_info()
 
-######## PROFILING PARAMETERS
-use_gpu = True
-use_atomic = True
-N = 4000
-p = 1.0
-we_base = 1.62*mV
-#wi_base = -9*mV
-wi_base = 0*mV
-duration = .1*second
-do_plot = False
-
-####### CONNECTION CLASS
+__all__ = ['GPUConnection']
 
 class GPUConnection(Connection):
     '''
     Only works with sparse at the moment, no modulation, no delays
     '''
+    def __init__(self, *args, **kwds):
+        self.use_atomic = kwds.pop('use_atomic', False)
+        super(GPUConnection, self).__init__(*args, **kwds)
     def gpu_prepare(self):
         self._gpu_prepared = True
         # find target variable on GPU
@@ -121,7 +112,7 @@ class GPUConnection(Connection):
             }
         }
         '''
-        if use_atomic:
+        if self.use_atomic:
             self.gpu_code = self.gpu_code.replace('%PROPAGATE%',
                     'atomic_add_double(v+target, weight);')
         else:
@@ -164,78 +155,6 @@ class GPUConnection(Connection):
         self.gpu_func.prepared_call(self.grid, *args)
         if self.gpuman.force_sync:
             self.memman.copy_to_host(True)
-
-##### PROFILING CODE
-
-if use_gpu:
-    Connection = GPUConnection
-    language = GPULanguage(force_sync=False)
-else:
-    language = CLanguage()
-
-eqs = '''
-dv/dt = (ge+gi-(v+49*mV))/(20*ms) : volt
-dge/dt = -ge/(5*ms) : volt
-dgi/dt = -gi/(10*ms) : volt
-'''
-threshold = 'v > -50*mV'
-reset = '''
-v = -60*mV
-'''
-
-nrandom.seed(213213)
-prandom.seed(343831)
-
-Ne = int(N*0.8)
-Ni = N-Ne
-we = we_base*(p/0.02)
-wi = wi_base*(p/0.02)
-
-P = NeuronGroup(N, eqs, threshold=threshold, reset=reset)
-P.v = -60 * mV + 10 * mV * rand(len(P))
-Pe = P.subgroup(Ne)
-Pi = P.subgroup(Ni)
-
-P._state_updater = CodeGenStateUpdater(P, euler, language, clock=P.clock)
-P._threshold = CodeGenThreshold(P, threshold, language)
-P._resetfun = CodeGenReset(P, reset, language)
-
-Ce = Connection(Pe, P, 'ge', weight=we, sparseness=p)
-Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=p)
-
-if do_plot:
-    M = SpikeMonitor(P)
-else:
-    M = SpikeCounter(P)
-
-if use_gpu:
-    language.gpu_man.copy_to_device(True)
-
-run(10*ms)
-#exit()
-
-start = time.time()
-run(duration-10*ms, report='stderr')
-end = time.time()
-
-if use_gpu:
-    print 'Using GPU',
-    if use_atomic:
-        print
-    else:
-        print '(without atomics - incorrect)'
-else:
-    print 'Using CPU'
-print 'N =', N, 'p =', p, 'numsynapses =', int(N*p)
-print 'we_base =', we_base, 'wi_base =', wi_base
-print 'duration =', duration
-print 'Num spikes:', M.nspikes
-print 'Firing rate: %.1f Hz'%(float(M.nspikes)/N)
-print 'Time:', end-start
-
-if do_plot and M.nspikes<=50000:
-    raster_plot(M)
-    show()
 
 '''
 Some timings:
