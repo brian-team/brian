@@ -518,9 +518,13 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         post_slice = self.postsynaptic_indexes(post)
         # Bound checks
         if pre_slice[-1]>=len(self.source):
-            raise ValueError('Presynaptic index greater than number of presynaptic neurons')
+            raise ValueError('Presynaptic index %d greater than number of '\
+                             'presynaptic neurons (%d)'
+                             % (pre_slice[-1], len(self.source)))
         if post_slice[-1]>=len(self.target):
-            raise ValueError('Postsynaptic index greater than number of postsynaptic neurons')
+            raise ValueError('Postsynaptic index %d greater than number of '\
+                             'postsynaptic neurons (%d)'
+                             % (post_slice[-1], len(self.target)))
 
         if isinstance(value,float):
             self.connect_random(pre,post,value)
