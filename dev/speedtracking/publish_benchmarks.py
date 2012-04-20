@@ -1,5 +1,7 @@
 import os, sys, getpass, xmlrpclib, tempfile
 from datetime import date, datetime
+import matplotlib as mpl
+mpl.use('Agg')
 from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter, MonthLocator
 
