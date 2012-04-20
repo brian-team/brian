@@ -11,7 +11,8 @@ except ImportError:
 log_level_info()
 
 ##### TESTING PARAMETERS
-from vectorise_over_postsynaptic_offset import *
+#from vectorise_over_postsynaptic_offset import *
+from vectorise_over_spiking_synapses import *
 use_gpu = True
 parameters = dict(use_atomic=True)
 do_plot = False

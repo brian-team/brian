@@ -93,7 +93,26 @@ class GPUConnection(Connection):
                                   int64_t target_offset,
                                   int64_t *spikes, int64_t numspikes)
         {
-            // TODO
+            //return;
+            __shared__ double stage[blockDim.x];
+            // zero stage memory
+            stage[threadIdx.x] = 0.0;
+            // propagate to stage
+            v = v+target_offset;
+            const int synaptic_offset = blockIdx.x * blockDim.x + threadIdx.x;
+            for(int spikes_index=0; spikes_index<numspikes; spikes_index++)
+            {
+                const int spike = spikes[spikes_index];
+                if(synaptic_offset<numsynapses[spike])
+                {
+                    const int target = allj[rowind[spike]+synaptic_offset]; // coalesced
+                    const double weight = alldata[rowind[spike]+synaptic_offset]; // coalesced
+                    %PROPAGATE%
+                    //v[target] += weight; // uncoalesced, incorrect, but no atomics
+                    //atomicAdd(v+target, weight); // uncoalesced, correct
+                }
+            }
+            // propagate to target
         }
         '''
         if self.use_atomic:

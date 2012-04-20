@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('wx') # faster for running over X server
+matplotlib.use('wxagg') # faster for running over X server
 from brian import *
 from brian.experimental.codegen2 import *
 import numpy
@@ -47,6 +47,8 @@ def profile_gpu_connection(gpu_module, use_gpu, Nsource, Ntarget, sparseness, sp
     
     start = time.time()
     run(1e10*second)
+    if use_gpu:
+        language.gpu_man.copy_to_host(True)
     end = time.time()
     elapsed = defaultclock.t
     realtime_ratio = (end-start)/float(elapsed)
@@ -75,13 +77,20 @@ if __name__=='__main__':
             )
         print summary
     if 1:
-        show_3d_plots = False
+        show_3d_plots = True
         show_individual_2d_plots = True # only used if 3D plots not used
-        repeats = 5
+        repeats = 1
         bases = {
             'C++':('b', dict(gpu_module='', use_gpu=False)),
-            'CUDA':('g', dict(gpu_module='vectorise_over_postsynaptic_offset', use_gpu=True,
-                              parameters=dict(use_atomic=False))),
+            'CUDA/VPO':('g', dict(gpu_module='vectorise_over_postsynaptic_offset',
+                                  use_gpu=True,
+                                  parameters=dict(use_atomic=True))),
+            'CUDA/VSS':('r', dict(gpu_module='vectorise_over_spiking_synapses',
+                                  use_gpu=True,
+                                  parameters=dict(use_atomic=True))),
+#            'CUDA/VSS/NA':('m', dict(gpu_module='vectorise_over_spiking_synapses',
+#                                     use_gpu=True,
+#                                     parameters=dict(use_atomic=False))),
             }
         plot_params = [
             #dict(Nsource=100, Ntarget=100000, sparseness=0.1,
@@ -91,10 +100,15 @@ if __name__=='__main__':
             #     sparseness=[0.001, 0.01, 0.1, 0.2],
             #     ),
             dict(Nsource=100, Ntarget=100000,
-                 #spikesperdt=[1, 5, 10, 50, 100],
-                 #sparseness=[0.001, 0.01, 0.1, 0.2],
-                 spikesperdt=[1, 3, 5, 10, 25, 50],
-                 sparseness=[0.001, 0.005, 0.01, 0.05, 0.1],
+                 # low detail
+                 #spikesperdt=[1, 10, 50],
+                 #sparseness=[0.001, 0.01, 0.1],
+                 # medium detail
+                 #spikesperdt=[1, 3, 5, 10, 25, 50],
+                 #sparseness=[0.001, 0.005, 0.01, 0.05, 0.1],
+                 # high detail
+                 spikesperdt=range(1, 41, 2),
+                 sparseness=linspace(0.001, 0.1, 20),
                  ),
             ]
         start_time = time.time()
@@ -149,7 +163,7 @@ if __name__=='__main__':
                                 print summary
                                 allt.append(t)
                             t = mean(allt)
-                            #t = (-1)**ibase*((v1/amax(varyval1))**2+(v2/amax(varyval2))**2)+ibase
+#                            t = (-1)**ibase*((v1/amax(varyval1))**2+(v2/amax(varyval2))**2)+ibase
                             T.append(t)
                         allT.append(T)
                     I = array(allT).T
