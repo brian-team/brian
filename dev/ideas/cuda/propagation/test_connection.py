@@ -12,7 +12,9 @@ log_level_info()
 
 ##### TESTING PARAMETERS
 #from vectorise_over_postsynaptic_offset import *
-from vectorise_over_spiking_synapses import *
+#from vectorise_over_spiking_synapses import *
+#from double_vectorise_over_postsynoff_targetidx_blocked import *
+from double_vectorise_over_spsyn_targetidx_blocked import *
 use_gpu = True
 parameters = dict(use_atomic=True)
 do_plot = False
@@ -21,7 +23,7 @@ do_plot = False
 
 if use_gpu:
     Conn = GPUConnection
-    language = GPULanguage(force_sync=False)
+    language = GPULanguage(force_sync=True)
 else:
     Conn = Connection
     language = CLanguage()
@@ -53,6 +55,7 @@ Ce = Conn(Pe, P, 'ge', weight=1.62*mV, sparseness=0.02, **parameters)
 Ci = Conn(Pi, P, 'gi', weight=-9*mV, sparseness=0.02, **parameters)
 
 M = SpikeMonitor(P)
+Mv = StateMonitor(P, 'ge', record=arange(100))
 
 if use_gpu:
     language.gpu_man.copy_to_device(True)
@@ -78,5 +81,8 @@ else:
     print 'FAILED!'  
 
 if do_plot:
+    subplot(211)
     raster_plot(M)
+    subplot(212)
+    Mv.plot()
     show()

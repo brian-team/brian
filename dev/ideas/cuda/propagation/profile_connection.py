@@ -1,5 +1,3 @@
-import matplotlib
-matplotlib.use('wxagg') # faster for running over X server
 from brian import *
 from brian.experimental.codegen2 import *
 import numpy
@@ -55,7 +53,7 @@ def profile_gpu_connection(gpu_module, use_gpu, Nsource, Ntarget, sparseness, sp
 
     summary = ''
     if use_gpu:
-        summary += 'Using GPU\n'
+        summary += 'Using GPU (algorithm %s)\n'%gpu_module
         for key, value in parameters.items():
             summary += '    '+key+': '+str(value)+'\n'
     else:
@@ -84,13 +82,25 @@ if __name__=='__main__':
             'C++':('b', dict(gpu_module='', use_gpu=False)),
             'CUDA/VPO':('g', dict(gpu_module='vectorise_over_postsynaptic_offset',
                                   use_gpu=True,
-                                  parameters=dict(use_atomic=True))),
+                                  parameters=dict())),
             'CUDA/VSS':('r', dict(gpu_module='vectorise_over_spiking_synapses',
                                   use_gpu=True,
-                                  parameters=dict(use_atomic=True))),
-#            'CUDA/VSS/NA':('m', dict(gpu_module='vectorise_over_spiking_synapses',
-#                                     use_gpu=True,
-#                                     parameters=dict(use_atomic=False))),
+                                  parameters=dict())),
+#            'CUDA/VSS/NA':((0.5,0,0), dict(gpu_module='vectorise_over_spiking_synapses',
+#                                           use_gpu=True,
+#                                           parameters=dict(use_atomic=False))),
+            'CUDA/DVPOT':('y', dict(gpu_module='double_vectorise_over_postsynoff_targetidx_blocked',
+                                    use_gpu=True,
+                                    parameters=dict())),
+#            'CUDA/DVPOT/MW':((0.5,0.5,0), dict(gpu_module='double_vectorise_over_postsynoff_targetidx_blocked',
+#                                               use_gpu=True,
+#                                               parameters=dict(masked_write=False))),
+            'CUDA/DVSST':('m', dict(gpu_module='double_vectorise_over_spsyn_targetidx_blocked',
+                                    use_gpu=True,
+                                    parameters=dict())),
+            'CUDA/DVSST/MW':((0.5,0,0.5), dict(gpu_module='double_vectorise_over_spsyn_targetidx_blocked',
+                                               use_gpu=True,
+                                               parameters=dict(masked_write=False))),
             }
         plot_params = [
             #dict(Nsource=100, Ntarget=100000, sparseness=0.1,
@@ -101,14 +111,14 @@ if __name__=='__main__':
             #     ),
             dict(Nsource=100, Ntarget=100000,
                  # low detail
-                 #spikesperdt=[1, 10, 50],
-                 #sparseness=[0.001, 0.01, 0.1],
+#                 spikesperdt=[1, 10, 50, 100],
+#                 sparseness=[0.001, 0.01, 0.1, 0.3],
                  # medium detail
-                 #spikesperdt=[1, 3, 5, 10, 25, 50],
-                 #sparseness=[0.001, 0.005, 0.01, 0.05, 0.1],
+#                 spikesperdt=[1, 3, 5, 10, 25, 50],
+#                 sparseness=[0.001, 0.005, 0.01, 0.05, 0.1],
                  # high detail
-                 spikesperdt=range(1, 41, 2),
-                 sparseness=linspace(0.001, 0.1, 20),
+                 spikesperdt=range(1,10)+range(10, 101, 10),
+                 sparseness=exp(linspace(log(0.001), log(0.3), 20)),
                  ),
             ]
         start_time = time.time()
@@ -220,7 +230,7 @@ if __name__=='__main__':
                             if I[j, i]<best:
                                 best = I[j, i]
                                 c = bases[name][0]
-                                fill([i,i+1,i+1,i], [j,j,j+1,j+1], c)
+                                fill([i,i+1,i+1,i], [j,j,j+1,j+1], color=c)
                 idx = array(xticks()[0], dtype=int)
                 idx = unique(idx[idx<len(varyval1)])
                 idx = idx[idx>=0]

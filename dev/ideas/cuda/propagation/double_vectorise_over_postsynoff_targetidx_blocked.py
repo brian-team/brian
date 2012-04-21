@@ -43,6 +43,7 @@ class GPUConnection(Connection):
     '''
     def __init__(self, *args, **kwds):
         self.use_atomic = kwds.pop('use_atomic', False)
+        self.masked_write = kwds.pop('masked_write', True)
         super(GPUConnection, self).__init__(*args, **kwds)
     def gpu_prepare(self):
         self._gpu_prepared = True
@@ -50,32 +51,30 @@ class GPUConnection(Connection):
         self.gpuman = gpuman = self.target._state_updater.language.gpu_man
         self.memman = memman = gpuman.mem_man
         self.gpu_target_var = self.memman.device['_arr_'+self.state]
+        blocksize = 1024
         # upload relevant data
         W = self.W
         self.gpu_alldata = pycuda.gpuarray.to_gpu(W.alldata)
-        self.gpu_rowind = pycuda.gpuarray.to_gpu(W.rowind)
         self.gpu_allj = pycuda.gpuarray.to_gpu(W.allj)
-        self.numsynapses = array([len(row) for row in W.rowdata], dtype=int)
-        self.gpu_numsynapses = pycuda.gpuarray.to_gpu(self.numsynapses)
-        self.gpu_numthreads = amax(self.numsynapses)
         self.gpu_spikes = pycuda.gpuarray.empty(len(self.source), dtype=int)
+        # define new rowind and numsynapses
+        numblocks = int(ceil(float(len(self.target))/blocksize))
+        rowind = zeros((numblocks+1)*len(self.source), dtype=int)
+        maxnumsynapses = 0
+        for i, row in enumerate(W.rows):
+            rowoff = searchsorted(row.ind/blocksize, arange(numblocks+1))+W.rowind[i]
+            rowind[i*(numblocks+1):(i+1)*(numblocks+1)] = rowoff
+            maxnumsynapses = max(maxnumsynapses, amax(diff(rowoff)))
+#            print rowoff, len(row.ind)
+#            print row.ind
+#            for j in xrange(len(rowoff)-1):
+#                print j, W.allj[rowoff[j]:rowoff[j+1]]
+#            if i==3:
+#                exit()
+        self.gpu_rowind = pycuda.gpuarray.to_gpu(rowind)    
         # define propagation kernel
         self.gpu_code = '''
-        // Issam's version
-        /*__device__ inline void atomicAdd(double *address, double val)
-        {
-             unsigned long long int i_val = ((unsigned long long int*) &val)[0];
-             unsigned long long int tmp0 = 0;
-             unsigned long long int tmp1;
-             double interm;
-             while( (tmp1 = atomicCAS((unsigned long long int *)address, tmp0, i_val)) != tmp0)
-             {     
-                     tmp0 = tmp1;
-                     interm = val + ((double*) &tmp1 )[0] ;
-                     i_val = ((unsigned long long int*) &interm)[0];             
-             }
-        }*/
-        // CUDA manual version
+        // From CUDA manual
         __device__ double atomicAdd(double* address, double val)
         {
             unsigned long long int* address_as_ull = (unsigned long long int*)address;
@@ -89,55 +88,73 @@ class GPUConnection(Connection):
         }
         // based on Issam's code
         __global__ void propagate(double *v, double *alldata, int64_t *rowind,
-                                  int64_t *allj, int64_t *numsynapses,
+                                  int64_t *allj,
                                   int64_t target_offset,
+                                  int64_t maxnumsynapses,
                                   int64_t *spikes, int64_t numspikes)
         {
             //return;
-            __shared__ double stage[blockDim.x];
+            __shared__ double stage[%BLOCKSIZE%];
             // zero stage memory
             stage[threadIdx.x] = 0.0;
+            __syncthreads();
             // propagate to stage
-            v = v+target_offset;
-            const int synaptic_offset = blockIdx.x * blockDim.x + threadIdx.x;
             for(int spikes_index=0; spikes_index<numspikes; spikes_index++)
             {
                 const int spike = spikes[spikes_index];
-                if(synaptic_offset<numsynapses[spike])
+                const int blockoffset = spike*(%NUMBLOCKS%+1)+blockIdx.x;
+                const int dataoffset = rowind[blockoffset]+threadIdx.x;
+                if(dataoffset<rowind[blockoffset+1])
                 {
-                    const int target = allj[rowind[spike]+synaptic_offset]; // coalesced
-                    const double weight = alldata[rowind[spike]+synaptic_offset]; // coalesced
+                    const int target = allj[dataoffset]% (%BLOCKSIZE%); // coalesced
+                    const double weight = alldata[dataoffset]; // coalesced
                     %PROPAGATE%
-                    //v[target] += weight; // uncoalesced, incorrect, but no atomics
-                    //atomicAdd(v+target, weight); // uncoalesced, correct
+                    //stage[target] += weight; // uncoalesced, incorrect, but no atomics
+                    //atomicAdd(stage+target, weight); // uncoalesced, correct
                 }
             }
+            __syncthreads();
             // propagate to target
+            // TODO: could do something clever on devices with warp vote functions?
+            %MASKED_WRITE%
+            //if(stage[threadIdx.x]==0.0)
+            //    return;
+            const int target_neuron = blockIdx.x * blockDim.x + threadIdx.x;
+            v[target_offset+target_neuron] += stage[threadIdx.x];
         }
         '''
+        self.gpu_code = self.gpu_code.replace('%NUMBLOCKS%', str(numblocks))
+        self.gpu_code = self.gpu_code.replace('%BLOCKSIZE%', str(blocksize))
         if self.use_atomic:
             self.gpu_code = self.gpu_code.replace('%PROPAGATE%',
-                    'atomic_add_double(v+target, weight);')
+                    'atomicAdd(stage+target, weight);')
         else:
             self.gpu_code = self.gpu_code.replace('%PROPAGATE%',
-                    'v[target] += weight;')
+                    'stage[target] += weight;')
+        if self.masked_write:
+            self.gpu_code = self.gpu_code.replace('%MASKED_WRITE%',
+                      'if(stage[threadIdx.x]==0.0) return;')
+        else:
+            self.gpu_code = self.gpu_code.replace('%MASKED_WRITE%', '')
+        log_info('brian.GPUConnection', 'code:\n'+self.gpu_code)
         self.gpu_module = pycuda.compiler.SourceModule(self.gpu_code)
         self.gpu_func = self.gpu_module.get_function('propagate')
         log_info('brian.GPUConnection',  'local size: '+str(self.gpu_func.local_size_bytes))
         log_info('brian.GPUConnection',  'shared size: '+str(self.gpu_func.shared_size_bytes))
         log_info('brian.GPUConnection',  'num regs: '+str(self.gpu_func.num_regs))
-        self.block, self.grid = compute_block_grid(512, self.gpu_numthreads)
+        self.block = (blocksize, 1, 1)
+        self.grid = (numblocks, 1)
         log_info('brian.GPUConnection', 'block='+str(self.block)+', grid='+str(self.grid))
         self.gpu_func.prepare(
-                (numpy.intp, numpy.intp, numpy.intp, numpy.intp, numpy.intp,
-                 numpy.int64, numpy.intp, numpy.int64),
+                (numpy.intp, numpy.intp, numpy.intp, numpy.intp,
+                 numpy.int64, numpy.int64, numpy.intp, numpy.int64),
                 self.block)
         self.gpu_args = (numpy.intp(self.gpu_target_var.gpudata),
                          numpy.intp(self.gpu_alldata.gpudata),
                          numpy.intp(self.gpu_rowind.gpudata),
                          numpy.intp(self.gpu_allj.gpudata),
-                         numpy.intp(self.gpu_numsynapses.gpudata),
                          numpy.int64(self.target._origin),
+                         numpy.int64(maxnumsynapses),
                          numpy.intp(self.gpu_spikes.gpudata),
                          )
         

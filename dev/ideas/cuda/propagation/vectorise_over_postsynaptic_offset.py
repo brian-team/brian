@@ -101,8 +101,9 @@ class GPUConnection(Connection):
                 const int spike = spikes[spikes_index];
                 if(synaptic_offset<numsynapses[spike])
                 {
-                    const int target = allj[rowind[spike]+synaptic_offset]; // coalesced
-                    const double weight = alldata[rowind[spike]+synaptic_offset]; // coalesced
+                    const int dataoffset = rowind[spike]+synaptic_offset;
+                    const int target = allj[dataoffset]; // coalesced
+                    const double weight = alldata[dataoffset]; // coalesced
                     %PROPAGATE%
                     //v[target] += weight; // uncoalesced, incorrect, but no atomics
                     //atomicAdd(v+target, weight); // uncoalesced, correct
