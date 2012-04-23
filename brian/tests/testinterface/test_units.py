@@ -1,3 +1,5 @@
+import itertools
+
 from brian import *
 from nose.tools import *
 import numpy
@@ -112,6 +114,18 @@ def test():
     for op in tryops:
         assert_raises(DimensionMismatchError, inconsistent_operation, a, b, op)
 
+    # check that comparisons to integer zero (no units) work
+    a = 1 * kilogram
+    c = [a < 0, a <= 0, a > 0, a >= 0, a == 0, a != 0]
+
+    # check that comparisons to float zero (no units) work
+    a = 1 * kilogram
+    c = [a < 0., a <= 0., a > 0., a >= 0., a == 0., a != 0.]
+    
+    # check that comparisons to inf and -inf work
+    a = 1 * kilogram
+    assert(all([a < inf, a <= inf, a > -inf, a >= -inf, a != inf, a != -inf]))
+    
     # check that operations not requiring consistent units work
     a = 1 * kilogram
     b = 1 * second
@@ -153,6 +167,18 @@ def test():
         return V / I
     R = find_resistance(1 * amp, 1 * volt)
     assert_raises(DimensionMismatchError, find_resistance, 1, 1)
+
+    # check that str works (ignoring the result) and that repr returns a 
+    # consistent representation, i.e. eval(repr(x)) == x
+    
+    # Combined units
+    complex_units = [(kgram * metre2)/(amp * second3),
+                     5 * (kgram * metre2)/(amp * second3),
+                     metre * second**-1, 10 * metre * second**-1] 
+    for u in itertools.chain(units_which_should_exist, some_scaled_units,
+                              powered_units, complex_units):
+        str(u)
+        assert(eval(repr(u)) == u) 
 
 if __name__ == '__main__':
     test()

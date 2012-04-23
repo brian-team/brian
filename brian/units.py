@@ -1227,6 +1227,7 @@ class Unit(Quantity):
                 u.name = '(' + self.name + ')'
             else:
                 u.dispname = self.dispname
+                u.name = self.name
             u.dispname += '^' + str(other)
             u.name += ' ** ' + repr(other)
             u.dim = self.dim ** other
