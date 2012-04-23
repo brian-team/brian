@@ -325,7 +325,7 @@ class Morphology(object):
         self.y = y[:n]
         self.z = z[:n]
         for kid in self.children:
-            kid.compress(diameter=diameter[n:], length=length[n:], area=area[n:], x=x[n:], y=y[n:], z=z[n:], origin=n)
+            kid.compress(diameter=diameter[n:], length=length[n:], area=area[n:], x=x[n:], y=y[n:], z=z[n:], origin=origin+n)
             n += len(kid)
         self.iscompressed = True
 
