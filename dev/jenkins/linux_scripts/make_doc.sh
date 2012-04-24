@@ -1,3 +1,9 @@
+# Make sure the build ends up in the build/lib directory
+python setup.py build --build-lib=build/lib
+
+# Use the previously built brian version
+export PYTHONPATH=$(pwd)/build/lib:$PYTHONPATH
+
 # Generates the HTML and PDF documentation for brian
 cd dev/tools/docs
 
