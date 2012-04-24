@@ -7,18 +7,10 @@ GPUManager handles:
 - Combines kernels with the same vectorisation index and range
 '''
 from brian import *
-from codeobject import *
-from formatting import *
-from languages import *
-import statements
-try:
-    import pycuda
-    import pycuda.autoinit as autoinit
-    import pycuda.driver as drv
-    import pycuda.compiler as compiler
-    from pycuda import gpuarray
-except ImportError:
-    pycuda = None
+from ..codeobject import *
+from ..formatting import *
+from ..languages import *
+from importpycuda import *
 
 __all__ = ['GPUKernel',
            'GPUManager',
@@ -362,7 +354,8 @@ class GPUSymbolMemoryManager(object):
         self.symbol_upload_funcnames = {}
         for name, value in self.host.iteritems():
             if isinstance(value, ndarray):
-                dtypestr = statements.c_data_type(value.dtype)
+                from ..statements import c_data_type
+                dtypestr = c_data_type(value.dtype)
                 init_arr_template = '''
                 __global__ void set_array_{name}({dtypestr} *_{name})
                 {{

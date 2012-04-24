@@ -5,6 +5,7 @@ from statements import *
 from blocks import *
 from dependencies import *
 from brian.inspection import namespace
+from gpu import GPUCompactor
 
 __all__ = ['CodeGenThreshold']
 
@@ -29,7 +30,7 @@ class CodeGenThreshold(Threshold):
             symbols['_numspikes'] = NumSpikesSymbol('_numspikes',
                                                     self.language)
         if self.language.name=='gpu':
-            _arr_spiked_bool = zeros(len(P), dtype=bool)
+            _arr_spiked_bool = zeros(len(P)+1, dtype=int32)
             symbols['_spiked'] = ArraySymbol(_arr_spiked_bool,
                                              '_spiked',
                                              self.language,
@@ -61,11 +62,14 @@ class CodeGenThreshold(Threshold):
             # TODO: this threshold func should do nothing on GPU unless
             # we want to force sync, or alternatively we can do a
             # compaction on the GPU and then return that
+            compactor = GPUCompactor(len(P), index_dtype=int32)
+            device_syms = code.gpu_man.mem_man.device
             def threshold_func(P):
                 code()
-                if not language.force_sync:
-                    code.gpu_man.copy_to_host('_arr_spiked_bool')
-                return ns['_arr_spiked_bool'].nonzero()[0]
+                return compactor(device_syms['_arr_spiked_bool'])
+                #if not language.force_sync:
+                #    code.gpu_man.copy_to_host('_arr_spiked_bool')
+                #return ns['_arr_spiked_bool'].nonzero()[0]
         self.threshold_func = threshold_func
 
     def __call__(self, P):

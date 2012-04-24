@@ -23,7 +23,7 @@ do_plot = False
 
 if use_gpu:
     Conn = GPUConnection
-    language = GPULanguage(force_sync=True)
+    language = GPULanguage(force_sync=do_plot)
 else:
     Conn = Connection
     language = CLanguage()
@@ -54,8 +54,11 @@ P._resetfun = CodeGenReset(P, reset, language)
 Ce = Conn(Pe, P, 'ge', weight=1.62*mV, sparseness=0.02, **parameters)
 Ci = Conn(Pi, P, 'gi', weight=-9*mV, sparseness=0.02, **parameters)
 
-M = SpikeMonitor(P)
-Mv = StateMonitor(P, 'ge', record=arange(100))
+if do_plot:
+    M = SpikeMonitor(P)
+    Mv = StateMonitor(P, 'ge', record=arange(100))
+else:
+    M = SpikeCounter(P)
 
 if use_gpu:
     language.gpu_man.copy_to_device(True)
@@ -74,6 +77,7 @@ if use_gpu:
 else:
     print 'Using CPU'
 correct_nspikes = 2443 # copied from CPU run
+print 'Time:', end-start
 print 'Num spikes:', M.nspikes, 'should be', correct_nspikes
 if M.nspikes==correct_nspikes:
     print 'Success!'
