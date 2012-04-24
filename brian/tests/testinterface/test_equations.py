@@ -9,24 +9,50 @@ def test():
 
     tau = 2 * ms
 
+    # Test Parsing and building
+    def test_build_and_parse(eqs):
+        assert set(eqs._eq_names) == set(['x', 'y']) # An alias is also a static equation
+        assert set(eqs._diffeq_names) == set(['v', 'z']) # A parameter is a differential equation dz/dt=0
+        assert eqs._diffeq_names_nonzero == ['v']
+        assert eqs._alias == {'y':'x'}
+        assert eqs._units == {'t':second, 'x':volt ** 2, 'z':amp, 'y':volt ** 2, 'v':volt}
+        assert eqs._string == {'y':'x', 'x':'v**2', 'z':'0*amp/second', 'v':'(y-v)/tau'}
+        assert eqs._namespace['v']['tau'] == 2 * ms
+        assert 'tau' not in eqs._namespace['x']
+
+    # Multiline string
     eqs = Equations('''
     x=v**2 : volt**2
     y=x # a comment
     dv/dt=(y-v)/tau : volt
     z : amp''')
-
-    # Parsing and building
-    assert eqs._eq_names == ['x', 'y'] # An alias is also a static equation
-    assert eqs._diffeq_names == ['v', 'z'] # A parameter is a differential equation dz/dt=0
-    assert eqs._diffeq_names_nonzero == ['v']
-    assert eqs._alias == {'y':'x'}
-    assert eqs._units == {'t':second, 'x':volt ** 2, 'z':amp, 'y':volt ** 2, 'v': volt}
-    assert eqs._string == {'y': 'x', 'x': 'v**2', 'z': '0*amp/second', 'v': '(y-v)/tau'}
-    assert eqs._namespace['v']['tau'] == 2 * ms
-    assert 'tau' not in eqs._namespace['x']
-
+    test_build_and_parse(eqs)
+    
+    # Concatenated Equation objects
+    eqs = (Equations('''x=v**2 : volt**2
+                        y=x # a comment''') +
+           Equations('dv/dt=(y-v)/tau : volt') +
+           Equations('z : amp'))
+    test_build_and_parse(eqs)
+    
+    # List of Equation objects
+    eqs = Equations([Equations('''x=v**2 : volt**2
+                                  y=x # a comment'''),
+                     Equations('dv/dt=(y-v)/tau : volt'),
+                     Equations('z : amp')])
+    test_build_and_parse(eqs)
+    
+    # List of strings
+    eqs = Equations(['''x=v**2 : volt**2
+                        y=x # a comment''',
+                     'dv/dt=(y-v)/tau : volt',
+                     'z : amp'])
+    test_build_and_parse(eqs)
+    
     # Name substitutions
-    assert Equations('dx/dt=-x/(2*ms):1', x='y')._diffeq_names == ['y']
+    assert Equations('dx/dt=-x/(2*ms) : 1', x='y')._diffeq_names == ['y']
+    assert Equations('''dx/dt=-x/(2*ms) : 1
+                        z = x ** 2 : 1''', z='y')._eq_names == ['y']
 
     # Explicit namespace
     eqs2 = Equations('dx/dt=-x/tau:volt', tau=1 * ms)

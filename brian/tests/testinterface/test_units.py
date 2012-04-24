@@ -116,15 +116,19 @@ def test():
 
     # check that comparisons to integer zero (no units) work
     a = 1 * kilogram
-    c = [a < 0, a <= 0, a > 0, a >= 0, a == 0, a != 0]
+    assert(all([not (a < 0), not (a <= 0), a > 0, a >= 0, not (a == 0), a != 0]))
 
     # check that comparisons to float zero (no units) work
     a = 1 * kilogram
-    c = [a < 0., a <= 0., a > 0., a >= 0., a == 0., a != 0.]
+    assert(all([not (a < 0.), not (a <= 0.), a > 0., a >= 0., not (a == 0.), a != 0.]))
     
     # check that comparisons to inf and -inf work
     a = 1 * kilogram
     assert(all([a < inf, a <= inf, a > -inf, a >= -inf, a != inf, a != -inf]))
+    
+    # check that comparisons for dimensionless units to scalars work
+    a = 1 * kilogram / kilogram
+    assert(all([a < 2, a <= 2, a > 0, a >= 0, a == 1, a != 2]))
     
     # check that operations not requiring consistent units work
     a = 1 * kilogram
