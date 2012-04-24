@@ -10,8 +10,8 @@ from mpl_toolkits.mplot3d import Axes3D
 
 ##### PROFILING CODE
 
-def profile_gpu_connection(gpu_module, Nsource, Ntarget, sparseness, spikesperdt,
-                           parameters={}, target_time=1.0):
+def profile(gpu_module, Nsource, Ntarget, Nstate, complexity, sparseness,
+            rate, parameters={}, target_time=1.0):
     clear(True, True)
     reinit_default_clock()
     use_gpu = bool(gpu_module)
@@ -29,13 +29,30 @@ def profile_gpu_connection(gpu_module, Nsource, Ntarget, sparseness, spikesperdt
     nrandom.seed(3212212)
     prandom.seed(3432334)
 
-    rate = spikesperdt/(Nsource*defaultclock.dt)
-        
-    source = PoissonGroup(Nsource, rate)
-    target = NeuronGroup(Ntarget, 'dv/dt=0/second:1')
+    expr = 'X'
+    for i in xrange(complexity):
+        expr = 'sin({expr}+X)'.format(expr=expr)
+    eqs = '''
+    dv/dt = {rate}/second : 1
+    '''.format(rate=float(rate))
+    for i in xrange(Nstate):
+        eqs += 'dX/dt = {expr}/(10*ms) : 1\n'.format(expr=expr).replace('X', 'x'+str(i))
+    
+    #source = PoissonGroup(Nsource, rate)
+    reset = 'v = 0'
+    threshold = 'v>1'
+    source = NeuronGroup(Nsource, eqs,
+                         reset=reset,
+                         threshold=threshold
+                         )
+    source.v = rand(Nsource)
+    source._state_updater = CodeGenStateUpdater(source, euler, language, clock=source.clock)
+    source._threshold = CodeGenThreshold(source, threshold, language)
+    source._resetfun = CodeGenReset(source, reset, language)
+    target = NeuronGroup(Ntarget, 'dV/dt=0/second:1')
     target._state_updater = CodeGenStateUpdater(target, euler, language, clock=target.clock)
 
-    C = Conn(source, target, 'v', weight=1, sparseness=sparseness, **parameters)
+    C = Conn(source, target, 'V', weight=1, sparseness=sparseness, **parameters)
 
     run(10*ms)
 
@@ -59,23 +76,25 @@ def profile_gpu_connection(gpu_module, Nsource, Ntarget, sparseness, spikesperdt
             summary += '    '+key+': '+str(value)+'\n'
     else:
         summary += 'Using CPU\n'
-    summary += 'Nsource={Nsource}, Ntarget={Ntarget}, sparseness={sparseness}, spikesperdt={spikesperdt}\n'.format(
-        Nsource=Nsource, Ntarget=Ntarget, sparseness=sparseness, spikesperdt=spikesperdt)
+    summary += 'Nsource={Nsource}, Ntarget={Ntarget}, sparseness={sparseness}, rate={rate}\n'.format(
+        Nsource=Nsource, Ntarget=Ntarget, sparseness=sparseness, rate=rate)
     summary += 'Ratio compared to realtime: %.3f'%realtime_ratio
     
     return realtime_ratio, summary
 
 if __name__=='__main__':
-    if 0:
-        ratio, summary = profile_gpu_connection(
-            'vectorise_over_postsynaptic_offset', True,
-            Nsource=4000, Ntarget=4000, sparseness=0.02, spikesperdt=2,
-            parameters=dict(
-                use_atomic=False,
-                ),
+    if 1:
+        log_level_info()
+        ratio, summary = profile(
+            #'',
+            'vectorise_over_postsynaptic_offset',
+            #'double_vectorise_over_spsyn_targetidx_blocked',
+            Nsource=1000000, Ntarget=100000, sparseness=0.001, rate=10*Hz,
+            Nstate=3, complexity=2,
+            parameters=dict(),
             )
         print summary
-    if 1:
+    if 0:
         show_3d_plots = True
         show_individual_2d_plots = True # only used if 3D plots not used
         repeats = 1
