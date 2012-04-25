@@ -3,6 +3,7 @@ TODO (Synapses)
 * S.w[P,Q]='...' : shift origin of i,j
 * S[:,:]='i<j' : int
 * S[:,:]=array or sequence (boolean or int)
+* S.w[:,:]='...' : might be problems when there are multiple synapses per pair
 
 * Code generation
 * SynapticVariable: should be usable as a numpy array
