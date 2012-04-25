@@ -6,5 +6,5 @@ export PYTHONPATH=$(pwd)/build/lib:$PYTHONPATH
 
 # Run unit tests and record coverage but do not fail the build if anything goes wrong here
 ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/coverage -e || :
-~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/coverage run --branch ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/nosetests --with-xunit --verbose brian/tests || :
-~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/coverage xml --include='brian/*' || :
+~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/coverage run ~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/nosetests --with-xunit --verbose brian/tests || :
+~/.jenkins/virtual_envs/$PythonVersion/$packages/bin/coverage xml || :
