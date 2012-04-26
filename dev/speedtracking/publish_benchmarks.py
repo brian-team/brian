@@ -71,28 +71,28 @@ if __name__ == '__main__':
         # Create the wikipage for the individual benchmark, including a link to the
         # graph
         benchmark_page = '''
-    = %(name)s =
-    ''Description'': %(description)s
-    
-    == Setup code ==
-    {{{
-    #!python
-    
-    %(setup)s
-    }}}
-    == Benchmarked code ==
-    {{{
-    #!python
-    
-    %(statement)s
-    }}}
-    
-    == Benchmark results ==
-    [[Image(results.png, max-width:"100%%")]]
-        ''' % {'name': benchmark.name,
-               'description': benchmark.description,
-               'setup': benchmark.setup,
-               'statement': benchmark.code}
+= %(name)s =
+''Description'': %(description)s
+
+== Setup code ==
+{{{
+#!python
+
+%(setup)s
+}}}
+== Benchmarked code ==
+{{{
+#!python
+
+%(statement)s
+}}}
+
+== Benchmark results ==
+[[Image(results.png, max-width:"100%%")]]
+''' % {'name': benchmark.name,
+       'description': benchmark.description,
+       'setup': benchmark.setup,
+       'statement': benchmark.code}
     
         try:
             old_page = server.wiki.getPage(wiki_name)
