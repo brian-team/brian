@@ -12,11 +12,12 @@ import random as prandom
 try:
     import pycuda
 except ImportError:
-    pycuda = None    
+    pycuda = None
+from gpu_propagation_shared import *
 
 __all__ = ['GPUConnection']
 
-class GPUConnection(Connection):
+class GPUConnection(BaseGPUConnection):
     '''
     Only works with sparse at the moment, no modulation, no delays
     '''
@@ -31,7 +32,7 @@ class GPUConnection(Connection):
         self.gpu_target_var = self.memman.device['_arr_'+self.state]
         # upload relevant data
         W = self.W
-        self.gpu_alldata = pycuda.gpuarray.to_gpu(W.alldata)
+        self.gpu_alldata = self.gpu_scalar_array(W.alldata)
         self.gpu_rowind = pycuda.gpuarray.to_gpu(W.rowind)
         self.gpu_allj = pycuda.gpuarray.to_gpu(W.allj)
         self.numsynapses = array([len(row) for row in W.rowdata], dtype=int)
@@ -39,21 +40,11 @@ class GPUConnection(Connection):
         self.maxnumsynapses = amax(self.numsynapses)
         self.gpu_spikes = pycuda.gpuarray.empty(len(self.source), dtype=int)
         # define propagation kernel
-        self.gpu_code = '''
-        // CUDA manual version
-        __device__ double atomicAdd(double* address, double val)
-        {
-            unsigned long long int* address_as_ull = (unsigned long long int*)address;
-            unsigned long long int old = *address_as_ull, assumed;
-            do {
-                assumed = old;
-                old = atomicCAS(address_as_ull, assumed,
-                        __double_as_longlong(val + __longlong_as_double(assumed)));
-            } while (assumed != old);
-            return __longlong_as_double(old);
-        }
+        self.gpu_code = atomic_float_code()
+        self.gpu_code += '''
         // propagate function, modified from Issam's code
-        __global__ void propagate(double *v, double *alldata, int64_t *rowind,
+        __global__ void propagate(%SCALAR% *v, %SCALAR% *alldata,
+                                  int64_t *rowind,
                                   int64_t *allj, int64_t *numsynapses,
                                   int64_t target_offset,
                                   int64_t maxnumsynapses,
@@ -71,7 +62,7 @@ class GPUConnection(Connection):
             {
                 const int dataoffset = rowind[spike]+synaptic_offset;
                 const int target = allj[dataoffset]; // coalesced
-                const double weight = alldata[dataoffset]; // coalesced
+                const %SCALAR% weight = alldata[dataoffset]; // coalesced
                 %PROPAGATE%
                 //v[target] += weight; // uncoalesced, incorrect, but no atomics
                 //atomicAdd(v+target, weight); // uncoalesced, correct
@@ -84,6 +75,7 @@ class GPUConnection(Connection):
         else:
             self.gpu_code = self.gpu_code.replace('%PROPAGATE%',
                     'v[target] += weight;')
+        self.gpu_code = self.gpu_code.replace('%SCALAR%', self.scalar)
         log_info('brian.GPUConnection', 'code:\n'+self.gpu_code)
         self.gpu_module = pycuda.compiler.SourceModule(self.gpu_code)
         self.gpu_func = self.gpu_module.get_function('propagate')

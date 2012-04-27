@@ -11,7 +11,11 @@ from mpl_toolkits.mplot3d import Axes3D
 ##### PROFILING CODE
 
 def profile(gpu_module, Nsource, Ntarget, Nstate, complexity, sparseness,
-            rate, parameters={}, target_time=1.0):
+            rate, parameters={}, target_time=1.0,
+            scalar='double',
+            dothreshreset=True,
+            doconn=True,
+            ):
     clear(True, True)
     reinit_default_clock()
     use_gpu = bool(gpu_module)
@@ -20,7 +24,9 @@ def profile(gpu_module, Nsource, Ntarget, Nstate, complexity, sparseness,
         exec 'from %s import GPUConnection'%gpu_module in ns
         GPUConnection = ns['GPUConnection']
         Conn = GPUConnection
-        language = GPULanguage(force_sync=False)
+        language = GPULanguage(force_sync=False,
+                               scalar=scalar,
+                               )
     else:
         Conn = Connection
         language = CLanguage()
@@ -41,18 +47,23 @@ def profile(gpu_module, Nsource, Ntarget, Nstate, complexity, sparseness,
     #source = PoissonGroup(Nsource, rate)
     reset = 'v = 0'
     threshold = 'v>1'
-    source = NeuronGroup(Nsource, eqs,
-                         reset=reset,
-                         threshold=threshold
-                         )
+    if dothreshreset:
+        source = NeuronGroup(Nsource, eqs,
+                             reset=reset,
+                             threshold=threshold
+                             )
+    else:
+        source = NeuronGroup(Nsource, eqs)
     source.v = rand(Nsource)
     source._state_updater = CodeGenStateUpdater(source, euler, language, clock=source.clock)
-    source._threshold = CodeGenThreshold(source, threshold, language)
-    source._resetfun = CodeGenReset(source, reset, language)
+    if dothreshreset:
+        source._threshold = CodeGenThreshold(source, threshold, language)
+        source._resetfun = CodeGenReset(source, reset, language)
     target = NeuronGroup(Ntarget, 'dV/dt=0/second:1')
     target._state_updater = CodeGenStateUpdater(target, euler, language, clock=target.clock)
 
-    C = Conn(source, target, 'V', weight=1, sparseness=sparseness, **parameters)
+    if doconn:
+        C = Conn(source, target, 'V', weight=1, sparseness=sparseness, **parameters)
 
     run(10*ms)
 
@@ -63,8 +74,8 @@ def profile(gpu_module, Nsource, Ntarget, Nstate, complexity, sparseness,
     
     start = time.time()
     run(1e10*second)
-    if use_gpu:
-        language.gpu_man.copy_to_host(True)
+#    if use_gpu:
+#        language.gpu_man.copy_to_host(True)
     end = time.time()
     elapsed = defaultclock.t
     realtime_ratio = (end-start)/float(elapsed)
@@ -86,10 +97,13 @@ if __name__=='__main__':
     if 1:
         log_level_info()
         ratio, summary = profile(
-            #'',
-            'vectorise_over_postsynaptic_offset',
-            #'double_vectorise_over_spsyn_targetidx_blocked',
-            Nsource=1000000, Ntarget=100000, sparseness=0.001, rate=10*Hz,
+            '',
+#            'vectorise_over_postsynaptic_offset',
+#            'double_vectorise_over_spsyn_targetidx_blocked',
+            #scalar='float',
+            dothreshreset=True,
+            doconn=True,
+            Nsource=10000, Ntarget=10000, sparseness=0.1, rate=10*Hz,
             Nstate=3, complexity=2,
             parameters=dict(),
             )

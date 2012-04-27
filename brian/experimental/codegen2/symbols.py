@@ -276,8 +276,17 @@ class ArraySymbol(Symbol):
         Uses :class:`CDefineFromArray`.
         '''
         return CDefineFromArray(self.name, self.array_name,
-                                self.index, reference=write, const=(not write),
+                                self.index,
+                                # use references when possible
+                                #reference=write,
+                                #const=(not write),
+                                # don't use references
+                                const=True,
+                                reference=False,
                                 dtype=self.arr.dtype)
+    # only use this if you are not using references
+    def write_c(self):
+        return self.array_name+'['+self.index+']'
     # Language invariant implementation
     def update_namespace(self, read, write, vectorisable, namespace):
         '''
@@ -289,8 +298,12 @@ class ArraySymbol(Symbol):
         Read-dependency on index.
         '''
         return set([Read(self.index)])
+    # use this version to use references
+#    write = language_invariant_symbol_method('write',
+#        {'python':write_python}, Symbol.write)
+    # use this version to not use references
     write = language_invariant_symbol_method('write',
-        {'python':write_python}, Symbol.write)
+        {'python':write_python, 'c':write_c, 'gpu':write_c})
     load = language_invariant_symbol_method('load',
         {'python':load_python, 'c':load_c, 'gpu':load_c})
 

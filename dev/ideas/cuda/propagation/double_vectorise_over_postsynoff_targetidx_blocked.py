@@ -34,10 +34,11 @@ try:
     import pycuda
 except ImportError:
     pycuda = None    
+from gpu_propagation_shared import *
 
 __all__ = ['GPUConnection']
 
-class GPUConnection(Connection):
+class GPUConnection(BaseGPUConnection):
     '''
     Only works with sparse at the moment, no modulation, no delays
     '''
@@ -54,7 +55,7 @@ class GPUConnection(Connection):
         blocksize = 1024
         # upload relevant data
         W = self.W
-        self.gpu_alldata = pycuda.gpuarray.to_gpu(W.alldata)
+        self.gpu_alldata = self.gpu_scalar_array(W.alldata)
         self.gpu_allj = pycuda.gpuarray.to_gpu(W.allj)
         self.gpu_spikes = pycuda.gpuarray.empty(len(self.source), dtype=int)
         # define new rowind and numsynapses
@@ -73,28 +74,18 @@ class GPUConnection(Connection):
 #                exit()
         self.gpu_rowind = pycuda.gpuarray.to_gpu(rowind)    
         # define propagation kernel
-        self.gpu_code = '''
-        // From CUDA manual
-        __device__ double atomicAdd(double* address, double val)
-        {
-            unsigned long long int* address_as_ull = (unsigned long long int*)address;
-            unsigned long long int old = *address_as_ull, assumed;
-            do {
-                assumed = old;
-                old = atomicCAS(address_as_ull, assumed,
-                        __double_as_longlong(val + __longlong_as_double(assumed)));
-            } while (assumed != old);
-            return __longlong_as_double(old);
-        }
+        self.gpu_code = atomic_float_code()
+        self.gpu_code += '''
         // based on Issam's code
-        __global__ void propagate(double *v, double *alldata, int64_t *rowind,
+        __global__ void propagate(%SCALAR% *v, %SCALAR% *alldata,
+                                  int64_t *rowind,
                                   int64_t *allj,
                                   int64_t target_offset,
                                   int64_t maxnumsynapses,
                                   int64_t *spikes, int64_t numspikes)
         {
             //return;
-            __shared__ double stage[%BLOCKSIZE%];
+            __shared__ %SCALAR% stage[%BLOCKSIZE%];
             // zero stage memory
             stage[threadIdx.x] = 0.0;
             __syncthreads();
@@ -107,7 +98,7 @@ class GPUConnection(Connection):
                 if(dataoffset<rowind[blockoffset+1])
                 {
                     const int target = allj[dataoffset]% (%BLOCKSIZE%); // coalesced
-                    const double weight = alldata[dataoffset]; // coalesced
+                    const %SCALAR% weight = alldata[dataoffset]; // coalesced
                     %PROPAGATE%
                     //stage[target] += weight; // uncoalesced, incorrect, but no atomics
                     //atomicAdd(stage+target, weight); // uncoalesced, correct
@@ -136,6 +127,7 @@ class GPUConnection(Connection):
                       'if(stage[threadIdx.x]==0.0) return;')
         else:
             self.gpu_code = self.gpu_code.replace('%MASKED_WRITE%', '')
+        self.gpu_code = self.gpu_code.replace('%SCALAR%', self.scalar)
         log_info('brian.GPUConnection', 'code:\n'+self.gpu_code)
         self.gpu_module = pycuda.compiler.SourceModule(self.gpu_code)
         self.gpu_func = self.gpu_module.get_function('propagate')

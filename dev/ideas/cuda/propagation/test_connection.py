@@ -18,12 +18,15 @@ from double_vectorise_over_spsyn_targetidx_blocked import *
 use_gpu = True
 parameters = dict(use_atomic=True)
 do_plot = False
+scalar = 'float'
+#scalar = 'double'
 
 ##### PROFILING CODE
 
 if use_gpu:
     Conn = GPUConnection
-    language = GPULanguage(force_sync=do_plot)
+    language = GPULanguage(force_sync=do_plot, scalar=scalar)
+    parameters['use_float'] = scalar=='float'
 else:
     Conn = Connection
     language = CLanguage()
