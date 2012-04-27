@@ -2,6 +2,9 @@ from brian import *
 from brian.experimental.codegen2 import *
 from brian.experimental.codegen2.gpu import *
 
+log_level_info()
+
+#language = GPULanguage(scalar='float')
 language = GPULanguage()
 
 structure = 'sparse'
@@ -35,8 +38,8 @@ for i in xrange(len(G)):
     C[i, i] = 1
 
 G._state_updater = CodeGenStateUpdater(G, euler, language, clock=G.clock)
-G._threshold = CodeGenThreshold(G, threshold, language)
-G._resetfun = CodeGenReset(G, reset, language)
+#G._threshold = CodeGenThreshold(G, threshold, language)
+#._resetfun = CodeGenReset(G, reset, language)
 
 M = MultiStateMonitor(G, record=True)
 Msp = SpikeMonitor(G)

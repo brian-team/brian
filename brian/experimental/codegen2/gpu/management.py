@@ -11,6 +11,7 @@ from ..codeobject import *
 from ..formatting import *
 from ..languages import *
 from importpycuda import *
+import re
 
 __all__ = ['GPUKernel',
            'GPUManager',
@@ -89,6 +90,7 @@ class GPUKernel(object):
         We also compute the block size and grid size using the user provided
         maximum block size.
         '''
+        from ..statements import c_data_type
         if self.prepared:
             return
         self.prepared = True
@@ -105,13 +107,10 @@ class GPUKernel(object):
                 hostarr = value
                 memman_items.append((symname, hostarr, devname))
             else:
-                if isinstance(value, int):
-                    dtype_c = 'int'
-                elif isinstance(value, float):
-                    dtype_c = self.scalar
-                else:
-                    continue
                 dtype = array(value).dtype.type
+                if dtype==float64 and self.scalar=='float':
+                    dtype = float32
+                dtype_c = c_data_type(dtype)
                 self.func_args.append((name, dtype, dtype_c))
         # This allocates memory on the GPU
         self.mem_man.add_symbols(memman_items)
@@ -149,6 +148,8 @@ class GPUKernel(object):
             self.prepare_gpu_func()
         ns = self.namespace
         args = [dtype(ns[name]) for name, dtype, _ in self.func_args]
+#        print self.gpu_func.local_size_bytes, self.gpu_func.shared_size_bytes, self.gpu_func.num_regs
+#        print self.grid, self.blocksize
         self.gpu_func.prepared_call(self.grid, *args)
 
 
@@ -172,13 +173,14 @@ class GPUManager(object):
     memory copies will be handled explicitly by calls to methods
     :meth:`copy_to_device` and :meth:`copy_to_host`.
     '''
-    def __init__(self, force_sync=True):
+    def __init__(self, force_sync=True, usefloat=False):
         self.numkernels = 0
         self.kernels = {}
         self.combined_kernels = []
-        self.mem_man = GPUSymbolMemoryManager()
+        self.mem_man = GPUSymbolMemoryManager(usefloat=usefloat)
         self.prepared = False
         self.force_sync = force_sync
+        self.usefloat = usefloat
     def add_kernel(self, name, code, namespace):
         '''
         Adds a kernel with the given name, code and namespace. Creates a
@@ -189,8 +191,13 @@ class GPUManager(object):
         while name in self.kernels:
             name = basename+str(suffix)
             suffix += 1
+        if self.usefloat:
+            scalar = 'float'
+        else:
+            scalar = 'double'
         self.kernels[name] = GPUKernel(name, code, namespace, self.mem_man,
-                                       force_sync=self.force_sync)
+                                       force_sync=self.force_sync,
+                                       scalar=scalar)
         return name
     def make_combined_kernel(self, *names):
         '''
@@ -245,6 +252,9 @@ class GPUManager(object):
 #            combined_name = 'combined_'+'_'.join(names)
 #            for name in names:
 #                code, ns, index, _ = self.kernels[name]
+        # if necessary, convert double to float
+        if self.usefloat:
+            code = re.sub(r'\bdouble\b', 'float', code)
         log_info('brian.codegen2.gpu.GPUManager', 'GENERATED GPU SOURCE CODE:\n'+code)
         self.code = code
     def compile(self):
@@ -308,9 +318,10 @@ class GPUSymbolMemoryManager(object):
     :class:`numpy.ndarray` respectively. Add symbols with :meth:`add_symbols`,
     which will allocate memory.
     '''
-    def __init__(self):
+    def __init__(self, usefloat=False):
         self.device = {}
         self.host = {}
+        self.usefloat = usefloat
     def add_symbols(self, items):
         '''
         Adds a collection of symbols.
@@ -327,7 +338,10 @@ class GPUSymbolMemoryManager(object):
         for symname, hostarr, devname in items:
             if symname not in self.device:
                 if pycuda is not None:
-                    devarr = pycuda.gpuarray.to_gpu(hostarr)
+                    if self.usefloat and hostarr.dtype==float64:
+                        devarr = pycuda.gpuarray.to_gpu(array(hostarr, dtype=float32))
+                    else:
+                        devarr = pycuda.gpuarray.to_gpu(hostarr)
                 else:
                     devarr = None
                 self.device[symname] = devarr
@@ -356,6 +370,8 @@ class GPUSymbolMemoryManager(object):
             if isinstance(value, ndarray):
                 from ..statements import c_data_type
                 dtypestr = c_data_type(value.dtype)
+                if self.usefloat and dtypestr=='double':
+                    dtypestr = 'float'
                 init_arr_template = '''
                 __global__ void set_array_{name}({dtypestr} *_{name})
                 {{
@@ -389,6 +405,9 @@ class GPUSymbolMemoryManager(object):
             return
         devarr = self.device[symname]
         hostarr = self.host[symname]
+        if self.usefloat and hostarr.dtype==float64:
+            # TODO: make this pagelocked/cached for speed?
+            hostarr = array(hostarr, dtype=float32)
         devarr.set(hostarr)
     def copy_to_host(self, symname):
         '''
@@ -403,7 +422,12 @@ class GPUSymbolMemoryManager(object):
             return
         devarr = self.device[symname]
         hostarr = self.host[symname]
-        devarr.get(hostarr)
+        if devarr.dtype==float32 and hostarr.dtype==float64:
+            # TODO: cache the float32 intermediate array for speed
+            #hostarr[:] = array(devarr.get(pagelocked=True), dtype=float64)
+            hostarr[:] = devarr.get(pagelocked=True)
+        else:
+            devarr.get(hostarr)
     @property
     def names(self):
         '''
@@ -455,6 +479,7 @@ class GPULanguage(CLanguage):
         Language.__init__(self, 'gpu')
         self.scalar = scalar
         if gpu_man is None:
-            gpu_man = GPUManager(force_sync=force_sync)
+            gpu_man = GPUManager(force_sync=force_sync,
+                                 usefloat=(scalar=='float'))
         self.gpu_man = gpu_man
         self.force_sync = force_sync
