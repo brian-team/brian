@@ -40,6 +40,7 @@ __all__ = ['attribdict', 'Parameters']
 
 from itertools import chain
 from inspect import *
+import numpy
 
 
 class attribdict(dict):
@@ -144,7 +145,7 @@ class Parameters(attribdict):
         for k, v in items:
             if k[:9] == 'computed_':
                 v = '\n'.join([line.strip() for line in v.split('\n')])
-                exec v in cv
+                exec v in numpy.__dict__, cv
         for k in cv.keys():
             if k[:1] == '_': # this is used to get rid of things like __builtins__ etc.
                 cv.pop(k)
