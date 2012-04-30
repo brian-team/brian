@@ -20,6 +20,8 @@ class ObjectContainer(object):
     
         co = obj.contained_objects
         co[:] = []
+        
+    Note that when extending the list, duplicate objects are removed.
     '''
     def get_contained_objects(self):
         if hasattr(self, '_contained_objects'):
@@ -29,6 +31,8 @@ class ObjectContainer(object):
 
     def set_contained_objects(self, newobjs):
         self._contained_objects = self.get_contained_objects()
+        ids = set(id(o) for o in self._contained_objects)
+        newobjs = [o for o in newobjs if id(o) not in ids]
         self._contained_objects.extend(newobjs)
 
     contained_objects = property(fget=get_contained_objects,
