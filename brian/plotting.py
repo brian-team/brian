@@ -74,7 +74,7 @@ def _take_options(myopts, givenopts):
             myopts[k] = givenopts.pop(k)
 
 
-def raster_plot(*monitors, **plotoptions):
+def raster_plot(*monitors, **additionalplotoptions):
     """Raster plot of a :class:`SpikeMonitor`
     
     **Usage**
@@ -136,15 +136,18 @@ def raster_plot(*monitors, **plotoptions):
     if len(monitors):
         # OPTIONS
         # Defaults
-        myopts = {"title":"", "xlabel":"Time (ms)", "showplot":False, "showgrouplines":False, \
-                  "spacebetweengroups":0.0, "grouplinecol":"k", 'newfigure':False,
-                  'refresh':None, 'showlast':None, 'redraw':True}
+        myopts = {"title":"", "xlabel":"Time (ms)", "showplot":False,
+                  "showgrouplines":False, "spacebetweengroups":0.0,
+                  "grouplinecol":"k", 'newfigure':False, 'refresh':None,
+                  'showlast':None, 'redraw':True}
+        plotoptions = {'mew':0}
         if len(monitors) == 1:
             myopts["ylabel"] = 'Neuron number'
         else:
             myopts["ylabel"] = 'Group number'
         # User options
-        _take_options(myopts, plotoptions)
+        _take_options(myopts, additionalplotoptions)
+        plotoptions.update(additionalplotoptions)
         # PLOTTING ROUTINE
         spacebetween = myopts['spacebetweengroups']
         class SecondTupleArray(object):
