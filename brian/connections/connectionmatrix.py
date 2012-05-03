@@ -1,12 +1,14 @@
 from base import *
 from sparsematrix import *
 from connectionvector import *
+import gc
 
 __all__ = [
          'ConnectionMatrix',
          'SparseConnectionMatrix',
          'DenseConnectionMatrix',
          'DynamicConnectionMatrix',
+         'set_connection_from_sparse',
          ]
 
 class ConnectionMatrix(object):
@@ -662,3 +664,131 @@ class DynamicConnectionMatrix(ConnectionMatrix):
             self.alldata[:self.nnz] = value
         else:
             ConnectionMatrix.__setitem__(self, item, value)
+
+
+
+class UnconstructedMatrix(object):
+    pass
+
+def make_sparse_connection_matrix(x, column_access=True):
+    x = x.tocsr()
+    if not x.has_sorted_indices:
+        x.sort_indices()
+    y = UnconstructedMatrix()
+    y.__class__ = SparseConnectionMatrix
+    y._useaccel = get_global_preference('useweave')
+    y._cpp_compiler = get_global_preference('weavecompiler')
+    y._extra_compile_args = ['-O3']
+    if y._cpp_compiler == 'gcc':
+        y._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+    y.nnz = nnz = int(x.getnnz())# nnz stands for number of nonzero entries
+    y.alldata = alldata = x.data
+    y.rowind = rowind = array(x.indptr, dtype=int, copy=False)
+    y.allj = allj = array(x.indices, dtype=int, copy=False)
+    if column_access:
+        colind = numpy.zeros(x.shape[1]+1, dtype=int)
+        coli = []
+        coldataindices = []
+    rowdata = []
+    rowj = []
+    i = 0 # i points to the current index in the alldata array as we go through row by row
+    for c in xrange(x.shape[0]):
+        k = y.rowind[c+1]-y.rowind[c]
+        rowdata.append(y.alldata[i:i+k])
+        rowj.append(y.allj[i:i+k])
+        i += k
+    if column_access:
+        # counts the number of nonzero elements in each column
+        counts = zeros(x.shape[1], dtype=int)
+        if len(allj):
+            bincounts = numpy.bincount(allj)
+        else:
+            bincounts = numpy.array([], dtype=int)
+        counts[:len(bincounts)] = bincounts # ensure that counts is the right length
+        # two algorithms depending on whether weave is available
+        if y._useaccel:
+            # this algorithm just goes through one by one adding each
+            # element to the appropriate bin whose sizes we have
+            # precomputed. alldi will contain all the data indices
+            # in blocks alldi[s[i]:s[i+1]] of length counts[i], and
+            # curcdi[i] is the current offset into each block. s is
+            # therefore just the cumulative sum of counts.
+            curcdi = numpy.zeros(x.shape[1], dtype=int)
+            allcoldataindices = numpy.zeros(nnz, dtype=int)
+            colind[:] = numpy.hstack(([0], cumsum(counts)))
+            colalli = numpy.zeros(nnz, dtype=int)
+            numrows = x.shape[0]
+            code = '''
+            int i = 0;
+            for(int k=0;k<nnz;k++)
+            {
+                while(k>=rowind[i+1]) i++;
+                int j = allj[k];
+                allcoldataindices[colind[j]+curcdi[j]] = k;
+                colalli[colind[j]+curcdi[j]] = i;
+                curcdi[j]++;
+            }
+            '''
+            weave.inline(code, ['nnz', 'allj', 'allcoldataindices',
+                                'rowind', 'numrows',
+                                'curcdi', 'colind', 'colalli'],
+                         compiler=y._cpp_compiler,
+                         extra_compile_args=y._extra_compile_args,
+                         )
+            # now store the blocks of allcoldataindices in coldataindices and update coli too
+            for i in xrange(len(colind) - 1):
+                D = allcoldataindices[colind[i]:colind[i + 1]]
+                I = colalli[colind[i]:colind[i + 1]]
+                coldataindices.append(D)
+                coli.append(I)
+        else:
+            # now allj[a] will be the columns in order, so that
+            # the first counts[0] elements of allj[a] will be 0,
+            # or in other words the first counts[0] elements of a
+            # will be the data indices of the elements (i,j) with j==0
+            # mergesort is necessary because we want the relative ordering
+            # of the elements of a within a block to be maintained
+            allcoldataindices = a = argsort(allj, kind='mergesort')
+            # this defines colind so that a[colind[i]:colind[i+1]] are the data
+            # indices where j==i
+            colind[:] = numpy.hstack(([0], cumsum(counts)))
+            # this computes the row index of each entry by first generating
+            # expanded_row_indices which gives the corresponding row index
+            # for each entry enumerated row-by-row, and then using the
+            # array allcoldataindices to index this array to convert into
+            # the corresponding row index for each entry enumerated
+            # col-by-col.
+            if len(a):
+                expanded_row_indices = empty(len(a), dtype=int)
+                for k, (i, j) in enumerate(zip(rowind[:-1], rowind[1:])):
+                    expanded_row_indices[i:j] = k
+                colalli = expanded_row_indices[a]
+            else:
+                colalli = numpy.zeros(nnz, dtype=int)
+            # in this loop, I are the data indices where j==i
+            # and alli[I} are the corresponding i coordinates
+            for i in xrange(len(colind) - 1):
+                D = a[colind[i]:colind[i + 1]]
+                I = colalli[colind[i]:colind[i + 1]]
+                coldataindices.append(D)
+                coli.append(I)
+
+    y.rowdata = rowdata
+    y.rowj = rowj
+    y.shape = x.shape
+    y.column_access = column_access
+    if column_access:
+        y.colalli = colalli
+        y.coli = coli
+        y.coldataindices = coldataindices
+        y.allcoldataindices = allcoldataindices
+        y.colind = colind
+    y.rows = [SparseConnectionVector(y.shape[1], y.rowj[i], y.rowdata[i]) for i in xrange(y.shape[0])]
+    return y
+
+def set_connection_from_sparse(C, W, delay=None, column_access=True):
+    C.W = make_sparse_connection_matrix(W, column_access=column_access)
+    if delay is not None:
+        C.delay = make_sparse_connection_matrix(delay, column_access=column_access)
+    C.iscompressed = True
+    gc.collect()

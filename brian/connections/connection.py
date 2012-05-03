@@ -84,7 +84,8 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         recognised by NumPy). Note that due to internal implementation details,
         passing a full matrix rather than a sparse one may slow down your code
         (because zeros will be propagated as well as nonzero values).
-        **WARNING:** No unit checking is done at the moment.
+        **WARNING:** No unit checking is done at the moment. For a more
+        efficient low-level method see :meth:`connect_from_sparse`.
 
     Additionally, you can directly access the matrix of weights by writing::
     
@@ -150,6 +151,10 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         out. If you know the maximum number of nonzero entries you will
         have in advance, specify the ``nnzmax`` keyword to set the
         initial size of the array. 
+    
+    **Low level methods**
+    
+    .. automethod:: connect_from_sparse
     
     **Advanced information**
     
@@ -403,6 +408,32 @@ class Connection(magic.InstanceTracker, ObjectContainer):
             raise AttributeError, 'The connected (sub)groups must have the same size.'
         # TODO: unit checking
         self.connect(P, Q, float(weight) * eye_lil_matrix(len(P)))
+        
+    def connect_from_sparse(self, W, delay=None, column_access=True):
+        '''
+        Bypasses the usual Brian mechanisms for constructing and compressing
+        matrices, and allows you to directly set the weight (and optionally
+        delay) matrices from scipy sparse matrix objects. This can be
+        more memory efficient, because the default sparse matrix used for
+        construction is ``scipy.sparse.lil_matrix`` which is very memory
+        inefficient.
+        
+        Arguments:
+        
+        ``W``
+            The weight matrix
+        ``delay``
+            Optional delay matrix if you are using heterogeneous delays.
+        ``column_access=True``
+            Set to ``False`` to save memory if you are not using STDP.
+        
+        .. warning::
+            This is a low-level method that bypasses the usual checks on the
+            data. In particular, make sure that if you pass a weight and
+            delay matrix, that they have the same structure.
+        '''
+        set_connection_from_sparse(self, W, delay=delay,
+                                   column_access=column_access)
 
     def __getitem__(self, i):
         return self.W.__getitem__(i)

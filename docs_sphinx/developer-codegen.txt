@@ -394,7 +394,7 @@ GPU
 ---
 
 .. inheritance-diagram::
-	brian.experimental.codegen2.gpu
+	brian.experimental.codegen2.gpu.management
 	:parts: 2
 
 Brian objects
