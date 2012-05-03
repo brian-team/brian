@@ -62,6 +62,7 @@ class NemoConnection(DelayConnection):
             delay = asarray(Wdelay/ms, dtype=int)+1
             weight = asarray(Wrow, dtype=float32)
             if len(ind):
+                #self.nemo_net.add_synapse(i, ind, delay, weight, False)
                 self.nemo_net.add_synapse(i, ind.tolist(), delay.tolist(),
                                           weight.tolist(), False)
         # configure
@@ -299,14 +300,14 @@ class NemoNetwork(Network):
                 else:
                     Wdelay = zeros(len(Wrow))
                 if isinstance(Wrow, SparseConnectionVector):
-                    ind = (Wrow.ind+target_offset).tolist()
+                    ind = (Wrow.ind+target_offset)
                 else:
                     ind = range(target_offset, target_offset+len(Wrow))
-                delay = (1+asarray(Wdelay/dt, dtype=int)).tolist()
+                delay = (1+asarray(Wdelay/dt, dtype=int))
                 # Need to update this when NeMo gets support for longer delays
-                if amax(delay)>64:
-                    raise NotImplementedError("Current version of NeMo has a maximum delay of 64 steps.")
-                weight = asarray(Wrow, dtype=float32).tolist()
+                if amax(delay)>256:
+                    raise NotImplementedError("Current version of NeMo has a maximum delay of 256 steps.")
+                weight = asarray(Wrow, dtype=float32)
                 total_synapses += len(weight)
                 this_connection_synapses += len(weight)
                 if len(ind):
