@@ -422,7 +422,7 @@ class SparseConnectionMatrix(ConnectionMatrix):
     def set_row(self, i, val):
         if isinstance(val, SparseConnectionVector):
             if val.ind is not self.rowj[i]:
-                if not (val.ind == self.rowj[i]).all():
+                if not equal(val.ind, self.rowj[i]).all():
                     raise ValueError('Sparse row setting must use same indices.')
             self.rowdata[i][:] = val
         else:
