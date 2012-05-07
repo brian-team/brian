@@ -208,6 +208,7 @@ class Network(object):
         """
         Add an object or container of objects to the network
         """
+        self.prepared = False
         for obj in objs:
             if isinstance(obj, NeuronGroup):
                 if obj not in self.groups:
