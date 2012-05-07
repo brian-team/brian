@@ -49,4 +49,3 @@ if __name__=='__main__':
     x = set([Read('x'), Read('x'), Write('x'), Read('y')])
     print x
     print get_read_or_write_dependencies(x)
-    

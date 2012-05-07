@@ -129,4 +129,3 @@ if __name__=='__main__':
     eqs.prepare()
     for stmt in make_integration_step(rk2, eqs):
         print str(stmt)
-    

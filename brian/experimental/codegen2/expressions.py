@@ -61,4 +61,3 @@ if __name__=='__main__':
     print expr.convert_to(c)
     print expr.dependencies
     print expr.resolved
-    

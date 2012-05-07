@@ -559,25 +559,3 @@ if __name__ == '__main__':
                             #delays=[-1*ms, 1*ms]
                             )
     print_table(results)
-    
-#    criterion_values, record_values = simulate( model = equations,
-#                                                reset = 0,
-#                                                threshold = 1,
-#                                                data = data,
-#                                                input = input,
-#                                                use_gpu = False,
-#                                                dt = dt,
-#                                                criterion = criterion,
-#                                                record = 'V',
-#                                                onset = overlap,
-#                                                neurons = slices,
-#                                                **results.best_params
-#                                                )
-#    
-#    trace = trace[:,int(overlap/dt):].flatten()
-#    traceV = record_values[:,int(overlap/dt):].flatten()
-#    
-#    plot(trace)
-#    plot(traceV)
-#    
-#    show()

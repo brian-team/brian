@@ -276,4 +276,3 @@ if __name__=='__main__':
     print stmt
     print 'Deps:', stmt.dependencies
     print 'Resolved:', stmt.resolved
-    
