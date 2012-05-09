@@ -186,6 +186,8 @@ class SpikeMonitor(Connection, Monitor):
     
     @property
     def it(self):
+        if len(self.spikes)==0:
+            return array([], dtype=int), array([], dtype=float)
         i, t = zip(*self.spikes)
         return array(i, dtype=int), array(t, dtype=float)
 
