@@ -95,6 +95,8 @@ class Network(object):
     ``add(...)``
         Add additional objects after initialisation, works the same way
         as initialisation.
+    ``remove(...)``
+        Remove objects from the Network.
     ``run(duration[, report[, report_period]])``
         Runs the network for the given duration. See below for details about
         what happens when you do this. See documentation for :func:`run` for
@@ -201,15 +203,31 @@ class Network(object):
         self._all_operations = []
         self.update_schedule_standard()
         self.prepared = False
+        self._added_objects = []
         for o in chain(args, kwds.itervalues()):
             self.add(o)
+
+    def unprepare(self):
+        if self.prepared:
+            # _added_objects keeps track of everything the user has added in
+            # order, and can be used when re-preparing a Network, but the way
+            # we do it is to undo the effect of the previous prepare() by
+            # calling __init__ again and then adding the previously added
+            # objects
+            _added_objects = self._added_objects
+            self.prepared = False
+            Network.__init__(self)
+            for o in _added_objects:
+                self.add(o)
 
     def add(self, *objs):
         """
         Add an object or container of objects to the network
         """
-        self.prepared = False
+        self.unprepare()
         for obj in objs:
+            if isinstance(obj, (NeuronGroup, Connection, NetworkOperation)):
+                self._added_objects.append(obj)
             if isinstance(obj, NeuronGroup):
                 if obj not in self.groups:
                     self.groups.append(obj)
@@ -232,6 +250,29 @@ class Network(object):
                     self.add(gco)
             except AttributeError:
                 pass
+            
+    def remove(self, *objs, **kwds):
+        '''
+        Remove an object or sequence of objects from a Network (note that this
+        will force the Network to be prepared from scratch).
+        '''
+        unprepare = kwds.pop('unprepare', True)
+        for obj in objs:
+            if isinstance(obj, (NeuronGroup, Connection, NetworkOperation)):
+                self._added_objects = [o for o in self._added_objects if o is not obj]
+            elif isSequenceType(obj):
+                for o in obj:
+                    self.remove(o, unprepare=False)
+            else:
+                raise TypeError('Only the following types of objects can be removed from a network: NeuronGroup, Connection or NetworkOperation')
+            try:
+                gco = obj.contained_objects
+                if gco is not None:
+                    self.remove(gco, unprepare=False)
+            except AttributeError:
+                pass
+        if unprepare:
+            self.unprepare()
 
     def __call__(self, obj):
         """
