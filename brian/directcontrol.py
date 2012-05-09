@@ -57,6 +57,7 @@ from log import *
 import numpy
 from numpy.random import exponential, randint, binomial
 from connections import Connection
+from itertools import izip
 
 class MultipleSpikeGeneratorGroup(NeuronGroup):
     """Emits spikes at given times
@@ -128,7 +129,7 @@ class MultipleSpikeGeneratorThreshold(Threshold):
             return iter(obj)
         self.spiketimeiter = [makeiter(st) for st in self.spiketimes]
         self.nextspiketime = [None for st in self.spiketimes]
-        for i in range(len(self.spiketimes)):
+        for i in xrange(len(self.spiketimes)):
             try:
                 self.nextspiketime[i] = self.spiketimeiter[i].next()
             except StopIteration:
@@ -150,7 +151,7 @@ class MultipleSpikeGeneratorThreshold(Threshold):
                 self.curperiod = cp
             t = t - cp * self.period
         # it is the iterator for neuron i, and nextspiketime is the stored time of the next spike
-        for it, nextspiketime, i in zip(self.spiketimeiter, self.nextspiketime, range(len(self.spiketimes))):
+        for i, (it, nextspiketime) in enumerate(izip(self.spiketimeiter, self.nextspiketime)):
             # Note we use approximate equality testing because the clock t+=dt mechanism accumulates errors
             if isinstance(self.spiketimes[i], numpy.ndarray):
                 curt = float(t)
