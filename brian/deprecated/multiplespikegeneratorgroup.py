@@ -1,14 +1,14 @@
-from ..neurongroup import *
-from ..threshold import *
-from ..units import *
+from ..neurongroup import NeuronGroup
+from ..threshold import Threshold
+from ..stateupdater import LazyStateUpdater
 import random as pyrandom
 from numpy import where, array, zeros, ones, inf, nonzero, tile, sum, isscalar,\
                   cumsum, hstack, bincount,  ceil, ndarray, ascontiguousarray
 from ..clock import guess_clock
-from ..utils.approximatecomparisons import *
+from ..utils.approximatecomparisons import is_approx_less_than_or_equal
 import warnings
 from operator import itemgetter
-from ..log import *
+from ..log import log_warn
 import numpy
 from numpy.random import exponential, randint, binomial
 from ..connections import Connection
@@ -70,6 +70,7 @@ class MultipleSpikeGeneratorGroup(NeuronGroup):
         spiketimes is a list of lists, one list for each neuron
         in the group. Each sublist consists of the spike times.
         """
+        log_warn('brian', 'MultipleSpikeGeneratorGroup is deprecated, use SpikeGeneratorGroup instead')
         clock = guess_clock(clock)
         thresh = MultipleSpikeGeneratorThreshold(spiketimes, period=period)
         NeuronGroup.__init__(self, len(spiketimes), model=LazyStateUpdater(), threshold=thresh, clock=clock)
