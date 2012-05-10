@@ -70,6 +70,7 @@ from magic import *
 from stdp import *
 from stp import *
 from timedarray import *
+from deprecated.multiplespikegeneratorgroup import *
 from tests.simpletest import *
 
 __version__ = '1.4.0dev'

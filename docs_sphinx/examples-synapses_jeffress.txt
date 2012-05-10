@@ -7,6 +7,7 @@
    pair: example usage; raster_plot
    pair: example usage; Connection
    pair: example usage; SpikeMonitor
+   pair: example usage; set_global_preferences
    pair: example usage; StateMonitor
 
 .. _example-synapses_jeffress:
@@ -27,6 +28,7 @@ Romain Brette
     from brian import *
     from brian.experimental.synapses import *
     from time import time
+    set_global_preferences(usecodegen = False)
     
     defaultclock.dt = .02 * ms
     dt = defaultclock.dt

@@ -6,8 +6,7 @@ Standard Groups
 Some standard types of :class:`NeuronGroup` have already been defined.
 :class:`PoissonGroup` and :class:`PoissonInput` to generate spikes with Poisson 
 statistics, :class:`PulsePacket` to generate pulse packets with specified 
-parameters, :class:`SpikeGeneratorGroup` and 
-:class:`MultipleSpikeGeneratorGroup` to generate spikes which fire at 
+parameters, and :class:`SpikeGeneratorGroup` to generate spikes which fire at 
 prespecified times.
 
 .. index::

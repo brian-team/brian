@@ -12,8 +12,8 @@ Vt = -55 * mV
 
 G = NeuronGroup(1, model='dV/dt = -(V-Vr)/tau : volt', threshold=Vt, reset=Vr)
 
-spikes = linspace(10 * ms, 100 * ms, 25)
-input = MultipleSpikeGeneratorGroup([spikes])
+spikes = [(0, t*second) for t in linspace(10 * ms, 100 * ms, 25)]
+input = SpikeGeneratorGroup(1, spikes)
 
 C = Connection(input, G)
 C[0, 0] = 5 * mV

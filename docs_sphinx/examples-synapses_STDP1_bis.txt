@@ -30,8 +30,8 @@ New time: 416 s
     
     N = 1000
     taum = 10 * ms
-    tau_pre = 20 * ms
-    tau_post = tau_pre
+    taupre = 20 * ms
+    taupost = taupre
     Ee = 0 * mV
     vt = -54 * mV
     vr = -60 * mV
@@ -39,10 +39,10 @@ New time: 416 s
     taue = 5 * ms
     F = 15 * Hz
     gmax = .01
-    dA_pre = .01
-    dA_post = -dA_pre * tau_pre / tau_post * 1.05
-    dA_post *= gmax
-    dA_pre *= gmax
+    dApre = .01
+    dApost = -dApre * taupre / taupost * 1.05
+    dApost *= gmax
+    dApre *= gmax
     
     eqs_neurons = '''
     dv/dt=(ge*(Ee-vr)+El-v)/taum : volt   # the synaptic current is linearized
@@ -53,13 +53,13 @@ New time: 416 s
     neurons = NeuronGroup(1, model=eqs_neurons, threshold=vt, reset=vr)
     S = Synapses(input, neurons,
                  model='''w:1
-                          dA_pre/dt=-A_pre/tau_pre : 1 (event-driven)
-                          dA_post/dt=-A_post/tau_post : 1 (event-driven)''',
+                          dApre/dt=-Apre/taupre : 1 (event-driven)
+                          dApost/dt=-Apost/taupost : 1 (event-driven)''',
                  pre='''ge+=w
-                        A_pre+=dA_pre
-                        w=clip(w+A_post,0,gmax)''',
-                 post='''A_post+=dA_post
-                         w=clip(w+A_pre,0,gmax)''')
+                        Apre+=dApre
+                        w=clip(w+Apost,0,gmax)''',
+                 post='''Apost+=dApost
+                         w=clip(w+Apre,0,gmax)''')
     neurons.v = vr
     S[:,:]=True
     S.w='rand()*gmax'

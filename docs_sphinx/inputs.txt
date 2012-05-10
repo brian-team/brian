@@ -105,18 +105,6 @@ but 3 of them never spike).
 One may also pass a generator instead of a list (in that case the pairs should be
 ordered in time).
 
-Spike times may also be provided separately for each neuron, using the
-:class:`MultipleSpikeGeneratorGroup` class::
-
-  S0=[1*ms, 2*ms]
-  S1=[3*ms]
-  S2=[1*ms, 3*ms, 5*ms]
-  input=MultipleSpikeGeneratorGroup([S0,S1,S2])
-
-The object is initialised with a list of spike containers, one for each neuron.
-Each container can be a sorted list of spike times or any iterable object returning
-the spike times (ordered in time).
-
 Gaussian spike packets
 ^^^^^^^^^^^^^^^^^^^^^^
 There is a subclass of :class:`SpikeGeneratorGroup` for generating spikes with a Gaussian

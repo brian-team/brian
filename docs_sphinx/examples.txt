@@ -24,6 +24,7 @@ synapses
    examples-synapses_barrelcortex
    examples-synapses_CUBA
    examples-synapses_delayed_stdp
+   examples-synapses_Diesmann_et_al_1999
    examples-synapses_gapjunctions
    examples-synapses_jeffress
    examples-synapses_multiple_delays
@@ -31,6 +32,7 @@ synapses
    examples-synapses_nonlinear_synapses
    examples-synapses_one_synapse
    examples-synapses_one_synapse_bis
+   examples-synapses_poisson_synapses
    examples-synapses_probabilistic_synapses
    examples-synapses_probabilistic_synapses2
    examples-synapses_short_term_plasticity
@@ -196,6 +198,7 @@ frompapers
    examples-frompapers_Rothman_Manis_2003
    examples-frompapers_Sturzl_et_al_2000
    examples-frompapers_Touboul_Brette_2008
+   examples-frompapers_Wang_Buszaki_1996
 
 .. _examples-electrophysiology:
 

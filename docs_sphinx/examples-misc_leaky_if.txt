@@ -1,10 +1,10 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; MultipleSpikeGeneratorGroup
-   pair: example usage; Connection
    pair: example usage; NeuronGroup
+   pair: example usage; Connection
    pair: example usage; run
+   pair: example usage; SpikeGeneratorGroup
    pair: example usage; StateMonitor
 
 .. _example-misc_leaky_if:
@@ -27,8 +27,8 @@ regularly spaced spikes from the :class:`SpikeGeneratorGroup`.
     
     G = NeuronGroup(1, model='dV/dt = -(V-Vr)/tau : volt', threshold=Vt, reset=Vr)
     
-    spikes = linspace(10 * ms, 100 * ms, 25)
-    input = MultipleSpikeGeneratorGroup([spikes])
+    spikes = [(0, t*second) for t in linspace(10 * ms, 100 * ms, 25)]
+    input = SpikeGeneratorGroup(1, spikes)
     
     C = Connection(input, G)
     C[0, 0] = 5 * mV
