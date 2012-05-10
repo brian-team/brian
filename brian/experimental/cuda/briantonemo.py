@@ -305,8 +305,10 @@ class NemoNetwork(Network):
                     ind = range(target_offset, target_offset+len(Wrow))
                 delay = (1+asarray(Wdelay/dt, dtype=int))
                 # Need to update this when NeMo gets support for longer delays
-                if amax(delay)>256:
-                    raise NotImplementedError("Current version of NeMo has a maximum delay of 256 steps.")
+                if self.nemo_use_gpu and amax(delay)>512:
+                    raise NotImplementedError("Current version of NeMo with GPU backend has a maximum delay of 512 steps.")
+                if not self.nemo_use_gpu and amax(delay)>64:
+                    raise NotImplementedError("Current version of NeMo with CPU backend has a maximum delay of 64 steps.")
                 weight = asarray(Wrow, dtype=float32)
                 total_synapses += len(weight)
                 this_connection_synapses += len(weight)
