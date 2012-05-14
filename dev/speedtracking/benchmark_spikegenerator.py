@@ -22,6 +22,12 @@ elif stim_type == 'array':
     spiketimes = vstack([array([n, t]) for t in times for n in xrange(N)])                      
 """
 
+# This tests the overhead of the SpikeGeneratorGroup if no spikes are generated
+setup_empty = """
+N = 1
+spiketimes = []
+"""
+
 #to do a fair comparison between old and new versions, this includes the setting
 #up of the SpikeGeneratorGroup, because the newer version does quite some
 #preprocessing of the data at this point.
@@ -45,3 +51,7 @@ bench_bigarray = Benchmark(statement,
                            common_setup + (setup_template % {'stim_type' : 'array',
                                                              'N' : 1000}),
                            name='SpikeGeneratorGroup with a big array of indices/times')
+
+bench_empty = Benchmark(statement,
+                        common_setup + setup_empty,
+                        name='SpikeGeneratorGroup without any spikes')
