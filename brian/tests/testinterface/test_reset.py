@@ -66,6 +66,21 @@ def test():
     net.run(1 * msecond)
     assert (all(G1.state(0) < 0.21) and all(0.19 < G1.state(0)) and all(G2.state(0) < 0.01))
 
+    # test string reset that resets two variables
+    eqs = '''v : 1
+             w : 1
+          '''
+    G = NeuronGroup(2, model=eqs, reset='v = 0; w = -1', threshold=Threshold(0.5))
+    G.v =[0.25, 1]
+    G.w =[0, 0]
+    # only second group crosses threshold
+    net = Network(G)
+    net.run(defaultclock.dt)
+    # Check that the states of the first group are unchanged
+    assert(G.v[0] == 0.25 and G.w[0] == 0)
+    # Check that the states of the second group are reset correctly
+    assert(G.v[1] == 0 and G.w[1] == -1)
+
     # check that function reset works as expected
     def f(P, spikeindices):
         P._S[0, spikeindices] = array([i / 10. for i in range(len(spikeindices))])

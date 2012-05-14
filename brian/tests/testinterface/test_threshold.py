@@ -83,34 +83,58 @@ def test():
     for s in t: assert (is_approx_equal(s, 1 * msecond))
 
     # test that Threshold works as expected with specified state
-    G = NeuronGroup(3, model=LazyStateUpdater(numstatevariables=2), reset=Reset(0., state=1), threshold=Threshold(1., state=1), init=(0., 0.))
-    M = SpikeMonitor(G, True)
-    net = Network(G, M)
-    net.run(1 * msecond)
-    assert (len(M.spikes) == 0)
-    net.reinit()
-    G.state(0)[:] = array([0.5, 1.5, 2.5])
-    net.run(1 * msecond)
-    assert (len(M.spikes) == 0)
-    net.reinit()
-    G.state(1)[:] = array([0.5, 1.5, 2.5])
-    net.run(1 * msecond)
-    i, t = zip(*sorted(M.spikes, key=itemgetter(0)))
-    assert (i == (1, 2))
-    for s in t: assert (is_approx_equal(s, 0 * msecond))
-
+    def test_specified_state(G):
+        M = SpikeMonitor(G, True)
+        net = Network(G, M)
+        net.run(1 * msecond)
+        assert (len(M.spikes) == 0)
+        net.reinit()
+        G.state(0)[:] = array([0.5, 1.5, 2.5])
+        net.run(1 * msecond)
+        assert (len(M.spikes) == 0)
+        net.reinit()
+        G.state(1)[:] = array([0.5, 1.5, 2.5])
+        net.run(1 * msecond)
+        i, t = zip(*sorted(M.spikes, key=itemgetter(0)))
+        assert (i == (1, 2))
+        for s in t: assert (is_approx_equal(s, 0 * msecond))
+    G = NeuronGroup(3, model=LazyStateUpdater(numstatevariables=2),
+                    reset=Reset(0., state=1), threshold=Threshold(1., state=1),
+                    init=(0., 0.))
+    test_specified_state(G)
+    # use string threshold
+    eqs = '''v : 1
+             w : 1
+          '''
+    G = NeuronGroup(3, model=eqs, reset=Reset(0., state=1), threshold='w > 1')
+    test_specified_state(G)    
+    
     # test that VariableThreshold works as expected
-    G = NeuronGroup(3, model=LazyStateUpdater(numstatevariables=3), reset=Reset(0., state=1), threshold=VariableThreshold(2, state=1), init=(0., 0., 0.))
-    M = SpikeMonitor(G, True)
-    net = Network(G, M)
-    get_default_clock().reinit()
-    G.state(2)[:] = array([1., 2., 3.]) # the thresholds
-    G.state(1)[:] = array([4., 1., 2.]) # the values
-    net.run(1 * msecond)
-    i, t = zip(*sorted(M.spikes, key=itemgetter(0)))
-    assert (i == (0,))
-    assert (is_approx_equal(t[0], 0 * second))
+    def test_variable_threshold(G):    
+        M = SpikeMonitor(G, True)
+        net = Network(G, M)
+        get_default_clock().reinit()
+        G.state(2)[:] = array([1., 2., 3.]) # the thresholds
+        G.state(1)[:] = array([4., 1., 2.]) # the values
+        net.run(1 * msecond)
+        i, t = zip(*sorted(M.spikes, key=itemgetter(0)))
+        assert (i == (0,))
+        assert (is_approx_equal(t[0], 0 * second))
 
+    G = NeuronGroup(3, model=LazyStateUpdater(numstatevariables=3),
+                    reset=Reset(0., state=1),
+                    threshold=VariableThreshold(2, state=1), init=(0., 0., 0.))
+    test_variable_threshold(G)
+    
+    # use string threshold
+    eqs = '''v : 1
+             w : 1
+             x : 1
+          '''
+    G = NeuronGroup(3, model=eqs, reset=Reset(0., state=1),
+                    threshold='w > x')
+    test_variable_threshold(G)
+    
     # test that FunThreshold works as expected
     def f(S0, S1):
         return S0 > S1 * S1
@@ -149,15 +173,27 @@ def test():
     for i, s in enumerate(t): assert (is_approx_equal(s, i * 0.5 * msecond))
 
     # test that PoissonThreshold works
-    init = float(1. / get_default_clock().dt) # should cause spiking at every time interval
-    G = NeuronGroup(3, model=LazyStateUpdater(), reset=NoReset(), threshold=PoissonThreshold())
-    G.state(0)[:] = array([0., init, 0.])
-    M = SpikeMonitor(G, True)
-    net = Network(G, M)
-    net.run(1 * msecond)
-    assert (len(M.spikes))
-    i, t = zip(*sorted(M.spikes, key=itemgetter(1)))
-    assert (all(j == 1 for j in i))
+    def test_poisson_threshold(G):
+        init = float(1. / get_default_clock().dt) # should cause spiking at every time interval        
+        G.state(0)[:] = array([0., init, 0.])
+        M = SpikeMonitor(G, True)
+        net = Network(G, M)
+        net.run(1 * msecond)
+        assert (len(M.spikes))
+        i, t = zip(*sorted(M.spikes, key=itemgetter(1)))
+        assert (all(j == 1 for j in i))
+    
+    G = NeuronGroup(3, model=LazyStateUpdater(), reset=NoReset(),
+                    threshold=PoissonThreshold())
+    test_poisson_threshold(G)
+    
+    # Poisson threshold via a string threshold using the rand() function
+    eqs = '''v : 1
+             w : 1
+             x : 1
+          '''
+    G = NeuronGroup(3, model=eqs, reset=NoReset(), threshold='rand() < v')
+    test_poisson_threshold(G)
 
     # test that HomogeneousPoissonThreshold works
     init = float(1. / get_default_clock().dt) # should cause spiking at every time interval
