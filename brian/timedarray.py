@@ -129,6 +129,32 @@ class TimedArray(numpy.ndarray):
             self._dt = None
         self.times = times
 
+    # __reduce__ and __setstate__ are needed for correct pickling and unpickling    
+    def __reduce__(self):
+        # numpy's reduce function returns a tuple, the third element contains
+        # the state that will be fed into the __setstate__ method
+        nd_reduce = list(numpy.ndarray.__reduce__(self))
+         
+        timedarray_state = (self.times, self.clock, self.guessed_clock,
+                            self._t_init, self._dt)
+        # Return a tuple where the third element contains a combination of the
+        # ndarray state and TimedArray's state        
+        return (nd_reduce[0], nd_reduce[1], (nd_reduce[2], timedarray_state))
+    
+    def __setstate__(self,state):
+        nd_state, timedarray_state = state
+        
+        # Restore ndarray's state
+        numpy.ndarray.__setstate__(self, nd_state)
+        
+        # Restore TimedArray's state
+        times, clock, guessed_clock, _t_init, _dt = timedarray_state
+        self.times = times
+        self.clock = clock
+        self.guessed_clock = guessed_clock
+        self._t_init = _t_init
+        self._dt = _dt 
+
     def __getitem__(self, item):
         # __getitem__ can deal with all sorts of indexing, we consider the
         # following types specially for an array x
