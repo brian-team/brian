@@ -2,6 +2,7 @@ from vbench.benchmark import Benchmark
 
 common_setup = """
 from brian import *
+set_global_preferences(useweave=False, usecodegen=False, usecodegenweave=False)
 log_level_error() # do not show warnings    
 """
 

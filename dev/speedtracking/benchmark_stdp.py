@@ -7,6 +7,10 @@ from brian import *
 log_level_error() # do not show warnings    
 """
 
+python_only_setup = """
+set_global_preferences(useweave=False, usecodegen=False, usecodegenweave=False)
+"""
+
 setup= """
 N = 1000
 taum = 10 * ms
@@ -42,4 +46,5 @@ statement = '''
 run(5 * second)
 '''
 
-bench_stdp = Benchmark(statement, common_setup + setup, name='Exponential STDP')
+bench_stdp = Benchmark(statement, common_setup + python_only_setup + setup,
+                       name='Exponential STDP (Python only)')
