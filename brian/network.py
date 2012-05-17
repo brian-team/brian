@@ -311,6 +311,7 @@ class Network(object):
         + Compresses the connection matrices for faster simulation
         Calling this function is not mandatory but speeds up the simulation.
         '''
+        self.unprepare()
         # Set the clock
         if self.same_clocks():
             self.set_clock()
