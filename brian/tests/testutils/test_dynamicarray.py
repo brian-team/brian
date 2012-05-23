@@ -16,6 +16,9 @@ def test_dynamicarray():
     x[:] += 1
     x.data[:] = x.data**2
     
+    # Do a resize that changes nothing
+    x.resize((4, 4))
+    
     # This is the expected result
     y = array([[16, 16, 16, 4],
                [16, 16, 16, 4],
@@ -38,6 +41,9 @@ def test_dynamicarray():
     x[:] += 1
     x.data[:] = x.data**2
     
+    # Do a resize that changes nothing
+    x.resize((4, 4))
+    
     y = array([[16, 16, 16, 4],
                [16, 16, 16, 4],
                [ 9,  9,  9, 4],
@@ -48,6 +54,17 @@ def test_dynamicarray():
     assert(x.shape == (4, 4))    
     assert((x == y).all())
     
+    # Test shrinking
+    x = DynamicArray((2, 3), dtype=int)
+    x[:] = 1
+    x.shrink((1, 2))
+    # This should not do anything
+    x.shrink((2, 3))
+    y = array([[1, 1]])
+
+    assert(x.shape == y.shape)
+    assert((x == y).all())
+        
     # Test DynamicArray1D
     x = DynamicArray1D(2, dtype=int)
     x[:] = 1
