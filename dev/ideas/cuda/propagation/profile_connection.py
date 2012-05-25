@@ -12,7 +12,7 @@ from matplotlib import cm, rcParams
 
 ##### PROFILING CODE
 
-cache_mem = joblib.Memory(cachedir='.', verbose=0)
+cache_mem = joblib.Memory(cachedir='/home/dan/programming/joblib_cache', verbose=0)
 
 @cache_mem.cache
 def profile_gpu_connection(gpu_module, Nsource, Ntarget, sparseness, spikesperdt,
