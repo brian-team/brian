@@ -434,10 +434,11 @@ class Sound(BaseSound, numpy.ndarray):
 
     def _init_mixer(self):
         global _mixer_status
-        if _mixer_status==[-1,-1] or _mixer_status[0]!=self.nchannels or _mixer_status != self.samplerate:
+        if _mixer_status==[-1,-1] or _mixer_status[0]!= self.nchannels or _mixer_status[1] != self.samplerate:
             pygame.mixer.quit()
             pygame.mixer.init(int(self.samplerate), -16, self.nchannels)
             _mixer_status=[self.nchannels,self.samplerate]
+
     
     def play(self, normalise=False, sleep=False):
         '''
