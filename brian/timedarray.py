@@ -1,7 +1,7 @@
 from clock import *
 from network import *
 import neurongroup
-from units import second
+from units import second, check_units
 import numpy
 import warnings
 try:
@@ -100,6 +100,7 @@ class TimedArray(numpy.ndarray):
             pass
         return self
 
+    @check_units(start=second, dt=second)
     def __init__(self, arr, times=None, clock=None, start=None, dt=None):
         # Mostly this is straightforward, the point about having
         # times and clock separate is that you don't have to limit
@@ -266,6 +267,7 @@ class TimedArraySetter(NetworkOperation):
         The standard :class:`NetworkOperation` ``when`` keyword, although
         note that the default value is 'start'.
     '''
+    @check_units(start=second, dt=second)
     def __init__(self, group, var, arr, times=None, clock=None, start=None, dt=None, when='start'):
         if clock is None:
             if isinstance(arr, TimedArray):
@@ -305,6 +307,7 @@ class TimedArraySetter(NetworkOperation):
         if self.arr.clock is None:
             self._cur_i = 0
 
+@check_units(start=second, dt=second)
 def set_group_var_by_array(group, var, arr, times=None, clock=None, start=None, dt=None):
     '''
     Sets NeuronGroup values with a TimedArray.

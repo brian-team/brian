@@ -515,6 +515,7 @@ class Sound(BaseSound, numpy.ndarray):
         ylabel('Frequency (Hz)')
         return (pxx, freqs, bins, im)
 
+    @check_units(low=Hz, high=Hz)
     def spectrum(self, low=None, high=None, log_power=True, display=False):
         '''
         Returns the spectrum of the sound and optionally plots it.
@@ -687,6 +688,7 @@ class Sound(BaseSound, numpy.ndarray):
             target[target.nsamples-sz:, :] *= multiplier[::-1]
         return target
     
+    @check_units(duration=second)
     def ramped(self, when='onset', duration=10*ms, envelope=None):
         '''
         Returns a ramped version of the sound (see :meth:`Sound.ramp`).
@@ -707,6 +709,7 @@ class Sound(BaseSound, numpy.ndarray):
         
     
     @staticmethod
+    @check_units(frequency=Hz, duration=second, samplerate=Hz)
     def tone(frequency, duration, phase=0, samplerate=None, nchannels=1):
         '''
         Returns a pure tone at frequency for duration, using the default
@@ -734,6 +737,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
+    @check_units(f0=Hz, duration=second, samplerate=Hz)
     def harmoniccomplex(f0, duration, amplitude=1, phase=0, samplerate=None, nchannels=1):
         '''
         Returns a harmonic complex composed of pure tones at integer multiples
@@ -771,6 +775,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x,samplerate)
     
     @staticmethod
+    @check_units(duration=second, samplerate=Hz)
     def whitenoise(duration, samplerate=None, nchannels=1):
         '''
         Returns a white noise. If the samplerate is not specified, the global
@@ -782,6 +787,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
+    @check_units(duration=second, samplerate=Hz)
     def powerlawnoise(duration, alpha, samplerate=None, nchannels=1,normalise=False):
         '''
         Returns a power-law noise for the given duration. Spectral density per unit of bandwidth scales as 1/(f**alpha).
@@ -843,6 +849,7 @@ class Sound(BaseSound, numpy.ndarray):
     
             
     @staticmethod
+    @check_units(duration=second, samplerate=Hz)
     def pinknoise(duration, samplerate=None, nchannels=1, normalise=False):
         '''
         Returns pink noise, i.e :func:`powerlawnoise` with alpha=1
@@ -851,6 +858,7 @@ class Sound(BaseSound, numpy.ndarray):
                                    nchannels=nchannels, normalise=normalise)
     
     @staticmethod
+    @check_units(duration=second, samplerate=Hz)
     def brownnoise(duration, samplerate=None, nchannels=1, normalise=False):
         '''
         Returns brown noise, i.e :func:`powerlawnoise` with alpha=2
@@ -859,6 +867,7 @@ class Sound(BaseSound, numpy.ndarray):
                                    nchannels=nchannels, normalise=normalise)
     
     @staticmethod
+    @check_units(duration=second, samplerate=Hz)
     def irns(delay, gain, niter, duration, samplerate=None, nchannels=1):
         '''
         Returns an IRN_S noise. The iterated ripple noise is obtained trough
@@ -883,6 +892,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x,samplerate)
     
     @staticmethod
+    @check_units(duration=second, samplerate=Hz)
     def irno(delay, gain, niter, duration, samplerate=None, nchannels=1):
         '''
         Returns an IRN_O noise. The iterated ripple noise is obtained many attenuated and
@@ -904,6 +914,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
+    @check_units(duration=second, samplerate=Hz)
     def click(duration, peak=None, samplerate=None, nchannels=1):
         '''
         Returns a click of the given duration.
@@ -924,6 +935,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
     
     @staticmethod
+    @check_units(duration=second, samplerate=Hz)
     def clicks(duration, n, interval, peak=None, samplerate=None, nchannels=1):
         '''
         Returns a series of n clicks (see :func:`click`) separated by interval.
@@ -932,6 +944,7 @@ class Sound(BaseSound, numpy.ndarray):
         return oneclick[:interval].repeat(n)
 
     @staticmethod
+    @check_units(duration=second, samplerate=Hz)
     def silence(duration, samplerate=None, nchannels=1):
         '''
         Returns a silent, zero sound for the given duration. Set nchannels to set the number of channels.
@@ -942,6 +955,7 @@ class Sound(BaseSound, numpy.ndarray):
         return Sound(x, samplerate)
 
     @staticmethod
+    @check_units(pitch=Hz, duration=second, samplerate=Hz)
     def vowel(vowel=None, formants=None, pitch=100*Hz, duration=1*second,
           samplerate=None, nchannels=1):
         '''
