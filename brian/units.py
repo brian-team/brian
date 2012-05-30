@@ -1494,13 +1494,23 @@ def check_units(**au):
             for (n, v) in zip(arg_names, args[0:f.func_code.co_argcount]):
                 newkeyset[n] = v
             for k in newkeyset.iterkeys():
-                if (k in au.keys()) and not isinstance(newkeyset[k], str): # string variables are allowed to pass, the presumption is they name another variable
+                # string variables are allowed to pass, the presumption is they
+                # name another variable. None is also allowed, useful for 
+                # default parameters
+                if (k in au.keys() and not isinstance(newkeyset[k], str) and
+                    not newkeyset[k] is None): 
                     if not have_same_dimensions(newkeyset[k], au[k]):
-                        raise DimensionMismatchError("Function " + f.__name__ + " variable " + k + " should have dimensions of " + str(au[k]), get_dimensions(newkeyset[k]))
+                        raise DimensionMismatchError("Function " + f.__name__ +
+                                                     " variable " + k +
+                                                     " should have dimensions of " +
+                                                     str(au[k]),
+                                                     get_dimensions(newkeyset[k]))
             result = f(*args, **kwds)
             if "result" in au:
                 assert have_same_dimensions(result, au["result"]), \
-                    "Function " + f.__name__ + " should return a value with unit " + str(au["result"]) + " but has returned " + str(get_dimensions(result))
+                    ("Function " + f.__name__ + " should return a value with unit " +
+                     str(au["result"]) + " but has returned " +
+                     str(get_dimensions(result)))
             return result
 #        new_f.__name__ = f.__name__
 #        new_f.__doc__ = f.__doc__
