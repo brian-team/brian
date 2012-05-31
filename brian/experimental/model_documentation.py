@@ -492,4 +492,3 @@ if __name__ == '__main__':
     # Document the network
     document_network(output='latex', labels=labels_from_namespace(locals()),
                      graph_connections=True)
-    

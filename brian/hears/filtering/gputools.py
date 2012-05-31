@@ -55,6 +55,3 @@ except:
 
     def close_cuda():
         pass
-
-#if __name__ == '__main__':
-#    close_cuda()
