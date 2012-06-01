@@ -4,9 +4,7 @@ from brian import *
 
 def test_pickling():
     '''    
-    Tests pickling of brian objects
-    
-    TODO: Only tests TimedArray so far...
+    Tests pickling of brian objects    
     '''
     
     def timed_array_correctly_pickled(obj):
@@ -32,6 +30,13 @@ def test_pickling():
     # Test TimedArray with the default clock
     ta = TimedArray([0, 1])
     timed_array_correctly_pickled(ta)
+
+    #very simple test of pickling for a NeuronGroup and a Network
+    G = NeuronGroup(42, model=LazyStateUpdater())
+    net = Network(G)
+    pickled = pickle.dumps(net)
+    unpickled = pickle.loads(pickled)
+    assert(len(unpickled) == 42)
 
 if __name__ == '__main__':
     test_pickling()
