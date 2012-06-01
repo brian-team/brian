@@ -1,5 +1,8 @@
-from brian import *
+import sys
 from StringIO import StringIO
+
+from brian import *
+
 
 def test_progressreporting():
     '''
