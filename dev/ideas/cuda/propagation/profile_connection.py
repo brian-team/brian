@@ -127,19 +127,22 @@ if __name__=='__main__':
         bases = {
             'CUDA/VPO':('g', dict(gpu_module='vectorise_over_postsynaptic_offset',
                                   parameters=dict())),
-            'CUDA/VSS':('r', dict(gpu_module='vectorise_over_spiking_synapses',
-                                  parameters=dict())),
+#            'CUDA/VSS':('r', dict(gpu_module='vectorise_over_spiking_synapses',
+#                                  parameters=dict())),
             'CUDA/DVPOT':('y', dict(gpu_module='double_vectorise_over_postsynoff_targetidx_blocked',
                                     parameters=dict())),
-            'CUDA/DVPOT/MW':((0.5,0.5,0), dict(gpu_module='double_vectorise_over_postsynoff_targetidx_blocked',
-                                               parameters=dict(masked_write=False))),
+#            'CUDA/DVPOT/MW':((0.5,0.5,0), dict(gpu_module='double_vectorise_over_postsynoff_targetidx_blocked',
+#                                               parameters=dict(masked_write=False))),
             'CUDA/DVSST':('m', dict(gpu_module='double_vectorise_over_spsyn_targetidx_blocked',
                                     parameters=dict())),
-            'CUDA/DVSST/MW':((0.5,0,0.5),
-                             dict(gpu_module='double_vectorise_over_spsyn_targetidx_blocked',
-                                  parameters=dict(masked_write=False))),
+#            'CUDA/DVSST/MW':((0.5,0,0.5),
+#                             dict(gpu_module='double_vectorise_over_spsyn_targetidx_blocked',
+#                                  parameters=dict(masked_write=False))),
             }
         repeats = 10
+        target_time = 1.0
+#        repeats = 1
+#        target_time = 0.1
         plot_params = [
             dict(Nsource=100, Ntarget=100000,
                  # low detail
@@ -149,10 +152,28 @@ if __name__=='__main__':
 #                 spikesperdt=[1, 3, 5, 10, 25, 50],
 #                 sparseness=[0.001, 0.005, 0.01, 0.05, 0.1],
                  # high detail
-                 spikesperdt=range(1,10)+range(10, 101, 10),
-                 sparseness=exp(linspace(log(0.001), log(0.3), 20)),
+#                 spikesperdt=range(1,10)+range(10, 101, 10),
+#                 sparseness=exp(linspace(log(0.001), log(0.3), 20)),
+                # low detail, large range
+#                spikesperdt=[1, 10, 50, 100],
+#                sparseness=[0.05, 0.1, 0.3, 0.4, 0.5],
+                # medium detail, large range
+#                 spikesperdt=range(2, 10, 2)+range(10, 101, 20),
+#                 sparseness=exp(linspace(log(0.001), log(0.8), 11)),
+#                 sparseness=hstack((exp(linspace(log(0.001), log(0.1), 6)),
+#                                    linspace(0.1, 0.8, 5)
+#                                    )),
+                # medium detail linear sparseness, large range
+#                 spikesperdt=range(1, 10, 2)+range(10, 101, 20),
+#                 sparseness=linspace(0.001, 0.5, 10),
+                # high detail, large range
+                 spikesperdt=range(1, 10)+range(10, 101, 10),
+                 sparseness=exp(linspace(log(0.001), log(0.8), 19)),
                  ),
             ]
+        labels = {'spikesperdt': 'Spikes per timestep',
+                  'sparseness': 'Sparseness (log scale)',
+                  }
         start_time = time.time()
         for pp in plot_params:
             basekwds = pp
@@ -187,6 +208,7 @@ if __name__=='__main__':
                         allt = []
                         for rep in xrange(repeats):
                             kwds['arbitrary'] = rep
+                            kwds['target_time'] = target_time
                             t, summary = profile_gpu_connection(**kwds)
                             print summary
                             allt.append(t)
@@ -203,6 +225,7 @@ if __name__=='__main__':
                             allt = []
                             for rep in xrange(repeats):
                                 kwds['arbitrary'] = rep
+                                kwds['target_time'] = target_time
                                 t, summary = profile_gpu_connection(**kwds)
                                 print summary
                                 allt.append(t)
@@ -230,16 +253,16 @@ if __name__=='__main__':
                         idx = unique(idx[idx<len(varyval2)])
                         idx = idx[idx>=0]
                         yticks(idx+0.5, array(varyval2)[idx])
-                        xlabel(varykey1)
-                        ylabel(varykey2)
+                        xlabel(labels.get(varykey1, varykey1))
+                        ylabel(labels.get(varykey2, varykey2))
             if len(varying)==1:
-                xlabel(varykey)
+                xlabel(labels.get(varykey, varykey))
                 ylabel('Ratio compared to realtime')
                 legend()
             elif len(varying)==2:
                 if show_3d_plots:
-                    xlabel(varykey1)
-                    ylabel(varykey2)
+                    xlabel(labels.get(varykey1, varykey1))
+                    ylabel(labels.get(varykey2, varykey2))
                     idx = array(ax.get_xticks(), dtype=int)
                     idx = unique(idx[idx<len(varyval1)])
                     if len(idx)==0:
@@ -253,14 +276,15 @@ if __name__=='__main__':
                     ax.set_yticks(idx)
                     ax.set_yticklabels(map(str, array(varyval2)[idx]))
                     #legend()
+                rcParams['font.size'] = 10
                 rcParams['figure.subplot.left']  = 0.1
                 rcParams['figure.subplot.right'] = .98
                 rcParams['figure.subplot.bottom'] = .12
                 rcParams['figure.subplot.top'] = .85
                 rcParams['figure.subplot.wspace'] = 0.0
                 rcParams['figure.subplot.hspace'] = 0.5
-                figure(figsize=(14, 6))
-                subplot(121)
+                figure(figsize=(10, 3))
+                subplot(131)
                 text(-0.15, 1.1, 'A', size=14, transform=gca().transAxes)
                 title('Best algorithm')
                 for i in xrange(len(varyval1)):
@@ -273,44 +297,69 @@ if __name__=='__main__':
                                 c = bases[name][0]
                                 fill([i,i+1,i+1,i], [j,j,j+1,j+1], color=c)
                 idx = array(xticks()[0], dtype=int)
+                idx = hstack((idx, len(varyval1)-1))
                 idx = unique(idx[idx<len(varyval1)])
                 idx = idx[idx>=0]
                 idx_x = idx
                 xticks(idx+0.5, array(varyval1)[idx])
                 idx = array(yticks()[0], dtype=int)
+                idx = hstack((idx, len(varyval2)-1))
                 idx = unique(idx[idx<len(varyval2)])
                 idx = idx[idx>=0]
                 #yticks(idx+0.5, array(varyval2)[idx])
                 yticks(idx+0.5, ['%.3f'%y for y in array(varyval2)[idx]])
-                xlabel(varykey1)
-                ylabel(varykey2)
+                xlabel(labels.get(varykey1, varykey1))
+                ylabel(labels.get(varykey2, varykey2))
                 axis('tight')
                 gca().set_aspect('equal')
-                subplot(122)
-                text(-0.15, 1.1, 'B', size=14, transform=gca().transAxes)
-                title('Ratio slowest:fastest')
-                ratios = zeros((len(varyval2), len(varyval1)))
+                
+                ratios_w2b = zeros((len(varyval2), len(varyval1)))
+                ratios_s2f = zeros((len(varyval2), len(varyval1)))
                 for i in xrange(len(varyval1)):
                     for j in xrange(len(varyval2)):
                         best = 1e10
                         worst = 0
                         c = 'k'
+                        allI = []
                         for name, I in images.items():
-                            if I[j, i]<best:
-                                best = I[j, i]
-                            if I[j, i]>worst:
-                                worst = I[j, i]
-                        ratios[j, i] = worst/best 
-                imshow(ratios, origin='lower left', aspect='auto',
+                            allI.append(I[j, i])
+                        best = amin(allI)
+                        worst = amax(allI)
+                        ratios_w2b[j, i] = worst/best
+                        allI.sort()
+                        ratios_s2f[j, i] =  allI[1]/allI[0]
+                        
+                subplot(132)
+                text(-0.15, 1.1, 'B', size=14, transform=gca().transAxes)
+                title('Ratio worst:best')
+#                    title('Ratio second best:best')
+                imshow(ratios_w2b, origin='lower left', aspect='auto',
                        interpolation='nearest',
+#                       vmin=1, vmax=amax(ratios_w2b),
                        extent=(0, len(varyval1),
                                0, len(varyval2)))
                 axis('tight')
                 colorbar()
                 xticks(idx_x+0.5, array(varyval1)[idx_x])
                 yticks(idx+0.5, ['' for _ in idx])#array(varyval2)[idx])
-                xlabel(varykey1)
-                #ylabel(varykey2)
+                xlabel(labels.get(varykey1, varykey1))
+                #ylabel(labels.get(varykey2, varykey2))
+                gca().set_aspect('equal')
+
+                subplot(133)
+                text(-0.15, 1.1, 'C', size=14, transform=gca().transAxes)
+                title('Ratio second best:best')
+                imshow(ratios_s2f, origin='lower left', aspect='auto',
+                       interpolation='nearest',
+                       #vmin=1, vmax=amax(ratios_w2b),
+                       extent=(0, len(varyval1),
+                               0, len(varyval2)))
+                axis('tight')
+                colorbar()
+                xticks(idx_x+0.5, array(varyval1)[idx_x])
+                yticks(idx+0.5, ['' for _ in idx])#array(varyval2)[idx])
+                xlabel(labels.get(varykey1, varykey1))
+                #ylabel(labels.get(varykey2, varykey2))
                 gca().set_aspect('equal')
         print 'Finished, took %ds'%int(time.time()-start_time)
         show()
