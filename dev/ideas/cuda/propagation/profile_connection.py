@@ -127,8 +127,8 @@ if __name__=='__main__':
         bases = {
             'CUDA/VPO':('g', dict(gpu_module='vectorise_over_postsynaptic_offset',
                                   parameters=dict())),
-#            'CUDA/VSS':('r', dict(gpu_module='vectorise_over_spiking_synapses',
-#                                  parameters=dict())),
+            'CUDA/VSS':('r', dict(gpu_module='vectorise_over_spiking_synapses',
+                                  parameters=dict())),
             'CUDA/DVPOT':('y', dict(gpu_module='double_vectorise_over_postsynoff_targetidx_blocked',
                                     parameters=dict())),
 #            'CUDA/DVPOT/MW':((0.5,0.5,0), dict(gpu_module='double_vectorise_over_postsynoff_targetidx_blocked',
