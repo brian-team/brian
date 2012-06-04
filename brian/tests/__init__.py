@@ -46,7 +46,13 @@ def repeat_with_global_opts(opt_list):
                 func(*args, **kwds)
                 # reset preferences
                 set_global_preferences(**old_preferences)
-    
+
+        #make sure that the wrapper has the same name as the original function
+        #otherwise nose will ignore the functions as they are not called
+        #"test..." anymore!
+        wrapper.__name__ = func.__name__
+        wrapper.__doc__ = func.__doc__
+        
         return wrapper
     
     return decorator
