@@ -44,7 +44,9 @@ The following global preferences have been defined:
 # define_global_preference
 __docformat__ = "restructuredtext en"
 
-__all__ = ['set_global_preferences', 'get_global_preference', 'exists_global_preference', 'define_global_preference']
+__all__ = ['set_global_preferences', 'get_global_preference',
+           'get_global_preferences', 'exists_global_preference', 
+           'define_global_preference']
 
 import sys
 from utils.documentation import *
@@ -74,6 +76,12 @@ def get_global_preference(k):
     """Get the value of the named global preference
     """
     return g_prefs.__dict__[k]
+
+def get_global_preferences():
+    """ 
+    Get a dictionary containing all the currently set preferences.
+    """
+    return g_prefs.__dict__.copy()
 
 def exists_global_preference(k):
     """Determine if named global preference exists
