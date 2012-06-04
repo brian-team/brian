@@ -2,7 +2,17 @@ from brian import *
 from nose.tools import *
 from operator import itemgetter
 from brian.utils.approximatecomparisons import is_approx_equal
+from brian.tests import repeat_with_global_opts
 
+@repeat_with_global_opts([
+                          # no C code or code generation,
+                          {'useweave': False, 'usecodegen': False},
+                          # # use weave but no code generation 
+                          {'useweave': True, 'usecodegen': False}, 
+                          # use Python code generation
+                          {'useweave': False, 'usecodegen': True,
+                           'usecodegenthreshold': True}
+                          ])
 def test():
     """
     :class:`Threshold`
@@ -192,7 +202,7 @@ def test():
              w : 1
              x : 1
           '''
-    G = NeuronGroup(3, model=eqs, reset=NoReset(), threshold='rand() < v')
+    G = NeuronGroup(3, model=eqs, reset=NoReset(), threshold=StringThreshold('rand() < v'))
     test_poisson_threshold(G)
 
     # test that HomogeneousPoissonThreshold works

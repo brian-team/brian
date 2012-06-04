@@ -1,7 +1,17 @@
 from brian import *
 from nose.tools import *
 from brian.utils.approximatecomparisons import is_approx_equal
+from brian.tests import repeat_with_global_opts
 
+@repeat_with_global_opts([
+                          # no C code or code generation,
+                          {'useweave': False, 'usecodegen': False},
+                          # # use weave but no code generation 
+                          {'useweave': True, 'usecodegen': False}, 
+                          # use Python code generation
+                          {'useweave': False, 'usecodegen': True,
+                           'usecodegenreset': True}
+                          ])
 def test():
     """
     :class:`Reset`
