@@ -280,6 +280,13 @@ class FastSpikeGeneratorThreshold(Threshold):
             res += zip(idx, ts)
         return res
 
+    def __repr__(self):
+        return '<FastSpikeGeneratorThreshold>'
+
+    def __str__(self):
+        return 'Fast threshold mechanism for the SpikeGenerator group'
+    
+
 class SpikeGeneratorThreshold(Threshold):
     """
     Old threshold object for the SpikeGeneratorGroup

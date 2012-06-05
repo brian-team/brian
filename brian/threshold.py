@@ -227,11 +227,11 @@ class StringThreshold(Threshold):
         return eval(self._code, self._namespace).nonzero()[0]
 
     def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, repr(self_expr))
+        return '%s(%s)' % (self.__class__.__name__, repr(self._expr))
     
     def __str__(self):
         return '%s using expression "%s"' % (self.__class__.__name__,
-                                             str(self_expr))
+                                             str(self._expr))
 
 
 class NoThreshold(Threshold):
@@ -383,7 +383,7 @@ class VariableThreshold(Threshold):
 
     def __repr__(self):
         return '%s(threshold_state=%s, state=%s)' % (self.__class__.__name__, 
-                                                     repr(self._threshold_state),
+                                                     repr(self.threshold_state),
                                                      repr(self.state))
     
     def __str__(self):
