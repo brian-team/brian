@@ -461,7 +461,7 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         '''
         if self._owner is self:
             if states:
-                if self._S0 is not None:
+                if self._S0 is not None and self._state_updater is not None:
                     for i in range(len(self._state_updater)):
                         self._S[i, :] = self._S0[i]
                 else:
