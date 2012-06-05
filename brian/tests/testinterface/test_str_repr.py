@@ -33,11 +33,18 @@ def test_str_repr():
     
     # Thresholds and Resets
     thresholds = [Threshold(1), StringThreshold('v > 1'),
-                  VariableThreshold('v', 'w')]
+                  VariableThreshold('v', 'w'),
+                  FunThreshold(lambda v: v > 1),
+                  SimpleFunThreshold(lambda v: v > 1),
+                  PoissonThreshold(), HomogeneousPoissonThreshold()]
+                  
     for threshold in thresholds:
         assert_str_repr(threshold)
 
-    resets = [Reset(0), StringReset('v = 0')]
+    resets = [Reset(0), StringReset('v = 0'), VariableReset(),
+              FunReset(lambda G, spikes: None), NoReset(), Refractoriness(),
+              SimpleCustomRefractoriness(lambda G, spikes: None),
+              CustomRefractoriness(lambda G, spikes: None)]
     for reset in resets:
         assert_str_repr(reset)
 

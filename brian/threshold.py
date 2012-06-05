@@ -249,7 +249,10 @@ class NoThreshold(Threshold):
         return []
 
     def __repr__(self):
-        return "No Threshold"
+        return "NoThreshold()"
+    
+    def __str__(self):
+        return "No threshold"
 
 
 class FunThreshold(Threshold):
@@ -281,6 +284,9 @@ class FunThreshold(Threshold):
         return spikes
 
     def __repr__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.thresholdfun)
+
+    def __str__(self):
         return 'Functional threshold mechanism'
 
 
@@ -459,6 +465,10 @@ class PoissonThreshold(Threshold):
     def __repr__(self):
         return '%s(state=%s)' % (self.__class__.__name__,
                                  repr(self.state))
+    
+    def __str__(self):
+        return '%s using state variable %s' % (self.__class__.__name__,
+                                               str(self.state))
 
 
 class HomogeneousPoissonThreshold(PoissonThreshold):

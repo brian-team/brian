@@ -278,6 +278,12 @@ class FunReset(Reset):
     def __call__(self, P):
         self.resetfun(P, P.LS.lastspikes())
 
+    def __repr__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.resetfun)
+
+    def __str__(self):
+        return 'Functional threshold mechanism'
+
 
 class Refractoriness(Reset):
     '''
