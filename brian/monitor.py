@@ -1165,7 +1165,7 @@ class MultiStateMonitor(NetworkOperation):
         pass
 
 
-class CoincidenceCounter(SpikeMonitor):
+class CoincidenceCounter(SpikeCounter):
     """
     Coincidence counter class.
     
@@ -1227,7 +1227,7 @@ class CoincidenceCounter(SpikeMonitor):
     ``target_length``
         The number of spikes in the target spike train associated to each neuron.
     """
-    def __init__(self, source, data=None, spiketimes_offset=None, spikedelays=None,
+    def __init__(self, source, data, spiketimes_offset=None, spikedelays=None,
                  coincidence_count_algorithm='exclusive', onset=None, delta=4 * ms):
 
         source.set_max_delay(0)
