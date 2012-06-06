@@ -29,11 +29,9 @@ def test_stdp():
     delta_A_pre, delta_A_post = 0.1, 0.1
     stdp = STDP(con, eqs=eqs_stdp, pre='A_pre+=delta_A_pre; w+=A_post',
                 post='A_post+=delta_A_post; w+=A_pre')
-    mon = StateMonitor(G, 'v', record=True)
-    net = Network(inp, G, con, stdp, mon)
+
+    net = Network(inp, G, con, stdp)
     net.run(4 * ms)
-    plot(mon.times / ms, mon[0])
-    show()
     
     # Postsynaptic spike came after presynaptic spike: weight should increase
     assert(con.W[0, 0] > 1) 
