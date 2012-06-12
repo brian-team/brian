@@ -34,7 +34,63 @@ def test_poissongroup():
     run(runtime)
     assert(counter.count[0] == 0)
     assert(counter.count[1] == runtime/defaultclock.dt)
+
+
+def test_linked_var():
+    ''' Tests whether linking variables between groups works. '''
     
+    # Test the basic linked_var behaviour
+    
+    reinit_default_clock()
+    
+    G1 = NeuronGroup(1, model='dv/dt = -v/(10*ms) : 1')
+    G2 = NeuronGroup(1, model='v: 1')
+    
+    #link the two variables
+    G2.v = linked_var(G1, 'v')
+    
+    G1.v = 1    
+    mon1 = StateMonitor(G1, 'v', record=True)
+    mon2 = StateMonitor(G2, 'v', record=True)
+    
+    run(50*ms)
+    
+    # The linked variable is updated of the beginning of a time step, before the
+    # update hapenns --> The values are shifted by one
+    assert(sum(abs(mon1[0][:-1] - mon2[0][1:])) == 0)
+
+    # Test the basic linked_var behaviour with when='middle'
+
+    reinit_default_clock()
+
+    #link the two variables, copy after the update step
+    G2.v = linked_var(G1, 'v', when='middle')
+    
+    G1.v = 1    
+    mon1 = StateMonitor(G1, 'v', record=True)
+    mon2 = StateMonitor(G2, 'v', record=True)
+    
+    run(50*ms)
+    
+    assert(sum(abs(mon1[0] - mon2[0])) == 0)    
+
+    # Test the basic linked_var behaviour with an applied function
+
+    reinit_default_clock()
+
+    #link the two variables, copy after the update step
+    G2.v = linked_var(G1, 'v', when='middle', func=lambda x: x * 2)
+    
+    G1.v = 1    
+    mon1 = StateMonitor(G1, 'v', record=True)
+    mon2 = StateMonitor(G2, 'v', record=True)
+    
+    run(50*ms)
+    
+    assert(sum(abs(2 * mon1[0] - mon2[0])) == 0)    
+    
+
 
 if __name__ == '__main__':
     test_poissongroup()
+    test_linked_var()
