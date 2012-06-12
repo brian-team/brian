@@ -1,5 +1,7 @@
 echo Using $(which python)
 
+OLD_DIR="$(pwd)"
+
 # change into the virtualenv directory
 cd ~/.jenkins/virtual_envs/$PythonVersion/$packages
 
@@ -19,11 +21,12 @@ elif [ $packages = oldest ]; then
   cd downloads
   tar xvf scipy-0.7.0.tar.gz
   # get and apply patch
+  cd scipy-0.7.0
   wget http://projects.scipy.org/scipy/raw-attachment/ticket/739/weave-739.patch
   patch -p1 < weave-739.patch
   # build scipy
-  ../bin/python setup.py install
-  cd ..
+  ../../bin/python setup.py install
+  cd ../..
   
   bin/pip install sympy
   # Brian depencies state matplotlib>=0.90.1 but 0.98.1 is the oldest version still available
@@ -36,5 +39,6 @@ bin/python -c "import scipy; print 'scipy version: ', scipy.__version__"
 bin/python -c "import sympy; print 'sympy version: ', sympy.__version__"
 bin/python -c "import matplotlib; print 'matplotlib version: ', matplotlib.__version__"
 
+cd "$OLD_DIR"
 # Make sure the build ends up in the build/lib directory
 python setup.py build --build-lib=build/lib
