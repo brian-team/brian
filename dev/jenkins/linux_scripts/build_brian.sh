@@ -29,8 +29,8 @@ elif [ $packages = oldest ]; then
   cd ../..
   
   bin/pip install sympy
-  # Brian depencies state matplotlib>=0.90.1 but 0.98.1 is the oldest version still available
-  bin/pip install http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-0.98.1/matplotlib-0.98.1.tar.gz/download
+  # Brian depencies state matplotlib>=0.90.1 but 0.98.5.3 seems to be the oldest one installable
+  bin/pip install http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-0.98.5/matplotlib-0.98.5.3.tar.gz/download
 fi
 
 # Print the version numbers for the dependencies
