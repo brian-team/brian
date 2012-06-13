@@ -1119,6 +1119,16 @@ class Sound(BaseSound, numpy.ndarray):
         
         return Sound(data, samplerate=framerate*Hz)
 
+    def __repr__(self):
+        arrayrep = repr(asarray(self))
+        arrayrep = '\n'.join('    '+l for l in arrayrep.split('\n'))
+        return 'Sound(\n'+arrayrep+',\n    '+repr(self.samplerate)+')'
+    
+    def __str__(self):
+        return 'Sound duration %s, channels %s, samplerate %s' % (self.duration,
+                                                                  self.nchannels,
+                                                                  self.samplerate)
+
     def __reduce__(self):
         return (_load_Sound_from_pickle, (asarray(self), float(self.samplerate)))
 
