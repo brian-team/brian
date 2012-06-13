@@ -1498,7 +1498,9 @@ def check_units(**au):
                 # name another variable. None is also allowed, useful for 
                 # default parameters
                 if (k in au.keys() and not isinstance(newkeyset[k], str) and
-                    not newkeyset[k] is None): 
+                                       not newkeyset[k] is None and
+                                       not isinstance(newkeyset[k],
+                                                      numpy.ndarray)): 
                     if not have_same_dimensions(newkeyset[k], au[k]):
                         raise DimensionMismatchError("Function " + f.__name__ +
                                                      " variable " + k +
