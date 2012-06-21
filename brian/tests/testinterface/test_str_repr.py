@@ -32,8 +32,9 @@ def test_str_repr():
     assert_str_repr(sgroup)
     
     # Thresholds and Resets
-    thresholds = [Threshold(1), StringThreshold('v > 1'),
+    thresholds = [Threshold(1), StringThreshold('v > 1'), NoThreshold(),
                   VariableThreshold('v', 'w'),
+                  EmpiricalThreshold(),
                   FunThreshold(lambda v: v > 1),
                   SimpleFunThreshold(lambda v: v > 1),
                   PoissonThreshold(), HomogeneousPoissonThreshold()]

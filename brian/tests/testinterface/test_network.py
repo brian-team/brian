@@ -1,7 +1,11 @@
 import sys
 from StringIO import StringIO
 
+from numpy.testing.utils import assert_raises
+
 from brian import *
+from brian.utils.progressreporting import ProgressReporter
+
 
 
 def test_progressreporting():
@@ -9,6 +13,9 @@ def test_progressreporting():
     Tests whether calling for progress reporting works -- the actual output is
     not checked, only that something is printed to the correct output.
     '''
+    real_stdout = sys.stdout
+    real_stderr = sys.stderr
+    
     G = NeuronGroup(1, model=LazyStateUpdater())
     net = Network(G)
     # Tests various ways to get a (textual) progress report
@@ -34,11 +41,30 @@ def test_progressreporting():
     assert(len(string_output.getvalue()) > 0)
     net.run(defaultclock.dt, report='text', report_period=5*second)
     
+    #explicitely construct a ProgressReporter    
+    string_output = StringIO()
+    sys.stdout = string_output
+    reporter = ProgressReporter('text')
+    reporter.start()
+    net.run(defaultclock.dt, report=reporter)
+    assert(len(string_output.getvalue()) > 0)
+    
+    string_output = StringIO()
+    sys.stdout = string_output
+    string_err = StringIO()
+    sys.stderr = string_err
+    reporter = ProgressReporter('stderr')
+    net.run(defaultclock.dt, report=reporter)    
+    assert(len(string_output.getvalue()) == 0 and len(string_err.getvalue()) > 0)
+    
     # use MagicNetwork implicitly
     string_output = StringIO()
     sys.stdout = string_output
     run(defaultclock.dt, report='text', report_period=5*second)
     assert(len(string_output.getvalue()) > 0)
+    
+    sys.stdout = real_stdout
+    sys.stderr = real_stderr
 
 def test_network_generation():
     '''
@@ -51,6 +77,13 @@ def test_network_generation():
     net = Network()
     net.add(G)
     assert(len(net) == 42)
+    
+    #try adding a group twice
+    net.add(G)
+    assert(len(net) == 42)
+    
+    #try adding something that should not be possible to add
+    assert_raises(TypeError, lambda: net.add(1 * msecond))    
     
     net = Network()
     # the network's call function adds an object and returns it
@@ -136,10 +169,36 @@ def test_network_clocks():
     G2 = NeuronGroup(42, model=LazyStateUpdater(), clock=clock2)
     net = Network(G1, G2)
     assert(not net.same_clocks())
+
+def test_network_operation():
+    reinit_default_clock()
+    G = NeuronGroup(1, model='dv/dt = -v / (1 * ms) : 1')
+    G.v = 1
+    @network_operation(when='end')
+    def keep_voltage(clock):
+        #reset voltage to 1 after the update step
+        G.v = 1
+    mon = StateMonitor(G, 'v', record=True)
+    net = Network(G, keep_voltage, mon)
+    net.run(5 * defaultclock.dt)
+    assert(all(mon[0] == 1.0))
     
+    
+    #test a dummy NetworkOperation that does nothing
+    mon.reinit()
+    
+    @network_operation()
+    def do_nothing(clock):
+        pass
+    net = Network(G, do_nothing, mon)
+    net.run(5 * defaultclock.dt)
+    # test that there is some decay
+    assert(all(mon[0] < 1.0))
+
     
 if __name__ == '__main__':
     test_progressreporting()
     test_network_generation()
     test_network_clocks()
+    test_network_operation()
     test_reinit()
