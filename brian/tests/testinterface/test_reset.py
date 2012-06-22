@@ -76,6 +76,23 @@ def test():
     net.run(1 * msecond)
     assert (all(G1.state(0) < 0.21) and all(0.19 < G1.state(0)) and all(G2.state(0) < 0.01))
 
+    # recreate the same behaviour with a VariableReset
+    eqs = '''
+    v : 1
+    r : 1
+    '''
+    G = NeuronGroup(10, model=eqs,
+                    reset=VariableReset(resetvaluestate='r', state='v'),
+                    threshold=Threshold(0.5))
+    G.r = 0.2
+    G1 = G.subgroup(5)
+    G2 = G.subgroup(5)
+    G1.v[:] = array([1.] * 5)
+    G2.v[:] = array([0.] * 5)
+    net = Network(G)
+    net.run(1 * msecond)
+    assert (all(G1.state(0) < 0.21) and all(0.19 < G1.state(0)) and all(G2.state(0) < 0.01))
+
     # test string reset that resets two variables
     eqs = '''v : 1
              w : 1

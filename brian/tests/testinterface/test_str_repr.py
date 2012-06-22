@@ -59,10 +59,15 @@ def test_str_repr():
     assert_str_repr(con_delay)
         
     # Monitors and counters
-    monitors = [SpikeMonitor(group), StateMonitor(group, 'v'),
+    monitors = [SpikeMonitor(group), SpikeMonitor(group, delay=1*ms),
+                SpikeMonitor(group, delay=1*ms, function=lambda spikes:None),
+                StateMonitor(group, 'v'),
                 SpikeCounter(group), StateSpikeMonitor(group, 'v'),
                 RecentStateMonitor(group, 'v'), MultiStateMonitor(group),
                 PopulationRateMonitor(group), PopulationSpikeCounter(group),
+                PopulationSpikeCounter(group, delay=1*ms),
+                ISIHistogramMonitor(group, bins=[0*ms, 10*ms, 20*ms]),
+                ISIHistogramMonitor(group, bins=[0*ms, 10*ms, 20*ms], delay=1*ms),
                 CoincidenceCounter(group, [1*ms, 2*ms]), VanRossumMetric(group)]
     for monitor in monitors:
         assert_str_repr(monitor)
@@ -73,6 +78,13 @@ def test_str_repr():
     
     net = Network(group, con)
     assert_str_repr(net)
+    
+    # Equations
+    eqs = Equations('''dv/dt = (-v + I) / (10 * ms) : volt #diffeq
+                       I = sin(2 * pi * f * t/second)**2 : volt #eq
+                       I2 = I # alias
+                       f : Hz # parameter''')
+    assert_str_repr(eqs)
 
 if __name__ == '__main__':
     test_str_repr()
