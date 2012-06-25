@@ -4,7 +4,7 @@ from brian.utils.approximatecomparisons import is_approx_equal
 from brian.tests import repeat_with_global_opts
 
 @repeat_with_global_opts([{'useweave': False}, {'useweave': True}])
-def test():
+def test_construction():
     '''
     :class:`Connection`
     ~~~~~~~~~~~~~~~~~~~
@@ -121,5 +121,67 @@ def test():
 
     reinit_default_clock()
 
+@repeat_with_global_opts([{'useweave': False}, {'useweave': True}])
+def test_access():
+    'Test accessing the contents of a ConnectionMatrix after construction'
+    G = NeuronGroup(3, model=LazyStateUpdater())
+    
+    # sparse matrix
+    C = Connection(G, G, structure='sparse')
+    C[0, 0] = 1.
+    C[0, 2] = 1.
+    
+    assert(C[0, 0] == 1. and C[0, 2] == 1.)
+    assert(C.W[0, 0] == 1. and C.W[0, 2] == 1.)    
+    assert(all(C.W.todense() == 
+               array([[1., 0., 1.],
+                      [0., 0., 0.],
+                      [0., 0., 0.]])))    
+    C.compress()
+    assert(C.W[0, 0] == 1. and C.W[0, 2] == 1.)
+    # Note that this is a sparse matrix
+    assert(all(C.W[0, :] == [1., 1.]))
+    assert(size(C.W[1, :]) == 0)
+    assert(all(C.W[:, 0] == [1.]))
+    assert(size(C.W[:, 1]) == 0)
+    assert(all(C.W.todense() == 
+               array([[1., 0., 1.],
+                      [0., 0., 0.],
+                      [0., 0., 0.]])))
+    
+    # dense matrix
+    C = Connection(G, G, structure='dense')
+    C[0, 0] = 1.
+    C[0, 2] = 1.
+    
+    assert(C[0, 0] == 1. and C[0, 2] == 1.)
+    assert(C.W[0, 0] == 1. and C.W[0, 2] == 1.)    
+    C.compress()
+    assert(C.W[0, 0] == 1. and C.W[0, 2] == 1.)
+    assert(all(C.W[0, :] == [1., 0., 1.]))   
+    assert(all(C.W[:, 0] == [1., 0., 0.]))
+    assert(all(C.W == C.W.todense()))
+    
+    # dynamic matrix
+    C = Connection(G, G, structure='dynamic')
+    C[0, 0] = 1.
+    C[0, 2] = 1.
+    
+    assert(C[0, 0] == 1. and C[0, 2] == 1.)
+    assert(C.W[0, 0] == 1. and C.W[0, 2] == 1.)    
+    C.compress()
+    assert(C.W[0, 0] == 1. and C.W[0, 2] == 1.)
+    # Note that this is a sparse matrix
+    assert(all(C.W[0, :] == [1., 1.]))
+    assert(size(C.W[1, :]) == 0)
+    assert(all(C.W[:, 0] == [1.]))
+    assert(size(C.W[:, 1]) == 0)
+    assert(all(C.W.todense() == 
+               array([[1., 0., 1.],
+                      [0., 0., 0.],
+                      [0., 0., 0.]])))    
+    
+
 if __name__ == '__main__':
-    test()
+    test_construction()
+    test_access()
