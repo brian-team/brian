@@ -64,6 +64,10 @@ class ProgressReporter(object):
     
     ``period``
         How often reports should be generated in seconds.
+        
+    ``first_report``
+        The time of the first report (nothing will be done before this amount
+        of time has elapsed).
     
     Methods:
     
@@ -101,14 +105,19 @@ class ProgressReporter(object):
         ``subtask``, where ``tasknum`` is the number of
         the subtask about to start.
     '''
-    def __init__(self, report, period=10.0):
+    def __init__(self, report, period=10.0, first_report=0.0):
         self.period = float(period)
-        self.report = get_reporter(report)
+        #self.report = get_reporter(report)
+        self.report = None
+        self.report_option = report
+        self.first_report = first_report
+        self.first_time = 0
         self.start() # just in case the user forgets to call start()
 
     def start(self):
         self.start_time = time.time()
         self.next_report_time = self.start_time + self.period
+        self.first_time = self.start_time + self.first_report
         self.subtask_complete = 0.0
         self.subtask_size = 1.0
 
@@ -125,10 +134,14 @@ class ProgressReporter(object):
     def update(self, complete):
         cur_time = time.time()
         totalcomplete = self.subtask_complete + complete * self.subtask_size
-        if cur_time > self.next_report_time or totalcomplete == 1.0 or totalcomplete == 1:
-            self.next_report_time = cur_time + self.period
-            elapsed = time.time() - self.start_time
-            self.report(elapsed, totalcomplete)
+        if cur_time > self.first_time:
+            if self.report is None:
+                self.report = get_reporter(self.report_option)
+            if cur_time > self.next_report_time or totalcomplete == 1.0 or totalcomplete == 1:
+                self.next_report_time = cur_time + self.period
+                elapsed = time.time() - self.start_time
+                self.report(elapsed, totalcomplete)
+
 
 def get_reporter(report):
     if report == 'print' or report == 'text' or report == 'stdout':
@@ -182,12 +195,11 @@ def get_reporter(report):
 
 if __name__ == '__main__':
     import time
-    report = ProgressReporter('graphical', 0.5)
+    report = ProgressReporter('stderr', 0.1, 2.0)
     report.start()
-    time.sleep(1)
-    report.update(1. / 3)
-    time.sleep(1)
-    report.update(2. / 3)
-    time.sleep(1)
-    report.update(3. / 3)
-    time.sleep(1)
+    for i in xrange(30):
+        print 'iteration', i
+        time.sleep(0.1)
+        report.update(i/30.0)
+    report.finish()
+    
