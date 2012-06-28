@@ -1,5 +1,8 @@
 import itertools
 
+from numpy.testing.utils import (assert_raises, 
+                                 assert_array_almost_equal_nulp)
+
 from brian import *
 from brian.hears import *
 
@@ -12,7 +15,7 @@ def assert_sound_properties(snd, duration, samplerate, nchannels):
     
     assert(snd.duration == duration), '%s != %s' % (snd.duration, duration)
     assert(snd.samplerate == get_samplerate(samplerate)), '%s != %s' % (snd.samplerate, samplerate)
-    assert(nchannels == nchannels), '%s != %s' % (snd.nchannels, nchannels)
+    assert(snd.nchannels == nchannels), '%s != %s' % (snd.nchannels, nchannels)
 
 def test_sound_construction():
     '''
@@ -91,8 +94,58 @@ def test_sound_construction():
         # artificial vowel
         snd = vowel('a', duration=1 * second, samplerate=samplerate,
                     nchannels=nchannels)
+
+def test_sound_access():
+    '''
+    Test accessing attributes and parts of a sound in various ways.
+    '''
+    
+    for nchannels in [1, 2]:
+        if nchannels == 1:
+            snd = tone(400*Hz, duration=1*second)
+        else:
+            snd = Sound([tone(400*Hz, duration=1*second),
+                         tone(600*Hz, duration=1*second)])
+        assert(snd.nsamples == int(snd.duration * snd.samplerate))
+        assert(len(snd.times) == snd.nsamples)
         
+        if nchannels == 1:
+            assert(isinstance(snd.level, dB_type))
+        
+        if nchannels == 2:
+            assert(np.all(snd.left == snd.channel(0)))
+            assert(np.all(snd[:, 0] == snd.channel(0)))
+            assert(np.all(snd.right == snd.channel(1)))
+            assert(np.all(snd[:, 1] == snd.channel(1)))
+        
+        snd.level = 60.0 * dB
+        
+        # Changing level should not change other properties
+        assert_sound_properties(snd.atlevel(70*dB), snd.duration,
+                                snd.samplerate, snd.nchannels)
+        assert_sound_properties(snd.atmaxlevel(80*dB), snd.duration,
+                                snd.samplerate, snd.nchannels)
+        
+        assert_sound_properties(snd.ramped(), snd.duration, snd.samplerate,
+                               snd.nchannels)
+        
+        assert(len(snd[:100]) == 100)
+        assert(len(snd[:snd.duration]) == len(snd))
+        assert_raises(DimensionMismatchError, lambda :snd[:3*Hz])
+        
+        snd[:100, :] = 0
+        assert(np.all(snd[:100, :] == 0))
+        
+        # repeat
+        snd_repeated = snd.repeat(3)
+        assert_sound_properties(snd_repeated, snd.duration * 3,
+                                snd.samplerate, snd.nchannels)
+        snd_sequence = sequence([snd, snd])
+        assert_sound_properties(snd_sequence, snd.duration * 2,
+                                snd.samplerate, snd.nchannels)
+
+
 if __name__ == '__main__':
     test_sound_construction()
-    
+    test_sound_access()
     
