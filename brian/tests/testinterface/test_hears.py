@@ -1,5 +1,3 @@
-import itertools
-
 from numpy.testing.utils import (assert_raises, 
                                  assert_array_almost_equal_nulp)
 
@@ -44,8 +42,10 @@ def test_sound_construction():
         assert_sound_properties(snd, 1 * second, samplerate, 1)
         
     # Test everything for mono and stereo
-    for samplerate, nchannels in itertools.product([None, 16 * kHz],
-                                                   [1, 2]):
+    # 
+    # Note (do not use itertools.product here as this does not exist in 
+    # python 2.5)
+    for samplerate, nchannels in [(None, 1), (None, 2), (16*kHz, 1), (16*kHz, 2)]:
         samplerate = get_samplerate(samplerate)
         # tone
         snd = tone(400 * Hz, duration=1*second, samplerate=samplerate,
