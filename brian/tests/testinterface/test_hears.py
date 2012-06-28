@@ -1,5 +1,4 @@
-from numpy.testing.utils import (assert_raises, 
-                                 assert_array_almost_equal_nulp)
+from numpy.testing.utils import assert_raises
 
 from brian import *
 from brian.hears import *
