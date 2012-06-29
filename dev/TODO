@@ -16,7 +16,7 @@ Solution: have a new class that is a set of currents, or (easier) use a new vari
 
 * Better progress reporting: the estimated time should adapt, maybe use only the last few seconds rather the entire simulation.
 
-(* Modulation keyword with variables defined as functions)
+(* Modulation keyword with variables defined as functions) 
 
 * Clean NeuronGroup init, in particular S0 is strangely handled; remove the
 init keyword? (in fact S0 is used mostly for unit checking)
