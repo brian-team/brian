@@ -105,7 +105,7 @@ class ProgressReporter(object):
         ``subtask``, where ``tasknum`` is the number of
         the subtask about to start.
     '''
-    def __init__(self, report, period=10.0, first_report=0.0):
+    def __init__(self, report, period=10.0, first_report=-1.0):
         self.period = float(period)
         #self.report = get_reporter(report)
         self.report = None
