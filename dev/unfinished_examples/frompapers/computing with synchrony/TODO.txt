@@ -1,0 +1,43 @@
+Examples for the paper "Computing with synchrony"
+
+Coincidence detection
+---------------------
+(done)* Fig. 1F
+	coincidence detection/hitrate, figROC
+(done)* Fig. 5D
+	selective synchronization/reproducibility
+(done)* Fig. 5E
+	selective synchronization/reproducibility_timescale,Fig1C
+(done)* Shared variability
+	selective synchronization/shared_variability
+
+Duration selectivity
+--------------------
+(done)* Fig. 1A
+	duration/trace_and_rebound
+(done)* Fig. 1B
+	duration/latency_crossing
+(done)* Fig. 1D
+	duration/coincidence_detection
+(done)* Fig. 2 (decoding sync patterns)
+	duration/synchrony_partition, post_receptivefield (les autres sont pour la Fig. 3)
+* Fig. 4 (learning)
+	duration/stdp/params,duration_stdp,weight_evolution
+
+Olfaction
+---------
+* Fig. 9B (coding/decoding)
+	olfaction/olfaction
+* Fig. 11 (learning)
+	olfaction/stdp/9Mar2012/params,olfaction_stdp,test_neurons,fig_learning
+
+Sound localization
+------------------
+* Jeffress model
+* See example for PLoS paper.
+
+(maybe)
+Pitch
+-----
+* Licklider
+* Two different neurons?
