@@ -4,6 +4,8 @@ Izhikevich_2006_Polychronization.py
 STDP1.py
 STDP1_bis.py
 STDP2.py
+Fig5E_precision_reliability.py
+Fig4_duration_stdp.py
 
 # Short ones
 parallelpython.py
@@ -21,6 +23,7 @@ sound_localisation_model.py
 Goodman_Brette_2010.py
 threshold_analysis.py
 lp_compensation.py
+Fig12A_Goodman_Brette_2010.py
 
 # Needs graphics
 realtime_plotting.py
@@ -40,3 +43,7 @@ Muller_et_al_2011.py
 taskfarm.py
 multiple_runs_with_gui.py
 multiple_runs_simple.py
+
+# Have to run together, simply exclude for now
+Fig2A_synchrony_partition.py
+Fig2C_decoding_synchrony.py
