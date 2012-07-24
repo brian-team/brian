@@ -24,6 +24,7 @@ Goodman_Brette_2010.py
 threshold_analysis.py
 lp_compensation.py
 Fig12A_Goodman_Brette_2010.py
+Fig1C.py
 
 # Needs graphics
 realtime_plotting.py
@@ -47,3 +48,5 @@ multiple_runs_simple.py
 # Have to run together, simply exclude for now
 Fig2A_synchrony_partition.py
 Fig2C_decoding_synchrony.py
+Fig11B_olfaction_stdp_learning.py
+Fig11B_olfaction_stdp_testing.py
