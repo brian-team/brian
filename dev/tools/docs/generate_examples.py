@@ -86,6 +86,8 @@ for code in examplescode:
 examples = zip(examplesfnames, examplespaths, examplesbasenames, examplescode, examplesdocs, examplesafterdoccode, examplesdocumentablenames)
 os.chdir('../docs_sphinx')
 for fname, path, basename, code, docs, afterdoccode, documentables in examples:
+    # for examples in subdirectories: "flatten" the path
+    flattened_path = path.replace(os.sep, '-')
     title = 'Example: ' + basename
     if len(path): title += ' (' + path[:-1] + ')'
     output = '.. currentmodule:: brian\n\n'
@@ -94,12 +96,13 @@ for fname, path, basename, code, docs, afterdoccode, documentables in examples:
         for dname in documentables:
             output += '   pair: example usage; ' + dname + '\n'
         output += '\n'
-    output += '.. _example-' + path + basename + ':\n\n'
+    output += '.. _example-' + flattened_path + basename + ':\n\n'
     output += title + '\n' + '=' * len(title) + '\n\n'
     output += docs + '\n\n::\n\n'
     output += '\n'.join(['    ' + line for line in afterdoccode.split('\n')])
     output += '\n\n'
-    open('examples-' + path + basename + '.txt', 'w').write(output)
+
+    open('examples-' + flattened_path + basename + '.txt', 'w').write(output)
 
 mainpage_text = open('examples.txt', 'r').read()
 mainpage_text = mainpage_text[:mainpage_text.find('.. EXAMPLES TOCTREE')]
@@ -108,13 +111,14 @@ mainpage_text += '.. toctree::\n'
 mainpage_text += '   :maxdepth: 1\n\n'
 curpath = ''
 for fname, path, basename, code, docs, afterdoccode, documentables in examples:
+    flattened_path = path.replace(os.sep, '-')
     if path != curpath:
         mainpage_text += '\n'
-        mainpage_text += '.. _examples-'+path[:-1]+':\n\n'
+        mainpage_text += '.. _examples-' + flattened_path[:-1]+':\n\n'
         mainpage_text += path[:-1] + '\n'
         mainpage_text += '-' * (len(path) - 1) + '\n\n'
         mainpage_text += '.. toctree::\n'
         mainpage_text += '   :maxdepth: 1\n\n'
         curpath = path
-    mainpage_text += '   examples-' + path + basename + '\n'
+    mainpage_text += '   examples-' + flattened_path + basename + '\n'
 open('examples.txt', 'w').write(mainpage_text)
