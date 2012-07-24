@@ -2,6 +2,89 @@ from brian import *
 from nose.tools import *
 from brian.utils.approximatecomparisons import is_approx_equal
 from brian.tests import repeat_with_global_opts
+from brian.connections.construction import (random_matrix,
+                                            random_matrix_fixed_column)
+from scipy.sparse import issparse
+
+def test_utility_functions():
+    '''
+    Test the (non-public) random_matrix and random_matrix_fixed_column
+    functions.
+    '''
+    
+    # Convenience functions to make the testing a bit easier
+    def assert_size_and_value(matrix, shape, value):
+        assert issparse(matrix)
+        assert matrix.shape == shape
+        rows, cols = matrix.nonzero()
+        for row, col in zip(rows, cols):
+            if callable(value):
+                if value.func_code.co_argcount == 0:
+                    assert matrix[row, col] == value()
+                elif value.func_code.co_argcount == 2:
+                    assert matrix[row, col] == value(row, col)
+                else:
+                    raise AssertionError('Illegal value argument')
+            else:
+                assert matrix[row, col] == value
+
+                
+    def assert_entries_per_column(matrix, n_entries):
+        for col_idx in range(matrix.shape[1]):
+            entries = matrix[:, col_idx].nonzero()[0]
+            assert len(entries) == n_entries, 'number of entries is %d not %d!' % (len(entries), n_entries)
+    
+    # with fixed probability 
+    p = 1.    
+    r_m = random_matrix(2, 4, p=p)
+    assert_size_and_value(r_m, (2, 4), 1.)
+    
+    # with fixed probability and value
+    p, value = 1., 2.
+    r_m = random_matrix(2, 4, p=p, value=value)
+    assert_size_and_value(r_m, (2, 4), 2.)
+    
+    # Note: p can also be a function (like value), but as this is not
+    # documented, this is also not tested
+        
+    # with a constant function for value
+    value = lambda : 2.
+    r_m = random_matrix(2, 4, p=1., value=value)
+    assert_size_and_value(r_m, (2, 4), value)
+    
+    # with an index dependent function for value
+    value = lambda i, j : (i != j) * 2.
+    r_m = random_matrix(2, 4, p=1., value=value)
+    assert_size_and_value(r_m, (2, 4), value)
+    
+
+    # Test random matrix with fixed number of entries per column
+    # with fixed probability 
+    p = 0.5    
+    r_m = random_matrix_fixed_column(100, 4, p=p)
+    assert_size_and_value(r_m, (100, 4), 1.)
+    assert_entries_per_column(r_m, 50)
+    
+    # with fixed probability and value
+    p, value = 0.5, 2.
+    r_m = random_matrix_fixed_column(100, 4, p=p, value=value)
+    assert_size_and_value(r_m, (100, 4), 2.)
+    assert_entries_per_column(r_m, 50)
+    
+    # Note: p can also be a function (like value), but this is not documented
+        
+    # with a constant function for value
+    value = lambda : 2.
+    r_m = random_matrix_fixed_column(100, 4, p=0.5, value=value)
+    assert_size_and_value(r_m, (100, 4), value)
+    assert_entries_per_column(r_m, 50)
+    
+    # with an index dependent function for value
+    value = lambda i, j : (i != j) * 2. + 1
+    r_m = random_matrix_fixed_column(100, 4, p=0.5, value=value)
+    assert_size_and_value(r_m, (100, 4), value)
+    assert_entries_per_column(r_m, 50)
+
 
 @repeat_with_global_opts([{'useweave': False}, {'useweave': True}])
 def test_construction():
@@ -185,3 +268,4 @@ def test_access():
 if __name__ == '__main__':
     test_construction()
     test_access()
+    test_utility_functions()
