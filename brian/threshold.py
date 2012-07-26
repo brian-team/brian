@@ -36,27 +36,24 @@
 Threshold mechanisms
 '''
 
+import re
+from random import sample # Python standard random module (sample is different)
+
+from numpy import clip, Inf
+from numpy.random import rand, randn
+from scipy import random, weave
+
+from brian.clock import guess_clock
+from brian.globalprefs import get_global_preference
+from brian.inspection import namespace, get_identifiers
+from brian.log import log_warn
+from brian.units import check_units, second, msecond, mvolt
+from brian.utils.approximatecomparisons import is_approx_equal
+
 __all__ = ['Threshold', 'FunThreshold', 'VariableThreshold', 'NoThreshold',
           'EmpiricalThreshold', 'SimpleFunThreshold', 'PoissonThreshold',
           'HomogeneousPoissonThreshold', 'StringThreshold']
 
-from numpy import where, array, zeros, Inf
-from units import *
-from itertools import count
-from clock import guess_clock, get_default_clock, reinit_default_clock
-from random import sample # Python standard random module (sample is different)
-from scipy import random
-from numpy import clip
-import bisect
-from scipy import weave
-from globalprefs import *
-import warnings
-from utils.approximatecomparisons import is_approx_equal
-from log import *
-import inspect
-from inspection import *
-import re
-import numpy
 CThreshold = PythonThreshold = None
 
 def select_threshold(expr, eqs, level=0):
@@ -70,11 +67,14 @@ def select_threshold(expr, eqs, level=0):
     others : StringThreshold
     '''
     global CThreshold, PythonThreshold
-    use_codegen = get_global_preference('usecodegen') and get_global_preference('usecodegenthreshold')
-    use_weave = get_global_preference('useweave') and get_global_preference('usecodegenweave')
+    use_codegen = (get_global_preference('usecodegen') and
+                   get_global_preference('usecodegenthreshold'))
+    use_weave = (get_global_preference('useweave') and
+                 get_global_preference('usecodegenweave'))
     if use_codegen:
         if CThreshold is None:
-            from experimental.codegen.threshold import CThreshold, PythonThreshold
+            from brian.experimental.codegen.threshold import (CThreshold,
+                                                              PythonThreshold)
         if use_weave:
             log_warn('brian.threshold', 'Using codegen CThreshold')
             return CThreshold(expr, level=level + 1)
@@ -189,7 +189,8 @@ class Threshold(object):
                                                repr(self.state))
 
     def __str__(self):
-        return 'Threshold mechanism with value=' + str(self.threshold) + " acting on state " + str(self.state)
+        return ('Threshold mechanism with value=' + str(self.threshold) +
+                ' acting on state ' + str(self.state))
 
 
 class StringThreshold(Threshold):
@@ -222,8 +223,8 @@ class StringThreshold(Threshold):
     def __call__(self, P):
         for var in self._vars: # couldn't we do this just once?
             self._namespace[var] = P.state(var)
-        self._namespace['rand'] = self._Replacer(numpy.random.rand, len(P))
-        self._namespace['randn'] = self._Replacer(numpy.random.randn, len(P))
+        self._namespace['rand'] = self._Replacer(rand, len(P))
+        self._namespace['randn'] = self._Replacer(randn, len(P))
         return eval(self._code, self._namespace).nonzero()[0]
 
     def __repr__(self):
