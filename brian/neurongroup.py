@@ -478,6 +478,8 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             spikes = self._threshold(self) # get spikes
             if not isinstance(spikes, numpy.ndarray):
                 spikes = array(spikes, dtype=int)
+            if not spikes.flags.contiguous:
+                spikes = array(spikes)
             if self._use_next_allowed_spiketime_refractoriness:
                 spikes = spikes[self._next_allowed_spiketime[spikes] <= self.clock._t]
                 if self._variable_refractory_time:
