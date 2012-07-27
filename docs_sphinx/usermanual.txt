@@ -28,6 +28,7 @@ Brian itself is documented in the following sections:
    connections
    stdp
    stp
+   synapses
    recording
    inputs
    operations

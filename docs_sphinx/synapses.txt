@@ -1,0 +1,240 @@
+.. currentmodule:: brian
+
+Synapses
+========
+
+Starting from Brian 1.4, there is a new class, :class:`Synapses`, in which everything synaptic can be defined.
+The :class:`Synapses` is similar to the :class:`Connection` class, but it is more general and flexible. In particular,
+synaptic plasticity can be defined in the same object.
+
+Defining synaptic models
+------------------------
+The basic syntax is as follows::
+
+  S=Synapses(P,Q,model='w:1',pre='v+=w')
+
+This defines a set of synapses between :class:`NeuronGroup` P and :class:`NeuronGroup` Q.
+If the target group is not specified, it is identical to the source group by default.
+The ``model`` keyword
+is similar as in :class:`NeuronGroup`: it defines synaptic variables and possibly their dynamics
+(with differential equations, as in :class:`NeuronGroup`). Here, synaptic variable ``w`` is created: there is
+one value for each synapse. The ``pre`` keyword defines what happens when a presynaptic spike arrives at
+a synapse. In this case, variable ``w`` is added to variable ``v``. Because ``v`` is not defined as a synaptic
+variable, it is assumed by default that it is a postsynaptic variable, defined in the target :class:`NeuronGroup` Q.
+Note that this does not does create synapses (see next section), only the synaptic models.
+
+The more general syntax is::
+
+  S=Synapses(P,Q,model=model_string,pre=pre_code,post=post_code)
+
+Model syntax
+^^^^^^^^^^^^
+The model follows exactly the same syntax as for :class:`NeuronGroup`. There can be parameters
+(e.g. synaptic variable ``w`` above), but there can also be static equations and differential equations,
+describing the dynamics of synaptic variables. In all cases, synaptic variables are created, one value per synapse.
+Internally, these are stored as arrays. There are a few specificities:
+
+* A variable with the ``_post`` suffix is looked up in the postsynaptic (target) neuron. That is,
+  ``v_post`` means variable ``v`` in the postsynaptic neuron.
+* A variable with the ``_pre`` suffix is looked up in the presynaptic (source) neuron.
+* A variable not defined as a synaptic variable is considered to be postsynaptic.
+* A variable not defined as a synaptic variable and not defined in the postsynaptic neuron is considered
+  external.
+
+For the integration of differential equations, one can use the same keywords as for :class:`NeuronGroup`.
+
+Event-driven updates
+^^^^^^^^^^^^^^^^^^^^
+By default, differential equations are integrated in a clock-driven fashion, as for a
+:class:`NeuronGroup`. This is potentially very time consuming, because all synapses are updated at every
+timestep. It is possible to ask Brian to simulate differential equations in an event-driven fashion,
+for one-dimensional linear equations, using the keyword ``(event-driven)``. A typical example is
+pre and postsynaptic traces in STDP::
+
+  model='''w:1
+           dApre/dt=-Apre/taupre : 1 (event-driven)
+           dApost/dt=-Apost/taupost : 1 (event-driven)'''
+
+Here, Brian updates the value of ``Apre`` for a given synapse only when this synapse receives a spike,
+whether it is presynaptic or postsynaptic. More precisely, the variables are updated every time either
+the ``pre`` or ``post`` code is called for the synapse, so that the values are always up to date when
+these codes are executed.
+
+Automatic event-driven updates are only possible for one-dimensional linear equations. These equations
+must also be independent of the other ones, that is, a differential equation that is not event-driven cannot
+depend on an event-driven equation (since the values are not continuously updated).
+In other cases, the user can write event-driven code explicitly in the update codes (see below).
+
+Pre and post codes
+^^^^^^^^^^^^^^^^^^
+The ``pre`` (``post``) code is executed at each synapse receiving a presynaptic spike. For example:
+
+	pre='v+=w'
+
+adds the value of synaptic variable ``w`` to postsynaptic variable ``v``. As for the model equations,
+the ``_post`` (``_pre``) suffix indicates a postsynaptic (presynaptic) variable, and variables not found
+in the synaptic variables are considered postsynaptic by default.
+Internally, the execution of the code is vectorized (simultaneously executed) for all synapses receiving
+presynaptic spikes during the current timestep. Therefore, the code should be understood as acting on
+arrays rather than single values. Any sort of code can be executed. For example, the following code defines
+stochastic synapses, with a synaptic weight ``w`` and transmission probability ``p``::
+
+	S=Synapses(input,neurons,model="""w : 1
+    	                              p : 1""",
+        	                 pre="v+=w*(rand()<p)")
+
+The code means that ``w`` is added to ``v`` with probability ``p`` (note that, internally, ``rand()``
+is transformed to a instruction that outputs an array of random numbers).
+The code may also include multiple lines.
+
+As mentioned above, it is possible to write event-driven update code for the synaptic variables.
+For this, two special variables are provided: ``t`` is the current time when the code is executed,
+and ``lastupdate`` is the last time when the synapse was updated (either through ``pre`` or ``post``
+code). An example is short-term plasticity (in fact this could be done automatically with the use
+of the ``(event-driven)`` keyword mentioned above)::
+
+	S=Synapses(input,neuron,
+	           model='''x : 1
+	                    u : 1
+	                    w : 1''',
+	           pre='''u=U+(u-U)*exp(-(t-lastupdate)/tauf)
+	                  x=1+(x-1)*exp(-(t-lastupdate)/taud)
+	                  i+=w*u*x
+	                  x*=(1-u)
+	                  u+=U*(1-u)''')
+
+Lumped variables
+^^^^^^^^^^^^^^^^
+In many cases, the postsynaptic neuron has a variable that represents a sum of variables over all
+its synapses. This is called a "lumped variable". An example is nonlinear synapses (e.g. NMDA)::
+
+	neurons = NeuronGroup(1, model="""dv/dt=(gtot-v)/(10*ms) : 1
+	                                  gtot : 1""")
+	S=Synapses(input,neurons,
+	           model='''dg/dt=-a*g+b*x*(1-g) : 1
+	                    dx/dt=-c*x : 1
+	                    w : 1 # synaptic weight
+	                 ''',
+	           pre='x+=w')
+	neurons.gtot=S.g
+
+Here, each synapse has a conductance ``g`` with nonlinear dynamics. The neuron's total conductance
+is ``gtot``. The link between the two is specified by the last statement. What happens during the
+simulation is that at each time step, presynaptic conductances are summed for each neuron and the
+result is copied to the variable ``gtot``. Another example is gap junctions::
+
+	neurons = NeuronGroup(N, model='''dv/dt=(v0-v+Igap)/tau : 1
+									  Igap : 1''')
+	S=Synapses(neurons,model='''w:1 # gap junction conductance
+    	                        Igap=w*(v_pre-v_post): 1''')
+	neurons.Igap=S.Igap
+
+Here, ``Igap`` is the total gap junction current received by the postsynaptic neuron.
+
+Creating synapses
+-----------------
+Creating a :class:`Synapses` instance does not create synapses, it only specifies their dynamics.
+The following command creates a synapse between neuron i in the source group and j in the target group::
+
+	S[i,j]=True
+
+It is possible to create several synapses for a given pair of neurons::
+
+	S[i,j]=3
+
+This is useful for example if one wants to have multiple synapses with different delays.
+Multiple synapses can be created in a single statement::
+
+	S[:,:]=True
+	S[:,1]=True
+	S[Pe,Pi]=True
+
+The first statement creates synapses between all pairs of neurons.
+The second statement creates synapses between all neurons in the source group and neuron 1
+in the target group.
+The third statement connects all pairs of neurons in the subgroups ``Pe`` and ``Pi``.
+
+One can also create synapses using code::
+
+	S[:,:]='i==j'
+	S[:,:]='j==((i+1)%N)'
+
+The code is a boolean statement that should return True when a synapse must be created,
+where ``i`` is the presynaptic neuron index and ``j`` is the postsynaptic neuron index
+(special variables).
+Here the first statement creates one-to-one connections, the second statement creates connections
+with a ring structure (``N`` is the number of neurons, assumed to defined elsewhere by the user).
+This way of creating synapses is generally much faster than using loops, because it is internally
+vectorised.
+
+Two high level construction methods are implemented::
+
+	S.connect_random(group1,group2,sparseness=0.1)
+	S.connect_one_to_one(group1,group2)
+	
+The first one randomly connects pairs of neurons with probability given by the ``sparseness`` argument.
+The second one is equivalent to the instruction ``S[group1,group2]='i==j'``. The ``group1`` and
+``group2`` arguments are subgroups of the source and target groups.
+
+Accessing synaptic variables
+----------------------------
+Synaptic variables can be accessed in a similar way as :class:`NeuronGroup` variables. They can indexed
+with two indexes, corresponding to the indexes of pre and postsynaptic neurons, and optionally with a third
+index in the case of multiple synapses.
+Here are a few examples, which follows essentially the same syntax as for creating synapses::
+
+	S.w[2,5]=1*nS
+	S.w[1,:]=2*nS
+	S.w=1*nS # all synapses assigned
+	w0=S.w[2,3,1] # second synapse for connection 2->3
+	S.w[2,3]=(1*nS,2*nS)
+	S.w[group1,group2]="(1+cos(i-j))*2*nS"
+	S.w[:,:]='rand()*nS'
+
+Delays
+------
+There is a special synaptic variable that is automatically created: ``delay``. It is the propagation delay
+from the presynaptic neuron to the synapse, i.e., the presynaptic delay. An alias is ``delay_pre``. When there
+is a postsynaptic code (keyword ``post``), the variable ``delay_post`` is created. These can be accessed and modified
+in the same way as other synaptic variables.
+
+If delays can change during the simulation, one should specify the maximum allowed delay with the keyword
+``max_delay``::
+
+	synapses = Synapses(P,Q,model='w:1',pre='v+=w',max_delay=1*ms)
+
+Otherwise, this maximum delay is automatically calculated the first time the model is run.
+
+Multiple pathways
+-----------------
+It is possible to have multiple pathways with different update codes from the same presynaptic neuron group.
+This may be interesting in cases when different operations must be applied at different times for the same
+presynaptic spike. To do this, simply specify a tuple or list of ``pre`` codes::
+
+    pre=('ge+=w',
+         '''w=clip(w+Apost,0,inf)
+            Apre+=dApre''')
+
+This creates two sets of delay variables, one for each pathway. They can be accessed by first indexing with
+the pathway number. The following statement, for example, sets the delay of the synapse between the first neurons
+of the source and target groups, in the second pathway::
+
+	S.delay[1][0,0]=3*ms
+
+Monitoring synaptic variables
+-----------------------------
+A :class:`StateMonitor` object can be used to monitor synaptic variables. For example, the following statement
+creates a monitor for variable ``w`` for the synapses 0 and 1::
+
+	M = StateMonitor(S,'w',record=[0,1])
+
+Note that these are synapse indexes, not neuron indexes.
+These can be obtained with the :meth:`synapse_index` method::
+
+	s=S.synapse_index((i,j))
+
+where ``i`` and ``j`` may be integers, arrays or slices. A third index can also be given.
+
+The recorded traces can then be accessed in the usual way, for example::
+
+	plot(M.times,M[0])
