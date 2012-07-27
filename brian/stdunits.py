@@ -46,6 +46,7 @@ Hz, kHz, MHz, cm, cm2, cm3, mm, mm2, mm3, um, um2, um3
 """
 
 import units as _units
+import fundamentalunits as _fundamentalunits
 
 mV = _units.mvolt
 
