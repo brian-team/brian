@@ -1,0 +1,135 @@
+Algorithms for simulating branched cable equations
+--------------------------------------------------
+The state update for the cable equation can be done with Hines method:
+Int J Biomed Comput. 1984 Jan-Feb;15(1):69-76.
+Efficient computation of branched nerve equations.
+Hines M.
+Available on Neuron's website:
+http://www.neuron.yale.edu/neuron/nrnpubs
+
+Another method here:
+http://www.jstor.org/stable/pdfplus/2157690.pdf
+The Backward Euler Method for Numerical Solution of the Hodgkin-Huxley Equations of
+Nerve Conduction.
+Mascagni M. 1990
+
+And:
+Digital computer solutions for excitation and propagation of the nerve impulse.
+Cooley & Dodge 1966
+
+In Hines method, values of ionic currents are calculated at
+midpoints of time steps as a function of V(t), and the
+values of the conductances are considered as constant within
+a timestep for the integration of the cable equation.
+The cable equation uses a simple implicit scheme followed by
+an explicit step. As I understand it, the update of Im (IHH in
+the paper) and the integration of the cable equation are completely
+independent. Therefore, we can have separate stateupdaters which are
+called in the following order:
+1) Update the spatial equation with Hines method.
+2) Update the membrane current with a standard vectorized updater (2nd order?).
+3) Update the point processes with a standard vectorized updater.
+(actually I think 2 should be before 1, but it won't make a difference)
+
+Mascagni's method is backward Euler, with the advantage that convergence is
+guaranteed. The algorithm is as follows:
+1) Solve the discrete system for V(t+dt), where the other variables are constant
+and assumed to be known at time t+dt (first iteration: use value at t). This
+is sparse linear system (could be computed with scipy.sparse.linalg?).
+2) Solve for the other variables at t+dt using a backward Euler step with the
+values of V from step 1. In principle this is a simple 1D linear system
+(assuming conditional linearity for these variables).
+3) Repeat until convergence (how many times?).
+
+In comparison, Hines method uses a single iteration, which is solving a sparse
+linear system as well (in fact the same one, but at time t+dt/2).
+1) Calculate other variables at t+dt/2, by an Euler step from time t-dt/2,
+that uses the values at time t for V, and estimated at time t for the other
+variables using the average between t-dt/2 and t+dt/2 (this makes it implicit).
+2) Solve for V(t+dt/2) then do a forward step to t+dt.
+This looks to me like one step of the backward Euler method (except it's 2 then
+1).
+There is pseudo-code in Hines paper.
+
+Both methods rely on the conditional linearity of the equations, therefore it
+cannot work for all types of models (e.g. exponential model).
+
+To deal with branches, there are two options:
+1) Use Hines method.
+2) Use domain decomposition. This means using the linearity of the problem
+(it is linear once the other variables considered fixed, by conditional linearity)
+to solve the equation separately on each branch and then combine them linearly.
+The big advantage is that this way we can still use the solve_banded method of
+scipy.
+
+----
+The simulation is in two stages:
+1) Solve the discrete system for V(t+dt), where the other variables are constant
+and assumed to be known at time t+dt (first iteration: use value at t). This
+is a sparse linear system (could be computed with scipy.sparse.linalg?).
+2) Calculate Im at t+dt using a backward Euler step with the
+values of V from step 1. That is, do one step of implicit Euler.
+And possibly repeat (until convergence) (how many times?).
+
+The discretized longitudinal current is:
+a/(2*R)*(V[i+1]-2*V[i]+V[i-1])/dx**2
+
+Artificial gridpoints are used so that:
+(V[1]-V[-1])/(2*dx) = dV/dt(0)   # =0 in general
+(V[N+1]-V[N-1])/(2*dx) = dV/dt(L)   # =0 in general
+
+Consider also the capacitive current (and leak?).
+
+Actually in Mascagni it's more complicated, because we use the
+full membrane equation (conductances in front V in particular).
+Therefore perhaps we would need sympy to reorganize the equation first
+as dV/dt=aV+b (see the Synapses class).
+
+x=scipy.linalg.solve_banded((lower,upper),ab,b)
+    lower = number of lower diagonals
+    upper = number of upper diagonals
+    ab = array(l+u+1,M)
+        each row is one diagonal
+    a[i,j]=ab[u+i-j,j]
+
+--------------------
+Domain decomposition
+--------------------
+Consider two connected cables, with the junction point at distance L.
+The linear equations (that is, assuming fixed variables other than v) are:
+L_A v^A = I^A
+L_B v^B = I^B
+for the two cables A and B.
+Continuity requirements are:
+* v^A(L)=v^B(0)  # potential
+* d/dx v^A(L)=d/dx v^B(0)  # current
+There are homogeneous boundardy conditions on the two ends (zero current).
+
+Consider the first equation, with boundary condition at 0 and free (unknown) voltage at L.
+Then the set of solutions is a linear one-dimensional manifold:
+v^A = k*v_0^A + v_*^A
+where v_0^A is a solution to the homogeneous equation, and v_*^A is a particular solution.
+For example, choose:
+* v_0(L)=1 and v_*^A(L)=0
+Then v^A(L)=k.
+
+The same can be done for cable B.
+The two continuity requirements mean that:
+* the constants (k) are identical
+* they are determined by a linear equation expressing the continuity of current at L:
+  k (d/dx v_0^A - d/dx v_0^B) = d/dx v_*^B - d/dx v_*^A
+
+Therefore, an algorithm is:
+* Solve 2 tridiagonal systems per branch.
+* Solve the unknowns by a linear system with the dimension of the order of the number of branches
+* Do linear combinations.
+The first and third steps can be done in parallel.
+
+When the branches connect on both ends, we need two unknown constants per branch. This is solved as follows:
+* Particular solution v_*(0)=v_*(L)=0
+* Homogeneous solution v_0(0)=1 and v_0(L)=0
+* Homogeneous solution v_1(0)=0 and v_0(L)=1
+* Combination: v = v_*(0) + v(0)v_0 + v(L)v_L (v(0) and v(L) are the two unknowns)
+
+Alternatively, boundary conditions could be expressed as currents rather than potentials.
+When there are several branches, we simply change to current continuity condition to Kirchoff's law.
