@@ -6,6 +6,7 @@ Doesn't seem to work: no propagation of APs.
 from brian import *
 from morphology import *
 from spatialneuron import *
+#from spatialneuron_remy import * # does not give the same results!
 
 defaultclock.dt=0.01*ms
 
