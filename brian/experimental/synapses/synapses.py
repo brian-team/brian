@@ -1,25 +1,30 @@
 '''
 The Synapses class - see BEP-21
 '''
-from ...neurongroup import NeuronGroup
-from ...stdunits import *
-from ...utils.dynamicarray import *
-from ...log import *
-from numpy import *
-from scipy import rand,randn
-from spikequeue import *
-from synapticvariable import *
-import numpy as np
-from ...inspection import *
-from ...equations import *
-from ...optimiser import *
-from numpy.random import binomial
-from ...utils.documentation import flattened_docstring
-from random import sample
-from synaptic_equations import *
 import re
 from operator import isSequenceType
 import warnings
+from random import sample
+
+from numpy import *
+from numpy.random import binomial
+import numpy as np
+from scipy import rand,randn
+
+from brian.neurongroup import NeuronGroup
+from brian.stdunits import *
+from brian.utils.dynamicarray import *
+from brian.log import *
+from brian.inspection import *
+from brian.equations import *
+from brian.optimiser import *
+from brian.utils.documentation import flattened_docstring
+
+from .spikequeue import SpikeQueue
+from .synapticvariable import (SynapticVariable, SynapticDelayVariable,
+                               slice_to_array)
+from .synaptic_equations import SynapticEquations
+
 try:
     import sympy
     use_sympy = True
