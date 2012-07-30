@@ -1,0 +1,24 @@
+Brian meeting 30 July 2012
+--------------------------
+Brian 1.4
+---------
+* Examples from the twister (Romain)
+* Synapses
+	- clean examples (Romain)
+	- move from experimental (Romain)
+	- some tests? (Marcel)
+	- 2.5 compatibility (Marcel)
+* Saving spikes from a SpikeMonitor
+	- docs (Victor)
+	
+For later
+---------
+* Synapses: C++: Victor+Dan
+* all the other stuff we wanted to do
+
+Brian 2.0
+---------
+* no relative imports
+* no wildcard imports
+* tests
+* maybe replace library models by showcase with copy/paste (catalogue)
