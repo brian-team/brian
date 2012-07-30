@@ -111,7 +111,7 @@ class TimedArray(numpy.ndarray):
             if start is None:
                 start = 0 * second
             if clock is not None:
-                raise ValueError('Specify start and dt or block, but not both.')
+                raise ValueError('Specify start and dt or clock, but not both.')
             clock = Clock(t=start, dt=dt)
         if times is not None and clock is not None:
             raise ValueError('Specify times or clock but not both.')
@@ -270,7 +270,7 @@ class TimedArraySetter(NetworkOperation):
     @check_units(start=second, dt=second)
     def __init__(self, group, var, arr, times=None, clock=None, start=None, dt=None, when='start'):
         if clock is None:
-            if isinstance(arr, TimedArray):
+            if isinstance(arr, TimedArray) and not arr.clock is None:
                 self.clock = clock = arr.clock
             else:
                 self.clock = clock = group.clock
@@ -294,9 +294,8 @@ class TimedArraySetter(NetworkOperation):
                 if self._cur_i == len(self.arr.times) - 1:
                     self.group.state_(self.var)[:] = self.arr[self._cur_i]
                     return
-                ti_now = self.arr.times[self._cur_i]
                 ti_next = self.arr.times[self._cur_i + 1]
-                if ti_next >= tcur:
+                if ti_next > tcur:
                     self.group.state_(self.var)[:] = self.arr[self._cur_i]
                     return
                 self._cur_i += 1
