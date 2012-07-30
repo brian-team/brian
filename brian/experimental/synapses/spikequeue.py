@@ -44,13 +44,14 @@ Main methods:
     offsets are precomputed or not, and on whether delays are heterogeneous or
     homogeneous.
 """
-from ...monitor import SpikeMonitor
-from ...stdunits import ms
-from ...globalprefs import *
-import numpy as np
 from numpy import *
-from pylab import plot,show
+from pylab import plot, show
 from scipy import weave
+import numpy as np
+
+from brian.globalprefs import get_global_preference
+from brian.monitor import SpikeMonitor
+from brian.stdunits import ms
 
 INITIAL_MAXSPIKESPER_DT = 1
 

@@ -1,10 +1,11 @@
 """
 Synaptic equations
 """
-#from brian import *
-from ...equations import Equations
-from ...units import *
 import re
+
+from brian.equations import Equations
+from brian.units import *
+
 
 __all__=['SynapticEquations']
 

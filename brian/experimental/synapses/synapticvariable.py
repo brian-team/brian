@@ -1,9 +1,10 @@
 '''
 Synaptic variables.
 '''
-from ...inspection import *
 from numpy import *
 import numpy as np
+
+from brian.inspection import *
 
 __all__=['SynapticVariable','SynapticDelayVariable','slice_to_array']
 
