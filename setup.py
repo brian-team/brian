@@ -53,7 +53,7 @@ setup(name='brian',
   package_data={'brian.utils.ccircular':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat'],
                 'brian.utils.fastexp':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat', '*.c']},
   requires=['matplotlib(>=0.90.1)',
-            'numpy(>=1.3.0)',
+            'numpy(>=1.4.1)',
             'scipy(>=0.7.0)'
             ],
   url='http://www.briansimulator.org/',

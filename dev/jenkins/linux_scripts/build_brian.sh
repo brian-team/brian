@@ -13,7 +13,7 @@ if [ $packages = newest ]; then
   bin/pip install --upgrade matplotlib
 elif [ $packages = oldest ]; then
   echo "Using oldest available package versions supported by Brian"
-  bin/pip install numpy==1.3.0
+  bin/pip install numpy==1.4.1
   # scipy 0.7 has a bug that makes it impossible to use weave, download the
   # package and apply the patch before installing
   mkdir downloads || :
