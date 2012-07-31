@@ -37,3 +37,7 @@ iface eth1 inet static
 address 192.168.56.101
 netmask 255.255.255.0
 You can get an IP address if you do iface eth1 inet dhcp and check for the assigned address with ifconfig eth1
+
+SSH to VMs on a different host
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+http://blog.bashton.com/2009/ssh-via-another-host/
