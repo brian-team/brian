@@ -1,25 +1,27 @@
 '''
 The Synapses class - see BEP-21
 '''
-from brian.neurongroup import NeuronGroup
-from brian.stdunits import *
-from brian.utils.dynamicarray import *
-from brian.log import *
-from numpy import *
-from scipy import rand,randn
-from spikequeue import *
-from synapticvariable import *
-import numpy as np
-from brian.inspection import *
-from brian.equations import *
-from brian.optimiser import *
-from numpy.random import binomial
-from brian.utils.documentation import flattened_docstring
-from random import sample
-from synaptic_equations import *
 import re
-from operator import isSequenceType
 import warnings
+from operator import isSequenceType
+
+import numpy as np
+from numpy.random import binomial
+from random import sample
+from scipy import rand, randn
+
+from brian.inspection import get_identifiers, namespace
+from brian.log import log_debug
+from brian.neurongroup import NeuronGroup
+from brian.optimiser import AffineFunction, symbolic_eval
+from brian.stdunits import ms
+from brian.synapses.spikequeue import SpikeQueue
+from brian.synapses.synaptic_equations import SynapticEquations
+from brian.synapses.synapticvariable import (SynapticDelayVariable, 
+                                             SynapticVariable, slice_to_array)
+from brian.utils.documentation import flattened_docstring
+from brian.utils.dynamicarray import DynamicArray, DynamicArray1D 
+
 try:
     import sympy
     use_sympy = True
@@ -272,8 +274,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self._S[:]=S
 
         # Pre and postsynaptic delays (synapse -> delay_pre/delay_post)
-        self._delay_pre=[DynamicArray1D(len(self),dtype=int16) for _ in pre_list] # max 32767 delays
-        self._delay_post=DynamicArray1D(len(self),dtype=int16) # Actually only useful if there is a post code!
+        self._delay_pre=[DynamicArray1D(len(self),dtype=np.int16) for _ in pre_list] # max 32767 delays
+        self._delay_post=DynamicArray1D(len(self),dtype=np.int16) # Actually only useful if there is a post code!
         
         # Pre and postsynaptic synapses (i->synapse indexes)
         max_synapses=2147483647 # it could be explicitly reduced by a keyword
@@ -282,7 +284,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.synapses_post=[DynamicArray1D(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.target))]
 
         # Code generation
-        self._binomial = lambda n,p:np.random.binomial(array(n,dtype=int),p)
+        self._binomial = lambda n,p:np.random.binomial(np.array(n,dtype=int),p)
 
         self.contained_objects = []
         self.codes=[]
@@ -538,24 +540,24 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             else:
                 nsynapses = value
 
-            postsynaptic,presynaptic=meshgrid(post_slice,pre_slice) # synapse -> pre, synapse -> post
+            postsynaptic,presynaptic=np.meshgrid(post_slice,pre_slice) # synapse -> pre, synapse -> post
             # Flatten
             presynaptic.shape=(presynaptic.size,)
             postsynaptic.shape=(postsynaptic.size,)
             # pre,post -> synapse index, relative to last synapse
             # (that's a complex vectorised one!)
-            synapses_pre=arange(len(presynaptic)).reshape((len(pre_slice),len(post_slice)))
-            synapses_post=ones((len(post_slice),1),dtype=int)*arange(0,len(presynaptic),len(post_slice))+\
-                          arange(len(post_slice)).reshape((len(post_slice),1))
+            synapses_pre=np.arange(len(presynaptic)).reshape((len(pre_slice),len(post_slice)))
+            synapses_post=np.ones((len(post_slice),1),dtype=int)*np.arange(0,len(presynaptic),len(post_slice))+\
+                          np.arange(len(post_slice)).reshape((len(post_slice),1))
             # Repeat
             if nsynapses>1:
-                synapses_pre=hstack([synapses_pre+k*len(presynaptic) for k in range(nsynapses)]) # could be vectorised
-                synapses_post=hstack([synapses_post+k*len(presynaptic) for k in range(nsynapses)]) # could be vectorised
-                presynaptic=tile(presynaptic,nsynapses)
-                postsynaptic=tile(postsynaptic,nsynapses)
+                synapses_pre=np.hstack([synapses_pre+k*len(presynaptic) for k in range(nsynapses)]) # could be vectorised
+                synapses_post=np.hstack([synapses_post+k*len(presynaptic) for k in range(nsynapses)]) # could be vectorised
+                presynaptic=np.tile(presynaptic,nsynapses)
+                postsynaptic=np.tile(postsynaptic,nsynapses)
             # Make sure the type is correct
-            synapses_pre=array(synapses_pre,dtype=self.synapses_pre[0].dtype)
-            synapses_post=array(synapses_post,dtype=self.synapses_post[0].dtype)
+            synapses_pre=np.array(synapses_pre,dtype=self.synapses_pre[0].dtype)
+            synapses_post=np.array(synapses_post,dtype=self.synapses_post[0].dtype)
             # Turn into dictionaries
             synapses_pre=dict(zip(pre_slice,synapses_pre))
             synapses_post=dict(zip(post_slice,synapses_post))
@@ -577,7 +579,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                                'rand': np.random.rand,
                                'randn': np.random.randn})
 #            try: # Vectorise over all indexes: not faster! 
-#                post,pre=meshgrid(post_slice-post_shift,pre_slice-pre_shift)
+#                post,pre=np.meshgrid(post_slice-post_shift,pre_slice-pre_shift)
 #                pre=pre.flatten()
 #                post=post.flatten()
 #                _namespace['i']=array(pre,dtype=self.presynaptic.dtype)
@@ -594,7 +596,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
 #                nsynapses=0
 #                for i in pre_slice:
 #                    n=sum(result[i*len(post_slice):(i+1)*len(post_slice)])
-#                    synapses_pre[i]=array(nsynapses+arange(n),dtype=dtype)
+#                    synapses_pre[i]=array(nsynapses+np.arange(n),dtype=dtype)
 #                    nsynapses+=n
 #            except MemoryError: # If not possible, vectorise over postsynaptic indexes
 #                log_info("synapses","Construction of synapses cannot be fully vectorised (too big)")
@@ -613,18 +615,18 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                     result=rand(len(post_slice))<result
                 indexes=result.nonzero()[0]
                 n=len(indexes)
-                synapses_pre[i]=array(nsynapses+arange(n),dtype=self.synapses_pre[0].dtype)
-                presynaptic.append(i*ones(n,dtype=int))
+                synapses_pre[i]=np.array(nsynapses+np.arange(n),dtype=self.synapses_pre[0].dtype)
+                presynaptic.append(i*np.ones(n,dtype=int))
                 postsynaptic.append(post_slice[indexes])
                 nsynapses+=n
                 
             # Make sure the type is correct
-            presynaptic=array(hstack(presynaptic),dtype=self.presynaptic.dtype)
-            postsynaptic=array(hstack(postsynaptic),dtype=self.postsynaptic.dtype)
+            presynaptic=np.array(np.hstack(presynaptic),dtype=self.presynaptic.dtype)
+            postsynaptic=np.array(np.hstack(postsynaptic),dtype=self.postsynaptic.dtype)
             synapses_post=None
         elif isinstance(value, np.ndarray):
             raise NotImplementedError
-            nsynapses = array(value, dtype = int) 
+            nsynapses = np.array(value, dtype = int) 
             
         # Now create the synapses
         self.create_synapses(presynaptic,postsynaptic,synapses_pre,synapses_post)
@@ -766,16 +768,16 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         presynaptic,postsynaptic=[],[]
         for i in pre: # vectorised over post neurons
             k = binomial(m, sparseness, 1)[0] # number of postsynaptic neurons
-            synapses_pre[i]=nsynapses+arange(k)
-            presynaptic.append(i*ones(k,dtype=int))
+            synapses_pre[i]=nsynapses+np.arange(k)
+            presynaptic.append(i*np.ones(k,dtype=int))
             # Not significantly faster to generate all random numbers in one pass
             # N.B.: the sample method is implemented in Python and it is not in Scipy
             postneurons = sample(xrange(m), k)
             #postneurons.sort() # sorting is unnecessary
             postsynaptic.append(post[postneurons])
             nsynapses+=k
-        presynaptic=hstack(presynaptic)
-        postsynaptic=hstack(postsynaptic)
+        presynaptic=np.hstack(presynaptic)
+        postsynaptic=np.hstack(postsynaptic)
         synapses_post=None # we ask for automatic calculation of (post->synapse)
         # this is more or less given by unique
         self.create_synapses(presynaptic,postsynaptic,synapses_pre,synapses_post)
@@ -826,7 +828,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             _namespace['binomial']=self._binomial
             _namespace['rand']=rand
             _namespace['randn']=randn
-            _namespace['zeros']=zeros
+            _namespace['zeros']=np.zeros
             _namespace['sum']=sum
             
         self._iscompressed=True
@@ -872,17 +874,17 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             synapsetype=self.synapses_pre[0].dtype
             
             if (test_i is None) and (test_j is None): # no speed-up is possible
-                synapses_pre=array(hstack([self.synapses_pre[k] for k in i]),dtype=synapsetype)
-                synapses_post=array(hstack([self.synapses_post[k] for k in j]),dtype=synapsetype)
+                synapses_pre=np.array(np.hstack([self.synapses_pre[k] for k in i]),dtype=synapsetype)
+                synapses_post=np.array(np.hstack([self.synapses_post[k] for k in j]),dtype=synapsetype)
                 return np.intersect1d(synapses_pre, synapses_post,assume_unique=True)
             elif ((len(i)<len(j)) and (test_j is not None)) or (test_i is None): # test synapses of presynaptic neurons
-                synapses_pre=array(hstack([self.synapses_pre[k] for k in i]),dtype=synapsetype)
+                synapses_pre=np.array(np.hstack([self.synapses_pre[k] for k in i]),dtype=synapsetype)
                 return synapses_pre[test_j(self.postsynaptic[synapses_pre])]
             else: # test synapses of postsynaptic neurons
-                synapses_post=array(hstack([self.synapses_post[k] for k in j]),dtype=synapsetype)
+                synapses_post=np.array(np.hstack([self.synapses_post[k] for k in j]),dtype=synapsetype)
                 return synapses_post[test_i(self.presynaptic[synapses_post])]
         elif len(i)==3: # 3rd coordinate is synapse number
-            if isscalar(i[0]) and isscalar(i[1]):
+            if np.isscalar(i[0]) and np.isscalar(i[1]):
                 return self.synapse_index(i[:2])[i[2]]
             else:
                 raise NotImplementedError,"The first two coordinates must be integers"
@@ -896,13 +898,13 @@ def smallest_inttype(N):
     Returns the smallest signed integer dtype that can store N indexes.
     '''
     if N<=127:
-        return int8
+        return np.int8
     elif N<=32727:
-        return int16
+        return np.int16
     elif N<=2147483647:
-        return int32
+        return np.int32
     else:
-        return int64
+        return np.int64
 
 def indent(s,n=1):
     '''
@@ -915,22 +917,19 @@ def invert_array(x,dtype=int):
     Returns a dictionary y of N int arrays such that:
     y[i]=set of j such that x[j]==i
     '''
-    I = argsort(x) # ,kind='mergesort') # uncomment for a stable sort
+    I = np.argsort(x) # ,kind='mergesort') # uncomment for a stable sort
     xs = x[I]
     # This below does the same as unique, except the indices point to first time
     # each number appears in the array 
     # See also code for unique (doesn't use diff, not sure which one is faster)
-    indices=hstack(([0],where(diff(xs)!=0)[0]+1)) # or concatenate?
+    indices=np.hstack(([0],np.where(np.diff(xs)!=0)[0]+1)) # or concatenate?
     u=xs[indices]
     y={}
     for j,i in enumerate(u[:-1]):
-        y[i]=array(I[indices[j]:indices[j+1]],dtype=dtype)
-    y[u[-1]]=array(I[indices[-1]:],dtype=dtype)
+        y[i]=np.array(I[indices[j]:indices[j+1]],dtype=dtype)
+    y[u[-1]]=np.array(I[indices[-1]:],dtype=dtype)
     return y
 
-if __name__=='__main__':
-    #log_level_debug()
-    print invert_array(array([7,5,2,2,3,5]))
 
 def neuron_indexes(x,P):
     '''
@@ -940,9 +939,10 @@ def neuron_indexes(x,P):
     '''
     if isinstance(x,NeuronGroup): # it should be checked that x is actually a subgroup of P
         i0=x._origin - P._origin # offset of the subgroup x in P
-        return arange(i0,i0+len(x))
+        return np.arange(i0,i0+len(x))
     else:
         return slice_to_array(x,N=len(P))      
+
 
 def slice_to_test(x):
     '''
@@ -961,3 +961,7 @@ def slice_to_test(x):
             return lambda y:(y>=start) & ((y-start)%step==0)
         else:
             return lambda y:(y>=start) & (y<stop) & ((y-start)%step==0)
+
+if __name__=='__main__':
+    #log_level_debug()
+    print invert_array(np.array([7,5,2,2,3,5]))

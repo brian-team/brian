@@ -1,9 +1,11 @@
 """
 Synaptic equations
 """
-from brian.equations import Equations
-from brian.units import *
 import re
+
+from brian.equations import Equations
+from brian.units import Quantity, scalar_representation, second
+from brian.stdunits import ms
 
 __all__=['SynapticEquations']
 

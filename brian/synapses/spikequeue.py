@@ -44,17 +44,17 @@ Main methods:
     offsets are precomputed or not, and on whether delays are heterogeneous or
     homogeneous.
 """
-from brian.monitor import SpikeMonitor
-from brian.stdunits import ms
-from brian.globalprefs import *
 import numpy as np
-from numpy import *
-from pylab import plot,show
+from pylab import plot, show
 from scipy import weave
 
-INITIAL_MAXSPIKESPER_DT = 1
+from brian.globalprefs import get_global_preference
+from brian.monitor import SpikeMonitor
+from brian.stdunits import ms
 
 __all__=['SpikeQueue']
+
+INITIAL_MAXSPIKESPER_DT = 1
 
 class SpikeQueue(SpikeMonitor):
     '''Spike queue
@@ -133,10 +133,10 @@ class SpikeQueue(SpikeMonitor):
         
         # number of time steps, maximum number of spikes per time step
         nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
-        self.X = zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
+        self.X = np.zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
         self.X_flat = self.X.reshape(nsteps*maxevents,)
         self.currenttime = 0
-        self.n = zeros(nsteps, dtype = int) # number of events in each time step
+        self.n = np.zeros(nsteps, dtype = int) # number of events in each time step
         
         self._offsets = None # precalculated offsets
         
@@ -177,9 +177,9 @@ class SpikeQueue(SpikeMonitor):
         else: # this means that the user has set a larger delay than necessary, which means the delays are not fixed
             self._homogeneous=False
         if (nsteps>self.X.shape[0]) or (maxevents>self.X.shape[1]): # Resize
-            self.X = zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
+            self.X = np.zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
             self.X_flat = self.X.reshape(nsteps*maxevents,)
-            self.n = zeros(nsteps, dtype = int) # number of events in each time step
+            self.n = np.zeros(nsteps, dtype = int) # number of events in each time step
 
         # Precompute offsets
         if (self._offsets is None) and self._precompute_offsets:
@@ -226,17 +226,17 @@ class SpikeQueue(SpikeMonitor):
             return self.offsets_C(delay)
         # We use merge sort because it preserves the input order of equal
         # elements in the sorted output
-        I = argsort(delay,kind='mergesort')
+        I = np.argsort(delay,kind='mergesort')
         xs = delay[I]
         J = xs[1:]!=xs[:-1]
         #K = xs[1:]==xs[:-1]
-        A = hstack((0, cumsum(J)))
-        #B = hstack((0, cumsum(K)))
-        B = hstack((0, cumsum(-J)))
-        BJ = hstack((0, B[J]))
+        A = np.hstack((0, np.cumsum(J)))
+        #B = np.hstack((0, np.cumsum(K)))
+        B = np.hstack((0, np.cumsum(-J)))
+        BJ = np.hstack((0, B[J]))
         ei = B-BJ[A]
-        ofs = zeros_like(delay)
-        ofs[I] = array(ei,dtype=ofs.dtype) # maybe types should be signed?
+        ofs = np.zeros_like(delay)
+        ofs[I] = np.array(ei,dtype=ofs.dtype) # maybe types should be signed?
         return ofs
            
     def insert(self, delay, target, offset=None):
@@ -253,7 +253,7 @@ class SpikeQueue(SpikeMonitor):
             Offsets within timestep (array). If unspecified, they are calculated
             from the delay array.
         '''
-        delay=array(delay,dtype=int)
+        delay=np.array(delay,dtype=int)
         if self._useweave: # C-optimised insertion (minor speed up)
             self.insert_C(delay,target)
             return
@@ -301,9 +301,9 @@ class SpikeQueue(SpikeMonitor):
         '''
         # old and new sizes
         old_maxevents = self.X.shape[1]
-        new_maxevents = int(2**ceil(log2(maxevents))) # maybe 2 is too large
+        new_maxevents = int(2**np.ceil(np.log2(maxevents))) # maybe 2 is too large
         # new array
-        newX = zeros((self.X.shape[0], new_maxevents), dtype = self.X.dtype)
+        newX = np.zeros((self.X.shape[0], new_maxevents), dtype = self.X.dtype)
         newX[:, :old_maxevents] = self.X[:, :old_maxevents] # copy old data
         
         self.X = newX
@@ -316,10 +316,10 @@ class SpikeQueue(SpikeMonitor):
         '''
         if len(spikes):
             if self._homogeneous: # homogeneous delays
-                synaptic_events=hstack([self.synapses[i].data for i in spikes]) # could be not efficient
+                synaptic_events=np.hstack([self.synapses[i].data for i in spikes]) # could be not efficient
                 self.insert_homogeneous(self.delays[0],synaptic_events)
             elif self._offsets is None: # vectorise over synaptic events
-                synaptic_events=hstack([self.synapses[i].data for i in spikes])
+                synaptic_events=np.hstack([self.synapses[i].data for i in spikes])
                 if len(synaptic_events):
                     delay = self.delays[synaptic_events]
                     self.insert(delay, synaptic_events)
@@ -369,8 +369,8 @@ class SpikeQueue(SpikeMonitor):
         This function is normally not used (since insert_C does not need it).
         '''
         nevents=len(delay)
-        x=zeros(self.X.shape[0],dtype=int) # a counter for each delay
-        ofs=zeros(nevents,dtype=int)
+        x=np.zeros(self.X.shape[0],dtype=int) # a counter for each delay
+        ofs=np.zeros(nevents,dtype=int)
         code='''
         int d;
         for(int i=0;i<nevents;i++) {
@@ -392,6 +392,6 @@ class SpikeQueue(SpikeMonitor):
         for i in range(self.X.shape[0]):
             idx = (i + self.currenttime ) % self.X.shape[0]
             data = self.X[idx, :self.n[idx]]
-            plot(idx * ones(len(data)), data, '.')
+            plot(idx * np.ones(len(data)), data, '.')
         if display:
             show()

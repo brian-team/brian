@@ -1,9 +1,9 @@
 '''
 Synaptic variables.
 '''
-from brian.inspection import *
-from numpy import *
 import numpy as np
+
+from brian.inspection import namespace
 
 __all__=['SynapticVariable','SynapticDelayVariable','slice_to_array']
 
@@ -102,7 +102,7 @@ class SynapticDelayVariable(SynapticVariable):
         synapses=self.synapses.synapse_index(i)
         if isinstance(value,str):
             value=self._interpret(value,synapses,level+1)
-        self.data[synapses]=array(array(value)/self.synapses.clock.dt,dtype=self.data.dtype)
+        self.data[synapses]=np.array(np.array(value)/self.synapses.clock.dt,dtype=self.data.dtype)
 
 def slice_to_array(s,N=None):
     '''
@@ -116,8 +116,8 @@ def slice_to_array(s,N=None):
         step=s.step
         if stop<0 and N is not None:
             stop=N+stop
-        return arange(start,stop,step)
-    elif isscalar(s): # if not a slice (e.g. an int) then we return it as an array of a single element
-        return array([s])
+        return np.arange(start,stop,step)
+    elif np.isscalar(s): # if not a slice (e.g. an int) then we return it as an array of a single element
+        return np.array([s])
     else: # array or sequence
-        return array(s)
+        return np.array(s)
