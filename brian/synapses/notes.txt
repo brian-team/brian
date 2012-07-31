@@ -1,0 +1,205 @@
+Notes
+=====
+Synapses variables
+------------------
+* presynaptic i -> synapse indexes
+* presynaptic i -> delay
+* synapse -> variables (w)
+* synapse -> presynaptic i (int32 or smaller, based on the size of the presynaptic group)
+* synapse -> postsynaptic j
+	These two are currently in existing_synapses
+	All synaptic mappings are handled by a SparseStateVector (deals with multiple types)
+	Maybe we don't need a StateVector (just dynamic arrays)
+
+and for backpropagation (STDP):
+* postsynaptic j -> synapse indexes
+* postsynaptic j -> delay
+(do we need synapse -> delay?)
+
+Also
+* presynaptic queue (pre_queue)
+* postsynaptic queue
+* presynaptic/postsynaptic code and namespace (pre_code,pre_namespace)
+
+Data structure
+--------------
+Currently, synapses are pushed: there is no order (meaning synapse indexes for neuron i may not
+be contiguous).
+Operations to optimize:
+* search
+* insertion: push values (O(1))
+* deletion (should it be allowed?)
+	we use a mask for deleted synapses
+
+There are also two mappings:
+* presynaptic i -> synapse indexes (sorted by synapse index)
+* postsynaptic j -> synapse indexes
+
+Current search (i,j):
+* get synapse indexes for pre i and post j
+* calculate intersection
+O(p) (p = number of synapses per neuron)
+
+Alternative: use a hash table of synapses for each presynaptic neuron: synapse[i][j]
+
+The structure must be dynamic.
+Maybe we don't need to compress the structure.
+
+Initialisation
+--------------
+Currently:
+* parse model equations and create a state updater
+* clean pre/post strings
+* create variables (state vector)
+* create and compile pre code
+	pre code deals with v+=w (problem with repeated postsynaptic indexes)
+
+Call
+----
+* Synapses object gets the synaptic events and apply the pre code
+* Call state updater
+
+StateVector
+-----------
+A state matrix for variables with different dtypes. 
+ConstructionSparseStateVector -> StateVector.
+ParameterVector = 1 row of a StateVector. Required for S.w[1,2].
+
+Clock
+-----
+Currently, we initialize the object with the clock of the synaptic state
+updater. At this time, it will not work if the clocks of the neuron groups are
+different. However, it should be possible in principle (but more complex).
+
+Event-driven updates
+---------------------------
+(done) A simple start would be to deal with 1D linear differential equations.
+Steps:
+1) identify isolated 1D linear differential equations in model,
+2) remove them from the model string,
+3) compute the update string,
+4) insert at the beginning of pre and post.
+
+Here is how to deal with 3) using sympy. Assuming RHS=a*x+b:
+1) z=brian.optimiser.symbolic_eval(RHS)
+2) z.coeff(Symbol('x')) -> a
+3) z.subs(Symbol('x'),0) or z.coeff(1) -> b
+4) str(...) for the string representation
+
+For step 1):
+1) Look for variable names that are defined by differential equations.
+2) If there is only the one on the LHS, then this is a 1D equation.
+3) Check linearity, either using sympy (I don't know what exactly), or
+the utilities in inspection (is_affine; setting external variables to 0).
+
+All this can be done after parsing by NeuronGroup.
+
+Issues
+^^^^^^
+Event-driven code can be problematic in some cases. In all these cases,
+updates should be continuous.
+1) The equation depends on pre or postsynaptic variables.
+2) Another equation depends on the synaptic variable.
+3) The synaptic variable corresponds to a lumped variable (see below),
+defined later by P.ge=S.ge.
+
+Issues #1 and #2 can be solved by examining the equations.
+Issue #3 is more problematic because it is not known at the time when
+equations are examined.
+
+Several possibilities to solve this problem:
+1) Explicitly ask for event-driven code using some local syntax, e.g.
+'dx/dt=-x : 1 (event-driven)'.
+2) Explicitly allow event-driven code using a global keyword, e.g.
+eventdriven=True.
+3) Examine the equations only at run time, through the compress() method.
+Then the instruction P.ge=S.ge should inform S.
+
+I think the global syntax, although simpler, cannot satisfactorily handle all cases,
+such as NMDA synapses with plasticity. So option #2 seems bad.
+Option #1 seems good because it is explicit, but it implies going into the
+details of parsing Equations. A simple solution is to have a class derived from
+Equations, for which the parsing changes. This would be my first choice.
+
+Lumped variables
+----------------
+With synaptic nonlinearities, we want to simulate differential equations for
+all synaptic variables, then (in general) sum them per postsynaptic neuron and
+add the value to one variable, or set it to some value (e.g. total conductance).
+
+To do this is simple:
+* loop over postsynaptic neurons j
+* ge[j]=sum(S.ge[synapses_post[j]])
+
+The main issue is then the syntax.
+We could use something like linked_var, for example:
+P.ge=lumped_var(synapses.ge)
+where P is the NeuronGroup, and ge must have been defined as a parameter
+in P.
+Or, in fact, we could just use linked_var directly!
+P.ge=linked_var(synapses,"ge")
+Of course we need to modify linked_var a bit.
+Or:
+P.ge=S.ge
+This is possible given that S.ge is a SynapticVariable, and therefore
+has all the necessary information.
+We then use link_var with a function that does the sum.
+
+Gap junctions
+-------------
+It could be simple, for example:
+model='''
+g : siemens
+I=g*(V_post-V_pre) : amp
+'''
+P.I=S.I
+
+The only limitation here is that it won't be possible to have
+delays in these connections.
+
+Delayed STDP
+------------
+When we consider delayed STDP, we have 3 delays instead of just two:
+pre->synapse, synapse->post (for STDP variables), pre->post (for v+=w).
+I can see two ways to deal with this:
+1) allow a Synapses object to share state variables with another one,
+2) have multiple codes and delays for the pre (and perhaps post) side.
+
+I think the most elegant, and perhaps simplest, way is #2. Here is how to do
+it:
+* the pre keyword accepts sequences (tuples/lists): pre=('v+=w','Apre+=dApre')
+* we have a list of presynaptic queues and codes,
+* delay_pre is now a list of delay arrays,
+* setattr fails on delay_pre
+
+Since there is no fundamental difference between pre and post sides, we could
+have a unified treatment of queues and codes.
+
+How to deal with pre and post suffixes
+--------------------------------------
+For gap junctions and some STDP rules, we need to access pre and post synaptic variables.
+A simple idea to deal with this is to use static variables.
+For example: v_pre=source.v[presynaptic[:]].
+
+How to deal with heterosynaptic modifications
+---------------------------------------------
+I can think of two examples:
+1) Synaptic scaling
+2) Axonal propagation (Kempter et al.)
+
+Specific examples:
+1) A postsynaptic spike modifies all weights for that neuron. This is actually
+what happens in STDP, so it is not a problem.
+2) A presynaptic spike modifies all weights for the target neuron.
+3) A presynaptic spike modifies all weights for synapses with the same source
+neuron (Kempter et al).
+
+1 is already implemented, 2 and 3 are more complex. For each synaptic event,
+we need to change a whole set of variables, and there can be overlaps between
+synaptic events. This is a similar problem as for modifying postsynaptic
+variables.
+
+Various notes
+-------------
+* I decided to use signed rather than unsigned ints for indexes, because there
+were some conversion problems.

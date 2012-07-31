@@ -1,0 +1,108 @@
+Creation
+--------
+(done) S[2,3:5]=True # or an array
+S[2,3:5]=(2,3) # 2 synapses from 2 to 3, 3 from 2 to 4
+(done) S[group1,group2]='rand()<0.2' # careful this is highly inefficient
+
+Modification and access
+-----------------------
+(done) S.w[2,5]=1*nS
+(done) S.w[1,:]=2*nS
+(done) S.w[2,3,1] # 2nd synapse from 2->3
+(done) S.w[2,3]=(1*nS,2*nS)
+(done) S.w[group1,group2]="(1+cos(i-j))*2*nS" # or pre/post
+
+High-level functions
+--------------------
+(done) S.connect_random(group1,group2,sparseness=0.1)
+(done) S.connect_one_to_one(group1,group2)
+
+Equations
+---------
+(done) S=Synapses(source,target,model="w : 1",pre="v+=w") # standard synapse
+
+(done) S=Synapses(source,target,
+           model='''dg/dt=-a*g+b*x*(1-g) : 1
+                    dx/dt=-c*x : 1
+                    w : 1 # synaptic weight
+                 ''',
+           pre='x+=w') # NMDA synapses
+
+(done) S=Synapses(source,target,
+           model='''dA_pre/dt=-A_pre/tau_pre : 1
+                    dA_post/dt=-A_post/tau_post : 1
+                    w : 1 # synaptic weight
+                 ''',
+           pre='''x+=w
+                  A_pre+=dA_pre;w+=A_post'''
+           post='''A_post+=dA_post;w+=A_pre''') # STDP
+           
+(done) S=Synapses(source,target,
+           model='''dA_pre/dt=-A_pre/tau_pre : 1
+                    dA_post/dt=-A_post/tau_post : 1
+                    w : 1 # synaptic weight
+                 ''',
+           pre='''v+=w
+                  A_pre+=dA_pre;w=clip(w+A_post,0,inf)'''
+           post='''A_post+=dA_post;w=clip(w+A_pre,0,inf)''') # STDP with clipping
+
+(done) S=Synapses(source,target,
+           model='''dx/dt=(1-x)/taud : 1
+                    du/dt=(U-u)/tauf : 1
+                    w : 1''',
+           pre='''v=v+w*u*x
+                  x=x*(1-u)
+                  u=u+U*(1-u)
+                  ''') # STP
+                  
+(done) S=Synapses(source,target,
+           model='''x : 1
+                    u : 1
+                    w : 1''',
+           pre='''u=U+(u-U)*exp(-(t-lastspike)/tauf)
+                  x=1+(x-1)*exp(-(t-lastspike)/taud)
+                  v=v+w*u*x
+                  x*=(1-u)
+                  u+=U*(1-u)                  
+                  ''') # Event-driven STP
+
+(done) S=Synapses(source,target,model="""w : 1
+                                  p : 1 # transmission probability""",
+                         pre="v+=w*(rand()<p)") # probabilistic synapse
+
+Other things to think about: heterosynaptic or non-specific modifications (e.g. synaptic scaling)
+For example, in Kempter et al., each weight modification also affects all
+synapses made by the presynaptic neuron.
+
+Syntax
+^^^^^^
+Undefined variables are searched for:
+1) in the postsynaptic group
+2) in the namespace
+
+pre/post variables can be explicitly specified with suffixes _pre and _post.
+
+In pre/post code:
+(done)* t is the current time
+(done)* lastspike holds the time of last update of the synapse
+(done)* rand() is vectorised
+
+How about:
+(done)* lumped variables
+(done)* gap junctions
+* heterosynaptic modifications
+
+Duck typing
+-----------
+The Synapses class should be usable by:
+* StateUpdater
+	We need a state matrix _S which stores all synaptic variables that can be continuously updated.
+	Not all synaptic variables should be accessible to the StateUpdater, so _S could be a view on the
+	first rows.
+* StateMonitor
+	To use: M = StateMonitor(S,'w',record=[(2,3),(7,1),(3,3)])
+	__len__ is the number of synapses
+	state_(varname) should give the values V of variable varname for all synapses, that behaves as an array, but
+	 	can be accessed with V[(2,3)] (this is more or less the ParameterVector)
+	unit(varname) returns the units of varname
+	state = state_

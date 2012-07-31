@@ -1,0 +1,41 @@
+Data structure for the Synapses object
+======================================
+* 1 SpikeQueue for pre and post (can be a Brian contained object or could be called by the Synapses object)
+
+Synaptic mappings:
+* synapse -> variables (w) (floats)
+	could be separated between continuously updated variables (i.e., not parameters) to be put in _S and other ones
+	This should be a dynamic state matrix (extendable 2D array).
+	For now it's in _S.
+* synapse -> presynaptic i (int32 or smaller, based on the size of the presynaptic group)
+	This should be a dynamic vector.
+	I call it 'presynaptic' for now.
+* synapse -> postsynaptic j (same)
+	I call it 'postsynaptic' for now.
+* synapse -> presynaptic delay (depending on max delay? but this is not known at the beginning)
+	This is better than presynaptic i -> delay for construction.
+* synapse -> postsynaptic delay
+
+The synaptic mappings should be addressable by (pre,post) number (2D or 3D).
+This could be done using separate objects, one per synaptic variable. There would be a dictionary
+of these objects.
+
+Pre/post mappings (useful for construction and spike queues):
+* presynaptic i -> synapse indexes (int32 or more? depending on len(pre)*len(post))
+	List of dynamic arrays
+* postsynaptic j -> synapse indexes
+
+Code:
+* presynaptic/postsynaptic code and namespace (pre_code,pre_namespace)
+
+Accessing synaptic variables
+----------------------------
+To do something like S.w[1,2]=1*nS
+we need to have a special vector class that can be indexed with pre/post indexes.
+First, the setattr method can be directly inherited from NeuronGroup, except
+for the delays. It allows things like:
+S.w=[1*nS,2*nS]
+although maybe this should not be allowed.
+
+The import method is getattr. It returns an object with a getitem that allows
+2 and 3D access to an underlying sparse matrix.
