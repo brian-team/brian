@@ -428,20 +428,19 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 _flag[0] = _flag[-1] = 1
                 not_equal(_aux[1:], _aux[:-1], _flag[1:-1])
                 if 0:#_flag.sum()==len(_aux)+1:
-                {code1}
+                %(code1)s
                 else:
                     _F = _flag.nonzero()[0][:-1]
                     logical_not(_flag, _flag)
                     while len(_F):
                         _u = _aux.take(_F)
                         _i = _perm.take(_F)
-                {code2}
+                %(code2)s
                         _F += 1
                         _F = extract(_flag.take(_F), _F)
                 '''
-                code_str = flattened_docstring(code_str).format(
-                    code1 = indent(update_code(code, '_synapses', '_post_neurons'), 1),
-                    code2 = indent(update_code(code, '_synapses[_i]', '_u'), 2))
+                code_str = flattened_docstring(code_str) % {'code1': indent(update_code(code, '_synapses','_post_neurons'), 1),
+                                                            'code2': indent(update_code(code, '_synapses[_i]', '_u'), 2)}
             elif algo==3:
                 code_str = '''
                 _post_neurons = _post.data.take(_synapses)
@@ -455,12 +454,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 while len(_F):
                     _u = _aux.take(_F)
                     _i = _perm.take(_F)
-                {code}
+                %(code)s
                     _F += 1
                     _F = extract(_flag.take(_F), _F)
                 '''
-                code_str = flattened_docstring(code_str).format(
-                    code=indent(update_code(code, '_synapses[_i]', '_u'), 1))
+                code_str = flattened_docstring(code_str) % {'code': indent(update_code(code, '_synapses[_i]', '_u'), 1)}
             elif algo==4:
                 code_str = '''
                 _post_neurons = _post[_synapses]
@@ -474,12 +472,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 while len(_F):
                     _u = _aux[_F]
                     _i = _perm[_F]
-                {code}
+                %(code)s
                     _F += 1
                     _F = _F[_flag[_F]]
                 '''
-                code_str = flattened_docstring(code_str).format(
-                    code=indent(update_code(code, '_synapses[_i]', '_u'), 1))
+                code_str = flattened_docstring(code_str) % {'code': indent(update_code(code, '_synapses[_i]', '_u'), 1)}
 #        print code_str
             
         log_debug('brian.synapses', '\nCODE:\n'+code_str)
