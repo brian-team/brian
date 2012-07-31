@@ -27,7 +27,7 @@ except:
     warnings.warn('sympy not installed: some features in Synapses will not be available')
     use_sympy = False
 
-__all__ = ['Synapses','slice_to_test','invert_array']
+__all__ = ['Synapses','invert_array']
 
 class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     '''Set of synapses between two neuron groups
