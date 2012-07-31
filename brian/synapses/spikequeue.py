@@ -44,9 +44,9 @@ Main methods:
     offsets are precomputed or not, and on whether delays are heterogeneous or
     homogeneous.
 """
-from ...monitor import SpikeMonitor
-from ...stdunits import ms
-from ...globalprefs import *
+from brian.monitor import SpikeMonitor
+from brian.stdunits import ms
+from brian.globalprefs import *
 import numpy as np
 from numpy import *
 from pylab import plot,show

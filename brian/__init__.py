@@ -49,6 +49,7 @@ if 'f' in globals(): del f
 
 from clock import *
 from connections import *
+from synapses import *
 from directcontrol import *
 from stateupdater import *
 from monitor import *

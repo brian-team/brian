@@ -1,7 +1,7 @@
 '''
 Synaptic variables.
 '''
-from ...inspection import *
+from brian.inspection import *
 from numpy import *
 import numpy as np
 

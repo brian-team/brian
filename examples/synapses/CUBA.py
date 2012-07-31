@@ -11,7 +11,6 @@ Synapses with zero delays: 5.2 s
 
 from brian import *
 import time
-from brian.experimental.synapses import *
 #log_level_debug()
 #set_global_preferences(useweave=False)
 

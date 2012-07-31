@@ -1,20 +1,20 @@
 '''
 The Synapses class - see BEP-21
 '''
-from ...neurongroup import NeuronGroup
-from ...stdunits import *
-from ...utils.dynamicarray import *
-from ...log import *
+from brian.neurongroup import NeuronGroup
+from brian.stdunits import *
+from brian.utils.dynamicarray import *
+from brian.log import *
 from numpy import *
 from scipy import rand,randn
 from spikequeue import *
 from synapticvariable import *
 import numpy as np
-from ...inspection import *
-from ...equations import *
-from ...optimiser import *
+from brian.inspection import *
+from brian.equations import *
+from brian.optimiser import *
 from numpy.random import binomial
-from ...utils.documentation import flattened_docstring
+from brian.utils.documentation import flattened_docstring
 from random import sample
 from synaptic_equations import *
 import re
