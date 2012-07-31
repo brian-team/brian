@@ -4,8 +4,8 @@ Brian 1.4
 ---------
 [DONE]* Examples from the twister (Romain)
 * Synapses
-	- clean examples (Romain)
-	- move from experimental (Romain)
+	[DONE]- clean examples (Romain)
+	[DONE]- move from experimental (Romain)
 	- some tests? (Marcel)
 	- 2.5 compatibility (Marcel)
 * Saving spikes from a SpikeMonitor

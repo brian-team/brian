@@ -3,9 +3,6 @@ One synapse within several possibilities.
 Synapse from 0->2,3.
 '''
 from brian import *
-from brian.experimental.synapses import *
-
-#log_level_debug()
 
 P=NeuronGroup(2,model='dv/dt=1/(10*ms):1',threshold=1,reset=0)
 Q=NeuronGroup(4,model='v:1')

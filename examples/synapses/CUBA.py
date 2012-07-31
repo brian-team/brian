@@ -11,8 +11,6 @@ Synapses with zero delays: 5.2 s
 
 from brian import *
 import time
-#log_level_debug()
-#set_global_preferences(useweave=False)
 
 start_time = time.time()
 taum = 20 * ms
@@ -38,18 +36,12 @@ Pi = P.subgroup(800)
 we = (60 * 0.27 / 10) * mV # excitatory synaptic weight (voltage)
 wi = (-20 * 4.5 / 10) * mV # inhibitory synaptic weight
 
-if True:
-########### NEW SYNAPSE CODE
-    Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we')
-    Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi')
-    Se[:,:]=0.02
-    Si[:,:]=0.02
-    Se.delay='rand()*ms'
-    Si.delay='rand()*ms'
-else:
-########### OLD CODE
-    Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02, delay=(0*ms,1*ms))
-    Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02, delay=(0*ms,1*ms))
+Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we')
+Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi')
+Se[:,:]=0.02
+Si[:,:]=0.02
+Se.delay='rand()*ms'
+Si.delay='rand()*ms'
 
 P.v = Vr + rand(len(P)) * (Vt - Vr)
 

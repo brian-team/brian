@@ -8,9 +8,7 @@ from both ears, with different delays).
 Romain Brette
 '''
 from brian import *
-from brian.experimental.synapses import *
 from time import time
-set_global_preferences(usecodegen = False)
 
 defaultclock.dt = .02 * ms
 dt = defaultclock.dt
@@ -45,17 +43,11 @@ dv/dt=-v/tau+sigma*(2./tau)**.5*xi : 1
 '''
 neurons = NeuronGroup(N, model=eqs_neurons, threshold=1, reset=0)
 
-if True: #20.3 s
-    synapses = Synapses(ears,neurons,model='w:1',pre='v+=w')
-    synapses[:,:]=True
-    synapses.w=.5
-    synapses.delay[0, :] = linspace(0 * ms, 1.1 * max_delay, N)
-    synapses.delay[1, :] = linspace(0 * ms, 1.1 * max_delay, N)[::-1]    
-else: #19.7 s
-    synapses = Connection(ears, neurons, 'v', structure='dense', delay=True, max_delay=1.1 * max_delay)
-    synapses.connect_full(ears, neurons, weight=.5)
-    synapses.delay[0, :] = linspace(0 * ms, 1.1 * max_delay, N)
-    synapses.delay[1, :] = linspace(0 * ms, 1.1 * max_delay, N)[::-1]
+synapses = Synapses(ears,neurons,model='w:1',pre='v+=w')
+synapses[:,:]=True
+synapses.w=.5
+synapses.delay[0, :] = linspace(0 * ms, 1.1 * max_delay, N)
+synapses.delay[1, :] = linspace(0 * ms, 1.1 * max_delay, N)[::-1]    
 
 spikes = SpikeMonitor(neurons)
 

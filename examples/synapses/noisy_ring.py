@@ -2,7 +2,6 @@
 Integrate-and-fire neurons with noise
 '''
 from brian import *
-from brian.experimental.synapses import *
 
 tau = 10 * ms
 sigma = .5

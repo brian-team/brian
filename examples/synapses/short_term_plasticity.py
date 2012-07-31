@@ -2,7 +2,6 @@
 Example with short term plasticity.
 """
 from brian import *
-from brian.experimental.synapses import *
 
 tau_e = 3 * ms
 taum = 10 * ms
@@ -40,7 +39,6 @@ S=Synapses(input,neuron,
                   x*=(1-u)
                   u+=U*(1-u)''')
 S[:,:]='i==j' # one to one connection
-#S.connect_one_to_one(input,neuron) # equivalent instruction
 S.w=A_SE
 # Initialization of STP variables
 S.x = 1

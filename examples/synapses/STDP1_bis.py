@@ -9,9 +9,7 @@ with DelayConnection: 478 s
 New time: 416 s
 '''
 from brian import *
-from brian.experimental.synapses import *
 from time import time
-set_global_preferences(useweave=False)
 
 N = 1000
 taum = 10 * ms

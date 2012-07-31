@@ -6,9 +6,3 @@ such as:
 * arbitrary STDP rules
 * probabilistic synapses
 * multiple synapses for a given neuron pair
-
-The syntax is described in BEP-21 (dev/BEPS/) and in the docstrings.
-The code is in experimental/synapses.
-
-Please report any bug to the mailing list!
-

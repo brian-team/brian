@@ -4,9 +4,6 @@ Probabilistic synapses
 Seems to work.
 """
 from brian import *
-from brian.experimental.synapses import *
-
-#log_level_debug()
 
 N=20
 tau=5*ms

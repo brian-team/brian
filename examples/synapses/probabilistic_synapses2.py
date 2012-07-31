@@ -3,7 +3,6 @@ Probabilistic synapses - Katz model
 """
 from brian import *
 from numpy.random import binomial
-from brian.experimental.synapses import *
         
 Nin=1000
 Nout=25
@@ -19,11 +18,9 @@ S.w='rand()'
 S.nvesicles=50
 S.p='rand()'
 
-#S=StateMonitor(neuron,'v',record=0)
 S=SpikeMonitor(neurons)
 
 run(1000*ms)
 
-#S.plot()
 raster_plot(S)
 show()

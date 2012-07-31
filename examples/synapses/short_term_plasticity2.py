@@ -3,9 +3,6 @@ Example with short term plasticity,
 with event-driven updates defined by differential equations.
 """
 from brian import *
-from brian.experimental.synapses import *
-
-#log_level_debug()
 
 tau_e = 3 * ms
 taum = 10 * ms

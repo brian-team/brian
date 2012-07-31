@@ -3,18 +3,8 @@ Spike-timing dependent plasticity
 Adapted from Song, Miller and Abbott (2000) and Song and Abbott (2001)
 
 This simulation takes a long time!
-
-Works!
-
-Original time: 278 s
-with DelayConnection: 478 s
-
-* New time: 479 s
-* with precomputed offsets: 444 s
-* with fixed delays: 454 s (?)
 '''
 from brian import *
-from brian.experimental.synapses import *
 from time import time
 
 N = 1000

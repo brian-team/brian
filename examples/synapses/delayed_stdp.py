@@ -3,7 +3,6 @@ Delayed STDP
 '''
 from brian import *
 import time
-from brian.experimental.synapses import *
 
 N = 1
 taum = 10 * ms

@@ -3,7 +3,6 @@ Monitoring synaptic variables.
 STDP example.
 """
 from brian import *
-from brian.experimental.synapses import *
 from time import time
 
 N = 1000

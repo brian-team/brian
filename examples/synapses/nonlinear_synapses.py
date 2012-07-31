@@ -3,7 +3,6 @@ NMDA synapses
 """
 from brian import *
 import time
-from brian.experimental.synapses import *
 
 a=1/(10*ms)
 b=1/(10*ms)

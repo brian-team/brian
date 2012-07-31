@@ -2,7 +2,6 @@
 Neurons with gap junctions
 '''
 from brian import *
-from brian.experimental.synapses import *
 
 N = 10
 v0=1.05

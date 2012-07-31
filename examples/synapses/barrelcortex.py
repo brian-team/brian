@@ -14,7 +14,6 @@ With Synapses: 4m36 s
 '''
 from brian import *
 import time
-from brian.experimental.synapses import *
 
 # Uncomment if you have a C compiler
 # set_global_preferences(useweave=True,usecodegen=True,usecodegenweave=True,usenewpropagate=True,usecstdp=True)

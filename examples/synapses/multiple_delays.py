@@ -2,7 +2,6 @@
 Multiple delays
 '''
 from brian import *
-from brian.experimental.synapses import *
 
 P=NeuronGroup(1,model='dv/dt=1/(20*ms):1',threshold=1,reset=0)
 Q=NeuronGroup(1,model='v:1')

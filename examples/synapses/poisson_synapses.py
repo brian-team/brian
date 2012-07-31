@@ -7,7 +7,6 @@ You could also just use many :class:`PoissonGroup` objects as inputs, but this
 is very slow and memory consuming.    
 '''
 from brian import *
-from brian.experimental.synapses import Synapses
 
 # Poisson inputs
 M = 1000 # number of Poisson inputs
