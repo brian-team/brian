@@ -621,6 +621,8 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             import timedarray
         if isinstance(val, timedarray.TimedArray):
             self.set_var_by_array(name, val)
+        elif hasattr(self, 'staticvars') and var in self.staticvars:
+            raise ValueError("Cannot assign static variable "+name)            
         elif isinstance(val, LinkedVar):
             self.link_var(name, val.source, val.var, val.func, val.when, val.clock)
         elif hasattr(val,"synapses") and not isinstance(val,Equations): # a synaptic variable
