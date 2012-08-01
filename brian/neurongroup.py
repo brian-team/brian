@@ -167,6 +167,8 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         string, giving the name of a state variable in the group. In the case
         of these variable refractory periods, you should specify
         ``min_refractory`` (optional) and ``max_refractory`` (required).
+    ``level=0``
+        See :class:`Equations` for details.
     ``clock``
         A clock to use for scheduling this :class:`NeuronGroup`, if omitted the
         default clock will be used.

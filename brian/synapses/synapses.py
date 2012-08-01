@@ -36,24 +36,25 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     
     Initialised with arguments:
     
-    ``source''
-        The source NeuronGroup.
-    ``target=None''
-        The target NeuronGroup. By default, target=source.
-    ``model=None''
+    ``source``
+        The source :class:`NeuronGroup`.
+    ``target=None``
+        The target :class:`NeuronGroup`. By default, target=source.
+    ``model=None``
         The equations that defined the synaptic variables, as an Equations object or a string.
-        The syntax is the same as for a NeuronGroup.
-    ``pre=None''
+        The syntax is the same as for a :class:`NeuronGroup`.
+    ``pre=None``
         The code executed when presynaptic spikes arrive at the synapses.
         There can be multiple presynaptic codes, passed as a list or tuple of strings.
-    ``post=None''
+    ``post=None``
         The code executed when postsynaptic spikes arrive at the synapses.
-    ``max_delay=0*ms''
+    ``max_delay=0*ms``
         The maximum pre and postsynaptic delay. This is only useful if the delays can change
         during the simulation.
-    ``level=0''
-    ``clock=None''
-        The clock for updating synaptic state variables according to ``model''.
+    ``level=0``
+        See :class:`Equations` for details.
+    ``clock=None``
+        The clock for updating synaptic state variables according to ``model``.
         Currently, this must be identical to both the source and target clocks.
     ``compile=False``
         Whether or not to attempt to compile the differential equation
@@ -74,7 +75,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     ``implicit=False``
         Whether to use an implicit method for solving the differential
         equations. TODO: more details.
-    ``code_namespace=None''
+    ``code_namespace=None``
         Namespace for the pre and post codes.
         
     **Methods**
@@ -83,9 +84,10 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
 
         Returns the vector of values for state
         variable ``var``, with length the number of synapses. The
-        vector is an instance of class ``SynapticVariable''.
+        vector is an instance of class :class:`SynapticVariable`.
         
     .. method:: synapse_index(i)
+
         Returns the synapse indexes correspond to i, which can be a tuple or a slice.
         If i is a tuple (m,n), m and n can be an integer, an array, a slice or a subgroup.
     
@@ -96,41 +98,41 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
     Attributes:
     
-    ``delay''
+    ``delay``
         The presynaptic delays for all synapses (synapse->delay). If there are multiple
         presynaptic delays (multiple pre codes), this is a list.
-    ``delay_pre''
-        Same as ``delay''.
-    ``delay_post''
+    ``delay_pre``
+        Same as ``delay``.
+    ``delay_post``
         The postsynaptic delays for all synapses (synapse->delay post).
-    ``lastupdate''
+    ``lastupdate``
         The time of last update of all synapses (synapse->last update). This
         only exists if there are dynamic synaptic variables.
     
     Internal attributes:
     
-    ``source''
+    ``source``
         The source neuron group.
-    ``target''
+    ``target``
         The target neuron group.
-    ``_S''
+    ``_S``
         The state matrix (a 2D dynamical array with values of synaptic variables).
         At run time, it is transformed into a static 2D array (with compress()).
-    ``presynaptic''
+    ``presynaptic``
         The (dynamic) array of presynaptic neuron indexes for all synapses (synapse->i).
-    ``postsynaptic''
+    ``postsynaptic``
         The array of postsynaptic neuron indexes for all synapses (synapse->j).
-    ``synapses_pre''
+    ``synapses_pre``
         A list of (dynamic) arrays giving the set of synapse indexes for each presynaptic neuron i
         (i->synapses)
-    ``synapses_post''
+    ``synapses_post``
         A list of (dynamic) arrays giving the set of synapse indexes for each postsynaptic neuron j
         (j->synapses)
-    ``queues''
+    ``queues``
         List of SpikeQueues for pre and postsynaptic spikes.
-    ``codes''
+    ``codes``
         The compiled codes to be executed on pre and postsynaptic spikes.
-    ``namespaces''
+    ``namespaces``
         The namespaces for the pre and postsynaptic codes.
     '''
     def __init__(self, source, target = None, model = None, pre = None, post = None,

@@ -9,39 +9,39 @@ __all__=['SynapticVariable','SynapticDelayVariable','slice_to_array']
 
 class SynapticVariable(object):
     '''
-    A vector of synaptic variables that is returned by Synapses.__getattr__,
+    A vector of synaptic variables that is returned by :meth:`Synapses.__getattr__`,
     and that can be subscripted with 2 or 3 arguments.
     
-    Example usages, where ``S'' is Synapses object:
+    Example usages, where ``S`` is Synapses object:
     
-    ``S.w[12]''
+    ``S.w[12]``
         Value of variable w for synapse 12. 
-    ``S.w[1,3]''
+    ``S.w[1,3]``
         Value of variable w for synapses from neuron 1 to neuron 3. This is an array,
         as there can be several synapses for a given neuron pair (e.g. with different
         delays)
-    ``S.w[1,3,4]''
+    ``S.w[1,3,4]``
         Value of variable w for synapse 4 from neuron 1 to neuron 3.
         
     Indexes can be integers, slices, arrays or groups.
     
     Synaptic variables can be assigned values as follows:
     
-    ``S.w[P,Q]=x''
+    ``S.w[P,Q]=x``
         where x is a float or a 1D array. The number of elements in the array must
         equal the number of selected synapses.
-    ``S.w[P,Q]=s''
+    ``S.w[P,Q]=s``
         where s is a string. The string is Python code that is executed in a single
-        vectorised operation, where ``i'' is the presynaptic neuron index (a vector
-        of length the number of synapses), ``j'' is the postsynaptic neuron index and
-        ``n'' is the number of synapses. The methods ``rand'' and ``randn'' return
+        vectorised operation, where ``i`` is the presynaptic neuron index (a vector
+        of length the number of synapses), ``j`` is the postsynaptic neuron index and
+        ``n`` is the number of synapses. The methods ``rand`` and ``randn`` return
         arrays of n random values.
         
     Initialised with arguments:
 
-    ``data''
+    ``data``
         Vector of values.
-    ``synapses''
+    ``synapses``
         The Synapses object.
     '''
     def __init__(self,data,synapses,name):
@@ -85,8 +85,8 @@ class SynapticVariable(object):
 class SynapticDelayVariable(SynapticVariable):
     '''
     A synaptic variable that is a delay.
-    The main difference with SynapticVariable is that
-    delays are stored as integers (timebins) but
+    The main difference with :class:`~brian.synapses.synapticvariable.SynapticVariable`
+    is that delays are stored as integers (timebins) but
     accessed as absolute times (in seconds).
     
     TODO: pass the clock as argument.

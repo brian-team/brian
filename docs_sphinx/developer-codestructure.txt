@@ -46,7 +46,7 @@ user network operation calls):
 * Push spikes into :class:`SpikeContainer`
 * Propagate spikes (possibly with delays) via :class:`Connection`
 * Update state variables of :class:`Synapses` (possibly includes updating the 
-  state of targeted :class:`NeuronGroup`s
+  state of targeted :class:`NeuronGroup` objects
 * Call reset function on neurons which have spiked
 
 Details of network construction

@@ -61,25 +61,25 @@ class SpikeQueue(SpikeMonitor):
     
     Initialised with arguments:
 
-    ``source''
+    ``source``
         The neuron group that sends spikes.
-    ``synapses''
+    ``synapses``
         A list of synapses (synapses[i]=array of synapse indexes for neuron i).
-    ``delays''
+    ``delays``
         An array of delays (delays[k]=delay of synapse k).  
-    ``max_delay=0*ms''
+    ``max_delay=0*ms``
         The maximum delay (in second) of synaptic events. At run time, the
-        structure is resized to the maximum delay in ``delays'', and thus
-        the ``max_delay'' should only be specified if delays can change
+        structure is resized to the maximum delay in ``delays``, and thus
+        the ``max_delay`` should only be specified if delays can change
         during the simulation (in which case offsets should not be
         precomputed).
-    ``maxevents = INITIAL_MAXSPIKESPER_DT''
+    ``maxevents = INITIAL_MAXSPIKESPER_DT``
         The initial size of the queue for each timestep. Note that the data
         structure automatically grows to the required size, and therefore this
         option is generally not useful.
-    ``precompute_offsets = True''
+    ``precompute_offsets = True``
         A flag to precompute offsets. By default, offsets (an internal array
-        derived from ``delays'', used to insert events in the data structure,
+        derived from ``delays``, used to insert events in the data structure,
         see below)
         are precomputed for all neurons, the first time the object is run.
         This usually results in a speed up but takes memory, which is why it
@@ -87,13 +87,13 @@ class SpikeQueue(SpikeMonitor):
 
     **Data structure** 
     
-    A spike queue is implemented as a 2D array ``X'' that is circular in the time
+    A spike queue is implemented as a 2D array ``X`` that is circular in the time
     direction (rows) and dynamic in the events direction (columns). The
-    row index corresponding to the current timestep is ``currentime''.
+    row index corresponding to the current timestep is ``currentime``.
     Each element contains the target synapse index.
 
-    The class is implemented as a SpikeMonitor, so that the propagate() method
-    is called at each timestep (of the monitored group).
+    The class is implemented as a :class:`SpikeMonitor`, so that the propagate()
+    method is called at each timestep (of the monitored group).
     
     **Methods**
             
@@ -112,7 +112,7 @@ class SpikeQueue(SpikeMonitor):
         delays will not change during the simulation. If they do (between two
         runs for example), then this method can be called.
     
-    ** Offsets **
+    **Offsets**
     
     Offsets are used to solve the problem of inserting multiple synaptic events with the
     same delay. This is difficult to vectorise. If there are n synaptic events with the same
@@ -243,13 +243,13 @@ class SpikeQueue(SpikeMonitor):
         '''
         Vectorised insertion of spike events.
         
-        ``delay''
+        ``delay``
             Delays in timesteps (array).
             
-        ``target''
+        ``target``
             Target synaptic indexes (array).
             
-        ``offset''
+        ``offset``
             Offsets within timestep (array). If unspecified, they are calculated
             from the delay array.
         '''
@@ -277,10 +277,10 @@ class SpikeQueue(SpikeMonitor):
         '''
         Inserts events at a fixed delay.
         
-        ``delay''
+        ``delay``
             Delay in timesteps (scalar).
             
-        ``target''
+        ``target``
             Target synaptic indexes (array).
         '''
         timestep = (self.currenttime + delay) % len(self.n)
@@ -296,7 +296,7 @@ class SpikeQueue(SpikeMonitor):
         '''
         Resizes the underlying data structure (number of columns = spikes per dt).
         
-        ``maxevents''
+        ``maxevents``
             The new number of columns.It will be rounded to the closest power of 2.
         '''
         # old and new sizes
@@ -336,10 +336,10 @@ class SpikeQueue(SpikeMonitor):
         '''
         Insertion of events using weave.
 
-        ``delay''
+        ``delay``
             Delays in timesteps (array).
             
-        ``target''
+        ``target``
             Target synaptic indexes (array).
         '''
         # Check if we can fit the events (crude check)

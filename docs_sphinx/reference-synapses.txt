@@ -1,0 +1,18 @@
+.. currentmodule:: brian
+
+Synapses
+--------
+
+The :class:`Synapses` class was introduced in Brian version 1.4 and can be used
+to define everything around synaptic interactions. It can replace the
+:class:`Connection` class but is much more flexible, in particular it allows to
+directly incorporate descriptions of synaptic plasticity.
+See section :ref:`usermanual-synapses` in the user manual for
+instructions how to use the class.
+
+.. autoclass:: Synapses
+.. autoclass:: SynapticEquations
+.. autoclass:: brian.synapses.synapticvariable.SynapticVariable
+.. autoclass:: brian.synapses.synapticvariable.SynapticDelayVariable
+.. autoclass:: brian.synapses.spikequeue.SpikeQueue
+ 

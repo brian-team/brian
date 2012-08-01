@@ -16,6 +16,7 @@ For an overview of Brian, see the :ref:`user-manual` section.
     reference-standard-groups
     reference-connections
     reference-plasticity
+    reference-synapses
     reference-network
     reference-monitors
     reference-plotting

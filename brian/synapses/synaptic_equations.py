@@ -12,10 +12,10 @@ __all__=['SynapticEquations']
 class SynapticEquations(Equations):
     '''
     Equations for the Synapses class.
-    The only difference with Equations is that differential equations can
-    be marked for an event-driven implementation, e.g.:
+    The only difference with :class:`Equations` is that differential equations
+    can be marked for an event-driven implementation, e.g.:
     
-    dx/dt=-x/tau : 1 (event-driven)
+    ``dx/dt=-x/tau : 1 (event-driven)``
     '''
     def __init__(self, expr='', level=0, **kwds):
         self._eventdriven={} # dictionary event driven variables (RHS)

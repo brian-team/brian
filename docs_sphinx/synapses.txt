@@ -1,5 +1,7 @@
 .. currentmodule:: brian
 
+.. _usermanual-synapses:
+
 Synapses
 ========
 
@@ -229,7 +231,7 @@ creates a monitor for variable ``w`` for the synapses 0 and 1::
 	M = StateMonitor(S,'w',record=[0,1])
 
 Note that these are synapse indexes, not neuron indexes.
-These can be obtained with the :meth:`synapse_index` method::
+These can be obtained with the :meth:`~Synapses.synapse_index` method::
 
 	s=S.synapse_index((i,j))
 
