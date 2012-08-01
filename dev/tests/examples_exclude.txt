@@ -28,10 +28,13 @@ Fig1C.py
 
 # Needs graphics
 realtime_plotting.py
+PierreYger.py
+Rossant_et_al_2011.py
 
 # Need pygame
 artificial_vowels.py
 sounds.py
+anonymous.py
 
 # Need playdoh
 offline_electrode_compensation.py
