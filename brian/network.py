@@ -31,31 +31,30 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 # ----------------------------------------------------------------------------------
-# 
+#
+import copy
+import gc
+import magic
+import time
+from collections import defaultdict
+from itertools import chain
+from operator import isSequenceType
+from inspect import *
+ 
+from brian.base import *
+from brian.clock import guess_clock, Clock
+from brian.connections import *
+from brian.globalprefs import *
+from brian.neurongroup import NeuronGroup
+from brian.units import second
+from brian.utils.progressreporting import *
+
 '''
 Network class
 '''
 __all__ = ['Network', 'MagicNetwork', 'NetworkOperation', 'network_operation', 'run',
            'reinit', 'stop', 'clear', 'forget', 'recall']
 
-from Queue import Queue
-from connections import *
-from neurongroup import NeuronGroup
-from clock import guess_clock, Clock
-import magic
-from inspect import *
-from operator import isSequenceType
-import types
-from itertools import chain
-from collections import defaultdict
-import copy
-from base import *
-from units import second
-import time
-from utils.progressreporting import *
-from globalprefs import *
-import gc
-import heapq
 
 globally_stopped = False
 
@@ -363,6 +362,7 @@ class Network(object):
                           'ops before_connections',
                           'connections',
                           'ops after_connections',
+                          'synapses',
                           'ops before_resets',
                           'resets',
                           'ops after_resets',
@@ -382,6 +382,7 @@ class Network(object):
                           'ops before_connections',
                           'connections',
                           'ops after_connections',
+                          'synapses',
                           'ops end'
                           ]
         self._build_update_schedule()
@@ -402,6 +403,10 @@ class Network(object):
             Calls the 'do_propagate' function of each connection in
             turn, this is typically propagating spikes forward (and
             backward in the case of STDP).
+        'synapses'
+            Calls the 'update' function of each synapse in turn, this
+            may include both updating the state of the synapse as well
+            as altering the state of groups targeted by the synapse.
         'resets'
             Calls the 'reset' function of each group in turn.
         'ops '+name
@@ -456,9 +461,18 @@ class Network(object):
             # we define some simple names for common schedule items
             if isinstance(item, str):
                 if item == 'groups':
-                    objset = self.groups
+                    # we can't directly do something like checking for
+                    # isinstance(group, Synapses) here, as this would lead to
+                    # a circular import
+                    objset = [group for group in self.groups
+                              if not hasattr(group, 'presynaptic')]
                     objfun = 'update'
                     allclocks = False
+                elif item == 'synapses':
+                    objset = [group for group in self.groups
+                              if hasattr(group, 'presynaptic')]
+                    objfun = 'update'
+                    allclocks = False    
                 elif item == 'resets':
                     objset = self.groups
                     objfun = 'reset'

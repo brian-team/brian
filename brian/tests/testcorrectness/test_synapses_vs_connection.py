@@ -1,8 +1,6 @@
 '''
 Make sure that the Synapses class does the same thing as the Connection class.
 '''
-from nose import SkipTest
-
 from brian import *
 
 def assert_same_voltage(mon, N):
@@ -14,10 +12,7 @@ def assert_same_voltage(mon, N):
         assert (mon[index] == mon[N + index]).all()            
 
 def test_without_delays():
-    ''' Compare connection via Connection class and via Synapses class.'''
-    
-    raise SkipTest()
-
+    ''' Compare connection via Connection class and via Synapses class.'''    
     reinit_default_clock()
     
     N = 10
@@ -46,10 +41,7 @@ def test_with_constant_delays():
     '''
     Compare connection via Connection class and via Synapses class using
     homogeneous delays.
-    '''
-
-    raise SkipTest()
-        
+    '''      
     reinit_default_clock()
     
     N = 10
@@ -69,7 +61,6 @@ def test_with_constant_delays():
     syn = Synapses(source, target_syn, model='w:1', pre='v+=w', max_delay=delay)    
     syn.connect_one_to_one(source, target_syn)
     syn.w = 1.1
-    print syn._pre_delays
     syn.delay = delay
     
     mon = StateMonitor(targets, 'v', record=True)
@@ -81,9 +72,6 @@ def test_with_variable_delays():
     Compare connection via Connection class and via Synapses class using
     heterogeneous delays.
     '''    
-
-    raise SkipTest()
-
     reinit_default_clock()
     
     N = 10

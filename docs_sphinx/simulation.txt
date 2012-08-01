@@ -15,6 +15,7 @@ When a simulation is run, the operations are done in the following order by defa
 
 #. Update every :class:`NeuronGroup`, this typically performs an integration time step for the differential equations defining the neuron model.
 #. Check the threshold condition and propagate the spikes to the target neurons.
+#. Update every :class:`Synapses`, this may include updating the state of targeted :class:`NeuronGroup`s
 #. Reset all neurons that spiked.
 #. Call all user-defined operations and state monitors.
 
