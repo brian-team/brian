@@ -914,6 +914,9 @@ def invert_array(x,dtype=int):
     Returns a dictionary y of N int arrays such that:
     y[i]=set of j such that x[j]==i
     '''
+    if len(x) == 0:
+        return {}
+
     I = np.argsort(x) # ,kind='mergesort') # uncomment for a stable sort
     xs = x[I]
     # This below does the same as unique, except the indices point to first time

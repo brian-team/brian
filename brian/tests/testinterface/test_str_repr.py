@@ -86,5 +86,9 @@ def test_str_repr():
                        f : Hz # parameter''')
     assert_str_repr(eqs)
 
+    # Synapses
+    syn = Synapses(group, model='w:1', pre='v+=w')
+    assert_str_repr(syn)
+
 if __name__ == '__main__':
     test_str_repr()
