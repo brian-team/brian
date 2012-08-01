@@ -2,6 +2,7 @@
 Make sure that the Synapses class does the same thing as the Connection class.
 '''
 from brian import *
+from brian.tests import repeat_with_global_opts
 
 def assert_same_voltage(mon, N):
     '''
@@ -11,6 +12,7 @@ def assert_same_voltage(mon, N):
     for index in range(N):
         assert (mon[index] == mon[N + index]).all()            
 
+@repeat_with_global_opts([{'useweave': False}, {'useweave': True}])
 def test_without_delays():
     ''' Compare connection via Connection class and via Synapses class.'''    
     reinit_default_clock()
@@ -37,6 +39,7 @@ def test_without_delays():
     assert_same_voltage(mon, N)
 
 
+@repeat_with_global_opts([{'useweave': False}, {'useweave': True}])
 def test_with_constant_delays():
     '''
     Compare connection via Connection class and via Synapses class using
@@ -66,7 +69,8 @@ def test_with_constant_delays():
     mon = StateMonitor(targets, 'v', record=True)
     run(duration)
     assert_same_voltage(mon, N)
-    
+
+@repeat_with_global_opts([{'useweave': False}, {'useweave': True}])
 def test_with_variable_delays():
     '''
     Compare connection via Connection class and via Synapses class using
