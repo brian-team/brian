@@ -1,5 +1,6 @@
 TODO
 ----
+* Test with Neuron: use PyNeuron on linux (Dodge & Cooley?)
 * Insert Remy's code (especially domain decomposition to deal with branches)
 * Cm should be (optionally) a distributed variable (for myeline). It could be done simply by a check
 that Cm is in the equations (if Cm=None, then we use the distributed variable).
@@ -9,4 +10,5 @@ that Cm is in the equations (if Cm=None, then we use the distributed variable).
 * One thing is missing the Morphology: the position of the current branch in the
   big matrix (Note: all other variables, length etc, are views on the big matrix,
   for the current branch).
+ * GPU
  
