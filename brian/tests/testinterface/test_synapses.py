@@ -214,7 +214,108 @@ def test_construction_and_access():
     assert (syn.w[:, 4] == 0.25).all()
     assert (syn.delay[:, 4] == 1 * ms).all()
 
+################################################################################
+# Low level unit tests, test single helper functions
+from brian.synapses.synapticvariable import slice_to_array
+# avoid nose picking up on slice_to_test as a test_function
+from brian.synapses.synapses import slice_to_test as slice_to_t
+from brian.synapses.synapses import invert_array, smallest_inttype, indent
+
+
+def test_slice_to_array():
+    '''
+    Test the slice_to_array function (converts a slice to the corresponding
+    array of integers).
+    '''
+    # test special cases: array, sequence, int
+    assert (slice_to_array(42) == np.array([42])).all()
+    assert (slice_to_array([23, 42]) == np.array([23, 42])).all()
+    assert (slice_to_array(np.array([23, 42])) == np.array([23, 42])).all()
+    assert (slice_to_array(slice(0, 5)) == np.arange(0, 5)).all()
+    assert (slice_to_array(slice(2, 5)) == np.arange(2, 5)).all()
+    assert (slice_to_array(slice(2, None), N=5) == np.arange(2, 5)).all()
+    assert (slice_to_array(slice(2, 5, 2)) == np.arange(2, 5, 2)).all()
+    assert (slice_to_array(slice(2, -1, 2), N=10) == np.arange(2, 9, 2)).all()
+
+
+def test_slice_to_test():
+    '''
+    Test the slice_to_test function (converts a slice to a corresponding function,
+    returning True in case an index is in the given slice).
+    '''    
+    testfun = slice_to_t(5)
+    assert testfun(5) and not testfun(4)
+    
+    testfun = slice_to_t(slice(None, 5))
+    assert all([testfun(x) for x in xrange(5)])
+    assert not testfun(5)
+    
+    testfun = slice_to_t(slice(0, 5))
+    assert all([testfun(x) for x in xrange(5)])
+    assert not testfun(5)
+
+    testfun = slice_to_t(slice(0, 10, 2))
+    assert all([testfun(x) for x in xrange(0, 10, 2)])
+    assert not testfun(1)
+    assert not testfun(10)
+
+    testfun = slice_to_t(slice(0, None, 2))
+    assert all([testfun(x) for x in xrange(0, 10, 2)])
+    assert not testfun(1)
+
+
+def test_invert_array():
+    '''
+    Test the invert_array function.
+    '''
+    assert invert_array(np.array([])) == {}
+    
+    test_ar = np.array([0, 4, 4, 1, 0, 0])
+    inverted_array = invert_array(test_ar)
+    # The inverted_array function does not guarantee sorted arrays
+    for key in inverted_array:
+        inverted_array[key].sort()
+    
+    assert len(inverted_array) == 3
+    assert (inverted_array[0] == np.array([0, 4, 5])).all()
+    assert (inverted_array[4] == np.array([1, 2])).all()
+    assert (inverted_array[1] == np.array([3])).all()
+
+
+def test_smallest_inttype():
+    '''
+    Test the smallest_inttype function (returning the smallest signed integer
+    type that can represent a certain number)
+    '''
+    values = [2**n-1 for n in xrange(1, 36)]
+    values.extend([2**n for n in xrange(1, 36)])
+    for value in values:
+        # only checks for whether the type is big enough, not whether it is the
+        # smallest possible type
+        inttype = smallest_inttype(value)
+        assert inttype(value) == value
+
+def test_indent():
+    '''
+    Tests the indent function.
+    '''
+    assert indent('some text') == '    some text'
+    assert indent('some text', 2) == '        some text'
+    assert indent('    some text') == '        some text'
+    before_text='''
+some text
+more text
+'''
+    after_text='''
+    some text
+    more text
+    '''
+    assert indent(before_text) == after_text
+    
 if __name__ == '__main__':
     test_construction_single_synapses()
     test_construction_multiple_synapses()
     test_construction_and_access()
+    test_slice_to_array()
+    test_slice_to_test()
+    test_smallest_inttype()
