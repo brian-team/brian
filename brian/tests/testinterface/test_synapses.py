@@ -217,8 +217,11 @@ def test_construction_and_access():
 ################################################################################
 # Low level unit tests, test single helper functions
 from brian.synapses.synapticvariable import slice_to_array
+
 # avoid nose picking up on slice_to_test as a test_function
 from brian.synapses.synapses import slice_to_test as slice_to_t
+slice_to_t.__name__ = 'slice_to_t'
+
 from brian.synapses.synapses import invert_array, smallest_inttype, indent
 
 
@@ -302,14 +305,10 @@ def test_indent():
     assert indent('some text') == '    some text'
     assert indent('some text', 2) == '        some text'
     assert indent('    some text') == '        some text'
-    before_text='''
-some text
-more text
-'''
-    after_text='''
-    some text
-    more text
-    '''
+    before_text='''some text
+more text'''
+    after_text='''    some text
+    more text'''
     assert indent(before_text) == after_text
     
 if __name__ == '__main__':
@@ -319,3 +318,4 @@ if __name__ == '__main__':
     test_slice_to_array()
     test_slice_to_test()
     test_smallest_inttype()
+    test_indent()
