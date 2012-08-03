@@ -3,6 +3,7 @@ from brian.utils.approximatecomparisons import *
 from nose.tools import *
 
 def test_poissongroup():
+    ''' Test PoissonGroup '''
     reinit_default_clock()
 
     # PoissonGroup with fixed rate, test that basic state setting works
@@ -90,7 +91,39 @@ def test_linked_var():
     assert(sum(abs(2 * mon1[0] - mon2[0])) == 0)    
     
 
+def test_variable_setting():
+    '''
+    Test that assigning to state variables and parameters works but assigning
+    to static equations is forbidden.
+    '''
+    eqs = '''
+    dv/dt = -v / tau : 1
+    vsquared = v ** 2 : 1
+    v_alias = v
+    tau : second
+    tau_alias = tau
+    '''
+    G = NeuronGroup(1, model=eqs)
+    # Assigning to a state (differential equation)
+    G.v = 0.25
+    assert G.v == 0.25 and G.v_alias == 0.25
+    # indirectly via an alias
+    G.v_alias = 0.5
+    assert G.v == 0.5 and G.v_alias == 0.5
+    # Assigning to a parameter
+    G.tau = 5 * ms
+    assert G.tau == 5 * ms and G.tau_alias == 5 * ms
+    # via an alias
+    G.tau_alias = 50 * ms
+    assert G.tau == 50 * ms and G.tau_alias == 50 * ms
+
+    # assert that assigning to a static equation does not work
+    def assign_to_static():
+        G.vsquared = 2
+    assert_raises(ValueError, assign_to_static)
+
 
 if __name__ == '__main__':
     test_poissongroup()
     test_linked_var()
+    test_variable_setting()

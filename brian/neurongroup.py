@@ -621,8 +621,14 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         global timedarray
         if timedarray is None:
             import timedarray
+
+        # make sure we are only handing resolved names        
+        if hasattr(self, '_eqs') and name in self._eqs._alias:
+            self.__setattr__(self._eqs._alias[name], val)
+            return
+
         if isinstance(val, timedarray.TimedArray):
-            self.set_var_by_array(name, val)
+            self.set_var_by_array(name, val)        
         elif hasattr(self, 'staticvars') and name in self.staticvars:
             raise ValueError("Cannot assign static variable "+name)            
         elif isinstance(val, LinkedVar):
