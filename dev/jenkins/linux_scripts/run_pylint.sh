@@ -1,1 +1,1 @@
-pylint --output-format=parseable --reports=y --ignore=tests brian > pylint.log || :
+pylint --rcfile=dev/jenkins/pylint.rc brian > pylint.log || :
