@@ -4,7 +4,9 @@ Tests various ways of constructing synapses.
 from nose.tools import assert_raises
 import numpy as np
 
-from brian.synapses import Synapses
+from brian.network import Network
+from brian.clock import defaultclock
+from brian.synapses import Synapses, SynapticEquations
 from brian.neurongroup import NeuronGroup
 from brian.threshold import NoThreshold
 from brian.stdunits import ms
@@ -28,6 +30,12 @@ def test_construction_single_synapses():
     # create all-to-all connections
     syn[:, :] = True
     assert len(syn) == 10 * 10
+    
+    # deleting a synapse should not work
+    def delete_synapse():
+        syn[0, 0] = False
+    assert_raises(ValueError, delete_synapse)
+    
     # set the weights
     syn.w[:, :] = 2
     # set the delays
@@ -39,7 +47,7 @@ def test_construction_single_synapses():
     all_delays = np.array([syn.delay[i, j] for i in xrange(len(subgroup1))
                          for j in xrange(len(subgroup2))])
     assert (all_delays == 1 * ms).all()
-
+    
     # create one-to-one connections
     syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
     syn[:, :] = 'i == j'
@@ -51,7 +59,14 @@ def test_construction_single_synapses():
                 assert syn.w[i, j] == 2
             else:                
                 assert len(syn.w[i, j]) == 0
-
+    
+    net = Network(G, syn)
+    net.run(defaultclock.dt)
+    # adding synapses should not work after the simulation has already been run
+    def adding_a_synapse():
+        syn[0, 1] = True
+    assert_raises(AttributeError, adding_a_synapse)
+    
     syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
     syn.connect_one_to_one(subgroup1, subgroup2)
     syn.w[:, :] = 2
@@ -214,6 +229,70 @@ def test_construction_and_access():
     assert (syn.w[:, 4] == 0.25).all()
     assert (syn.delay[:, 4] == 1 * ms).all()
 
+def test_model_definition():
+    ''' Tests various ways of defining models.
+    Note that this test only checks for whether the interface accepts what it
+    is supposed to accept, not whether the Synapses class actually does what
+    it is supposed to do... '''
+    G = NeuronGroup(1, model='v:1', threshold=NoThreshold())
+    
+    # model, pre and post string
+    syn = Synapses(G, model='w:1', pre='v+=w', post='v+=w')
+    # list of pre codes
+    syn = Synapses(G, model='w:1', pre=['v+=w', 'v+=1'])
+    
+    # an equation object
+    model = SynapticEquations('w:1')
+    syn = Synapses(G, model=model, pre='v+=w')
+    
+    ############################################################################
+    # Some more complex examples from the docs
+    ############################################################################
+    
+    # event-driven simulations
+    
+    model='''w:1
+             dApre/dt=-Apre/taupre : 1 (event-driven)
+             dApost/dt=-Apost/taupost : 1 (event-driven)'''
+    syn = Synapses(G, model=model)
+    
+    model ='''w : 1
+              p : 1'''
+    syn = Synapses(G, model=model, pre="v+=w*(rand()<p)")
+    
+    syn = Synapses(G,
+                   model='''x : 1
+                            u : 1
+                            w : 1''',
+                    pre='''u=U+(u-U)*exp(-(t-lastupdate)/tauf)
+                           x=1+(x-1)*exp(-(t-lastupdate)/taud)
+                           i+=w*u*x
+                           x*=(1-u)
+                           u+=U*(1-u)''')
+    
+    # lumped variables
+    a = 1 / (10 * ms)
+    b = 1 / (20 * ms)
+    c = 1 / (30 * ms)
+    neurons = NeuronGroup(1, model="""dv/dt=(gtot-v)/(10*ms) : 1
+                                  gtot : 1""")
+    S=Synapses(neurons,
+               model='''dg/dt=-a*g+b*x*(1-g) : 1
+                    dx/dt=-c*x : 1
+                    w : 1 # synaptic weight
+                 ''',
+                 pre='x+=w')    
+    neurons.gtot = S.g
+    
+    v0 = 0
+    tau = 5 * ms
+    neurons = NeuronGroup(1, model='''dv/dt=(v0-v+Igap)/tau : 1
+                                      Igap : 1''')
+    S=Synapses(neurons, model='''w:1 # gap junction conductance
+                                 Igap=w*(v_pre-v_post): 1''')
+    neurons.Igap = S.Igap
+
+
 ################################################################################
 # Low level unit tests, test single helper functions
 from brian.synapses.synapticvariable import slice_to_array
@@ -315,6 +394,7 @@ if __name__ == '__main__':
     test_construction_single_synapses()
     test_construction_multiple_synapses()
     test_construction_and_access()
+    test_model_definition()
     test_slice_to_array()
     test_slice_to_test()
     test_smallest_inttype()
