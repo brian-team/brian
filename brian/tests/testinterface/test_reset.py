@@ -10,7 +10,10 @@ from brian.tests import repeat_with_global_opts
                           {'useweave': True, 'usecodegen': False}, 
                           # use Python code generation
                           {'useweave': False, 'usecodegen': True,
-                           'usecodegenreset': True}
+                           'usecodegenreset': True},
+                          # use C code generation
+                          {'useweave': True, 'usecodegen': True,
+                           'usecodegenreset': True, 'usecodegenweave': True}                          
                           ])
 def test():
     """

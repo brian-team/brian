@@ -27,9 +27,12 @@ def generate_c_reset(eqs, inputcode, vartype='double', level=0, ns=None):
     for line in inputcode.split('\n'):
         line = line.strip()
         if line:
-            line = freeze(line, all_variables, ns)
-            line = c_single_statement(line)
-            code += '    ' + line + '\n'
+            # handle multiple statements in one line
+            statements = line.split(';')
+            for statement in statements:
+                statement = freeze(statement.strip(), all_variables, ns)      
+                statement = c_single_statement(statement)
+                code += '    ' + line + '\n'
     code += '}\n'
     return code
 
