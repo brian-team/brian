@@ -3,6 +3,7 @@ from nose.tools import *
 from operator import itemgetter
 from brian.utils.approximatecomparisons import is_approx_equal
 from brian.tests import repeat_with_global_opts
+from brian.globalprefs import get_global_preference
 
 @repeat_with_global_opts([
                           # no C code or code generation,
@@ -11,7 +12,10 @@ from brian.tests import repeat_with_global_opts
                           {'useweave': True, 'usecodegen': False}, 
                           # use Python code generation
                           {'useweave': False, 'usecodegen': True,
-                           'usecodegenthreshold': True}
+                           'usecodegenthreshold': True},
+                          # use C code generation
+                          {'useweave': True, 'usecodegen': True,
+                           'usecodegenthreshold': True, 'usecodegenweave': True}
                           ])
 def test():
     """
@@ -117,7 +121,7 @@ def test():
              w : 1
           '''
     G = NeuronGroup(3, model=eqs, reset=Reset(0., state=1), threshold='w > 1')
-    test_specified_state(G)    
+    test_specified_state(G)
     
     # test that VariableThreshold works as expected
     def test_variable_threshold(G):    
@@ -202,8 +206,19 @@ def test():
              w : 1
              x : 1
           '''
+    
+    # A threshold with rand in it is not supported by CThreshold
+    if not (get_global_preference('usecodegen') and
+            get_global_preference('usecodegenthreshold') and
+            get_global_preference('useweave') and
+            get_global_preference('usecodegenweave')):            
+        G = NeuronGroup(3, model=eqs, reset=NoReset(), threshold='rand() < v')
+        test_poisson_threshold(G)
+        
     G = NeuronGroup(3, model=eqs, reset=NoReset(), threshold=StringThreshold('rand() < v'))
     test_poisson_threshold(G)
+
+
 
     # test that HomogeneousPoissonThreshold works
     init = float(1. / get_default_clock().dt) # should cause spiking at every time interval

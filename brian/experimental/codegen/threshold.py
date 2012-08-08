@@ -68,6 +68,8 @@ class CThreshold(Threshold):
     def __init__(self, inputcode, level=0):
         inputcode = inputcode.strip()
         self._ns, unknowns = namespace(inputcode, level=level + 1, return_unknowns=True)
+        if 'rand' in self._ns or 'randn' in self._ns:
+            raise NotImplementedError('rand and randn not supported in thresholds with C code generation.')
         self._inputcode = inputcode
         self._prepared = False
         self._weave_compiler = get_global_preference('weavecompiler')
