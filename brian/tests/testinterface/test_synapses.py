@@ -175,7 +175,7 @@ def test_construction_single_synapses():
     assert_raises(ValueError, wrong_probability)        
 
     # this test requires python 2.6
-    if sys.version_info.major >= 2 and sys.version_info.minor >=6:
+    if sys.version_info[0] >= 2 and sys.version_info[1] >=6:
         # Running a model with a synapses object with 0 synapses should raise a warning
         syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
         with warnings.catch_warnings(record=True) as w:
