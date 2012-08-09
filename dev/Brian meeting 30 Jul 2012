@@ -6,8 +6,8 @@ Brian 1.4
 * Synapses
 	[DONE]- clean examples (Romain)
 	[DONE]- move from experimental (Romain)
-	- some tests? (Marcel)
-	- 2.5 compatibility (Marcel)
+	[DONE] some tests (Marcel)
+	[DONE] 2.5 compatibility (Marcel)
 * Saving spikes from a SpikeMonitor
 	- docs (Victor)
 	

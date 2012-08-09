@@ -1,6 +1,9 @@
 '''
 Tests various ways of constructing synapses.
 '''
+import warnings
+import sys
+
 from nose.tools import assert_raises
 import numpy as np
 
@@ -93,6 +96,9 @@ def test_construction_single_synapses():
     syn.connect_one_to_one()
     assert len(syn) == len(subgroup1)
 
+    # connect_one_to_one should only work with subgroups of the same size
+    assert_raises(TypeError, lambda : syn.connect_one_to_one(G[:2], G[:1]))
+
     # create random connections
     # the only two cases that can be tested exactly are 0 and 100% connection
     # probability
@@ -168,6 +174,30 @@ def test_construction_single_synapses():
         syn[:, :] = 1.3        
     assert_raises(ValueError, wrong_probability)        
 
+    # this test requires python 2.6
+    if sys.version_info.major >= 2 and sys.version_info.minor >=6:
+        # Running a model with a synapses object with 0 synapses should raise a warning
+        syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            # Trigger a warning.
+            syn.compress()
+            # Verify some things
+            assert len(w) == 1
+    
+    # use arrays as neuron indices instead of slices or ints
+    syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
+    syn[np.arange(5), np.arange(5)] = True
+    syn.w[np.arange(5), np.arange(5)] = 2
+    syn.delay[np.arange(5), np.arange(5)] = 5 * ms
+    assert len(syn) == 5 * 5
+    assert all([syn.w[i, j] == 2 for i in xrange(5) for j in xrange(5)])
+    assert all([syn.delay[i, j] == 5 * ms for i in xrange(5) for j in xrange(5)])
+    assert all([len(syn.w[i, j]) == 0 for i in xrange(5, len(subgroup1))
+                for j in xrange(5, len(subgroup2))])
+    assert all([len(syn.delay[i, j]) == 0 for i in xrange(5, len(subgroup1))
+                for j in xrange(5, len(subgroup2))])
 
 def test_construction_multiple_synapses():
     '''
