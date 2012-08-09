@@ -11,6 +11,7 @@ from brian.neurongroup import NeuronGroup
 from brian.threshold import NoThreshold
 from brian.stdunits import ms
 
+
 def test_construction_single_synapses():
     '''
     Test the construction of synapses with a single synapse per connection.
@@ -78,6 +79,20 @@ def test_construction_single_synapses():
             else:                
                 assert len(syn.w[i, j]) == 0
 
+    # Calling connect_one_to_one without specifying groups should use the full
+    # source or target group
+    syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
+    syn.connect_one_to_one(subgroup1)
+    assert len(syn) == len(subgroup1)
+
+    syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
+    syn.connect_one_to_one(post=subgroup2)
+    assert len(syn) == len(subgroup1)
+
+    syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
+    syn.connect_one_to_one()
+    assert len(syn) == len(subgroup1)
+
     # create random connections
     # the only two cases that can be tested exactly are 0 and 100% connection
     # probability
@@ -119,6 +134,20 @@ def test_construction_single_synapses():
     all_delays = np.array([syn.delay[i, j] for i in xrange(len(subgroup1))
                          for j in xrange(len(subgroup2))])
     assert (all_delays == 1 * ms).all()
+
+    # Calling connect_random without specifying groups should use the full
+    # source or target group
+    syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
+    syn.connect_random(subgroup1, sparseness=1.0)
+    assert len(syn) == 10 * 10
+
+    syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
+    syn.connect_random(post=subgroup2, sparseness=1.0)
+    assert len(syn) == 10 * 10
+
+    syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
+    syn.connect_random(sparseness=1.0)
+    assert len(syn) == 10 * 10
 
     # Just test that probabilities between zero and one work at all
     syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
@@ -228,6 +257,32 @@ def test_construction_and_access():
     # access with slice                
     assert (syn.w[:, 4] == 0.25).all()
     assert (syn.delay[:, 4] == 1 * ms).all()
+    
+    # Use string initialization for synaptic variable
+    syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
+    syn[:, 4] = True
+    # synapses from even source index have weight 1, uneven --> weight 0.5
+    # same for delays (1ms and 0.5ms)
+    syn.w[:, 4] = '(i % 2 == 0) * 0.5 + 0.5'
+    syn.delay[:, 4] = '(i % 2 == 0) * 0.5 * ms + 0.5 * ms'
+    assert (syn.w[::2, 4] == 1).all()
+    assert (syn.w[1::2, 4] == 0.5).all()
+    assert (syn.delay[::2, 4] == 1 * ms).all()
+    assert (syn.delay[1::2, 4] == 0.5 * ms).all()    
+    
+    # Use string initialization with a numpy function and constant
+    syn = Synapses(subgroup1, subgroup2, model='w:1', pre='v += w')
+    syn[:, 4] = True
+    
+    syn.w[:, 4] = '0.5 + 0.5 * np.cos(i / (1.0 * n) * np.pi)'
+    syn.delay[:, 4] = '0.0005 + 0.0005 * np.cos(i / (1.0 * n) * np.pi)'
+    assert (syn.w[:, 4] == 0.5 + 0.5 * np.cos(np.arange(len(subgroup1)) /
+                                              (1.0 * len(subgroup1)) * np.pi)).all()
+    # possible delays are always multiples of dt
+    delays = 0.5 * ms + 0.5 * ms * np.cos(np.arange(len(subgroup1)) /
+                                          (1.0 * len(subgroup1)) * np.pi)
+    delays_rounded_to_dt = (delays / defaultclock.dt).astype(np.int) * defaultclock.dt
+    assert (syn.delay[:, 4] == delays_rounded_to_dt).all()
 
 def test_model_definition():
     ''' Tests various ways of defining models.
