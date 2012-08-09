@@ -1,6 +1,9 @@
 '''
 Tests various ways of constructing synapses.
 '''
+# Needed so that python 2.5 does not complain about a SyntaxError
+from __future__ import with_statement
+
 import warnings
 import sys
 
