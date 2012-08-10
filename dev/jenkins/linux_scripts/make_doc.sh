@@ -21,5 +21,8 @@ cp docs_sphinx/_latexbuild/Brian.pdf docs/
 # Delete old docs zip file if it exists
 rm docs.zip 2> /dev/null || :
 
+# copy the docs to the directory served by the local webserver
+cp -r docs/* ~/www-doc
+
 # Create new zip file
 zip -r -q -9 docs.zip docs/
