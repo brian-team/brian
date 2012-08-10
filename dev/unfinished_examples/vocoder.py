@@ -37,8 +37,8 @@ TFS=H2/abs(H2) # careful with division by zero
 chimaera=sum(envelope*real(TFS),axis=1)
 
 Sout=Sound(chimaera,samplerate=S.samplerate).atlevel(70*dB)+whitenoise(S.duration,samplerate=S.samplerate).atlevel(70*dB)
-Sout.play(normalise=True)
-Sout.save(filename=r'D:/My Dropbox/Articles/In progress/Chimaeras/104_harmonic_SNR0dB.wav',normalise=True)
+#Sout.play(normalise=True)
+Sout.save(filename=r'D:/tmp/104_harmonic_SNR0dB.wav',normalise=True)
 
 figure()
 show()

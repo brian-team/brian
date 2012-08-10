@@ -250,3 +250,22 @@ Suggestions:
 
 My favorite is the last one for the moment, but I'd like something better
 (shorter).
+
+--------------
+Examples
+--------
+Equations:
+'''
+dv/dt=-v/tau : volt		(active)
+'''
+
+A->R:	threshold="v>vt"
+		reset="v=0"
+R->A:	refractory_until="t>last_spike+5*ms" ?
+		refractory=5*ms ?
+		reactivate="" ?
+
+Implementation:
+* store inactive variables
+* full state update
+* copy inactive variables back
