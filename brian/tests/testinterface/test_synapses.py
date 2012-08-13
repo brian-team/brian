@@ -384,7 +384,8 @@ def test_model_definition():
 
 def test_max_delay():
     '''Test that changing delays after compression works. '''
-        
+    
+    reinit_default_clock()
     inp = SpikeGeneratorGroup(1, [(0, 1*ms)])
     G = NeuronGroup(1, model='v:1')
     mon = StateMonitor(G, 'v', record=True)
@@ -401,8 +402,7 @@ def test_max_delay():
     syn.delay[:, :] = 5 * ms    
     net.run(6.5*ms)
     
-    # spike should arrive at 5 + 1 ms
-    timestep = np.int((6 * ms) / defaultclock.dt)
+    # spike should arrive at 5 + 1 ms    
     assert (mon[0][mon.times >= 6 * ms] == 1).all() 
     assert (mon[0][mon.times < 6 * ms] == 0).all()
     
@@ -423,7 +423,6 @@ def test_max_delay():
     net.run(6.5*ms)
     
     # spike should arrive at 5 + 1 ms
-    timestep = np.int((6 * ms) / defaultclock.dt) - 1
     assert (mon[0][mon.times >= 6 * ms] == 2).all()
     assert (mon[0][mon.times < 6 * ms] == 0).all()    
     
