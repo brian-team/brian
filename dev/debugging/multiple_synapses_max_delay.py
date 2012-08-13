@@ -8,14 +8,14 @@ mon = StateMonitor(G, 'v', record=True)
 syn[:, :] = 2
 syn.w[:, :] = 1
 syn.delay[:, :] = [1 * ms, 1 * ms]
-
-run(defaultclock.dt)
+net = Network(inp, G, syn, mon)
+net.run(defaultclock.dt)
 
 #print syn.queues[0].
 
 syn.delay[:, :] = [2.5 * ms, 5 * ms]
 
-run(6.5 * ms)
+net.run(6.5 * ms)
 
 mon.plot()
 show()
