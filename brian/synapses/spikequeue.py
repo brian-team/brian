@@ -131,6 +131,10 @@ class SpikeQueue(SpikeMonitor):
         self.synapses = synapses
         self._precompute_offsets=precompute_offsets
         
+        self._max_delay=max_delay
+        if max_delay>0: # do not precompute offsets if delays can change
+            self._precompute_offsets=False
+        
         # number of time steps, maximum number of spikes per time step
         nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
         self.X = np.zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
@@ -163,20 +167,27 @@ class SpikeQueue(SpikeMonitor):
         the option ``precompute_offsets'' is set to False. A flag is set if
         delays are homogeneous, in which case insertion will use a faster method.
         '''
+        nsteps=max(self.delays)+1
+        # Check whether some delays are too long
+        if (self._max_delay>0) and (nsteps>self.X.shape[0]):
+            raise ValueError,"Synaptic delays exceed maximum delay"
+        
         if hasattr(self, '_iscompressed') and self._iscompressed:
             return
         self._iscompressed = True
         # Adjust the maximum delay and number of events per timestep if necessary
-        nsteps=max(self.delays)+1
         maxevents=self.X.shape[1]
         if maxevents==INITIAL_MAXSPIKESPER_DT: # automatic resize
             maxevents=max(INITIAL_MAXSPIKESPER_DT,max([len(targets) for targets in self.synapses]))
         # Check if homogeneous delays
-        if (nsteps>self.X.shape[0]) or (nsteps==1): 
-            self._homogeneous=(nsteps==min(self.delays)+1)
-        else: # this means that the user has set a larger delay than necessary, which means the delays are not fixed
+        if self._max_delay>0:
             self._homogeneous=False
+        else:
+            self._homogeneous=(nsteps==min(self.delays)+1)
+        # Resize
         if (nsteps>self.X.shape[0]) or (maxevents>self.X.shape[1]): # Resize
+            nsteps=max(nsteps,self.X.shape[0]) # Choose max_delay if is is larger than the maximum delay
+            maxevents=max(maxevents,self.X.shape[1])
             self.X = np.zeros((nsteps, maxevents), dtype = self.synapses[0].dtype) # target synapses
             self.X_flat = self.X.reshape(nsteps*maxevents,)
             self.n = np.zeros(nsteps, dtype = int) # number of events in each time step
