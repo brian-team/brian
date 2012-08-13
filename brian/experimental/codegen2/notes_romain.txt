@@ -1,0 +1,16 @@
+Notes
+-----
+There are various aspects in code generation, which can be conceptually separated.
+1) Linking variables to their values or meaning. In an equation, there are names that correspond to neuron variables
+   and others that correspond to external variables. At this stage, one may want to freeze the values of external variables,
+   for example.
+2) Inspection of equations. This includes units checking, identification of stochastic terms, of linear equations, etc.
+   It may also include some equation rewriting.
+   One question is whether we should make more use of sympy to do this.
+3) (For equations only) Producing target-independent state-update code from the equations. The nature of this intermediate
+   can be discussed. It could be a string (good for debugging). But it could also be an object, for example an iterable object.
+   At this stage, the code is not vectorised, it is local (either to a neuron or to a synapse).
+4) Producing target-specific code. Essentially, what we want to do at this stage is to produce vectorized code from the
+   non-vectorised statements, in a way that takes into account the different target platforms.
+
+To me, the term "resolving" correspond to the operation #1, not to operation #4 (as seems to be Dan's usage?).
