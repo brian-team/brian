@@ -13,7 +13,7 @@ net.run(defaultclock.dt)
 
 #print syn.queues[0].
 
-syn.delay[:, :] = [2.5 * ms, 5 * ms]
+syn.delay[:, :] = [7 * ms, 5 * ms]
 
 net.run(6.5 * ms)
 
