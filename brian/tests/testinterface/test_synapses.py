@@ -11,9 +11,11 @@ from nose.tools import assert_raises
 import numpy as np
 
 from brian.network import Network
-from brian.clock import defaultclock
+from brian.clock import defaultclock, reinit_default_clock
 from brian.synapses import Synapses, SynapticEquations
 from brian.neurongroup import NeuronGroup
+from brian.directcontrol import SpikeGeneratorGroup
+from brian.monitor import StateMonitor
 from brian.threshold import NoThreshold
 from brian.stdunits import ms
 
@@ -380,6 +382,51 @@ def test_model_definition():
                                  Igap=w*(v_pre-v_post): 1''')
     neurons.Igap = S.Igap
 
+def test_max_delay():
+    '''Test that changing delays after compression works. '''
+        
+    inp = SpikeGeneratorGroup(1, [(0, 1*ms)])
+    G = NeuronGroup(1, model='v:1')
+    mon = StateMonitor(G, 'v', record=True)
+    
+    # one synapse
+    syn = Synapses(inp, G, model='w:1', pre='v+=w', max_delay=5*ms)
+    
+    syn[:, :] = 1
+    syn.w[:, :] = 1
+    syn.delay[:, :] = 0 * ms
+    
+    net = Network(inp, G, syn, mon)    
+    net.run(defaultclock.dt)
+    syn.delay[:, :] = 5 * ms    
+    net.run(6.5*ms)
+    
+    # spike should arrive at 5 + 1 ms
+    timestep = np.int((6 * ms) / defaultclock.dt)
+    assert (mon[0][mon.times >= 6 * ms] == 1).all() 
+    assert (mon[0][mon.times < 6 * ms] == 0).all()
+    
+    # same as above but with two synapses
+    reinit_default_clock()
+    mon.reinit()
+    G.reinit()
+    
+    syn = Synapses(inp, G, model='w:1', pre='v+=w', max_delay=5*ms)
+    
+    syn[:, :] = 2
+    syn.w[:, :] = 1
+    syn.delay[:, :] = [0 * ms, 0 * ms]
+    
+    net = Network(inp, G, syn, mon)    
+    net.run(defaultclock.dt)
+    syn.delay[:, :] = [5 * ms, 5 * ms]
+    net.run(6.5*ms)
+    
+    # spike should arrive at 5 + 1 ms
+    timestep = np.int((6 * ms) / defaultclock.dt) - 1
+    assert (mon[0][mon.times >= 6 * ms] == 2).all()
+    assert (mon[0][mon.times < 6 * ms] == 0).all()    
+    
 
 ################################################################################
 # Low level unit tests, test single helper functions
@@ -487,3 +534,4 @@ if __name__ == '__main__':
     test_slice_to_test()
     test_smallest_inttype()
     test_indent()
+    test_max_delay()
