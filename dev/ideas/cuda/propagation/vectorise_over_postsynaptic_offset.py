@@ -35,7 +35,44 @@ Theoretical analysis of performance:
       inefficient?
 - writing to target state variable is atomic, inefficient
     + this cost depends on the number of conflicts, but in many cases may not
-      be too bad      
+      be too bad     
+
+
+        // propagate function, modified from Issam's code
+        __global__ void propagate(%SCALAR% *v, %SCALAR% *alldata,
+                                  int64_t *rowind,
+                                  int64_t *allj, int64_t *numsynapses,
+                                  int64_t target_offset,
+                                  int64_t *spikes, int64_t numspikes)
+        {
+            //return;
+            v = v+target_offset;
+            const int synaptic_offset = blockIdx.x * blockDim.x + threadIdx.x;
+            for(int spikes_index=0; spikes_index<numspikes; spikes_index++)
+            {
+                const int spike = spikes[spikes_index];
+                if(synaptic_offset<numsynapses[spike])
+                {
+                    const int dataoffset = rowind[spike]+synaptic_offset;
+                    const int target = allj[dataoffset]; // coalesced
+                    const %SCALAR% weight = alldata[dataoffset]; // coalesced
+                    %PROPAGATE%
+                    //v[target] += weight; // uncoalesced, incorrect, but no atomics
+                    //atomicAdd(v+target, weight); // uncoalesced, correct
+                }
+            }
+        }
+      
+PSEUDOCODE:
+
+for syn_off in 0..maxnumsynapses-1 in parallel:
+    for spike in spikes:
+        if syn_off<numsynapses[spike]:
+            data_off = row_idx[spike]+syn_off
+            target = targets[data_off]
+            weight = weights[data_off]
+            atomicAdd(v+target, weight)
+    
 '''
 
 from brian import *

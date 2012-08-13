@@ -22,6 +22,65 @@ Performance:
 too costly. On the other hand, we potentially waste a lot of time
 propagating unnecessarily from shared to global memory. This might be fixed by
 having warp-sized boolean flags to say whether or not a propagation is needed.
+
+KERNEL CODE:
+        {
+            //return;
+            __shared__ %SCALAR% stage[%BLOCKSIZE%];
+            // zero stage memory
+            stage[threadIdx.x] = 0.0;
+            __syncthreads();
+            // propagate to stage
+            for(int spikes_index_start=0; spikes_index_start<numspikes; spikes_index_start+=%BLOCKSIZE%/maxnumsynapses)
+            {
+                const int spikes_index = spikes_index_start+threadIdx.x/maxnumsynapses;
+                if(spikes_index<numspikes)
+                {
+                    const int spike = spikes[spikes_index];
+                    const int blockoffset = spike*(%NUMBLOCKS%+1)+blockIdx.x;
+                    const int dataoffset = rowind[blockoffset]+threadIdx.x%maxnumsynapses;
+                    if(dataoffset<rowind[blockoffset+1])
+                    {
+                        const int target = allj[dataoffset]% (%BLOCKSIZE%); // coalesced
+                        const %SCALAR% weight = alldata[dataoffset]; // coalesced
+                        %PROPAGATE%
+                        //stage[target] += weight; // uncoalesced, incorrect, but no atomics
+                        //atomicAdd(stage+target, weight); // uncoalesced, correct
+                    }
+                }
+            }
+            __syncthreads();
+            // propagate to target
+            // TODO: could do something clever on devices with warp vote functions?
+            %MASKED_WRITE%
+            //if(stage[threadIdx.x]==0.0)
+            //    return;
+            const int target_neuron = blockIdx.x * blockDim.x + threadIdx.x;
+            v[target_offset+target_neuron] += stage[threadIdx.x];
+        }
+PSEUDOCODE:
+def stage[block_size] as shared
+for target_index in range(num_target_neurons) in parallel:
+    thread_index = target_index % block_size
+    block_index = target_index / block_size
+    spikes_per_block = block_size/max_num_synapses
+    stage[thread_index] = 0
+    __syncthreads()
+    for spike_block_index in range(num_spikes/spikes_per_block):
+        spike_index = spike_block_index*spikes_per_block+thread_index/max_num_synapses
+        spike = spikes[spike_index]
+        block_offset = spike*(num_blocks+1)+block_index
+        data_offset = row_index[block_offset]+thread_index%max_num_synapses
+        if data_offset<row_index[block_offset+1]:
+            # coalesced
+            block_target_index = target_indices[dataoffset] % block_size
+            weight = weights[data_offset]
+            # uncoalesced, but in shared memory
+            atomicAdd(stage+block_target_index, weight)
+    __syncthreads()
+    # coalesced
+    target_variable[target_index] += stage[thread_index];
+
 '''
 
 from brian import *
