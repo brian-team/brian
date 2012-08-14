@@ -1,8 +1,5 @@
-# Make sure the build ends up in the build/lib directory
-python setup.py build --build-lib=build/lib
-
-# Use the previously built brian version
-export PYTHONPATH=$(pwd)/build/lib:$PYTHONPATH
+# Use the source directory
+export PYTHONPATH=$(pwd)
 
 # Generates the HTML and PDF documentation for brian
 cd dev/tools/docs
@@ -16,13 +13,13 @@ python build_latex.py || exit 1
 cd ../../..
 
 # Copy the PDF to the doc directory
-cp docs_sphinx/_latexbuild/Brian.pdf docs/
+cp $DOCROOT/docs_sphinx/_latexbuild/Brian*.pdf $DOCROOT/docs/
 
 # Delete old docs zip file if it exists
 rm docs.zip 2> /dev/null || :
 
 # copy the docs to the directory served by the local webserver
-cp -r docs/* ~/www-doc
+cp -r $DOCROOT/docs/* ~/www-doc/$DOCNAME
 
 # Create new zip file
-zip -r -q -9 docs.zip docs/
+zip -r -q -9 docs.zip $DOCROOT/docs/
