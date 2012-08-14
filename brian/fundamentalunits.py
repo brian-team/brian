@@ -109,7 +109,7 @@ __all__ = [
     'get_dimensions', 'is_dimensionless', 'have_same_dimensions',
     'display_in_unit', 'Quantity', 'Unit', 'register_new_unit',
     'check_units', 'is_scalar_type', 'get_unit', 'get_unit_fast',
-    'scalar_representation',
+    'scalar_representation', 'quantity_with_dimensions',
     ]
 
 from brian_unit_prefs import bup
