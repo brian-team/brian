@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
 # Use the source directory
-export PYTHONPATH="$(pwd)"
+PYTHONPATH="$(pwd)"
 
 # Generates the HTML and PDF documentation for brian
 cd dev/tools/docs
