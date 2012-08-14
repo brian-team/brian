@@ -1,0 +1,42 @@
+Equations
+=========
+Equations are used both in NeuronGroup and Synapses to:
+* define state variables
+* define continuous-updates on these variables, through differential equations
+
+Equations are defined by strings. In Brian 2.0, we completely remove the Equations objects
+as they are currently used. Instead, everything is only described by strings. This will
+greatly simplify the design, because a lot of the complexity was due to the possibility of
+combining equations.
+
+An Equation is a set of single lines in a string:
+    (1) ``dx/dt = f : unit`` (differential equation)
+    (2) ``x = f : unit`` (equation)
+    (3) ``x : unit`` (parameter)
+
+The equations may be defined on multiple lines with the character \.
+Comments using # may also be included. These two things along with other general
+string processing things, are common to all model strings (reset and threshold).
+
+Note that aliases disappear in Brian 2.0.
+Two special variables are defined: t (time) and xi (white noise).
+In the state updaters, dt should also be a special variable.
+But in Brian 2.0, noise is dealt with differently. Equations are stochastic
+differential equations, that is, the right hand side is split into two terms:
+f(x,t).dt and g(x,t).dW. State updaters can use these two terms separately and
+directly. Before, there were only deterministic state updaters, and the stochastic
+term was added afterwards.
+
+Another new syntax if the possibility of flags. A flag is a keyword in brackets, which
+qualifies the equations. There are several keywords:
+* event-driven: this is only used in Synapses, and means that the differential equation should be updated
+  only at the times of events. This implies that the equation is taken out of the continuous
+  state update, and instead a event-based state update statement is generated and inserted into
+  event codes (pre and post).
+* active: this means the variable is only updated during the active (not refractory) state
+* constant: this means the parameter
+
+Processing equations
+--------------------
+
+Miscellaneous ideas: sympy for units, linearity; decorator for functions: has_units(volt)
