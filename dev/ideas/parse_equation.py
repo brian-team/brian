@@ -75,10 +75,10 @@ alphan = 0.032*(mV**-1)*(15*mV-v+VT)/ \
     (exp((15*mV-v+VT)/(5*mV))-1.)/ms : Hz
 betan = .5*exp((10*mV-v+VT)/(40*mV))/ms : Hz
 '''
-print_parse_result(equations.parseString(eqs))
+print_parse_result(equations.parseString(eqs, parseAll=True))
 
 model = '''w:1 # synaptic weight
          dApre/dt=-Apre/taupre : 1 (event-driven)
          dApost/dt=-Apost/taupost : 1 (event-driven)
         '''
-print_parse_result(equations.parseString(model))
+print_parse_result(equations.parseString(model, parseAll=True))
