@@ -1,6 +1,7 @@
 Equations
 =========
 Equations are used both in NeuronGroup and Synapses to:
+
 * define state variables
 * define continuous-updates on these variables, through differential equations
 
@@ -27,16 +28,136 @@ f(x,t).dt and g(x,t).dW. State updaters can use these two terms separately and
 directly. Before, there were only deterministic state updaters, and the stochastic
 term was added afterwards.
 
+Flags
+-----
 Another new syntax if the possibility of flags. A flag is a keyword in brackets, which
 qualifies the equations. There are several keywords:
+
 * event-driven: this is only used in Synapses, and means that the differential equation should be updated
   only at the times of events. This implies that the equation is taken out of the continuous
   state update, and instead a event-based state update statement is generated and inserted into
   event codes (pre and post).
-* active: this means the variable is only updated during the active (not refractory) state
-* constant: this means the parameter
+  This can only qualify differential equations of synapses. Currently, only one-dimensional
+  linear equations can be handled (see below).
+* active: this means the variable is only updated during the active (not refractory) state.
+  The name may be changed. This can only qualify differential equations of neuron groups.
+* constant: this means the parameter will not be changed during a run. This allows
+  optimizations in state updaters.
+  This can only qualify parameters.
+
+Different flags may be specified as follows::
+
+	dx/dt = f : unit (flag1,flag2)
+
+However, the current flags are mutually exclusive.
+
+Event-driven equations
+----------------------
+Equations defined as event-driven are completely ignored in the state update.
+They are only defined as variables that can be externally accessed.
+There are additional constraints:
+
+* An event-driven variable cannot be used by any other equation that is not
+  also event-driven.
+* An event-driven equation cannot depend on a differential equation that is not
+  event-driven (directly, or indirectly through static equations). It can depend
+  on a constant parameter. An open question is whether we should also allow it
+  to depend on a parameter not defined as constant (I would say no).
+
+Currently, automatic event-driven updates are only possible for one-dimensional
+linear equations, but it could be extended.
+
+Synaptic equations
+------------------
+A specificity of synaptic equations is that they can include variables of
+the pre and postsynaptic groups. The resolution of variable names is as follows::
+
+* A variable with the ``_post`` suffix is looked up in the postsynaptic (target) neuron. That is,
+  ``v_post`` means variable ``v`` in the postsynaptic neuron.
+* A variable with the ``_pre`` suffix is looked up in the presynaptic (source) neuron.
+* A variable not defined as a synaptic variable is considered to be postsynaptic.
+* A variable not defined as a synaptic variable and not defined in the postsynaptic neuron is considered
+  external.
+
+External variables
+------------------
+Equations can include variables and functions defined elsewhere. The resolution
+order is::
+
+* reserved names (xi, t and dt)
+* state variables
+* for synapses: pre/post-synaptic variables
+* external variables, in the frame nearest that where the string is defined.
+
+We may allow the passing of a namespace for external variables. This could be
+done by ``Equations(str,namespace=...)``. This should apply equally to
+equations, reset and threshold. When a namespace is specified, external
+variables are first looked for in the namespace, then in the external frames.
+The difference with Brian 1.0 is that we do not allow the addition of Equations
+object anymore, which simplifies the design considerably.
+
+One potential difficulty here is when external functions are used in the equations,
+and these functions use external variables not defined in the equations. One
+option (currently used in Brian 1) is to use the full namespace where the
+string was defined (instead of building the namespace with identified external
+variables). Another option, perhaps cleaner, could be to use a decorator::
+
+	@external_variables('tau')
+	def f(...):
+
+This would inform Brian to include ``tau`` in the equations namespace, where
+comes from the frame where f is defined.
+
+In Brian 1, there are two other types of external variables (rather inputs):
+``Timedarray`` and ``Linkedvariable``. We may want to reconsider the way these
+are dealt with. Note that lumped variables from synapses are processed with a
+``Linkedvariable``.
 
 Processing equations
 --------------------
+Equations are processed in the following way:
 
-Miscellaneous ideas: sympy for units, linearity; decorator for functions: has_units(volt)
+	(1) Parsing. First, we extract individual equations and build the data
+	    structure. Stochastic and deterministic parts should be extracted at
+	    this stage (using sympy).
+	(2) Ordering static variables. There must be no cycle in the dependency
+	    graph of static variables. In addition, it is necessary to calculate
+	    this graph (which is a set of trees) and compute the update order of
+	    these equations. This is required for generating the abstract state
+	    update code.
+	(2) Variable resolution. Here we identify state and external variables
+	    and build a namespace. This should be common with reset and threshold.
+	(3) Inspection. This means checking units, linearity, conditional linearity.
+	(4) Generating abstract state update code.
+	(5) Generating target-specific state update code.
+
+At run time, constant parameters should be frozen. But this could possibly be
+done at code generation time.
+
+In Brian 1, static variables are included into differential equations, so that
+these variables are effectively hidden to the state updaters. This simplifies
+the design, but is probably not the most efficient in general. It seems more
+efficient to calculate the value of all static variables in a single pass,
+at every time step.
+
+We propose to rely more systematically on sympy for inspecting equations (see below).
+
+Unit checking
+-------------
+Currently, to test units, the RHS of each equation is evaluated with the state
+variables replaced by units. If it evaluates without error and the units is
+consistent with the LHS divided by second, then unit checking succeeds. This
+is not ideal because errors can also be raised because of a division by zero,
+for example.
+
+Instead, we propose to do it similarly but using sympy. For each SI unit, a symbol
+is associated. A namespace is then created, with each state variable and each
+external variable mapped to its value times the unit symbol. When then evaluate
+RHS-LHS/second and simplify the expression with sympy. The result should be a single
+term. Alternatively, we separately evaluate RHS and LHS/second and compare. This
+may allow more meaningful error messages.
+
+One potential issue is with external functions. We suggest an optional decorator::
+
+	@has_units(volt)
+

@@ -9,4 +9,5 @@ interest to others wishing to better understand how Brian works internally.
    :maxdepth: 2
 
    developer-overview
+   developer-clocks
    developer-equations
