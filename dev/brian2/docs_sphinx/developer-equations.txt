@@ -8,7 +8,8 @@ Equations are used both in NeuronGroup and Synapses to:
 Equations are defined by strings. In Brian 2.0, we completely remove the Equations objects
 as they are currently used. Instead, everything is only described by strings. This will
 greatly simplify the design, because a lot of the complexity was due to the possibility of
-combining equations.
+combining equations. But we still keep an ``Equations`` class at least internally,
+which handles basic things.
 
 An Equation is a set of single lines in a string:
     (1) ``dx/dt = f : unit`` (differential equation)
@@ -125,14 +126,26 @@ Equations are processed in the following way:
 	    this graph (which is a set of trees) and compute the update order of
 	    these equations. This is required for generating the abstract state
 	    update code.
-	(2) Variable resolution. Here we identify state and external variables
-	    and build a namespace. This should be common with reset and threshold.
-	(3) Inspection. This means checking units, linearity, conditional linearity.
-	(4) Generating abstract state update code.
-	(5) Generating target-specific state update code.
+	(3) Variable resolution. Here we identify state and external variables
+	    and build a namespace. This step can in fact be done through
+	    Expression objects.
+	(4) Inspection. This means checking units, linearity, conditional linearity.
+		Some or all of it can be done through Expression objects (checking units).
+	(5) Generating abstract state update code. This could be a Statement object.
+	(6) Generating target-specific state update code.
 
 At run time, constant parameters should be frozen. But this could possibly be
-done at code generation time.
+done at code generation time (could be better).
+After step (5), we may have a series of statements, of the same nature as
+reset. One special case is linear updates, which use specific updaters depending
+on the target (matrix multiplication).
+
+Step (3) is common to other string-based definitions (threshold, reset).
+It needs to be done before inspecting the
+equations (e.g. for units checking). Note that units checking could be done in
+the same way for expressions (e.g. for threshold).
+Therefore, I suggest that the result of parsing is a list of expressions. Steps
+(3) and (4) would then be done by the Expression class.
 
 In Brian 1, static variables are included into differential equations, so that
 these variables are effectively hidden to the state updaters. This simplifies

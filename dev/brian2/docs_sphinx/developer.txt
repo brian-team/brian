@@ -10,4 +10,5 @@ interest to others wishing to better understand how Brian works internally.
 
    developer-overview
    developer-clocks
+   developer-code-strings
    developer-equations

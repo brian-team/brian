@@ -14,12 +14,23 @@ To achieve these goals, Brian 2.0 will rely more systematically on code generati
 the code will depend on the target.
 There are three types of code:
 
-* state update code, defined by equations
-* threshold code, defined as a boolean condition
-* reset code, defined as a series of statements
+* State update code, defined by equations. This is used both in NeuronGroup and
+  Synapses.
+* Threshold code, defined as an expression. This is also used in Synapses, to
+  set the values of synaptic variables.
+* Reset code, defined as a series of statements. This is also used in Synapses,
+  for events triggered by pre and postsynaptic spikes.
 
-These are used both in NeuronGroup and Synapses.
-In fact reset could be more generally defined as an event.
+We may rephrase it as follows:
+
+* Equations
+* Expressions
+* Statements
+
+Equations are specific, and maybe they should first be turned into statements.
+I suggest the following: equations consist of essentially of expressions.
+The main job of the Equations class is to turn expressions into statements
+(state update code).
 
 Another cornerstone of Brian 2.0 is the use of a single class, Synapses, to
 represent everything synaptic, including synaptic plasticity.

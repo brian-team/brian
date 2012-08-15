@@ -1,0 +1,38 @@
+Code strings
+============
+A code string is a string that can be evaluated in a namespace. Examples are:
+
+* Right-hand side of equations
+* Reset
+* Threshold condition
+* Synaptic events triggered by pre- and post-synaptic spikes
+* Expressions used to assign synaptic variables, or create synapses
+* We could also use expressions to assign neuron variables
+* Perhaps, state update code
+
+There are two types of code strings:
+
+* Expressions
+* Statements
+
+I suggest to create a base class, e.g. ``CodeString``, and two subclasses,
+``Expression`` and ``Statement``. Equations would be parsed into sets of
+expressions describing the RHS.
+
+These classes should handle:
+
+* Basic string manipulations
+* Namespace building
+* Units checking (for expressions)
+* Possibly, linearity/conditional linearity checking
+* Possibly, execution in a namespace
+* Possibly, code generation
+
+There two types of contexts: ``NeuronGroup`` and ``Synapses``.
+This determines how the code is evaluated, and how variable names are resolved.
+
+Reserved keywords
+-----------------
+* i, j
+* t, dt
+* xi
