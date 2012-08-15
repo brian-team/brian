@@ -5,3 +5,5 @@ Code generation
    :maxdepth: 2
 
    examples
+   proposal
+

@@ -1,14 +1,24 @@
 Style and coding guidelines for Brian 2.0
 -----------------------------------------
 * no relative imports
+	[Dan] What does this mean exactly? It is quite restrictive to not allow
+  		  for example, package A.B to refer to A.C.
 * no wildcard imports
+	[Dan] Are we sure about this?
 * tests
 
 [Marcel]
-In addition to the import-related things we agreed on, I'd like to suggest that we start thinking a bit about Python 3. Not that Brian 2 should already be compatible (of the Brian dependencies, matplotlib is not yet there) but that we use certain constructs or do "from __future__ import" that will make it easier in the future to do the transition (that means we will lose python 2.5 support but I think we already agreed on that). For example: Instead of writing
+In addition to the import-related things we agreed on, I'd like to suggest that
+we start thinking a bit about Python 3. Not that Brian 2 should already be
+compatible (of the Brian dependencies, matplotlib is not yet there) but that we
+use certain constructs or do "from __future__ import" that will make it easier
+in the future to do the transition (that means we will lose python 2.5 support
+but I think we already agreed on that). For example: Instead of writing
     except Exception, ex:
 write
     except Exception as ex:
 or use from __future__ import division
 so that 3 / 2 returns 1.5 not 1 (3 // 2 would be used for flooring division).
-There's a great online book with hints and best practices (http://python3porting.com/), I could write a bit about that in the developer guidelines.
+There's a great online book with hints and best
+practices (http://python3porting.com/), I could write a bit about that in the
+developer guidelines.

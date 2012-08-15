@@ -1,0 +1,161 @@
+Proposed code generation system
+===============================
+
+We should largely scrap the codegen and codegen2 frameworks, as a large amount
+of their functionality is designed to enable Connection and STDP to work
+correctly. Now, with Synapses, the code generation requirements are much
+simpler and it would be pointless to have such an overly complicated system
+to handle them.
+
+It seems to me that the main things we need to do are:
+
+- Templating
+- Python expressions that operate on a subset
+- Read/write optimisations
+- Common sub-expressions
+- Namespace manipulations
+
+I propose then that the code generation framework should be divided into two
+submodules: translation and compilation.
+Translation should simply handle the transformation from a series
+of language-independent code statements to a series of language-dependent ones.
+Freezing and optimisation of expressions could be handled before it gets to
+the code generation stage or at this stage (but then more data has to be
+included from the namespace).
+Compilation should handle taking a template and translated code segment and
+generating a finished bit of code, compiling it and handle running it. This is
+straightforward for Python/C and more tricky for GPU because you also have to
+hadle transferring data to and from the GPU, including multiple bits of code in
+a single kernel, and so forth.
+
+Translation
+-----------
+
+The input to code generation should then be something like::
+
+	_tmp_V := -V*100
+	V += _tmp_V*dt
+	
+Additional information would have to be provided, including:
+
+* The fact that V is an array of type double, and maybe it's worth actually
+  including the array itself here for namespace management?
+* dt is a runtime provided constant of type double
+* The name of the index variable, which would be of type int for C++/GPU or
+  of type array of ints for Python
+* Possibly some more stuff?
+
+From this, a language-specific representation would be generated. Information
+about read/write dependencies would be inferred from the sequence of strings and
+all information about data types would be available. I'm not yet sure how
+information about common subexpressions should be handled.
+
+Compilation
+-----------
+
+The input to this stage would be a syntactically correct sequence of statements
+in the language of choice, and a template in which to insert them, and a
+namespace. This would simply insert the statements into the template (handling
+tabulation levels in Python code for example) and compile it to executable
+code. In addition, it could return an ExecutableCode object that can be called
+with the additional variables that are to be inserted into the namespace before
+being run.
+
+Handling GPU also needs to be thought about carefully at this stage, since it
+is potentially complicated.
+
+Examples
+--------
+
+State update
+^^^^^^^^^^^^
+
+For state update, the translation step would be given the following data.
+A language independent code block::
+
+	_tmp_V := -V*100
+	V += _tmp_V*dt
+
+And the following:
+
+* The fixed namespace ``{'V':array}``
+* The set of runtime names ``{'t':float64, 'dt':float64}``
+
+It would give the following C++ code::
+
+	double &V = _arr_V[_neuron_index];
+	const double _tmp_V = -V*100;
+	V += _tmp_V*dt;
+	
+In addition it would return an updated fixed namespace ``{'_arr_V':array}``.
+
+The following template would be provided by the StateUpdater class::
+
+	for(int _neuron_index=0; _neuron_index<_num_neurons; _neuron_index++)
+	{
+		%CODE%
+	}
+	
+And from this the final code object would be generated. This code object
+would then be called from StateUpdater by something like::
+
+	self.code(t=self.clock.t, dt=self.clock.dt)
+
+Threshold
+^^^^^^^^^
+
+For threshold, we have an expression rather than a series of statements to
+convert, but for simplicity I suggest we always do something like this::
+
+	_cond := EXPR
+	
+This way it is a series (just one) of statements, just like in all the other
+cases. The template would look like this in Python::
+
+	%CODE%
+	return _cond.nonzero()[0]	
+
+C++::
+
+	int numspikes = 0;
+	for(int i=0; i<N; i++)
+	{
+		%CODE%
+		if(_cond)
+		{
+			spikes[numspikes++] = i;
+		}
+	}
+	return numspikes;
+
+GPU::
+
+	__global__ threshold()
+	{
+		const int i = threadIdx.x+blockDim.x*blockIdx.x;
+		if(i>=N) return;
+		%CODE%
+	}
+
+Progress
+--------
+
+* Syntax translation (e.g. ``x**2`` to ``pow(x,2)``) is done by
+  ``codegen2.expressions``, ``codegen2.statements`` and ``codegen2.formatting``
+* Compilation step is fairly simple and is largely done by
+  ``codegen2.formatting`` and ``codegen2.codeobject``, it just needs to be
+  put together slightly differently.
+* The rest of the translation step will require a bit more work but many of
+  the elements are already present in ``codegen2``. Some of the work would
+  just be simplifying this and cutting out unnecessary complexity, but some
+  of it would require new work (the optimisations stuff).
+
+All in all, I don't think this would take too long to put together.
+
+Notes and details (unfinished)
+------------------------------
+
+This section is just a place for me to put some as yet unfinished notes and
+details.
+
+

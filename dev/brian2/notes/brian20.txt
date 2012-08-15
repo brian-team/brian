@@ -8,6 +8,10 @@ Aims:
 Outline
 -------
 * Units: more or less ok
+	- considering arrays
+	- reduction of number of units imported by default
+	- runtime disabling of units
+	- unpickling units when units are disabled
 * Clocks: integer clocks
 * Parsing (simplification of Equations)
 	- turning strings into structure with flags etc
@@ -62,6 +66,5 @@ Main loop
 
 Notes
 -----
-* no relative imports
-* no wildcard imports
-* tests
+
+See style guide style.txt
