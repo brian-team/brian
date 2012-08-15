@@ -3,8 +3,9 @@ This file demonstrates how parsing equations would look like with pyparsing.
 '''
 import pprint
 
-from pyparsing import (Group, ZeroOrMore, Optional, Word, CharsNotIn, Suppress,
-                       alphas, alphanums, restOfLine)
+from pyparsing import (Group, ZeroOrMore, OneOrMore, Optional, Word, CharsNotIn,
+                       Combine, Suppress, alphas, alphanums, restOfLine,
+                       LineEnd)
 
 ###############################################################################
 # Basic Elements
@@ -15,7 +16,11 @@ from pyparsing import (Group, ZeroOrMore, Optional, Word, CharsNotIn, Suppress,
 identifier = Word(alphas + "_", alphanums + "_").setResultsName('variable')
 
 # very broad definition here, expression will be analysed by sympy anyway
-expression = CharsNotIn(':').setResultsName('expression')
+# allows for multi-line expressions, where each line can have comments
+expression = Combine(OneOrMore((CharsNotIn(':#\n') +
+                                Suppress(Optional(LineEnd()))).ignore('#' + restOfLine)),
+                     joinString=" ").setResultsName('expression')
+
 
 # a unit
 # TODO: Brian actually allows expressions like amp * ohm -- what exactly do we
@@ -79,6 +84,17 @@ print_parse_result(equations.parseString(eqs, parseAll=True))
 
 model = '''w:1 # synaptic weight
          dApre/dt=-Apre/taupre : 1 (event-driven)
-         dApost/dt=-Apost/taupost : 1 (event-driven)
+         dApost/dt=-Apost/taupost : 1 (event-driven) # comment
         '''
 print_parse_result(equations.parseString(model, parseAll=True))
+
+eqs = '''
+dv/dt = (
+         gl*(El-v) + # passive leak
+         ge*(Ee-v) + # excitatory synapses
+         gi*(Ei-v) - # inhibitory synapses
+         g_na*(m*m*m)*h*(v-ENa) # sodium channels-
+         g_kd*(n*n*n*n)*(v-EK) # potassium channels
+         )/Cm : volt
+'''
+print_parse_result(equations.parseString(eqs, parseAll=True))
