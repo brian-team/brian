@@ -12,3 +12,4 @@ interest to others wishing to better understand how Brian works internally.
    developer-clocks
    developer-code-strings
    developer-equations
+   code_generation

@@ -1,0 +1,7 @@
+Code generation
+---------------
+
+.. toctree::
+   :maxdepth: 2
+
+   code_generation_examples
