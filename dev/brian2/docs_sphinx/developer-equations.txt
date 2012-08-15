@@ -72,7 +72,7 @@ linear equations, but it could be extended.
 Synaptic equations
 ------------------
 A specificity of synaptic equations is that they can include variables of
-the pre and postsynaptic groups. The resolution of variable names is as follows::
+the pre and postsynaptic groups. The resolution of variable names is as follows:
 
 * A variable with the ``_post`` suffix is looked up in the postsynaptic (target) neuron. That is,
   ``v_post`` means variable ``v`` in the postsynaptic neuron.
@@ -84,7 +84,7 @@ the pre and postsynaptic groups. The resolution of variable names is as follows:
 External variables
 ------------------
 Equations can include variables and functions defined elsewhere. The resolution
-order is::
+order is:
 
 * reserved names (xi, t and dt)
 * state variables
