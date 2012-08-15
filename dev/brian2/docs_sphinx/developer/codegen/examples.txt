@@ -19,6 +19,10 @@ We should generate Python code::
 	_tmp_V = -V/tau
 	V += _tmp_V*dt
 	
+Note that if we had written V = V+_tmp_V*dt then we would need to generate::
+
+	V[:] = V+_tmp_V*dt
+	
 C++ code::
 
 	for(int i=0; i<N; i++)

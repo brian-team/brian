@@ -43,6 +43,9 @@ Additional information would have to be provided, including:
 * dt is a runtime provided constant of type double
 * The name of the index variable, which would be of type int for C++/GPU or
   of type array of ints for Python
+* A dict of common subexpressions (coming from user-defined equations). The
+  input statements should use these variables and not substitute them? (Unless
+  we want to handle that in a clever way in the analysis stage.)
 * Possibly some more stuff?
 
 From this, a language-specific representation would be generated. Information
@@ -50,8 +53,8 @@ about read/write dependencies would be inferred from the sequence of strings and
 all information about data types would be available. I'm not yet sure how
 information about common subexpressions should be handled.
 
-Compilation
------------
+Templating and compilation
+--------------------------
 
 The input to this stage would be a syntactically correct sequence of statements
 in the language of choice, and a template in which to insert them, and a
@@ -148,9 +151,19 @@ Progress
 * The rest of the translation step will require a bit more work but many of
   the elements are already present in ``codegen2``. Some of the work would
   just be simplifying this and cutting out unnecessary complexity, but some
-  of it would require new work (the optimisations stuff).
+  of it would require new work.
+* We need to think about how to handle GPU. Some of this is already done in
+  ``codegen2.gpu`` but we need to think about the namespace conflict issue a
+  bit (assigning new names in a deterministic fashion, rewriting the code and
+  namespaces to use these names).
+* We also need to think about how to handle extensibility. Presumably we need
+  to do something like assign places where additional code can be inserted
+  by other modules, but this does require some care. Fortunately, it can
+  probably be done relatively easily after we have implemented the rest. 
+* A way of handling common subexpressions should be found.
 
-All in all, I don't think this would take too long to put together.
+All in all, I don't think this would take too long to put together leaving out
+the GPU and extensibility bits.
 
 Notes and details (unfinished)
 ------------------------------
@@ -158,4 +171,124 @@ Notes and details (unfinished)
 This section is just a place for me to put some as yet unfinished notes and
 details.
 
+* For Python code, if you write the statement ``V = 0``, for example, it should
+  get translated as ``V[:] = 0`` and not ``V = 0``, but I think we already
+  have to handle this.
 
+Optimisations stuff
+^^^^^^^^^^^^^^^^^^^
+
+First pass: loop through all the statements and decide for each variable if it
+is read/written to and keep track of this.
+
+Second pass: loop through all the statements and keep track at each stage of
+the status of each variable, whether it has been declared/loaded/etc. For
+example::
+
+	b += 1
+	a = b*c
+	
+Would go through first pass::
+
+	b += 1   # Read(b) Write(b)
+	a = b*c  # Write(a) Read(b) Read(c)
+
+From this we can infer::
+
+	# a cannot be constant
+	# b cannot be constant
+	# c can be constant
+
+Second pass, first step::
+
+	# a: not loaded, b: not loaded, c: not loaded
+	b += 1
+	# need to read b, write b
+
+Output statements::
+
+	double &b = _arr_b[i]; // b loaded
+	b += 1
+
+Second pass, second step::
+
+	# a: not loaded, b: loaded, valid, c: not loaded
+	a = b*c
+	# need to read b, c, write a
+	
+Output statements::
+
+	double &a = _arr_a[i]; // a now loaded
+	// b already loaded
+	const double c = _arr_c[i]; // c now loaded
+	a = b*c;
+	
+This would give us the final code::
+
+	double &b = _arr_b[i];
+	b += 1
+	double &a = _arr_a[i];
+	const double c = _arr_c[i];
+	a = b*c;
+
+Now, for both C++ and GPU we could just load all the variables at the
+beginning, we don't need to iterate through the statements step by step, however
+there are two reasons to go step by step. First of all, interleaving memory
+loading and arithmetic is good, I think both for CPU and particulaly for GPU.
+Secondly, for Python it is already more tricky because suppose we were in a
+reset function and did something like this::
+
+	a = b*b*b
+	b += 1
+	c = b*b
+	
+Now the crude thing to get as output would be this::
+
+	a[spikes] = b[spikes]*b[spikes]*b[spikes]
+	b[spikes] += 1
+	c[spikes] = b[spikes]*b[spikes]
+	
+However, this is heavily inefficient. What we would rather see is this::
+
+	_b_spikes = b[spikes]
+	a[spikes] = _b_spikes*_b_spikes*_b_spikes
+	b[spikes] += 1
+	_b_spikes = b[spikes]
+	c[spikes] = _b_spikes*_b_spikes
+	
+In order to achieve this, we need to keep track of more things. Writing to a
+variable cannot be cached in this way, so we only need to follow the reads. We
+need to remember that each time a variable is written to, any previous cacheing
+of the value of that variable in _var_spikes will be invalidated. When deciding
+whether or not to recache an invalidated variable, we need to look ahead and
+see if it is read again. (Technically, we only need to know if it is read more
+than twice, but in Python there is no cost virtually to doing the cacheing
+operation, so just checking if it is read at all will do.)
+
+The same type of reasoning applies to common subexpressions coming from
+user-defined equations. As soon as any of the variables appearing in the
+common subexpression are written to, the common subexpression would need to
+be recalculated to be valid. Note that this is true in both Python and in
+C++/GPU.
+
+For GPU it is better to do this::
+
+	double V = _arr_V[i];
+	...
+	_arr_V[i] = ...;
+	
+Instead of this::
+
+	double &V = _arr_V[i];
+	...
+	V = ...;
+
+This is because it turns out the Nvidia compiler will not optimise these accesses
+by default and will issue a new read to global memory each time you read the
+value of V. (Note: incorporating this into the model fitting toolbox would
+probably give a significant speed-up in some cases!) The reason it does this
+is that it doesn't know whether or not some of the pointers might be aliased
+(i.e. overlap). You can also declare them - I think - as ``__volatile__`` or maybe
+just ``volatile`` and then it will assume that no pointer accesses are aliased.
+I need to check up on exactly what you need to do here. (It may be that this
+helps CPU as well, the same volatile keyword exists.)
