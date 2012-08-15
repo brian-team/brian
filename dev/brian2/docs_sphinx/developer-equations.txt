@@ -23,6 +23,7 @@ string processing things, are common to all model strings (reset and threshold).
 Note that aliases disappear in Brian 2.0.
 Two special variables are defined: t (time) and xi (white noise).
 In the state updaters, dt should also be a special variable.
+Variable names starting with an underscore are forbidden.
 But in Brian 2.0, noise is dealt with differently. Equations are stochastic
 differential equations, that is, the right hand side is split into two terms:
 f(x,t).dt and g(x,t).dW. State updaters can use these two terms separately and
@@ -155,8 +156,8 @@ at every time step.
 
 We propose to rely more systematically on sympy for inspecting equations (see below).
 
-Unit checking
--------------
+Units checking
+--------------
 Currently, to test units, the RHS of each equation is evaluated with the state
 variables replaced by units. If it evaluates without error and the units is
 consistent with the LHS divided by second, then unit checking succeeds. This
@@ -174,3 +175,31 @@ One potential issue is with external functions. We suggest an optional decorator
 
 	@has_units(volt)
 
+State updaters
+--------------
+State updaters generate an abstract state update code from the equations, which
+depends on the integration scheme. This code could take the form of a Statements
+object.
+
+Currently, in Dan's code, these integration schemes are specified by a generator
+function that produces string statements via yield instructions.
+It's already better than before, but perhaps it could be improved.
+Ideally, one would want to try the scheme as it is written in a math book.
+Something like::
+
+	xi(t+dt)=xi(t)+dt*dxi(x(t),t)
+
+(just to give a flavour). However, Dan pointed out that this is not always
+possible, for example for the exponential Euler scheme. However, I feel that
+all explicit schemes could be written in this way, and allowing such a syntax
+would make it very easy for one to write state updaters, including with
+stochastic updaters.
+
+Given that we are going to have special cases (linear updater), it might be
+ok to have special cases for implicit updaters. Something to think about.
+Should we write down the maths for a few state updaters?
+
+One new element of design in Brian 2.0 is that noise is managed directly by
+state updaters. Another potentially new element is that static functions may
+not be included in the RHS of differential equations, but rather in the update
+code. This could be done automatically, I think.
