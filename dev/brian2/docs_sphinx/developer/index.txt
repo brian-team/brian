@@ -8,8 +8,8 @@ interest to others wishing to better understand how Brian works internally.
 .. toctree::
    :maxdepth: 2
 
-   developer-overview
-   developer-clocks
-   developer-code-strings
-   developer-equations
-   code_generation
+   overview
+   clocks
+   code-strings
+   equations
+   codegen/index
