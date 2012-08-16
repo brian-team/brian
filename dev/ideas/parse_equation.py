@@ -25,6 +25,7 @@ expression = Combine(OneOrMore((CharsNotIn(':#\n') +
 # a unit
 # TODO: Brian actually allows expressions like amp * ohm -- what exactly do we
 #       want to allow here -- any expression returning a Unit?
+# [Romain] Yes! For example, a common case would be siemens/cm**2
 unit = (Word(alphas, alphanums) | '1').setResultsName('unit')
 
 ###############################################################################
