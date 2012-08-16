@@ -13,3 +13,5 @@ interest to others wishing to better understand how Brian works internally.
    code-strings
    equations
    codegen/index
+   features_to_be_removed
+ 
