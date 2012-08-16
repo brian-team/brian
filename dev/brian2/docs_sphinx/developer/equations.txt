@@ -156,6 +156,10 @@ at every time step.
 
 We propose to rely more systematically on sympy for inspecting equations (see below).
 
+Parsing
+-------
+Parsing is now based on pyparsing (MIT license).
+
 Units checking
 --------------
 Currently, to test units, the RHS of each equation is evaluated with the state
