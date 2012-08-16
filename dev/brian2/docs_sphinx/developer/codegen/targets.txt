@@ -1,0 +1,16 @@
+Targets
+=======
+Code is generated for a specific target.
+Here is a list of potential targets:
+
+* Python (more precisely, numpy)
+* C
+* GPU
+* Cluster or multicores (MPI)
+* Spinnaker
+* Other neuromorphic chips
+* C++ simulator
+* Robot (i.e., code to be run on a specific robot)
+* PyNN
+* PyNeuron
+* NineML
