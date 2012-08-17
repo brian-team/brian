@@ -488,7 +488,7 @@ class IIRFilterbank(LinearFilterbank):
         
         self.samplerate=source.samplerate
         if Wpassband.shape != Wstopband.shape:
-            raise Exeption('passband and stopband must contain the same number of ent')
+            raise Exception('passband and stopband must contain the same number of ent')
         try:
             Wpassband=Wpassband/self.samplerate*2+0.0    # wn=1 corresponding to half the sample rate 
             Wstopband=Wstopband/self.samplerate*2+0.0     
