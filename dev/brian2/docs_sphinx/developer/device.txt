@@ -1,0 +1,28 @@
+Simulation on devices
+=====================
+Code can be generated for different targets, e.g. C or GPU.
+This means that code will be executed in different languages, but also that
+memory can be stored on a external device. This would be the case of simulation
+on GPU, clusters or neuromorphic devices.
+
+In this case, arrays for NeuronGroup and Synapses should not be create on the
+host but on the device. The host would only store the address on the device.
+The simplest way to handle this, I think, is to have a special class
+array_on_device.
+
+We should also consider that a number of variables would probably also need
+to be stored on the device (for example, time of last spike)
+When we create any variable, we need to keep in mind that the device may need
+to access it.
+
+What needs to be done is to distinguish clearly between variables and objects
+that are specific to Brian cooking, or needed for it (e.g. model specification,
+network structure, etc), and simulation variables, which can potentially all
+be on the device.
+Among simulation variables, some may only need to be in the code (constant
+variables, e.g. number of neurons in a group), others require a creation in
+device memory.
+
+So I suggest that, from the start, we clearly categorize all variables as
+being device variables, constant variables, structural variables
+(basically whether the device needs to know about it).
