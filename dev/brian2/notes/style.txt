@@ -6,6 +6,9 @@ Style and coding guidelines for Brian 2.0
 * no wildcard imports
 	[Dan] Are we sure about this?
 * tests
+* PEP8
+* See Romain's document on designing script languages
+  (e.g. use explicit names, consistent conventions etc)
 
 [Marcel]
 In addition to the import-related things we agreed on, I'd like to suggest that

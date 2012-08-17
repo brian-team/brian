@@ -19,6 +19,8 @@ An Equation is a set of single lines in a string:
 The equations may be defined on multiple lines with the character \.
 Comments using # may also be included. These two things along with other general
 string processing things, are common to all model strings (reset and threshold).
+Subunits are not allowed, i.e., one must write ``volt``, not ``mV``. But
+compound units are allowed (e.g. ``farad/meter**2``).
 
 Note that aliases disappear in Brian 2.0.
 Two special variables are defined: t (time) and xi (white noise).
@@ -159,6 +161,7 @@ We propose to rely more systematically on sympy for inspecting equations (see be
 Parsing
 -------
 Parsing is now based on pyparsing (MIT license).
+Maybe dividing into deterministic and noise terms could be done in this way too?
 
 Units checking
 --------------
