@@ -14,5 +14,6 @@ interest to others wishing to better understand how Brian works internally.
    equations
    codegen/index
    device
+   groups
    features_to_be_removed
  
