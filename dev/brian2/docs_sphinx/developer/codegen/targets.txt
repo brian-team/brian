@@ -6,7 +6,11 @@ Here is a list of potential targets:
 * Python (more precisely, numpy)
 * C
 * GPU
-* Android Renderscript
+* Android
+	Android is based on linux and uses a Java API.
+	But there also seems to be something called Renderscript for numerical
+	computation based on a C-like language.
+	http://www.slideshare.net/yrameshrao/android-understanding-6453986
 * Cluster or multicores (MPI)
 * Spinnaker
 * Other neuromorphic chips
