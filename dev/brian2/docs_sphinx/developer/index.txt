@@ -12,6 +12,7 @@ interest to others wishing to better understand how Brian works internally.
    clocks
    code-strings
    equations
+   state_update
    codegen/index
    device
    groups

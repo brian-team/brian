@@ -6,6 +6,7 @@ Here is a list of potential targets:
 * Python (more precisely, numpy)
 * C
 * GPU
+* Android Renderscript
 * Cluster or multicores (MPI)
 * Spinnaker
 * Other neuromorphic chips
@@ -14,3 +15,12 @@ Here is a list of potential targets:
 * PyNN
 * PyNeuron
 * NineML
+
+What should one do to develop support for a specific target?
+* Code generation. Translation to target code could be identical for several targets
+  (e.g. that use C or C-like code). Decoration (adding loops etc) is most likely
+  target-specific.
+* Managing device memory.
+* SpikeQueue and possibly a few other key classes.
+* Target-specific library. This is code with which the generated will be compiled.
+  This is used mostly when creating a complete code.
