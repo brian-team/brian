@@ -13,6 +13,21 @@ in the extras package.
    :maxdepth: 1
 
 
+.. _examples-twister:
+
+twister
+-------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-twister_anonymous
+   examples-twister_FriedemannZenke
+   examples-twister_MicheleGiugliano
+   examples-twister_PeterDiehl
+   examples-twister_PierreYger
+   examples-twister_QuentinPauluis
+
 .. _examples-synapses:
 
 synapses
@@ -198,7 +213,62 @@ frompapers
    examples-frompapers_Rothman_Manis_2003
    examples-frompapers_Sturzl_et_al_2000
    examples-frompapers_Touboul_Brette_2008
+   examples-frompapers_Vogels_et_al_2011
    examples-frompapers_Wang_Buszaki_1996
+
+.. _examples-frompapers-computing with neural synchrony-olfaction:
+
+frompapers\computing with neural synchrony\olfaction
+----------------------------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-frompapers-computing with neural synchrony-olfaction_Fig11B_olfaction_stdp_learning
+   examples-frompapers-computing with neural synchrony-olfaction_Fig11B_olfaction_stdp_testing
+   examples-frompapers-computing with neural synchrony-olfaction_Fig9B_olfaction
+   examples-frompapers-computing with neural synchrony-olfaction_params
+
+.. _examples-frompapers-computing with neural synchrony-hearing:
+
+frompapers\computing with neural synchrony\hearing
+--------------------------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-frompapers-computing with neural synchrony-hearing_Fig12A_Goodman_Brette_2010
+   examples-frompapers-computing with neural synchrony-hearing_Fig7A_Jeffress
+   examples-frompapers-computing with neural synchrony-hearing_Fig7B_Licklider
+
+.. _examples-frompapers-computing with neural synchrony-duration selectivity:
+
+frompapers\computing with neural synchrony\duration selectivity
+---------------------------------------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-frompapers-computing with neural synchrony-duration selectivity_Fig1A_rebound_neurons
+   examples-frompapers-computing with neural synchrony-duration selectivity_Fig1D_duration_selectivity
+   examples-frompapers-computing with neural synchrony-duration selectivity_Fig2A_synchrony_partition
+   examples-frompapers-computing with neural synchrony-duration selectivity_Fig2C_decoding_synchrony
+   examples-frompapers-computing with neural synchrony-duration selectivity_Fig4_duration_stdp
+   examples-frompapers-computing with neural synchrony-duration selectivity_params
+
+.. _examples-frompapers-computing with neural synchrony-coincidence detection and synchrony:
+
+frompapers\computing with neural synchrony\coincidence detection and synchrony
+------------------------------------------------------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig1C
+   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig1F_ROC
+   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig5D_reproducibility
+   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig5E_precision_reliability
+   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig6_shared_variability
 
 .. _examples-electrophysiology:
 
@@ -210,9 +280,10 @@ electrophysiology
 
    examples-electrophysiology_AEC
    examples-electrophysiology_bridge
+   examples-electrophysiology_compensation_ex1
+   examples-electrophysiology_compensation_ex2_spikes
+   examples-electrophysiology_compensation_ex3_quality
    examples-electrophysiology_DCC
-   examples-electrophysiology_lp_compensation
-   examples-electrophysiology_offline_electrode_compensation
    examples-electrophysiology_SEVC
    examples-electrophysiology_threshold_analysis
    examples-electrophysiology_voltageclamp

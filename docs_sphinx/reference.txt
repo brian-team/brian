@@ -27,6 +27,7 @@ For an overview of Brian, see the :ref:`user-manual` section.
     reference-remotecontrol
     reference-progressreporting
     reference-modelfitting
+    reference-electrodecompensation
     reference-hears
     reference-magic
     reference-tests

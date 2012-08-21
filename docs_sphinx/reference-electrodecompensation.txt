@@ -1,0 +1,11 @@
+.. currentmodule:: brian.library.electrophysiology
+
+Electrode compensation
+======================
+
+The L^p electrode compensation method is implemented, along with a spike 
+detection method and a quality test (Rossant et al 2012).
+
+.. autofunction:: Lp_compensate
+.. autofunction:: find_spikes
+.. autofunction:: get_trace_quality

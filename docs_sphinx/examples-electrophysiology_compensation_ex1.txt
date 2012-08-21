@@ -1,0 +1,43 @@
+.. currentmodule:: brian
+
+.. _example-electrophysiology_compensation_ex1:
+
+Example: compensation_ex1 (electrophysiology)
+=============================================
+
+Example of L^p electrode compensation method. Requires binary files 
+"current.npy" and "rawtrace.npy".
+
+    Rossant et al., "A calibration-free electrode compensation method"
+    J. Neurophysiol 2012
+
+::
+
+    from brian import *
+    import numpy as np
+    from brian.library.electrophysiology import *
+    
+    # load data
+    dt = 0.1*ms
+    current = np.load("current.npy")  # 10000-long vector, 1s duration
+    rawtrace = np.load("trace.npy")  # 10000-long vector, 1s duration
+    t = linspace(0., 1., len(current))
+    
+    # launch compensation
+    r = Lp_compensate(current, rawtrace, dt, p=1.0, full=True)
+    
+    # print best parameters
+    print "Best parameters: R, tau, Vr, Re, taue:"
+    print r["params"]
+    
+    # plot traces
+    subplot(211)
+    plot(t, current, 'k')
+    
+    subplot(212)
+    plot(t, rawtrace, 'k')  # raw trace
+    plot(t, r["Vfull"], 'b')  # full model trace (neuron and electrode)
+    plot(t, r["Vcompensated"], 'g')  # compensated trace
+    
+    show()
+
