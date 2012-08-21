@@ -5,7 +5,25 @@
 Input/output
 ============
 
+General data management
+-----------------------
+
 .. autoclass:: brian.tools.datamanager.DataManager
+
+Spikes management
+-----------------
+
+The following function describes how to load Address-Event Representation files (AER files). 
+See also the :class:`AERSpikeMonitor` for saving spikes in that format, and :class:`SpikeGeneratorGroup` for reusing them in a simulation.
+
+.. index:: 
+	pair: Spikes; aer file
+
+.. autofunction:: load_aer
+
+
+Other external datatypes
+------------------
 
 .. index::
 	pair: Neuron; dat file
@@ -16,3 +34,5 @@ Input/output
 	pair: Axon; atf file
 
 .. autofunction:: read_atf
+
+

@@ -27,6 +27,7 @@ decorator.
 .. autoclass:: StateMonitor
 .. autoclass:: MultiStateMonitor
 .. autoclass:: RecentStateMonitor
+.. autoclass:: AERSpikeMonitor
 .. autoclass:: FileSpikeMonitor
 .. autoclass:: ISIHistogramMonitor
 .. autoclass:: PopulationRateMonitor
