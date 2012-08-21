@@ -537,7 +537,13 @@ class AERSpikeMonitor(FileSpikeMonitor):
         FileSpikeMonitor(source, filename[, record=False])
     
     Does everything that a :class:`SpikeMonitor` does except ONLY records
-    the spikes to the named file in AER format. 
+    the spikes to the named file in AER format. These spikes can then
+    be reloaded via the io.load_aer function and used later into a
+    SpikeGeneratorGroup. 
+    
+    It is about three times faster than the FileSpikeMonitor and
+    creates smaller files. On the other hand those files are not
+    human-readable because they are in binary format. 
 
     
     Has one additional method:
@@ -545,6 +551,8 @@ class AERSpikeMonitor(FileSpikeMonitor):
     ``close_file()``
         Closes the file manually (will happen automatically when
         the program ends).
+
+    
     """
     def __init__(self, source, filename, record=False, delay=0):
         super(FileSpikeMonitor, self).__init__(source, record, delay)
