@@ -39,14 +39,14 @@ if properly coded.
 '''
 
 __all__ = ['VanRossumMetric','SpikeMonitor', 'PopulationSpikeCounter', 'SpikeCounter', 'FileSpikeMonitor', 'StateMonitor', 'ISIHistogramMonitor', 'Monitor',
-           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter', 'CoincidenceMatrixCounter', 'StateHistogramMonitor']
+           'PopulationRateMonitor', 'StateSpikeMonitor', 'MultiStateMonitor', 'RecentStateMonitor', 'CoincidenceCounter', 'CoincidenceMatrixCounter', 'StateHistogramMonitor', 'AERSpikeMonitor']
 
 from units import *
 from connections import Connection, SparseConnectionVector
 from numpy import array, zeros, mean, histogram, linspace, tile, digitize,     \
         copy, ones, rint, exp, arange, convolve, argsort, mod, floor, asarray, \
         maximum, Inf, amin, amax, sort, nonzero, setdiff1d, diag, hstack, resize,\
-         inf, var,tril,empty,float64,array,sum
+         inf, var, tril, empty, float64, array, sum, int32, ceil
 from scipy.spatial.distance import sqeuclidean
 from itertools import repeat, izip
 from clock import guess_clock, EventClock, Clock
@@ -60,6 +60,7 @@ from neurongroup import NeuronGroup
 import bisect
 from base import *
 from time import time
+import datetime
 try:
     import pylab, matplotlib
 except:
@@ -524,6 +525,44 @@ class FileSpikeMonitor(SpikeMonitor):
 
     def close_file(self):
         self.f.close()
+
+
+# The default header for AER files. (see AERSpikeMonitor init)
+AER_HEADER = """#!AER-DAT2.0\n# This is a raw AE data file - do not edit\n# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event\n# Timestamps tick is %s\n# created with the Brian simulator on """
+class AERSpikeMonitor(FileSpikeMonitor):
+    """Records spikes to an AER file
+    
+    Initialised as::
+    
+        FileSpikeMonitor(source, filename[, record=False])
+    
+    Does everything that a :class:`SpikeMonitor` does except ONLY records
+    the spikes to the named file in AER format. 
+
+    
+    Has one additional method:
+    
+    ``close_file()``
+        Closes the file manually (will happen automatically when
+        the program ends).
+    """
+    def __init__(self, source, filename, record=False, delay=0):
+        super(FileSpikeMonitor, self).__init__(source, record, delay)
+        self.filename = filename
+        self.f = open(filename, 'w')
+        header = AER_HEADER % self.source.clock.dt.__repr__()
+        header += str(datetime.datetime.now()) + '\n'
+        self.f.write(header)
+
+    def propagate(self, spikes):
+#        super(AERSpikeMonitor, self).propagate(spikes)
+        addr = array(spikes, dtype = int32)
+        s_addr = addr[::-1]
+        x = zeros(2*len(addr), dtype = int32)
+        x[1::2] = addr[::-1]
+        x[::2] = int(ceil(float(self.source.clock.t/self.source.clock.dt)))
+        s = x.tostring()[::-1]
+        self.f.write(s)
 
 
 class PopulationRateMonitor(SpikeMonitor):
