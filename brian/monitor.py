@@ -504,7 +504,7 @@ class FileSpikeMonitor(SpikeMonitor):
     
     Has one additional method:
     
-    ``close_file()``
+    ``close()``
         Closes the file manually (will happen automatically when
         the program ends).
     """
@@ -523,12 +523,16 @@ class FileSpikeMonitor(SpikeMonitor):
             for i in spikes:
                 self.f.write(str(i) + ", " + str(float(self.source.clock.t)) + "\n")
 
-    def close_file(self):
+    def close(self):
         self.f.close()
 
 
 # The default header for AER files. (see AERSpikeMonitor init)
-AER_HEADER = """#!AER-DAT2.0\n# This is a raw AE data file - do not edit\n# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event\n# Timestamps tick is %s\n# created with the Brian simulator on """
+AER_HEADER = """#!AER-DAT2.0
+# This is a raw AE data file - do not edit
+# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event
+# Timestamps tick is %s
+# created with the Brian simulator on """
 class AERSpikeMonitor(FileSpikeMonitor):
     """Records spikes to an AER file
     
@@ -537,7 +541,8 @@ class AERSpikeMonitor(FileSpikeMonitor):
         FileSpikeMonitor(source, filename[, record=False])
     
     Does everything that a :class:`SpikeMonitor` does except ONLY records
-    the spikes to the named file in AER format. These spikes can then
+    the spikes to the named file in AER format, during the simulation.
+    These spikes can then
     be reloaded via the io.load_aer function and used later into a
     SpikeGeneratorGroup. 
     
@@ -548,7 +553,7 @@ class AERSpikeMonitor(FileSpikeMonitor):
     
     Has one additional method:
     
-    ``close_file()``
+    ``close()``
         Closes the file manually (will happen automatically when
         the program ends).
 
@@ -557,7 +562,7 @@ class AERSpikeMonitor(FileSpikeMonitor):
     def __init__(self, source, filename, record=False, delay=0):
         super(FileSpikeMonitor, self).__init__(source, record, delay)
         self.filename = filename
-        self.f = open(filename, 'w')
+        self.f = open(filename, 'wb')
         header = AER_HEADER % self.source.clock.dt.__repr__()
         header += str(datetime.datetime.now()) + '\n'
         self.f.write(header)
@@ -565,7 +570,6 @@ class AERSpikeMonitor(FileSpikeMonitor):
     def propagate(self, spikes):
 #        super(AERSpikeMonitor, self).propagate(spikes)
         addr = array(spikes, dtype = int32)
-        s_addr = addr[::-1]
         x = zeros(2*len(addr), dtype = int32)
         x[1::2] = addr[::-1]
         x[::2] = int(ceil(float(self.source.clock.t/self.source.clock.dt)))

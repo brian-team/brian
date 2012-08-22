@@ -41,14 +41,14 @@ def read_atf(name):
 
 def load_multiple_aer(filename, check_sorted = False, relative_time = False, directory = '.'):
     '''
-    Used to load AER files that point to multiple files.
+    Loads multiple AER files listed in the file.
     '''
     f=open(filename,'rb')
     line = f.readline()
     res = []
     line = line.strip('\n')
     while not line == '':
-        res.append(load_AER(os.path.join(directory, line), check_sorted = check_sorted, relative_time = relative_time))
+        res.append(load_aer(os.path.join(directory, line), check_sorted = check_sorted, reinit_time = relative_time))
         line = f.readline()
     f.close()
     return res
@@ -74,15 +74,13 @@ def load_aer(filename,
     
     If check_sorted is True, checks if timestamps are sorted,
     and sort them if necessary.
-    ``reinit_time`` is True, it will set the first spike time to zero and all others relatively to that precise time (avoid negative timestamps, is definitely a good idea).
+    ``reinit_time`` is True, it will set the first spike time to zero and all others relatively to that
+    precise time (avoid negative timestamps, is definitely a good idea).
     
     Hence to use those data files in Brian, one should do:
 
     addr, timestamp =  load_AER(filename, reinit_time = True)
     G = AERSpikeGeneratorGroup((addr, timestamps))
-    
-    
-    
     '''
     # This loading fun is inspired by the following Matlab script:
     # http://jaer.svn.sourceforge.net/viewvc/jaer/trunk/host/matlab/loadaerdat.m?revision=2001&content-type=text%2Fplain
@@ -98,7 +96,7 @@ def load_aer(filename,
         #AER data points to different AER files
         return load_multiple_AER(filename, 
                                  check_sorted = check_sorted, 
-                                 relative_time = relative_time, 
+                                 relative_time = reinit_time, 
                                  directory = directory)
     elif not (ext == 'dat' or ext == 'aedat'):
         raise ValueError('Wrong extension for AER data, should be dat, or aedat, it was '+ext)
@@ -155,8 +153,8 @@ def load_aer(filename,
         else:
             # alternative fallback:
             #timestamp = x[1::2]
-            raise IOError("""Corrupted AER file, timestamps and
-        addresses don't have the same lengths.""")
+            #print len(x)
+            raise IOError("""Corrupted AER file, timestamps and addresses don't have the same lengths.""")
     
     # Sorts the events if necessary
     if check_sorted: 

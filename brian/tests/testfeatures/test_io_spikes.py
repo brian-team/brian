@@ -35,7 +35,7 @@ def do_spikeio_test(test = 'save', dt = .1*ms):
         Maer = AERSpikeMonitor(g, './dummy.aedat')
         M = SpikeMonitor(g)
         run(100*ms)
-        Maer.close_file()
+        Maer.close()
 
         # reload the spikes
         addr, timestamps = load_aer('./dummy.aedat')
