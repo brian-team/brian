@@ -66,5 +66,14 @@ Main loop
 
 Notes
 -----
-
 See style guide style.txt
+
+A number of projects to look at:
+* GPU for Python: http://www.accelereyes.com/
+  (includes IIR filters and convolution)
+* Oliphant's note on speed comparisons:
+  http://technicaldiscovery.blogspot.fr/2011/07/speeding-up-python-again.html
+  Fortran rather than C could perhaps be a target?
+* Numba looks amazing: http://numba.pydata.org/
+* This is used in Numba: http://www.llvmpy.org/
+* Python for Android: https://code.google.com/p/python-for-android/
