@@ -20,15 +20,21 @@ mathematical statements. Here are a few examples
 Euler
 ^^^^^
 
+::
+
 	x(t+dt)=x(t)+dt*f(x(t),t)
 
 Runge-Kutta 2 (midpoint)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+::
+
 	x(t+dt)=x(t)+dt*f(x(t)+dt/2*f(x(t),t),t+dt/2)
 
 Runge-Kutta 4
 ^^^^^^^^^^^^^
+
+::
 
 	k1=dt*f(x(t),t)
 	k2=dt*f(x(t)+k1/2,t+dt/2)
@@ -38,7 +44,10 @@ Runge-Kutta 4
 
 Stochastic Euler
 ^^^^^^^^^^^^^^^^
-x(t+dt)=x(t)+dt*f(x(t),t)+dt**.5*g(x(t),t)*randn()
+
+::
+
+	x(t+dt)=x(t)+dt*f(x(t),t)+dt**.5*g(x(t),t)*randn()
 
 General schemes
 ^^^^^^^^^^^^^^^^

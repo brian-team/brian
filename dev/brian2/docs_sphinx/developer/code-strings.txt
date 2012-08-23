@@ -36,3 +36,4 @@ Reserved keywords
 * i, j
 * t, dt
 * xi
+* function names: sin, cos, etc., maybe also rand(), randn(), etc.
