@@ -7,3 +7,5 @@ Code generation
    examples
    proposal
    targets
+   compiler
+   
