@@ -9,6 +9,7 @@ interest to others wishing to better understand how Brian works internally.
    :maxdepth: 2
 
    overview
+   style
    clocks
    code-strings
    equations

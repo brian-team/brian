@@ -1,0 +1,117 @@
+Development guidelines
+======================
+
+The basic principles of developing Brian are:
+
+1. For the user, the emphasis is on making the package flexible, readable and
+   easy to use. See the paper "The Brian simulator" in Frontiers in Neuroscience
+   for more details.  
+2. For the developer, the emphasis is on keeping the package maintainable by
+   a small number of people. To this end, we use stable, well maintained,
+   existing open source packages whenever possible, rather than writing our
+   own code.
+
+Coding conventions
+------------------
+
+Syntax is chosen as much as possible from the user point of view,
+to reflect the concepts as directly as possible. Ideally, a Brian script
+should be readable by someone who doesn't know Python or Brian, although this
+isn't always possible. Function, class and keyword argument names should be
+explicit rather than abbreviated and consistent across Brian. See Romain's paper 
+`On the design of script languages for neural simulators
+<http://briansimulator.org/WordPress/wp-content/uploads/2012/05/On-the-design-of-script-languages-for-neural-simulation.pdf>`__ 
+for a discussion.
+
+We use the `PEP-8 coding conventions <http://www.python.org/dev/peps/pep-0008/>`__
+for our code. This in particular includes the following conventions:
+
+* Use 4 spaces instead of tabs per indentation level
+* Use commas after operators (except around the ``=`` in keyword arguments)
+* The core code should only contain ASCII characters, no encoding has to be declared
+* imports should be on different lines (e.g. do not use ``import sys, os``) and
+  should be grouped in the following order, using blank lines between each group:
+  
+  	1. standard library imports
+  	2. third-party library imports (e.g. numpy, scipy, sympy, ...)
+  	3. brian imports
+
+* Use absolute instead of relative imports, i.e. within the brian2 package use
+  ``import brian2.something`` instead of ``import something``
+* Do not use wildcard imports (``from brian2 import *``), instead import only the
+  identifiers you need, e.g. ``from brian2 import NeuronGroup, Synapses``. For 
+  packages like numpy that are used a lot, use ``import numpy as np``. But
+  note that the user should still be able to do something like
+  ``from brian2 import *`` (and this style can also be freely used in examples
+  and tests, for example). For this to work, as an exception from the above rule,
+  packages may include ``from brian2.submodule import *`` statements.
+  For example, ``brian2/__init__.py`` includes such statements for all modules
+  whose namespaces should be available to the user. As a rule of thumb, a 
+  ``from brian2.module import *`` statement should only appear once in the 
+  codebase for any module. Modules always have to use the ``__all__`` mechanism
+  to specify what is being made available with a wildcard import.
+  
+Brian2 is no longer supporting Python versions 2.5 and older. Therefore, a
+couple of backwards-incompatible idioms can be used that will also ease a future
+transition towards Python 3. The `Porting to Python 3 <http://python3porting.com/>`__
+book is available online and has a couple of recommendations. For example:
+
+* If you are working with integers and using division, consider using ``//``
+  for flooring division (default behaviour for ``/`` in python 2) and switch the
+  behaviour of ``/`` to floating point division by using
+  ``from __future__ import division`` .
+* instead of ``except Exception, ex:`` use ``except Exception as ex:`` (note that plain ``except:`` should never be used!)
+* If you write code dealing with strings, possibly reading and writing them to
+  files, make sure you make the distinction between bytes and unicode (see
+  `"separate binary data and strings" <http://python3porting.com/preparing.html#separate-binary-data-and-strings>`__ )
+* If you are sorting lists or dictionaries, have a look at
+  `"when sorting, use key instead of cmp" <http://python3porting.com/preparing.html#when-sorting-use-key-instead-of-cmp>`__ )  
+
+Documentation
+-------------
+
+It is very important to maintain documentation. We use the
+`Sphinx documentation generator <http://sphinx.pocoo.org/>`__ tools. The
+documentation is all hand written. Sphinx source files are stored in the
+``docs_sphinx`` folder (currently: ``dev/brian2/docs_sphinx``). The HTML files
+can be generated via the script ``dev/tools/docs/build_html_brian2.py`` and end
+up in the ``docs`` folder (currently: ``dev/brian2/docs``).
+
+The documentation is also built automatically every night on the Jenkin's build
+server and the most recent version is always available from
+http://hal.dec.ens.fr:9000/brian2 . If you have login credentials for
+*hal.dec.ens.fr*, you can also trigger a rebuild `via the Jenkin's web portal
+<http://hal.dec.ens.fr:8080/job/Documentation%20(Brian%202.0)/build?delay=0sec>`__ .
+
+Most of the documentation is stored directly in the Sphinx
+source text files, but reference documentation for important Brian classes and
+functions are kept in the documentation strings of those classes themselves.
+This is automatically pulled from these classes for the reference manual
+section of the documentation. The idea is to keep the definitive reference
+documentation near the code that it documents, serving as both a comment for
+the code itself, and to keep the documentation up to date with the code.
+
+In the code, every class or function should start with an explanation of what it does,
+unless it is trivial. A good idea is to use explicit names rather than abbreviations,
+so that you instantly understand what it is about. Inside a function, important chunks
+should also be commented. 
+
+Testing
+-------
+Brian uses the `nose package <http://somethingaboutorange.com/mrl/projects/nose/0.11.1/>`__
+for its testing framework. 
+
+TODO
+
+Errors
+------
+
+It is a good idea to start an important function (e.g. object initialisation)
+with a check of the arguments, and possibly issue errors. This way errors are
+more understandable by the user.
+
+Contributions
+-------------
+TODO
+
+We use the `Brian 2.0 <http://groups.google.fr/group/brian-20>`__ mailing list.
