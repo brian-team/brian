@@ -328,7 +328,7 @@ def Lp_compensate(I, Vraw, dt,
     * docompensation=True: if False, does not perform the optimization and only
       return an ElectrodeCompensation object instance, to take full control over
       the optimization procedure.
-    * *params: a list of initial parameters for the optimization, in the 
+    * params: a list of initial parameters for the optimization, in the 
       following order: R, tau, Vr, Re, taue. Best results are obtained when
       reasonable estimates of the parameters are given.
     """

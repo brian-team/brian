@@ -23,7 +23,7 @@ See also the :class:`AERSpikeMonitor` for saving spikes in that format, and :cla
 
 
 Other external datatypes
-------------------
+------------------------
 
 .. index::
 	pair: Neuron; dat file

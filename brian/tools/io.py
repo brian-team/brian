@@ -60,7 +60,7 @@ def load_aer(filename,
     '''
     Loads Address Event Representation (AER) data files for use in
     Brian. Files contain spikes as a binary representation of an
-    ``address'' (i.e. neuron identifier) and a timestamp.
+    ``address`` (i.e. neuron identifier) and a timestamp.
 
     Returns a list containing tuples with a vector of addresses and a vector of timestamps (ints, unit is usually microsecond).
 
