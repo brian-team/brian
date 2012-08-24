@@ -5,15 +5,18 @@ Example of quality check method. Requires binary files
     Rossant et al., "A calibration-free electrode compensation method"
     J. Neurophysiol 2012
 """
+import os
 from brian import *
 import numpy as np
 from brian.library.electrophysiology import *
 
+working_dir = os.path.dirname(__file__)
+
 # load data
 dt = 0.1*ms
-current = np.load("current.npy")  # 10000-long vector, 1s duration
-rawtrace = np.load("trace.npy")  # 10000-long vector, 1s duration
-compensatedtrace = np.load("compensatedtrace.npy")  # obtained with example1
+current = np.load(os.path.join(working_dir, "current.npy"))  # 10000-long vector, 1s duration
+rawtrace = np.load(os.path.join(working_dir, "trace.npy"))  # 10000-long vector, 1s duration
+compensatedtrace = np.load(os.path.join(working_dir, "compensatedtrace.npy"))  # obtained with example1
 t = linspace(0., 1., len(current))
 
 # get trace quality of both raw and compensated traces

@@ -5,14 +5,18 @@ Example of L^p electrode compensation method. Requires binary files
     Rossant et al., "A calibration-free electrode compensation method"
     J. Neurophysiol 2012
 """
+import os
+
 from brian import *
 import numpy as np
 from brian.library.electrophysiology import *
 
+working_dir = os.path.dirname(__file__)
+
 # load data
 dt = 0.1*ms
-current = np.load("current.npy")  # 10000-long vector, 1s duration
-rawtrace = np.load("trace.npy")  # 10000-long vector, 1s duration
+current = np.load(os.path.join(working_dir, "current.npy"))  # 10000-long vector, 1s duration
+rawtrace = np.load(os.path.join(working_dir, "trace.npy"))  # 10000-long vector, 1s duration
 t = linspace(0., 1., len(current))
 
 # launch compensation
