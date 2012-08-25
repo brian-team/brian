@@ -77,12 +77,6 @@ documentation is all hand written. Sphinx source files are stored in the
 can be generated via the script ``dev/tools/docs/build_html_brian2.py`` and end
 up in the ``docs`` folder (currently: ``dev/brian2/docs``).
 
-The documentation is also built automatically every night on the Jenkin's build
-server and the most recent version is always available from
-http://hal.dec.ens.fr:9000/brian2 . If you have login credentials for
-*hal.dec.ens.fr*, you can also trigger a rebuild `via the Jenkin's web portal
-<http://hal.dec.ens.fr:8080/job/Documentation%20(Brian%202.0)/build?delay=0sec>`__ .
-
 Most of the documentation is stored directly in the Sphinx
 source text files, but reference documentation for important Brian classes and
 functions are kept in the documentation strings of those classes themselves.
@@ -113,5 +107,3 @@ more understandable by the user.
 Contributions
 -------------
 TODO
-
-We use the `Brian 2.0 <http://groups.google.fr/group/brian-20>`__ mailing list.
