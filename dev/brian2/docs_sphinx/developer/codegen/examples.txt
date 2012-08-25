@@ -155,7 +155,7 @@ made available to code generation somehow. Presumably there is also a
 presynaptic[i]?
 	
 Python code is slightly more tricky because we cannot handle it in one go, but
-instead we use the trick developed by Victor and I::
+instead we use the trick developed by Victor and me::
 
     _post_neurons = _post.data.take(_synapses)
     _perm = _post_neurons.argsort()
