@@ -122,6 +122,6 @@ try:
 except DimensionMismatchError as ex:    
     print 'Expected error raised: ', ex
 
-print '\n\tConversions to and from list (not working yet)'
-print_eval('np.array([1 * mV, 1 * volt])')
+print '\n\tConversions to and from list'
+print_eval('Quantity([1 * mV, 1 * volt])')
 print_eval('(np.array([1, 2, 3]) * mV).tolist()')

@@ -105,52 +105,47 @@ the potential for variable name clashes.
 """
 
 __all__ = [
-    'Dimension', 'Scale', 'DimensionMismatchError',
+    'Dimension', 'DimensionMismatchError',
     'get_dimensions', 'is_dimensionless', 'have_same_dimensions',
     'display_in_unit', 'Quantity', 'Unit', 'register_new_unit',
     'check_units', 'is_scalar_type', 'get_unit', 'get_unit_fast',
     'scalar_representation',
     ]
-
-from brian_unit_prefs import bup
 from operator import isNumberType, isSequenceType
 from itertools import izip
-import numpy
-from brian.utils.approximatecomparisons import *
-import types
-from functools import *
-import sys
+from functools import wraps
 
-from numpy.core.numerictypes import ScalarType
+import numpy as np
 
-# Note that the decorator module below is used to provide signature preserving
-# decorators, but it has the unfortunate side effect of messing up the tracebacks
-# because it uses eval, so we only use it when we want to generate documentation,
-# i.e. if 'sphinx' or 'docutils' or 'epydoc' are loaded.
-# TODO: this has stopped working anyway, so it's now removed
-#try:
-#    import decorator
-#    use_decorator = 'sphinx' in sys.modules or 'docutils' in sys.modules or 'epydoc' in sys.modules
-#except:
-#    use_decorator = False
+from brian_unit_prefs import bup
+#from brian.utils.approximatecomparisons import *
+
 
 # SI dimensions (see table at end of file) and various descriptions,
 # each description maps to an index i, and the power of each dimension
 # is stored in the variable dims[i]
-_di = { "Length":0, "length": 0, "metre":0, "metres":0, "metre": 0, "metres":0, "metre":0, "metres":0, "metre": 0, "metres":0, "m": 0, \
-       "Mass":1, "mass": 1, "kilogram":1, "kilograms":1, "kilogram": 1, "kilograms":1, "kg": 1, \
-       "Time":2, "time": 2, "second":2, "seconds":2, "second": 2, "seconds":2, "s": 2, \
-       "Electric Current":3, "Electric Current":3, "electric current": 3, "Current":3, "current":3, "ampere":3, "amperes":3, "ampere": 3, "amperes":3, "A": 3, \
-       "Temperature":4, "temperature": 4, "kelvin":4, "kelvins":4, "kelvin": 4, "kelvins":4, "K": 4, \
-       "Quantity of Substance":5, "Quantity of substance": 5, "quantity of substance": 5, "Substance":5, "substance":5, "mole":5, "moles":5, "mole": 5, "moles":5, "mol": 5, \
-       "Luminosity":6, "luminosity": 6, "candle":6, "candles":6, "candle": 6, "candles":6, "cd": 6 }
+_di = { "Length":0, "length": 0, "metre":0, "metres":0, "metre": 0, "metres":0,
+       "metre":0, "metres":0, "metre": 0, "metres":0, "m": 0, "Mass":1,
+       "mass": 1, "kilogram":1, "kilograms":1, "kilogram": 1, "kilograms":1,
+       "kg": 1, "Time":2, "time": 2, "second":2, "seconds":2, "second": 2,
+       "seconds":2, "s": 2, "Electric Current":3, "Electric Current":3,
+       "electric current": 3, "Current":3, "current":3, "ampere":3, "amperes":3,
+       "ampere": 3, "amperes":3, "A": 3, "Temperature":4, "temperature": 4,
+       "kelvin":4, "kelvins":4, "kelvin": 4, "kelvins":4, "K": 4,
+       "Quantity of Substance":5, "Quantity of substance": 5,
+       "quantity of substance": 5, "Substance":5, "substance":5, "mole":5,
+       "moles":5, "mole": 5, "moles":5, "mol": 5, "Luminosity":6,
+       "luminosity": 6, "candle":6, "candles":6, "candle": 6, "candles":6,
+       "cd": 6 }
 _ilabel = ["m", "kg", "s", "A", "K", "mol", "cd"]
 # The same labels with the names used for constructing them in Python code
-_iclass_label = ["metre", "kilogram", "second", "amp", "kelvin", "mole", "candle"]
+_iclass_label = ["metre", "kilogram", "second", "amp", "kelvin", "mole",
+                 "candle"]
 # SI unit _prefixes, see table at end of file
-_siprefixes = {"y":1e-24, "z":1e-21, "a":1e-18, "f":1e-15, "p":1e-12, "n":1e-9, "u":1e-6, "m":1e-3, "c":1e-2, "d":1e-1, \
-            "":1, \
-            "da":1e1, "h":1e2, "k":1e3, "M":1e6, "G":1e9, "T":1e12, "P":1e15, "E":1e18, "Z":1e21, "Y":1e24}
+_siprefixes = {"y":1e-24, "z":1e-21, "a":1e-18, "f":1e-15, "p":1e-12, "n":1e-9,
+               "u":1e-6, "m":1e-3, "c":1e-2, "d":1e-1, "":1, "da":1e1, "h":1e2,
+               "k":1e3, "M":1e6, "G":1e9, "T":1e12, "P":1e15, "E":1e18,
+               "Z":1e21, "Y":1e24}
 
 
 class Dimension(object):
@@ -214,20 +209,16 @@ class Dimension(object):
             for k in keywords.keys():
                 # _di stores the index of the dimension with name 'k'
                 self._dims[_di[k]] = keywords[k]
+            self._dims = tuple(self._dims)
+
     #### METHODS ####
     def get_dimension(self, d):
+        #FIXME: incorrect docstring
         """Returns the list of dimension indices.
         
         See documentation for __init__.
         """
         return self._dims[_di[d]]
-
-    def set_dimension(self, d, value):
-        """Sets the list of dimension indices.
-        
-        See documentation for __init__.
-        """
-        self._dims[_di[d]] = value
 
     def is_dimensionless(self):
         """Tells you whether the object is dimensionless."""
@@ -286,90 +277,31 @@ class Dimension(object):
     def __pow__(self, value):
         return Dimension([x * value for x in self._dims])
 
-    def __imul__(self, value):
-        self._dims = [x + y for x, y in izip(self._dims, value._dims)]
-        return self
+    def __imul__(self, value):        
+        raise TypeError('Dimension object is immutable')
 
     def __idiv__(self, value):
-        self._dims = [x - y for x, y in izip(self._dims, value._dims)]
-        return self
+        raise TypeError('Dimension object is immutable')        
 
     def __itruediv__(self, value):
-        return self.__idiv__(value)
+        raise TypeError('Dimension object is immutable')
 
     def __ipow__(self, value):
-        self._dims = [x * value for x in self._dims]
-        return self
+        raise TypeError('Dimension object is immutable')
+
     #### COMPARISON ####
     def __eq__(self, value):
-        #return sum([x==y for x,y in izip(self._dims,value._dims)])==7
-        return sum([is_within_absolute_tolerance(x, y) for x, y in izip(self._dims, value._dims)]) == 7
+        return np.allclose(self._dims, value._dims)
 
     def __ne__(self, value):
         return not self.__eq__(value)
+
     #### MAKE DIMENSION PICKABLE ####
     def __getstate__(self):
         return self._dims
 
     def __setstate__(self, state):
         self._dims = state
-
-
-class Scale(object):
-    """Stores the scale factor for each SI dimension.
-    
-    Probably would only be very rarely used by a user, but might
-    conceivably be useful in certain circumstances.
-    
-    Methods:
-    
-    -- Initialisation by list of keywords
-    -- scale_factor(dim) gives the overall scaling for a value in
-       dimension dim
-    -- unit_representation(dim) gives a string representation of
-       the unit defined by the Scale object applied to dimension
-       dim 
-    """
-    __slots__ = ["scale"]
-
-    def __init__(self, *args, **keywords):
-        """Initialise by list of scales or keywords, see Dimension documentation
-        
-        e.g. Scale(length="m", time="u") =
-             Scale(["m","","u","","","",""])
-        corresponds to measuring the unit of length at the milli scale
-        and the unit of time at the u scale.
-        """
-        self.scale = [ "", "", "", "", "", "", "" ]
-        for k in keywords:
-            self.scale[_di[k]] = keywords[k]
-
-    def scale_factor(self, dim):
-        """Returns the scaling factor for dimension dim
-        
-        For example, if the scale factor of length is milli, and the
-        dimensions of dim are length^2 then the scale factor will be
-        0.001^2.
-        """
-        sf = 1
-        for s, i in izip(self.scale, dim._dims):
-            if i: sf *= _siprefixes[s] ** i
-        return sf
-
-    def unit_representation(self, dim):
-        """Returns a representation of the dimension dim at this scale
-        
-        For example, if the scale factor of length is milli, and the
-        dimensions of dim are length^2 then this will return mm^2.
-        """
-        s = ""
-        for i in range(7):
-            if dim._dims[i]:
-                s += self.scale[i] + _ilabel[i]
-                if dim._dims[i] != 1:
-                    s += "^" + str(dim._dims[i])
-                s += " "
-        return s.strip()
 
 
 class DimensionMismatchError(Exception):
@@ -456,8 +388,9 @@ def display_in_unit(x, u):
     """String representation of the object x in unit u.
     """
     if not have_same_dimensions(x, u):
-        raise DimensionMismatchError("Non-matching unit for function display_in_unit", get_dimensions(x), get_dimensions(u))
-    s = str(numpy.asarray(x / u)) + " "
+        raise DimensionMismatchError("Non-matching unit for function display_in_unit",
+                                     get_dimensions(x), get_dimensions(u))
+    s = str(np.asarray(x / u)) + " "
     if not is_dimensionless(u):
         if isinstance(u, Unit):
             s += str(u)
@@ -469,14 +402,14 @@ def quantity_with_dimensions(floatval, dims):
     return Quantity.with_dimensions(floatval, dims)
 
 
-class Quantity(numpy.ndarray):
+class Quantity(np.ndarray):
     """A number with an associated physical dimension.
     
     In most cases, it is not necessary to create a :class:`Quantity` object
     by hand, instead use the constant unit names ``second``, ``kilogram``,
     etc. The details of how :class:`Quantity` objects work is subject to
     change in future releases of Brian, as we plan to reimplement it
-    in a more efficient manner, more tightly integrated with numpy. The
+    in a more efficient manner, more tightly integrated with np. The
     following can be safely used:
     
     * :class:`Quantity`, this name will not change, and the usage
@@ -517,6 +450,8 @@ class Quantity(numpy.ndarray):
     The three rules that define the casting operations for
     Quantity object are:
     
+    TODO
+    
     1. Quantity op Quantity = Quantity
         - Performs dimension checking if appropriate
     2. Scalar op Quantity = Quantity 
@@ -529,7 +464,7 @@ class Quantity(numpy.ndarray):
     
     The Quantity class is a derived class of float, so many other operations
     will also downcast to float. For example, sin(x) where x is a quantity
-    will return sin(numpy.array(x)) without doing any dimension checking.
+    will return sin(np.array(x)) without doing any dimension checking.
 
     Construction details:
     
@@ -559,10 +494,10 @@ class Quantity(numpy.ndarray):
     
     #### CONSTRUCTION ####
 
-    def __new__(cls, arr, times=None, clock=None, start=None, dt=None):
-        # All numpy.ndarray subclasses need something like this, see
+    def __new__(cls, arr):        
+        # All np.ndarray subclasses need something like this, see
         # http://www.scipy.org/Subclasses
-        return numpy.array(arr, copy=False).view(cls)
+        return np.array(arr, copy=False).view(cls)
 
     def __array_finalize__(self, orig):
         try:
@@ -571,7 +506,7 @@ class Quantity(numpy.ndarray):
             pass
         return self    
     
-    def __array_prepare__(self, array, context=None):
+    def __array_prepare__(self, array, context=None): 
         if context is None:
             return array
 
@@ -596,7 +531,8 @@ class Quantity(numpy.ndarray):
         
         return array
 
-    def __array_wrap__(self, array, context=None):   
+    def __array_wrap__(self, array, context=None):
+        # print '__array_wrap', self, array, context 
         dim = self.dim
         
         if not context is None:            
@@ -608,16 +544,43 @@ class Quantity(numpy.ndarray):
     
     def __init__(self, value):
         """Initialises as dimensionless
-        """
+        """        
         super(Quantity, self).__init__()
-        self.dim = Dimension()
+        
+        if isinstance(value, Quantity):
+            dim = value.dim            
+        else:
+            try:
+                is_quantity = [isinstance(x, Quantity) for x in value]
+                if all(is_quantity):
+                    dims = [x.dim for x in value]
+                    one_dim = dims[0]
+                    for d in dims:
+                        if d != one_dim:
+                            raise DimensionMismatchError('Mixing quantities with different dimensions is not allowed',
+                                                         d, one_dim)                    
+                    dim = dims[0]
+                elif any(is_quantity):
+                    raise ValueError('Mixing quantities and non-quantities is not allowed.')
+                else:
+                    # no quantities
+                    dim = None
+            except TypeError:
+                # Not iterable
+                dim = None
+            
+        if dim is None:
+            self.dim = Dimension()
+        else:
+            self.dim = dim
         
     def __getitem__(self, key):
         ''' Overwritten to assure that single elements (i.e., indexed with a
         single integer) retain their unit.
         '''
-        if numpy.isscalar(key) and numpy.issubdtype(type(key), numpy.integer):
-            return Quantity.with_dimensions(super(Quantity, self).__getitem__(key), self.dim)
+        if np.isscalar(key) and np.issubdtype(type(key), np.integer):
+            return Quantity.with_dimensions(super(Quantity, self).__getitem__(key),
+                                            self.dim)
         else:
             return super(Quantity, self).__getitem__(key)
 
@@ -683,7 +646,8 @@ class Quantity(numpy.ndarray):
     def at_scale(self, scale):
         """Returns a string representation at given scale
         """
-        return str(numpy.asarray(self) / scale.scale_factor(self.dim)) + " " + scale.unit_representation(self.dim)
+        return (str(np.asarray(self) / scale.scale_factor(self.dim)) + " " +
+                scale.unit_representation(self.dim))
 
     def has_same_dimensions(self, other):
         """Tells you if this object has the same dimensions as another.
@@ -696,11 +660,12 @@ class Quantity(numpy.ndarray):
         string like `5.0 * um ** 2`instead of `5.0 um^2`  
         """
         if not self.has_same_dimensions(u):
-            raise DimensionMismatchError("Non-matching unit for method in_unit", self.dim, u.dim)
+            raise DimensionMismatchError("Non-matching unit for method in_unit",
+                                         self.dim, u.dim)
         if python_code:
-            s = repr(numpy.asarray(self / u)) + " "
+            s = repr(np.asarray(self / u)) + " "
         else:
-            s = str(numpy.asarray(self / u)) + " "
+            s = str(np.asarray(self / u)) + " "
         if not u.is_dimensionless():
             if isinstance(u, Unit):
                 if python_code:                    
@@ -730,51 +695,67 @@ class Quantity(numpy.ndarray):
         """
         u = _get_best_unit(self, *regs)
         return self.in_unit(u, python_code)
+    
+    def tolist(self):
+        def replace_with_quantity(seq, dim):
+            def top_replace(s):
+                for i in s:
+                    if not isinstance(i, list):
+                        yield Quantity.with_dimensions(i, dim)
+                    else:
+                        yield type(i)(top_replace(i))
+
+            return type(seq)(top_replace(seq))
+        return replace_with_quantity(np.asarray(self).tolist(), self.dim)
+            
     #### METHODS (NUMERICAL) ####
+    def argsort(self, *args, **kwds):
+        return np.asarray(super(Quantity, self).argsort(*args, **kwds)).astype(int)
+    
     def sqrt(self):
         return self ** 0.5
 
     def var(self, *args):
-        return Quantity.with_dimensions(numpy.asarray(self).var(*args), self.dim ** 2)
+        return Quantity.with_dimensions(np.asarray(self).var(*args), self.dim ** 2)
 
     def log(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.log(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.log(np.asarray(self)), self.dim)
         raise DimensionMismatchError('log', self.dim)
 
     def exp(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.exp(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.exp(np.asarray(self)), self.dim)
         raise DimensionMismatchError('exp', self.dim)
 
     def sin(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.sin(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.sin(np.asarray(self)), self.dim)
         raise DimensionMismatchError('sin', self.dim)
 
     def cos(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.cos(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.cos(np.asarray(self)), self.dim)
         raise DimensionMismatchError('cos', self.dim)
 
     def tan(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.tan(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.tan(np.asarray(self)), self.dim)
         raise DimensionMismatchError('tan', self.dim)
 
     def asin(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.asin(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.arcsin(np.asarray(self)), self.dim)
         raise DimensionMismatchError('asin', self.dim)
 
     def acos(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.acos(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.arccos(np.asarray(self)), self.dim)
         raise DimensionMismatchError('acos', self.dim)
 
     def atan(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.atan(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.arctan(np.asarray(self)), self.dim)
         raise DimensionMismatchError('atan', self.dim)
     arcsin = asin
     arccos = cos
@@ -782,43 +763,40 @@ class Quantity(numpy.ndarray):
 
     def sinh(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.sinh(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.sinh(np.asarray(self)), self.dim)
         raise DimensionMismatchError('sinh', self.dim)
 
     def cosh(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.cosh(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.cosh(np.asarray(self)), self.dim)
         raise DimensionMismatchError('cosh', self.dim)
 
     def tanh(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.tanh(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.tanh(np.asarray(self)), self.dim)
         raise DimensionMismatchError('tanh', self.dim)
 
     def arcsinh(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.arcsinh(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.arcsinh(np.asarray(self)), self.dim)
         raise DimensionMismatchError('sinh', self.dim)
 
     def arccosh(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.arccosh(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.arccosh(np.asarray(self)), self.dim)
         raise DimensionMismatchError('cosh', self.dim)
 
     def arctanh(self):
         if self.is_dimensionless():
-            return Quantity.with_dimensions(numpy.arctanh(numpy.asarray(self)), self.dim)
+            return Quantity.with_dimensions(np.arctanh(np.asarray(self)), self.dim)
         raise DimensionMismatchError('tanh', self.dim)
     #### REPRESENTATION ####
     def __repr__(self):
         return self.in_best_unit(python_code=True)
 
     def __str__(self):
-        #s = super(Quantity,self).__str__()
-        #if not self.is_dimensionless(): s += " " + str(self.dim)
-        #return s
         return self.in_best_unit()
-        #return str(numpy.array(self))+'*'+str(get_unit(self))
+        
     #### ARITHMETIC ####
     # Arithmetic operations implement the following set of rules for
     # determining casting:
@@ -830,141 +808,144 @@ class Quantity(numpy.ndarray):
         # This code, like all the other arithmetic code below, implements the casting rules
         # defined above.
         if isinstance(other, Quantity):
-            return Quantity.with_dimensions(numpy.asarray(self) * numpy.asarray(other), self.dim * other.dim)
-        elif isinstance(other,numpy.ndarray) or is_scalar_type(other):
-            return Quantity.with_dimensions(numpy.asarray(self) * other, self.dim)
+            return Quantity.with_dimensions(np.asarray(self) * np.asarray(other),
+                                            self.dim * other.dim)
+        elif is_scalar_type(other) or isinstance(other, np.ndarray):
+            return Quantity.with_dimensions(np.asarray(self) * other, self.dim)
         else:
             return NotImplemented
-            #return super(Quantity,self).__mul__(other)
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __div__(self, other):
         if isinstance(other, Quantity):
-            return Quantity.with_dimensions(numpy.asarray(self) / numpy.asarray(other), self.dim / other.dim)
-        elif isinstance(other,numpy.ndarray) or is_scalar_type(other):
-            return Quantity.with_dimensions(numpy.asarray(self) / other, self.dim)
+            return Quantity.with_dimensions(np.asarray(self) / np.asarray(other),
+                                            self.dim / other.dim)
+        elif is_scalar_type(other) or isinstance(other, np.ndarray):
+            return Quantity.with_dimensions(np.asarray(self) / other, self.dim)
         else:
             return NotImplemented
-            #return super(Quantity,self).__div__(other)
 
     def __truediv__(self, other):
-        if isinstance(other, Quantity):
-            return Quantity.with_dimensions(numpy.asarray(self) / numpy.asarray(other), self.dim / other.dim)
-        elif isinstance(other,numpy.ndarray) or is_scalar_type(other):
-            return Quantity.with_dimensions(numpy.asarray(self) / other, self.dim)
-        else:
-            return NotImplemented
-            #return super(Quantity,self).__truediv__(other)
-
+        return self.__div__(other)
+    
     def __rdiv__(self, other):
         if isinstance(other, Quantity):
-            return Quantity.with_dimensions(numpy.asarray(other) / numpy.asarray(self), other.dim / self.dim)
-        elif isinstance(other,numpy.ndarray) or is_scalar_type(other):
-            return Quantity.with_dimensions(other / numpy.asarray(self), [-x for x in self.dim._dims])
+            return Quantity.with_dimensions(np.asarray(other) / np.asarray(self),
+                                            other.dim / self.dim)
+        elif is_scalar_type(other) or isinstance(other, np.ndarray):
+            return Quantity.with_dimensions(other / np.asarray(self),
+                                            [-x for x in self.dim._dims])
         else:
             return NotImplemented
-            #return super(Quantity,self).__rdiv__(other)
 
     def __rtruediv__(self, other):
-        if isinstance(other, Quantity):
-            return Quantity.with_dimensions(numpy.asarray(other) / numpy.asarray(self), other.dim / self.dim)
-        elif isinstance(other,numpy.ndarray) or is_scalar_type(other):
-            return Quantity.with_dimensions(other / numpy.asarray(self), [-x for x in self.dim._dims])
-        else:
-            return NotImplemented
-            #return super(Quantity,self).__rtruediv__(other)
+        return self.__rdiv__(self, other)
 
     def __mod__(self, other):
-        if isinstance(other, Quantity) or isinstance(other,numpy.ndarray) or is_scalar_type(other):
+        if isinstance(other, Quantity) or is_scalar_type(other):
             dim = get_dimensions(other)
             if dim == self.dim:
-                return Quantity.with_dimensions(numpy.asarray(self) % numpy.asarray(other), self.dim)
-            else: raise DimensionMismatchError("Addition", self.dim, dim)
+                return Quantity.with_dimensions(np.asarray(self) % np.asarray(other),
+                                                self.dim)
+            else: raise DimensionMismatchError("Modulo", self.dim, dim)
+        elif isinstance(other, np.ndarray):
+            return np.asarray(self) % other
         else:
-            return NotImplemented
-            #return super(Quantity,self).__add__(other)    
+            return NotImplemented    
 
     def __add__(self, other):
-        if isinstance(other, Quantity) or isinstance(other,numpy.ndarray) or is_scalar_type(other):
+        if isinstance(other, Quantity) or is_scalar_type(other):
             dim = get_dimensions(other)
             if dim == self.dim:
-                return Quantity.with_dimensions(numpy.asarray(self) + numpy.asarray(other), self.dim)
+                return Quantity.with_dimensions(np.asarray(self) + np.asarray(other),
+                                                self.dim)
             else: raise DimensionMismatchError("Addition", self.dim, dim)
+        elif isinstance(other, np.ndarray):
+            return np.asarray(self) + other
         else:
-            return NotImplemented
-            #return super(Quantity,self).__add__(other)    
+            return NotImplemented    
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
-        if isinstance(other, Quantity) or isinstance(other,numpy.ndarray) or is_scalar_type(other):
+        if isinstance(other, Quantity) or is_scalar_type(other):
             dim = get_dimensions(other)
             if dim == self.dim:
-                return Quantity.with_dimensions(numpy.asarray(self) - numpy.asarray(other), self.dim)
+                return Quantity.with_dimensions(np.asarray(self) - np.asarray(other),
+                                                self.dim)
             else: raise DimensionMismatchError("Subtraction", self.dim, dim)
+        elif isinstance(other, np.ndarray):
+            return np.asarray(self) - other
         else:
             return NotImplemented
-            #return super(Quantity,self).__sub__(other)
 
     def __rsub__(self, other):
-        if isinstance(other, Quantity) or isinstance(other,numpy.ndarray) or is_scalar_type(other):
+        if isinstance(other, Quantity) or is_scalar_type(other):
             dim = get_dimensions(other)
             if dim == self.dim:
-                return Quantity.with_dimensions(numpy.asarray(other) - numpy.asarray(self), self.dim)
+                return Quantity.with_dimensions(np.asarray(other) - np.asarray(self),
+                                                self.dim)
             else: raise DimensionMismatchError("Subtraction(R)", self.dim, dim)
+        elif isinstance(other, np.ndarray):
+            return other - np.asarray(self)
         else:
             return NotImplemented
-            #return super(Quantity,self).__rsub__(other)
 
     def __pow__(self, other):
         if isinstance(other, Quantity):
             if other.is_dimensionless():
                 # WARNING: because dimension consistency is checked by exact comparison of dimensions,
                 # this may lead to unexpected behaviour (e.g. (x**2)**0.5 may not have the same dimensions as x)
-                return Quantity.with_dimensions(numpy.asarray(self) ** numpy.asarray(other), self.dim ** numpy.asarray(other))
+                return Quantity.with_dimensions(np.asarray(self) ** np.asarray(other),
+                                                self.dim ** np.asarray(other))
             else: raise DimensionMismatchError("Power", self.dim, other.dim)
         elif is_scalar_type(other):
-            return Quantity.with_dimensions(numpy.asarray(self) ** other, self.dim ** other)
+            return Quantity.with_dimensions(np.asarray(self) ** other,
+                                            self.dim ** other)
+        elif isinstance(other, np.ndarray):
+            return np.asarray(self) ** other
         else:
             return NotImplemented
-            #return super(Quantity,self).__pow__(other)
 
     def __rpow__(self, other):
         if self.is_dimensionless():
             if isinstance(other, Quantity):
-                return Quantity.with_dimensions(numpy.asarray(other) ** numpy.asarray(self), other.dim ** numpy.asarray(self))
-            elif is_scalar_type(other):
-                return Quantity(other ** numpy.asarray(self))
+                return Quantity.with_dimensions(np.asarray(other) ** np.asarray(self),
+                                                other.dim ** np.asarray(self))
+            elif is_scalar_type(other) or isinstance(other, np.ndarray):
+                return Quantity(other ** np.asarray(self))
             else:
                 return NotImplemented
-                #return super(Quantity,self).__pow__(other)
         else:
             raise DimensionMismatchError("Power(R)", self.dim)
 
     def __neg__(self):
-        return Quantity.with_dimensions(-numpy.asarray(self), self.dim)
+        return Quantity.with_dimensions(-np.asarray(self), self.dim)
 
     def __pos__(self):
         return self
 
     def __abs__(self):
-        return Quantity.with_dimensions(abs(numpy.asarray(self)), self.dim)
+        return Quantity.with_dimensions(abs(np.asarray(self)), self.dim)
+
     #### COMPARISONS ####
     def __lt__(self, other):
         if isinstance(other, Quantity):
             if self.dim == other.dim:
-                return numpy.asarray(self) < numpy.asarray(other)
+                return np.asarray(self) < np.asarray(other)
             else: raise DimensionMismatchError("LessThan", self.dim, other.dim)
         elif is_scalar_type(other):
-            if other == 0 or other == 0.: return numpy.asarray(self) < other
-            if numpy.isposinf(other): return True
-            if numpy.isneginf(other): return False
+            if other == 0 or other == 0.: return np.asarray(self) < other
+            if np.isposinf(other): return True
+            if np.isneginf(other): return False
             if self.is_dimensionless():
-                return numpy.asarray(self) < other
+                return np.asarray(self) < other
             else: raise DimensionMismatchError("LessThan", self.dim, Dimension())
+        elif isinstance(other, np.ndarray):
+            return np.asarray(self) < other
         else:
             return NotImplemented
             #return super(Quantity,self).__lt__(other)
@@ -972,15 +953,19 @@ class Quantity(numpy.ndarray):
     def __le__(self, other):
         if isinstance(other, Quantity):
             if self.dim == other.dim:
-                return numpy.asarray(self) <= numpy.asarray(other)
-            else: raise DimensionMismatchError("LessThanOrEquals", self.dim, other.dim)
+                return np.asarray(self) <= np.asarray(other)
+            else: raise DimensionMismatchError("LessThanOrEquals", self.dim,
+                                               other.dim)
         elif is_scalar_type(other):
-            if other == 0 or other == 0.: return numpy.asarray(self) <= other
-            if numpy.isposinf(other): return True
-            if numpy.isneginf(other): return False
+            if other == 0 or other == 0.: return np.asarray(self) <= other
+            if np.isposinf(other): return True
+            if np.isneginf(other): return False
             if self.is_dimensionless():
-                return numpy.asarray(self) <= other
-            else: raise DimensionMismatchError("LessThanOrEquals", self.dim, Dimension())
+                return np.asarray(self) <= other
+            else: raise DimensionMismatchError("LessThanOrEquals", self.dim,
+                                               Dimension())
+        elif isinstance(other, np.ndarray):
+            return np.asarray(self) <= other            
         else:
             return NotImplemented
             #return super(Quantity,self).__le__(other)
@@ -988,15 +973,19 @@ class Quantity(numpy.ndarray):
     def __gt__(self, other):
         if isinstance(other, Quantity):
             if self.dim == other.dim:
-                return numpy.asarray(self) > numpy.asarray(other)
-            else: raise DimensionMismatchError("GreaterThan", self.dim, other.dim)
+                return np.asarray(self) > np.asarray(other)
+            else: raise DimensionMismatchError("GreaterThan", self.dim,
+                                               other.dim)
         elif is_scalar_type(other):
-            if other == 0 or other == 0.: return numpy.asarray(self) > other
-            if numpy.isneginf(other): return True
-            if numpy.isposinf(other): return False
+            if other == 0 or other == 0.: return np.asarray(self) > other
+            if np.isneginf(other): return True
+            if np.isposinf(other): return False
             if self.is_dimensionless():
-                return numpy.asarray(self) > other
-            else: raise DimensionMismatchError("GreaterThan", self.dim, Dimension())
+                return np.asarray(self) > other
+            else: raise DimensionMismatchError("GreaterThan", self.dim,
+                                               Dimension())
+        elif isinstance(other, np.ndarray):
+            return np.asarray(self) > other            
         else:
             return NotImplemented
             #return super(Quantity,self).__gt__(other)
@@ -1004,15 +993,19 @@ class Quantity(numpy.ndarray):
     def __ge__(self, other):
         if isinstance(other, Quantity):
             if self.dim == other.dim:
-                return numpy.asarray(self) >= numpy.asarray(other)
-            else: raise DimensionMismatchError("GreaterThanOrEquals", self.dim, other.dim)
+                return np.asarray(self) >= np.asarray(other)
+            else: raise DimensionMismatchError("GreaterThanOrEquals", self.dim,
+                                               other.dim)
         elif is_scalar_type(other):
-            if other == 0 or other == 0.: return numpy.asarray(self) >= other
-            if numpy.isneginf(other): return True
-            if numpy.isposinf(other): return False
+            if other == 0 or other == 0.: return np.asarray(self) >= other
+            if np.isneginf(other): return True
+            if np.isposinf(other): return False
             if self.is_dimensionless():
-                return numpy.asarray(self) >= other
-            else: raise DimensionMismatchError("GreaterThanOrEquals", self.dim, Dimension())
+                return np.asarray(self) >= other
+            else: raise DimensionMismatchError("GreaterThanOrEquals", self.dim,
+                                               Dimension())
+        elif isinstance(other, np.ndarray):
+            return np.asarray(self) >= other            
         else:
             return NotImplemented
             #return super(Quantity,self).__ge__(other)
@@ -1020,33 +1013,38 @@ class Quantity(numpy.ndarray):
     def __eq__(self, other):
         if isinstance(other, Quantity):
             if self.dim == other.dim:
-                return numpy.asarray(self) == numpy.asarray(other)
+                return np.asarray(self) == np.asarray(other)
             else: raise DimensionMismatchError("Equals", self.dim, other.dim)
         elif is_scalar_type(other):
-            if other == 0 or other == 0. or numpy.isinf(other): return numpy.asarray(self) == other
+            if other == 0 or other == 0. or np.isinf(other):
+                return np.asarray(self) == other
             if self.dim.is_dimensionless():
-                return numpy.asarray(self) == other
+                return np.asarray(self) == other
             else: raise DimensionMismatchError("Equals", self.dim, Dimension())
+        elif isinstance(other, np.ndarray):
+            return np.asarray(self) == other            
         else:
             return NotImplemented
-            #return super(Quantity,self).__eq__(other)
 
     def __ne__(self, other):
         if isinstance(other, Quantity):
             if self.dim == other.dim:
-                return numpy.asarray(self) != numpy.asarray(other)
+                return np.asarray(self) != np.asarray(other)
             else: raise DimensionMismatchError("Equals", self.dim, other.dim)
         elif is_scalar_type(other):
-            if other == 0 or other == 0. or numpy.isinf(other): return numpy.asarray(self) != other
+            if other == 0 or other == 0. or np.isinf(other):
+                return np.asarray(self) != other
             if self.dim.is_dimensionless():
-                return numpy.asarray(self) != other
+                return np.asarray(self) != other
             else: raise DimensionMismatchError("NotEquals", self.dim, Dimension())
+        elif isinstance(other, np.ndarray):
+            return np.asarray(self) != other            
         else:
             return NotImplemented
-            #return super(Quantity,self).__ne__(other)
+
     #### MAKE QUANTITY PICKABLE ####
     def __reduce__(self):
-        return (quantity_with_dimensions, (numpy.asarray(self), self.dim))
+        return (quantity_with_dimensions, (np.asarray(self), self.dim))
 
 
 class Unit(Quantity):
@@ -1188,7 +1186,7 @@ class Unit(Quantity):
             pass
         return self  
         
-    def __init__(self, value):
+    def __init__(self, value, dim=None, scale=None):
         """Initialises a dimensionless unit
         """
         super(Unit, self).__init__(value)
@@ -1223,6 +1221,7 @@ class Unit(Quantity):
         u.dispname = dispname + ""
         u.iscompound = False
         return u
+
     @staticmethod
     def create_scaled_unit(baseunit, scalefactor):
         """Create a scaled unit from a base unit
@@ -1230,7 +1229,7 @@ class Unit(Quantity):
         baseunit -- e.g. volt, amp
         scalefactor -- e.g. "m" for mvolt, mamp
         """
-        u = Unit(numpy.asarray(baseunit) * _siprefixes[scalefactor])
+        u = Unit(np.asarray(baseunit) * _siprefixes[scalefactor])
         u.dim = baseunit.dim
         u.scale = baseunit.scale
         u.scalefactor = scalefactor
@@ -1238,6 +1237,7 @@ class Unit(Quantity):
         u.dispname = scalefactor + baseunit.dispname
         u.iscompound = False
         return u
+
     #### METHODS ####
     def set_name(self, name):
         """Sets the name for the unit
@@ -1287,7 +1287,7 @@ class Unit(Quantity):
     #### ARITHMETIC ####
     def __mul__(self, other):
         if isinstance(other, Unit):
-            u = Unit(numpy.asarray(self) * numpy.asarray(other))
+            u = Unit(np.asarray(self) * np.asarray(other))
             u.name = self.name + " * " + other.name
             u.dispname = self.dispname + ' ' + other.dispname
             u.dim = self.dim * other.dim
@@ -1298,7 +1298,7 @@ class Unit(Quantity):
 
     def __div__(self, other):
         if isinstance(other, Unit):
-            u = Unit(numpy.asarray(self) / numpy.asarray(other))            
+            u = Unit(np.asarray(self) / np.asarray(other))            
             if other.iscompound:
                 u.dispname = '(' + self.dispname + ')'
                 u.name = '(' + self.name + ')'
@@ -1321,7 +1321,7 @@ class Unit(Quantity):
 
     def __pow__(self, other):
         if is_scalar_type(other):
-            u = Unit(numpy.asarray(self) ** other)            
+            u = Unit(np.asarray(self) ** other)            
             if self.iscompound:
                 u.dispname = '(' + self.dispname + ')'
                 u.name = '(' + self.name + ')'
@@ -1334,6 +1334,30 @@ class Unit(Quantity):
             return u
         else:
             return super(Unit, self).__mul__(other)
+
+    def __iadd__(self, other):
+        raise TypeError('Units cannot be modified in-place')
+    
+    def __isub__(self, other):
+        raise TypeError('Units cannot be modified in-place')
+    
+    def __imul__(self, other):
+        raise TypeError('Units cannot be modified in-place')
+    
+    def __idiv__(self, other):
+        raise TypeError('Units cannot be modified in-place')
+
+    def __itruediv__(self, other):
+        raise TypeError('Units cannot be modified in-place')
+    
+    def __ifloordiv__(self, other):
+        raise TypeError('Units cannot be modified in-place')
+        
+    def __imod__(self, other):
+        raise TypeError('Units cannot be modified in-place')
+    
+    def __ipow__(self, other, modulo=None):
+        raise TypeError('Units cannot be modified in-place')
 
 automatically_register_units = True
 
@@ -1384,9 +1408,9 @@ class UnitRegistry(object):
         if len(matching) == 0:
             raise KeyError("Unit not found in registry.")
         # count the number of entries well represented by this unit 
-        floatreps = numpy.asarray(map(lambda o:
-                                    numpy.sum(numpy.logical_and(0.1 <= abs(numpy.asarray(x / o)),
-                                                                abs(numpy.asarray(x / o)) < 100)),
+        floatreps = np.asarray(map(lambda o:
+                                    np.sum(np.logical_and(0.1 <= abs(np.asarray(x / o)),
+                                                                abs(np.asarray(x / o)) < 100)),
                                     matching))
         if any(floatreps):
             return matching[floatreps.argmax()]
@@ -1434,20 +1458,22 @@ def _get_best_unit(x, *regs):
                 pass
         return Quantity.with_dimensions(1, x.dim)
     else:
-        return _get_best_unit(x, standard_unit_register, UserUnitRegister, additional_unit_register)
+        return _get_best_unit(x, standard_unit_register, UserUnitRegister,
+                              additional_unit_register)
 
 def get_unit(x, *regs):
     '''
-    Find the most appropriate consistent unit from the unit registries, or just return a Quantity with the same dimensions and value 1
+    Find the most appropriate consistent unit from the unit registries, or just
+    return a Quantity with the same dimensions and value 1.
     '''
     for u in all_registered_units(*regs):
-        if is_equal(numpy.asarray(u), 1) and have_same_dimensions(u, x):
+        if np.asarray(u) == 1 and have_same_dimensions(u, x):
             return u
     return Quantity.with_dimensions(1, get_dimensions(x))
 
 def get_unit_fast(x):
     '''
-    Return a quantity with value 1 and the same dimensions
+    Return a quantity with value 1 and the same dimensions.
     '''
     return Quantity.with_dimensions(1, get_dimensions(x))
 
@@ -1518,18 +1544,9 @@ def check_units(**au):
                      str(au["result"]) + " but has returned " +
                      str(get_dimensions(result)))
             return result
-#        new_f.__name__ = f.__name__
-#        new_f.__doc__ = f.__doc__
-#        new_f.__dict__.update(f.__dict__)
         return new_f
     return do_check_units
 
-## Note: do not normally call this, see note on importing of decorator module at the top of this module
-#if use_decorator:
-#    old_check_units = check_units
-#    def check_units(**au):
-#        return lambda f : decorator.new_wrapper(old_check_units(**au)(f), f)
-#    check_units.__doc__ = old_check_units.__doc__
 
 def _check_nounits(**au):
     """Don't bother checking units decorator
@@ -1538,15 +1555,16 @@ def _check_nounits(**au):
         return f
     return dont_check_units
 
-
+# TODO: What is this used for?
 def scalar_representation(x):
     if isinstance(x, Unit):
         return x.name
     u = get_unit(x)
     if isinstance(u, Unit):
-        return '(' + repr(numpy.asarray(x)) + '*' + u.name + ')'
+        return '(' + repr(np.asarray(x)) + '*' + u.name + ')'
     if isinstance(x, Quantity):
-        return '(Quantity.with_dimensions(' + repr(numpy.asarray(x)) + ',' + repr(x.dim._dims) + '))'
+        return ('(Quantity.with_dimensions(' + repr(np.asarray(x)) + ',' +
+                repr(x.dim._dims) + '))')
     return repr(x)
 
 # Remove all units

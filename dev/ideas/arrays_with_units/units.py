@@ -56,7 +56,7 @@ katal = Unit.create(Dimension(s= -1, mol=1), "katal", "kat")
 
 
 __all__ = [
-    'Dimension', 'Scale', 'DimensionMismatchError',
+    'Dimension', 'DimensionMismatchError',
     'get_dimensions', 'is_dimensionless', 'have_same_dimensions',
     'display_in_unit', 'Quantity', 'Unit', 'register_new_unit',
     'check_units', 'is_scalar_type', 'get_unit', 'get_unit_fast',
