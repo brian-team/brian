@@ -1,0 +1,42 @@
+.. currentmodule:: brian2
+
+Code generation reference
+=========================
+
+Statements
+----------
+
+.. autoclass:: brian2.codegen.statements.Statement
+    :members:
+    
+Templating
+----------
+
+.. autofunction:: brian2.codegen.templating.apply_code_template
+
+Translation
+-----------
+
+.. autofunction:: brian2.codegen.translation.make_statements
+.. autofunction:: brian2.codegen.translation.translate
+
+Specifiers
+----------
+
+.. autoclass:: brian2.codegen.specifiers.Specifier
+.. autoclass:: brian2.codegen.specifiers.Value
+.. autoclass:: brian2.codegen.specifiers.ArrayVariable
+.. autoclass:: brian2.codegen.specifiers.Function
+.. autoclass:: brian2.codegen.specifiers.OutputVariable
+.. autoclass:: brian2.codegen.specifiers.Subexpression
+.. autoclass:: brian2.codegen.specifiers.Index
+
+Language
+--------
+
+.. autoclass:: brian2.codegen.languages.base.Language
+    :members:
+
+.. autoclass:: brian2.codegen.languages.base.CodeObject
+    :members:
+    
