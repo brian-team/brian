@@ -105,7 +105,7 @@ the potential for variable name clashes.
 """
 
 __all__ = [
-    'Dimension', 'DimensionMismatchError',
+    'DimensionMismatchError', 'get_or_create_dimension',
     'get_dimensions', 'is_dimensionless', 'have_same_dimensions',
     'display_in_unit', 'Quantity', 'Unit', 'register_new_unit',
     'check_units', 'is_scalar_type', 'get_unit', 'get_unit_fast',
@@ -147,8 +147,7 @@ _siprefixes = {"y":1e-24, "z":1e-21, "a":1e-18, "f":1e-15, "p":1e-12, "n":1e-9,
                "k":1e3, "M":1e6, "G":1e9, "T":1e12, "P":1e15, "E":1e18,
                "Z":1e21, "Y":1e24}
 
-
-class Dimension(object):
+class _Dimension(object):
     '''Stores the indices of the 7 basic SI unit dimension (length, mass, etc.)
     
     Provides a subset of arithmetic operations appropriate to dimensions:
@@ -170,46 +169,8 @@ class Dimension(object):
     __array_priority__ = 1000
     #### INITIALISATION ####
     
-    def __init__(self, *args, **keywords):
-        """Initialise Dimension object with a vector or keywords
-        
-        Call as Dimension(list), Dimension(keywords) or Dimension(dim)
-        
-        list -- a list with the indices of the 7 elements of an SI dimension
-        keywords -- a sequence of keyword=value pairs where the keywords are
-          the names of the SI dimensions, or the standard unit
-        dim -- a dimension object to copy
-        
-        Examples:
-        
-        The following are all definitions of the dimensions of force
-        
-        Dimension(length=1, mass=1, time=-2)
-        Dimension(m=1, kg=1, s=-2)
-        Dimension([1,1,-2,0,0,0,0])
-        
-        The 7 units are (in order):
-        
-        Length, Mass, Time, Electric Current, Temperature,
-        Quantity of Substance, Luminosity
-        
-        and can be referred to either by these names or their SI unit names,
-        e.g. length, metre, and m all refer to the same thing here.
-        """
-        if len(args):
-            if isSequenceType(args[0]) and len(args[0]) == 7:
-                # initialisation by list
-                self._dims = args[0]
-            elif isinstance(args[0], Dimension):
-                # initialisation by another dimension object
-                self._dims = args[0]._dims
-        else:
-            # initialisation by keywords
-            self._dims = [0, 0, 0, 0, 0, 0, 0]
-            for k in keywords.keys():
-                # _di stores the index of the dimension with name 'k'
-                self._dims[_di[k]] = keywords[k]
-            self._dims = tuple(self._dims)
+    def __init__(self, dims):
+        self._dims = dims        
 
     #### METHODS ####
     def get_dimension(self, d):
@@ -266,16 +227,16 @@ class Dimension(object):
     # on their inputs, although most will throw an exception if you pass the
     # wrong sort of input
     def __mul__(self, value):
-        return Dimension([x + y for x, y in izip(self._dims, value._dims)])
+        return get_or_create_dimension([x + y for x, y in izip(self._dims, value._dims)])
 
     def __div__(self, value):
-        return Dimension([x - y for x, y in izip(self._dims, value._dims)])
+        return get_or_create_dimension([x - y for x, y in izip(self._dims, value._dims)])
 
     def __truediv__(self, value):
         return self.__div__(value)
 
     def __pow__(self, value):
-        return Dimension([x * value for x in self._dims])
+        return get_or_create_dimension([x * value for x in self._dims])
 
     def __imul__(self, value):        
         raise TypeError('Dimension object is immutable')
@@ -302,6 +263,58 @@ class Dimension(object):
 
     def __setstate__(self, state):
         self._dims = state
+
+DIMENSIONLESS = _Dimension((0, 0, 0, 0, 0, 0, 0))
+_dimensions = {(0, 0, 0, 0, 0, 0, 0): DIMENSIONLESS}
+
+def get_or_create_dimension(*args, **kwds):
+    """Get a _Dimension object with a vector or keywords
+    
+    Call as get_or_create_dimension(list/tuple) or
+    get_or_create_dimension(keywords)
+    
+    list/tuple -- a list or tuple with the indices of the 7 elements of an SI dimension
+    keywords -- a sequence of keyword=value pairs where the keywords are
+      the names of the SI dimensions, or the standard unit
+    
+    Examples:
+    
+    The following are all definitions of the dimensions of force
+    
+    _get_dimension(length=1, mass=1, time=-2)
+    _get_dimension(m=1, kg=1, s=-2)
+    _get_dimension([1,1,-2,0,0,0,0])
+    
+    The 7 units are (in order):
+    
+    Length, Mass, Time, Electric Current, Temperature,
+    Quantity of Substance, Luminosity
+    
+    and can be referred to either by these names or their SI unit names,
+    e.g. length, metre, and m all refer to the same thing here.
+    """
+    if len(args):
+        if isSequenceType(args[0]) and len(args[0]) == 7:
+            # initialisation by list
+            dims = args[0]
+        else:
+            raise ValueError('Need a sequence of exactly 7 items')
+    else:
+        # initialisation by keywords
+        dims = [0, 0, 0, 0, 0, 0, 0]
+        for k in kwds.keys():
+            # _di stores the index of the dimension with name 'k'
+            dims[_di[k]] = kwds[k]
+            
+    dims = tuple(dims)
+    
+    # check whether this _Dimension object has already been created
+    if dims in _dimensions:
+        return _dimensions[dims]
+    else:
+        new_dim = _Dimension(dims)
+        _dimensions[dims] = new_dim
+        return new_dim
 
 
 class DimensionMismatchError(Exception):
@@ -363,7 +376,8 @@ def get_dimensions(obj):
     a new dimensionless Dimension() object if the object is of number type
     but not a Quantity (e.g. a float or int).
     """
-    if isNumberType(obj) and not isinstance(obj, Quantity): return Dimension()
+    if isNumberType(obj) and not isinstance(obj, Quantity):
+        return get_dimension()
     return obj.get_dimensions()
 
 
@@ -373,7 +387,7 @@ def is_dimensionless(obj):
     Note that the syntax may change in later releases of Brian, with tighter
     integration of scalar and array valued quantities.
     """
-    return get_dimensions(obj) == Dimension()
+    return get_dimensions(obj) is DIMENSIONLESS
 
 
 def have_same_dimensions(obj1, obj2):
@@ -382,7 +396,7 @@ def have_same_dimensions(obj1, obj2):
     Note that the syntax may change in later releases of Brian, with tighter
     integration of scalar and array valued quantities.
     """
-    return get_dimensions(obj1) == get_dimensions(obj2)
+    return get_dimensions(obj1) is get_dimensions(obj2)
 
 def display_in_unit(x, u):
     """String representation of the object x in unit u.
@@ -570,7 +584,7 @@ class Quantity(np.ndarray):
                 dim = None
             
         if dim is None:
-            self.dim = Dimension()
+            self.dim = DIMENSIONLESS
         else:
             self.dim = dim
         
@@ -622,10 +636,10 @@ class Quantity(np.ndarray):
         all define the same object.
         """
         x = Quantity(value)
-        if len(args) and isinstance(args[0], Dimension):
+        if len(args) and isinstance(args[0], _Dimension):
             x.set_dimensions(args[0])
         else:
-            x.set_dimensions(Dimension(*args, **keywords))
+            x.set_dimensions(get_or_create_dimension(*args, **keywords))
         return x
     #### METHODS ####
     def get_dimensions(self):
@@ -936,14 +950,17 @@ class Quantity(np.ndarray):
         if isinstance(other, Quantity):
             if self.dim == other.dim:
                 return np.asarray(self) < np.asarray(other)
-            else: raise DimensionMismatchError("LessThan", self.dim, other.dim)
+            else:
+                raise DimensionMismatchError("LessThan", self.dim, other.dim)
         elif is_scalar_type(other):
             if other == 0 or other == 0.: return np.asarray(self) < other
             if np.isposinf(other): return True
             if np.isneginf(other): return False
             if self.is_dimensionless():
                 return np.asarray(self) < other
-            else: raise DimensionMismatchError("LessThan", self.dim, Dimension())
+            else:
+                raise DimensionMismatchError("LessThan", self.dim,
+                                             DIMENSIONLESS)
         elif isinstance(other, np.ndarray):
             return np.asarray(self) < other
         else:
@@ -963,7 +980,7 @@ class Quantity(np.ndarray):
             if self.is_dimensionless():
                 return np.asarray(self) <= other
             else: raise DimensionMismatchError("LessThanOrEquals", self.dim,
-                                               Dimension())
+                                               DIMENSIONLESS)
         elif isinstance(other, np.ndarray):
             return np.asarray(self) <= other            
         else:
@@ -983,7 +1000,7 @@ class Quantity(np.ndarray):
             if self.is_dimensionless():
                 return np.asarray(self) > other
             else: raise DimensionMismatchError("GreaterThan", self.dim,
-                                               Dimension())
+                                               DIMENSIONLESS)
         elif isinstance(other, np.ndarray):
             return np.asarray(self) > other            
         else:
@@ -1003,7 +1020,7 @@ class Quantity(np.ndarray):
             if self.is_dimensionless():
                 return np.asarray(self) >= other
             else: raise DimensionMismatchError("GreaterThanOrEquals", self.dim,
-                                               Dimension())
+                                               DIMENSIONLESS)
         elif isinstance(other, np.ndarray):
             return np.asarray(self) >= other            
         else:
@@ -1020,7 +1037,8 @@ class Quantity(np.ndarray):
                 return np.asarray(self) == other
             if self.dim.is_dimensionless():
                 return np.asarray(self) == other
-            else: raise DimensionMismatchError("Equals", self.dim, Dimension())
+            else: raise DimensionMismatchError("Equals", self.dim,
+                                               DIMENSIONLESS)
         elif isinstance(other, np.ndarray):
             return np.asarray(self) == other            
         else:
@@ -1036,7 +1054,8 @@ class Quantity(np.ndarray):
                 return np.asarray(self) != other
             if self.dim.is_dimensionless():
                 return np.asarray(self) != other
-            else: raise DimensionMismatchError("NotEquals", self.dim, Dimension())
+            else: raise DimensionMismatchError("NotEquals", self.dim,
+                                               DIMENSIONLESS)
         elif isinstance(other, np.ndarray):
             return np.asarray(self) != other            
         else:
@@ -1190,7 +1209,7 @@ class Unit(Quantity):
         """Initialises a dimensionless unit
         """
         super(Unit, self).__init__(value)
-        self.dim = Dimension()
+        self.dim = DIMENSIONLESS
         self.scale = [ "", "", "", "", "", "", "" ]
         self.scalefactor = ""
         self.name = ""
@@ -1448,7 +1467,7 @@ def _get_best_unit(x, *regs):
     case it will check the standard, user and additional unit
     registers in turn.
     """
-    if get_dimensions(x) == Dimension():
+    if get_dimensions(x) is DIMENSIONLESS:
         return Quantity(1)
     if len(regs):
         for r in regs:
@@ -1571,7 +1590,7 @@ def scalar_representation(x):
 if not bup.use_units:
     check_units = _check_nounits
     def get_dimensions(obj):
-        return Dimension()
+        return DIMENSIONLESS
 
     def is_dimensionless(obj):
         return True

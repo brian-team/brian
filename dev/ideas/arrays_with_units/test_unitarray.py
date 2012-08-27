@@ -1,7 +1,9 @@
 import numpy as np
 
-from units import *
-from stdunits import *
+#from units import *
+#from stdunits import *
+from brian.units import *
+from brian.stdunits import *
 
 def print_eval(expr):
     print expr, '=', eval(expr)
