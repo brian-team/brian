@@ -19,8 +19,6 @@ sound=5*sin(2*pi*frequency*t)**3 : 1 # nonlinear distorsion
 frequency=(200+200*t*Hz)*Hz : Hz # increasing pitch
 '''
 receptors = NeuronGroup(2, model=eqs_ear, threshold=1, reset=0, refractory=2 * ms)
-traces = StateMonitor(receptors, 'x', record=True)
-sound = StateMonitor(receptors, 'sound', record=0)
 
 # Coincidence detectors
 min_freq = 50 * Hz
