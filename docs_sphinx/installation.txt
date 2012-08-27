@@ -48,11 +48,14 @@ Finally, if you want to use the (optional) automatic C++ code generation feature
 have the ``gcc`` compiler installed (on `Cygwin <http://www.cygwin.com/>`__ if you are
 running on Windows).
 
-Mac users: the `Scipy Superpack for Intel OS X <http://stronginference.com/scipy-superpack/>`__ includes
+Mac users: the `Scipy Superpack for Intel OS X <http://fonnesbeck.github.com/ScipySuperpack/>`__ includes
 recent versions of Numpy, Scipy, Pylab and IPython.
 
 Windows users: the `Python(x,y) <http://www.pythonxy.com/>`__ distribution includes all the packages
 (including Eclipse and IPython) above except Brian (which is available as an optional plugin).
+
+Another option is the `Anaconda distribution <http://continuum.io/anaconda.html>`__, which also includes
+all the packages above except Brian and Eclipse.
 
 Installing Python packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
