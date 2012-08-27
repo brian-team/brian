@@ -48,18 +48,20 @@ class RunTestCase(unittest.TestCase):
         
         # Catch any exception and save it to a temporary file
         code_string = """
+# needed for some scripts that load data
+__file__ = '%(fname)s'
 import matplotlib as _mpl
 _mpl.use('Agg')
 import warnings, traceback, pickle, sys
 warnings.simplefilter('ignore')
 try:
-    execfile('%s')
+    execfile('%(fname)s')
 except Exception, ex:
     traceback.print_exc(file=sys.stdout)
-    f = open('%s', 'w')
+    f = open('%(tempfname)s', 'w')
     pickle.dump(ex, f, -1)
     f.close()
-""" % (self.filename, tempfilename)
+""" % {'fname': self.filename, 'tempfname': tempfilename}
         
         args = [sys.executable, '-c',
                 code_string]
