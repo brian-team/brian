@@ -54,41 +54,55 @@ With homogeneous dimensions:
 
 * dot
 """
+import numpy as np
 
 from brian_unit_prefs import bup
-from units import *
-import numpy, math, scipy
-from numpy import *
-from numpy.random import *
-from scipy.integrate import *
-import inspect
+from fundamentalunits import (Quantity, is_dimensionless,
+                              DimensionMismatchError, DIMENSIONLESS,
+                              wrap_function_dimensionless)
 
-__all__ = []
 
 # these functions are the ones that will work with the template immediately below, and
 # extend the numpy functions to know about Quantity objects 
-quantity_versions = [
-         'sqrt',
+__all__ = [
          'log', 'exp',
          'sin', 'cos', 'tan',
          'arcsin', 'arccos', 'arctan',
          'sinh', 'cosh', 'tanh',
-         'arcsinh', 'arccosh', 'arctanh'
+         'arcsinh', 'arccosh', 'arctanh',
+         'diagonal', 'ravel', 'trace'
          ]
 
-def make_quantity_version(func):
-    funcname = func.__name__
-    def f(x):
+sin = wrap_function_dimensionless(np.sin)
+sinh = wrap_function_dimensionless(np.sinh)
+arcsin = wrap_function_dimensionless(np.arcsin)
+arcsinh = wrap_function_dimensionless(np.arcsinh)
+cos = wrap_function_dimensionless(np.cos)
+cosh = wrap_function_dimensionless(np.cosh)
+arccos = wrap_function_dimensionless(np.arccos)
+arccosh = wrap_function_dimensionless(np.arccosh)
+tan = wrap_function_dimensionless(np.tan)
+tanh = wrap_function_dimensionless(np.tanh)
+arctan = wrap_function_dimensionless(np.arctan)
+arctanh = wrap_function_dimensionless(np.arctanh)
+
+log = wrap_function_dimensionless(np.log)
+exp = wrap_function_dimensionless(np.exp)
+
+def wrap_function_to_method(func):
+    def f(x, *args, **kwds):
         if isinstance(x, Quantity):
-            return getattr(x, funcname)()
-        return func(x)
+            return getattr(x, func.__name__)(*args, **kwds)
+        else:
+            # no need to wrap anything
+            return func(x, *args, **kwds)
     f.__name__ = func.__name__
     f.__doc__ = func.__doc__
     if hasattr(func, '__dict__'):
         f.__dict__.update(func.__dict__)
     return f
 
-for name in quantity_versions:
-    if bup.use_units:
-        exec name + '=make_quantity_version(' + name + ')'
-    __all__.append(name)
+# these functions discard subclass info -- maybe a bug in numpy?
+ravel = wrap_function_to_method(np.ravel)
+diagonal = wrap_function_to_method(np.ravel)
+trace = wrap_function_to_method(np.ravel)
