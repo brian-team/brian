@@ -40,3 +40,6 @@ Language
 .. autoclass:: brian2.codegen.languages.base.CodeObject
     :members:
     
+.. autoclass:: brian2.codegen.languages.c.CLanguage
+
+.. autoclass:: brian2.codegen.languages.python_numexpr.NumexprPythonLanguage
