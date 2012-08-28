@@ -62,25 +62,31 @@ def load_aer(filename,
     Brian. Files contain spikes as a binary representation of an
     ``address`` (i.e. neuron identifier) and a timestamp.
 
-    Returns a list containing tuples with a vector of addresses and a vector of timestamps (ints, unit is usually microsecond).
+    This function returns two arrays, an array of addresses (neuron indices) and an array of spike times (in second).
 
-    Note: For index files (that point to multiple .(ae)dat files) it
-    will return a list containing tuples as for single files.
+    Note: For index files (that point to multiple .(ae)dat files, typically aeidx files) it
+    will return a list containing tuples (addr, time) as for single files.
     
     Usage:
+    
     ids, times = load_aer('/path/to/file.aedat')
     
     Keyword Arguments:
+
+    ``reinit_time`` If True, sets the first spike time to zero and all others relative to that one.
     
-    If check_sorted is True, checks if timestamps are sorted,
-    and sort them if necessary.
-    ``reinit_time`` is True, it will set the first spike time to zero and all others relatively to that
-    precise time (avoid negative timestamps, is definitely a good idea).
+    ``check_sorted`` If True, checks if timestamps are sorted, and sorts them if necessary.
     
-    Hence to use those data files in Brian, one should do:
+    Example use:
+    
+    To use the spikes recorded in the AER file ``filename`` in a Brian ``NeuronGroup``, one should do:
 
     addr, timestamp =  load_AER(filename, reinit_time = True)
     G = AERSpikeGeneratorGroup((addr, timestamps))
+
+    An example script can be found in examples/misc/spikes_io.py
+
+    
     '''
     # This loading fun is inspired by the following Matlab script:
     # http://jaer.svn.sourceforge.net/viewvc/jaer/trunk/host/matlab/loadaerdat.m?revision=2001&content-type=text%2Fplain
