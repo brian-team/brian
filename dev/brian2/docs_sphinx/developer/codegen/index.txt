@@ -6,7 +6,6 @@ Code generation
 
    examples
    proposal
+   reference
    targets
    compiler
-   reference
-   
