@@ -24,4 +24,5 @@ rm docs.zip 2> /dev/null || :
 cp -r "$DOCROOT"/docs/* ~/www-doc/"$DOCNAME"
 
 # Create new zip file
-zip -r -q -9 docs.zip "$DOCROOT"/docs/
+cd "$DOCROOT"
+zip -r -q -9 docs.zip docs/
