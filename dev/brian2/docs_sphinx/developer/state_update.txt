@@ -12,6 +12,9 @@ vector form::
 
 	dx/dt=f(x,t)+g(x,t)*xi
 
+Proposed mechanism: we allow both writing explicit schemes and generator-based state updaters
+as in experimental.codegen2.
+
 Explicit state update
 ---------------------
 In general, explicit state update schemes can be specified as a series of
@@ -56,13 +59,13 @@ describe. I suggest that they can be described in a string as above, where
 x is taken as the vector of dynamic variables. Static variables are automatically
 calculated when f(x,t) is called (that is, we insert a string of update statements
 before any such expression). We may use x instead of x(t), and remove the final
-assignement. In this case, RK4 will become::
+assignment. In this case, RK4 will become::
 
 	k1=dt*f(x,t)
 	k2=dt*f(x+k1/2,t+dt/2)
 	k3=df*f(x+k2/2,t+dt/2)
 	k4=df*f(x+k3,t+dt)
-	x+(k1+2*k2+2*k3+k4)/6
+	return x+(k1+2*k2+2*k3+k4)/6
 
 Implicit state updates
 ----------------------

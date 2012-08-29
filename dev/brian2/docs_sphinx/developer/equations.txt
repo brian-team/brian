@@ -130,12 +130,15 @@ Equations are processed in the following way:
 	    these equations. This is required for generating the abstract state
 	    update code.
 	(3) Variable resolution. Here we identify state and external variables
-	    and build a namespace. This step can in fact be done through
-	    Expression objects.
-	(4) Inspection. This means checking units, linearity, conditional linearity.
-		Some or all of it can be done through Expression objects (checking units).
-	(5) Generating abstract state update code. This could be a Statement object.
-	(6) Generating target-specific state update code.
+	    and build a namespace. This step will be done in an external function,
+	    so it can also be used for threshold and reset.
+	(4) Inspection. This means checking units, linearity, conditional linearity
+	    (using sympy).
+		Some or all of it can be done externally (checking units).
+	(5) Generating abstract state update code. This will be done in a separate
+	    module.
+	(6) Generating target-specific state update code. This is going to be in 
+		code generation, not in equations objects.
 
 At run time, constant parameters should be frozen. But this could possibly be
 done at code generation time (could be better).
