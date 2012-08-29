@@ -6,6 +6,8 @@ Major features:
 
 Minor features:
 
+* New AERSpikeMonitor class
+
 Improvements:
 
 Bug fixes:

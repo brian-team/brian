@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.4.0dev
+Version: 1.4.0
 Authors:
 	Romain Brette
 		http://audition.ens.fr/brette/
@@ -16,8 +16,6 @@ Team:
 	Victor Benichoux
 	Marcel Stimberg
 	Jonathan Laudanski
-	Boris Gourevitch
-		http://pi314.net/
 
 ==== Installation ==========================================================
 
