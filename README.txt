@@ -51,6 +51,47 @@ See the documentation in the extras download, or online:
 
 ==== Changes ===============================================================
 
+Version 1.3.1 to 1.4.0
+----------------------
+
+Major features:
+
+* New Synapses class (plasticity, gap junctions, nonlinear synapses, etc)
+
+Minor features:
+
+* New AERSpikeMonitor class
+* Several updates to library.electrophysiology
+
+Improvements:
+
+* Units should work better with static code analysers now
+* Added Network.remove
+* SpikeMonitor has a new .it attribute (returns pair i, t of arrays of spike times)
+* Many new examples
+
+Bug fixes:
+
+* Assigning to a static variable (equation) now raise an error
+* Fixed issues for TimedArrays with explicitly set times (fixes ticket #81)
+* Fixed bug, repr and str didn't work for Sound
+* Fixed bug where tone(array_of_frequencies, ...)
+* Fixed SparseConnectionMatrix bug suggested by Owen Mackwood
+* Fixed bug in Parameters reported by Jimmy Bonaiuto
+* Fixed bug with contained_objects reported by Oleg Sinyavskiy
+* Units __repr__ and __str__ fixes
+* Sound.spectrum, Sound.pinknoise, brownnoise
+* t wasn't available in StringReset and PythonThreshold
+
+Deprecated or removed features:
+
+* MultipleSpikeGeneratorGroup
+* experimental.coincidence_detection
+
+Experimental features:
+
+* Generating model documentation automatically (experimental.model_documentation) 
+
 Version 1.3.0 to 1.3.1
 ----------------------
 
