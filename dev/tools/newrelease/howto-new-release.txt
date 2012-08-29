@@ -224,3 +224,5 @@ Announce the release
 --------------------
 
 Announce on the web page and the brian support mailing list.
+
+Also, update the version number in the wikipedia entry for Brian!
