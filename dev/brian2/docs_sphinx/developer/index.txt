@@ -11,6 +11,7 @@ interest to others wishing to better understand how Brian works internally.
    overview
    style
    clocks
+   units
    code-strings
    equations
    state_update

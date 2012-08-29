@@ -1,0 +1,139 @@
+Units
+=====  
+
+The unit system is still open for discussion so the below rules should not be
+considered definitive yet. 
+
+Casting rules
+-------------
+In Brian 1, a distinction is made between scalars and numpy arrays (including
+scalar arrays): Scalars could be multiplied with a unit, resulting in a Quantity
+object whereas the multiplication of an array with a unit resulted in a
+(unitless) array. Accordingly, scalars where considered as dimensionless
+quantities for the purpose of unit checking (e.g.. 1 + 1 * mV raised an error)
+whereas arrays where not (e.g. array(1) + 1 * mV resulted in 1.001 without any
+errors). I propose to get rid of this distinction, and treat both scalars and
+arrays as dimensionless for unit checking and make all operations involving
+quantities return a quantity.::
+
+	>> 1 + 1 * second	
+	DimensionMismatchError: Addition, dimensions were (s) (1)
+	
+	>> np.array([1]) + 1 * second
+	DimensionMismatchError: Addition, dimensions were (s) (1)
+	
+	>> 1 * second  + 1 * second
+	array(2.0) * second
+	
+	>> np.array([1]) * second  + 1 * second
+	array([ 2.]) * second
+
+As one exception from this rule, a scalar or array ``0`` is considered as having
+"any unit", i.e. ``0 + 1 * second`` will result in ``1 * second`` without a
+dimension mismatch error and ``0 == 0 * mV`` will evaluate to ``True``. This
+seems reasonable from a mathematical viewpoint and makes some sources of error
+disappear. For example, the Python builtin ``sum`` (not numpy's version) adds
+the value of the optional argument ``start``, which defaults to 0, to its
+main argument. Without this exception, ``sum([1 * mV, 2 * mV])`` would therefore
+raise an error.
+
+The above rules also apply to all comparisons (e.g. ``==`` or ``<``) with one
+further exception: ``inf`` and ``-inf`` also have "any unit", therefore an
+expression like ``v <= inf`` will never raise an exception (and always return
+``True``).
+
+[Question: Should this rule also extend to other operations, i.e.
+should ``1 + second + inf`` work? Might be more consistent even if there is no
+real usecase for that. What about NaN?].  
+
+Checking units
+--------------
+TODO
+
+Functions and units
+-------------------
+All *methods* of Quantity are guaranteed to correctly work with units (not
+entirely true yet). This means, if ``q`` is an array with units, you can do
+things like ``q.mean()``, ``q.std()``, ``q.max()``, etc. and the result will
+have the correct unit attached. This works nicely with numpy, as it calls these
+methods also if you use the numpy functions, i.e. ``np.sum(q)`` will also work
+(There are some exceptions to this rule, sometimes ufuncs are called directly
+without going through the methods, but these are taken care of in
+``__array_prepare__`` and ``__array_wrap__``). 
+
+In ``fundamentalunits.py``, simple function wrappers can be used to take care
+of the easy cases:
+
+``wrap_function_keep_dimension``:
+	Strips away the units before giving the array to the method of ``ndarray``,
+	then reattaches the unit to the result (examples: sum, mean, max)
+
+``wrap_function_change_dimension``:
+	Changes the dimensions in a simple way that is independent of function
+	arguments, the shape of the array, etc. (examples: sqrt, var, power)
+
+For some methods, the wrapper needs to be a bit more complicated, e.g. for
+``prod`` -- the question is whether it is worth the effort or raising
+NotImplementedError is enough.
+
+There are some functions in numpy that do not propagate their call to the
+corresponding method (because they use np.asarray instead of np.asanyarray,
+which might actually be a bug in numpy): ``trace``, ``diagonal``, ``ravel``. For
+these -- and any other functions we want to support, e.g. a unit-version of
+``arange`` would be nice -- we can provide wrapped functions in
+``unitsafefunctions.py``, similarly to the ``sin``, ``log``, ``sqrt`` wrappers
+currently there.   
+
+List of unit-aware functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Guaranteed**
+
+TODO
+
+**Working (but might change with future numpy versions)**
+
+*Numpy*
+
+	* linspace
+	* trapz
+	* ... TODO
+
+User-defined functions and units
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+For performance and simplicity reasons, code within the Brian core does not use
+Quantity objects but unitless numpy arrays instead. This can lead to issues if
+the user provides an external function that uses units and is called by the
+Brian code, e.g. the state updater. To avoid errors arising from dimension
+mismatches, the unit checking can be temporally switched off (currently by
+setting ``fundamentalunits.check_units`` to ``False`` but this will change, not
+the least because this name is already taken by the unit check decorator...).
+This will only switch the unit *checking* off, units will still be used (e.g.
+``1 + 1 * second`` will result in ``2 * second``. Therefore, each array that is
+the result of external code has to be wrapped in ``np.asarray`` to be sure it
+is a unitless array.  
+
+Units imported via wildcard import
+----------------------------------
+The number of units that is imported by a ``from brian2 import *`` will be
+drastically reduced. There will be a mechanism like
+``from brian2.units.allunits import ...`` mechanism to still get all predefined
+units like ``pfarad3``, etc.
+
+Comparison with Brian 1
+-----------------------
+
+Some expressions and their return values in Brian 1 and Brian 2
+
+================================    ================================    =================================
+Expression                          Brian 1                             Brian 2
+================================    ================================    =================================
+1 * mV                              1.0 * mvolt                         array(1.0) * mvolt
+array(1) * mV                       0.001                               array(1.0) * mvolt
+array([1]) * mV                     array([ 0.001])                     array([1.]) * mvolt
+mean(np.arange(5) * mV)             0.002                               array(2.0) * mvolt
+np.arange(2) * mV                   array([ 0.   ,  0.001])             array([ 0.,  1.]) * mvolt
+(np.arange(2) * mV) >= 1 * mV       array([False, True], dtype=bool)    array([False, True], dtype=bool)
+(np.arange(2) * mV)[0] >= 1 * mV    False                               False
+(np.arange(2) * mV)[1] >= 1 * mV    DimensionMismatchError              True
+================================    ================================    =================================
