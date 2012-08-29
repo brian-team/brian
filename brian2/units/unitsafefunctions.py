@@ -57,9 +57,9 @@ With homogeneous dimensions:
 import numpy as np
 
 from brian_unit_prefs import bup
-from fundamentalunits import (Quantity, is_dimensionless,
-                              DimensionMismatchError, DIMENSIONLESS,
-                              wrap_function_dimensionless)
+from brian2.units.fundamentalunits import (Quantity, is_dimensionless,
+                                           DimensionMismatchError, DIMENSIONLESS,
+                                           wrap_function_dimensionless)
 
 
 # these functions are the ones that will work with the template immediately below, and

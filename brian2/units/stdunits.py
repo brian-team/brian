@@ -45,37 +45,38 @@ mV, mA, uA (micro_amp), nA, pA, mF, uF, nF, mS, uS, ms,
 Hz, kHz, MHz, cm, cm2, cm3, mm, mm2, mm3, um, um2, um3
 """
 
-import units as _units
-import fundamentalunits as _fundamentalunits
+from .units import *
+from .units import all_units
 
-mV = _units.mvolt
+mV = mvolt
 
-mA = _units.mamp
-uA = _units.uamp
-nA = _units.namp
-pA = _units.pamp
+mA = mamp
+uA = uamp
+nA = namp
+pA = pamp
 
-pF = _units.pfarad
-uF = _units.ufarad
-nF = _units.nfarad
+pF = pfarad
+uF = ufarad
+nF = nfarad
 
-nS = _units.nsiemens
-uS = _units.usiemens
+nS = nsiemens
+uS = usiemens
 
-ms = _units.msecond
+ms = msecond
 
-Hz = _units.hertz
-kHz = _units.khertz
-MHz = _units.Mhertz
+Hz = hertz
+kHz = khertz
+MHz = Mhertz
 
-cm = _units.cmetre
-cm2 = _units.cmetre2
-cm3 = _units.cmetre3
-mm = _units.mmetre
-mm2 = _units.mmetre2
-mm3 = _units.mmetre3
-um = _units.umetre
-um2 = _units.umetre2
-um3 = _units.umetre3
+cm = cmetre
+cm2 = cmetre2
+cm3 = cmetre3
+mm = mmetre
+mm2 = mmetre2
+mm3 = mmetre3
+um = umetre
+um2 = umetre2
+um3 = umetre3
 
-_units.all_units.extend([mV, mA, uA, nA, pA, pF, uF, nF, nS, uS, ms, Hz, kHz, MHz, cm, cm2, cm3, mm, mm2, mm3, um, um2, um3])
+all_units.extend([mV, mA, uA, nA, pA, pF, uF, nF, nS, uS, ms, Hz, kHz,
+                  MHz, cm, cm2, cm3, mm, mm2, mm3, um, um2, um3])

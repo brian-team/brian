@@ -5,13 +5,15 @@ DO NOT EDIT BY HAND
 Instead edit the template in the SVN:
 
     /dec/tools/static_codegen/units_template.py
+
+This file has been changed for the new unit system, changes to the code
+generation tool are not yet done.
 '''
-from fundamentalunits import *
-from fundamentalunits import standard_unit_register, additional_unit_register
-import fundamentalunits
+from .fundamentalunits import *
+from .fundamentalunits import standard_unit_register, additional_unit_register
 from brian_unit_prefs import bup
 
-fundamentalunits.automatically_register_units = False
+automatically_register_units = False
 
 #### FUNDAMENTAL UNITS
 metre = Unit.create(get_or_create_dimension(m=1), "metre", "m")
@@ -11105,7 +11107,7 @@ all_units = [
     ]
 
 
-fundamentalunits.automatically_register_units = True
+automatically_register_units = True
 
 map(standard_unit_register.add, base_units + scaled_units + powered_units)
 map(additional_unit_register.add, additional_units)

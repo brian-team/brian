@@ -32,8 +32,6 @@
 # knowledge of the CeCILL license and that you accept its terms.
 # ----------------------------------------------------------------------------------
 # 
-from warnings import warn
-
 """Defines physical units and quantities
 
 The standard way to use this class is as follows:
@@ -105,6 +103,14 @@ module, which defines things like mV for mvolt, etc. They
 are not included by default in the units module because of
 the potential for variable name clashes.
 """
+from warnings import warn
+from operator import isNumberType, isSequenceType
+from itertools import izip
+from functools import wraps
+
+import numpy as np
+
+from brian_unit_prefs import bup
 
 __all__ = [
     'DimensionMismatchError', 'get_or_create_dimension',
@@ -114,13 +120,6 @@ __all__ = [
     'scalar_representation',
     'check_units' # TODO:
     ]
-from operator import isNumberType, isSequenceType
-from itertools import izip
-from functools import wraps
-
-import numpy as np
-
-from brian_unit_prefs import bup
 
 warn_if_no_unit_checking = True
 
@@ -651,11 +650,10 @@ class Quantity(np.ndarray):
     
     def __array_prepare__(self, array, context=None):
         if context is None:
-            return np.asarray(array)
+            return array
 
         uf, args, _ = context
-       
-        
+
         if uf.__name__ in ['multiply', 'divide', 'absolute', 'rint', 'sqrt',
                            'square', 'negative']:
             # always allowed
@@ -668,18 +666,20 @@ class Quantity(np.ndarray):
             fail_for_dimension_mismatch(args[0], error_message=uf.__name__)
         elif uf.__name__ in ['power']:
             # FIXME: do not allow several values for exponent
-            fail_for_dimension_mismatch(args[1], error_message=uf.__name__)            
+            fail_for_dimension_mismatch(args[1], error_message=uf.__name__)
         elif uf.__name__ in ['add', 'subtract']:
-            # Ok if dimension of arguments match
+            # Ok if dimension of arguments match 
+            fail_for_dimension_mismatch(args[0], args[1], uf.__name__)
+        elif uf.__name__ in  ['less', 'less_equal', 'greater', 'greater_equal',
+                              'equal', 'not_equal']:
+            # TODO: Special status for inf and -inf for comparisons?
             fail_for_dimension_mismatch(args[0], args[1], uf.__name__)
         else:
-            warn("Unknown ufunc '%s' in __array_prepare__" % uf.__name__)
-            #TODO: Remove units in this case?
+            warn("Unknown ufunc '%s' in __array_prepare__" % uf.__name__)            
 
         return array
 
     def __array_wrap__(self, array, context=None):
-        result = array.view(type(self))
         dim = DIMENSIONLESS
 
         # TODO: Does not always work?
@@ -692,7 +692,7 @@ class Quantity(np.ndarray):
             elif uf.__name__ == 'square':
                 dim = self.dim ** 2
             elif uf.__name__ in ['absolute', 'negative', 'rint', 'add',
-                                 'subtract']:                
+                                 'subtract']:
                 dim = self.dim
             elif uf.__name__ == 'divide':
                 dim = get_dimensions(args[0]) / get_dimensions(args[1])
@@ -704,14 +704,18 @@ class Quantity(np.ndarray):
                              'log', 'exp']:
                 # We should have been arrived here only for dimensionless
                 # quantities
-                dim = DIMENSIONLESS                 
+                dim = DIMENSIONLESS
+            elif uf.__name__ in  ['less', 'less_equal', 'greater', 'greater_equal',
+                                  'equal', 'not_equal']:
+                return array
             else:
                 warn("Unknown ufunc '%s' in __array_wrap__" % uf.__name__)
+                #TODO: Remove units in this case?
 
+        result = array.view(type(self))
         result.dim = dim
         return result
 
-        
     def __getitem__(self, key):
         ''' Overwritten to assure that single elements (i.e., indexed with a
         single integer) retain their unit.
