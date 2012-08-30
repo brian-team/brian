@@ -13,18 +13,17 @@ which handles basic things.
 
 An Equation is a set of single lines in a string:
     (1) ``dx/dt = f : unit`` (differential equation)
-    (2) ``x = f : unit`` (equation)
+    (2) ``x = f : unit`` (static equation)
     (3) ``x : unit`` (parameter)
 
-The equations may be defined on multiple lines with the character \.
+The equations may be defined on multiple lines with the character \\.
 Comments using # may also be included. These two things along with other general
 string processing things, are common to all model strings (reset and threshold).
 Subunits are not allowed, i.e., one must write ``volt``, not ``mV``. But
 compound units are allowed (e.g. ``farad/meter**2``).
 
 Note that aliases disappear in Brian 2.0.
-Two special variables are defined: t (time) and xi (white noise).
-In the state updaters, dt should also be a special variable.
+Some special variables are defined: t, dt (time) and xi (white noise).
 Variable names starting with an underscore are forbidden.
 But in Brian 2.0, noise is dealt with differently. Equations are stochastic
 differential equations, that is, the right hand side is split into two terms:
@@ -134,7 +133,7 @@ Equations are processed in the following way:
 	    so it can also be used for threshold and reset.
 	(4) Inspection. This means checking units, linearity, conditional linearity
 	    (using sympy).
-		Some or all of it can be done externally (checking units).
+	    Some or all of it can be done externally (checking units).
 	(5) Generating abstract state update code. This will be done in a separate
 	    module.
 	(6) Generating target-specific state update code. This is going to be in 

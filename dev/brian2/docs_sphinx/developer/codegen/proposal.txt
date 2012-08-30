@@ -290,18 +290,30 @@ for each language.
 
 The insertion into a template is handled by the :meth:`Language.apply_template`
 method which in turn uses the :func:`apply_code_template` function defined
-in ``brian2.codegen.templating``. Templates consist of a string with
+in ``brian2.codegen.templating``. Templates consist of either a string ``code`` or
+a dict of ``(name, code)`` pairs with ``code`` including
 multiple slots or placeholders of the form ``%CODE%`` (the default slot) which
 are replaced by values returned by the
 :meth:`Language.translate_statement_sequence` method (see above). The
 templating functions simply handle these replacements, and correct indentation
-of the code (important for Python and nice for readability).
+of the code (important for Python and nice for readability). If the template
+is a dict, then it must have name keys which can be interpreted by the 
+:class:`CodeObject` for that language.
 
 Code to :class:`CodeObject`
 ---------------------------
 
 The final code is passed to the :class:`CodeObject` which is language-specific
 and defined in the file, e.g. ``brian2.codegen.languages.c``, etc.
+
+User-defined functions
+----------------------
+
+Extensions to the language via user-defined functions are handled by the
+:class:`brian2.codegen.functions.UserFunction` specifier. This class returns the
+code to compile the function into different languages. In addition there is
+a simplified :class:`brian2.codegen.functions.UserFunction` version, and a
+:func:`brian2.codegen.functions.make_user_function` decorator.
 
 Example usage
 +++++++++++++
