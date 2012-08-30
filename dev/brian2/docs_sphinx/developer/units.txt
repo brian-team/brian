@@ -106,12 +106,11 @@ Quantity objects but unitless numpy arrays instead. This can lead to issues if
 the user provides an external function that uses units and is called by the
 Brian code, e.g. the state updater. To avoid errors arising from dimension
 mismatches, the unit checking can be temporally switched off (currently by
-setting ``fundamentalunits.check_units`` to ``False`` but this will change, not
-the least because this name is already taken by the unit check decorator...).
-This will only switch the unit *checking* off, units will still be used (e.g.
-``1 + 1 * second`` will result in ``2 * second``. Therefore, each array that is
-the result of external code has to be wrapped in ``np.asarray`` to be sure it
-is a unitless array.  
+setting ``fundamentalunits.unit_checking`` to ``False`` but this will change in
+the future). This will only switch the unit *checking* off, units will still be
+used (e.g. ``1 + 1 * second`` will result in ``2 * second``. Therefore, each
+array that is the result of external code has to be wrapped in ``np.asarray``
+to be sure it is a unitless array.  
 
 Units imported via wildcard import
 ----------------------------------
