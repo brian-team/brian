@@ -1,8 +1,10 @@
 import pickle
 
+from nose import SkipTest
+
 from brian import *
 
-def test_pickling():
+def test_timed_array_pickling():
     '''    
     Tests pickling of brian objects    
     '''
@@ -31,6 +33,14 @@ def test_pickling():
     ta = TimedArray([0, 1])
     timed_array_correctly_pickled(ta)
 
+def test_neurongroup_pickling():
+    # check whether the C version of circular arrays is used -- if yes, skip
+    # the test because pickling such objects is not possible yet
+    try:
+        import brian.utils.ccircular.ccircular as _ccircular
+        raise SkipTest('Pickling does not yet work with C version of circular')
+    except ImportError:
+        pass
     #very simple test of pickling for a NeuronGroup and a Network
     G = NeuronGroup(42, model=LazyStateUpdater())
     net = Network(G)
@@ -39,6 +49,7 @@ def test_pickling():
     assert(len(unpickled) == 42)
 
 if __name__ == '__main__':
-    test_pickling()
+    test_timed_array_pickling()
+    test_neurongroup_pickling()
 
     
