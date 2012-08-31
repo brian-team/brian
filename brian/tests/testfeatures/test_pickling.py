@@ -34,13 +34,6 @@ def test_timed_array_pickling():
     timed_array_correctly_pickled(ta)
 
 def test_neurongroup_pickling():
-    # check whether the C version of circular arrays is used -- if yes, skip
-    # the test because pickling such objects is not possible yet
-    try:
-        import brian.utils.ccircular.ccircular as _ccircular
-        raise SkipTest('Pickling does not yet work with C version of circular')
-    except ImportError:
-        pass
     #very simple test of pickling for a NeuronGroup and a Network
     G = NeuronGroup(42, model=LazyStateUpdater())
     net = Network(G)

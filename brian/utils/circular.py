@@ -179,6 +179,7 @@ class SpikeContainer(object):
         self.ind = CircularVector(m + 1, dtype=int, useweave=useweave, compiler=compiler) # indexes of bins
         self.remaining_space = 1
         self._useweave = useweave
+        self.m = m
 
     def reinit(self):
         self.S.reinit()
@@ -239,14 +240,28 @@ class SpikeContainer(object):
     def __print__(self):
         return self.__repr__()
 
+    def __reduce__(self):
+        return (unpickle_SpikeContainer, (self.m, tuple(self[i].copy() for i in xrange(self.m))))
+
 try:
     import ccircular.ccircular as _ccircular
     class SpikeContainer(_ccircular.SpikeContainer):
         def __init__(self, m, useweave=False, compiler=None):
             _ccircular.SpikeContainer.__init__(self, m)
+            self.m = m
+        def __reduce__(self):
+            return (unpickle_SpikeContainer, (self.m, tuple(self[i].copy() for i in xrange(self.m))))
     #warnings.warn('Using C++ SpikeContainer')
 except ImportError:
     pass
+
+
+def unpickle_SpikeContainer(m, allspikes):
+    newsc = SpikeContainer(m)
+    for spikes in allspikes[::-1]:
+        newsc.push(spikes)
+    return newsc
+
 
 # I am not sure that class below is useful!
 class ModInt(object):
