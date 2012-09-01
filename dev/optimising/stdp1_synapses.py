@@ -231,7 +231,7 @@ suggesting that the C++ version should be as fast as the previous version.
 
 Hacked C++ version:
 
-Time taken 154s. This is [1.5, 0.8]x the time taken by the (C/Python) Connection
+Time taken 136s. This is [1.2, 0.7]x the time taken by the (C/Python) Connection
 alternatives.
 '''
 from brian import *
@@ -263,20 +263,13 @@ if True:
     from scipy import weave
     class Synapses(Synapses):
         def update(self):
-            if self._state_updater is not None:
-                self._state_updater(self)
-            for queue, _namespace, code in zip(self.queues, self.namespaces, self.codes):
-                synaptic_events = queue.peek()
-                if len(synaptic_events):
-                    # Build the namespace - Here we don't consider static equations
-                    _namespace['_synapses'] = synaptic_events
-                    _namespace['t'] = self.clock._t
-                    _namespace['_num_spiking_synapses'] = len(synaptic_events)
-                    for k, v in _namespace.items():
-                        if isinstance(v, float64):
-                            _namespace[k] = float(v)
-                    # original version
-                    #exec code in _namespace
+            if not hasattr(self, '_prepared_hack'):
+                self._QNCV = []
+                for queue, _namespace, code in zip(self.queues, self.namespaces, self.codes):
+                    for _namespace in self.namespaces:
+                        for k, v in _namespace.items():
+                            if isinstance(v, float64):
+                                _namespace[k] = float(v)
                     # we hack it to use C++, only works if the code below is
                     # updated when the Synapse equations change, and there is
                     # only one queue/namespace/code item.
@@ -304,8 +297,11 @@ if True:
                                 */                                
                                                                                             
                                 double w_i = w[_synapse_idx];
-                                Apost[_synapse_idx] *= exp(-(-lastupdate[_synapse_idx] + t)/taupost);
-                                Apre[_synapse_idx] *= exp(-(-lastupdate[_synapse_idx] + t)/taupre);
+                                if(lastupdate[_synapse_idx]<t) {
+                                    Apost[_synapse_idx] *= exp(-(-lastupdate[_synapse_idx] + t)/taupost);
+                                    Apre[_synapse_idx] *= exp(-(-lastupdate[_synapse_idx] + t)/taupre);
+                                    lastupdate[_synapse_idx] = t;
+                                }
                                 _target_ge[_postsynaptic_idx] += w_i;
                                 Apre[_synapse_idx] += dApre;
                                 
@@ -315,7 +311,6 @@ if True:
                                 else if(w_i>gmax) w_i = gmax;
                                 w[_synapse_idx] = w_i;
                                                             
-                                lastupdate[_synapse_idx] = t;
                         }
                         '''
                         vars = ['Apost', 'Apre', '_synapses', 't', 'taupost',
@@ -344,8 +339,11 @@ if True:
                                 */
                                 
                                 double w_i = w[_synapse_idx];
-                                Apost[_synapse_idx] *= exp(-(-lastupdate[_synapse_idx] + t)/taupost);
-                                Apre[_synapse_idx] *= exp(-(-lastupdate[_synapse_idx] + t)/taupre);
+                                if(lastupdate[_synapse_idx]<t) {
+                                    Apost[_synapse_idx] *= exp(-(-lastupdate[_synapse_idx] + t)/taupost);
+                                    Apre[_synapse_idx] *= exp(-(-lastupdate[_synapse_idx] + t)/taupre);
+                                    lastupdate[_synapse_idx] = t;
+                                }
                                 Apost[_synapse_idx] += dApost;
                                 
                                 w_i += Apre[_synapse_idx];
@@ -354,7 +352,6 @@ if True:
                                 else if(w_i>gmax) w_i = gmax;
                                 w[_synapse_idx] = w_i;
                                                             
-                                lastupdate[_synapse_idx] = t;
                         }
                         '''
                         vars = ['Apost', 'Apre', '_synapses', 't', 'taupost',
@@ -363,6 +360,17 @@ if True:
                                 '_num_spiking_synapses']
                     else:
                         raise ValueError("Unknown code string")
+                    self._QNCV.append((queue, _namespace, code_str, vars))                    
+                self._prepared_hack = True
+            if self._state_updater is not None:
+                self._state_updater(self)
+            for queue, _namespace, code_str, vars in self._QNCV:
+                synaptic_events = queue.peek()
+                if len(synaptic_events):
+                    # Build the namespace - Here we don't consider static equations
+                    _namespace['_synapses'] = synaptic_events
+                    _namespace['t'] = float(self.clock._t)
+                    _namespace['_num_spiking_synapses'] = len(synaptic_events)
                     weave.inline(code=code_str, arg_names=vars,
                                  local_dict=_namespace, compiler='gcc',
                                  extra_compile_args=['-O3', '-ffast-math',
