@@ -486,6 +486,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         # Compile
         compiled_code = compile(code_str, "Synaptic code", "exec")
         
+        _namespace['_original_code_string'] = code_str
+        
         return compiled_code,_namespace
 
     def __setitem__(self, key, value):
