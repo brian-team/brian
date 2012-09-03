@@ -238,6 +238,8 @@ from brian import *
 from time import time
 log_level_debug()
 
+do_monitor = False
+
 N = 1000
 taum = 10 * ms
 taupre = 20 * ms
@@ -266,10 +268,9 @@ if True:
             if not hasattr(self, '_prepared_hack'):
                 self._QNCV = []
                 for queue, _namespace, code in zip(self.queues, self.namespaces, self.codes):
-                    for _namespace in self.namespaces:
-                        for k, v in _namespace.items():
-                            if isinstance(v, float64):
-                                _namespace[k] = float(v)
+                    for k, v in _namespace.items():
+                        if isinstance(v, float64):
+                            _namespace[k] = float(v)
                     # we hack it to use C++, only works if the code below is
                     # updated when the Synapse equations change, and there is
                     # only one queue/namespace/code item.
@@ -282,7 +283,7 @@ if True:
                             _spiking_synapse_idx++)
                         {
                                 const int _synapse_idx = _synapses[_spiking_synapse_idx];
-                                const int _postsynaptic_idx = _post[_synapse_idx];
+                                const int _postsynaptic_idx = _postdata[_synapse_idx];
 
                                 /* ORIGINAL CODE STRING WAS:
                                 
@@ -315,20 +316,20 @@ if True:
                         '''
                         vars = ['Apost', 'Apre', '_synapses', 't', 'taupost',
                                 'taupre', '_target_ge', 'w', 'dApre', 'gmax',
-                                '_post', 'lastupdate',
+                                '_postdata', 'lastupdate',
                                 '_num_spiking_synapses']
-                    elif 'Apost[_synapses]=Apost[_synapses]*exp(-(-lastupdate[_synapses] + t)/taupost)':
+                    elif 'Apost[_synapses]=Apost[_synapses]*exp(-(-lastupdate[_synapses] + t)/taupost)' in orig_code_str:
                         code_str =  '''
                         for(int _spiking_synapse_idx=0;
                             _spiking_synapse_idx<_num_spiking_synapses;
                             _spiking_synapse_idx++)
                         {
                                 const int _synapse_idx = _synapses[_spiking_synapse_idx];
-                                const int _postsynaptic_idx = _post[_synapse_idx];
+                                const int _postsynaptic_idx = _postdata[_synapse_idx];
 
                                 /* ORIGINAL CODE STRING WAS:
                                 
-                                _post_neurons = _post[_synapses]
+                                _post_neurons = _postdata[_synapses]
                                 Apost[_synapses]=Apost[_synapses]*exp(-(-lastupdate[_synapses] + t)/taupost)
                                 Apre[_synapses]=Apre[_synapses]*exp(-(-lastupdate[_synapses] + t)/taupre)
                                 Apost[_synapses]+=dApost
@@ -356,7 +357,7 @@ if True:
                         '''
                         vars = ['Apost', 'Apre', '_synapses', 't', 'taupost',
                                 'taupre', 'w', 'dApost', 'gmax',
-                                '_post', 'lastupdate',
+                                '_postdata', 'lastupdate',
                                 '_num_spiking_synapses']
                     else:
                         raise ValueError("Unknown code string")
@@ -366,11 +367,13 @@ if True:
                 self._state_updater(self)
             for queue, _namespace, code_str, vars in self._QNCV:
                 synaptic_events = queue.peek()
+#                print len(synaptic_events)
                 if len(synaptic_events):
                     # Build the namespace - Here we don't consider static equations
                     _namespace['_synapses'] = synaptic_events
                     _namespace['t'] = float(self.clock._t)
                     _namespace['_num_spiking_synapses'] = len(synaptic_events)
+                    _namespace['_postdata'] = _namespace['_post'].data
                     weave.inline(code=code_str, arg_names=vars,
                                  local_dict=_namespace, compiler='gcc',
                                  extra_compile_args=['-O3', '-ffast-math',
@@ -393,8 +396,15 @@ neurons.v = vr
 S[:,:]=True
 S.w='rand()*gmax'
 
+if do_monitor:
+    M = SpikeMonitor(neurons)
+
 def f():
+    start = time()
     run(100 * second, report='text')
+    print 'Time taken:', time()-start
+    if do_monitor:
+        print 'Num spikes:', M.nspikes
 
 ## do profiling
 #import cProfile as profile
@@ -406,7 +416,5 @@ def f():
 #stats.print_stats(50)
 
 # do simple run
-start = time()
 f()
-print 'Time taken:', time()-start
 
