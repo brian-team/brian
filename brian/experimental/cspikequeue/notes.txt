@@ -1,5 +1,12 @@
 This folder contains the C++ version of the SpikeQueue.
 
+
+use the standard c types int16_t, int8_t
+actually use uints
+
++ typedef
+
+
 State
 -----
 	Basically everything works well when used in CPP, and fails when used in Python

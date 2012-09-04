@@ -30,17 +30,14 @@ public:
 
   void _peek(int nevents);
 
-  // my two attempts at returning a numpy array
   void peek(long **ret, int *ret_n);
-  void peek2(long *ret_out, int ret_n_out);
 
-  void minimal();
+  void insert(int len1, long *vec1, int len2, long *vec2);
 
-  void insert(long delay[], long target[], int nevents);
-
-  /* string __repr__(); */
-  /* string __str__(); */
+  string __repr__();
+  string __str__();
   /* //printout c++ */
+
   void print_summary();
 };
 

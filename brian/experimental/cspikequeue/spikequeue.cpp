@@ -78,7 +78,7 @@ void SpikeQueue::expand()
 
    if(!new_X || !retarray){
       if(new_X) delete [] new_X;
-     throw BrianException("Not enough memory in expanding SpikeQueue.");
+      throw BrianException("Not enough memory in expanding SpikeQueue.");
    }
    // 2D array
    delete [] this->X;
@@ -108,35 +108,22 @@ void SpikeQueue::peek(long **ret, int *ret_n)
   *ret = this->retarray;
   *ret_n = nevents;
 }
-void SpikeQueue::minimal()
-{
-  int nevents = (this->n)[this->currenttime];
-  this->something = nevents;
-  this->retarray[0] = (this->X)[this->currenttime][0];  
-  this->retarray[1] = (this->X)[this->currenttime][1];  
-  this->retarray[2] = (this->X)[this->currenttime][2];  
-  (this->n)[0] = 1;
-  (this->X)[0][0] = 1;
-}
-void SpikeQueue::peek2(long *ret_out, int ret_n_out)
-{
-  // This is where it fails for now.
-  int nevents = (this->n)[this->currenttime];
 
-  ret_out = (this->retarray);
-  ret_n_out = nevents;
-}
-
-
-void SpikeQueue::insert(long delay[], long target[], int nevents)
+void SpikeQueue::insert(int len1, long *vec1, int len2, long *vec2)
 {
-  //  int nevents = sizeof(delay)/sizeof(long);
-  //  cout << "nevents: " << nevents;
-  for (int k = 0; k < nevents; k ++)
+  // vec1 = targets
+  // vec2 = delays
+  if (len1!=len2) 
     {
-      const int d = (this->currenttime + delay[k]) % (this->n_delays);
-      (this->X)[d][(this->n)[d]] = target[k];
+      throw BrianException("Inputs to insert have non matching lengths");
+    }
 
+  for (int k = 0; k < len1; k ++)
+    {
+      // get the timebin of this spike
+      const int d = (this->currenttime + vec2[k]) % (this->n_delays);
+      // place it in the 2D array
+      (this->X)[d][(this->n)[d]] = vec1[k];
       (this->n)[d]++;
     }
 }
@@ -159,25 +146,24 @@ void SpikeQueue::print_summary()
   }
 }
 // Even this simple thing doesnt work.
-// string SpikeQueue::__repr__()
-// {
-// 	stringstream out;
-// 	out << "SpikeQueue" << endl;
-// 	out << "n_delays = " << this->n_delays << endl;
-// 	out << "n_maxevents = " << this->n_maxevents << endl;
-// 	out << "currenttime = " << this->currenttime << endl;
-	
-// 	int n = 0;
-// 	for (int k=0; k<this->n_delays; k++){
-// 	  n += (this->n)[k];
-// 	}
-// 	out << "Contains " << n << "spikes" << endl;
-// 	return out.str();
-// }
-// string SpikeQueue::__str__()
-// {
-// 	return this->__repr__();
-// }
+string SpikeQueue::__repr__()
+{
+  stringstream out;
+  out << "SpikeQueue" << endl;
+  out << "n_delays = " << this->n_delays << endl;
+  out << "n_maxevents = " << this->n_maxevents << endl;
+  out << "currenttime = " << this->currenttime << endl;
+  int n = 0;
+  for (int k=0; k<this->n_delays; k++){
+    n += (this->n)[k];
+  }
+  out << "Contains " << n << "spikes" << endl;
+  return out.str();
+}
+string SpikeQueue::__str__()
+{
+  return this->__repr__();
+}
 
 
 ///////////////////// MAIN ///////////////////////
@@ -200,7 +186,7 @@ int main(void){
   
   long delay[4] = {1, 2, 2, 3};
   long target[4] = {45, 45, 46, 46};
-  x.insert(delay, target, 4);
+  //  x.insert(delay, target, 4);
 
   cout << "////////////////" << endl;
   cout << "///// CHECK /////" << endl;

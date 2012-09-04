@@ -5,26 +5,21 @@ from cspikequeue import *
 import numpy as np
 
 
-queue = SpikeQueue(4, 10)
+queue = SpikeQueue(20, 10)
+#print queue
+print "time", queue.currenttime
 sys.stdout.flush()
-print "Queue initialized"
-sys.stdout.flush()
-print 'currenttime', queue.currenttime
-print 'n', queue.n
-print 'X', queue.X
-#queue.minimal()
 q = queue.peek()
-print "Queue peeked!"
 
+spikes = np.array([0, 1, 2, 3], dtype = int)
+delays = np.array([2, 3, 4, 5], dtype = int)
 
-# #print queue
+queue.insert(spikes, delays)
+
 # #queue.expand()
 # print "Queue expanded"
 
 for k in range(10):
-    print queue.currenttime
-    x = queue.peek()
-    print x
-    print queue.next()
-
-
+    print "time", queue.currenttime
+    print "current content", queue.peek()
+    queue.next()
