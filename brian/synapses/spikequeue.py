@@ -25,7 +25,7 @@ Main methods:
     have different delays, this is relatively easy to vectorise. It is a bit
     more difficult if there are synapses with the same delays.
     For a given presynaptic neuron, each synaptic delay corresponds to coordinates
-    (i,j) in the circular array of stacks, where i is the delay (stack index) and
+    (i,j) in the circular array of stacks, where i is the delay (stack index and
     j is index relative to the top of the stack (0=top, 1=1 above top).
     The absolute location in the structure is then calculated as n[i]+j, where
     n[i] is the location of the top of stack i. The only difficulty is to calculate
@@ -51,6 +51,7 @@ from scipy import weave
 from brian.globalprefs import get_global_preference
 from brian.monitor import SpikeMonitor
 from brian.stdunits import ms
+import warnings
 
 __all__=['SpikeQueue']
 
@@ -282,7 +283,7 @@ class SpikeQueue(SpikeMonitor):
         
         self.X_flat[timesteps*self.X.shape[1]+offset+self.n[timesteps]]=target
         self.n[timesteps] += offset+1 # that's a trick (to update stack size)
-        # Note: the trick can only work if offsets are ordered in the right way        
+        # Note: the trick can only work if offsets are ordered in the right way
         
     def insert_homogeneous(self,delay,target):
         '''
@@ -406,3 +407,44 @@ class SpikeQueue(SpikeMonitor):
             plot(idx * np.ones(len(data)), data, '.')
         if display:
             show()
+
+
+try:
+    raise ImportError
+    import brian.experimental.cspikequeue.cspikequeue as _cspikequeue
+    class SpikeQueue(_cspikequeue.SpikeQueue, SpikeMonitor):
+        def __init__(self, source, synapses, delays,
+                     max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT,
+                     precompute_offsets = True):
+            self.source = source
+            nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
+
+            _cspikequeue.SpikeQueue.__init__(self, nsteps, maxevents)
+
+            self.delay = -1
+            self.nspikes = -1
+            self.record = -1
+            self.spikes = []
+
+            self.synapses = synapses
+            self.delays = delays # Delay handling should also be in C
+            
+        def compress(self):
+            pass
+        
+        def propagate(self, spikes):
+            '''
+            Called by the network object at every timestep.
+            Spikes produce synaptic events that are inserted in the queue. 
+            '''
+            if len(spikes):
+                print spikes
+                synaptic_events=np.hstack([self.synapses[i].data for i in spikes]) # could be not efficient
+                print synaptic_events
+                self.insert(synaptic_events, self.delays[synaptic_events])   
+
+        warnings.warn('Using C++ SpikeQueue')
+except ImportError:
+#    raise
+    pass
+
