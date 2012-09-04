@@ -10,6 +10,7 @@ def run_and_print(command, print_out = True):
             print line,
     retval = p.wait()
     return retval
+
 run_and_print("rm spikequeue")
 
 if True:
@@ -22,6 +23,7 @@ if True:
         print SEPARATOR+' Run successful'
 
 if True:
+    run_and_print("rm _cspikequeue.so")
     # the swig test
     SWIG_BUILD = 'swig -c++ -python spikequeue.i'
     run_and_print(SWIG_BUILD)

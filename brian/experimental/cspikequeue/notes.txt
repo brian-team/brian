@@ -35,3 +35,11 @@ test_python.py
 	the python script that gets run for testing.
 
 
+
+Interface
+---------
+	Methods/Functions to implement so that all the calls to SpikeQueue in Synapses work.
+			  next()
+			  advances time
+			  peek()	
+			  returns np.array		  

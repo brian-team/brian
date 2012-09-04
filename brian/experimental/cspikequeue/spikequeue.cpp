@@ -1,6 +1,7 @@
 #include "spikequeue.h"
 #include<string.h>
 #include<iostream>
+#include<sstream>
 
 using namespace std;
 
@@ -8,21 +9,17 @@ SpikeQueue::SpikeQueue(int n_delays, int n_maxevents)
 {
   this->n_delays = n_delays;
   this->n_maxevents = n_maxevents;
-  
-  this->retarray = NULL;
-  this->retarray = new long[n_maxevents];
-
-  this->X = new long*[n_delays];
-  for (int i = 0 ; i < n_delays ; i++)
-    {
-      (this->X)[i] = new long[n_maxevents];
-    }
-
-  this->n = new long[n_delays];
   this->currenttime = 0;
   
-  // memory use control (copied from the ccircular.cpp)
-  if(!this->X || !this->n){
+  this->retarray = NULL;
+
+  this->something = -1;
+
+  this->retarray = new long[n_maxevents];
+  this->n = new long[n_delays];
+  this->X = new long*[n_delays];
+
+  if(!this->X || !this->n || !this->retarray){
     if(this->X) {
       delete [] this->X;
       this->X = 0;
@@ -35,10 +32,30 @@ SpikeQueue::SpikeQueue(int n_delays, int n_maxevents)
       delete [] this->retarray;
       this->retarray = 0;
     }
-    //    throw BrianException("Not enough memory in creating SpikeQueue.");
+    throw BrianException("Not enough memory in creating SpikeQueue.");
   }
-}
 
+  for (int i = 0 ; i < n_delays ; i++)
+    {
+      (this->X)[i] = new long[n_maxevents];
+      (this->n)[i] = 0;
+      if (!((this->X)[i]))
+	{
+	  throw BrianException("Not enough memory in creating SpikeQueue (X).");
+	}
+    }
+}
+SpikeQueue::~SpikeQueue()
+{
+  for (int i = 0 ; i < this->n_delays ; i++)
+    {
+      delete [] (this->X)[i];
+    }
+  if(this->X) delete [] this->X;
+  if(this->retarray) delete [] this->retarray;
+  this->X = NULL;
+  this->retarray = NULL;
+}
 // Spike Queue data structure
 void SpikeQueue::expand()
 {
@@ -47,16 +64,23 @@ void SpikeQueue::expand()
 
    long *new_retarray = new long[this->n_maxevents];
    long **new_X = new long*[this->n_delays];
+
    for (int i = 0 ; i < n_delays ; i++)
      {
      new_X[i] = new long[this->n_maxevents];
+     if (!(new_X[i]))
+       {
+	 cout << "something";
+       }
      memcpy((void *)new_X[i], (void *)(this->X[i]), sizeof(long)*(this->n)[i]);
+     delete [] (this->X)[i];
      }
-   cout << "Done" << endl;
-   if(!new_X){
-     if(new_X) delete [] new_X;
-     //     throw BrianException("Not enough memory in expanding SpikeQueue.");
+
+   if(!new_X || !retarray){
+      if(new_X) delete [] new_X;
+     throw BrianException("Not enough memory in expanding SpikeQueue.");
    }
+   // 2D array
    delete [] this->X;
    this->X = new_X;
    delete [] this->retarray;
@@ -71,31 +95,34 @@ void SpikeQueue::next()
 
 void SpikeQueue::_peek(int nevents)
 {
-  //  
-  //  cout << "nevents: " << nevents;
-  for (int i = 0; i<nevents; i++)
+  for (int i = 0; i < nevents; i++)
     {
       this->retarray[i] = (this->X)[this->currenttime][i];
     }
-
 }
-
 // my two attempts at returning a numpy array
 void SpikeQueue::peek(long **ret, int *ret_n)
 {
-  // This is where it fails for now.
-  cout << "OK";
   int nevents = (this->n)[this->currenttime];
-  cout << "OK";
   this->_peek(nevents);
-  *ret = (this->retarray);
+  *ret = this->retarray;
   *ret_n = nevents;
+}
+void SpikeQueue::minimal()
+{
+  int nevents = (this->n)[this->currenttime];
+  this->something = nevents;
+  this->retarray[0] = (this->X)[this->currenttime][0];  
+  this->retarray[1] = (this->X)[this->currenttime][1];  
+  this->retarray[2] = (this->X)[this->currenttime][2];  
+  (this->n)[0] = 1;
+  (this->X)[0][0] = 1;
 }
 void SpikeQueue::peek2(long *ret_out, int ret_n_out)
 {
   // This is where it fails for now.
   int nevents = (this->n)[this->currenttime];
-  this->_peek(nevents);
+
   ret_out = (this->retarray);
   ret_n_out = nevents;
 }
@@ -131,6 +158,27 @@ void SpikeQueue::print_summary()
     cout << endl;
   }
 }
+// Even this simple thing doesnt work.
+// string SpikeQueue::__repr__()
+// {
+// 	stringstream out;
+// 	out << "SpikeQueue" << endl;
+// 	out << "n_delays = " << this->n_delays << endl;
+// 	out << "n_maxevents = " << this->n_maxevents << endl;
+// 	out << "currenttime = " << this->currenttime << endl;
+	
+// 	int n = 0;
+// 	for (int k=0; k<this->n_delays; k++){
+// 	  n += (this->n)[k];
+// 	}
+// 	out << "Contains " << n << "spikes" << endl;
+// 	return out.str();
+// }
+// string SpikeQueue::__str__()
+// {
+// 	return this->__repr__();
+// }
+
 
 ///////////////////// MAIN ///////////////////////
 /*
@@ -204,6 +252,20 @@ int main(void){
   for (int i = 0; i < N; i++)
     {
       cout << x.retarray[i] << ',';
+    }
+  cout << endl;
+
+  int n;
+  long *ret;
+  x.peek(&ret, &n);
+  
+  cout << "////////////////" << endl;
+  cout << "/ LAST /" << endl;
+  cout << "////////////////" << endl;
+
+  for (int i = 0; i < n; i++)
+    {
+      cout << ret[i] << ',';
     }
   cout << endl;
 
