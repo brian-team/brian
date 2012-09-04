@@ -382,7 +382,11 @@ class StateSpikeMonitor(SpikeMonitor):
     def propagate(self, spikes):
         if len(spikes):
             self.nspikes += len(spikes)
-            recordedstate = [ [x * u for x in v[spikes]] for v, u in izip(self._vars, self._units) ]
+            recordedstate = [ [ x * u for x in self.source.state_(varname)[spikes]] for varname, u in izip(self._varnames, self._units)]
+            # the above line used to be this one:
+            # recordedstate = [ [x * u for x in v[spikes]] for v, u in izip(self._vars, self._units) ]
+            # which didn't take the values of the variables if they were defined by a static eqn
+            # a = b + c : 1
             self.spikes += zip(spikes, repeat(self.source.clock.t), *recordedstate)
 
     def __getitem__(self, i):
@@ -527,7 +531,7 @@ class FileSpikeMonitor(SpikeMonitor):
         self.f.close()
 
 
-# The default header for AER files. (see AERSpikeMonitor init)
+# The default header for AER files (see AERSpikeMonitor init):
 AER_HEADER = """#!AER-DAT2.0
 # This is a raw AE data file - do not edit
 # Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event
@@ -546,8 +550,8 @@ class AERSpikeMonitor(FileSpikeMonitor):
     be reloaded via the io.load_aer function and used later into a
     SpikeGeneratorGroup. 
     
-    It is about three times faster than the FileSpikeMonitor and
-    creates smaller files. On the other hand those files are not
+    It is about three times faster than the :class:`FileSpikeMonitor` and
+    creates  smaller files. On the other hand those files are not
     human-readable because they are in binary format. 
 
     
