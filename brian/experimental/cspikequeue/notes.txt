@@ -1,0 +1,37 @@
+This folder contains the C++ version of the SpikeQueue.
+
+State
+-----
+	Basically everything works well when used in CPP, and fails when used in Python
+
+Files
+-----
+spikequeue.cpp
+	The cpp source code file. At the end in contains a main() function that does some testing. Hence running it will display some stuff etc.. The test covers all the functions (_peek, next, insert, expand), and checks that it works fine. It does. 
+	
+	About peek: There are two peek functions peek and peek2, they correspond to two different %apply statements in the spikequeue.i SWIG file. Both fail. The _peek function just fetches the right values and put them in this->retarray. It gets tested in the main() fun and it works.
+
+spikequeue.i
+	The .i file, nothing really fancy here, I have two % apply statements for the reasons shown above.
+	
+spikequeue.h
+	header file
+
+setup.py
+	nothing fancy
+
+test_all.py
+	Used as a shell script to do all the building and testing at once.
+	
+	builds the CPP code, 
+	runs the CPP code
+	builds with SWIG
+	runs python setup.py
+	runs the python script test_python
+
+	Note: It often says "successful" or "built" when it's not. I based this on return values and it doesn't make sense. sorry
+
+test_python.py
+	the python script that gets run for testing.
+
+

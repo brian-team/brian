@@ -45,7 +45,7 @@ void SpikeQueue::expand()
    int orig_n_maxevents = this->n_maxevents;
    this->n_maxevents += orig_n_maxevents; // we multiply by 2.
 
-   long *new_retarray = new long[this->n_maxevents];  
+   long *new_retarray = new long[this->n_maxevents];
    long **new_X = new long*[this->n_delays];
    for (int i = 0 ; i < n_delays ; i++)
      {
@@ -79,6 +79,8 @@ void SpikeQueue::_peek(int nevents)
     }
 
 }
+
+// my two attempts at returning a numpy array
 void SpikeQueue::peek(long **ret, int *ret_n)
 {
   // This is where it fails for now.
@@ -86,11 +88,18 @@ void SpikeQueue::peek(long **ret, int *ret_n)
   int nevents = (this->n)[this->currenttime];
   cout << "OK";
   this->_peek(nevents);
-  cout << "OK";
   *ret = (this->retarray);
-  cout << "OK";
   *ret_n = nevents;
 }
+void SpikeQueue::peek2(long *ret_out, int ret_n_out)
+{
+  // This is where it fails for now.
+  int nevents = (this->n)[this->currenttime];
+  this->_peek(nevents);
+  ret_out = (this->retarray);
+  ret_n_out = nevents;
+}
+
 
 void SpikeQueue::insert(long delay[], long target[], int nevents)
 {
@@ -124,50 +133,79 @@ void SpikeQueue::print_summary()
 }
 
 ///////////////////// MAIN ///////////////////////
-
+/*
+Here I do some testing.
+ */
 int main(void){
   int N = 5;
   SpikeQueue x (10, N);
+
+  cout << "////////////////" << endl;
+  cout << "///// INIT /////" << endl;
+  cout << "////////////////" << endl;
+
   x.print_summary();
+
+  cout << "////////////////" << endl;
   cout << "Inserting spikes" << endl;
+  cout << "////////////////" << endl;
   
   long delay[4] = {1, 2, 2, 3};
   long target[4] = {45, 45, 46, 46};
-  
   x.insert(delay, target, 4);
+
+  cout << "////////////////" << endl;
+  cout << "///// CHECK /////" << endl;
+  cout << "////////////////" << endl;
+  // We should see some spikes
   x.print_summary();
 
-  //  x.peek(ret, n);
-
+  cout << "////////////////" << endl;
+  cout << "///// NEXT /////" << endl;
+  cout << "////////////////" << endl;
+  // We should see currenttime = 1
   x.next();
   x.print_summary();
 
-  cout << "Peeking" << endl;
+  cout << "////////////////" << endl;
+  cout << "///// EXPND ////" << endl;
+  cout << "////////////////" << endl;
+  x.expand();
+  // We should not see any difference
+  x.print_summary();
+  
+  cout << "////////////////" << endl;
+  cout << "///// PEEK /////" << endl;
+  cout << "////////////////" << endl;
+  x._peek(N);
+  // I have to print manually, we should see the numbers corresponding to the right line in the data.
+  for (int i = 0; i < N; i++)
+    {
+      cout << x.retarray[i] << ',';
+    }
+  cout << endl;
+
+  cout << "////////////////" << endl;
+  cout << "/ NEXT + PEEK //" << endl;
+  cout << "////////////////" << endl;
+  x.next();
+  x._peek(N);
+  for (int i = 0; i < N; i++)
+    {
+      cout << x.retarray[i] << ',';
+    }
+
+  cout << endl;
+  cout << "////////////////" << endl;
+  cout << "/ NEXT + PEEK 2/" << endl;
+  cout << "////////////////" << endl;
+  x.next();
   x._peek(N);
   for (int i = 0; i < N; i++)
     {
       cout << x.retarray[i] << ',';
     }
   cout << endl;
-  cout << "Done" << endl;
-
-  x.expand();
-  x.print_summary();
-  cout << "Expanded" << endl;
-
-  x.next();
-  x._peek(N);
-  for (int i = 0; i < N; i++)
-    {
-      cout << x.retarray[i] << ',';
-    }
-
-  long *ret;
-  int ret_n;
-
-  //  x.peek(ret, n);
 
   return 1;
-
-
 }

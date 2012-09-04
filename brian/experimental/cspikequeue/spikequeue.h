@@ -19,7 +19,11 @@ public:
   void next();
 
   void _peek(int nevents);
+
+  // my two attempts at returning a numpy array
   void peek(long **ret, int *ret_n);
+  void peek2(long *ret_out, int ret_n_out);
+
   void insert(long delay[], long target[], int nevents);
 
   //printout c++
