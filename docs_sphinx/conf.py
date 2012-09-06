@@ -13,6 +13,8 @@
 
 import sys, os
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
 building_as = 'html'
 
 # If your extensions are in another directory, add it here. If the directory
@@ -83,7 +85,8 @@ pygments_style = 'sphinx'
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
 # given in html_static_path.
-html_style = 'default.css'
+if not on_rtd:
+    html_style = 'default.css'
 
 html_theme = "default"
 html_theme_options = {
