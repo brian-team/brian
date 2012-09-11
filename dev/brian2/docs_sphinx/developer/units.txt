@@ -58,8 +58,8 @@ things like ``q.mean()``, ``q.std()``, ``q.max()``, etc. and the result will
 have the correct unit attached. This works nicely with numpy, as it calls these
 methods also if you use the numpy functions, i.e. ``np.sum(q)`` will also work
 (There are some exceptions to this rule, sometimes ufuncs are called directly
-without going through the methods, but these are taken care of in
-``__array_prepare__`` and ``__array_wrap__``). 
+without going through the methods, but these are taken care of as well (see
+below).
 
 In ``fundamentalunits.py``, simple function wrappers can be used to take care
 of the easy cases:
@@ -89,7 +89,49 @@ List of unit-aware functions
 
 **Guaranteed**
 
-TODO
+All of the standard `numpy ufuncs`_ (functions that operate element-wise on numpy
+arrays) are supported, meaning that they check for correct units and return
+appropriate arrays. These functions are often called implicitly, for example
+when using operators like ``<`` or ``**``.
+
+*Math operations:*
+	``add, subtract, multiply, divide, logaddexp, logaddexp2,
+	true_divide, floor_divide, negative, power, remainder, mod, fmod, absolute,
+	rint, sign, conj, exp, exp2, log, log2, log10, expm1, log1p, sqrt, square,
+	reciprocal, ones_like``
+	
+*Trigonometric functions:*
+	``sin, cos, tan, arcsin, arccos, arctan, arctan2,
+	hypot, sinh, cosh, tanh, arcsinh, arccosh, arctanh, deg2rad, rad2deg``
+
+*Bitwise functions:*
+	``bitwise_and, bitwise_or, bitwise_xor, invert, left_shift, right_shift``
+
+*Comparison functions:* 
+	``greater, greater_equal, less, less_equal, not_equal,
+	equal, logical_and, logical_or, logical_xor, logical_not, maximum, minimum``
+	
+*Floating functions:*
+	``isreal, iscomplex, isfinite, isinf, isnan, floor, ceil, trunc, fmod``
+
+Not taken care of yet: ``signbit, copysign, nextafter, modf, ldexp, frexp``
+
+Some remarks:
+
+* Everything involving ``log`` or ``exp``, as well as trigonometric functions
+  only works on dimensionless array (for ``arctan2`` and ``hypot`` this is
+  questionable, though)
+* Unit arrays can only be raised to a scalar power, not to an array of
+  exponents as this would lead to differing dimensions across entries. For
+  simplicity, this is enforced even for dimensionless quantities (could be
+  changed, though).  
+* Bitwise functions never works on quantities (numpy will by itself throw a 
+  ``TypeError`` because they are floats not integers).
+* All comparisons only work for matching dimensions (with the exception of
+  always allowing comparisons to 0) and return a pure boolean array.
+* The ``logical_...`` functions treat quantities as boolean values in the same
+  way as floats are treated as boolean: Any non-zero value is True.
+
 
 **Working (but might change with future numpy versions)**
 
@@ -136,3 +178,5 @@ np.arange(2) * mV                   array([ 0.   ,  0.001])             array([ 
 (np.arange(2) * mV)[0] >= 1 * mV    False                               False
 (np.arange(2) * mV)[1] >= 1 * mV    DimensionMismatchError              True
 ================================    ================================    =================================
+
+.. _numpy ufuncs: http://docs.scipy.org/doc/numpy/reference/ufuncs.html
