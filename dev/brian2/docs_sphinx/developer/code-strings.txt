@@ -1,39 +1,105 @@
+Code strings and equations
+==========================
+
+The descriptions below are mostly meant to describe the *internal* use of
+code strings and equation. The user normally should just give strings as
+arguments to the respective functions.
+
 Code strings
-============
-A code string is a string that can be evaluated in a namespace. Examples are:
+------------
+
+A code string is a string that can be evaluated, referencing state variables
+(static and differential equations defined in a NeuronGroup or Synapses object)
+and external variables or functions (namespace). These code strings are used in
+various places in Brian: 
 
 * Right-hand side of equations
 * Reset
 * Threshold condition
 * Synaptic events triggered by pre- and post-synaptic spikes
-* Expressions used to assign synaptic variables, or create synapses
-* We could also use expressions to assign neuron variables
-* Perhaps, state update code
+* Expressions used to assign to synaptic variables, or create synapses
+* Possibly: Expressions to assign to neuron variables
 
-There are two types of code strings:
+There are two types of code strings: *Expressions* (RHS of quations, threshold
+condition, assignments to synaptic variables, creation of synapses) and 
+*statements* (Reset, synaptic events)
 
-* Expressions
-* Statements
+:class:`CodeString` is directly used for statments, expressions instead use a
+subclass :class:`Expression` providing additional methods.
 
-I suggest to create a base class, e.g. ``CodeString``, and two subclasses,
-``Expression`` and ``Statement``. Equations would be parsed into sets of
-expressions describing the RHS.
+:class:`CodeString` objects save the local and global namespace at the point
+where they were created. Optionally, an explicit namespace can be given, either
+completely replacing or augmenting the local/global namespace. This information
+is not immediately used to resolve identifiers in the code string because state
+variables (including for example pre- and postsynaptic state variables in the
+context of synaptic events) are not yet known and take precedence over external
+variables.   
 
-These classes should handle:
+The main purpose of the :class:`CodeString` object is to encapsulate a
+combination of a string and an external namespace. The objects are immutable,
+convenience functions that replace variable names, for example, return a new
+:class:`CodeString` object instead of changing it. 
 
-* Basic string manipulations
-* Namespace building
-* Units checking (for expressions)
-* Possibly, linearity/conditional linearity checking
-* Possibly, execution in a namespace
-* Possibly, code generation
+When additional information about the "internal namespace" (state variables and
+variables with special meaning, e.g. "i" and "j" in the context of
+synapses) is given, the :class:`CodeString` object can be asked to resolve all
+the identifiers (see below). A resolved code string can also return a
+"frozen" version of itself, replacing all external variables with their float
+values and removing them from the namespace.
+ 
+Expressions
+~~~~~~~~~~~
+The main additional functionality of :class:`Expression` objects is that they
+can be evaluated, given values for the "internal namespace". As code generation
+is used even for Python code, this evaluation is not used during simulation but
+only for tasks like unit checking. Expressions can also be analysed with sympy,
+determining whether the expression is linear or separating it into
+non-stochastic and stochastic (containing the special variable ``xi``) parts. 
 
-There two types of contexts: ``NeuronGroup`` and ``Synapses``.
-This determines how the code is evaluated, and how variable names are resolved.
+Resolving
+~~~~~~~~~
+Every identifier in the code string is resolved according to the following
+resolution order.
 
-Reserved keywords
------------------
-* i, j
-* t, dt
-* xi
-* function names: sin, cos, etc., maybe also rand(), randn(), etc.
+1. "internal variables" -- provided by the class that is the context for the
+   code string, e.g. NeuronGroup or Synapses. These internal variables contain
+   "special variables" like "t" or "xi" and state variables (including
+   automatically generated variable names with _pre and _post suffix in the
+   context of synaptic events).
+2. explicit namespace provided during the object creation
+3. external variables/functions in the local namespace (as saved during the
+   object creation)
+4. external variables/functions in the global namespace (as saved during the
+   object creation)
+5. units
+6. Possibly: A standard set of numpy functions (with unit-aware replacements)
+
+An error is raised if an identifier cannot be resolved. If there is more than
+one possible resolution, the resolution is performed according to the above
+resolution order but a warning is raised.
+
+Equations
+---------
+There are three kinds of equations in Brian: static equations, differential
+equations and parameters (which are not really equations, but share some
+properties with them). A single equation is encapsulated internally in an
+``_Equation`` object (a private inner class in :class:`Equations`), most
+importantly containing the name of the variable, the type, the
+expression defining the right-hand side of the equation (empty for parameters),
+a unit, and a list of flags. This object has many attributes in common with the
+:class:`Expression` class, delegating it to the respective expression and
+returning sensible values for parameters (e.g. ``is_linear`` is ``True``,
+``is_time_dependent`` is ``False``).
+
+The :class:`Equations` object mostly encapsulates a list of equations. As it
+knows about all state variables, it can check for non-defined identifiers and
+check for correct units. It also shares properties such as ``is_linear`` with
+single equations and expressions, returning ``True`` if all equations are
+linear.
+
+Some basic checks cannot performed by the :class:`Equations` class itself: 
+Neuronal and synaptic equations allow for different flags and identifiers
+(in :class:`Synapses`, "i" and "j" have a special meaning). These checks are
+performed as soon as the Equations object is given to the constructor of the
+:class:`NeuronGroup` or :class:`Synapses` or when the constructor constructs
+the respective objects from strings.
