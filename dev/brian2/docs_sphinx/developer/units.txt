@@ -1,8 +1,33 @@
 Units
 =====  
 
-The unit system is still open for discussion so the below rules should not be
-considered definitive yet. 
+[The unit system is still open for discussion so the below rules should not be
+considered definitive yet.] 
+
+Importing units
+---------------
+Brian generates standard names for units, combining the unit name (e.g.
+"siemens") with a prefixes (e.g. "m"), and also generates squared and cubed
+versions by appending a number. For example, the units "msiemens", "siemens2",
+"usiemens3" are all predefined. You can import these units from the package
+``brian2.units.allunits`` -- accordingly, an
+``from brian2.units.allunits import *`` will result in everything from
+``Ylumen3`` (cubed yotta lumen) to ``ymol`` (yocto mole) being imported.
+
+A better choice is normally to do an ``from brian2.units import *``, this
+imports only the base units amp, kilogram, second, metre/meter and the
+derived units coulomb, farad, gram/gramme, hertz, joule, pascal, ohm, 
+siemens, volt, watt, together with the prefixes p, n, u, m, k, M, G, T (two
+exceptions: kilogram is not imported with any prefixes, metre and meter are
+additionaly defined with the "centi" prefix, i.e. cmetre/cmeter).
+
+In addition to these, the module ``brian2.units.stdunits`` adds a couple of
+useful standard abbreviations like "cm" (instead of cmetre/cmeter), "nS"
+(instead of nsiemens), "ms" (instead of msecond), "Hz" (instead of hertz), etc.
+
+Doing a top-level wildcard import ``from brian2 import *`` is equivalent to
+doing both ``from brian2.units import *`` and
+``from brian2.units.stdunits import *``. 
 
 Casting rules
 -------------
@@ -46,10 +71,6 @@ expression like ``v <= inf`` will never raise an exception (and always return
 should ``1 + second + inf`` work? Might be more consistent even if there is no
 real usecase for that. What about NaN?].  
 
-Checking units
---------------
-TODO
-
 Functions and units
 -------------------
 All *methods* of Quantity are guaranteed to correctly work with units (not
@@ -59,7 +80,7 @@ have the correct unit attached. This works nicely with numpy, as it calls these
 methods also if you use the numpy functions, i.e. ``np.sum(q)`` will also work
 (There are some exceptions to this rule, sometimes ufuncs are called directly
 without going through the methods, but these are taken care of as well (see
-below).
+below)).
 
 In ``fundamentalunits.py``, simple function wrappers can be used to take care
 of the easy cases:
@@ -72,10 +93,6 @@ of the easy cases:
 	Changes the dimensions in a simple way that is independent of function
 	arguments, the shape of the array, etc. (examples: sqrt, var, power)
 
-For some methods, the wrapper needs to be a bit more complicated, e.g. for
-``prod`` -- the question is whether it is worth the effort or raising
-NotImplementedError is enough.
-
 There are some functions in numpy that do not propagate their call to the
 corresponding method (because they use np.asarray instead of np.asanyarray,
 which might actually be a bug in numpy): ``trace``, ``diagonal``, ``ravel``. For
@@ -87,7 +104,7 @@ currently there.
 List of unit-aware functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Guaranteed**
+**Numpy ufuncs**
 
 All of the standard `numpy ufuncs`_ (functions that operate element-wise on numpy
 arrays) are supported, meaning that they check for correct units and return
@@ -97,8 +114,8 @@ when using operators like ``<`` or ``**``.
 *Math operations:*
 	``add, subtract, multiply, divide, logaddexp, logaddexp2,
 	true_divide, floor_divide, negative, power, remainder, mod, fmod, absolute,
-	rint, sign, conj, exp, exp2, log, log2, log10, expm1, log1p, sqrt, square,
-	reciprocal, ones_like``
+	rint, sign, conj, conjugate, exp, exp2, log, log2, log10, expm1, log1p,
+	sqrt, square, reciprocal, ones_like``
 	
 *Trigonometric functions:*
 	``sin, cos, tan, arcsin, arccos, arctan, arctan2,
@@ -129,17 +146,12 @@ Some remarks:
   ``TypeError`` because they are floats not integers).
 * All comparisons only work for matching dimensions (with the exception of
   always allowing comparisons to 0) and return a pure boolean array.
-* The ``logical_...`` functions treat quantities as boolean values in the same
+* All logical functions treat quantities as boolean values in the same
   way as floats are treated as boolean: Any non-zero value is True.
 
+.. _numpy ufuncs: http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
-**Working (but might change with future numpy versions)**
-
-*Numpy*
-
-	* linspace
-	* trapz
-	* ... TODO
+**Numpy functions**
 
 User-defined functions and units
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,5 +190,3 @@ np.arange(2) * mV                   array([ 0.   ,  0.001])             array([ 
 (np.arange(2) * mV)[0] >= 1 * mV    False                               False
 (np.arange(2) * mV)[1] >= 1 * mV    DimensionMismatchError              True
 ================================    ================================    =================================
-
-.. _numpy ufuncs: http://docs.scipy.org/doc/numpy/reference/ufuncs.html
