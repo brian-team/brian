@@ -522,6 +522,7 @@ def modelfitting(model=None,
 
 def get_spikes(model=None, reset=None, threshold=None,
                 input=None, input_var='I', dt=None,
+                initial_values=None,
                 **params):
     """
     Retrieves the spike times corresponding to the best parameters found by
@@ -529,7 +530,8 @@ def get_spikes(model=None, reset=None, threshold=None,
     
     **Arguments**
     
-    ``model``, ``reset``, ``threshold``, ``input``, ``input_var``, ``dt``
+    ``model``, ``reset``, ``threshold``, ``input``, ``input_var``, ``dt``,
+    ``initial_values``
         Same parameters as for the ``modelfitting`` function.
         
     ``**params``
@@ -551,6 +553,10 @@ def get_spikes(model=None, reset=None, threshold=None,
             continue
         group.state(param)[:] = values
 
+    if initial_values is not None:
+        for param, value in initial_values.iteritems():
+            group.state(param)[:] = value
+        
     M = SpikeMonitor(group)
     net = Network(group, M)
     net.run(duration)
