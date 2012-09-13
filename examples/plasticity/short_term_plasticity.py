@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example with short term plasticity model
 Neurons with regular inputs and depressing synapses

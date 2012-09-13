@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Anonymous entry for the 2012 Brian twister.
 '''

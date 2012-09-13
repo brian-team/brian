@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Integrate-and-fire neurons with noise
 '''

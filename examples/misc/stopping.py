@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Network to demonstrate stopping a simulation during a run
 

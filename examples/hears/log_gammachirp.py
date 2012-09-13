@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of the use of the class :class:`~brian.hears.LogGammachirp` available in
 the library. It implements a filterbank of IIR gammachirp filters as 

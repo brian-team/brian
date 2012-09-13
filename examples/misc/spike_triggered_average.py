@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of the use of the function spike_triggered_average. A white noise  is filtered
 by a gaussian filter (low pass filter) which output is used to generate spikes (poission process)

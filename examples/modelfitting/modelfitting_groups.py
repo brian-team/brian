@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example showing how to fit a single model
 with different target spike trains (several groups).

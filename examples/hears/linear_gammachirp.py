@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of the use of the class :class:`~brian.hears.LinearGammachirp` available
 in the library. It implements a filterbank of FIR gammatone filters with linear

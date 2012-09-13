@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Very short example program.
 '''

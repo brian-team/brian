@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Example of quality check method. Requires binary files 
 "current.npy" and "rawtrace.npy".

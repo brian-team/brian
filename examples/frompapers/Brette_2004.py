@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Phase locking in leaky integrate-and-fire model
 -----------------------------------------------

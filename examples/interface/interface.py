@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Interface example
 Install cherrypy for this example

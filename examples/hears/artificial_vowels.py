@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 This example implements the artificial vowels from
 Culling, J. F. and Summerfield, Q. (1995a). "Perceptual segregation of

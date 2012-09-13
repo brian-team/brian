@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Reliability of spike timing
 ---------------------------

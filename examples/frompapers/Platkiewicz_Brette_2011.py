@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Slope-threshold relationship with noisy inputs, in the adaptive threshold model
 -------------------------------------------------------------------------------

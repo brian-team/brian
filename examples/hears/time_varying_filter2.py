@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 This example implements a band pass filter whose center frequency is modulated by
 a sinusoid function. This modulator is implemented as a

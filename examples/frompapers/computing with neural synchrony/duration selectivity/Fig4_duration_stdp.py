@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Brette R (2012). Computing with neural synchrony. PLoS Comp Biol. 8(6): e1002561. doi:10.1371/journal.pcbi.1002561
 ------------------------------------------------------------------------------------------------------------------

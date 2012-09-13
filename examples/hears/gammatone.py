@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of the use of the class :class:`~brian.hears.Gammatone` available in the
 library. It implements a fitlerbank of IIR gammatone filters as 

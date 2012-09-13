@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Quentin Pauluis's entry for the 2012 Brian twister.
 '''

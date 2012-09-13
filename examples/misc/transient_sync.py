@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Transient synchronisation in a population of noisy IF neurons
 with distance-dependent synaptic weights (organised as a ring)

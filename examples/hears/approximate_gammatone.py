@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of the use of the class :class:`~brian.hears.ApproximateGammatone`
 available in the library. It implements a filterbank of approximate gammatone

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 An example of single-electrode current clamp recording
 with discontinuous current clamp (using the electrophysiology library).

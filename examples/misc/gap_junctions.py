@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Network of noisy IF neurons with gap junctions
 '''

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Peter Diehl's entry for the 2012 Brian twister.
 '''

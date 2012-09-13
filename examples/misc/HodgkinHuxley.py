@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Hodgkin-Huxley model
 Assuming area 1*cm**2

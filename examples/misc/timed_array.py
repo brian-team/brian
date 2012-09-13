@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 An example of the :class:`TimedArray` class used for applying input currents
 to neurons.

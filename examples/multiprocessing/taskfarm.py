@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Uses the :func:`~brian.tools.taskfarm.run_tasks` function to run a task on
 multiple CPUs and save the results to a

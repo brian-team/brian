@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Michele Giugliano's entry for the 2012 Brian twister.
 '''

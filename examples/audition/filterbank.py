@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 An auditory filterbank implemented with Poisson neurons
 

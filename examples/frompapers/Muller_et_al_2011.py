@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Interplay of STDP and input oscillations
 ----------------------------------------

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example with named threshold and reset variables
 '''

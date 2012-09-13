@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of the use of the cochlear models (:class:`~brian.hears.DRNL`,
 :class:`~brian.hears.DCGC` and :class:`~brian.hears.TanCarney`) available in the library.

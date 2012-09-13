@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Inhibitory synaptic plasticity in a recurrent network model
 ----------------------------------------------------------- 

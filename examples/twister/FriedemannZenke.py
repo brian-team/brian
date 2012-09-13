@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Friedemann Zenke's winning entry for the 2012 Brian twister.
 '''

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Input-Frequency curve of a neuron (cortical RS type)
 Network: 1000 unconnected integrate-and-fire neurons (Brette-Gerstner)

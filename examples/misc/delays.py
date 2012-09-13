@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Random network with external noise and transmission delays
 '''

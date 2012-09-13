@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Jeffress model, adapted with spiking neuron models.
 A sound source (white noise) is moving around the head.

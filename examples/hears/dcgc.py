@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Implementation example of the compressive gammachirp auditory filter as
 described in Irino, T. and Patterson R., "A compressive gammachirp auditory

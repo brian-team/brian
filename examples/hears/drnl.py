@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Implementation example of the dual resonance nonlinear (DRNL) filter with
 parameters fitted for human as described in Lopez-Paveda, E. and Meddis, R., A

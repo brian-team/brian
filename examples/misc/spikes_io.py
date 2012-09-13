@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 This script demonstrates how to save/load spikes in AER format from inside Brian.
 '''

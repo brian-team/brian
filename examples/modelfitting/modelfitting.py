@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Model fitting example.
 Fit an integrate-and-fire model to an in-vitro electrophysiological 

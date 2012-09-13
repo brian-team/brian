@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Adapted from
 Theory of Arachnid Prey Localization

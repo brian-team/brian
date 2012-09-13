@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 A model with adaptive threshold (increases with each spike)
 '''

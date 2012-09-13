@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of using Python multiprocessing module to distribute simulations over
 multiple processors.

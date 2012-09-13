@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Cochlear neuron model of Rothman & Manis
 ----------------------------------------

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of basic use and manipulation of sounds with Brian hears.
 '''

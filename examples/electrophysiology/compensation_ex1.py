@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Example of L^p electrode compensation method. Requires binary files 
 "current.npy" and "rawtrace.npy".

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Neurons with gap junctions
 '''

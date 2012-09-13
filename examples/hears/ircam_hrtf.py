@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example showing the use of HRTFs in Brian hears. Note that you will need to
 download the :class:`IRCAM_LISTEN` database.

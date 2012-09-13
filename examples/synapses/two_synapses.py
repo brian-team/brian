@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 One synapse within several possibilities.
 Synapse from 0->2,3.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Pierre Yger's winning entry for the 2012 Brian twister.
 '''

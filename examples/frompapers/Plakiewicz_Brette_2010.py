@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Spike threshold variability in single compartment model
 -------------------------------------------------------

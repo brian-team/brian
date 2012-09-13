@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 A ring of integrate-and-fire neurons.
 """

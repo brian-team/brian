@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Example with short term plasticity,
 with event-driven updates defined by differential equations.

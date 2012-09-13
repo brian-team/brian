@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Spike-timing dependent plasticity
 Adapted from Song, Miller and Abbott (2000) and Song and Abbott (2001)

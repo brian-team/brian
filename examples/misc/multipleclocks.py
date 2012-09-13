@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 This example demonstrates using different clocks for different objects
 in the network. The clock ``simclock`` is the clock used for the

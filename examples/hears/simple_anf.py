@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of a simple auditory nerve fibre model with Brian hears.
 '''

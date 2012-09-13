@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Dynamics of a network of sparsely connected inhibitory current-based 
 integrate-and-fire neurons. Individual neurons fire irregularly at 

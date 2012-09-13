@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # coding: latin-1
 """
 This is an implementation of a benchmark described

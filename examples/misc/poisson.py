@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This example demonstrates the PoissonGroup object. Here we have
 used a custom function to generate different rates at different

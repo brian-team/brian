@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of a 2D stimulus, see the
 `complete description <http://neuralensemble.org/cookbook/wiki/Brian/StimulusArrayGroup>`__

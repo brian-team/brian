@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Topographic map - an example of complicated connections.
 Two layers of neurons.

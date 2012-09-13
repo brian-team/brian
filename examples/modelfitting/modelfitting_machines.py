@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Model fitting example using several machines.
 Before running this example, you must start the Playdoh server on the remote machines.

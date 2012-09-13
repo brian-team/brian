@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 This example shows how to efficiently simulate neurons with a large number of 
 Poisson inputs targetting arbitrarily complex synapses. The approach is very

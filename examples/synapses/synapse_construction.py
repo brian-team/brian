@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 An example of constructing synapses.
 '''

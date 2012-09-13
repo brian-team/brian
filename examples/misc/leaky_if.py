@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 A very simple example Brian script to show how to implement
 a leaky integrate and fire model. In this example, we also

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Network (CUBA) with short-term synaptic plasticity for excitatory synapses
 (Depressing at long timescales, facilitating at short timescales)

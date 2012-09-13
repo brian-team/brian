@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of using derived classes in Brian
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 An example with correlated spike trains
 From: Brette, R. (2007). Generation of correlated spike trains.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 A network of exponential IF models with synaptic conductances
 '''

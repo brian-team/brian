@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Voltage-clamp experiment (SEVC)
 '''

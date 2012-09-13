@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Poisson input to an IF model
 '''

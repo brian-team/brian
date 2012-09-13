@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example showing :func:`linked_var`, connecting two different :class:`NeuronGroup`
 variables. Here we show something like a simplified haircell and auditory nerve

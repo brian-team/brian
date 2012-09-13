@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 This example basically replicates what the Brian PulsePacket object does,
 and then compares to that object.

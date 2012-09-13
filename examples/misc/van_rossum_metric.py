@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of how to use the van Rossum metric. 
 

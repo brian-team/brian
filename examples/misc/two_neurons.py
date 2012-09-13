@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Two connected neurons with delays
 '''

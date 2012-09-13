@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Adaptive exponential integrate-and-fire model.
 http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model

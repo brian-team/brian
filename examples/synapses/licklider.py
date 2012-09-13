@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Spike-based adaptation of Licklider's model of pitch processing (autocorrelation with
 delay lines) with phase locking.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 This example implements a band pass filter whose center frequency is modulated
 by an Ornstein-Uhlenbeck. The white noise term used for this process is output

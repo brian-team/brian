@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Monitoring synaptic variables.
 STDP example.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # coding: latin-1
 """
 CUBA example with delays.

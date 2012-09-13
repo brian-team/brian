@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 An example of single-electrode current clamp recording
 with bridge compensation (using the electrophysiology library).

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Dendrite with 100 compartments
 '''

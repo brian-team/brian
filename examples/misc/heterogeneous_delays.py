@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Script demonstrating use of a :class:`Connection` with homogenenous delays
 

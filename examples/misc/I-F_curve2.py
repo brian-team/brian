@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Input-Frequency curve of a IF model
 Network: 1000 unconnected integrate-and-fire neurons (leaky IF)

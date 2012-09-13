@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 A model with depolarizing after-potential.
 """

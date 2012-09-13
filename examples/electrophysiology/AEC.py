@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 AEC experiment (current-clamp)
 '''

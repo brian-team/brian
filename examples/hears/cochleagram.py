@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of basic filtering of a sound with Brian hears.
 This example implements a cochleagram based on a gammatone filterbank

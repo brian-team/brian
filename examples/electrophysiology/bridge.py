@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Bridge experiment (current-clamp)
 '''

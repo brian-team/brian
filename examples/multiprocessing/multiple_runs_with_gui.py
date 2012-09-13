@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 A complicated example of using multiprocessing for multiple runs of a simulation
 with different parameters, using a GUI to monitor and control the runs.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Analysis of spike threshold.
 

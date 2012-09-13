@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Implementation of synfire chain from Diesmann et al. 1999
 

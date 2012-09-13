@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of the use of the class :class:`~brian.hears.IIRFilterbank` available in
 the library.  In this example, a white noise is filtered by a bank of chebyshev

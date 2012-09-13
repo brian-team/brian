@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example of using :class:`RemoteControlServer` and :class:`RemoteControlClient`
 to control a simulation as it runs in Brian.

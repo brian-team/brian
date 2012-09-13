@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Example demonstrating the use of many features of Brian hears, including
 HRTFs, restructuring filters and integration with Brian. Implements a

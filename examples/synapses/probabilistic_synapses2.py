@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Probabilistic synapses - Katz model
 """

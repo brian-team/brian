@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Chaos in the AdEx model
 -----------------------
