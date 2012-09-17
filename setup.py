@@ -1,10 +1,25 @@
 """
 Setup script for Brian
 """
+import sys
+import os
+from distutils.core import setup, Extension
+from distutils.command.build_ext import build_ext
+from distutils.errors import CCompilerError
 
-from distutils.core import setup
+import numpy
 
 from brian_setup_info import version
+
+class optional_build_ext(build_ext):
+    # This class allows C extension building to fail.
+    def build_extension(self, ext):
+        try:
+            build_ext.build_extension(self, ext)
+        except CCompilerError:
+            sys.stderr.write(('Building %s failed (see error message(s) '
+                              'above) -- pure Python version will be used '
+                              'instead.\n') % ext.name) 
 
 long_description = '''
 Brian is a simulator for spiking neural networks available on almost all platforms.
@@ -17,6 +32,24 @@ which is an easy, concise and highly developed language with many advanced featu
 development tools, excellent documentation and a large community of users providing
 support and extension packages.
 '''
+
+ext_modules = []
+utils_path = os.path.join('brian', 'utils')
+ext_modules.append(Extension('brian.utils.fastexp._fastexp',
+                             sources=[os.path.join(utils_path,
+                                                   'fastexp', x) for x in
+                                                   ('fastexp_wrap.cxx',
+                                                    'fastexp.cpp',
+                                                    'fexp.c')],
+                                 include_dirs=[numpy.get_include()]
+                                 ))
+ext_modules.append(Extension('brian.utils.ccircular._ccircular',
+                             sources=[os.path.join(utils_path,
+                                                   'ccircular', x) for x in
+                                                   ('ccircular_wrap.cxx',
+                                                    'circular.cpp')],
+                                 include_dirs=[numpy.get_include()]
+                                 ))    
 
 setup(name='brian',
   version=version,
@@ -53,8 +86,8 @@ setup(name='brian',
                     'brian.utils.fastexp',
                     'brian.utils.sparse_patch',
             ],
-  package_data={'brian.utils.ccircular':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat'],
-                'brian.utils.fastexp':['*.cxx', '*.h', '*.i', '*.cpp', '*.bat', '*.c']},
+  ext_modules=ext_modules,
+  cmdclass={'build_ext' : optional_build_ext},
   requires=['matplotlib(>=0.90.1)',
             'numpy(>=1.4.1)',
             'scipy(>=0.7.0)'
