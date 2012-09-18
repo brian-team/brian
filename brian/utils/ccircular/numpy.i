@@ -11,63 +11,6 @@
 
 /**********************************************************************/
 
-%fragment("NumPy_Backward_Compatibility", "header")
-{
-/* Support older NumPy data type names
-*/
-%#if NDARRAY_VERSION < 0x01000000
-%#define NPY_BOOL          PyArray_BOOL
-%#define NPY_BYTE          PyArray_BYTE
-%#define NPY_UBYTE         PyArray_UBYTE
-%#define NPY_SHORT         PyArray_SHORT
-%#define NPY_USHORT        PyArray_USHORT
-%#define NPY_INT           PyArray_INT
-%#define NPY_UINT          PyArray_UINT
-%#define NPY_LONG          PyArray_LONG
-%#define NPY_ULONG         PyArray_ULONG
-%#define NPY_LONGLONG      PyArray_LONGLONG
-%#define NPY_ULONGLONG     PyArray_ULONGLONG
-%#define NPY_FLOAT         PyArray_FLOAT
-%#define NPY_DOUBLE        PyArray_DOUBLE
-%#define NPY_LONGDOUBLE    PyArray_LONGDOUBLE
-%#define NPY_CFLOAT        PyArray_CFLOAT
-%#define NPY_CDOUBLE       PyArray_CDOUBLE
-%#define NPY_CLONGDOUBLE   PyArray_CLONGDOUBLE
-%#define NPY_OBJECT        PyArray_OBJECT
-%#define NPY_STRING        PyArray_STRING
-%#define NPY_UNICODE       PyArray_UNICODE
-%#define NPY_VOID          PyArray_VOID
-%#define NPY_NTYPES        PyArray_NTYPES
-%#define NPY_NOTYPE        PyArray_NOTYPE
-%#define NPY_CHAR          PyArray_CHAR
-%#define NPY_USERDEF       PyArray_USERDEF
-%#define npy_intp          intp
-
-%#define NPY_MAX_BYTE      MAX_BYTE
-%#define NPY_MIN_BYTE      MIN_BYTE
-%#define NPY_MAX_UBYTE     MAX_UBYTE
-%#define NPY_MAX_SHORT     MAX_SHORT
-%#define NPY_MIN_SHORT     MIN_SHORT
-%#define NPY_MAX_USHORT    MAX_USHORT
-%#define NPY_MAX_INT       MAX_INT
-%#define NPY_MIN_INT       MIN_INT
-%#define NPY_MAX_UINT      MAX_UINT
-%#define NPY_MAX_LONG      MAX_LONG
-%#define NPY_MIN_LONG      MIN_LONG
-%#define NPY_MAX_ULONG     MAX_ULONG
-%#define NPY_MAX_LONGLONG  MAX_LONGLONG
-%#define NPY_MIN_LONGLONG  MIN_LONGLONG
-%#define NPY_MAX_ULONGLONG MAX_ULONGLONG
-%#define NPY_MAX_INTP      MAX_INTP
-%#define NPY_MIN_INTP      MIN_INTP
-
-%#define NPY_FARRAY        FARRAY
-%#define NPY_F_CONTIGUOUS  F_CONTIGUOUS
-%#endif
-}
-
-/**********************************************************************/
-
 /* The following code originally appeared in
  * enthought/kiva/agg/src/numeric.i written by Eric Jones.  It was
  * translated from C++ to C by John Hunter.  Bill Spotz has modified
@@ -97,7 +40,7 @@
 {
   /* Given a PyObject, return a string describing its type.
    */
-  char* pytype_string(PyObject* py_obj) {
+  const char* pytype_string(PyObject* py_obj) {
     if (py_obj == NULL          ) return "C NULL value";
     if (py_obj == Py_None       ) return "Python None" ;
     if (PyCallable_Check(py_obj)) return "callable"    ;
@@ -116,8 +59,8 @@
 
   /* Given a NumPy typecode, return a string describing the type.
    */
-  char* typecode_string(int typecode) {
-    static char* type_names[25] = {"bool", "byte", "unsigned byte",
+  const char* typecode_string(int typecode) {
+    static const char* type_names[25] = {"bool", "byte", "unsigned byte",
                                    "short", "unsigned short", "int",
                                    "unsigned int", "long", "unsigned long",
                                    "long long", "unsigned long long",
@@ -159,8 +102,8 @@
     }
     else if is_array(input)
     {
-      char* desired_type = typecode_string(typecode);
-      char* actual_type  = typecode_string(array_type(input));
+      const char* desired_type = typecode_string(typecode);
+      const char* actual_type  = typecode_string(array_type(input));
       PyErr_Format(PyExc_TypeError,
                    "Array of type '%s' required.  Array of type '%s' given",
                    desired_type, actual_type);
@@ -168,8 +111,8 @@
     }
     else
     {
-      char * desired_type = typecode_string(typecode);
-      char * actual_type  = pytype_string(input);
+      const char * desired_type = typecode_string(typecode);
+      const char * actual_type  = pytype_string(input);
       PyErr_Format(PyExc_TypeError,
                    "Array of type '%s' required.  A '%s' was given",
                    desired_type, actual_type);
@@ -196,7 +139,7 @@
     }
     else
     {
-      py_obj = PyArray_FromObject(input, typecode, 0, 0);
+      py_obj = PyArray_FROMANY(input, typecode, 0, 0, NPY_DEFAULT);
       /* If NULL, PyArray_FromObject will have set python error value.*/
       ary = (PyArrayObject*) py_obj;
       *is_new_object = 1;
@@ -229,6 +172,30 @@
     return result;
   }
 
+  /* Given a PyArrayObject, check to see if it is Fortran-contiguous.
+   * If so, return the input pointer, but do not flag it as not a new
+   * object.  If it is not Fortran-contiguous, create a new
+   * PyArrayObject using the original data, flag it as a new object
+   * and return the pointer.
+   */
+  PyArrayObject* make_fortran(PyArrayObject* ary, int* is_new_object,
+                              int min_dims, int max_dims)
+  {
+    PyArrayObject* result;
+    if (array_is_fortran(ary))
+    {
+      result = ary;
+      *is_new_object = 0;
+    }
+    else
+    {
+      Py_INCREF(ary->descr);
+      result = (PyArrayObject*) PyArray_FromArray(ary, ary->descr, NPY_FORTRAN);
+      *is_new_object = 1;
+    }
+    return result;
+  }
+
   /* Convert a given PyObject to a contiguous PyArrayObject of the
    * specified type.  If the input object is not a contiguous
    * PyArrayObject, a new one will be created and the new object flag
@@ -255,7 +222,36 @@
     *is_new_object = is_new1 || is_new2;
     return ary1;
   }
-}
+
+  /* Convert a given PyObject to a Fortran-ordered PyArrayObject of the
+   * specified type.  If the input object is not a Fortran-ordered
+   * PyArrayObject, a new one will be created and the new object flag
+   * will be set.
+   */
+  PyArrayObject* obj_to_array_fortran_allow_conversion(PyObject* input,
+                                                       int typecode,
+                                                       int* is_new_object)
+  {
+    int is_new1 = 0;
+    int is_new2 = 0;
+    PyArrayObject* ary2;
+    PyArrayObject* ary1 = obj_to_array_allow_conversion(input, typecode,
+                                                        &is_new1);
+    if (ary1)
+    {
+      ary2 = make_fortran(ary1, &is_new2, 0, 0);
+      if (is_new1 && is_new2)
+      {
+        Py_DECREF(ary1);
+      }
+      ary1 = ary2;
+    }
+    *is_new_object = is_new1 || is_new2;
+    return ary1;
+  }
+
+} /* end fragment */
+
 
 /**********************************************************************/
 
@@ -716,8 +712,8 @@
   (PyArrayObject* array=NULL, int is_new_object=0)
 {
   npy_intp size[2] = { -1, -1 };
-  array = obj_to_array_contiguous_allow_conversion($input, DATA_TYPECODE,
-                                                   &is_new_object);
+  array = obj_to_array_fortran_allow_conversion($input, DATA_TYPECODE,
+                                                &is_new_object);
   if (!array || !require_dimensions(array, 2) ||
       !require_size(array, size, 2) || !require_fortran(array)) SWIG_fail;
   $1 = (DATA_TYPE*) array_data(array);
@@ -864,8 +860,8 @@
   (PyArrayObject* array=NULL, int is_new_object=0)
 {
   npy_intp size[3] = { -1, -1, -1 };
-  array = obj_to_array_contiguous_allow_conversion($input, DATA_TYPECODE,
-                                                   &is_new_object);
+  array = obj_to_array_fortran_allow_conversion($input, DATA_TYPECODE,
+                                                &is_new_object);
   if (!array || !require_dimensions(array, 3) ||
       !require_size(array, size, 3) | !require_fortran(array)) SWIG_fail;
   $1 = (DATA_TYPE*) array_data(array);
@@ -1238,7 +1234,7 @@
   npy_intp dims[1];
   if (!PyInt_Check($input))
   {
-    char* typestring = pytype_string($input);
+    const char* typestring = pytype_string($input);
     PyErr_Format(PyExc_TypeError,
                  "Int dimension expected.  '%s' given.",
                  typestring);
@@ -1266,7 +1262,7 @@
   npy_intp dims[1];
   if (!PyInt_Check($input))
   {
-    char* typestring = pytype_string($input);
+    const char* typestring = pytype_string($input);
     PyErr_Format(PyExc_TypeError,
                  "Int dimension expected.  '%s' given.",
                  typestring);
