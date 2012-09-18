@@ -1,5 +1,6 @@
 %module ccircular
 %include "exception.i"
+%include "std_string.i"
 
 %exception {
 	try {

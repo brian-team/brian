@@ -2948,9 +2948,8 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_int swig_types[3]
 #define SWIGTYPE_p_long swig_types[4]
 #define SWIGTYPE_p_p_long swig_types[5]
-#define SWIGTYPE_p_string swig_types[6]
-static swig_type_info *swig_types[8];
-static swig_module_info swig_module = {swig_types, 7, 0, 0, 0, 0};
+static swig_type_info *swig_types[7];
+static swig_module_info swig_module = {swig_types, 6, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3045,6 +3044,9 @@ namespace swig {
     }
   };
 }
+
+
+#include <string>
 
 
 #define SWIG_FILE_WITH_INIT
@@ -3586,6 +3588,47 @@ SWIG_From_int  (int value)
   }
 
  
+
+SWIGINTERN swig_type_info*
+SWIG_pchar_descriptor(void)
+{
+  static int init = 0;
+  static swig_type_info* info = 0;
+  if (!init) {
+    info = SWIG_TypeQuery("_p_char");
+    init = 1;
+  }
+  return info;
+}
+
+
+SWIGINTERNINLINE PyObject *
+SWIG_FromCharPtrAndSize(const char* carray, size_t size)
+{
+  if (carray) {
+    if (size > INT_MAX) {
+      swig_type_info* pchar_descriptor = SWIG_pchar_descriptor();
+      return pchar_descriptor ? 
+	SWIG_InternalNewPointerObj(const_cast< char * >(carray), pchar_descriptor, 0) : SWIG_Py_Void();
+    } else {
+#if PY_VERSION_HEX >= 0x03000000
+      return PyUnicode_FromStringAndSize(carray, static_cast< int >(size));
+#else
+      return PyString_FromStringAndSize(carray, static_cast< int >(size));
+#endif
+    }
+  } else {
+    return SWIG_Py_Void();
+  }
+}
+
+
+SWIGINTERNINLINE PyObject *
+SWIG_From_std_string  (const std::string& s)
+{
+  return SWIG_FromCharPtrAndSize(s.data(), s.size());
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -4476,7 +4519,7 @@ SWIGINTERN PyObject *_wrap_CircularVector___repr__(PyObject *SWIGUNUSEDPARM(self
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  string result;
+  std::string result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:CircularVector___repr__",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
@@ -4492,7 +4535,7 @@ SWIGINTERN PyObject *_wrap_CircularVector___repr__(PyObject *SWIGUNUSEDPARM(self
       return NULL;
     }
   }
-  resultobj = SWIG_NewPointerObj((new string(static_cast< const string& >(result))), SWIGTYPE_p_string, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
 fail:
   return NULL;
@@ -4505,7 +4548,7 @@ SWIGINTERN PyObject *_wrap_CircularVector___str__(PyObject *SWIGUNUSEDPARM(self)
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  string result;
+  std::string result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:CircularVector___str__",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CircularVector, 0 |  0 );
@@ -4521,7 +4564,7 @@ SWIGINTERN PyObject *_wrap_CircularVector___str__(PyObject *SWIGUNUSEDPARM(self)
       return NULL;
     }
   }
-  resultobj = SWIG_NewPointerObj((new string(static_cast< const string& >(result))), SWIGTYPE_p_string, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
 fail:
   return NULL;
@@ -5132,7 +5175,7 @@ SWIGINTERN PyObject *_wrap_SpikeContainer___repr__(PyObject *SWIGUNUSEDPARM(self
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  string result;
+  std::string result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:SpikeContainer___repr__",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
@@ -5148,7 +5191,7 @@ SWIGINTERN PyObject *_wrap_SpikeContainer___repr__(PyObject *SWIGUNUSEDPARM(self
       return NULL;
     }
   }
-  resultobj = SWIG_NewPointerObj((new string(static_cast< const string& >(result))), SWIGTYPE_p_string, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
 fail:
   return NULL;
@@ -5161,7 +5204,7 @@ SWIGINTERN PyObject *_wrap_SpikeContainer___str__(PyObject *SWIGUNUSEDPARM(self)
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  string result;
+  std::string result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:SpikeContainer___str__",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_SpikeContainer, 0 |  0 );
@@ -5177,7 +5220,7 @@ SWIGINTERN PyObject *_wrap_SpikeContainer___str__(PyObject *SWIGUNUSEDPARM(self)
       return NULL;
     }
   }
-  resultobj = SWIG_NewPointerObj((new string(static_cast< const string& >(result))), SWIGTYPE_p_string, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
 fail:
   return NULL;
@@ -5244,7 +5287,6 @@ static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_int = {"_p_int", "int *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_long = {"_p_long", "long *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_long = {"_p_p_long", "long **", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_string = {"_p_string", "string *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_CircularVector,
@@ -5253,7 +5295,6 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_int,
   &_swigt__p_long,
   &_swigt__p_p_long,
-  &_swigt__p_string,
 };
 
 static swig_cast_info _swigc__p_CircularVector[] = {  {&_swigt__p_CircularVector, 0, 0, 0},{0, 0, 0, 0}};
@@ -5262,7 +5303,6 @@ static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0,
 static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_long[] = {  {&_swigt__p_long, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_long[] = {  {&_swigt__p_p_long, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_string[] = {  {&_swigt__p_string, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_CircularVector,
@@ -5271,7 +5311,6 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_int,
   _swigc__p_long,
   _swigc__p_p_long,
-  _swigc__p_string,
 };
 
 
