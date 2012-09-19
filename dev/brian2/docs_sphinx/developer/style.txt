@@ -37,19 +37,19 @@ for our code. This in particular includes the following conventions:
   	3. brian imports
 
 * Use absolute instead of relative imports, i.e. within the brian2 package use
-  ``import brian2.something`` instead of ``import something``
+  ``import brian2.something`` instead of ``import something``. The only
+  exception to this rule are imports from the same package within
+  ``__init__.py``. Here, absolute imports cannot be used, use "new-style"
+  relative imports instead, i.e. ``from .something import ...``
 * Do not use wildcard imports (``from brian2 import *``), instead import only the
   identifiers you need, e.g. ``from brian2 import NeuronGroup, Synapses``. For 
   packages like numpy that are used a lot, use ``import numpy as np``. But
   note that the user should still be able to do something like
   ``from brian2 import *`` (and this style can also be freely used in examples
-  and tests, for example). For this to work, as an exception from the above rule,
-  packages may include ``from brian2.submodule import *`` statements.
-  For example, ``brian2/__init__.py`` includes such statements for all modules
-  whose namespaces should be available to the user. As a rule of thumb, a 
-  ``from brian2.module import *`` statement should only appear once in the 
-  codebase for any module. Modules always have to use the ``__all__`` mechanism
-  to specify what is being made available with a wildcard import.
+  and tests, for example). Modules always have to use the ``__all__`` mechanism
+  to specify what is being made available with a wildcard import. As an
+  exception from this rule, the main ``brian2/__init__.py`` may use wildcard
+  imports.
   
 Brian2 is no longer supporting Python versions 2.5 and older. Therefore, a
 couple of backwards-incompatible idioms can be used that will also ease a future
