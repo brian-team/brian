@@ -1,8 +1,8 @@
 # get the newest version of nose and coverage, ignoring installed packages
 /home/jenkins/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade -I nose coverage || :
 
-# Use the previously built brian version
-export PYTHONPATH=$(pwd)/build/lib:$PYTHONPATH
+# Directly use the source directory (no setup.py yet)
+export PYTHONPATH=$(pwd):$PYTHONPATH
 
 # delete remaining compiled code from previous runs
 echo deleting '~/.python*_compiled' if it exists
