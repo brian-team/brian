@@ -131,7 +131,7 @@ class SpikeQueue(SpikeMonitor):
         self.delays = delays
         self.synapses = synapses
         self._precompute_offsets=precompute_offsets
-        
+
         self._max_delay=max_delay
         if max_delay>0: # do not precompute offsets if delays can change
             self._precompute_offsets=False
@@ -327,6 +327,7 @@ class SpikeQueue(SpikeMonitor):
         Spikes produce synaptic events that are inserted in the queue. 
         '''
         if len(spikes):
+#            print '(Python) In propagate: spikes = ', spikes
             if self._homogeneous: # homogeneous delays
                 synaptic_events=np.hstack([self.synapses[i].data for i in spikes]) # could be not efficient
                 self.insert_homogeneous(self.delays[0],synaptic_events)
@@ -408,43 +409,56 @@ class SpikeQueue(SpikeMonitor):
         if display:
             show()
 
-
 try:
-    raise ImportError
+    ## CSpikeQueue support!
     import brian.experimental.cspikequeue.cspikequeue as _cspikequeue
+    has_cspikequeue = True
     class SpikeQueue(_cspikequeue.SpikeQueue, SpikeMonitor):
         def __init__(self, source, synapses, delays,
-                     max_delay = 0*ms, maxevents = INITIAL_MAXSPIKESPER_DT,
-                     precompute_offsets = True):
-            self.source = source
-            nsteps = int(np.floor((max_delay)/(self.source.clock.dt)))+1
+                     max_delay = 60*ms, maxevents = INITIAL_MAXSPIKESPER_DT):
+            SpikeMonitor.__init__(self, source, record = False)
 
-            _cspikequeue.SpikeQueue.__init__(self, nsteps, maxevents)
+            nsteps = int(np.floor(max_delay/self.source.clock.dt))+1
+            print "Initialized with %d steps and %d events" % (nsteps, maxevents)
 
-            self.delay = -1
-            self.nspikes = -1
-            self.record = -1
-            self.spikes = []
+            self._max_delay = max_delay
 
             self.synapses = synapses
             self.delays = delays # Delay handling should also be in C
-            
+
+            _cspikequeue.SpikeQueue.__init__(self, nsteps, int(maxevents))
+
+#            self._spikequeue = _cspikequeue.SpikeQueue(nsteps, int(maxevents))
+
         def compress(self):
-            pass
-        
+            nsteps=max(self.delays)+1
+
+            # Check whether some delays are too long
+            if (nsteps>self.n_delays):
+                desired_max_delay = nsteps * self.source.clock.dt
+                raise ValueError,"Synaptic delays exceed maximum delay, set max_delay to %.1f ms" % (desired_max_delay/ms)
+
+            if hasattr(self, '_iscompressed') and self._iscompressed:
+                return
+
+            self._iscompressed = True
+
+            # Adjust the maximum delay and number of events per timestep if necessary
+            maxevents=self.n_maxevents
+            if maxevents==INITIAL_MAXSPIKESPER_DT: # automatic resize
+                maxevents=max(INITIAL_MAXSPIKESPER_DT, max([len(targets) for targets in self.synapses]))
+
+            # Resize
+
+            self.expand(int(maxevents))
         def propagate(self, spikes):
             '''
             Called by the network object at every timestep.
             Spikes produce synaptic events that are inserted in the queue. 
             '''
             if len(spikes):
-                print spikes
                 synaptic_events=np.hstack([self.synapses[i].data for i in spikes]) # could be not efficient
-                print synaptic_events
                 self.insert(synaptic_events, self.delays[synaptic_events])   
-
         warnings.warn('Using C++ SpikeQueue')
 except ImportError:
-#    raise
-    pass
-
+    has_cspikequeue = False
