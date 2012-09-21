@@ -11,7 +11,7 @@ def test(use_cspikequeue):
 
     P=SpikeGeneratorGroup(3, [(0, 5*ms), (2, 10*ms), (1, 15*ms)])
     Q=NeuronGroup(4,model='v:1')
-    S=Synapses(P,Q,model='w:1',pre='v+=w', use_cspikequeue = use_cspikequeue, max_delay = 4*ms)
+    S=Synapses(P,Q,model='w:1',pre='v+=w', max_delay = 4*ms)
 
     S[0,1]=True
     S.w[0,1]=1.
