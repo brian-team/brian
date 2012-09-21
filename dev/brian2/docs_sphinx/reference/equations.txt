@@ -1,0 +1,7 @@
+.. currentmodule:: brian2.equations
+
+Equations and code strings
+==========================
+
+.. autoclass:: CodeString
+.. autoclass:: Equations

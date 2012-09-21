@@ -25,7 +25,10 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphinx', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.mathjax', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
+              'sphinx.ext.intersphinx', 'sphinx.ext.todo',
+              'sphinx.ext.coverage', 'sphinx.ext.mathjax',
+              'sphinx.ext.viewcode', 'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -242,5 +245,8 @@ texinfo_documents = [
 #texinfo_show_urls = 'footnote'
 
 
-# Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {'http://docs.python.org/': None,
+                        'http://docs.scipy.org/doc/numpy': None,
+                        'http://docs.scipy.org/doc/scipy/reference': None}
+
+autodoc_default_flags = ['members']

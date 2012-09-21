@@ -1,0 +1,10 @@
+.. currentmodule:: brian2.units.fundamentalunits
+
+Unit system
+===========
+
+.. autoerror:: DimensionMismatchError
+.. autoclass:: Dimension
+.. autoclass:: Quantity
+.. autoclass:: Unit
+
