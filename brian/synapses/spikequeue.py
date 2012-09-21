@@ -419,7 +419,6 @@ try:
             SpikeMonitor.__init__(self, source, record = False)
 
             nsteps = int(np.floor(max_delay/self.source.clock.dt))+1
-            print "Initialized with %d steps and %d events" % (nsteps, maxevents)
 
             self._max_delay = max_delay
 
