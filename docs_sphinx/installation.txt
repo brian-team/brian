@@ -48,8 +48,7 @@ Finally, if you want to use the (optional) automatic C++ code generation feature
 have the ``gcc`` compiler installed (on `Cygwin <http://www.cygwin.com/>`__ if you are
 running on Windows).
 
-Mac users: the `Scipy Superpack for Intel OS X <http://fonnesbeck.github.com/ScipySuperpack/>`__ includes
-recent versions of Numpy, Scipy, Pylab and IPython.
+Mac users: The Enthought Python Distribution (`EPD <http://www.enthought.com/products/edudownload.php/>`__ ) is free for academics and contains all the libraries necessary to run Brian. Otherwise, the `Scipy Superpack for Intel OS X <http://fonnesbeck.github.com/ScipySuperpack/>`__ also includes versions of Numpy, Scipy, Pylab and IPython.
 
 Windows users: the `Python(x,y) <http://www.pythonxy.com/>`__ distribution includes all the packages
 (including Eclipse and IPython) above except Brian (which is available as an optional plugin).
@@ -99,7 +98,8 @@ be installed already on most unix or linux distributions. If you are using Windo
 install `cygwin <http://www.cygwin.com/>`__ (make sure to include the ``gcc`` package). Alternatively,
 some but not all versions of Microsoft Visual C++ should be compatible, but this is untested
 so far. See the documentation for the `SciPy Weave <http://www.scipy.org/Weave>`__ package for
-more information on this. See also the section on :ref:`compiled-code`.
+more information on this. Mac users should have XCode installed so as to have access to gcc and hence take advantage of brian compiled code. See also the section on :ref:`compiled-code`.
+
 
 Testing
 -------
