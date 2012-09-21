@@ -94,7 +94,8 @@ def test_with_variable_delays():
     conn = Connection(source, target_conn, delay=True, max_delay=flat_delays.max())
     conn.connect_one_to_one(source, target_conn, weight=1.1, delay=delays)
     
-    syn = Synapses(source, target_syn, model='w:1', pre='v+=w')    
+    syn = Synapses(source, target_syn, model='w:1', pre='v+=w',
+                   max_delay=flat_delays.max())    
     syn.connect_one_to_one(source, target_syn)
     syn.w = 1.1
     syn.delay = flat_delays
