@@ -1,5 +1,6 @@
 %module cspikequeue
 %include "exception.i"
+%include "std_string.i"
 
 %exception {
 	try {

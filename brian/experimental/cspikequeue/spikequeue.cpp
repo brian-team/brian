@@ -7,8 +7,9 @@ using namespace std;
 
 SpikeQueue::SpikeQueue(int n_delays, int n_maxevents)
 {
-  this->n_delays = n_delays;
-  this->n_maxevents = n_maxevents;
+  this->n_delays = n_delays; // first dimension of X (nsteps)
+  this->n_maxevents = n_maxevents; // second dimension of X 
+
   this->currenttime = 0;
   
   this->retarray = NULL;
@@ -16,7 +17,7 @@ SpikeQueue::SpikeQueue(int n_delays, int n_maxevents)
   this->something = -1;
 
   this->retarray = new long[n_maxevents];
-  this->n = new long[n_delays];
+  this->n = new int[n_delays];
   this->X = new long*[n_delays];
 
   if(!this->X || !this->n || !this->retarray){
@@ -39,6 +40,10 @@ SpikeQueue::SpikeQueue(int n_delays, int n_maxevents)
     {
       (this->X)[i] = new long[n_maxevents];
       (this->n)[i] = 0;
+      for (int j = 0 ; j < n_maxevents; j++)
+	{
+	  (this->X)[i][j] = 0;
+	}
       if (!((this->X)[i]))
 	{
 	  throw BrianException("Not enough memory in creating SpikeQueue (X).");
@@ -53,44 +58,72 @@ SpikeQueue::~SpikeQueue()
     }
   if(this->X) delete [] this->X;
   if(this->retarray) delete [] this->retarray;
+  if(this->n) delete [] this->n;
+  
   this->X = NULL;
   this->retarray = NULL;
+  this->n = NULL;
+  
 }
 // Spike Queue data structure
-void SpikeQueue::expand()
+void SpikeQueue::expand(int maxevents = -1)
 {
-   int orig_n_maxevents = this->n_maxevents;
-   this->n_maxevents += orig_n_maxevents; // we multiply by 2.
-
-   long *new_retarray = new long[this->n_maxevents];
-   long **new_X = new long*[this->n_delays];
-
-   for (int i = 0 ; i < n_delays ; i++)
-     {
-     new_X[i] = new long[this->n_maxevents];
-     if (!(new_X[i]))
-       {
-	 cout << "something";
-       }
-     memcpy((void *)new_X[i], (void *)(this->X[i]), sizeof(long)*(this->n)[i]);
-     delete [] (this->X)[i];
-     }
-
-   if(!new_X || !retarray){
-      if(new_X) delete [] new_X;
-      throw BrianException("Not enough memory in expanding SpikeQueue.");
-   }
-   // 2D array
-   delete [] this->X;
-   this->X = new_X;
-   delete [] this->retarray;
-   this->retarray = new_retarray;
+  if (maxevents != -1){
+    this->n_maxevents += maxevents; // we add maxevents
+  }
+  else
+    {
+      int orig_n_maxevents = this->n_maxevents;
+      this->n_maxevents += orig_n_maxevents; // we multiply by 2.
+    }
+  
+  // declare and allocate
+  long *new_retarray = new long[this->n_maxevents];
+  long **new_X = new long*[this->n_delays];
+  
+  // expand the 2D array structure
+  for (int i = 0 ; i < n_delays ; i++)
+    {
+      // allocate new memory
+      new_X[i] = new long[this->n_maxevents];
+       // check allocation success
+      if (!(new_X[i]))
+	{
+	  stringstream err;
+	  err << "Not enough memory in expanding SpikeQueue to size (";
+	  err << this->n_delays << ",";
+	  err << this->n_maxevents << ")";
+	  throw BrianException(err.str());
+	}
+       // copy old contents of X
+      memcpy((void *)new_X[i], (void *)(this->X[i]), sizeof(long)*(this->n)[i]);
+      // delete old contents
+      delete [] (this->X)[i];
+      // zero out newly allocated data
+      for (int j = (this->n)[i] ; j < this->n_maxevents; j++)
+	{
+	  new_X[i][j] = 0;
+	}
+    }
+  
+  if(!new_X || !retarray){
+    if(new_X) delete [] new_X;
+    throw BrianException("Not enough memory in expanding SpikeQueue.");
+  }
+  // delete 
+  delete [] this->X;
+  // assign
+  this->X = new_X;
+  // re-delete
+  delete [] this->retarray;
+  // re-assign
+  this->retarray = new_retarray;
 }
 
 void SpikeQueue::next()
 {
   this->n[this->currenttime] = 0; // erase
-  this->currenttime = (this->currenttime + 1) % (this->n_delays);
+  this->currenttime = ((this->currenttime + 1) % (this->n_delays));
 }
 
 void SpikeQueue::_peek(int nevents)
@@ -117,14 +150,19 @@ void SpikeQueue::insert(int len1, long *vec1, int len2, long *vec2)
     {
       throw BrianException("Inputs to insert have non matching lengths");
     }
-
   for (int k = 0; k < len1; k ++)
     {
       // get the timebin of this spike
-      const int d = (this->currenttime + vec2[k]) % (this->n_delays);
+      int d = (this->currenttime + vec2[k]) % (this->n_delays);
+      if ((this->n)[d] == this->n_maxevents)
+	{
+	  this->expand();
+	}
       // place it in the 2D array
       (this->X)[d][(this->n)[d]] = vec1[k];
       (this->n)[d]++;
+      // check that we can fit the events
+
     }
 }
 
@@ -156,8 +194,9 @@ string SpikeQueue::__repr__()
   int n = 0;
   for (int k=0; k<this->n_delays; k++){
     n += (this->n)[k];
+    out << "(" << k << ")" << (this->n)[k] << endl;
   }
-  out << "Contains " << n << "spikes" << endl;
+  out << "Contains " << n << " spikes" << endl;
   return out.str();
 }
 string SpikeQueue::__str__()
@@ -167,10 +206,9 @@ string SpikeQueue::__str__()
 
 
 ///////////////////// MAIN ///////////////////////
-/*
-Here I do some testing.
- */
+
 int main(void){
+  /*
   int N = 5;
   SpikeQueue x (10, N);
 
@@ -256,4 +294,6 @@ int main(void){
   cout << endl;
 
   return 1;
+*/
 }
+

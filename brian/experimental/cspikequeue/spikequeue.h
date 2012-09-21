@@ -20,11 +20,12 @@ public:
   SpikeQueue(int n0, int n1);
   ~SpikeQueue();
   
-  long **X, *n;
+  long **X;
+  int *n;
   int n_delays, n_maxevents, currenttime, something;
   long *retarray;
 
-  void expand();
+  void expand(int maxevents);
 
   void next();
 
@@ -33,8 +34,8 @@ public:
   void peek(long **ret, int *ret_n);
 
   void insert(int len1, long *vec1, int len2, long *vec2);
-
-  string __repr__();
+  
+  string __repr__(); /* doesn't work, but doesn't work in ccircular either. */
   string __str__();
   /* //printout c++ */
 
