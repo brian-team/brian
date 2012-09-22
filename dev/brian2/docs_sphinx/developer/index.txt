@@ -18,9 +18,10 @@ interest to others wishing to better understand how Brian works internally.
    equations
    state_update
    codegen/index
-   device
    groups
    features_to_be_removed
    defensive_programming
    refractoriness_and_linearity
    new_magic_and_clocks
+   device
+   device_structures

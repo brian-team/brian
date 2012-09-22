@@ -28,6 +28,12 @@ for our code. This in particular includes the following conventions:
 
 * Use 4 spaces instead of tabs per indentation level
 * Use commas after operators (except around the ``=`` in keyword arguments)
+  [Comment from Dan] I guess this means spaces after operators, i.e. ``3 * ms``
+  rather than ``3*ms``? I find this really ugly, and PEP8 doesn't mandate this,
+  how about we stick with no spaces around operators, except ``a = b`` outside
+  of keyword arguments? On the other hand, we should absolutely have spaces
+  after commas, this makes code much easier to read ``f(a, b, c)`` instead of
+  ``f(a,b,c)``.
 * The core code should only contain ASCII characters, no encoding has to be declared
 * imports should be on different lines (e.g. do not use ``import sys, os``) and
   should be grouped in the following order, using blank lines between each group:
