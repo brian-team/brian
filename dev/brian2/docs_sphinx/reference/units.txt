@@ -4,10 +4,12 @@ Unit system
 ===========
 
 .. autoclass:: Quantity
-.. taken out temporarily:
-	.. autoerror:: DimensionMismatchError
-	
-.. autoclass:: DimensionMismatchError
+    :no-members:
+    :members: with_dimensions, get_dimensions, set_dimensions, is_dimensionless,
+              has_same_dimensions, in_unit, in_best_unit 
+    
+.. autoexception:: DimensionMismatchError
+
 
 Advanced features
 -----------------
