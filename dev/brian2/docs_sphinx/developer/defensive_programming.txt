@@ -25,3 +25,25 @@ For example, you could create a new NonsenseObject class, and do this::
 In general, the idea should be to make it hard for something incorrect to run
 without raising an error, preferably at the point where the user makes the error
 and not in some obscure way several lines later.
+
+The preferred way to validate inputs is one that handles types in a Pythonic
+way. For example, instead of doing something like::
+
+    if not isinstance(arg, (float, int)):
+        raise TypeError(...)
+    
+Do something like::
+
+        arg = float(arg)
+
+(or use try/except to raise a more specific error). In contrast to the
+``isinstance`` check it does not make any assumptions about the type except for
+its ability to be converted to a float. 
+
+This approach is particular useful for numpy arrays::
+
+    arr = np.asarray(arg)
+
+(or ``np.asanyarray`` if you want to allow for array subclasses like arrays
+with units or masked arrays). This approach has also the nice advantage that it
+allows all "array-like" arguments, e.g. a list of numbers.
