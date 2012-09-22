@@ -1,10 +1,17 @@
-.. currentmodule:: brian2.units.fundamentalunits
+.. currentmodule:: brian2
 
 Unit system
 ===========
 
-.. autoerror:: DimensionMismatchError
-.. autoclass:: Dimension
 .. autoclass:: Quantity
-.. autoclass:: Unit
+.. taken out temporarily:
+	.. autoerror:: DimensionMismatchError
+	
+.. autoclass:: DimensionMismatchError
+
+Advanced features
+-----------------
+
+.. autoclass:: brian2.units.fundamentalunits.Dimension
+.. autoclass:: brian2.units.fundamentalunits.Unit
 

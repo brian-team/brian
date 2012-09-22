@@ -1,4 +1,4 @@
-.. currentmodule:: brian2.equations
+.. currentmodule:: brian2
 
 Equations and code strings
 ==========================
