@@ -1,6 +1,7 @@
 Brian 2.0
 =========
 Aims:
+
 * Simplification: fewer modules and classes but more general; refactoring
 * More encapsulation
 * Easier to develop and maintain
@@ -36,7 +37,9 @@ Outline
 	- LS is out (replaced by SpikeQueue), instead: an array of last spikes (current timestep)
 	- threshold and reset objects are out
 	- only string threshold/reset (no guessing)
+	
 	Methods:
+	
 	- update()
 	- threshold()
 	- reset()
@@ -69,6 +72,7 @@ Notes
 See style guide style.txt
 
 A number of projects to look at:
+
 * GPU for Python: http://www.accelereyes.com/
   (includes IIR filters and convolution)
 * Oliphant's note on speed comparisons:

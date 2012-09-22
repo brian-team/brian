@@ -1,3 +1,6 @@
+Defensive programming
+=====================
+
 One idea for Brian 2 is to make it so that it's more likely that errors are
 raised rather than silently causing weird bugs. Some ideas in this line:
 

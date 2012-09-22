@@ -1,3 +1,6 @@
+Refractoriness and linearity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Refractoriness
 ==============
 
@@ -258,6 +261,8 @@ that generated the weave version), and 'numexpr' is the Python version but
 using numexpr. In addition, there are the weavemulti and einsum algorithms which
 handle the case where there is a different matrix for each neuron. These are
 slightly slower than their equivalents, but not much so.
+
+::
 
 	N: 10
 	numsteps: 100000

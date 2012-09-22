@@ -8,6 +8,8 @@ interest to others wishing to better understand how Brian works internally.
 .. toctree::
    :maxdepth: 2
 
+   brian20
+   project_management
    overview
    style
    clocks
@@ -19,4 +21,6 @@ interest to others wishing to better understand how Brian works internally.
    device
    groups
    features_to_be_removed
- 
+   defensive_programming
+   refractoriness_and_linearity
+   

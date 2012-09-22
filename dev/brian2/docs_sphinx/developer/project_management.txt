@@ -14,6 +14,7 @@ We can assume that this will only be Python code, with data structures stored
 on the host. This is closest to our previous work, some of which we can reuse.
 
 Things we can reuse with minor changes:
+
 * units
 * magic
 * clocks
@@ -22,6 +23,7 @@ Things we can reuse with minor changes:
 * plotting
 
 Redesigned things:
+
 * Equations. The job of this new class is essentially to create a data
   structure.
 * Code strings (expression/statements). This will include basic string manipulation
@@ -43,10 +45,12 @@ Here we must always ask ourselves: what if the network is executed and hosted
 on the device?
 
 Mostly unchanged:
+
 * Network. The main thing that may change is if we want to output and/or
   execute code for the main loop, but this is a minor addition.
 
 Redesigned:
+
 * NeuronGroup. This should be rewritten almost entirely. We must take into
   account device memory.
 * Synapses. This is largely done, but should be connected with code generation.
@@ -55,6 +59,7 @@ Redesigned:
   and Synapses.
 
 Completely new:
+
 * Code generation
 
 Inputs and monitors
