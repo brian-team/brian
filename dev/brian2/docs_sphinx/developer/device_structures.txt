@@ -23,7 +23,11 @@ In order to run Brian code the following steps need to be carried out:
 
 * Code needs to be generated and compiled. The generation should probably be
   carried out in core Brian, and the compilation either in core Brian or on the
-  device depending on details.
+  device depending on details. A possible exception would be if we wanted to,
+  for example, use a different bit of software to integrate the differential
+  equations, e.g. PyDSTool or CVODE, in which case we wouldn't specify an
+  integration method, but rather allow this software to construct the entire
+  state update part of the NeuronGroup object.
 
 * The main loop needs to be run. This can either happen entirely on the device
   or in a cooperative manner between the device and core Brian. For example,
