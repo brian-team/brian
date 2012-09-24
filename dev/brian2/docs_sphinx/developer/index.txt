@@ -12,6 +12,7 @@ interest to others wishing to better understand how Brian works internally.
    project_management
    overview
    guidelines/index
+   features_to_be_removed
    clocks
    units
    code-strings
@@ -19,8 +20,6 @@ interest to others wishing to better understand how Brian works internally.
    state_update
    codegen/index
    groups
-   features_to_be_removed
    refractoriness_and_linearity
    new_magic_and_clocks
    device
-   device_structures
