@@ -1,18 +1,5 @@
-Development guidelines
-======================
-
-The basic principles of developing Brian are:
-
-1. For the user, the emphasis is on making the package flexible, readable and
-   easy to use. See the paper "The Brian simulator" in Frontiers in Neuroscience
-   for more details.  
-2. For the developer, the emphasis is on keeping the package maintainable by
-   a small number of people. To this end, we use stable, well maintained,
-   existing open source packages whenever possible, rather than writing our
-   own code.
-
 Coding conventions
-------------------
+==================
 
 Syntax is chosen as much as possible from the user point of view,
 to reflect the concepts as directly as possible. Ideally, a Brian script
@@ -27,13 +14,17 @@ We use the `PEP-8 coding conventions <http://www.python.org/dev/peps/pep-0008/>`
 for our code. This in particular includes the following conventions:
 
 * Use 4 spaces instead of tabs per indentation level
-* Use commas after operators (except around the ``=`` in keyword arguments)
-  [Comment from Dan] I guess this means spaces after operators, i.e. ``3 * ms``
-  rather than ``3*ms``? I find this really ugly, and PEP8 doesn't mandate this,
-  how about we stick with no spaces around operators, except ``a = b`` outside
-  of keyword arguments? On the other hand, we should absolutely have spaces
-  after commas, this makes code much easier to read ``f(a, b, c)`` instead of
-  ``f(a,b,c)``.
+* Use spaces after commas and around the following binary operators:
+  assignment (=), augmented assignment (+=, -= etc.),
+  comparisons (==, <, >, !=, <>, <=, >=, in, not in, is, is not), 
+  Booleans (and, or, not).
+* Do *not* use spaces around the equals sign in keyword arguments or when
+  specifying default values. Neither put spaces immediately inside parentheses,
+  brackets or braces, immediately before the open parenthesis that starts the
+  argument list of a function call, or immediately before the open parenthesis
+  that starts an indexing or slicing.
+* Avoid using a backslash for continuing lines whenever possible, instead use
+  Python's implicit line joining inside parentheses, brackets and braces.
 * The core code should only contain ASCII characters, no encoding has to be declared
 * imports should be on different lines (e.g. do not use ``import sys, os``) and
   should be grouped in the following order, using blank lines between each group:
@@ -73,43 +64,3 @@ book is available online and has a couple of recommendations. For example:
 * If you are sorting lists or dictionaries, have a look at
   `"when sorting, use key instead of cmp" <http://python3porting.com/preparing.html#when-sorting-use-key-instead-of-cmp>`__ )  
 
-Documentation
--------------
-
-It is very important to maintain documentation. We use the
-`Sphinx documentation generator <http://sphinx.pocoo.org/>`__ tools. The
-documentation is all hand written. Sphinx source files are stored in the
-``docs_sphinx`` folder (currently: ``dev/brian2/docs_sphinx``). The HTML files
-can be generated via the script ``dev/tools/docs/build_html_brian2.py`` and end
-up in the ``docs`` folder (currently: ``dev/brian2/docs``).
-
-Most of the documentation is stored directly in the Sphinx
-source text files, but reference documentation for important Brian classes and
-functions are kept in the documentation strings of those classes themselves.
-This is automatically pulled from these classes for the reference manual
-section of the documentation. The idea is to keep the definitive reference
-documentation near the code that it documents, serving as both a comment for
-the code itself, and to keep the documentation up to date with the code.
-
-In the code, every class or function should start with an explanation of what it does,
-unless it is trivial. A good idea is to use explicit names rather than abbreviations,
-so that you instantly understand what it is about. Inside a function, important chunks
-should also be commented. 
-
-Testing
--------
-Brian uses the `nose package <http://somethingaboutorange.com/mrl/projects/nose/0.11.1/>`__
-for its testing framework. 
-
-TODO
-
-Errors
-------
-
-It is a good idea to start an important function (e.g. object initialisation)
-with a check of the arguments, and possibly issue errors. This way errors are
-more understandable by the user.
-
-Contributions
--------------
-TODO

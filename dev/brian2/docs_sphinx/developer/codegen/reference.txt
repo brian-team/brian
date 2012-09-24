@@ -13,10 +13,8 @@ Language
 --------
 
 .. autoclass:: brian2.codegen.languages.base.Language
-    :members:
 
 .. autoclass:: brian2.codegen.languages.base.CodeObject
-    :members:
     
 .. autoclass:: brian2.codegen.languages.cpp.CPPLanguage
 .. autoclass:: brian2.codegen.languages.cpp.CPPCodeObject
@@ -28,7 +26,6 @@ Statements
 ----------
 
 .. autoclass:: brian2.codegen.statements.Statement
-    :members:
     
 Specifiers
 ----------

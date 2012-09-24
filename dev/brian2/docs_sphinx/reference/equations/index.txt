@@ -1,0 +1,12 @@
+.. currentmodule:: brian2
+
+Equations and code strings
+==========================
+
+TODO: Some general explanations here
+
+.. autosummary:: CodeString
+   :toctree:
+
+.. autosummary:: Equations
+   :toctree:

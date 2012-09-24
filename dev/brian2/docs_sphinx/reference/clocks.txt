@@ -10,4 +10,4 @@ Clocks
 	``dt=0.1*ms`` but this can be changed at the beginning of your script
 	with, for example, ``defaultclock.dt = 1*ms``.
 
-.. autoclass:: Clock(dt=0.1*ms, order=0)
+.. autoclass:: Clock

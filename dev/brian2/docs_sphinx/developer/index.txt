@@ -11,7 +11,7 @@ interest to others wishing to better understand how Brian works internally.
    brian20
    project_management
    overview
-   style
+   guidelines/index
    clocks
    units
    code-strings
@@ -20,7 +20,6 @@ interest to others wishing to better understand how Brian works internally.
    codegen/index
    groups
    features_to_be_removed
-   defensive_programming
    refractoriness_and_linearity
    new_magic_and_clocks
    device

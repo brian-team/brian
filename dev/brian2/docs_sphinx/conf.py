@@ -29,7 +29,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
               'sphinx.ext.intersphinx', 'sphinx.ext.todo',
               'sphinx.ext.coverage', 'sphinx.ext.mathjax',
               'sphinx.ext.viewcode',
-              'numpydoc',
+              'brian2.utils.sphinxext.briandoc',
               'sphinx.ext.autosummary']
 
 # Add any paths that contain templates here, relative to this directory.
@@ -247,10 +247,10 @@ texinfo_documents = [
 #texinfo_show_urls = 'footnote'
 
 
-intersphinx_mapping = {'http://docs.python.org/': None,
-                        'http://docs.scipy.org/doc/numpy': None,
-                        'http://docs.scipy.org/doc/scipy/reference': None}
+intersphinx_mapping = {
+                       #'http://docs.python.org/': None,
+                       # 'http://docs.scipy.org/doc/numpy': None,
+                       # 'http://docs.scipy.org/doc/scipy/reference': None
+                       }
 
-autodoc_default_flags = ['members', 'inheritance']
-numpydoc_show_class_members = False
-
+autodoc_default_flags = ['inheritance']

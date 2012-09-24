@@ -6,6 +6,6 @@ Reference
 
     base
     clocks
-    equations
+    equations/index
     preferences
     units
