@@ -3,10 +3,28 @@
 Equations and code strings
 ==========================
 
-TODO: Some general explanations here
+Most of the time, the user does not explicitly construct CodeString or Equations
+objects. Instead, directly pass a string to the constructor of NeuronGroup, 
+Synapses, etc. The following classes are only useful if you want to have full
+control over the namespace in which the code strings are interpreted.
 
 .. autosummary:: CodeString
    :toctree:
 
 .. autosummary:: Equations
    :toctree:
+
+For internal use only
+---------------------
+.. autosummary:: brian2.equations.equations.Equation
+   :toctree:
+
+Parsing
+~~~~~~~
+.. autofunction:: brian2.equations.equations.parse_string_equations
+
+Checking identifiers
+~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: brian2.equations.equations.check_identifier
+.. autofunction:: brian2.equations.equations.check_identifier_basic
+.. autofunction:: brian2.equations.equations.check_identifier_reserved
