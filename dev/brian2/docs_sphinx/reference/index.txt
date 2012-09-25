@@ -9,4 +9,4 @@ Reference
     equations/index
     network
     preferences
-    units
+    units/index

@@ -1,0 +1,6 @@
+.. currentmodule:: brian2.units.fundamentalunits
+
+UnitRegistry
+============
+
+.. autoclass:: UnitRegistry
