@@ -7,5 +7,6 @@ Reference
     base
     clocks
     equations/index
+    network
     preferences
     units

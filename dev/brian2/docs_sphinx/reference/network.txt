@@ -1,0 +1,21 @@
+.. currentmodule:: brian2
+
+Network
+=======
+
+.. autoclass:: Network
+
+Magic
+-----
+
+.. autoclass:: MagicNetwork
+
+.. autofunction:: run
+.. autofunction:: reinit
+.. autofunction:: stop
+
+Network operations
+------------------
+
+.. autoclass:: NetworkOperation
+.. autofunction:: network_operation
