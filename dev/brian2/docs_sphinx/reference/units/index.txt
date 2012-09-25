@@ -55,6 +55,7 @@ Utility functions
 
 *Unit registry*
 
+.. autofunction:: register_new_unit
 .. autofunction:: all_registered_units
 .. autofunction:: get_unit
 .. autofunction:: get_unit_fast
