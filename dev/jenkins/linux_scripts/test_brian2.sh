@@ -1,6 +1,9 @@
 # get the newest version of nose and coverage, ignoring installed packages
 /home/jenkins/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade -I nose coverage || :
 
+# Make sure pyparsing is installed
+bin/pip install pyparsing
+
 # Directly use the source directory (no setup.py yet)
 export PYTHONPATH="$(pwd)":$PYTHONPATH
 
