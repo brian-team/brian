@@ -33,6 +33,9 @@ elif [ $packages = oldest ]; then
   bin/pip install http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-0.98.5/matplotlib-0.98.5.3.tar.gz/download
 fi
 
+# Make sure pyparsing is installed (needed for brian2)
+bin/pip install pyparsing
+
 # Print the version numbers for the dependencies
 bin/python -c "import numpy; print 'numpy version: ', numpy.__version__"
 bin/python -c "import scipy; print 'scipy version: ', scipy.__version__"
