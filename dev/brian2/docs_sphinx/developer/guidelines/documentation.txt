@@ -22,24 +22,78 @@ Docstrings
 Every module, class, method or function has to start with a docstring, unless
 it is a private or special method (i.e. starting with ``_`` or ``__``) *and* it
 is obvious what it does. For example, there is normally no need to document
-``__str__`` with "Returns a string representation.".
+``__str__`` with "Return a string representation.".
 
-For the docstring format, we use the `numpydoc <http://pypi.python.org/pypi/numpydoc/>`__
-extension, allowing to write docstrings that are well readable both in sourcecode
-as well as in the rendered HTML. We generally follow the `format used by numpy
+For the docstring format, we use the our own sphinx extension (in
+`brian2.utils.sphinxext`) based on
+`numpydoc <http://pypi.python.org/pypi/numpydoc/>`__, allowing to write
+docstrings that are well readable both in sourcecode as well as in the
+rendered HTML. We generally follow the `format used by numpy
 <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`__
 
 When the docstring uses variable, class or function names, these should be
 enclosed in single backticks. Inline source fragments should be enclosed in 
 double backticks. Class docstrings follow the same conventions as method
-docstrings and should document the ``__init__`` method, the  ``__init__`` method
+docstrings and should document the ``__init__`` method, the ``__init__`` method
 itself does not need a docstring.
 
-Template for function docstring
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Documenting functions and methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The docstring for a function/method should start with a one-line description of
+what the function does, without referring to the function name or the names of
+variables. Use a "command style" for this summary, e.g. "Return the result."
+instead of "Returns the result." If the signature of the function cannot be
+automatically extracted because of an decorator (e.g. `check_units`), place a
+signature in the very first row of the docstring, before the one-line
+description.
 
-This is a very long docstring, most of the time no See Also, Notes or
-References section is needed::
+For methods, do not document the ``self`` parameter, nor give information about
+the method being static or a class method (this information will be
+automatically added to the documentation).
+
+Documenting classes
+~~~~~~~~~~~~~~~~~~~
+Class docstrings should use the same "Parameters" and "Returns" sections as
+method and function docstrings for documenting the ``__init__`` constructor. If
+a class docstring does not have any "Attributes" or "Methods" section, these
+sections will be automatically generated with all documented (i.e. having a
+docstring), public (i.e. not starting with `_`) attributes respectively methods
+of the class. Alternatively, you can provide these sections manually. This is
+useful for example in the `Quantity` class, which would otherwise include the
+documentation of many `ndarray` methods, or when you want to include
+documentation for functions like ``__getitem__`` which would otherwise not be
+documented. When specifying these sections, you only have to state the names of
+documented methods/attributes but you can also provide direct documentation.
+For example::
+    
+    Attributes
+    ----------
+    foo
+    bar
+    baz
+        This is a description.
+
+This can be used for example for class or instance attributes which do not
+have "classical" docstrings. However, you can also use a special syntax: When
+defining class attributes in the class body or instance attributes in
+``__init__`` you can use the following variants (here shown for instance
+attributes)::
+
+    def __init__(a, b, c):
+        #: The docstring for the instance attribute a.
+        #: Can also span multiple lines
+        self.a = a
+        
+        self.b = b #: The docstring for self.b (only one line).
+        
+        self.c = c
+        'The docstring for self.c, directly *after* its definition'
+  
+Long example of a function docstring
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is a very long docstring, showing all the possible sections. Most of the
+time no See Also, Notes or References section is needed::
 
     def foo(var1, var2, long_var_name='hi') :
     """
