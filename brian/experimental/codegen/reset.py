@@ -13,13 +13,20 @@ from c_support_code import *
 __all__ = ['generate_c_reset', 'generate_python_reset',
            'CReset', 'PythonReset']
 
-def generate_c_reset(eqs, inputcode, vartype='double', level=0, ns=None):
+def generate_c_reset(eqs, inputcode, vartype='double', level=0, ns=None,
+                     openmp=True):
     if ns is None:
         ns, unknowns = namespace(inputcode, level=level + 1, return_unknowns=True)
     all_variables = eqs._eq_names + eqs._diffeq_names + eqs._alias.keys() + ['t']
     code = ''
     for j, name in enumerate(eqs._diffeq_names):
-        code += vartype + ' *' + name + '__Sbase = _S+' + str(j) + '*_num_neurons;\n'
+        code += vartype + ' *' + name + '__Sbase2 = _S+' + str(j) + '*num_neurons;\n'
+    for j, name in enumerate(eqs._diffeq_names):
+        code += vartype + ' *' + name + '__Sbase = '+name + '__Sbase2;\n'
+#    for j, name in enumerate(eqs._diffeq_names):
+#        code += vartype + ' *' + name + '__Sbase = _S+' + str(j) + '*_num_neurons;\n'
+    if openmp:
+        code += '#pragma omp parallel for\n'
     code += 'for(int _i=0;_i<_nspikes;_i++){\n'
     code += '    long _j = _spikes[_i];\n'
     for j, name in enumerate(eqs._diffeq_names):
@@ -83,6 +90,12 @@ class CReset(Reset):
         self._extra_compile_args = ['-O3']
         if self._weave_compiler == 'gcc':
             self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+        self._openmp = get_global_preference('openmp')
+        if self._openmp:
+            self._extra_compile_args.append('-fopenmp')
+            self._extra_link_args = ['-fopenmp']
+        else:
+            self._extra_link_args = []
 
     def __call__(self, P):
         if not self._prepared:
@@ -99,7 +112,8 @@ class CReset(Reset):
             weave.inline(self._outputcode, ['_S', '_nspikes', 'dt', 't', '_spikes', '_num_neurons'],
                          c_support_code=c_support_code,
                          compiler=self._weave_compiler,
-                         extra_compile_args=self._extra_compile_args)
+                         extra_compile_args=self._extra_compile_args,
+                         extra_link_args=self._extra_link_args)
         except:
             log_warn('brian.experimental.codegen.reset',
                      'C compilation failed, falling back on Python.')

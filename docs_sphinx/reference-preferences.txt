@@ -60,6 +60,13 @@ The following global preferences have been defined:
     4.2+ we recommend using ``-march=native``. By default, the ``-ffast-math``
     optimisations are turned on - if you need IEEE guaranteed results, turn
     this switch off.
+``openmp = False``
+    Whether or not to use OpenMP pragmas in generated C code. If supported
+    on your compiler (gcc 4.2+) it will use multiple CPUs and can run
+    substantially faster. However, if you are already running several
+    simulations in parallel this will not improve the speed and may even
+    slow it down. In addition, for smaller networks or for simpler neuron
+    models the parallelisation overheads can make it take longer.
 ``usecodegen = False``
     Whether or not to use experimental code generation support.
 ``usecodegenweave = False``

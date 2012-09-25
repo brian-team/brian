@@ -24,12 +24,18 @@ class CStateUpdater(StateUpdater):
         self.eqs = eqs
         self.scheme = scheme
         self.freeze = freeze
-        self.code_c = CCodeGenerator().generate(eqs, scheme)
+        self._openmp = get_global_preference('openmp')
+        self.code_c = CCodeGenerator(openmp=self._openmp).generate(eqs, scheme)
         log_debug('brian.experimental.codegen.stateupdaters', 'C state updater code:\n' + self.code_c)
         self._weave_compiler = get_global_preference('weavecompiler')
         self._extra_compile_args = ['-O3']
         if self._weave_compiler == 'gcc':
             self._extra_compile_args += get_global_preference('gcc_options') # ['-march=native', '-ffast-math']
+        if self._openmp:
+            self._extra_compile_args.append('-fopenmp')
+            self._extra_link_args = ['-fopenmp']
+        else:
+            self._extra_link_args = []
         self.namespace = {}
         code_vars = re.findall(r'\b\w+\b', self.code_c)
         self._arrays_to_check = []
@@ -62,7 +68,8 @@ class CStateUpdater(StateUpdater):
                          local_dict = self.namespace,
                          support_code=c_support_code,
                          compiler=self._weave_compiler,
-                         extra_compile_args=self._extra_compile_args)
+                         extra_compile_args=self._extra_compile_args,
+                         extra_link_args=self._extra_link_args)
         except:
             log_warn('brian.experimental.codegen.stateupdaters',
                      'C compilation failed, falling back on Python.')

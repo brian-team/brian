@@ -108,6 +108,18 @@ define_global_preference(
 set_global_preferences(gcc_options=['-ffast-math'])
 
 define_global_preference(
+    'openmp', 'False',
+    desc='''
+        Whether or not to use OpenMP pragmas in generated C code. If supported
+        on your compiler (gcc 4.2+) it will use multiple CPUs and can run
+        substantially faster. However, if you are already running several
+        simulations in parallel this will not improve the speed and may even
+        slow it down. In addition, for smaller networks or for simpler neuron
+        models the parallelisation overheads can make it take longer.
+        ''')
+set_global_preferences(openmp=False)
+
+define_global_preference(
     'usecodegen', 'False',
     desc='''
          Whether or not to use experimental code generation support.
