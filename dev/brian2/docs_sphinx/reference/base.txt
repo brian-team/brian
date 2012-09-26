@@ -6,3 +6,4 @@ Base class and instance tracking
 .. autoclass:: BrianObject
 .. autoclass:: InstanceTracker
 .. autofunction:: get_instances
+.. autofunction:: clear
