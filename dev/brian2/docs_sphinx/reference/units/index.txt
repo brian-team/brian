@@ -3,11 +3,13 @@
 Unit system
 ===========
 
-The main class for working with units (although it is rarely used explicitly by
-users):
+The main classes for working with units (although they are rarely used
+explicitly by users):
 
 .. autosummary:: Quantity
    :toctree:
+.. autosummary:: Unit
+   :toctree:   
    
 .. autoexception:: DimensionMismatchError
 
@@ -17,45 +19,42 @@ A decorator that can be used for unit checking:
 
 Advanced features
 -----------------
-.. currentmodule:: brian2.units.fundamentalunits
 
 Classes used internally
 ~~~~~~~~~~~~~~~~~~~~~~~
-.. autosummary:: Dimension
+.. autosummary:: brian2.units.fundamentalunits.Dimension
    :toctree:
-.. autosummary:: Unit
-   :toctree:
-.. autosummary:: UnitRegistry
+.. autosummary:: brian2.units.fundamentalunits.UnitRegistry
    :toctree:
 
 Utility functions
 ~~~~~~~~~~~~~~~~~
 *Display/create quantities*
 
-.. autofunction:: display_in_unit
-.. autofunction:: quantity_with_dimensions
+.. autofunction:: brian2.units.fundamentalunits.display_in_unit
+.. autofunction:: brian2.units.fundamentalunits.quantity_with_dimensions
 
 *Function wrappers*
 
-.. autofunction:: wrap_function_dimensionless
-.. autofunction:: wrap_function_keep_dimensions
-.. autofunction:: wrap_function_change_dimensions
-.. autofunction:: wrap_function_remove_dimensions
-.. autofunction:: wrap_function_no_check_warning
+.. autofunction:: brian2.units.fundamentalunits.wrap_function_dimensionless
+.. autofunction:: brian2.units.fundamentalunits.wrap_function_keep_dimensions
+.. autofunction:: brian2.units.fundamentalunits.wrap_function_change_dimensions
+.. autofunction:: brian2.units.fundamentalunits.wrap_function_remove_dimensions
+.. autofunction:: brian2.units.fundamentalunits.wrap_function_no_check_warning
 
 *Create/compare dimensions*
 
 .. autoattribute:: brian2.units.fundamentalunits.DIMENSIONLESS
-.. autofunction:: get_or_create_dimension
-.. autofunction:: is_scalar_type
-.. autofunction:: get_dimensions
-.. autofunction:: is_dimensionless
+.. autofunction:: brian2.units.fundamentalunits.get_or_create_dimension
+.. autofunction:: brian2.units.fundamentalunits.is_scalar_type
+.. autofunction:: brian2.units.fundamentalunits.get_dimensions
+.. autofunction:: brian2.units.fundamentalunits.is_dimensionless
 .. autofunction:: have_same_dimensions
-.. autofunction:: fail_for_dimension_mismatch
+.. autofunction:: brian2.units.fundamentalunits.fail_for_dimension_mismatch
 
 *Unit registry*
 
 .. autofunction:: register_new_unit
-.. autofunction:: all_registered_units
-.. autofunction:: get_unit
-.. autofunction:: get_unit_fast
+.. autofunction:: brian2.units.fundamentalunits.all_registered_units
+.. autofunction:: brian2.units.fundamentalunits.get_unit
+.. autofunction:: brian2.units.fundamentalunits.get_unit_fast

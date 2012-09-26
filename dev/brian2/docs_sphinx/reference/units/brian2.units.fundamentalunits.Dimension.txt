@@ -1,6 +1,6 @@
-.. currentmodule:: brian2.units.fundamentalunits
+.. currentmodule:: brian2
 
 Dimension
 =========
 
-.. autoclass:: Dimension
+.. autoclass:: brian2.units.fundamentalunits.Dimension

@@ -32,10 +32,21 @@ rendered HTML. We generally follow the `format used by numpy
 <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`__
 
 When the docstring uses variable, class or function names, these should be
-enclosed in single backticks. Inline source fragments should be enclosed in 
-double backticks. Class docstrings follow the same conventions as method
-docstrings and should document the ``__init__`` method, the ``__init__`` method
-itself does not need a docstring.
+enclosed in single backticks. Class and function/method names will be
+automatically linked to the corresponding documentation. For classes imported
+in the main brian2 package, you do not have to add the package name, e.g.
+writing ```NeuronGroup``` is enough. For other classes, you have to give the
+full path, e.g. ```brian2.units.fundamentalunits.UnitRegistry```. If it is
+clear from the context where the class is (e.g. within the documentation of
+`~brian2.units.fundamentalunits.UnitRegistry`), consider using the ``~``
+abbreviation: ```~brian2.units.fundamentalunits.UnitRegistry``` displays only
+the class name: `~brian2.units.fundamentalunits.UnitRegistry`.
+
+Inline source fragments should be enclosed in  double backticks.
+
+Class docstrings follow the same conventions as method docstrings and should
+document the ``__init__`` method, the ``__init__`` method itself does not need
+a docstring.
 
 Documenting functions and methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
