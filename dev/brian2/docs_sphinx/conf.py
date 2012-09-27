@@ -29,7 +29,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
               'sphinx.ext.intersphinx', 'sphinx.ext.todo',
               'sphinx.ext.coverage', 'sphinx.ext.mathjax',
               'sphinx.ext.viewcode',
-              'brian2.utils.sphinxext.briandoc',
+              'brian2.sphinxext.briandoc',
               'sphinx.ext.autosummary']
 
 # Add any paths that contain templates here, relative to this directory.
