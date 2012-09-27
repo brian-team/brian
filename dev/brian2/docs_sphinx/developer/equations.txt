@@ -17,10 +17,9 @@ An Equation is a set of single lines in a string:
     (3) ``x : unit`` (parameter)
 
 The equations may be defined on multiple lines with the character \\.
-Comments using # may also be included. These two things along with other general
-string processing things, are common to all model strings (reset and threshold).
-Subunits are not allowed, i.e., one must write ``volt``, not ``mV``. But
-compound units are allowed (e.g. ``farad/meter**2``).
+Comments using # may also be included. Subunits are not allowed, i.e., one must
+write ``volt``, not ``mV``. But compound units are allowed (e.g.
+``farad/meter**2``).
 
 Note that aliases disappear in Brian 2.0.
 Some special variables are defined: t, dt (time) and xi (white noise).
