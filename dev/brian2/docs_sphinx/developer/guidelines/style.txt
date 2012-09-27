@@ -33,11 +33,15 @@ for our code. This in particular includes the following conventions:
   	2. third-party library imports (e.g. numpy, scipy, sympy, ...)
   	3. brian imports
 
-* Use absolute instead of relative imports, i.e. within the brian2 package use
-  ``import brian2.something`` instead of ``import something``. The only
-  exception to this rule are imports from the same package within
-  ``__init__.py``. Here, absolute imports cannot be used, use "new-style"
-  relative imports instead, i.e. ``from .something import ...``
+* Use absolute imports for everything outside of "your" package, e.g. if you
+  are working in `brian2.equations`, import functions from the stringtools
+  modules via ``from brian2.utils.stringtools import ...``. Try to use the
+  shortest possible import, e.g. do ``from brian2 import seconds`` instead of
+  ``from brian2.units.fundamentalunits import seconds``, this allows for easier
+  changes in the package structure later on.
+* Use "new-style" relative imports for everything in "your" package, e.g. in
+  ``brian2.codegen.functions.py`` import the `Function` class as 
+  ``from .specifiers import Function``.  
 * Do not use wildcard imports (``from brian2 import *``), instead import only the
   identifiers you need, e.g. ``from brian2 import NeuronGroup, Synapses``. For 
   packages like numpy that are used a lot, use ``import numpy as np``. But
