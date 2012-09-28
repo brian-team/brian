@@ -8,11 +8,12 @@ Network
 Magic
 -----
 
-.. autoclass:: MagicNetwork
-
 .. autofunction:: run
 .. autofunction:: reinit
 .. autofunction:: stop
+
+.. autodata:: magic_network
+.. autoclass:: MagicNetwork
 
 Network operations
 ------------------

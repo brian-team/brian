@@ -1,9 +1,16 @@
 .. currentmodule:: brian2
 
-Base class and instance tracking
-================================
+Base class
+==========
 
 .. autoclass:: BrianObject
-.. autoclass:: InstanceTracker
-.. autofunction:: get_instances
 .. autofunction:: clear
+
+Advanced
+--------
+
+.. autodata:: brian_objects
+.. autoclass:: BrianObjectSet
+
+.. autoclass:: MagicError
+

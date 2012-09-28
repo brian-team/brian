@@ -20,6 +20,6 @@ Built-in preferences
 Advanced
 --------
 
-.. autoclass:: brian2.preferences.BrianGlobalPreferences
+.. autoclass:: brian2.core.preferences.BrianGlobalPreferences
 
     
