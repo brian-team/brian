@@ -21,7 +21,8 @@ if __name__ == '__main__':
                 datetime(2010, 1, 19) : '1.2.0',
                 datetime(2010, 9, 27) : '1.2.1',
                 datetime(2011, 2, 18) : '1.3.0',
-                datetime(2011, 12, 22) : '1.3.1'}
+                datetime(2011, 12, 22) : '1.3.1',
+                datetime(2012, 8, 29) : '1.4.0'}
     
     TRAC_URL = 'https://%s:%s@neuralensemble.org/trac/brian/login/xmlrpc'
     
