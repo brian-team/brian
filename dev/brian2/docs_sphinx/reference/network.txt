@@ -40,8 +40,7 @@ Functions
 .. autodata:: magic_network
 .. autoclass:: MagicNetwork
 
-Network operations
-------------------
+`MagicError`
+~~~~~~~~~~~~
 
-.. autoclass:: NetworkOperation
-.. autofunction:: network_operation
+.. autoclass:: MagicError

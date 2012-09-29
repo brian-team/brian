@@ -8,5 +8,6 @@ Reference
     clocks
     equations/index
     network
+    operations
     preferences
     units/index

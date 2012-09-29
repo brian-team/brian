@@ -6,11 +6,9 @@ Base class
 .. autoclass:: BrianObject
 .. autofunction:: clear
 
-Advanced
---------
+Internal use
+------------
 
 .. autodata:: brian_objects
 .. autoclass:: BrianObjectSet
-
-.. autoclass:: MagicError
 
