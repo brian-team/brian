@@ -40,7 +40,11 @@ full path, e.g. ```brian2.units.fundamentalunits.UnitRegistry```. If it is
 clear from the context where the class is (e.g. within the documentation of
 `~brian2.units.fundamentalunits.UnitRegistry`), consider using the ``~``
 abbreviation: ```~brian2.units.fundamentalunits.UnitRegistry``` displays only
-the class name: `~brian2.units.fundamentalunits.UnitRegistry`.
+the class name: `~brian2.units.fundamentalunits.UnitRegistry`. Note that you do
+not have to enclose the exception name in a "Raises" or "Warns" section, or
+the class/method/function name in a "See Also" section in backticks, they will
+be automatically linked (putting backticks there will lead to incorrect display
+or an error message),
 
 Inline source fragments should be enclosed in  double backticks.
 
