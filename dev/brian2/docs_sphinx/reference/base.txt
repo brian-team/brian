@@ -4,6 +4,7 @@ Base class
 ==========
 
 .. autoclass:: BrianObject
+.. autoclass:: Scheduler
 .. autofunction:: clear
 
 Internal use
