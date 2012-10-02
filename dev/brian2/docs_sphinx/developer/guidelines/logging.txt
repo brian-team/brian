@@ -29,6 +29,12 @@ be automatically added as a prefix)::
 	logger.debug('A debug message', 'NeuronGroup.update')
 	logger.debug('A debug message', 'reinit')
 
+If you want to log a message only once, e.g. in a function that is called
+repeatedly, set the optional ``once`` keyword to ``True``::
+
+	logger.debug('Will only be shown once', once=True)
+	logger.debug('Will only be shown once', once=True)
+
 The output of debugging looks like this in the log file::
 
 	2012-10-02 14:41:41,484 DEBUG    brian2.equations.equations.CodeString: A debug message
