@@ -1,3 +1,5 @@
+.. currentmodule:: brian2
+
 Logging
 =======
 
@@ -8,7 +10,9 @@ deleted on exit, except if an uncaught exception occured or if
 :bpref:`delete_log_on_exit` is set to ``False``. The default log level for the
 logging on the console is "warn".
 
-Every brian module that needs logging should start with the following line::
+Every brian module that needs logging should start with the following line,
+using the `get_logger` function to get an instance of
+`~brian2.utils.logger.BrianLogger`::
 
 	logger = get_logger(__name__)
 
