@@ -17,4 +17,5 @@ The basic principles of developing Brian are:
    style
    defensive_programming
    documentation
+   logging
    testing

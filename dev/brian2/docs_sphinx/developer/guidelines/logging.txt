@@ -1,0 +1,49 @@
+Logging
+=======
+
+Logging in Brian is based on the :mod:`logging` module in Python's standard
+library. In Brian2, all logging output is logged to a file (the file name is
+available in `brian2.utils.logger.TMP_LOG`). This log file will normally be
+deleted on exit, except if an uncaught exception occured or if
+:bpref:`delete_log_on_exit` is set to ``False``. The default log level for the
+logging on the console is "warn".
+
+Every brian module that needs logging should start with the following line::
+
+	logger = get_logger(__name__)
+
+In the code, logging can then be done via::
+
+	logger.debug('A debug message')
+	logger.info('An info message')
+	logger.warn('A warning message')
+	logger.error('An error message')
+
+If a module logs similar messages in different places or if it might be useful
+to be able to suppress a subset of messages in a module, add an additional
+specifier to the logging command, specifying the class or function name, or
+a method name including the class name (do not include the module name, it will
+be automatically added as a prefix)::
+
+	logger.debug('A debug message', 'CodeString')
+	logger.debug('A debug message', 'NeuronGroup.update')
+	logger.debug('A debug message', 'reinit')
+
+The output of debugging looks like this in the log file::
+
+	2012-10-02 14:41:41,484 DEBUG    brian2.equations.equations.CodeString: A debug message
+
+and like this on the console (if the log level is set to "debug")::
+
+	DEBUG    brian2.equations.equations.CodeString: A debug message
+
+Log level recommendations
+-------------------------
+debug
+	TODO
+info
+	TODO
+warn
+	TODO
+error
+	TODO
