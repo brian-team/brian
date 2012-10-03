@@ -11,8 +11,7 @@ deleted on exit, except if an uncaught exception occured or if
 logging on the console is "warn".
 
 Every brian module that needs logging should start with the following line,
-using the `get_logger` function to get an instance of
-`~brian2.utils.logger.BrianLogger`::
+using the `get_logger` function to get an instance of `BrianLogger`::
 
 	logger = get_logger(__name__)
 
@@ -57,3 +56,22 @@ warn
 	TODO
 error
 	TODO
+
+Showing/hiding log messages
+---------------------------
+The user can change the level of displayed log messages by using a static
+method of `BrianLogger`::
+
+	BrianLogger.log_level_info() # now also display info messages
+
+It is also possible to suppress messages for certain sub-hiearchies by using
+`BrianLogger.suppress_messages`::
+
+	# Suppress code generation messages on the console
+	BrianLogger.suppress_messages('brian2.codegen')
+	# Suppress preference messages even in the log file
+	BrianLogger.suppress_messages('brian2.core.preferences',
+	                              filter_log_file=True)
+
+This function should be used with care, as it suppresses messages independent
+of the level, i.e. even warning and error messages.

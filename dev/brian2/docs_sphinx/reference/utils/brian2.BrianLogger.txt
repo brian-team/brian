@@ -2,4 +2,4 @@
 
 BrianLogger
 ===========
-.. autoclass:: brian2.utils.logger.BrianLogger
+.. autoclass:: BrianLogger

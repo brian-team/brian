@@ -5,7 +5,7 @@ Utility functions
 
 Logging
 -------
-.. autosummary:: brian2.utils.logger.BrianLogger
+.. autosummary:: BrianLogger
    :toctree:
 
 .. autofunction:: get_logger
