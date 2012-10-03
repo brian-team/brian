@@ -3,13 +3,7 @@
 Base class
 ==========
 
+.. autoclass:: Nameable
 .. autoclass:: BrianObject
 .. autoclass:: Scheduler
 .. autofunction:: clear
-
-Internal use
-------------
-
-.. autodata:: brian_objects
-.. autoclass:: BrianObjectSet
-

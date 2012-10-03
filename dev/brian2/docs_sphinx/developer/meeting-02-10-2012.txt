@@ -1,13 +1,6 @@
 Meeting 02/10/2012
 ------------------
 
-* BrianObject schedule: get rid of clock.order. Then maybe have a single tuple argument (clock,'start',1)
-* Assign automatic unique name to objects. Would be good for code generation and error tracking.
-  Several options:
-  
-	- Numbering: Group1,2 etc
-	- Code inspection and choose LHS
-	- Name list (animals, bridge names etc)
 * Subclass CodeString into Statements and Expression
 * CodeString.check_unit_against: other name? (check_units?)
 * Stochastic term: enforce numbering xi (xi1, xi2) or indexing (xi_alpha etc) if there are several of them
@@ -24,3 +17,13 @@ Meeting 02/10/2012
 	- Maybe let users rewrite NeuronGroup etc for each device.
 	- AbstractNeuronGroup as base class
 	- Start with two cases: Python and stand-alone C
+
+Done:
+
+* BrianObject schedule: get rid of clock.order. Then maybe have a single tuple argument (clock,'start',1)
+* Assign automatic unique name to objects. Would be good for code generation and error tracking.
+  Several options:
+  
+	- Numbering: Group1,2 etc
+	- Code inspection and choose LHS
+	- Name list (animals, bridge names etc)
