@@ -1,8 +1,8 @@
 Meeting 02/10/2012
 ------------------
 
-* Subclass CodeString into Statements and Expression
-* CodeString.check_unit_against: other name? (check_units?)
+* Subclass CodeString into Statements and Expression [DONE]
+* CodeString.check_unit_against: other name? (check_units?) [DONE]
 * Stochastic term: enforce numbering xi (xi1, xi2) or indexing (xi_alpha etc) if there are several of them
   So we could have tuples of stochastic terms.
 * Have private variables in NeuronGroup for optimisation (ie calculation of coefficients in linear updates).

@@ -1,7 +1,0 @@
-.. currentmodule:: brian2
-
-Equation
-========
-
-.. autoclass:: brian2.equations.equations.Equation
-

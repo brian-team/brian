@@ -3,20 +3,24 @@
 Equations and code strings
 ==========================
 
-Most of the time, the user does not explicitly construct CodeString or Equations
-objects. Instead, directly pass a string to the constructor of NeuronGroup, 
-Synapses, etc. The following classes are only useful if you want to have full
-control over the namespace in which the code strings are interpreted.
+Most of the time, the user does not explicitly construct `Expression`,
+`Statements` or `Equations` objects. Instead, directly pass a string to the
+constructor of NeuronGroup, Synapses, etc. The following classes are only useful
+if you want to have full control over the namespace in which the code strings are
+interpreted.
 
-.. autosummary:: CodeString
+.. autosummary:: Expression
    :toctree:
-
+.. autosummary:: Statements
+   :toctree:
 .. autosummary:: Equations
    :toctree:
 
 For internal use only
 ---------------------
-.. autosummary:: brian2.equations.equations.Equation
+.. autosummary:: brian2.equations.codestrings.CodeString
+   :toctree:
+.. autosummary:: brian2.equations.equations.SingleEquation
    :toctree:
 
 Parsing

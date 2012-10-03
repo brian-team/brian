@@ -1,5 +1,12 @@
 Equations
 =========
+
+.. note::
+   [Marcel] This document contains Romain's notes that are now partly outdated
+   but kept here for reference purposes (parts of it should be converted into
+   user documentation). For	a documentation of the current Equations system in
+   Brian2, see: :doc:`code-strings`.
+
 Equations are used both in NeuronGroup and Synapses to:
 
 * define state variables
