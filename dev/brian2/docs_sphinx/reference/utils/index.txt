@@ -10,6 +10,10 @@ Logging
 
 .. autofunction:: get_logger
 
+Testing log messages
+~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: brian2.utils.logger.catch_logs
+
 String tools
 ------------
 .. autofunction:: brian2.utils.stringtools.indent
