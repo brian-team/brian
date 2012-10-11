@@ -9,7 +9,8 @@ cd ~/.jenkins/virtual_envs/$PythonVersion/$packages
 if [ $packages = newest ]; then
   echo "Using newest available package versions"
   bin/pip install --upgrade numpy 
-  bin/pip install --upgrade scipy sympy
+  bin/pip install --upgrade scipy
+  bin/pip install sympy==0.7.1
   bin/pip install --upgrade matplotlib
 elif [ $packages = oldest ]; then
   echo "Using oldest available package versions supported by Brian"
