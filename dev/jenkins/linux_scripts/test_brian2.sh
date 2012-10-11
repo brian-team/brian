@@ -1,8 +1,10 @@
+CURRENT=$(pwd)
+cd /home/jenkins/.jenkins/virtual_envs/$PythonVersion/$packages 
 # get the newest version of nose and coverage, ignoring installed packages
-/home/jenkins/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install --upgrade -I nose coverage || :
+bin/pip install --upgrade -I nose coverage || :
 
 # Make sure pyparsing is installed
-/home/jenkins/.jenkins/virtual_envs/$PythonVersion/$packages/bin/pip install pyparsing
+bin/pip install pyparsing
 
 # This is copied from the build_brian.sh script. When brian2 gets a setup.py script, this script
 # should be used and the following lines removed.
@@ -43,6 +45,7 @@ bin/python -c "import matplotlib; print 'matplotlib version: ', matplotlib.__ver
 
 ##### End build_brian.sh
 
+cd "$CURRENT"
 # Directly use the source directory (no setup.py yet)
 export PYTHONPATH="$(pwd)":$PYTHONPATH
 
