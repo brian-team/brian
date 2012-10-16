@@ -1,3 +1,7 @@
 matplotlib>=0.90.1
 numpy>=1.4.1
 scipy>=0.7.0
+sympy==0.7.1
+playdoh
+pygame
+
