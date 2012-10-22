@@ -8,6 +8,8 @@ Reference
     clocks
     equations/index
     network
+    monitors/index
+    neurongroup
     operations
     preferences
     units/index
