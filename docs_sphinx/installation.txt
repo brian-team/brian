@@ -9,15 +9,49 @@ otherwise take a look at `Manual installation`_.
 Quick installation
 ------------------
 
-The easiest way to install Brian if you already have a version of Python 2.5-2.7 including the
-``easy_install`` script is to simply run the following in a shell::
+easy_install / pip
+^^^^^^^^^^^^^^^^^^
+
+The easiest way to install the most recent version of Brian if you already have
+a version of Python 2.5-2.7 including the ``easy_install`` script is to simply
+run the following in a shell::
 
 	easy_install brian
 
 This will download and install Brian and all its required packages (NumPy, SciPy, etc.).
 
+Similarly, you can use the ``pip`` utility::
+
+	pip install brian 
+
 Note that there are some optimisations you can make after installation, see the
 section below on `Optimisations`_.
+
+Debian/Ubuntu packages
+^^^^^^^^^^^^^^^^^^^^^^
+
+If you use a Debian-based Linux distribution (in addition to Debian itself, this
+includes for example Ubuntu or Linux Mint), you can install Brian directly
+from your favourite package manager (e.g. Synaptic or the Ubuntu Software
+Centre), thanks to the packages provided by the
+`NeuroDebian <http://neuro.debian.net/>`__ team.
+
+The package is called ``python-brian``, the documentation and tutorials can be
+found in ``python-brian-doc``. To install these packages from the command-line
+use::
+
+	sudo apt-get install python-brian python-brian-doc
+
+Note that in contrast to the procedure described above for
+`easy_install / pip`_, you will not necessarily get the most recent version of
+Brian this way. On the other hand, you do not have to take care of future
+updates yourself, as the Brian package gets updated with the standard update
+process. Additionally, the Brian package already includes all the compiled C
+code mentioned in the `Optimisations`_ section.
+Another way to install Brian which combines these advantages with up-to-date
+versions is to directly add the
+`NeuroDebian repository <http://neuro.debian.net/index.html#repository-howto>`__
+to your software sources.
 
 Manual installation
 -------------------
