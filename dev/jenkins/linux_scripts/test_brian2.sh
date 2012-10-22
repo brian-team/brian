@@ -3,8 +3,9 @@ cd /home/jenkins/.jenkins/virtual_envs/$PythonVersion/$packages
 # get the newest version of nose and coverage, ignoring installed packages
 bin/pip install --upgrade -I nose coverage || :
 
-# Make sure pyparsing is installed
+# Make sure pyparsing and ipython (used for pretty printing) are installed
 bin/pip install pyparsing
+bin/pip install ipython
 
 # This is copied from the build_brian.sh script. When brian2 gets a setup.py script, this script
 # should be used and the following lines removed.
