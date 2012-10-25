@@ -7,10 +7,9 @@ Reference
     base
     clocks
     equations/index
-    inputs/index
+    groups/index
     network
     monitors/index
-    neurongroup
     operations
     preferences
     units/index
