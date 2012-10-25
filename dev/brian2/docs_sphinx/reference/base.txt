@@ -1,9 +1,10 @@
 .. currentmodule:: brian2
 
-Base class
-==========
+Base classes
+============
 
 .. autoclass:: Nameable
 .. autoclass:: BrianObject
+.. autoclass:: SpikeSource
 .. autoclass:: Scheduler
 .. autofunction:: clear
