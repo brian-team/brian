@@ -1,0 +1,7 @@
+Inputs
+======
+
+.. toctree::
+    :maxdepth: 2
+
+    poissongroup
