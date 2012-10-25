@@ -5,3 +5,4 @@ Monitors
     :maxdepth: 2
 
     spikemonitor
+    statemonitor
