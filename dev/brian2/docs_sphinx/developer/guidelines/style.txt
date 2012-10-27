@@ -35,10 +35,9 @@ for our code. This in particular includes the following conventions:
 
 * Use absolute imports for everything outside of "your" package, e.g. if you
   are working in `brian2.equations`, import functions from the stringtools
-  modules via ``from brian2.utils.stringtools import ...``. Try to use the
-  shortest possible import, e.g. do ``from brian2 import seconds`` instead of
-  ``from brian2.units.fundamentalunits import seconds``, this allows for easier
-  changes in the package structure later on.
+  modules via ``from brian2.utils.stringtools import ...``. Use the full path
+  when importing, e.g. do ``from brian2.units.fundamentalunits import seconds``
+  instead of ``from brian2 import seconds``.
 * Use "new-style" relative imports for everything in "your" package, e.g. in
   ``brian2.codegen.functions.py`` import the `Function` class as 
   ``from .specifiers import Function``.  
