@@ -135,7 +135,7 @@ generated-members=REQUEST,acl_users,aq_parent
 [MISCELLANEOUS]
 
 # List of note tags to take in consideration, separated by a comma.
-notes=FIXME,XXX,TODO
+notes=FIXME
 
 
 [VARIABLES]
