@@ -33,7 +33,7 @@ load-plugins=
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=C0301,C0103,W0614,W0403,W0142,R0903,W0212,W0401,R0904,R0913,E1103
+disable=C0301,C0302,C0103,R0902,R0903,R0904,R0911,R0913,R0914,R0915,W0142,W0212,W0401,W0403,W0614,E1103
 
 
 [REPORTS]
@@ -43,7 +43,7 @@ disable=C0301,C0103,W0614,W0403,W0142,R0903,W0212,W0401,R0904,R0913,E1103
 output-format=parseable
 
 # Include message's id in output
-include-ids=no
+include-ids=yes
 
 # Put messages in a separate file for each module / package specified on the
 # command line instead of printing them on stdout. Reports (if any) will be
@@ -71,7 +71,7 @@ comment=no
 required-attributes=
 
 # List of builtins function names that should not be used, separated by a comma
-bad-functions=map,filter,apply,input
+bad-functions=apply,input
 
 # Regular expression which should only match correct module names
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
@@ -180,7 +180,7 @@ indent-string='    '
 [IMPORTS]
 
 # Deprecated modules which should not be used, separated by a comma
-deprecated-modules=regsub,string,TERMIOS,Bastion,rexec
+deprecated-modules=regsub,TERMIOS,Bastion,rexec
 
 # Create a graph of every (i.e. internal and external) dependencies in the
 # given file (report RP0402 must not be disabled)
