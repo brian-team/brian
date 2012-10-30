@@ -460,6 +460,20 @@ class LinearStateUpdater(StateUpdater):
                              type_converters=weave.converters.blitz,
                              extra_compile_args=self._extra_compile_args)
 
+    def __getstate__(self):
+        pickle_dict = self.__dict__.copy()
+        # NotImplemented is not pickable, replace it with a string instead
+        # (will be reverted when doing the unpickling in __setstate__)
+        if 'B' in pickle_dict and pickle_dict['B'] == NotImplemented:
+            pickle_dict['B'] = 'NotImplemented'
+        return pickle_dict
+    
+    def __setstate__(self, state):
+        self.__dict__ = state
+        # Revert the change done in __getstate__ for NotImplemented values
+        if 'B' in self.__dict__ and self.__dict__['B'] == 'NotImplemented':
+            self.__dict__['B'] = NotImplemented
+
     def __len__(self):
         '''
         Number of state variables
