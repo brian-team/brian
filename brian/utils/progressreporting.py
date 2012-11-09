@@ -104,8 +104,17 @@ class ProgressReporter(object):
         sized subtasks, you can use this method instead of
         ``subtask``, where ``tasknum`` is the number of
         the subtask about to start.
+        
+    Note that in Python 2.6+, this can be used as a context manager, and it
+    will automatically call the :meth:`start` and :meth:`finish` methods at
+    the beginning and end, e.g.::
+    
+        with ProgressReporter(period=0.1) as progress:
+            for i in xrange(10):
+                time.sleep(1)
+                progress.update((i+1.0)/10)    
     '''
-    def __init__(self, report, period=10.0, first_report=-1.0):
+    def __init__(self, report='stderr', period=10.0, first_report=-1.0):
         self.period = float(period)
         #self.report = get_reporter(report)
         self.report = None
@@ -141,6 +150,13 @@ class ProgressReporter(object):
                 self.next_report_time = cur_time + self.period
                 elapsed = time.time() - self.start_time
                 self.report(elapsed, totalcomplete)
+                
+    def __enter__(self):
+        self.start()
+        return self
+    
+    def __exit__(self, type, value, traceback):
+        self.finish()
 
 
 def get_reporter(report):
