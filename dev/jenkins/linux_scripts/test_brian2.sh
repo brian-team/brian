@@ -7,6 +7,9 @@ bin/pip install --upgrade -I nose coverage || :
 bin/pip install pyparsing
 bin/pip install ipython
 
+# Make sure we have sphinx (for testing the sphinxext)
+bin/pip install sphinx
+
 # This is copied from the build_brian.sh script. When brian2 gets a setup.py script, this script
 # should be used and the following lines removed.
 ##### From build_brian.sh
