@@ -40,7 +40,6 @@ Utility functions
 .. autofunction:: brian2.units.fundamentalunits.wrap_function_keep_dimensions
 .. autofunction:: brian2.units.fundamentalunits.wrap_function_change_dimensions
 .. autofunction:: brian2.units.fundamentalunits.wrap_function_remove_dimensions
-.. autofunction:: brian2.units.fundamentalunits.wrap_function_no_check_warning
 
 *Create/compare dimensions*
 
