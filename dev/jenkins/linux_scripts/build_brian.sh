@@ -6,18 +6,18 @@ OLD_DIR="$(pwd)"
 cd ~/.jenkins/virtual_envs/$PythonVersion/$packages
 
 # if no system-wide packages are used, update numpy etc. to newest version
-if [ $packages = newest ]; then
+if [[ $packages == "newest" ]]; then
   echo "Using newest available package versions"
   bin/pip install --upgrade numpy 
   bin/pip install --upgrade scipy
   bin/pip install sympy==0.7.1
-  if [ $PythonVersion == "python2.5" ]; then
+  if [[ $PythonVersion == "python2.5" ]]; then
     # matplotlib 1.2 is no longer compatible with Python 2.5
     bin/pip install --upgrade matplotlib<1.2
   else
     bin/pip install --upgrade matplotlib
   fi
-elif [ $packages = oldest ]; then
+elif [[ $packages == "oldest" ]]; then
   echo "Using oldest available package versions supported by Brian"
   bin/pip install numpy==1.4.1
   # scipy 0.7 has a bug that makes it impossible to use weave, download the
