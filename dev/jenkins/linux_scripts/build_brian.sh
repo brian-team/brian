@@ -11,7 +11,12 @@ if [ $packages = newest ]; then
   bin/pip install --upgrade numpy 
   bin/pip install --upgrade scipy
   bin/pip install sympy==0.7.1
-  bin/pip install --upgrade matplotlib
+  if [ $PythonVersion == "python2.5" ]; then
+    # matplotlib 1.2 is no longer compatible with Python 2.5
+    bin/pip install --upgrade matplotlib<1.2
+  else
+    bin/pip install --upgrade matplotlib
+  fi
 elif [ $packages = oldest ]; then
   echo "Using oldest available package versions supported by Brian"
   bin/pip install numpy==1.4.1
