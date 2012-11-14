@@ -16,6 +16,12 @@ sudo apt-get install python-all
 It does not have to have Jenkins installed, but a java version is needed, try
 sudo apt-get install openjdk-6-jre
 
+Recent versions of scipy do not seem to work with the BLAS reference implementation, installing the ATLAS libraries should make it work, e.g.:
+sudo apt-get install libatlas3gf-base liblapack3gf libatlas-dev liblapack-dev
+The ATLAS lapack libraries are sometimes not automatically activated, try the following to make it work (select the version with "atlas" in the path):
+sudo update-alternatives --config liblapack.so
+sudo update-alternatives --config liblapack.so.3
+
 Other necessary steps:
 * Prepare the virtual environments (see Master configuration) — the build scripts assume that there is a .jenkins directory in $HOME
 

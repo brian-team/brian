@@ -1,3 +1,4 @@
+#! /bin/bash
 echo Using $(which python)
 
 OLD_DIR="$(pwd)"
