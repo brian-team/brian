@@ -50,7 +50,6 @@ except ImportError:
 # inspired by https://github.com/wesm/pandas/blob/master/vb_suite/suite.py
 modules = ['benchmark_connections',
            'benchmark_spikegenerator',
-           'benchmark_multiplespikegenerator',
            'benchmark_stdp']
 
 by_module = {}
