@@ -14,13 +14,14 @@ def read_neuron_dat(name):
     '''
     Reads a Neuron vector file (.dat).
     
-    Returns vector of times, vector of values
+    Returns vector of times, vector(s) of values
     '''
     f = open(name)
     f.readline(), f.readline() # skip first two lines
     M = np.loadtxt(f)
     f.close()
-    return M[:, 0], M[:, 1]
+    return M.T
+#    return M[:, 0], M[:, 1]
 
 def read_atf(name):
     '''
