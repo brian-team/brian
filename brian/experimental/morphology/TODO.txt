@@ -1,6 +1,12 @@
 TODO
 ----
+1) Maybe: first test with cylinders in Neuron, check access resistance and all.
+2) If ok: maybe mismatch is due to having different branches. Then implement this.
+
+* Deal with branches, not done yet
 * Test with Neuron: use PyNeuron on linux (Dodge & Cooley?)
+	Calculate access resistances
+		Isn't there a problem with impedance mismatches? (branches of different diameters)
 * Insert Remy's code (especially domain decomposition to deal with branches)
 * Cm should be (optionally) a distributed variable (for myeline). It could be done simply by a check
 that Cm is in the equations (if Cm=None, then we use the distributed variable).
