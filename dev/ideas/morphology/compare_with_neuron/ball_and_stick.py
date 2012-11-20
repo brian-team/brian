@@ -1,10 +1,14 @@
 """
 The ball-and-stick model
 
-There is a 20% difference in access resistance, compared to Neuron
+* There is a 20% difference in access resistance, compared to Neuron, for soma+axon, if it is a single branch
+* Cylinder works perfectly (passive).
+* Tapered cylinder works almost perfectly, but not exactly.
+  Identical in the middle, but slightly different at the start.
 """
 from brian import *
 from brian.experimental.morphology import *
+from brian.experimental.morphology.spatialneuron_remy import *
 
 defaultclock.dt=0.025*ms
 
@@ -19,8 +23,17 @@ morpho.set_area()
 morpho.set_coordinates()
 '''
 
-morpho=Soma(diameter=30*um)
-morpho.axon=Cylinder(diameter=1*um,length=300*um,n=100)
+'''
+morpho=Morphology(n=1000)
+morpho.length[:]=0.3*um
+morpho.diameter[:]=linspace(10*um,3*um,1000) # tapered axon
+morpho.set_area()
+morpho.set_coordinates()
+'''
+
+morpho=Cylinder(diameter=30*um,length=30*um,n=1)
+morpho.L=Cylinder(diameter=1*um,length=300*um,n=100)
+#morpho=Cylinder(diameter=1*um,length=300*um,n=100)
 
 # Passive channels
 gL=1e-4*siemens/cm**2
@@ -41,17 +54,17 @@ run(1*ms)
 neuron.I[0]=0.2*nA/neuron.area[0]
 run(50*ms)
 neuron.I=0*amp
-run(949*ms,report='text')
+run(449*ms,report='text')
 
 # Load Neuron data
-file=r'C:\My Dropbox\LocalEclipseWorkspace\Neuron\example.dat'
+file=r'D:\My Dropbox\LocalEclipseWorkspace\Neuron\example.dat'
 x,y,z=read_neuron_dat(file)
 
 subplot(211)
-plot(x,y)
-plot(mon.times/ms,mon[0]/mV)
+plot(x,y,'b')
+plot(mon.times/ms,mon[0]/mV,'r')
 subplot(212)
-plot(x,z)
-plot(mon.times/ms,mon[50]/mV)
+plot(x,z,'b')
+plot(mon.times/ms,mon[50]/mV,'r')
 #plot(x,z)
 show()

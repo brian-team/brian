@@ -16,7 +16,7 @@ dgi/dt = -gi/(10*ms) : volt
 
 P = NeuronGroup(4000, eqs,
                 threshold='v>-50*mV', reset='v=-60*mV',
-                language=CPPLanguage(),
+                #language=CPPLanguage(),
                 )
 P.v = -60*mV+10*mV*rand(len(P))
 #Pe = P.subgroup(3200)

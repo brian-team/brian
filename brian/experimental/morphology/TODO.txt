@@ -1,6 +1,8 @@
 TODO
 ----
 1) Maybe: first test with cylinders in Neuron, check access resistance and all.
+	- Cylinder = fine
+	- Tapered cylinder = almost fine (slight difference at the start, maybe different boundary condition?)
 2) If ok: maybe mismatch is due to having different branches. Then implement this.
 3) Check with active currents on cylinders.
 4) Check with active currents on soma+axon.
