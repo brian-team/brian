@@ -14,7 +14,7 @@ if [[ $packages == "newest" ]]; then
   bin/pip install sympy==0.7.1
   if [[ $PythonVersion == "python2.5" ]]; then
     # matplotlib 1.2 is no longer compatible with Python 2.5
-    bin/pip install --upgrade matplotlib<1.2
+    bin/pip install --upgrade matplotlib==1.1
   else
     bin/pip install --upgrade matplotlib
   fi
