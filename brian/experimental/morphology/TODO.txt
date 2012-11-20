@@ -2,6 +2,8 @@ TODO
 ----
 1) Maybe: first test with cylinders in Neuron, check access resistance and all.
 2) If ok: maybe mismatch is due to having different branches. Then implement this.
+3) Check with active currents on cylinders.
+4) Check with active currents on soma+axon.
 
 * Deal with branches, not done yet
 * Test with Neuron: use PyNeuron on linux (Dodge & Cooley?)
