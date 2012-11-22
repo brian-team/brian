@@ -10,7 +10,9 @@ TODO:
 * Add branches
 '''
 from brian import *
-from brian.experimental.morphology import *
+#from brian.experimental.morphology import *
+from morphology import *
+from spatialneuron_remy import *
 from time import time
 
 '''
@@ -83,7 +85,7 @@ Im=gl*(El-v)+I : amp/cm**2 # distributed transmembrane current
 I : amp/cm**2 # applied current
 '''
 
-neuron = SpatialNeuron(morphology=morpho, model=eqs, refractory=refractory, Cm=Cm, Ri=Ri,environment=environment,diffeq_nonzero=False)
+neuron = SpatialNeuron(morphology=morpho, model=eqs, refractory=refractory, Cm=Cm, Ri=Ri)
 neuron.v=El
 neuron.I=0*amp/cm**2
 neuron.bc[0] = 0

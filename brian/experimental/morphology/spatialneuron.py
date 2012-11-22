@@ -254,8 +254,7 @@ class SpatialStateUpdater_new(StateUpdater): # Modified by Remy
         pointType = self.neuron.bc[endpoint]
         hasChild = (children_number>0)
         if (not hasChild) and (pointType == 1): #if the branch point is a leaf of the tree : apply default boundary condition
-            self.neuron.bc[endpoint] = 2 # Standard boundary condition    
-        
+            self.neuron.bc[endpoint] = 2 # Standard boundary condition
         
         #extract informations about the branches
         index_ante = self.neuron.index[ante]

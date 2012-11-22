@@ -8,7 +8,7 @@ The ball-and-stick model
 """
 from brian import *
 from brian.experimental.morphology import *
-from brian.experimental.morphology.spatialneuron_remy import *
+#from brian.experimental.morphology.spatialneuron_remy import *
 
 defaultclock.dt=0.025*ms
 
@@ -32,7 +32,7 @@ morpho.set_coordinates()
 '''
 
 morpho=Cylinder(diameter=30*um,length=30*um,n=1)
-morpho.L=Cylinder(diameter=1*um,length=300*um,n=100)
+morpho.axon=Cylinder(diameter=1*um,length=300*um,n=100)
 #morpho=Cylinder(diameter=1*um,length=300*um,n=100)
 
 # Passive channels
@@ -45,6 +45,7 @@ I : amp/cm**2
 
 neuron = SpatialNeuron(morphology=morpho, model=eqs, Cm=1 * uF / cm ** 2, Ri=100 * ohm * cm)
 neuron.v=-65*mV
+#neuron.L.v=-65*mV
 neuron.I=0*amp/cm**2
 
 # Monitors
@@ -52,12 +53,14 @@ mon=StateMonitor(neuron,'v',record=[0,50])
 
 run(1*ms)
 neuron.I[0]=0.2*nA/neuron.area[0]
+#neuron.changed=True
 run(50*ms)
 neuron.I=0*amp
+#neuron.changed=True
 run(449*ms,report='text')
 
 # Load Neuron data
-file=r'D:\My Dropbox\LocalEclipseWorkspace\Neuron\example.dat'
+file=r'C:\My Dropbox\LocalEclipseWorkspace\Neuron\example.dat'
 x,y,z=read_neuron_dat(file)
 
 subplot(211)

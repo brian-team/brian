@@ -387,7 +387,7 @@ class SpatialStateUpdater(StateUpdater):
 		self.ab1_base[-1] = (- self.neuron.Cm[-1] / self.neuron.clock.dt * second - self.Aminus[-1])
 		
 	def update_ab_gtot(self): #this is called every step. changing part of ab.
-		self.ab[1,:] = self.ab1_base[:] - self.neuron._gtot[:]
+		self.ab[1,:] = self.ab1_base[:] - self.neuron._gtot
 		
 	def update_bd(self): #bd is a right hand side in a tridiagonal system
 		self.bd[:] = -self.neuron.Cm[:] / self.neuron.clock.dt * self.neuron.v[:] - self.neuron._I0[:]
