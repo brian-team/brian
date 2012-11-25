@@ -3,7 +3,13 @@ TODO
 1) Maybe: first test with cylinders in Neuron, check access resistance and all.
 	- Cylinder = fine
 	- Tapered cylinder = almost fine (slight difference at the start, maybe different boundary condition?)
-** Test Remy's old stuff (see stages folder) **
+1b) Remy's stuff: does *not* work (maybe the gpu version?)
+	what might be wrong:
+	- LinearSpatialStateUpdater might work, not the other one
+	- prepare_branch: qq diff
+	- anything else!
+1c) Write it myself, use Remy's examples to check.
+
 2) If ok: maybe mismatch is due to having different branches. Then implement this.
 3) Check with active currents on cylinders.
 4) Check with active currents on soma+axon.

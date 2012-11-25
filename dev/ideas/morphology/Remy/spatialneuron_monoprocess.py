@@ -7,7 +7,7 @@ from brian.stdunits import *
 from brian.units import *
 from brian.reset import NoReset
 from brian.stateupdater import StateUpdater
-from gpustateupdater import *
+#from gpustateupdater import *
 from brian.inspection import *
 from brian.optimiser import *
 from itertools import count
@@ -21,6 +21,7 @@ import functools
 import warnings
 from math import ceil, log
 from scipy import weave
+import numpy
 from time import time
 import trace
 

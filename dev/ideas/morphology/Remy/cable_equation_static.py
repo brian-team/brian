@@ -12,7 +12,7 @@ if __name__ == '__main__':
 	'''
 	from brian import *
 	from morphology import *
-	from spatialneuron import *
+	from spatialneuron_monoprocess import *
 	from time import time
 
 	'''
@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
 	environment ='''El = 0 * mV
 gl = 0.02 * msiemens / cm ** 2
-	'''
+'''
 	exec(environment)
 
 	# Typical equations
@@ -85,7 +85,7 @@ gl = 0.02 * msiemens / cm ** 2
 	I : amp/cm**2 # applied current
 	'''
 
-	neuron = SpatialNeuron(morphology=morpho, model=eqs, refractory=refractory, Cm=Cm, Ri=Ri,environment=environment,diffeq_nonzero=False)
+	neuron = SpatialNeuron(morphology=morpho, model=eqs, refractory=refractory, Cm=Cm, Ri=Ri,diffeq_nonzero=False)
 	neuron.v=El
 	neuron.I=0*amp/cm**2
 	neuron.bc[0] = 0
