@@ -35,7 +35,7 @@ Mascagni's method is backward Euler, with the advantage that convergence is
 guaranteed. The algorithm is as follows:
 1) Solve the discrete system for V(t+dt), where the other variables are constant
 and assumed to be known at time t+dt (first iteration: use value at t). This
-is sparse linear system (could be computed with scipy.sparse.linalg?).
+is a sparse linear system (could be computed with scipy.sparse.linalg?).
 2) Solve for the other variables at t+dt using a backward Euler step with the
 values of V from step 1. In principle this is a simple 1D linear system
 (assuming conditional linearity for these variables).
@@ -77,6 +77,17 @@ a/(2*R)*(V[i+1]-2*V[i]+V[i-1])/dx**2
 Artificial gridpoints are used so that:
 (V[1]-V[-1])/(2*dx) = dV/dt(0)   # =0 in general
 (V[N+1]-V[N-1])/(2*dx) = dV/dt(L)   # =0 in general
+** This is taken from Mascagni but does not seem to be adapted to Neuron's convention **
+** Neuron's convention below would be: **
+With Neuron's convention, we should add two endpoints with coordinates 0 and 1, i.e.,
+on the boundaries of the cable. If i goes from 0 to N-1 (included), we define
+points -1 and N, at half a compartment from the ends. These nodes have zero area,
+and coefficients Aplus and Aminus are calculated based on half a compartment length.
+There is no membrane current.
+Voltage at endpoints seems to be Genesis's convention too.
+
+** Soma **
+The soma should be treated specially, with no axial resistance.
 
 Consider also the capacitive current (and leak?).
 
@@ -103,7 +114,7 @@ for the two cables A and B.
 Continuity requirements are:
 * v^A(L)=v^B(0)  # potential
 * d/dx v^A(L)=d/dx v^B(0)  # current
-There are homogeneous boundardy conditions on the two ends (zero current).
+There are homogeneous boundary conditions on the two ends (zero current).
 
 Consider the first equation, with boundary condition at 0 and free (unknown) voltage at L.
 Then the set of solutions is a linear one-dimensional manifold:
@@ -133,3 +144,28 @@ When the branches connect on both ends, we need two unknown constants per branch
 
 Alternatively, boundary conditions could be expressed as currents rather than potentials.
 When there are several branches, we simply change to current continuity condition to Kirchoff's law.
+
+--------------
+Implementation
+--------------
+** Branches **
+We use domain decomposition. Each branch consists on n compartments. The
+voltage v(i) is placed at the middle of the compartment, as in Neuron and
+Genesis. Each compartment has:
+1) a membrane current proportional to the area of the compartment,
+2) an axial current to the right, through half the length of the compartment,
+3) an axial current to the left, through half the length of the compartment.
+TO CHECK: axial resistances
+
+We add a starting point (-1) and an end point (n), through which:
+- there is no membrane current,
+- there is an axial current towards the branch.
+
+The soma is a special case, with no axial current.
+
+** Computation **
+For each branch, we have Lv=I, where L and I are updated at every timestep.
+1) Calculate particular solution with v_*(-1)=v_*(n)=0.
+2) Homogeneous solution v_0(-1)=1 and v_0(n)=0
+3) Homogeneous solution v_1(-1)=0 and v_0(n)=1
+4) Combination: v = v_*(0) + v(0)v_0 + v(L)v_L (v(0) and v(L) are the two unknowns)

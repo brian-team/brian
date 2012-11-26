@@ -161,6 +161,7 @@ class SpatialStateUpdater_old(StateUpdater):
        
         A_plus: i->i+1
         A_minus: i->i-1
+        ** Note: why are the coefficients not symmetrical then? **
         
         This gives the following tridiagonal system:
         A_plus*V(i+1)-(Cm/dt+gtot(i)+A_plus+A_minus)*V(i)+A_minus*V(i-1)=-Cm/dt*V(i,t)-I0(i)
@@ -175,6 +176,7 @@ class SpatialStateUpdater_old(StateUpdater):
         mid_diameter=.5*(self.neuron.diameter[:-1]+self.neuron.diameter[1:]) # i -> i+1
         self.Aplus=mid_diameter**2/(4*self.neuron.diameter[:-1]*self.neuron.length[:-1]**2*self.neuron.Ri)
         self.Aminus=mid_diameter**2/(4*self.neuron.diameter[1:]*self.neuron.length[1:]**2*self.neuron.Ri)
+        # It seems that Aminus(1) = Aminus[0]
 
     def __call__(self, neuron):
         '''
@@ -230,18 +232,19 @@ class SpatialStateUpdater_new(StateUpdater): # Modified by Remy
         3) fill neuron.bc (boundary conditions)
         '''
         branch = morphology.branch()
-        i=branch._origin
+        i=branch._origin # First compartment of the current branch
         j= i + len(branch) - 2
-        endpoint = j + 1
-        self.neuron.index[i:endpoint+1] = self.neuron.BPcount
+        endpoint = j + 1 # Last compartment of the current branch
+        self.neuron.index[i:endpoint+1] = self.neuron.BPcount # Branch index
         children_number = 0
-        
         
         #connections between branches
         for x in (morphology.children):#parent of segment n isn't always n-1 at branch points. We need to change Aplus and Aminus
-            gc = 2 * msiemens/cm**2
+            gc = 2 * msiemens/cm**2 # WTF???
             startpoint = x._origin
+            # Next line is odd: says that at branching point, the diameter is half that of both branches
             mid_diameter[startpoint] = .5*(self.neuron.diameter[endpoint]+self.neuron.diameter[startpoint])
+            # Apparently only the startpoint of the branch is updated (???)
             self.Aminus[startpoint]=mid_diameter[startpoint]**2/(4*self.neuron.diameter[startpoint]*self.neuron.length[startpoint]**2*self.neuron.Ri)
             if endpoint>0:
                 self.Aplus[startpoint]=mid_diameter[startpoint]**2/(4*self.neuron.diameter[endpoint]*self.neuron.length[endpoint]**2*self.neuron.Ri)

@@ -9,6 +9,7 @@ TODO
 	- prepare_branch: qq diff
 	- anything else!
 1c) Write it myself, use Remy's examples to check.
+	- see algorithms.txt
 
 2) If ok: maybe mismatch is due to having different branches. Then implement this.
 3) Check with active currents on cylinders.
