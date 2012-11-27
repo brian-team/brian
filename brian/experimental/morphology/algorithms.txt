@@ -169,3 +169,6 @@ For each branch, we have Lv=I, where L and I are updated at every timestep.
 2) Homogeneous solution v_0(-1)=1 and v_0(n)=0
 3) Homogeneous solution v_1(-1)=0 and v_0(n)=1
 4) Combination: v = v_*(0) + v(0)v_0 + v(L)v_L (v(0) and v(L) are the two unknowns)
+
+It is seen here that the two additional endpoints do not actually need to be
+explicitly present, since they are in fact constant in the calculations.
