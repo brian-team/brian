@@ -12,8 +12,8 @@ TODO
 	- Several branches: seems to work.
 	(- Then add soma more cleanly.)
 2) Check with active currents.
+	- HH on cylinder, matches nicely.
 
-* Test with Neuron: use PyNeuron on linux (Dodge & Cooley?)
 * Cm should be (optionally) a distributed variable (for myeline). It could be done simply by a check
 that Cm is in the equations (if Cm=None, then we use the distributed variable).
 * Write examples, including point processes
