@@ -44,17 +44,14 @@ I : amp/cm**2
 neuron = SpatialNeuron(morphology=morpho, model=eqs, Cm=1 * uF / cm ** 2, Ri=100 * ohm * cm)
 neuron.v=-65*mV
 neuron.I=0*amp/cm**2
-neuron.gL=1e-4*siemens/cm**2
 
 # Monitors
 mon=StateMonitor(neuron,'v',record=[0,50])
 
 run(1*ms)
 neuron.I[0]=0.2*nA/neuron.area[0]
-#neuron.changed=True
 run(50*ms)
 neuron.I=0*amp
-#neuron.changed=True
 run(495*ms,report='text')
 
 # Load Neuron data
