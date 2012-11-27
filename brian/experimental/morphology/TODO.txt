@@ -4,21 +4,16 @@ TODO
 	- Cylinder = fine
 	- Tapered cylinder = almost fine (slight difference at the start, maybe different boundary condition?)
 1b) Remy's stuff: does *not* work (maybe the gpu version?)
-	what might be wrong:
-	- LinearSpatialStateUpdater might work, not the other one
-	- prepare_branch: qq diff
-	- anything else!
 1c) Write it myself, use Remy's examples to check.
-	- Solving the small linear system.
+	- Works for 1 branch.
+	- Impulse response works for sequence of branches.
+	- Ball and stick works! (same as Neuron).
+	- Hack for soma works.
+	- Several branches: seems to work.
+	(- Then add soma more cleanly.)
+2) Check with active currents.
 
-2) If ok: maybe mismatch is due to having different branches. Then implement this.
-3) Check with active currents on cylinders.
-4) Check with active currents on soma+axon.
-
-* Deal with branches, not done yet
 * Test with Neuron: use PyNeuron on linux (Dodge & Cooley?)
-	Calculate access resistances
-		Isn't there a problem with impedance mismatches? (branches of different diameters)
 * Cm should be (optionally) a distributed variable (for myeline). It could be done simply by a check
 that Cm is in the equations (if Cm=None, then we use the distributed variable).
 * Write examples, including point processes

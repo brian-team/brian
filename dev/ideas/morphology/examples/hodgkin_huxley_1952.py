@@ -6,7 +6,7 @@ Conduction velocity is about 12.5 m/s (is it right?)
 from brian import *
 from brian.experimental.morphology import *
 
-defaultclock.dt=0.01*ms
+defaultclock.dt=0.1*ms
 
 morpho=Cylinder(length=10*cm, diameter=2*238*um, n=1000, type='axon')
 

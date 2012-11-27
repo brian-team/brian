@@ -1,10 +1,6 @@
-"""
-The ball-and-stick model
-
-* There is a 20% difference in access resistance, compared to Neuron, for soma+axon, if it is a single branch
-* Cylinder works perfectly (passive).
-* Tapered cylinder works almost perfectly, but not exactly.
-"""
+'''
+A pseudo MSO neuron, with two dendrites and one axon (fake geometry).
+'''
 from brian import *
 from brian.experimental.morphology import *
 
@@ -13,25 +9,8 @@ defaultclock.dt=0.1*ms
 # Morphology
 morpho=Soma(30*um)
 morpho.axon=Cylinder(diameter=1*um,length=300*um,n=100)
-
-'''
-diam=linspace(10*um,3*um,1000)
-morpho=Morphology(n=500)
-morpho.length[:]=0.3*um
-morpho.diameter[:]=diam[:500] # tapered axon
-morpho.set_area()
-morpho.set_coordinates()
-morpho2=Morphology(n=500)
-morpho2.length[:]=0.3*um
-morpho2.diameter[:]=diam[500:] # tapered axon
-morpho2.set_area()
-morpho2.set_coordinates()
-morpho.L=morpho2
-'''
-
-#morpho=Cylinder(diameter=30*um,length=30*um,n=1)
-#morpho.axon=Cylinder(diameter=1*um,length=300*um,n=100)
-#morpho=Cylinder(diameter=1*um,length=300*um,n=100)
+morpho.L=Cylinder(diameter=3*um,length=100*um,n=50)
+morpho.R=Cylinder(diameter=3*um,length=150*um,n=50)
 
 # Passive channels
 gL=1e-4*siemens/cm**2
@@ -58,7 +37,7 @@ neuron.I=0*amp
 run(495*ms,report='text')
 
 # Load Neuron data
-file=r'D:\My Dropbox\LocalEclipseWorkspace\Neuron\example.dat'
+file=r'D:\My Dropbox\LocalEclipseWorkspace\Neuron\mso_cell.dat'
 x,y,z=read_neuron_dat(file)
 
 subplot(211)

@@ -112,9 +112,6 @@ class SpatialNeuron(NeuronGroup):
         #for var, i in zip(var_names, count()):
         #    self._S0[i] = S0[var]
         
-        self.bc = ones(len(self)) # boundary conditions on branch points
-        self.changed = True # ???
-
         # Insert morphology
         self.morphology = morphology
         self.morphology.compress(diameter=self.diameter, length=self.length, x=self.x, y=self.y, z=self.z, area=self.area)
@@ -232,11 +229,27 @@ class SpatialStateUpdater_new(StateUpdater):
         for kid in (morphology.children):
             self.cut_branches(kid)
     
+    def number_branches(self,morphology,n=0,parent=-1):
+        '''
+        Recursively number the branches and return their total number.
+        n is the index number of the current branch.
+        parent is the index number of the parent branch.
+        '''
+        morphology.index=n
+        morphology.parent=parent
+        nbranches=1
+        for kid in (morphology.children):
+            nbranches+=self.number_branches(kid,n+nbranches,n)
+        return nbranches
+    
     def prepare(self):
         '''
         Preparation of data structures.
         See the relevant document.
         '''
+        # Correction for soma (a bit of a hack), so that it has negligible axial resistance
+        if self.neuron.morphology.type=='soma':
+            self.neuron.length[0]=self.neuron.diameter[0]*0.01
         # Inverse axial resistance
         self.invr=zeros(len(self.neuron))
         self.invr[1:]=pi/(2*self.neuron.Ri)*(self.neuron.diameter[:-1]*self.neuron.diameter[1:])/\
@@ -247,25 +260,31 @@ class SpatialStateUpdater_new(StateUpdater):
         # Linear systems
         # The particular solution
         '''a[i,j]=ab[u+i-j,j]''' # u is the number of upper diagonals = 1
-        self.ab_star=zeros((3,len(neuron)))
+        self.ab_star=zeros((3,len(self.neuron)))
         self.ab_star[0,1:]=self.invr[1:]/self.neuron.area[:-1]
         self.ab_star[2,:-1]=self.invr[1:]/self.neuron.area[1:]
-        self.ab_star[1,:]=-neuron.Cm/neuron.clock.dt-self.invr/self.neuron.area
+        self.ab_star[1,:]=-self.neuron.Cm/self.neuron.clock.dt-self.invr/self.neuron.area
         self.ab_star[1,:-1]-=self.invr[1:]/self.neuron.area[:-1]
         # Homogeneous solutions
-        self.ab_plus=zeros((3,len(neuron)))
-        self.ab_minus=zeros((3,len(neuron)))
-        self.ab_plus[:]=self.ab_particular
-        self.ab_minus[:]=self.ab_particular
-        self.b_plus=zeros(len(neuron))
-        self.b_minus=zeros(len(neuron))
+        self.ab_plus=zeros((3,len(self.neuron)))
+        self.ab_minus=zeros((3,len(self.neuron)))
+        self.ab_plus[:]=self.ab_star
+        self.ab_minus[:]=self.ab_star
+        self.b_plus=zeros(len(self.neuron))
+        self.b_minus=zeros(len(self.neuron))
         # Solutions
-        self.v_star=zeros(len(neuron))
-        self.u_plus=zeros(len(neuron))
-        self.u_minus=zeros(len(neuron))
+        self.v_star=zeros(len(self.neuron))
+        self.u_plus=zeros(len(self.neuron))
+        self.u_minus=zeros(len(self.neuron))
         
         # Boundary conditions
         self.boundary_conditions(self.neuron.morphology)
+        
+        # Linear system for connecting branches
+        n=1+self.number_branches(self.neuron.morphology) # number of nodes (2 for the root)
+        self.P=zeros((n,n)) # matrix
+        self.B=zeros(n) # vector RHS
+        self.V=zeros(n) # solution = voltages at nodes
 
     def boundary_conditions(self,morphology):
         '''
@@ -274,14 +293,18 @@ class SpatialStateUpdater_new(StateUpdater):
         first=morphology._origin # first compartment
         last=first+len(morphology.x)-1 # last compartment
         # Inverse axial resistances at the ends: r0 and rn
-        morphology.invr0=pi/(2*self.neuron.Ri)*self.neuron.diameter[first]**2/self.neuron.length[first]
-        morphology.invrn=pi/(2*self.neuron.Ri)*self.neuron.diameter[last]**2/self.neuron.length[last]
+        morphology.invr0=float(pi/(2*self.neuron.Ri)*self.neuron.diameter[first]**2/self.neuron.length[first])
+        morphology.invrn=float(pi/(2*self.neuron.Ri)*self.neuron.diameter[last]**2/self.neuron.length[last])
         # Correction for boundary conditions
-        self.ab_star[1,first]-=morphology.invr0/self.neuron.area[first]
-        self.ab_star[1,last]-=morphology.invrn/self.neuron.area[last]
+        self.ab_star[1,first]-=float(morphology.invr0/self.neuron.area[first]) # because of units problems
+        self.ab_star[1,last]-=float(morphology.invrn/self.neuron.area[last])
+        self.ab_plus[1,first]-=float(morphology.invr0/self.neuron.area[first]) # because of units problems
+        self.ab_plus[1,last]-=float(morphology.invrn/self.neuron.area[last])
+        self.ab_minus[1,first]-=float(morphology.invr0/self.neuron.area[first]) # because of units problems
+        self.ab_minus[1,last]-=float(morphology.invrn/self.neuron.area[last])
         # RHS for homogeneous solutions
-        self.b_plus[last]=-morphology.invrn/self.neuron.area[last]
-        self.b_minus[first]=-morphology.invr0/self.neuron.area[first]
+        self.b_plus[last]=-float(morphology.invrn/self.neuron.area[last])
+        self.b_minus[first]=-float(morphology.invr0/self.neuron.area[first])
         # Recursive call
         for kid in (morphology.children):
             self.boundary_conditions(kid)
@@ -323,13 +346,52 @@ class SpatialStateUpdater_new(StateUpdater):
         ab[:]=self.ab_minus 
         ab[1,:]-=neuron._gtot
         self.u_minus[:]=solve_banded((1,1),ab,b,overwrite_ab=True,overwrite_b=True)
+        # Solve the linear system connecting branches
+        self.P[:]=0
+        self.B[:]=0
+        self.fill_matrix(self.neuron.morphology)
+        self.V = solve(self.P,self.B)
+        # Calculate solutions by linear combination
+        self.linear_combination(self.neuron.morphology)
+        
+    def linear_combination(self,morphology):
         '''
-        I'M HERE
-        TODO:
-        - fill the small linear system (sealed ends, etc)
-        - solve it
-        - deal with the soma
+        Calculates solutions by linear combination
         '''
+        first=morphology._origin # first compartment
+        last=first+len(morphology.x)-1 # last compartment
+        i=morphology.index+1
+        i_parent=morphology.parent+1
+        self.neuron.v[first:last+1]=self.v_star[first:last+1]+self.V[i_parent]*self.u_minus[first:last+1]\
+                                                             +self.V[i]*self.u_plus[first:last+1]
+        # Recursive call
+        for kid in (morphology.children):
+            self.linear_combination(kid)
+
+    def fill_matrix(self,morphology):
+        '''
+        Recursively fills the matrix of the linear system that connects branches together.
+        '''
+        first=morphology._origin # first compartment
+        last=first+len(morphology.x)-1 # last compartment
+        i=morphology.index+1
+        i_parent=morphology.parent+1
+        # Towards parent
+        if i==1: # first branch, sealed end
+            self.P[0,0]=self.u_minus[first]-1
+            self.P[0,1]=self.u_plus[first]
+            self.B[0]=-self.v_star[first]
+        else:
+            self.P[i_parent,i_parent]+=(1-self.u_minus[first])*morphology.invr0
+            self.P[i_parent,i]-=self.u_plus[first]*morphology.invr0
+            self.B[i_parent]+=self.v_star[first]*morphology.invr0
+        # Towards children
+        self.P[i,i]=(1-self.u_plus[last])*morphology.invrn
+        self.P[i,i_parent]=-self.u_minus[last]*morphology.invrn
+        self.B[i]=self.v_star[last]*morphology.invrn
+        # Recursive call
+        for kid in (morphology.children):
+            self.fill_matrix(kid)
 
     def __len__(self):
         '''
