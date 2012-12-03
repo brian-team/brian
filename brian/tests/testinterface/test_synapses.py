@@ -17,7 +17,7 @@ from brian.neurongroup import NeuronGroup
 from brian.directcontrol import SpikeGeneratorGroup
 from brian.monitor import StateMonitor
 from brian.threshold import NoThreshold
-from brian.stdunits import ms
+from brian.stdunits import ms, mV, nS, nF
 
 
 def test_construction_single_synapses():
@@ -381,6 +381,27 @@ def test_model_definition():
     S=Synapses(neurons, model='''w:1 # gap junction conductance
                                  Igap=w*(v_pre-v_post): 1''')
     neurons.Igap = S.Igap
+
+    # static equations in synaptic model
+    V_L = -70 * mV
+    C_m = 0.5 * nF
+    g_m = 25 * nS
+    V_E1 = 0 * mV
+    V_E2 = -20 * mV
+    g_1 = 0.1 * nS
+    g_2 = 0.2 * nS
+    tau1 = 5 * ms
+    tau2 = 50 * ms
+    neurons = NeuronGroup(1, model='''dV/dt = (-1/C_m)*((g_m)*(V-V_L) + I_tot) : volt
+                                      I_tot : amp''', reset=-55*mV, threshold=-50*mV)
+    S=Synapses(neurons, model='''I_tot = I_1 + I_2 : amp
+                                 I_1 = sI_1*g_1*(V_post-V_E1) : amp
+                                 dsI_1/dt = -sI_1 / tau1 : 1
+                                 I_2 = sI_2*g_2*(V_post-V_E2) : amp
+                                 dsI_2/dt = -sI_2 / tau1 : 1
+                              ''', pre='sI_1 += 1; sI_2 += 1')
+    S[:, :] = True
+    neurons.I_tot = S.I_tot
 
 def test_max_delay():
     '''Test that changing delays after compression works. '''

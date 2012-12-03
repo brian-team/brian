@@ -178,13 +178,13 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         # Identify pre and post variables in the model string
         # They are identified by _pre and _post suffixes
         # or no suffix for postsynaptic variables
-        ids=[]
+        ids=set()
         for RHS in model._string.itervalues():
-            ids.extend(get_identifiers(RHS))
-        pre_ids=[id[:-4] for id in ids if id[-4:]=='_pre']
-        post_ids=[id[:-5] for id in ids if id[-5:]=='_post']
-        post_vars=[var for var in source.var_index if isinstance(var,str)] # postsynaptic variables
-        post_ids2=list(set(ids).intersection(set(post_vars))) # post variables without the _post suffix
+            ids.update(get_identifiers(RHS))
+        pre_ids = [id[:-4] for id in ids if id[-4:]=='_pre']
+        post_ids = [id[:-5] for id in ids if id[-5:]=='_post']
+        post_vars = [var for var in source.var_index if isinstance(var,str)] # postsynaptic variables
+        post_ids2 = list(ids.intersection(set(post_vars))) # post variables without the _post suffix
 
         # Insert static equations for pre and post variables
         S=self
@@ -198,7 +198,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             if name not in model._string: # check that it is not already defined
                 model.add_eq(name, 'S.target.state_(__'+name+')[S.postsynaptic[:]]', target.unit(name),
                              global_namespace={'S':S,'__'+name:name})
-        
+
         self.source=source
         self.target=target
         
