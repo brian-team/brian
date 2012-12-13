@@ -1,0 +1,175 @@
+'''
+An implementation of the IHC-AN synapse from
+
+Zhang, X., M. G. Heinz, I. C. Bruce, and L. H. Carney.
+‘A Phenomenological Model for the Responses of Auditory-nerve Fibers:
+I. Nonlinear Tuning with Compression and Suppression’.
+The Journal of the Acoustical Society of America 109 (2001): 648.
+
+'''
+
+import numpy as np
+from brian import *
+from brian.stdunits import *
+from brian.hears import *
+
+@check_units(spont=Hz, A_SS=Hz, tau_ST=ms, tau_R=ms, A_RST=1, PTS=1, P_Imax=1,
+             R_A=second, c_0=1, c_1=1, s_0=second, s_1=second)
+# Default values for parameters from table 1, Zhang et al. 2001
+def create_synapse(source, CF, spont=50*Hz, A_SS=350*Hz, tau_ST=60*ms,
+                   tau_R=2*ms, A_RST=6, PTS=8.6, P_Imax=0.6, c_0=0.5, c_1=0.5,
+                   R_A=0.75*ms, s_0=1*ms, s_1=12.5*ms):
+    '''
+    Return a FilterbankGroup that represents a synapse according to the
+    Zhang et al. (2001) model. The `source` should be a filterbank, producing
+    V_ihc (e.g. `TanCarney`). `CF` specifies the characteristic frequencies of
+    the AN fibers.
+
+    The group emits spikes according to a time-varying Poisson process with
+    absolute and relative refractoriness (probability of spiking is given by
+    state variable ``R``). The continuous probability of spiking without
+    refractoriness is available in the state variable ``s``.
+
+    For details see Zhang et al. (2001).
+    '''
+    # Equations A1-A5 of Zhang et al. 2001
+    A_ON  = PTS * A_SS  # onset rate
+    A_R = (A_ON - A_SS) * A_RST / (1 + A_RST)  # rapid response amplitude
+    A_ST = A_ON - A_SS - A_R  # short-term response amplitude
+    P_rest = P_Imax * spont / A_ON  # resting permeability
+    C_G = spont * (A_ON - spont) / (A_ON*P_rest*(1 - spont/A_SS))  # global concentration
+
+    # Equations A6 (intermediate parameters for store volume computation)
+    gamma_1 = C_G / spont
+    gamma_2 = C_G / A_SS
+    kappa_1 = -1 / tau_R
+    kappa_2 = -1 / tau_ST
+
+    # Equations A7-A9 (immediate volume)
+    V_I0 = (1 - P_Imax/P_rest)/(gamma_1*((A_R*(kappa_1-kappa_2)/(C_G*P_Imax)) +
+                                         kappa_2/(P_rest*gamma_1) - kappa_2/(P_Imax*gamma_2)))
+    V_I1 = (1 - P_Imax/P_rest)/(gamma_1*((A_ST*(kappa_2-kappa_1)/(C_G*P_Imax)) +
+                                         kappa_1/(P_rest*gamma_1) - kappa_1/(P_Imax*gamma_2)))
+    V_I = 0.5 * (V_I0 + V_I1)
+
+    # Equations A10 (other intermediate parameters)
+    alpha = gamma_2 / (kappa_1*kappa_2)
+    beta = -(kappa_1 + kappa_2) * alpha
+    theta_1 = alpha * P_Imax/V_I
+    theta_2 = V_I/P_Imax
+    theta_3 = gamma_2 - 1/P_Imax
+
+    # Equations A11-A12 (local and global permeabilities)
+    P_L = ((beta - theta_2*theta_3)/theta_1 - 1) * P_Imax
+    P_G = 1 / (theta_3 - 1/P_L)
+
+    # Equations A13-A15
+    V_L = theta_1*P_L*P_G  # local volume
+    C_Irest = spont/P_rest  # resting value of immediate concentration
+    C_Lrest = C_Irest*(P_rest + P_L)/P_L  # local concentration
+
+    # Equation 18 with A16 and A17
+    p_1 = P_rest / log(2)
+
+    eqs = '''
+    # input into the Synapse
+    V_ihc : 1
+
+    # CF in Hz
+    CF_param : 1
+
+    # Equation A17
+    V_sat = 18.54*P_Imax*((V_sat2 > 1.5)*(V_sat2 - 1.5) + 1.5) : 1
+    V_sat2 = 2 + 3*np.log10(CF_param / 1000.0) : 1
+
+    # Equation 17
+    P_I = p_1 * np.log(1 + np.exp(((p_2 > 1165) * (p_2 - 1165) + 1165) * V_ihc)) : 1
+
+    # FIXME: This should follow the calculation in A17, but the formula involves
+    # np.log(2**x - 1) and is not numerically feasible for high values of x
+    p_2 = -5430 + 1010 * np.log(CF_param) : 1
+
+    # Equation A18-A19
+    # Concentration in the stores (as differential instead of difference equation)
+    dC_I/dt = (-P_I*C_I + P_L*(C_L - C_I))/V_I : Hz
+    dC_L/dt = (-P_L*(C_L - C_I) + P_G*(C_G - C_L))/V_I : Hz
+
+    # time-varying discharge rate (ignoring refractory effects), equation A20
+    s = C_I * P_I : Hz
+
+    # discharge-history effect (Equation 20 in differential equation form)
+    H = c_0*e_0 + c_1*e_1 : 1
+    de_0/dt = -e_0/s_0    : 1
+    de_1/dt = -e_1/s_1    : 1
+
+    # final time-varying discharge rate for the Poisson process, equation 19
+    R = s * (1 - H) : Hz
+    '''
+
+    def reset_func(P, spikes):
+        P.e_0[spikes] = 1.0
+        P.e_1[spikes] = 1.0
+
+    synapse = FilterbankGroup(source, 'V_ihc',
+                              model=eqs,
+                              threshold=PoissonThreshold('R'),
+                              reset=CustomRefractoriness(resetfun=reset_func,
+                                                         period=R_A)
+                             )
+    synapse.CF_param = CF
+    synapse.C_I = C_Irest
+    synapse.C_L = C_Lrest
+
+    return synapse
+
+if __name__ == '__main__':
+    '''
+    Should reproduce the output of the AN3_test_tone.m script, available in the
+    code accompanying the paper Tan & Carney (2003). This matlab code is
+    available from
+    http://www.urmc.rochester.edu/labs/Carney-Lab/publications/auditory-models.cfm
+
+    Tan, Q., and L. H. Carney.
+    ‘A Phenomenological Model for the Responses of Auditory-nerve Fibers.
+    II. Nonlinear Tuning with a Frequency Glide’.
+    The Journal of the Acoustical Society of America 114 (2003): 2007.
+    '''
+    duration = 50*ms
+    set_default_samplerate(50*kHz)
+    cf = 1000 * Hz
+    levels = [0, 20, 40, 60, 80]
+    tones = Sound([Sound.sequence([tone(cf, duration).atlevel(level*dB).ramp(when='both',
+                                                                             duration=10*ms,
+                                                                             inplace=False),
+                                   silence(duration=duration/2)])
+               for level in levels])
+
+    ihc = TanCarney(tones, [cf] * len(levels), update_interval=1)
+    syn = create_synapse(ihc, cf)
+    s_mon = StateMonitor(syn, 's', record=True)
+    R_mon = StateMonitor(syn, 'R', record=True)
+    spike_mon = SpikeMonitor(syn)
+    net = Network(syn, s_mon, R_mon, spike_mon)
+    net.run(duration * 1.5)
+    for idx, level in enumerate(levels):
+        plt.figure(1)
+        plt.subplot(len(levels), 1, idx + 1)
+        plt.plot(s_mon.times / ms, s_mon[idx])
+        plt.xlabel('Time (msec)')
+        plt.ylabel('Sp/sec')
+        plt.text(1.25 * duration/ms, np.nanmax(s_mon[idx])/2., '%s SPL' % str(level*dB));
+        if idx == 0:
+            plt.title('CF=%.0f Hz - Response to Tone at CF' % cf)
+
+        plt.figure(2)
+        plt.subplot(len(levels), 1, idx + 1)
+        plt.plot(R_mon.times / ms, R_mon[idx])
+        plt.xlabel('Time (msec)')
+        plt.xlabel('Time (msec)')
+        plt.text(1.25 * duration/ms, np.nanmax(R_mon[idx])/2., '%s SPL' % str(level*dB));
+        if idx == 0:
+            plt.title('CF=%.0f Hz - Response to Tone at CF (with spikes and refractoriness)' % cf)
+        plt.plot(spike_mon.spiketimes[idx] / ms,
+             np.ones(len(spike_mon.spiketimes[idx])) * np.nanmax(R_mon[idx]), 'rx')
+
+    plt.show()
