@@ -15,6 +15,9 @@ TODO
 	- HH on cylinder, matches nicely.
 	- HH on soma+axon+dendrite works.
 
+* Threshold, reset and refractoriness: threshold should be able to return a
+  single boolean, in this case reset should be given the full index array.
+
 * Cm should be (optionally) a distributed variable (for myeline). It could be done simply by a check
 that Cm is in the equations (if Cm=None, then we use the distributed variable).
 * Write examples, including point processes
