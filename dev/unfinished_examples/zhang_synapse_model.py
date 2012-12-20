@@ -2,16 +2,50 @@
 An implementation of the IHC-AN synapse from
 
 Zhang, X., M. G. Heinz, I. C. Bruce, and L. H. Carney.
-‘A Phenomenological Model for the Responses of Auditory-nerve Fibers:
-I. Nonlinear Tuning with Compression and Suppression’.
+"A Phenomenological Model for the Responses of Auditory-nerve Fibers:
+I. Nonlinear Tuning with Compression and Suppression".
 The Journal of the Acoustical Society of America 109 (2001): 648.
 
 '''
 
 import numpy as np
+import scipy.signal as signal
+
 from brian import *
 from brian.stdunits import *
 from brian.hears import *
+
+
+class MiddleEar(LinearFilterbank):
+    '''
+    Implements the middle ear model from Tan & Carney (2003) (linear filter
+    with two pole pairs and one double zero). The gain is normalized for the
+    response of the analog filter at 1000Hz as in the model of Tan & Carney
+    (their actual C code does however result in a slightly different
+    normalization, the difference in overall level is about 0.33dB (to get
+    exactly the same output as in their model, multiply the filter bank's
+    output with 0.962512703689).
+
+    Tan, Q., and L. H. Carney.
+    "A Phenomenological Model for the Responses of Auditory-nerve Fibers.
+    II. Nonlinear Tuning with a Frequency Glide".
+    The Journal of the Acoustical Society of America 114 (2003): 2007.
+    '''
+    def __init__(self, source, **kwds):
+        samplerate = source.samplerate
+        zeros = np.array([-200, -200])
+        poles = np.array([-250 + 400j, -250 - 400j,
+                          -2000 + 6000j, -2000 - 6000j])
+        # use an arbitrary gain here, will be normalized afterwards
+        b, a = signal.zpk2tf(zeros, poles * 2 * np.pi, 1.5e9)
+        # normalize the response at 1000Hz (of the analog filter)
+        resp = np.abs(signal.freqs(b, a, [1000*2*np.pi])[1])  # response magnitude
+        b /= resp
+        bd, ad = signal.bilinear(b, a, samplerate)
+        bd = np.tile(bd, (source.nchannels, 1))
+        ad = np.tile(ad, (source.nchannels, 1))
+        LinearFilterbank.__init__(self, source, bd, ad, **kwds)
+
 
 @check_units(spont=Hz, A_SS=Hz, tau_ST=ms, tau_R=ms, A_RST=1, PTS=1, P_Imax=1,
              R_A=second, c_0=1, c_1=1, s_0=second, s_1=second)
@@ -130,8 +164,8 @@ if __name__ == '__main__':
     http://www.urmc.rochester.edu/labs/Carney-Lab/publications/auditory-models.cfm
 
     Tan, Q., and L. H. Carney.
-    ‘A Phenomenological Model for the Responses of Auditory-nerve Fibers.
-    II. Nonlinear Tuning with a Frequency Glide’.
+    "A Phenomenological Model for the Responses of Auditory-nerve Fibers.
+    II. Nonlinear Tuning with a Frequency Glide".
     The Journal of the Acoustical Society of America 114 (2003): 2007.
     '''
     duration = 50*ms
@@ -144,7 +178,7 @@ if __name__ == '__main__':
                                    silence(duration=duration/2)])
                for level in levels])
 
-    ihc = TanCarney(tones, [cf] * len(levels), update_interval=1)
+    ihc = TanCarney(MiddleEar(tones), [cf] * len(levels), update_interval=1)
     syn = create_synapse(ihc, cf)
     s_mon = StateMonitor(syn, 's', record=True)
     R_mon = StateMonitor(syn, 'R', record=True)
