@@ -10,11 +10,20 @@ The Journal of the Acoustical Society of America 109 (2001): 648.
 
 import numpy as np
 import scipy.signal as signal
+import matplotlib.pyplot as plt
 
-from brian import *
-from brian.stdunits import *
-from brian.hears import *
+from brian.units import second, check_units
+from brian.stdunits import kHz, Hz, ms
+from brian.network import Network
+from brian.monitor import StateMonitor, SpikeMonitor
+from brian.globalprefs import set_global_preferences
+from brian.threshold import PoissonThreshold
+from brian.reset import CustomRefractoriness
 
+set_global_preferences(useweave=True)
+from brian.hears import (Sound, LinearFilterbank, FilterbankGroup,
+                         set_default_samplerate, tone, silence, dB,
+                         TanCarney)
 
 class MiddleEar(LinearFilterbank):
     '''
@@ -51,7 +60,7 @@ class MiddleEar(LinearFilterbank):
              R_A=second, c_0=1, c_1=1, s_0=second, s_1=second)
 # Default values for parameters from table 1, Zhang et al. 2001
 def create_synapse(source, CF, spont=50*Hz, A_SS=350*Hz, tau_ST=60*ms,
-                   tau_R=2*ms, A_RST=6, PTS=8.6, P_Imax=0.6, c_0=0.5, c_1=0.5,
+                   tau_R=2*ms, A_RST=6, PTS=8.627, P_Imax=0.6, c_0=0.5, c_1=0.5,
                    R_A=0.75*ms, s_0=1*ms, s_1=12.5*ms):
     '''
     Return a FilterbankGroup that represents a synapse according to the
@@ -66,6 +75,9 @@ def create_synapse(source, CF, spont=50*Hz, A_SS=350*Hz, tau_ST=60*ms,
 
     For details see Zhang et al. (2001).
     '''
+    
+    A_SS=130*Hz  # FIXME: In the example C code, this is used when not spiking (with comment: "read Frank's cmpa.c")   
+    
     # Equations A1-A5 of Zhang et al. 2001
     A_ON  = PTS * A_SS  # onset rate
     A_R = (A_ON - A_SS) * A_RST / (1 + A_RST)  # rapid response amplitude
@@ -103,7 +115,7 @@ def create_synapse(source, CF, spont=50*Hz, A_SS=350*Hz, tau_ST=60*ms,
     C_Lrest = C_Irest*(P_rest + P_L)/P_L  # local concentration
 
     # Equation 18 with A16 and A17
-    p_1 = P_rest / log(2)
+    p_1 = P_rest / np.log(2)
 
     eqs = '''
     # input into the Synapse
@@ -112,16 +124,18 @@ def create_synapse(source, CF, spont=50*Hz, A_SS=350*Hz, tau_ST=60*ms,
     # CF in Hz
     CF_param : 1
 
-    # Equation A17
-    V_sat = 18.54*P_Imax*((V_sat2 > 1.5)*(V_sat2 - 1.5) + 1.5) : 1
+    # Equation A17 (using an expression based on the spontaneous rate instead of 18.54, based on the C code)
+    V_sat = 20.0*(spont + 1*Hz)/(spont + 5*Hz)*P_Imax*((V_sat2 > 1.5)*(V_sat2 - 1.5) + 1.5) : 1
     V_sat2 = 2 + 3*np.log10(CF_param / 1000.0) : 1
 
     # Equation 17
-    P_I = p_1 * np.log(1 + np.exp(((p_2 > 1165) * (p_2 - 1165) + 1165) * V_ihc)) : 1
+    P_I_exponent = p_2 * V_ihc : 1
+    # avoid infinity values
+    P_I = p_1 * ((P_I_exponent < 100) * (np.log(1. + np.exp(P_I_exponent)) - P_I_exponent) + P_I_exponent): 1
 
-    # FIXME: This should follow the calculation in A17, but the formula involves
-    # np.log(2**x - 1) and is not numerically feasible for high values of x
-    p_2 = -5430 + 1010 * np.log(CF_param) : 1
+    # Following Equation A16 (p_2 is the same as P_ST)
+    p_2_exponent = np.log(2) * V_sat / P_rest : 1
+    p_2 = (p_2_exponent < 100) * (np.log(np.exp(p_2_exponent) - 1) - p_2_exponent) + p_2_exponent : 1
 
     # Equation A18-A19
     # Concentration in the stores (as differential instead of difference equation)
@@ -168,7 +182,7 @@ if __name__ == '__main__':
     II. Nonlinear Tuning with a Frequency Glide".
     The Journal of the Acoustical Society of America 114 (2003): 2007.
     '''
-    duration = 50*ms
+    duration = 60*ms
     set_default_samplerate(50*kHz)
     cf = 1000 * Hz
     levels = [0, 20, 40, 60, 80]
@@ -180,8 +194,8 @@ if __name__ == '__main__':
 
     ihc = TanCarney(MiddleEar(tones), [cf] * len(levels), update_interval=1)
     syn = create_synapse(ihc, cf)
-    s_mon = StateMonitor(syn, 's', record=True)
-    R_mon = StateMonitor(syn, 'R', record=True)
+    s_mon = StateMonitor(syn, 's', record=True, clock=syn.clock)
+    R_mon = StateMonitor(syn, 'R', record=True, clock=syn.clock)
     spike_mon = SpikeMonitor(syn)
     net = Network(syn, s_mon, R_mon, spike_mon)
     net.run(duration * 1.5)
@@ -189,6 +203,7 @@ if __name__ == '__main__':
         plt.figure(1)
         plt.subplot(len(levels), 1, idx + 1)
         plt.plot(s_mon.times / ms, s_mon[idx])
+        plt.xlim(0, 120)
         plt.xlabel('Time (msec)')
         plt.ylabel('Sp/sec')
         plt.text(1.25 * duration/ms, np.nanmax(s_mon[idx])/2., '%s SPL' % str(level*dB));
