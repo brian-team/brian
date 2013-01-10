@@ -144,6 +144,42 @@ def test_sound_access():
         assert_sound_properties(snd_sequence, snd.duration * 2,
                                 snd.samplerate, snd.nchannels)
 
+def test_shifting():
+    # one channel
+    snd = tone(1000*Hz, duration=100*ms, samplerate=10*kHz)
+    shifted = snd.shifted(10*ms)
+    assert shifted.duration == 110*ms
+    assert_equal(shifted[:10*ms], silence(duration=10*ms, samplerate=10*kHz))
+    assert_equal(shifted[10*ms:], snd)
+    
+    #fractional shift
+    snd = tone(1000*Hz, duration=100*ms, samplerate=10*kHz)
+    shifted = snd.shifted(10.0*ms, fractional=True)    
+    # actually that leads to a sound with a total length of 109.9ms, 
+    # I think for multiples of the sample rate, using fractional or not should
+    # not make a difference for the length...   
+    assert_equal(shifted[:10*ms], silence(duration=10*ms, samplerate=10*kHz))
+    
+    # several channels
+    snd = Sound([tone(1000*Hz, duration=100*ms, samplerate=10*kHz),
+                 tone(2000*Hz, duration=100*ms, samplerate=10*kHz)],
+                samplerate=10*kHz)
+    shifted = snd.shifted(10*ms)
+    assert shifted.nchannels == snd.nchannels
+    assert shifted.duration == 110*ms
+    for channel in xrange(shifted.nchannels):
+        assert_equal(shifted[:10*ms, channel],
+                     silence(duration=10*ms, samplerate=10*kHz))
+        assert_equal(shifted[10*ms:, channel], snd[:, channel])        
+    
+    #fractional shift
+    shifted = snd.shifted(10.0*ms, fractional=True)
+    assert shifted.nchannels == snd.nchannels
+    for channel in xrange(shifted.nchannels):
+        assert_equal(shifted[:10*ms, channel],
+                     silence(duration=10*ms, samplerate=10*kHz))
+    
+
 def test_linear_filtering():
     ''' Test that linear filtering does not change the source '''
     original_sound = Sound(linspace(-1, 1, 1000))
@@ -154,5 +190,6 @@ def test_linear_filtering():
 if __name__ == '__main__':
     test_sound_construction()
     test_sound_access()
+    test_shifting()
     test_linear_filtering()
     

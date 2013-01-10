@@ -384,7 +384,7 @@ class Sound(BaseSound, numpy.ndarray):
         else:
             if self.nchannels>1:
                 sounds = [self.channel(i).shifted(duration, fractional=True, filter_length=filter_length) for i in xrange(self.nchannels)]
-                return Sound(array(sounds), samplerate=self.samplerate)
+                return Sound(hstack(sounds), samplerate=self.samplerate)
             # Adapted from
             # http://www.labbookpages.co.uk/audio/beamforming/fractionalDelay.html
             delay = duration*self.samplerate
