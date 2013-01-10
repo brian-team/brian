@@ -1,6 +1,7 @@
-from numpy.testing.utils import assert_raises
+from numpy.testing.utils import assert_raises, assert_equal
 
 from brian import *
+#set_global_preferences(useweave=True)
 from brian.hears import *
 
 def assert_sound_properties(snd, duration, samplerate, nchannels):
@@ -143,8 +144,15 @@ def test_sound_access():
         assert_sound_properties(snd_sequence, snd.duration * 2,
                                 snd.samplerate, snd.nchannels)
 
-
+def test_linear_filtering():
+    ''' Test that linear filtering does not change the source '''
+    original_sound = Sound(linspace(-1, 1, 1000))
+    sound = original_sound.copy()
+    filtered = Gammatone(sound, 1000*Hz).process()
+    assert_equal(np.asarray(original_sound), np.asarray(sound))
+    
 if __name__ == '__main__':
     test_sound_construction()
     test_sound_access()
+    test_linear_filtering()
     

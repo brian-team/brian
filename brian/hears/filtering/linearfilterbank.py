@@ -39,7 +39,7 @@ def apply_linear_filterbank(b, a, x, zi):
         alf_cache_a1[curf] = a[:, 1:b.shape[1], curf]
         alf_cache_zi0[curf] = zi[:, 0:b.shape[1]-1, curf]
         alf_cache_zi1[curf] = zi[:, 1:b.shape[1], curf]
-    X = x
+    X = x.copy()
     output = empty_like(X)
     num_cascade = zi.shape[2]
     b_loop_size = b.shape[1]-2
@@ -70,7 +70,7 @@ def apply_linear_filterbank(b, a, x, zi):
 
 if numexpr is not None and False:
     def apply_linear_filterbank(b, a, x, zi):
-        X = x
+        X = x.copy()
         output = empty_like(X)
         for sample in xrange(X.shape[0]):
             x = X[sample]
@@ -113,7 +113,10 @@ if get_global_preference('useweave'):
             # we need to do this so as not to alter the values in x in the C code below
             # but if zi.shape[2] is 1 there is only one filter in the chain and the
             # copy operation at the end of the C code will never happen.
-            x = array(x, copy=True)
+            x = array(x, copy=True, order='C')
+        else:
+            # make sure that the array is in C-order
+            x = asarray(x, order='C')
         y = empty_like(x)
         n, m, p = b.shape
         n1, m1, p1 = a.shape
