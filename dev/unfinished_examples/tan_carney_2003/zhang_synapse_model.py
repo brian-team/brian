@@ -20,10 +20,9 @@ from brian.globalprefs import set_global_preferences
 from brian.threshold import PoissonThreshold
 from brian.reset import CustomRefractoriness
 
-set_global_preferences(useweave=True)
+#set_global_preferences(useweave=True)
 from brian.hears import (Sound, LinearFilterbank, FilterbankGroup,
-                         set_default_samplerate, tone, silence, dB,
-                         TanCarney)
+                         set_default_samplerate, tone, silence, dB, TanCarney)
 
 class MiddleEar(LinearFilterbank):
     '''
@@ -32,15 +31,15 @@ class MiddleEar(LinearFilterbank):
     response of the analog filter at 1000Hz as in the model of Tan & Carney
     (their actual C code does however result in a slightly different
     normalization, the difference in overall level is about 0.33dB (to get
-    exactly the same output as in their model, multiply the filter bank's
-    output with 0.962512703689).
+    exactly the same output as in their model, set the `gain` parameter to
+    0.962512703689).
 
     Tan, Q., and L. H. Carney.
     "A Phenomenological Model for the Responses of Auditory-nerve Fibers.
     II. Nonlinear Tuning with a Frequency Glide".
     The Journal of the Acoustical Society of America 114 (2003): 2007.
     '''
-    def __init__(self, source, **kwds):
+    def __init__(self, source, gain=1, **kwds):
         samplerate = source.samplerate
         zeros = np.array([-200, -200])
         poles = np.array([-250 + 400j, -250 - 400j,
@@ -51,7 +50,7 @@ class MiddleEar(LinearFilterbank):
         resp = np.abs(signal.freqs(b, a, [1000*2*np.pi])[1])  # response magnitude
         b /= resp
         bd, ad = signal.bilinear(b, a, samplerate)
-        bd = np.tile(bd, (source.nchannels, 1))
+        bd = (np.tile(bd, (source.nchannels, 1)).T * gain).T
         ad = np.tile(ad, (source.nchannels, 1))
         LinearFilterbank.__init__(self, source, bd, ad, **kwds)
 
@@ -131,11 +130,11 @@ def create_synapse(source, CF, spont=50*Hz, A_SS=350*Hz, tau_ST=60*ms,
     # Equation 17
     P_I_exponent = p_2 * V_ihc : 1
     # avoid infinity values
-    P_I = p_1 * ((P_I_exponent < 100) * (np.log(1. + np.exp(P_I_exponent)) - P_I_exponent) + P_I_exponent): 1
+    P_I = p_1 * np.clip(np.log(1 + np.exp(P_I_exponent)), -np.inf, np.abs(P_I_exponent) + 1): 1
 
     # Following Equation A16 (p_2 is the same as P_ST)
     p_2_exponent = np.log(2) * V_sat / P_rest : 1
-    p_2 = (p_2_exponent < 100) * (np.log(np.exp(p_2_exponent) - 1) - p_2_exponent) + p_2_exponent : 1
+    p_2 = np.clip(np.log(np.exp(p_2_exponent) - 1), -np.inf, np.abs(p_2_exponent)) : 1
 
     # Equation A18-A19
     # Concentration in the stores (as differential instead of difference equation)
