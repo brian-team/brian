@@ -1,5 +1,13 @@
 from brian import *
-import pygame
+from brian.log import log_info
+
+try:
+    import pygame
+except ImportError:
+    # as this is an experimental package, don't bother the user with a warning
+    log_info('Could not import pygame. The RealtimeConnectionMonitor class '
+             'depends on it.')
+
 import matplotlib.cm as cm
 
 __all__ = ['RealtimeConnectionMonitor']

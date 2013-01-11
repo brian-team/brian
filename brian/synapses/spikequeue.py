@@ -45,7 +45,10 @@ Main methods:
     homogeneous.
 """
 import numpy as np
-from pylab import plot, show
+try:
+    import pylab
+except:
+    pass
 from scipy import weave
 
 from brian.globalprefs import get_global_preference
@@ -405,9 +408,9 @@ class SpikeQueue(SpikeMonitor):
         for i in range(self.X.shape[0]):
             idx = (i + self.currenttime ) % self.X.shape[0]
             data = self.X[idx, :self.n[idx]]
-            plot(idx * np.ones(len(data)), data, '.')
+            pylab.plot(idx * np.ones(len(data)), data, '.')
         if display:
-            show()
+            pylab.show()
 
 try:
     ## CSpikeQueue support!
