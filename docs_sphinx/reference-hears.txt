@@ -74,11 +74,13 @@ Filterbank library
 .. autoclass:: LowPass
 .. autoclass:: AsymmetricCompensation
 
-Cochlear model library
+Auditory model library
 ----------------------
 .. autoclass:: DRNL
 .. autoclass:: DCGC
+.. autoclass:: MiddleEar
 .. autoclass:: TanCarney
+.. autoclass:: ZhangSynapse
 
 Filterbank group
 ----------------
