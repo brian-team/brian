@@ -15,11 +15,9 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
 from brian import *
-set_global_preferences(useweave=True)
+#set_global_preferences(useweave=True)
 from brian.hears import *
-from brian.hears.filtering.tan_carney import TanCarneySignal
-
-from zhang_synapse_model import MiddleEar
+from brian.hears.filtering.tan_carney import TanCarneySignal, MiddleEar
 
 samplerate = 50*kHz
 set_default_samplerate(samplerate)

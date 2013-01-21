@@ -15,10 +15,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from brian import *
-set_global_preferences(useweave=True)
+# set_global_preferences(useweave=True)
 from brian.hears import *
-
-from zhang_synapse_model import MiddleEar, create_synapse
 
 duration = 50*ms
 samplerate = 50*kHz
@@ -33,7 +31,7 @@ tones = Sound([Sound.sequence([tone(freq * Hz, duration).atlevel(level*dB).ramp(
                for freq, level in cf_level])
 
 ihc = TanCarney(MiddleEar(tones), [CF] * len(cf_level), update_interval=2)
-syn = create_synapse(ihc, CF)
+syn = ZhangSynapse(ihc, CF)
 s_mon = StateMonitor(syn, 's', record=True, clock=syn.clock)
 net = Network(syn, s_mon)
 net.run(duration)
