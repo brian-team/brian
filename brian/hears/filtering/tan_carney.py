@@ -1,13 +1,19 @@
-from brian import *
+import numpy as np
+from numpy import pi
+import scipy.signal as signal
+import warnings
 
-from brian.hears.filtering.filterbank import (Filterbank, FunctionFilterbank,
+from brian.stdunits import Hz, ms
+from brian.threshold import PoissonThreshold
+from brian.reset import CustomRefractoriness
+
+from brian.hears.filtering.filterbank import (FunctionFilterbank,
                                               ControlFilterbank,
                                               CombinedFilterbank)
 from brian.hears.filtering.filterbanklibrary import *
 from brian.hears.filtering.linearfilterbank import *
 from brian.hears.filtering.filterbankgroup import FilterbankGroup
-import warnings
-from brian.hears import *
+
 
 __all__=['TanCarney', 'MiddleEar', 'ZhangSynapse']
 
@@ -149,14 +155,14 @@ class ZhangSynapse(FilterbankGroup):
         eqs = '''
         # input into the Synapse
         V_ihc : 1
-    
+
         # CF in Hz
         CF_param : 1
-    
+
         # Equation A17 (using an expression based on the spontaneous rate instead of 18.54, based on the C code)
         V_sat = 20.0*(spont + 1*Hz)/(spont + 5*Hz)*P_Imax*((V_sat2 > 1.5)*(V_sat2 - 1.5) + 1.5) : 1
         V_sat2 = 2 + 3*np.log10(CF_param / 1000.0) : 1
-    
+
         # Equation 17
         P_I_exponent = p_2 * V_ihc : 1
         # avoid infinity values
@@ -165,20 +171,20 @@ class ZhangSynapse(FilterbankGroup):
         # Following Equation A16 (p_2 is the same as P_ST)
         p_2_exponent = np.log(2) * V_sat / P_rest : 1
         p_2 = np.clip(np.log(np.exp(p_2_exponent) - 1), -np.inf, np.abs(p_2_exponent)) : 1
-    
+
         # Equation A18-A19
         # Concentration in the stores (as differential instead of difference equation)
         dC_I/dt = (-P_I*C_I + P_L*(C_L - C_I))/V_I : Hz
         dC_L/dt = (-P_L*(C_L - C_I) + P_G*(C_G - C_L))/V_I : Hz
-    
+
         # time-varying discharge rate (ignoring refractory effects), equation A20
         s = C_I * P_I : Hz
-    
+
         # discharge-history effect (Equation 20 in differential equation form)
         H = c_0*e_0 + c_1*e_1 : 1
         de_0/dt = -e_0/s_0    : 1
         de_1/dt = -e_1/s_1    : 1
-    
+
         # final time-varying discharge rate for the Poisson process, equation 19
         R = s * (1 - H) : Hz
         '''
@@ -204,12 +210,12 @@ def set_parameters(cf,param):
     parameters['fc_LP_control']=800 #Hz
     parameters['fc_LP_fb']=500 #Hz
     parameters['fp1']=1.0854*cf-106.0034
-    parameters['ta']=10**(log10(cf)*1.0230 + 0.1607)
-    parameters['tb']=10**(log10(cf)*1.4292 - 1.1550) - 1000
-    parameters['gain80']=10**(log10(cf)*0.5732 + 1.5220)
-    parameters['rgain']=10**( log10(cf)*0.4 + 1.9)
+    parameters['ta']=10**(np.log10(cf)*1.0230 + 0.1607)
+    parameters['tb']=10**(np.log10(cf)*1.4292 - 1.1550) - 1000
+    parameters['gain80']=10**(np.log10(cf)*0.5732 + 1.5220)
+    parameters['rgain']=10**( np.log10(cf)*0.4 + 1.9)
     parameters['average_control']=0.3357
-    parameters['zero_r']= array(-10**( log10(cf)*1.5-0.9 ))   
+    parameters['zero_r']= np.array(-10**( np.log10(cf)*1.5-0.9 ))   
         
     if param: 
         if not isinstance(param, dict): 
@@ -231,24 +237,24 @@ class Control_Coefficients:
         self.nch=len(cf)
         self.fs_bilinear = 2.0*samplerate#*ones(self.nch)
 #        self.fs_bilinear =tile(self.fs_bilinear.reshape(self.nch,-1),3)
-        self.x_cf=11.9*log10(0.8+cf/456);
+        self.x_cf=11.9*np.log10(0.8+cf/456);
         self.f_shift=(pow(10,((self.x_cf+1.2)/11.9))-0.8)*456-cf
         self.wbw=cf/4.0
-        self.filt_a = zeros((len(cf),3,5), order='F') #8 5
+        self.filt_a = np.zeros((len(cf),3,5), order='F') #8 5
 #        self.filt_a[:,0,:] = 1
-        self.filt_b = zeros((len(cf),3,5), order='F')
+        self.filt_b = np.zeros((len(cf),3,5), order='F')
         self.control_signal = 0
-        self.preal = zeros((self.nch,6))
-        self.pimg = zeros((self.nch,6))
+        self.preal = np.zeros((self.nch,6))
+        self.pimg = np.zeros((self.nch,6))
         self.preal,self.pimg = self.analog_poles()
         
     def return_coefficients(self,control_signal):
         self.wbw=-(self.preal[:,0] - control_signal)/self.PI2
         
         self.gain_norm_bp=((self.PI2**2
-                            * sqrt(self.wbw**2 + self.f_shift**2)
-                            * sqrt((2*self.cf+self.f_shift)**2 + self.wbw**2)
-                            )**3)/sqrt(self.PI2**2*self.cf**2)#       
+                            * np.sqrt(self.wbw**2 + self.f_shift**2)
+                            * np.sqrt((2*self.cf+self.f_shift)**2 + self.wbw**2)
+                            )**3)/np.sqrt(self.PI2**2*self.cf**2)#       
         iord = [1,3,5]  
         
         preal = self.preal[:,iord]-control_signal.T  #actually control_signal is the same for the three channels
@@ -308,11 +314,11 @@ class Signal_Coefficients:
         self.half_order_pole = self.order_of_pole/2
         self.order_of_zero  = self.half_order_pole
 
-        self.filt_a = zeros((len(cf),3,11), order='F')
-        self.filt_b = zeros((len(cf),3,11), order='F')
+        self.filt_a = np.zeros((len(cf),3,11), order='F')
+        self.filt_b = np.zeros((len(cf),3,11), order='F')
         
-        self.preal = zeros((self.nch,20))
-        self.pimg = zeros((self.nch,20))
+        self.preal = np.zeros((self.nch,20))
+        self.pimg = np.zeros((self.nch,20))
         
         self.control_signal = 0
         
@@ -322,19 +328,19 @@ class Signal_Coefficients:
         self.tb= parameters['tb']#    10**(log10(cf)*1.4292 - 1.1550) - 1000
         self.zeroa = parameters['zero_r']# -10**(log10(cf)*1.5-0.9 )  
         
-        self.zeroamat = tile(self.zeroa.reshape(self.nch,-1),10)
+        self.zeroamat = np.tile(self.zeroa.reshape(self.nch,-1),10)
         self.preal,self.pimg = self.analog_poles(0)
 
         
-        self.cfmat = tile(self.cf.reshape(self.nch,-1),20)  
-        self.gain_norm = sqrt(prod((2*pi*self.cfmat-self.pimg[:,0:20])**2+self.preal[:,0:20]**2,axis=1))
+        self.cfmat = np.tile(self.cf.reshape(self.nch,-1),20)  
+        self.gain_norm = np.sqrt(np.prod((2*pi*self.cfmat-self.pimg[:,0:20])**2+self.preal[:,0:20]**2,axis=1))
 
-        self.gain_norm = self.gain_norm /(sqrt((2*pi*self.cf)**2+self.zeroa**2))**self.order_of_zero
+        self.gain_norm = self.gain_norm /(np.sqrt((2*pi*self.cf)**2+self.zeroa**2))**self.order_of_zero
         
     def return_coefficients(self,control_signal):
         self.preal,self.pimg = self.analog_poles(control_signal)
         
-        iord = arange(2,22,2)-1
+        iord = np.arange(2,22,2)-1
         temp=(self.fs_bilinear-self.preal[:,iord])**2 + self.pimg[:,iord]**2
         self.filt_a[:,0,:10] = 1
         self.filt_a[:,1,:10] = -2*(self.fs_bilinear**2-self.preal[:,iord]**2-self.pimg[:,iord]**2)/temp            
@@ -400,11 +406,11 @@ class LowPass_IHC(LinearFilterbank):
         c1LP = ( c/Hz - TWOPI*fc ) / ( c/Hz + TWOPI*fc )
         c2LP = TWOPI*fc/Hz / (TWOPI*fc + c/Hz)
         
-        b_temp = array([c2LP,c2LP])
-        a_temp = array([1,-c1LP])
+        b_temp = np.array([c2LP,c2LP])
+        a_temp = np.array([1,-c1LP])
         
-        filt_b = tile(b_temp.reshape([2,1]),[nch,1,order])               
-        filt_a = tile(a_temp.reshape([2,1]),[nch,1,order]) 
+        filt_b = np.tile(b_temp.reshape([2,1]),[nch,1,order])               
+        filt_a = np.tile(a_temp.reshape([2,1]),[nch,1,order]) 
         filt_b[:,:,0] = filt_b[:,:,0]*gain
 
         LinearFilterbank.__init__(self, source, filt_b, filt_a)
@@ -418,11 +424,11 @@ class LowPass_filter(LinearFilterbank):
         c = 2.0 * self.samplerate
         c1LP = ( c/Hz - TWOPI*fc ) 
         
-        b_temp = array([1,1])/ ( c/Hz + TWOPI*fc )
-        a_temp = array([1,-c1LP/ ( c/Hz + TWOPI*fc )])
+        b_temp = np.array([1,1])/ ( c/Hz + TWOPI*fc )
+        a_temp = np.array([1,-c1LP/ ( c/Hz + TWOPI*fc )])
         
-        filt_b = tile(b_temp.reshape([2,1]),[nch,1,order])               
-        filt_a = tile(a_temp.reshape([2,1]),[nch,1,order]) 
+        filt_b = np.tile(b_temp.reshape([2,1]),[nch,1,order])               
+        filt_a = np.tile(a_temp.reshape([2,1]),[nch,1,order]) 
         filt_b[:,:,order-1] = filt_b[:,:,order-1]*gain
 
         LinearFilterbank.__init__(self, source, filt_b, filt_a)
@@ -430,11 +436,11 @@ class LowPass_filter(LinearFilterbank):
 
 def saturation_fc(x,A0=1,B=1,C=1,D=1):
     ind = x>=0
-    x[ind]=A0*log(x[ind]*B+1.0)   
+    x[ind]=A0*np.log(x[ind]*B+1.0)   
     ind = x<0
     dtemp = (-x[ind])**C
     tempA = -A0*(dtemp+D)/(3*dtemp+D)
-    x[ind]=tempA*log(abs(x[ind])*B+1.0)
+    x[ind]=tempA*np.log(abs(x[ind])*B+1.0)
 
     return x
 
@@ -457,25 +463,25 @@ class TanCarneyControl(CombinedFilterbank):
     def __init__(self, source, cf, update_interval, param=None):
         CombinedFilterbank.__init__(self, source)
         source = self.get_modified_source()       
-        cf = atleast_1d(cf)
+        cf = np.atleast_1d(cf)
         samplerate=source.samplerate
         parameters = set_parameters(cf, param)
         ##### Control Path ####
         # band pass filter
         control_coef = Control_Coefficients(cf, samplerate)
-        [filt_b,filt_a] = control_coef.return_coefficients(zeros((1,len(cf))))        
+        [filt_b,filt_a] = control_coef.return_coefficients(np.zeros((1,len(cf))))        
         BP_control = LinearFilterbank(source,filt_b,filt_a)
                 
         # first non linearity of control path
         Acp,Bcp,Ccp=100.,2.5,0.60 
-        func_NL1_control=lambda x:sign(x)*Bcp*log(1.+Acp*abs(x)**Ccp)
+        func_NL1_control=lambda x:np.sign(x)*Bcp*np.log(1.+Acp*abs(x)**Ccp)
         NL1_control=FunctionFilterbank(BP_control,func_NL1_control)
                 
         # second non linearity of control path
         asym,s0,x1,s1=7.,8.,5.,3. 
         shift = 1./(1.+asym)
-        x0 = s0*log((1.0/shift-1)/(1+exp(x1/s1)))
-        func_NL2_control=lambda x:(1.0/(1.0+exp(-(x-x0)/s0)*(1.0+exp(-(x-x1)/s1)))-shift)*parameters['nlgain']
+        x0 = s0*np.log((1.0/shift-1)/(1+np.exp(x1/s1)))
+        func_NL2_control=lambda x:(1.0/(1.0+np.exp(-(x-x0)/s0)*(1.0+np.exp(-(x-x1)/s1)))-shift)*parameters['nlgain']
         NL2_control=FunctionFilterbank(NL1_control,func_NL2_control)
 
         #control low pass filter (its output will be used to control the signal path)
@@ -497,7 +503,7 @@ class TanCarneySignal(CombinedFilterbank):
 
         CombinedFilterbank.__init__(self, source)
         source = self.get_modified_source()       
-        cf = atleast_1d(cf)
+        cf = np.atleast_1d(cf)
         parameters = set_parameters(cf, param)
         samplerate=source.samplerate
 
@@ -506,7 +512,7 @@ class TanCarneySignal(CombinedFilterbank):
         
         # band pass filter
         signal_coef = Signal_Coefficients(cf, samplerate,parameters)
-        [filt_b,filt_a] = signal_coef.return_coefficients(zeros((1,len(cf))))
+        [filt_b,filt_a] = signal_coef.return_coefficients(np.zeros((1,len(cf))))
         BP_signal = LinearFilterbank(source,filt_b,filt_a)
         
         control_output = TanCarneyControl(source, cf, update_interval, parameters)
@@ -550,7 +556,7 @@ class TanCarney(CombinedFilterbank):
     def __init__(self, source, cf, update_interval, param=None):
         CombinedFilterbank.__init__(self, source)
         source = self.get_modified_source()       
-        cf = atleast_1d(cf)
+        cf = np.atleast_1d(cf)
 
         parameters=set_parameters(cf,param)        
         
