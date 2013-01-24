@@ -553,7 +553,7 @@ class TanCarney(CombinedFilterbank):
         original paper. 
     '''
         
-    def __init__(self, source, cf, update_interval, param=None):
+    def __init__(self, source, cf, update_interval=1, param=None):
         CombinedFilterbank.__init__(self, source)
         source = self.get_modified_source()       
         cf = np.atleast_1d(cf)

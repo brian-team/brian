@@ -138,7 +138,7 @@ class DCGC(CombinedFilterbank):
       param['ERBwidth']= 24.7*(4.37*cf/1000 + 1)
     '''
     
-    def __init__(self, source,cf,update_interval,param={}):
+    def __init__(self, source,cf,update_interval=1,param={}):
         
         CombinedFilterbank.__init__(self, source)
         source = self.get_modified_source()
