@@ -9,9 +9,9 @@ from brian.reset import CustomRefractoriness
 
 from brian.hears.filtering.filterbank import (FunctionFilterbank,
                                               ControlFilterbank,
-                                              CombinedFilterbank)
-from brian.hears.filtering.filterbanklibrary import *
-from brian.hears.filtering.linearfilterbank import *
+                                              CombinedFilterbank,
+                                              RestructureFilterbank)
+from brian.hears.filtering.linearfilterbank import LinearFilterbank
 from brian.hears.filtering.filterbankgroup import FilterbankGroup
 
 
@@ -33,6 +33,14 @@ class MiddleEar(LinearFilterbank):
     The Journal of the Acoustical Society of America 114 (2003): 2007.
     '''
     def __init__(self, source, gain=1, **kwds):
+        # Automatically duplicate mono input to fit the desired output shape
+        gain = np.atleast_1d(gain)
+        if len(gain) != source.nchannels and len(gain) != 1:
+            if source.nchannels != 1:
+                raise ValueError('Can only automatically duplicate source '
+                                 'channels for mono sources, use '
+                                 'RestructureFilterbank.')
+            source = RestructureFilterbank(source, len(gain))
         samplerate = source.samplerate
         zeros = np.array([-200, -200])
         poles = np.array([-250 + 400j, -250 - 400j,
