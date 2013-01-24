@@ -1,7 +1,7 @@
 from numpy.testing.utils import assert_raises, assert_equal
 
 from brian import *
-#set_global_preferences(useweave=True)
+from brian.tests import repeat_with_global_opts
 from brian.hears import *
 
 def assert_sound_properties(snd, duration, samplerate, nchannels):
@@ -179,17 +179,67 @@ def test_shifting():
         assert_equal(shifted[:10*ms, channel],
                      silence(duration=10*ms, samplerate=10*kHz))
     
-
+@repeat_with_global_opts([{'useweave': False},
+                          {'useweave': True}])
 def test_linear_filtering():
     ''' Test that linear filtering does not change the source '''
     original_sound = Sound(linspace(-1, 1, 1000))
     sound = original_sound.copy()
     filtered = Gammatone(sound, 1000*Hz).process()
     assert_equal(np.asarray(original_sound), np.asarray(sound))
+
+
+@repeat_with_global_opts([{'useweave': False},
+                          {'useweave': True}])
+def test_multichannel_processing():
+    '''Make sure that processing multiple channels gives the same results as
+       processing single channels.
+    '''
+    set_default_samplerate(50*kHz)
+    freqs = np.array([100, 1000, 5000])
+    sounds = Sound([harmoniccomplex(float(freq)*Hz,
+                                    duration=5*ms) for freq in freqs])
+    # test some filters that only need a single 'CF' argument in addition
+    # to the source 
+    filters = [Gammatone, DRNL, TanCarney]
+    for one_filter in filters:
+        print one_filter.__name__
+        # process all channels in parallel
+        all_channels = one_filter(sounds, freqs).process()
+        all_channels_array = np.asarray(all_channels)
+        # process each channel separately 
+        for idx, freq in enumerate(freqs):
+            one_channel = one_filter(sounds.channel(idx), freq).process()
+            assert_equal(np.asarray(one_channel).flatten(),
+                         all_channels_array[:, idx])
+
+
+@repeat_with_global_opts([{'useweave': False},
+                          {'useweave': True}])
+def test_middleear():
+    '''Make sure that using multiple gain values in the middle ear model do the
+       expected thing.
+    '''
+    gains = np.arange(1., 5.)
+    snd = harmoniccomplex(1000*Hz, duration=5*ms)
+    # use multiple gains for the same sound
+    all_gains = MiddleEar(snd, gain=gains).process()
+    # same but with RestructureFilterbank
+    all_gains2 = MiddleEar(RestructureFilterbank(snd, len(gains)),
+                           gain=gains).process()
+    assert_equal(np.asarray(all_gains), np.asarray(all_gains2))
     
+    # use single gain values
+    for idx, gain in enumerate(gains):
+        one_gain = MiddleEar(snd, gain=gain).process()
+        assert_equal(np.asarray(all_gains)[:, idx].flatten(),
+                     np.asarray(one_gain).flatten())
+
+
 if __name__ == '__main__':
     test_sound_construction()
     test_sound_access()
     test_shifting()
     test_linear_filtering()
-    
+    test_multichannel_processing()
+    test_middleear()
