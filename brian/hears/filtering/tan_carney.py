@@ -3,9 +3,12 @@ from numpy import pi
 import scipy.signal as signal
 import warnings
 
+from brian.clock import Clock
 from brian.stdunits import Hz, ms
 from brian.threshold import PoissonThreshold
 from brian.reset import CustomRefractoriness
+from brian.neurongroup import NeuronGroup
+from brian.network import network_operation
 
 from brian.hears.filtering.filterbank import (FunctionFilterbank,
                                               ControlFilterbank,
@@ -56,7 +59,60 @@ class MiddleEar(LinearFilterbank):
         LinearFilterbank.__init__(self, source, bd, ad, **kwds)
 
 
-class ZhangSynapse(FilterbankGroup):
+class ZhangSynapseSpikes(NeuronGroup):
+    '''
+    The spike-generating Poisson process (with absolute and relative
+    refractoriness) of an IHC-AN synapse according to the Zhang et al. (2001)
+    model. The `source` has to have a state variable `s`, representing the
+    firing rate (e.g. the class `ZhangSynapseRate`).
+    
+    The `n_per_channel` argument can be used to generate multiple spike trains
+    for every channel of the source group.
+    '''
+    def __init__(self, source, n_per_channel=1, params=None):
+        params = ZhangSynapse._get_parameters(params)
+        c_0, c_1 = params['c_0'], params['c_1']
+        s_0, s_1 = params['s_0'], params['s_1']
+        R_A = params['R_A']
+        eqs =  '''
+        # time-varying discharge rate, input into this model
+        s : Hz
+        
+        # discharge-history effect (Equation 20 in differential equation form)        
+        H = c_0*e_0 + c_1*e_1 : 1
+        de_0/dt = -e_0/s_0    : 1
+        de_1/dt = -e_1/s_1    : 1
+
+        # final time-varying discharge rate for the Poisson process, equation 19
+        R = s * (1 - H) : Hz
+        '''
+        
+        def reset_func(P, spikes):
+            P.e_0[spikes] = 1.0
+            P.e_1[spikes] = 1.0
+
+        # make sure that the s value is first updated in
+        # ZhangSynapseRate, then this NeuronGroup is
+        # updated
+        clock=Clock(dt=source.clock.dt, t=source.clock.t,
+                    order=source.clock.order + 1)
+        
+        @network_operation(clock=clock, when='start')
+        def distribute_input():
+            self.s[:] = source.s.repeat(n_per_channel)
+        
+        NeuronGroup.__init__(self, len(source) * n_per_channel,
+                             model=eqs,
+                             threshold=PoissonThreshold('R'),
+                             reset=CustomRefractoriness(resetfun=reset_func,
+                                                        period=R_A),
+                             clock=clock
+                             )
+        
+        self.contained_objects += [distribute_input]
+
+
+class ZhangSynapse(ZhangSynapseSpikes):
     '''
     A `FilterbankGroup` that represents an IHC-AN synapse according to the
     Zhang et al. (2001) model. The `source` should be a filterbank, producing
@@ -67,7 +123,14 @@ class ZhangSynapse(FilterbankGroup):
     The group emits spikes according to a time-varying Poisson process with
     absolute and relative refractoriness (probability of spiking is given by
     state variable ``R``). The continuous probability of spiking without
-    refractoriness is available in the state variable ``s``.
+    refractoriness is available in the state variable ``s``. 
+
+    The `n_per_channel` argument can be used to generate multiple spike trains
+    for every channel.
+
+    If all you need is the state variable ``s``, you can use the class
+    `ZhangSynapseRate` instead which does not simulate the spike-generating
+    Poisson process.
 
     For details see:
     Zhang, X., M. G. Heinz, I. C. Bruce, and L. H. Carney.
@@ -75,7 +138,7 @@ class ZhangSynapse(FilterbankGroup):
     I. Nonlinear Tuning with Compression and Suppression".
     The Journal of the Acoustical Society of America 109 (2001): 648.
     '''
-
+    
     @staticmethod
     def _get_parameters(params=None):
         # Default values for parameters from table 1, Zhang et al. 2001
@@ -95,14 +158,31 @@ class ZhangSynapse(FilterbankGroup):
         if params is None:
             return default_params
     
-        for param, value in params.iter_values():
+        for param, value in params.iteritems():
             if not param in default_params:
                 raise KeyError(('"%s" is not a valid parameter, '
                                 'has to be one of: %s') % (param,
                                                            str(default_params.keys())))
             default_params[param] = value
         
-        return default_params 
+        return default_params     
+    
+    def __init__(self, source, CF, n_per_channel=1, params=None):
+        params = ZhangSynapse._get_parameters(params)
+        
+        rate_model = ZhangSynapseRate(source, CF, params)        
+        ZhangSynapseSpikes.__init__(self, rate_model, n_per_channel, params)
+        
+        self.contained_objects += [rate_model]
+
+
+class ZhangSynapseRate(FilterbankGroup):
+    '''
+    A `FilterbankGroup` that represents an IHC-AN synapse according to the
+    Zhang et al. (2001) model, see `ZhangSynapse` for details. This class does
+    not actually generate any spikes, it only simulates the time-varying
+    firing rate (not taking refractory effects into account) `s`.
+    '''
 
     def __init__(self, source, CF, params=None):
         
@@ -187,30 +267,13 @@ class ZhangSynapse(FilterbankGroup):
 
         # time-varying discharge rate (ignoring refractory effects), equation A20
         s = C_I * P_I : Hz
-
-        # discharge-history effect (Equation 20 in differential equation form)
-        H = c_0*e_0 + c_1*e_1 : 1
-        de_0/dt = -e_0/s_0    : 1
-        de_1/dt = -e_1/s_1    : 1
-
-        # final time-varying discharge rate for the Poisson process, equation 19
-        R = s * (1 - H) : Hz
         '''
     
-        def reset_func(P, spikes):
-            P.e_0[spikes] = 1.0
-            P.e_1[spikes] = 1.0
-    
-        FilterbankGroup.__init__(self, source, 'V_ihc',
-                                 model=eqs,
-                                 threshold=PoissonThreshold('R'),
-                                 reset=CustomRefractoriness(resetfun=reset_func,
-                                                            period=R_A)
-                                 )
+        FilterbankGroup.__init__(self, source, 'V_ihc', model=eqs)
         self.CF_param = CF
         self.C_I = C_Irest
         self.C_L = C_Lrest
-
+        
 
 def set_parameters(cf,param):
     
