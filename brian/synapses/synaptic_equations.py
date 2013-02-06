@@ -19,6 +19,10 @@ class SynapticEquations(Equations):
     '''
     def __init__(self, expr='', level=0, **kwds):
         self._eventdriven={} # dictionary event driven variables (RHS)
+        # might be set to True in the Synapses __init__ function if the model
+        # equations refer to variables in the pre- or postsynaptic group.
+        # In this case, the model is never linear
+        self.refers_others = False
         Equations.__init__(self, expr, level=level+1, **kwds)
 
     def add_diffeq(self, name, eq, unit, global_namespace={}, local_namespace={}, nonzero=True):
@@ -39,6 +43,12 @@ class SynapticEquations(Equations):
             self._eventdriven[name]=eq
         else:
             Equations.add_diffeq(self,name, eq, unit, global_namespace, local_namespace, nonzero)
+
+    def is_linear(self):
+        if self.refers_others:
+            return False
+        return Equations.is_linear(self)
+
 
 if __name__=='__main__':
     tau_pre=10*ms

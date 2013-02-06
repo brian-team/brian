@@ -186,6 +186,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         post_vars = [var for var in source.var_index if isinstance(var,str)] # postsynaptic variables
         post_ids2 = list(ids.intersection(set(post_vars))) # post variables without the _post suffix
 
+        # remember whether our equations refer to any variables in the pre- or
+        # postsynaptic group. This is important for the state-updater, e.g. the
+        # equations can no longer be solved as linear equations.
+        model.refers_others = (len(pre_ids) + len(post_ids) + len(post_ids2) > 0)
+
         # Insert static equations for pre and post variables
         S=self
         for name in pre_ids:
