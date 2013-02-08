@@ -203,6 +203,10 @@ def test_construction_single_synapses():
                 for j in xrange(5, len(subgroup2))])
     assert all([len(syn.delay[i, j]) == 0 for i in xrange(5, len(subgroup1))
                 for j in xrange(5, len(subgroup2))])
+    
+    # Create a synapse without a model (e.g. a simple connection with constant
+    # weights
+    syn = Synapses(subgroup1, subgroup2, model='', pre='v+=1')
 
 def test_construction_multiple_synapses():
     '''

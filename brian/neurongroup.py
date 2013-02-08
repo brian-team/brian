@@ -32,6 +32,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 # ----------------------------------------------------------------------------------
 # 
+from brian.stateupdater import LazyStateUpdater
 '''
 Neuron groups
 '''
@@ -289,27 +290,32 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             self._state_updater = model # Update mechanism
             self._all_units = defaultdict()
         elif isinstance(model, Equations):
-            self._eqs = model
-            if (init == None) and (model._units == {}):
-                raise AttributeError, "The group must be initialized."
-            self._state_updater, var_names = magic_state_updater(model, clock=clock, order=order,
-                                                                 check_units=unit_checking, implicit=implicit,
-                                                                 compile=compile, freeze=freeze,
-                                                                 method=method)
-            Group.__init__(self, model, N, unit_checking=unit_checking)
-            self._all_units = model._units
-            # Converts S0 from dictionary to tuple
-            if self._S0 == None: # No initialization: 0 with units
-                S0 = {}
+            if len(model) == 0:
+                self._eqs = model
+                self._state_updater = LazyStateUpdater(0)
+                self._all_units = defaultdict()
             else:
-                S0 = self._S0.copy()
-            # Fill missing units
-            for key, value in model._units.iteritems():
-                if not key in S0:
-                    S0[key] = 0 * value
-            self._S0 = [0] * len(var_names)
-            for var, i in zip(var_names, count()):
-                self._S0[i] = S0[var]
+                self._eqs = model
+                if (init == None) and (model._units == {}):
+                    raise AttributeError, "The group must be initialized."
+                self._state_updater, var_names = magic_state_updater(model, clock=clock, order=order,
+                                                                     check_units=unit_checking, implicit=implicit,
+                                                                     compile=compile, freeze=freeze,
+                                                                     method=method)
+                Group.__init__(self, model, N, unit_checking=unit_checking)
+                self._all_units = model._units
+                # Converts S0 from dictionary to tuple
+                if self._S0 == None: # No initialization: 0 with units
+                    S0 = {}
+                else:
+                    S0 = self._S0.copy()
+                # Fill missing units
+                for key, value in model._units.iteritems():
+                    if not key in S0:
+                        S0[key] = 0 * value
+                self._S0 = [0] * len(var_names)
+                for var, i in zip(var_names, count()):
+                    self._S0[i] = S0[var]
         else:
             raise TypeError, "StateUpdater must be specified at initialization."
         # TODO: remove temporary unit hack, this makes all state variables dimensionless if no units are specified
