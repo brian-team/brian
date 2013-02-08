@@ -1,7 +1,6 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; threshold
    pair: example usage; NeuronGroup
    pair: example usage; run
    pair: example usage; log

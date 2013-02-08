@@ -5,7 +5,7 @@
    pair: example usage; run
    pair: example usage; raster_plot
    pair: example usage; SpikeMonitor
-   pair: example usage; group
+   pair: example usage; Synapses
    pair: example usage; StateMonitor
 
 .. _example-synapses_noisy_ring:
@@ -18,7 +18,6 @@ Integrate-and-fire neurons with noise
 ::
 
     from brian import *
-    from brian.experimental.synapses import *
     
     tau = 10 * ms
     sigma = .5

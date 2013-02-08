@@ -7,7 +7,8 @@ for k, v in itertools.chain(
                 brian.hears.__dict__.iteritems()
                 ):
     try:
-        if 'brian' in inspect.getsourcefile(v):
+        # do not add modules (e.g. synapses is a common variable name)
+        if 'brian' in inspect.getsourcefile(v) and not inspect.ismodule(v):
             documentable_names.add(k)
     except TypeError:
         pass

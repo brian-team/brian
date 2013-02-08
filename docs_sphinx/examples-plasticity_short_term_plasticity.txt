@@ -1,11 +1,10 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; STP
+   pair: example usage; Connection
    pair: example usage; NeuronGroup
    pair: example usage; run
-   pair: example usage; Connection
-   pair: example usage; STP
-   pair: example usage; stp
    pair: example usage; StateMonitor
 
 .. _example-plasticity_short_term_plasticity:

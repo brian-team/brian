@@ -3,6 +3,7 @@
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
+   pair: example usage; Synapses
    pair: example usage; StateMonitor
 
 .. _example-synapses_short_term_plasticity:
@@ -15,7 +16,6 @@ Example with short term plasticity.
 ::
 
     from brian import *
-    from brian.experimental.synapses import *
     
     tau_e = 3 * ms
     taum = 10 * ms
@@ -53,7 +53,6 @@ Example with short term plasticity.
                       x*=(1-u)
                       u+=U*(1-u)''')
     S[:,:]='i==j' # one to one connection
-    #S.connect_one_to_one(input,neuron) # equivalent instruction
     S.w=A_SE
     # Initialization of STP variables
     S.x = 1

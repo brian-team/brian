@@ -8,7 +8,6 @@
    pair: example usage; Connection
    pair: example usage; PoissonGroup
    pair: example usage; exp
-   pair: example usage; stdp
 
 .. _example-frompapers_Kremer_et_al_2011:
 

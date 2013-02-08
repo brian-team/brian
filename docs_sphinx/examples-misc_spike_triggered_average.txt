@@ -21,6 +21,7 @@ Those spikes are used in conjunction with the input signal to retrieve the filte
     from brian import *
     from brian.hears import *
     from numpy.random import randn
+    from numpy.linalg import norm
     from matplotlib import pyplot
     
     dt = 0.1*ms

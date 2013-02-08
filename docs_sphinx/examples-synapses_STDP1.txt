@@ -1,10 +1,11 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
+   pair: example usage; Synapses
    pair: example usage; PoissonGroup
    pair: example usage; run
    pair: example usage; PopulationRateMonitor
+   pair: example usage; NeuronGroup
 
 .. _example-synapses_STDP1:
 
@@ -16,19 +17,9 @@ Adapted from Song, Miller and Abbott (2000) and Song and Abbott (2001)
 
 This simulation takes a long time!
 
-Works!
-
-Original time: 278 s
-with DelayConnection: 478 s
-
-* New time: 479 s
-* with precomputed offsets: 444 s
-* with fixed delays: 454 s (?)
-
 ::
 
     from brian import *
-    from brian.experimental.synapses import *
     from time import time
     
     N = 1000

@@ -5,17 +5,14 @@
    pair: example usage; NeuronGroup
    pair: example usage; Repeat
    pair: example usage; run
-   pair: example usage; filterbank
+   pair: example usage; Gammatone
    pair: example usage; FunctionFilterbank
-   pair: example usage; clock
-   pair: example usage; IRCAM_LISTEN
    pair: example usage; RestructureFilterbank
    pair: example usage; Connection
    pair: example usage; erbspace
    pair: example usage; FilterbankGroup
-   pair: example usage; Gammatone
    pair: example usage; whitenoise
-   pair: example usage; hrtf
+   pair: example usage; IRCAM_LISTEN
    pair: example usage; SpikeCounter
 
 .. _example-frompapers_Goodman_Brette_2010:

@@ -3,6 +3,7 @@
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
+   pair: example usage; Synapses
    pair: example usage; StateMonitor
 
 .. _example-synapses_gapjunctions:
@@ -15,7 +16,6 @@ Neurons with gap junctions
 ::
 
     from brian import *
-    from brian.experimental.synapses import *
     
     N = 10
     v0=1.05

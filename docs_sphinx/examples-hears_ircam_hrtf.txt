@@ -3,7 +3,6 @@
 .. index::
    pair: example usage; whitenoise
    pair: example usage; IRCAM_LISTEN
-   pair: example usage; filterbank
 
 .. _example-hears_ircam_hrtf:
 

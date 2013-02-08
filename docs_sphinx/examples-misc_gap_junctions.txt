@@ -7,7 +7,6 @@
    pair: example usage; raster_plot
    pair: example usage; network_operation
    pair: example usage; SpikeMonitor
-   pair: example usage; group
    pair: example usage; StateMonitor
 
 .. _example-misc_gap_junctions:

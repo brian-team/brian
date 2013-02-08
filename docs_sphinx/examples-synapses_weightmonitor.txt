@@ -2,9 +2,10 @@
 
 .. index::
    pair: example usage; NeuronGroup
-   pair: example usage; PoissonGroup
    pair: example usage; run
    pair: example usage; PopulationRateMonitor
+   pair: example usage; PoissonGroup
+   pair: example usage; Synapses
    pair: example usage; StateMonitor
 
 .. _example-synapses_weightmonitor:
@@ -18,7 +19,6 @@ STDP example.
 ::
 
     from brian import *
-    from brian.experimental.synapses import *
     from time import time
     
     N = 1000

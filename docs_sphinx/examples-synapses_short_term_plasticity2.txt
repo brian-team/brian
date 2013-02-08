@@ -3,6 +3,7 @@
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
+   pair: example usage; Synapses
    pair: example usage; StateMonitor
 
 .. _example-synapses_short_term_plasticity2:
@@ -16,9 +17,6 @@ with event-driven updates defined by differential equations.
 ::
 
     from brian import *
-    from brian.experimental.synapses import *
-    
-    #log_level_debug()
     
     tau_e = 3 * ms
     taum = 10 * ms

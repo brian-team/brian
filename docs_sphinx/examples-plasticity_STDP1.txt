@@ -5,9 +5,8 @@
    pair: example usage; run
    pair: example usage; PopulationRateMonitor
    pair: example usage; Connection
-   pair: example usage; STDP
    pair: example usage; PoissonGroup
-   pair: example usage; stdp
+   pair: example usage; STDP
 
 .. _example-plasticity_STDP1:
 

@@ -6,7 +6,6 @@
    pair: example usage; raster_plot
    pair: example usage; Connection
    pair: example usage; SpikeMonitor
-   pair: example usage; group
    pair: example usage; StateMonitor
 
 .. _example-misc_noisy_ring:

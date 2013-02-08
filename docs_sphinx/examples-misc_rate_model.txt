@@ -2,9 +2,8 @@
 
 .. index::
    pair: example usage; NeuronGroup
-   pair: example usage; run
-   pair: example usage; group
    pair: example usage; PoissonThreshold
+   pair: example usage; run
    pair: example usage; PopulationRateMonitor
 
 .. _example-misc_rate_model:

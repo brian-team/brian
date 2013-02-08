@@ -1,8 +1,9 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
    pair: example usage; run
+   pair: example usage; NeuronGroup
+   pair: example usage; Synapses
    pair: example usage; StateMonitor
 
 .. _example-synapses_nonlinear_synapses:
@@ -16,7 +17,6 @@ NMDA synapses
 
     from brian import *
     import time
-    from brian.experimental.synapses import *
     
     a=1/(10*ms)
     b=1/(10*ms)

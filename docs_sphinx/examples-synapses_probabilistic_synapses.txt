@@ -4,6 +4,7 @@
    pair: example usage; NeuronGroup
    pair: example usage; PoissonGroup
    pair: example usage; run
+   pair: example usage; Synapses
    pair: example usage; StateMonitor
 
 .. _example-synapses_probabilistic_synapses:
@@ -18,9 +19,6 @@ Seems to work.
 ::
 
     from brian import *
-    from brian.experimental.synapses import *
-    
-    #log_level_debug()
     
     N=20
     tau=5*ms

@@ -5,7 +5,7 @@
    pair: example usage; run
    pair: example usage; PopulationRateMonitor
    pair: example usage; PopulationSpikeCounter
-   pair: example usage; Connection
+   pair: example usage; Synapses
    pair: example usage; Equations
 
 .. _example-synapses_CUBA:
@@ -26,9 +26,6 @@ Synapses with zero delays: 5.2 s
     
     from brian import *
     import time
-    from brian.experimental.synapses import *
-    #log_level_debug()
-    #set_global_preferences(useweave=False)
     
     start_time = time.time()
     taum = 20 * ms
@@ -54,18 +51,12 @@ Synapses with zero delays: 5.2 s
     we = (60 * 0.27 / 10) * mV # excitatory synaptic weight (voltage)
     wi = (-20 * 4.5 / 10) * mV # inhibitory synaptic weight
     
-    if True:
-    ########### NEW SYNAPSE CODE
-        Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we')
-        Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi')
-        Se[:,:]=0.02
-        Si[:,:]=0.02
-        Se.delay='rand()*ms'
-        Si.delay='rand()*ms'
-    else:
-    ########### OLD CODE
-        Ce = Connection(Pe, P, 'ge', weight=we, sparseness=0.02, delay=(0*ms,1*ms))
-        Ci = Connection(Pi, P, 'gi', weight=wi, sparseness=0.02, delay=(0*ms,1*ms))
+    Se = Synapses(Pe, P, model = 'w : 1', pre = 'ge += we')
+    Si = Synapses(Pi, P, model = 'w : 1', pre = 'gi += wi')
+    Se[:,:]=0.02
+    Si[:,:]=0.02
+    Se.delay='rand()*ms'
+    Si.delay='rand()*ms'
     
     P.v = Vr + rand(len(P)) * (Vt - Vr)
     

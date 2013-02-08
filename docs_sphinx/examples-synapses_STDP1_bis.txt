@@ -1,11 +1,11 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
+   pair: example usage; Synapses
    pair: example usage; PoissonGroup
-   pair: example usage; set_global_preferences
    pair: example usage; run
    pair: example usage; PopulationRateMonitor
+   pair: example usage; NeuronGroup
 
 .. _example-synapses_STDP1_bis:
 
@@ -24,9 +24,7 @@ New time: 416 s
 ::
 
     from brian import *
-    from brian.experimental.synapses import *
     from time import time
-    set_global_preferences(useweave=False)
     
     N = 1000
     taum = 10 * ms
