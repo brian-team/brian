@@ -183,6 +183,9 @@ class Equations(object):
         self._frozen = False # True if all units and parameters are gone
         self._prepared = False
 
+        if expr is None:
+            expr = ''
+
         if not isinstance(expr, str): # assume it is a sequence of Equations objects
             for eqs in expr:
                 if not isinstance(eqs, Equations):
