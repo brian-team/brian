@@ -530,8 +530,7 @@ def get_spikes(model=None, reset=None, threshold=None,
     
     **Arguments**
     
-    ``model``, ``reset``, ``threshold``, ``input``, ``input_var``, ``dt``,
-    ``initial_values``
+    ``model``, ``reset``, ``threshold``, ``input``, ``input_var``, ``dt``, ``initial_values``
         Same parameters as for the ``modelfitting`` function.
         
     ``**params``
