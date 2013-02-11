@@ -12,14 +12,27 @@ import numpy
 from brian_setup_info import version
 
 class optional_build_ext(build_ext):
-    # This class allows C extension building to fail.
+    '''
+    This class allows the building of C extensions to fail and still continue
+    with the building process. This ensures that installation never fails, even
+    on systems without a C compiler, for example.
+    If brian is installed in an environment where building C extensions
+    *should* work, set the environment variable BRIAN_SETUP_FAIL_ON_ERROR
+    '''
+    
     def build_extension(self, ext):
         try:
             build_ext.build_extension(self, ext)
-        except CCompilerError:
-            sys.stderr.write(('Building %s failed (see error message(s) '
-                              'above) -- pure Python version will be used '
-                              'instead.\n') % ext.name) 
+        except CCompilerError as ex:
+            if os.getenv('BRIAN_SETUP_FAIL_ON_ERROR', False):
+                raise ex
+            else:
+                error_msg = ('Building %s failed (see error message(s) '
+                             'above) -- pure Python version will be used '
+                             'instead.') % ext.name                             
+                sys.stderr.write('*' * len(error_msg) + '\n' +
+                                 error_msg + '\n' +
+                                 '*' * len(error_msg) + '\n') 
 
 long_description = '''
 Brian is a simulator for spiking neural networks available on almost all platforms.
@@ -88,6 +101,7 @@ setup(name='brian',
             ],
   ext_modules=ext_modules,
   cmdclass={'build_ext' : optional_build_ext},
+  provides=['brian'],
   requires=['matplotlib(>=0.90.1)',
             'numpy(>=1.4.1)',
             'scipy(>=0.7.0)'
