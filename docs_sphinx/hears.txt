@@ -453,16 +453,18 @@ Finally, Brian hears comes with a series of complex nonlinear cochlear models
 developed to model nonlinear effects such as filter bandwith level dependency,
 two-tones suppression, peak position level dependency, etc.
 
+.. tabularcolumns::|p{3cm}|p{15cm}|p{3cm}|
+
 +------------------------------------+---------------------------------------------------------------------------------------------------+------------------------------------------------------------+
 | Class                              | Description                                                                                       |  Example                                                   |
 +====================================+===================================================================================================+============================================================+
 | :class:`DRNL`                      | Dual resonance nonlinear filter as described in Lopez-Paveda and Meddis, JASA 2001                | :ref:`example-hears_drnl`                                  |
 +------------------------------------+---------------------------------------------------------------------------------------------------+------------------------------------------------------------+
-| :class:`DCGC`                      |Compressive gammachirp auditory filter as described in  Irino and Patterson, JASA 2001             | :ref:`example-hears_dcgc`                                  |
+| :class:`DCGC`                      | Compressive gammachirp auditory filter as described in  Irino and Patterson, JASA 2001            | :ref:`example-hears_dcgc`                                  |
 +------------------------------------+---------------------------------------------------------------------------------------------------+------------------------------------------------------------+
-| :class:`TanCarney`                 |Auditory phenomenological model as described in  Tan and Carney, JASA 2003                         | :ref:`example-hears-tan_carney_2003_tan_carney_simple_test`|                                           |
+| :class:`TanCarney`                 | Auditory phenomenological model as described in  Tan and Carney, JASA 2003                        | :ref:`example-hears-tan_carney_2003_tan_carney_simple_test`|
 +------------------------------------+---------------------------------------------------------------------------------------------------+------------------------------------------------------------+
-| :class:`ZhangSynapse`              | Model of an inner hair cell -- auditory nerve synapse (Zhang et al., JASA 2001)                   | :ref:`example-hears-tan_carney_2003_tan_carney_simple_test`|                                           |
+| :class:`ZhangSynapse`              | Model of an inner hair cell -- auditory nerve synapse (Zhang et al., JASA 2001)                   | :ref:`example-hears-tan_carney_2003_tan_carney_simple_test`|
 +------------------------------------+---------------------------------------------------------------------------------------------------+------------------------------------------------------------+
 
 .. index::
