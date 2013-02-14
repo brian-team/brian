@@ -23,7 +23,7 @@ class optional_build_ext(build_ext):
     def build_extension(self, ext):
         try:
             build_ext.build_extension(self, ext)
-        except CCompilerError as ex:
+        except CCompilerError, ex:
             if os.getenv('BRIAN_SETUP_FAIL_ON_ERROR', False):
                 raise ex
             else:
