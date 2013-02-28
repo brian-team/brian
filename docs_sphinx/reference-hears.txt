@@ -93,6 +93,12 @@ Functions
 .. autofunction:: erbspace
 .. autofunction:: asymmetric_compensation_coeffs
 
+Plotting
+--------
+
+.. autofunction:: log_frequency_xaxis_labels
+.. autofunction:: log_frequency_yaxis_labels
+
 HRTFs
 -----
 

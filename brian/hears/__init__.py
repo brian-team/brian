@@ -6,3 +6,4 @@ from erb import *
 from filtering import *
 from hrtf import *
 from db import *
+from plotting import *
