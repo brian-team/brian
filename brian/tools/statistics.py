@@ -230,7 +230,7 @@ def vector_strength(spikes, period):
     '''
     Returns the vector strength of the given train
     '''
-    return abs(mean(exp(array(spikes) * 1j / period)))
+    return abs(mean(exp(array(spikes) * 1j * 2 * pi / period)))
 
 # Normalize the coincidence count of two spike trains (return the gamma factor)
 def get_gamma_factor(coincidence_count, model_length, target_length, target_rates, delta):
