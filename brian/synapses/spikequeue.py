@@ -68,7 +68,7 @@ class SpikeQueue(SpikeMonitor):
     ``source``
         The neuron group that sends spikes.
     ``synapses``
-        A list of synapses (synapses[i]=array of synapse indexes for neuron i).
+        A list of synapses (synapses[i]=array of synapse indices for neuron i).
     ``delays``
         An array of delays (delays[k]=delay of synapse k).  
     ``max_delay=0*ms``
@@ -215,6 +215,14 @@ class SpikeQueue(SpikeMonitor):
         '''      
         return self.X[self.currenttime,:self.n[self.currenttime]]
     
+    def _update_delays(self, delays):
+        '''
+        Internal method to update the delays, used by the Synapses class when the delays are dynamically varied.
+        Delays are assumed to be represented as floating values in second, hence the conversion to "timestep delays" is handled here.
+        '''
+        #log_debug('brian.synapses.spikequeue', 'Updating delays...')
+        self.delays = np.array(np.floor(delays/self.source.clock.dt), dtype = int)+1
+    
     def precompute_offsets(self):
         '''
         Precompute all offsets corresponding to delays. This assumes that
@@ -335,6 +343,7 @@ class SpikeQueue(SpikeMonitor):
                 synaptic_events=np.hstack([self.synapses[i].data for i in spikes]) # could be not efficient
                 self.insert_homogeneous(self.delays[0],synaptic_events)
             elif self._offsets is None: # vectorise over synaptic events
+                # there are no precomputed offsets, this is the case (in particular) when there are dynamic delays
                 synaptic_events=np.hstack([self.synapses[i].data for i in spikes])
                 if len(synaptic_events):
                     delay = self.delays[synaptic_events]
@@ -399,6 +408,13 @@ class SpikeQueue(SpikeMonitor):
              compiler=self._cpp_compiler,
              extra_compile_args=self._extra_compile_args)
         return ofs
+
+    def __repr__(self):
+        res = 'SpikeQueue(shape = (%d, %d), ' % (self.X.shape)
+        res += 'max_delay = %.1f ms)' % (self._max_delay/ms)
+        return res
+        
+    
 
     ######################################## UTILS    
     def plot(self, display = True):

@@ -196,6 +196,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         for name in pre_ids:
             model.add_eq(name+'_pre', 'S.source.'+name+'[S.presynaptic[:]]', source.unit(name),
                          global_namespace={'S':S})
+
         for name in post_ids:
             model.add_eq(name+'_post', 'S.target.'+name+'[S.postsynaptic[:]]', target.unit(name),
                          global_namespace={'S':S})
@@ -203,6 +204,10 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             if name not in model._string: # check that it is not already defined
                 model.add_eq(name, 'S.target.state_(__'+name+')[S.postsynaptic[:]]', target.unit(name),
                              global_namespace={'S':S,'__'+name:name})
+        # Dynamical delays hack
+
+
+            
 
         self.source=source
         self.target=target
@@ -228,6 +233,12 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         Things we may need to add:
         * _pre and _post suffixes
         '''       
+        if "delay" in self.var_index:
+            self.has_variable_delays = True
+            log_debug('brian.synapses', 'Variable delays (presynaptic) detected')
+        else:
+            self.has_variable_delays = False
+
         self._iscompressed=False # True if compress() has already been called
         
         # Look for event-driven code in the differential equations
@@ -275,6 +286,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         # Set last spike to -infinity
         if 'lastupdate' in self.var_index:
             self.lastupdate=-1e6
+
         # _S is turned to a dynamic array - OK this is probably not good! we may lose references at this point
         S=self._S
         self._S=DynamicArray(S.shape)
@@ -286,6 +298,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
         # Pre and postsynaptic synapses (i->synapse indexes)
         max_synapses=2147483647 # it could be explicitly reduced by a keyword
+
         # We use a loop instead of *, otherwise only 1 dynamic array is created
         self.synapses_pre=[DynamicArray1D(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.source))]
         self.synapses_post=[DynamicArray1D(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.target))]
@@ -301,7 +314,13 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             code,_namespace=self.generate_code(pre,level+1,code_namespace=code_namespace)
             self.codes.append(code)
             self.namespaces.append(_namespace)
-            self.queues.append(SpikeQueue(self.source, self.synapses_pre, self._delay_pre[i], max_delay = max_delay))
+            
+            if self.has_variable_delays:
+                _precompute_offsets = False
+            else:
+                _precompute_offsets = True
+            self.queues.append(SpikeQueue(self.source, self.synapses_pre, self._delay_pre[i], max_delay = max_delay, precompute_offsets = _precompute_offsets))
+            
         
         if post is not None:
             code,_namespace=self.generate_code(post,level+1,direct=True,code_namespace=code_namespace)
@@ -567,7 +586,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             # Turn into dictionaries
             synapses_pre=dict(zip(pre_slice,synapses_pre))
             synapses_post=dict(zip(post_slice,synapses_post))
-        elif isinstance(value,str): # string code assignment
+        elif isinstance(value, str): # string code assignment
             # For subgroups, origin of i and j are shifted to subgroup origin
             if isinstance(pre,NeuronGroup):
                 pre_shift=pre_slice[0]
@@ -658,7 +677,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.postsynaptic[nsynapses_all:]=postsynaptic
         for delay_pre in self._delay_pre:
             delay_pre.resize(nsynapses_all+newsynapses)
-        self._delay_post.resize(nsynapses_all+newsynapses)
+        if synapses_post is not None:
+            self._delay_post.resize(nsynapses_all+newsynapses)
         if synapses_pre is None:
             synapses_pre=invert_array(presynaptic,dtype=self.synapses_post[0].dtype)
         for i,synapses in synapses_pre.iteritems():
@@ -678,7 +698,9 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         if not hasattr(self, 'var_index'):
             raise AttributeError
         if (name=='delay_pre') or (name=='delay'): # default: delay is presynaptic delay
-            if len(self._delay_pre)>1:
+            if name == 'delay' and self.has_variable_delays: # handle variable delays
+                return SynapticVariable(self.state(name), self, name) # stored as floats for update (i.e not SynapticDelayVar)
+            if len(self._delay_pre) > 1:
                 return [SynapticDelayVariable(delay_pre,self,name) for delay_pre in self._delay_pre]
             else:
                 return SynapticDelayVariable(self._delay_pre[0],self,name)
@@ -691,13 +713,15 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             return NeuronGroup.__getattr__(self,name)
         
     def __setattr__(self, name, val):
-        if (name=='delay_pre') or (name=='delay'):
-            if len(self._delay_pre)==1:
-                SynapticDelayVariable(self._delay_pre[0],self,name)[:]=val
-            else:
-                raise NotImplementedError,"Cannot assign multiple delays at the same time"
-        elif name=='delay_post':
-            SynapticDelayVariable(self._delay_post,self,name)[:]=val
+        if ((name=='delay_pre') or (name=='delay') or (name=='delay_post')) and (not self.has_variable_delays):
+            # if only constant delays, then delays are held in the _delay_pre (list of array) and _delay_post (array) data
+            if name=='delay_post':
+                SynapticDelayVariable(self._delay_post,self,name)[:]=val
+            else: #i.e (name=='delay_pre') or (name=='delay'):
+                if len(self._delay_pre)==1:
+                    SynapticDelayVariable(self._delay_pre[0], self, name)[:]=val
+                else:
+                    raise NotImplementedError,"Cannot assign multiple delays at the same time"
         else: # copied from Group
             origname = name
             if len(name) and name[-1] == '_':
@@ -729,6 +753,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
                 _namespace['t'] = self.clock._t
                 exec code in _namespace
             queue.next()
+            if self.has_variable_delays:
+                queue._update_delays(_namespace['delay'])#self._S[self.var_index['delay'],:])
             
     def connect_one_to_one(self,pre=None,post=None):
         '''

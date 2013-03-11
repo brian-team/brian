@@ -44,7 +44,7 @@ class SynapticVariable(object):
     ``synapses``
         The Synapses object.
     '''
-    def __init__(self,data,synapses,name):
+    def __init__(self, data, synapses, name):
         self.data=data
         self.name=name
         self.synapses=synapses
@@ -60,12 +60,12 @@ class SynapticVariable(object):
         return self.data[self.synapses.synapse_index(i)]
 
     def __setitem__(self,i,value,level=1):
-        synapses=self.synapses.synapse_index(i)
-        if isinstance(value,str):
-            value=self._interpret(value,synapses,level+1)
-        self.data[synapses]=value
+        synapses = self.synapses.synapse_index(i)
+        if isinstance(value, str):
+            value = self._interpret(value, synapses, level+1)
+        self.data[synapses] = value
         
-    def _interpret(self,value,synapses,level):
+    def _interpret(self, value, synapses, level):
         '''
         Interprets value string in the context of the synaptic indexes synapses
         '''
@@ -80,7 +80,7 @@ class SynapticVariable(object):
                 _namespace[var] = self.synapses.state(var)[synapses]
         _namespace['rand'] = self._Replacer(np.random.rand, len(synapses))
         _namespace['randn'] = self._Replacer(np.random.randn, len(synapses))
-        return eval(code,_namespace)
+        return eval(code, _namespace)
 
 class SynapticDelayVariable(SynapticVariable):
     '''
@@ -91,19 +91,19 @@ class SynapticDelayVariable(SynapticVariable):
     
     TODO: pass the clock as argument.
     '''
-    def __init__(self,data,synapses,name):
-        SynapticVariable.__init__(self,data,synapses,name)
+    def __init__(self, data, synapses, name):
+        SynapticVariable.__init__(self, data, synapses, name)
         
-    def __getitem__(self,i):
-        return SynapticVariable.__getitem__(self,i)*self.synapses.clock.dt
+    def __getitem__(self, i):
+        return SynapticVariable.__getitem__(self, i)*self.synapses.clock.dt
 
-    def __setitem__(self,i,value,level=1):
+    def __setitem__(self, i, value, level=1):
         # will not work with computed values (strings)
-        synapses=self.synapses.synapse_index(i)
+        synapses = self.synapses.synapse_index(i)
         if isinstance(value,str):
-            value=self._interpret(value,synapses,level+1)
-        self.data[synapses]=np.array(np.array(value)/self.synapses.clock.dt,dtype=self.data.dtype)
-
+            value = self._interpret(value,synapses,level+1)
+        self.data[synapses] = np.array(np.array(value)/self.synapses.clock.dt,dtype=self.data.dtype)
+    
 def slice_to_array(s,N=None):
     '''
     Converts a slice s, single int or array to the corresponding array of integers.
