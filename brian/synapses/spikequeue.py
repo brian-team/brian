@@ -434,7 +434,9 @@ try:
     has_cspikequeue = True
     class SpikeQueue(_cspikequeue.SpikeQueue, SpikeMonitor):
         def __init__(self, source, synapses, delays,
-                     max_delay = 60*ms, maxevents = INITIAL_MAXSPIKESPER_DT):
+                     max_delay = 60*ms, maxevents = INITIAL_MAXSPIKESPER_DT,
+                     precompute_offsets = True):
+            self._precompute_offsets = precompute_offsets
             SpikeMonitor.__init__(self, source, record = False)
 
             nsteps = int(np.floor(max_delay/self.source.clock.dt))+1
