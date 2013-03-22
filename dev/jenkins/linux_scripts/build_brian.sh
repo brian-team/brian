@@ -9,7 +9,7 @@ cd ~/.jenkins/virtual_envs/$PythonVersion/$packages
 # if no system-wide packages are used, update numpy etc. to newest version
 if [[ $packages == "newest" ]]; then
   echo "Using newest available package versions"
-  bin/pip install --upgrade numpy 
+  bin/pip install --upgrade numpy==1.6.2 
   bin/pip install --upgrade scipy
   bin/pip install sympy==0.7.1
   if [[ $PythonVersion == "python2.5" ]]; then
