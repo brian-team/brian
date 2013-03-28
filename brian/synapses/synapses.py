@@ -670,15 +670,18 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         # Resize dynamic arrays and push new values
         newsynapses=len(presynaptic) # number of new synapses
         nvars,nsynapses_all=self._S.shape
+        
         self._S.resize((nvars,nsynapses_all+newsynapses))
         self.presynaptic.resize(nsynapses_all+newsynapses)
         self.presynaptic[nsynapses_all:]=presynaptic
         self.postsynaptic.resize(nsynapses_all+newsynapses)
         self.postsynaptic[nsynapses_all:]=postsynaptic
+
         for delay_pre in self._delay_pre:
             delay_pre.resize(nsynapses_all+newsynapses)
-        if synapses_post is not None:
-            self._delay_post.resize(nsynapses_all+newsynapses)
+
+        self._delay_post.resize(nsynapses_all+newsynapses)
+        
         if synapses_pre is None:
             synapses_pre=invert_array(presynaptic,dtype=self.synapses_post[0].dtype)
         for i,synapses in synapses_pre.iteritems():
