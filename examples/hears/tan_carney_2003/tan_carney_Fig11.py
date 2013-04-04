@@ -8,9 +8,6 @@ Tan, Q., and L. H. Carney.
     The Journal of the Acoustical Society of America 114 (2003): 2007.
 '''
 
-
-import itertools
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -18,13 +15,23 @@ from brian import *
 # set_global_preferences(useweave=True)
 from brian.hears import *
 
+def product(*args):
+    # Simple (and inefficient) variant of itertools.product that works for
+    # Python 2.5 (directly returns a list instead of yielding one item at a
+    # time)
+    pools = map(tuple, args)
+    result = [[]]
+    for pool in pools:
+        result = [x+[y] for x in result for y in pool]
+    return result
+
 duration = 50*ms
 samplerate = 50*kHz
 set_default_samplerate(samplerate)
 CF = 2200
 freqs = np.arange(250.0, 3501., 50.)
 levels = [10, 30, 50, 70, 90]
-cf_level = list(itertools.product(freqs, levels))
+cf_level = product(freqs, levels)
 tones = Sound([Sound.sequence([tone(freq * Hz, duration).atlevel(level*dB).ramp(when='both',
                                                                                 duration=2.5*ms,
                                                                                 inplace=False)])
