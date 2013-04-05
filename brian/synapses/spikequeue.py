@@ -51,7 +51,7 @@ except:
     pass
 from scipy import weave
 
-from brian.globalprefs import get_global_preference
+from brian.globalprefs import get_global_preference, exists_global_preference, define_global_preference
 from brian.monitor import SpikeMonitor
 from brian.stdunits import ms
 import warnings
@@ -430,8 +430,16 @@ class SpikeQueue(SpikeMonitor):
 
 try:
     ## CSpikeQueue support!
+    # replaces the SpikeQueue object by a wrapper for the C++ version
+    # this is only if the import statement below doesn't fail (i.e. the c version is compiled)
+
+    ## try to import the CSpikeQueue
     import brian.experimental.cspikequeue.cspikequeue as _cspikequeue
     has_cspikequeue = True
+
+    ## OK, now replace SpikeQueue by a wrapper to the C version
+    # this adds compatibility easily to all usual the arguments of SpikeQueue
+    # hence the arguments should match those of the class above
     class SpikeQueue(_cspikequeue.SpikeQueue, SpikeMonitor):
         def __init__(self, source, synapses, delays,
                      max_delay = 60*ms, maxevents = INITIAL_MAXSPIKESPER_DT,

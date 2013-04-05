@@ -204,15 +204,22 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             if name not in model._string: # check that it is not already defined
                 model.add_eq(name, 'S.target.state_(__'+name+')[S.postsynaptic[:]]', target.unit(name),
                              global_namespace={'S':S,'__'+name:name})
-        # Dynamical delays hack
-
-
-            
 
         self.source=source
         self.target=target
         
-        NeuronGroup.__init__(self, 0,model=model,clock=clock,level=level+1,unit_checking=unit_checking,method=method,freeze=freeze,implicit=implicit,order=order)
+        NeuronGroup.__init__(self, 0,
+                             model=model, clock=clock, level=level+1,
+                             unit_checking=unit_checking, method=method,
+                             freeze=freeze, implicit=implicit, order=order)
+        
+        # Dynamical delays
+        if "delay" in self.var_index: # if there is a "delay" variable specified in the model eqns
+            self.has_variable_delays = True # remember it 
+            log_debug('brian.synapses', 'Variable delays (presynaptic) detected') # tell the user
+        else:
+            self.has_variable_delays = False
+
         '''
         At this point we have:
         * a state matrix _S with all variables
@@ -233,11 +240,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         Things we may need to add:
         * _pre and _post suffixes
         '''       
-        if "delay" in self.var_index:
-            self.has_variable_delays = True
-            log_debug('brian.synapses', 'Variable delays (presynaptic) detected')
-        else:
-            self.has_variable_delays = False
+
 
         self._iscompressed=False # True if compress() has already been called
         
