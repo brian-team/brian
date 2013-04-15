@@ -11,7 +11,12 @@ if [[ $packages == "newest" ]]; then
   echo "Using newest available package versions"
   bin/pip install --upgrade numpy 
   bin/pip install --upgrade scipy
-  bin/pip install sympy==0.7.1
+  
+  if [[ ${PythonVersion:0:1} == '2' ]]; then
+  	bin/pip install --upgrade sympy
+  else
+  	bin/pip http://sympy.googlecode.com/files/sympy-0.7.2-py3.2.tar.gz
+  fi
   if [[ $PythonVersion == "python2.5" ]]; then
     # matplotlib 1.2 is no longer compatible with Python 2.5
     bin/pip install --upgrade matplotlib==1.1
