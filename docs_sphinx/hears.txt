@@ -309,7 +309,7 @@ earlier, and feed it into a noisy leaky integrate-and-fire model as follows::
 	cfmin, cfmax, cfN = 20*Hz, 20*kHz, 3000
 	cf = erbspace(cfmin, cfmax, cfN)
 	sound = Sound.whitenoise(100*ms)
-	gfb = GammatoneFilterbank(sound, cf)
+	gfb = Gammatone(sound, cf)
 	ihc = FunctionFilterbank(gfb, lambda x: 3*clip(x, 0, Inf)**(1.0/3.0))
 	# Leaky integrate-and-fire model with noise and refractoriness
 	eqs = '''
