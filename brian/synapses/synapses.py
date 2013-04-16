@@ -138,7 +138,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     def __init__(self, source, target = None, model = None, pre = None, post = None,
              max_delay = 0*ms,
              level = 0,
-             clock = None,code_namespace=None,
+             clock = None, code_namespace=None,
              unit_checking = True, method = None, freeze = False, implicit = False, order = 1): # model (state updater) related
         
         target=target or source # default is target=source
@@ -659,7 +659,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         # Now create the synapses
         self.create_synapses(presynaptic,postsynaptic,synapses_pre,synapses_post)
     
-    def create_synapses(self,presynaptic,postsynaptic,synapses_pre=None,synapses_post=None):
+    def create_synapses(self, presynaptic, postsynaptic,
+                        synapses_pre = None, synapses_post = None):
         '''
         Create new synapses.
         * synapses_pre: a mapping from presynaptic neuron to synapse indexes
@@ -925,9 +926,61 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             if np.isscalar(i[0]) and np.isscalar(i[1]):
                 return self.synapse_index(i[:2])[i[2]]
             else:
-                raise NotImplementedError,"The first two coordinates must be integers"
+                raise NotImplementedError, "The first two coordinates must be integers"
         return i
     
+    def save_connectivity(self, fn):
+        '''
+        Saves the connectivity matrices and delays so that they can be reloaded afterwards. 
+        
+        Notice that this only saves the connectivity, not the current state of the variables in the Synapses class. In fact, it is completely decoupled from the pre/post synaptic groups, and the models of the Synapses object.
+        
+        Example: Say we want to save the connectivity of Synapses, and some other state of the network, say ``my_state''. We would simply do:
+        
+        array_to_save = synapses.my_state[:,:]
+        synapses.save_connectivity('./somefile')
+
+        new_synapses = Synapses(newgroup0, newgroup0, model = newmodel, pre = newpre, ...)
+        new_synapses.load_connectivity('./somefile')
+        new_synapses.my_state[:,:] = array_that_was_saved_and_then_reloaded
+        
+        Note: You have to deal with dynamical delays as you would with any other variable.
+        '''
+        if isinstance(fn, str):
+            f = open(fn, 'w')
+        else:
+            f = fn
+            
+        nvars, nsynapses_all = self._S.shape
+        
+        # prepare to save the connectivity itself
+        savez_args = { 
+            'presynaptic' : self.presynaptic,
+            'postsynaptic' : self.postsynaptic,
+            '_delay_pre' : self._delay_pre,
+            '_delay_post' : self._delay_post
+        }
+        
+
+        np.savez(f, **savez_args)
+        return 1
+
+    def load_connectivity(self, fn):
+        '''
+        Loads a connectivity saved with the ``save'' option, this reloads the synapses as they were saved, between thge same neuron (indices), and with the same delays. See the documentation for save_connectivity.
+        '''
+        if isinstance(fn, str):
+            f = open(fn, 'r')
+        else:
+            f = fn
+
+        data = np.load(f)
+
+        self.create_synapses(data['presynaptic'],
+                             data['postsynaptic'])
+        self._delay_pre = data['_delay_pre']
+        self._delay_post = data['_delay_post']
+
     def __repr__(self):
         return 'Synapses object with '+ str(len(self))+ ' synapses'
 
