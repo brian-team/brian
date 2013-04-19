@@ -2,7 +2,7 @@
 Synaptic variables.
 '''
 import numpy as np
-
+from brian.log import log_debug
 from brian.inspection import namespace
 
 __all__=['SynapticVariable','SynapticDelayVariable','slice_to_array']
@@ -43,6 +43,9 @@ class SynapticVariable(object):
         Vector of values.
     ``synapses``
         The Synapses object.
+
+    .. automethod:: to_matrix(self, multiple_synapses = 'last')
+    
     '''
     def __init__(self, data, synapses, name):
         self.data=data
@@ -81,6 +84,55 @@ class SynapticVariable(object):
         _namespace['rand'] = self._Replacer(np.random.rand, len(synapses))
         _namespace['randn'] = self._Replacer(np.random.randn, len(synapses))
         return eval(code, _namespace)
+        
+    def to_matrix(self, multiple_synapses = 'last'):
+        '''
+        Returns the wanted state as a matrix of shape (# presynaptic neurons, # postsynaptic neurons) for visualization purposes. 
+        The returned array value at [i,j] is the value of the wanted synaptic variable for the synapse between (i, j). If not synapse exists between those two neurons, then the value is ``np.nan''.
+
+        * Dealing with multiple synapses between two neurons
+
+        Outputting a 2D matrix is not generally possible, because multiple synapses can exist for a given pair or pre- and post-synaptic neurons.
+        In this case, the state values for all the synapses between neurons i and j are aggregated in the (i, j) position of the matrix. This is done according to the ``multiple_synapses'' keyword argument which can be changed:
+        
+        ``mutiple_synapses = 'last' '' (default) takes the last value
+        ``mutiple_synapses = 'first' '' takes the first value
+        ``mutiple_synapses = 'min' '' takes the min of the values
+        ``mutiple_synapses = 'max' '' takes the max of the values
+        ``mutiple_synapses = 'sum' '' takes the sum of the values
+        
+        Please note that this function should be used for visualization, and should not be used to store or reload synaptic variable values. 
+        If you want to do so, refer to the documentation at :meth:`Synapses.save_connectivity`.
+        '''
+        
+        Nsource = len(self.synapses.source)
+        Ntarget = len(self.synapses.target)
+        Nsynapses = len(self.synapses)
+        
+        output = np.ones((Nsource, Ntarget)) * np.nan
+
+        for isyn in xrange(Nsynapses):
+            # this is the couple index of the presynaptic and postsynaptic neurons.
+            curidx = (self.synapses.presynaptic[isyn], self.synapses.postsynaptic[isyn])
+            if multiple_synapses == 'last' or np.isnan(output[curidx]):
+                # no previously found synapse, or we want the last one
+                output[curidx] = self.data[isyn]
+            elif multiple_synapses == 'first':
+                # if we want the first one, it's already set
+                pass
+            else:
+                # in this case, we try to use the numpy function as named by the multiple_synapses keyword
+                # it's a trick to make this code impossible to understand.
+                try: 
+                    # there already was a synapse, we aggregate data
+                    exec('output[curidx] = np.'+multiple_synapses+'([output[curidx], self.data[isyn]])')
+                except AttributeError:
+                    log_debug('brian.synapticvariable', 'Couldn\'t figure out how to handle multiple synapses when creating matrix')
+                    raise
+
+        return output
+                
+    
 
 class SynapticDelayVariable(SynapticVariable):
     '''
