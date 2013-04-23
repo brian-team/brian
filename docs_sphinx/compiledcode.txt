@@ -23,30 +23,27 @@ C++ objects
 -----------
 
 For maximum compatibility, Brian works with pure Python only. However, as well as the optional
-weave optimisations, there are also objects used in the spike propagation code that can run
-with a pure C++ version for a considerable speedup. For this to work, you need a copy of the ``gcc`` compiler
-installed (either on linux, mac or through cygwin on Windows) to build them
+weave optimisations, there are also objects can run with a pure C++ version for a considerable speedup.
+For this to work, you need a copy of the ``gcc`` compiler installed (either on Linux, Mac or through cygwin on Windows)
+to build them. During installation (via ``easy_install``, ``pip`` or with ``python setup.py install``), two objects
+are compiled automatically: `brian.utils.fastexp.fastexp` (providing a fast, approximate exponential function) and
+`brian.utils.ccircular.ccircular` (a circular array data structure). If the compilation fails, a warning message
+will be displayed and the pure Python versions used instead.
 
-There are two such objects, one (SpikeQueue) is the more recent datastructure underlying the Synapses object, the second one will be deprecated in the 2.x versions of Brian (Circular array) because it is used by the older Connection object. Both the installation routines are similar: only the folder in which the setup command is run differs.
-
-* C++ SpikeQueue installation (Synapses objects):
+In addition, it is possible to compile a C++ version of a more recent datastructure underlying the Synapses object, the `SpikeQueue`.
+To compile this object, follow these instructions: 
 
 In a command prompt or shell window, go to the directory where Brian is installed. On Windows this
-will probably be ``C:\Python25\lib\site-packages\brian``. Now
+will probably be ``C:\Python27\lib\site-packages\brian``. Now
 go to the ``Brian/brian/experimental/cspikequeue`` folder. If you're on Linux (and this may also work for Mac) run
-the command ``python setup.py build_ext --inplace``. If you're on windows you'll need to have cygwin with gcc
+the command ``python setup.py build_ext --inplace``. If you're on Windows you'll need to have cygwin with gcc
 installed, and then you run ``setup.py build_ext --inplace -c mingw32`` instead. You should see some
 compilation, possibly with some warnings but no errors.
 
-If all works OK, you should see a UserWarning when importing Brian. You can uninstall (an effectively switch off) the use of the C++ SpikeQueue by removing the ``*.so`` file in the ``experimental/cspikequeue/`` directory. Repeating the steps above (i.e. recompiling the object) will re-enable the C SpikeQueue.
+If all works OK, you should see a UserWarning when importing Brian. You can uninstall (and effectively switch off) the use of the C++ SpikeQueue by removing the ``*.so`` file in the ``experimental/cspikequeue/`` directory. Repeating the steps above (i.e. recompiling the object) will re-enable the C SpikeQueue.
 
-* Circular array installation (Connection objects):
-
-For the circular array, the installation is very similar to the C++ SpikeQueue, except you have to navigate to a different folder.
-In a command prompt or shell window, go to the directory where Brian is installed. On Windows this
-will probably be ``C:\Python25\lib\site-packages\brian``. Then, go to the ``Brian/brian/utils/ccircular`` folder and run the same commands as described above.
-
-Similarly, if all works fine, you should see a warning when importing Brian.
+The same steps can also be used for compiling the `ccircular` or `fastexp` if they were not already compiled automatically during installation, just navigate
+to the respective directory. 
 
 Automatically generated C code
 ------------------------------
