@@ -44,7 +44,7 @@ class SynapticVariable(object):
     ``synapses``
         The Synapses object.
 
-    .. automethod:: to_matrix(self, multiple_synapses = 'last')
+    .. automethod:: brian.synapses.synapticvariable.SynapticVariable.to_matrix
     
     '''
     def __init__(self, data, synapses, name):
@@ -85,21 +85,25 @@ class SynapticVariable(object):
         _namespace['randn'] = self._Replacer(np.random.randn, len(synapses))
         return eval(code, _namespace)
         
-    def to_matrix(self, multiple_synapses = 'last'):
+    def to_matrix(self, multiple_synapses='last'):
         '''
         Returns the wanted state as a matrix of shape (# presynaptic neurons, # postsynaptic neurons) for visualization purposes. 
-        The returned array value at [i,j] is the value of the wanted synaptic variable for the synapse between (i, j). If not synapse exists between those two neurons, then the value is ``np.nan''.
+        The returned array value at [i,j] is the value of the wanted synaptic variable for the synapse between (i, j). If not synapse exists between those two neurons, then the value is ``np.nan``.
 
         * Dealing with multiple synapses between two neurons
 
         Outputting a 2D matrix is not generally possible, because multiple synapses can exist for a given pair or pre- and post-synaptic neurons.
-        In this case, the state values for all the synapses between neurons i and j are aggregated in the (i, j) position of the matrix. This is done according to the ``multiple_synapses'' keyword argument which can be changed:
+        In this case, the state values for all the synapses between neurons i and j are aggregated in the (i, j) position of the matrix. This is done according to the ``multiple_synapses`` keyword argument which can be changed:
         
-        ``mutiple_synapses = 'last' '' (default) takes the last value
-        ``mutiple_synapses = 'first' '' takes the first value
-        ``mutiple_synapses = 'min' '' takes the min of the values
-        ``mutiple_synapses = 'max' '' takes the max of the values
-        ``mutiple_synapses = 'sum' '' takes the sum of the values
+        ``mutiple_synapses = 'last'`` (default) takes the last value
+        
+        ``mutiple_synapses = 'first'`` takes the first value
+        
+        ``mutiple_synapses = 'min'`` takes the min of the values
+        
+        ``mutiple_synapses = 'max'`` takes the max of the values
+        
+        ``mutiple_synapses = 'sum'`` takes the sum of the values
         
         Please note that this function should be used for visualization, and should not be used to store or reload synaptic variable values. 
         If you want to do so, refer to the documentation at :meth:`Synapses.save_connectivity`.

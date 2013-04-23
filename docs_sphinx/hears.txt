@@ -104,9 +104,11 @@ hears packages as follows::
 To download Brian hears, simply :ref:`download Brian <installation>`:
 Brian hears is included as part of the package.
 
-.. seealso:: Reference documentation for :ref:`brian-hears-reference`, which
-			 covers everything in this overview in detail, and more. List of
-			 :ref:`examples of using Brian hears <examples-hears>`.
+.. seealso::
+
+	Reference documentation for :ref:`brian-hears-reference`, which
+	covers everything in this overview in detail, and more. List of
+	:ref:`examples of using Brian hears <examples-hears>`.
 
 .. index::
 	single: sound
