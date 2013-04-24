@@ -11,7 +11,7 @@ from random import sample
 from scipy import rand, randn
 
 from brian.inspection import get_identifiers, namespace
-from brian.log import log_debug
+from brian.log import log_debug, log_warn
 from brian.neurongroup import NeuronGroup
 from brian.optimiser import AffineFunction, symbolic_eval
 from brian.stdunits import ms
@@ -216,7 +216,8 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         # Dynamical delays
         if "delay" in self.var_index: # if there is a "delay" variable specified in the model eqns
             self.has_variable_delays = True # remember it 
-            log_debug('brian.synapses', 'Variable delays (presynaptic) detected') # tell the user
+            log_warn('brian.synapses', 'Variable delays (presynaptic) detected '
+                     '-- note that this feature is still experimental') # tell the user
         else:
             self.has_variable_delays = False
 
