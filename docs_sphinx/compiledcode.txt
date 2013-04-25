@@ -35,7 +35,7 @@ To compile this object, follow these instructions:
 
 In a command prompt or shell window, go to the directory where Brian is installed. On Windows this
 will probably be ``C:\Python27\lib\site-packages\brian``. Now
-go to the ``Brian/brian/experimental/cspikequeue`` folder. If you're on Linux (and this may also work for Mac) run
+go to the ``experimental/cspikequeue`` folder. If you're on Linux (and this may also work for Mac) run
 the command ``python setup.py build_ext --inplace``. If you're on Windows you'll need to have cygwin with gcc
 installed, and then you run ``setup.py build_ext --inplace -c mingw32`` instead. You should see some
 compilation, possibly with some warnings but no errors.
