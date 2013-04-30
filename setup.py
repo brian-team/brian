@@ -46,23 +46,31 @@ development tools, excellent documentation and a large community of users provid
 support and extension packages.
 '''
 
+
+
+# Allow switching off extensions to allow building a pure Python Windows
+# installer
 ext_modules = []
-utils_path = os.path.join('brian', 'utils')
-ext_modules.append(Extension('brian.utils.fastexp._fastexp',
-                             sources=[os.path.join(utils_path,
-                                                   'fastexp', x) for x in
-                                                   ('fastexp_wrap.cxx',
-                                                    'fastexp.cpp',
-                                                    'fexp.c')],
-                                 include_dirs=[numpy.get_include()]
-                                 ))
-ext_modules.append(Extension('brian.utils.ccircular._ccircular',
-                             sources=[os.path.join(utils_path,
-                                                   'ccircular', x) for x in
-                                                   ('ccircular_wrap.cxx',
-                                                    'circular.cpp')],
-                                 include_dirs=[numpy.get_include()]
-                                 ))    
+if not os.getenv('BRIAN_SETUP_NO_EXTENSIONS', False):    
+    utils_path = os.path.join('brian', 'utils')
+    ext_modules.append(Extension('brian.utils.fastexp._fastexp',
+                                 sources=[os.path.join(utils_path,
+                                                       'fastexp', x) for x in
+                                                       ('fastexp_wrap.cxx',
+                                                        'fastexp.cpp',
+                                                        'fexp.c')],
+                                     include_dirs=[numpy.get_include()]
+                                     ))
+    ext_modules.append(Extension('brian.utils.ccircular._ccircular',
+                                 sources=[os.path.join(utils_path,
+                                                       'ccircular', x) for x in
+                                                       ('ccircular_wrap.cxx',
+                                                        'circular.cpp')],
+                                     include_dirs=[numpy.get_include()]
+                                     ))    
+
+
+print 'ext_modules:', ext_modules
 
 setup(name='brian',
   version=version,
