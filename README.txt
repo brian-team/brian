@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.4.1dev
+Version: 1.4.1
 Authors:
 	Romain Brette
 		http://audition.ens.fr/brette/
@@ -21,9 +21,10 @@ Team:
 
 Requirements: Python (version 2.5-7), the following modules:
 
-* numpy
-* scipy (preferably 0.7 or later)
-* pylab
+* numpy (version >=1.4.1)
+* scipy (version >= 0.7)
+* matplotlib (version >=0.90.1, optional, necessary for plotting )
+* sympy (optional, necessary for the "event-based" feature in Synapses)
 
 Windows: run the installer exe file
 
@@ -50,6 +51,52 @@ See the documentation in the extras download, or online:
 	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.4.0 to 1.4.1
+----------------------
+
+Major features:
+* C extensions are compiled by default during installation (with a fallback to
+  the Python version if compilation fails) -- this might lead to a considerable
+  speedup for users who did not compile those extensions manually before 
+
+Minor features:
+* Convenience methods for the Synapses class, allowing to save and load the
+  connectivity and to convert the weights into a matrix
+* A new openmp option to switch on the use of OpenMP pragmas in generated C code
+* Brian hears: Two new models, MiddleEar (filtering by the middle ear) and 
+  ZhangSynapse (model of the IHC-AN synapse) 
+* Brian hears: New convenience functions to get reasonable axis ticks for
+  logarithmic axes
+  
+Improvements:
+* Brian's documentation is now also available under brian.readthedocs.org
+* ProgressReporter has context manager support (i.e. can be used in "with"
+  statements)
+* NeuronGroup and Synapses work with empty model specifications. 
+* C version of SpikeContainer is now picklable
+ 
+Bug fixes:
+* Synaptic equations referring to variables in the pre- or postsynaptic group
+  are never considered as being linear (fixes ticket #83)
+* Fix issue with static equations in synaptic models (see
+  https://groups.google.com/d/msg/briansupport/-/uqxLK_yoqKUJ )
+* Make LinearStateUpdater pickable, even if array B is "NotImplemented".
+* Fixed the bug in which the StateSpikeMonitor didn't record variables defined
+  with a static equation.
+  
+* Important bug fixes for brian hears, all users are encouraged to update:
+	* Make sure that LinearFilterbank copies it source and therefore not
+	  changes it (when not using weave) (fixes ticket #73)
+	* Fix some bugs in the TanCarney model
+	* Fix shifting multi-channel sounds with fractional=True (fixes ticket #80)
+
+Experimental features:
+* A C version of SpikeQueue (used in the Synapses class), which can lead to a
+  considerable speedup (see "Advanced concepts/Compiled code" for instructions
+  how to use it).
+* Delays can be specified as a parameters of the Synapses model and then be
+  changed dynamically.
 
 Version 1.3.1 to 1.4.0
 ----------------------
