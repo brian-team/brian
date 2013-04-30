@@ -107,6 +107,10 @@ setup(name='brian',
                     'brian.utils.sparse_patch',
             ],
   ext_modules=ext_modules,
+  # Add the source files for the CSpikeQueue as package data so they end up
+  # being included in the installation directory for a possible later manual
+  # build.
+  package_data={'brian.experimental.cspikequeue': ['*.h', '*.c??']},
   cmdclass={'build_ext' : optional_build_ext},
   provides=['brian'],
   requires=['matplotlib(>=0.90.1)',
