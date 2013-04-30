@@ -13,4 +13,6 @@ pathname = os.path.abspath(os.path.dirname(__file__))
 os.chdir(pathname)
 os.chdir('../../../.') # work from Brian's root
 run_setup('setup.py', ['register'])
+os.environ['BRIAN_SETUP_NO_EXTENSIONS'] = '1' 
 run_setup('setup.py', ['--plat-name=win32', 'sdist', 'bdist_wininst', 'upload'])
+del os.environ['BRIAN_SETUP_NO_EXTENSIONS']
