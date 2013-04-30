@@ -13,4 +13,4 @@ pathname = os.path.abspath(os.path.dirname(__file__))
 os.chdir(pathname)
 os.chdir('../../../.') # work from Brian's root
 run_setup('setup.py', ['register'])
-run_setup('setup.py', ['sdist', 'bdist_wininst', 'upload'])
+run_setup('setup.py', ['--plat-name=win32', 'sdist', 'bdist_wininst', 'upload'])
