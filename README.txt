@@ -26,9 +26,12 @@ Requirements: Python (version 2.5-7), the following modules:
 * matplotlib (version >=0.90.1, optional, necessary for plotting )
 * sympy (optional, necessary for the "event-based" feature in Synapses)
 
-Windows: run the installer exe file
+All operating systems: run 'python setup.py install' from the download folder.
 
-Others: run 'python setup.py install' from the download folder.
+Windows: You can run the installer exe file, but note that this is a pure
+         Python version without compiled C extensions. You can manually
+         compile them by following the instructions in the documentation
+         (see "Advanced concepts/Compiled code").
 
 ==== Extras ================================================================
 
