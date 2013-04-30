@@ -70,8 +70,6 @@ if not os.getenv('BRIAN_SETUP_NO_EXTENSIONS', False):
                                      ))    
 
 
-print 'ext_modules:', ext_modules
-
 setup(name='brian',
   version=version,
   py_modules=['brian_unit_prefs', 'brian_no_units', 'brian_no_units_no_warnings'],
