@@ -187,8 +187,13 @@ to edit the Download page on the Trac Wiki to point to the new release.
 
 Upload to PyPI
 --------------
-(Has to be done manually)
+Using Jenkins
+~~~~~~~~~~~~~
+Select "Build now" for the "PyPI upload" job and enter the username and
+password for you PyPI account.
 
+Manually
+~~~~~~~~
 You use the dev/tools/newrelease/register_pypi.py script to register
 the data on PyPI. Note that you need a PyPI account that is authorised
 to make changes to Brian. Also note that you need a file .pypirc in
