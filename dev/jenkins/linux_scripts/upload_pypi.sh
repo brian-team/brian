@@ -1,7 +1,12 @@
 #! /bin/bash
 
 # Create a .pypirc file in the home directory 
-echo "[pypi]" > ~/.pypirc
+echo "[distutils]
+index-servers =
+	pypi
+
+[pypi]" > ~/.pypirc
+
 echo "username: " "$USERNAME" >> ~/.pypirc
 echo "password: " "$PASSWORD" >> ~/.pypirc
 
