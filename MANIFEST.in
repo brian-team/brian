@@ -1,1 +1,3 @@
 recursive-include brian *.py *.c *.h *.i *.cpp *.cxx *.bat
+include brian_setup_info.py
+

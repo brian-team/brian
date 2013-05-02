@@ -9,6 +9,11 @@ from distutils.errors import CCompilerError
 
 import numpy
 
+# Insert the path of the directory where setup.py is located to sys.path,
+# we need to import brian_setup_info from there
+setup_path = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, setup_path)
+
 from brian_setup_info import version
 
 class optional_build_ext(build_ext):
