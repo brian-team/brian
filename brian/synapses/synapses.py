@@ -90,13 +90,15 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
 
         Returns the synapse indexes correspond to i, which can be a tuple or a slice.
         If i is a tuple (m,n), m and n can be an integer, an array, a slice or a subgroup.
-    
-    The following usages are also possible for a Synapses object ``S``:
+
+    .. automethod:: save_connectivity
+        
+    *The following usages are also possible for a Synapses object ``S``*:
     
     ``len(S)``
         Returns the number of synapses in ``S``.
         
-    Attributes:
+    **Attributes**:
     
     ``delay``
         The presynaptic delays for all synapses (synapse->delay). If there are multiple
@@ -109,7 +111,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         The time of last update of all synapses (synapse->last update). This
         only exists if there are dynamic synaptic variables.
     
-    Internal attributes:
+    *Internal attributes*:
     
     ``source``
         The source neuron group.
@@ -932,18 +934,19 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     
     def save_connectivity(self, fn):
         '''
-        Saves the connectivity matrices and delays so that they can be reloaded afterwards. 
+        Saves the connectivity matrices and delays to a file ``fn``, so that they can be reloaded afterwards. 
         
         Notice that this only saves the connectivity, not the current state of the variables in the Synapses class. In fact, it is completely decoupled from the pre/post synaptic groups, and the models of the Synapses object.
         
-        Example: Say we want to save the connectivity of Synapses, and some other state of the network, say ``my_state''. We would simply do:
+        *Example*: Say we want to save the connectivity of Synapses, and some other state of the network, say ``my_state''. We would simply do::
         
-        array_to_save = synapses.my_state[:,:]
-        synapses.save_connectivity('./somefile')
 
-        new_synapses = Synapses(newgroup0, newgroup0, model = newmodel, pre = newpre, ...)
-        new_synapses.load_connectivity('./somefile')
-        new_synapses.my_state[:,:] = array_that_was_saved_and_then_reloaded
+            array_to_save = synapses.my_state[:,:]
+            synapses.save_connectivity('./somefile')
+            ...
+            new_synapses = Synapses(newgroup0, newgroup0, model = newmodel, pre = newpre, ...)
+            new_synapses.load_connectivity('./somefile')
+            new_synapses.my_state[:,:] = array_that_was_saved_and_then_reloaded
         
         Note: You have to deal with dynamical delays as you would with any other variable.
         '''
