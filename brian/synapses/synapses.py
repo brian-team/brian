@@ -938,7 +938,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         
         Notice that this only saves the connectivity, not the current state of the variables in the Synapses class. In fact, it is completely decoupled from the pre/post synaptic groups, and the models of the Synapses object.
         
-        *Example*: Say we want to save the connectivity of Synapses, and some other state of the network, say ``my_state''. We would simply do::
+        *Example*: Say we want to save the connectivity of Synapses, and some other state of the network, say ``my_state``. We would simply do::
         
 
             array_to_save = synapses.my_state[:,:]
