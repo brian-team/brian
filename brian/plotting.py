@@ -209,7 +209,7 @@ def raster_plot(*monitors, **additionalplotoptions):
         ax.set_xlabel(myopts['xlabel'])
         ax.set_title(myopts["title"])
         if myopts["showplot"]:
-            fig.show()
+            pylab.show()
         if myopts['refresh'] is not None:
             @network_operation(clock=EventClock(dt=myopts['refresh']))
             def refresh_raster_plot(clk):
