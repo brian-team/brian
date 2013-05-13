@@ -51,9 +51,9 @@ copyright = '2008, Romain Brette, Dan Goodman'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '1.4'
+version = '1.5de'
 # The full version, including alpha/beta/rc tags.
-release = '1.4.1'
+release = '1.5dev'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
