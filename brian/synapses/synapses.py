@@ -838,6 +838,14 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         '''
         return neuron_indexes(x,self.target)
     
+    def uncompress(self):
+        # make the state matrix a dynamic array again
+        S = self._S
+        self._S = DynamicArray(S.shape)
+        self._S[:] = S
+        # now isn't compressed
+        self._iscompressed = False
+
     def compress(self):
         '''
         * Checks that the object is not empty.
