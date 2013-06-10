@@ -84,7 +84,7 @@ running on Windows).
 
 Mac users: The Enthought Python Distribution (`EPD <http://www.enthought.com/products/edudownload.php/>`__ ) is free for academics and contains all the libraries necessary to run Brian. Otherwise, the `Scipy Superpack for Intel OS X <http://fonnesbeck.github.com/ScipySuperpack/>`__ also includes versions of Numpy, Scipy, Pylab and IPython.
 
-Windows users: the `Python(x,y) <http://www.pythonxy.com/>`__ distribution includes all the packages
+Windows users: the `Python(x,y) <http://code.google.com/p/pythonxy/>`__ distribution includes all the packages
 (including Eclipse and IPython) above except Brian (which is available as an optional plugin).
 
 Another option is the `Anaconda distribution <http://continuum.io/anaconda.html>`__, which also includes
