@@ -4,12 +4,11 @@ Spike-timing-dependent plasticity
 =================================
 
 .. note:: The classes below are only working with the :class:`Connection` class.
-          Consider using the newer :class:`Synapses` class as a replacement, it
-          allows you to flexibily express plasticity rules in a very similar way to
-          the classes below. A single :class:`Synapses` object can therefore
-          completely replace the combination of :class:`Connection` +
-          :class:`STDP`, for example.
-          See :doc:`synapses` for more details.
+   Consider using the newer :class:`Synapses` class as a replacement, it
+   allows you to flexibily express plasticity rules in a very similar way to
+   the classes below. A single :class:`Synapses` object can therefore
+   completely replace the combination of :class:`Connection` +
+   :class:`STDP`, for example. See :doc:`synapses` for more details.
 
 Synaptic weights can be modified by spiking activity.
 Weight modifications at a given synapse depend on the relative
