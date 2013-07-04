@@ -3,6 +3,10 @@
 Connections
 ===========
 
+.. note:: Consider using the newer :class:`Synapses` class instead of
+          :class:`Connection`, in particular when you are modelling plastic
+          connections.
+
 Building connections
 --------------------
 First, one must define which neuron groups are connected and which state variable receives the spikes.

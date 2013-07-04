@@ -145,7 +145,7 @@ class STDP(NetworkOperation):
         dA_pre/dt  = -A_pre/tau_pre   : 1
         dA_post/dt = -A_post/tau_post : 1
         """
-        stdp = STDP(synapses, eqs=eqs_stdp, pre='A_pre+=delta_A_pre; w+=A_post',
+        stdp = STDP(C, eqs=eqs_stdp, pre='A_pre+=delta_A_pre; w+=A_post',
                     post='A_post+=delta_A_post; w+=A_pre', wmax=gmax)
 
     **STDP variables**

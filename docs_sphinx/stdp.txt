@@ -3,6 +3,14 @@
 Spike-timing-dependent plasticity
 =================================
 
+.. note:: The classes below are only working with the :class:`Connection` class.
+          Consider using the newer :class:`Synapses` class as a replacement, it
+          allows you to flexibily express plasticity rules in a very similar way to
+          the classes below. A single :class:`Synapses` object can therefore
+          completely replace the combination of :class:`Connection` +
+          :class:`STDP`, for example.
+          See :doc:`synapses` for more details.
+
 Synaptic weights can be modified by spiking activity.
 Weight modifications at a given synapse depend on the relative
 timing between presynaptic and postsynaptic spikes. Down to the
@@ -47,7 +55,7 @@ Exponential STDP
 In many applications, the STDP function is piecewise exponential.
 In that case, one can use the :class:`ExponentialSTDP` class::
 
-  stdp=ExponentialSTDP(synapses,taup,taum,Ap,Am,wmax=gmax,interactions='all',update='additive')
+  stdp=ExponentialSTDP(connection,taup,taum,Ap,Am,wmax=gmax,interactions='all',update='additive')
 
 Here the synaptic weight modification function is::
 
