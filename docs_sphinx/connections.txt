@@ -3,9 +3,10 @@
 Connections
 ===========
 
-.. note:: Consider using the newer :class:`Synapses` class instead of
-   :class:`Connection`, in particular when you are modelling plastic
-   connections.
+.. note::
+    Consider using the newer :class:`Synapses` class instead of
+    :class:`Connection`, in particular when you are modelling plastic
+    connections.
 
 Building connections
 --------------------
