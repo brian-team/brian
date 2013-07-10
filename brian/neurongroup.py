@@ -39,7 +39,7 @@ Neuron groups
 __all__ = ['NeuronGroup', 'linked_var']
 
 from numpy import *
-from scipy import rand, linalg, random
+from scipy import rand, linalg, random, weave
 from numpy.random import exponential, randint
 import copy
 from units import *
@@ -63,6 +63,7 @@ from base import *
 from group import *
 from threshold import select_threshold
 from collections import defaultdict
+from log import log_info
 
 timedarray = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
 network = None # ugly hack: import this module when it is needed, can't do it here because of order of imports
@@ -256,6 +257,13 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
         '''
         Initializes the group.
         '''
+
+        self._useweave = get_global_preference('useweave')
+        if self._useweave:
+            self._cpp_compiler = get_global_preference('weavecompiler')
+            self._extra_compile_args = ['-O3']
+            if self._cpp_compiler == 'gcc':
+                self._extra_compile_args += get_global_preference('gcc_options')
 
         self._spiking = True # by default, produces spikes
         if bup.use_units: # one additional frame level induced by the decorator
@@ -648,12 +656,39 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
             if network is None:
                 import network
             selfarr = self.state_(name)
-            nameS=val.name
-            @network.network_operation(clock=S.clock)
-            def update_link_var():
-                s_state = S.state_(nameS)
-                selfarr[:] = array([sum(s_state[post_syns.data]) for
-                                    post_syns in S.synapses_post])
+            s_name = val.name
+
+            #Faster version using weave
+            if self._useweave:
+                log_info('brian.neurongroup',
+                         'Using weave for lumped variable.')
+                compiler = self._cpp_compiler
+                extra_args = self._extra_compile_args
+
+                @network.network_operation(clock=S.clock)
+                def update_link_var():
+                    s_state = S.state_(s_name)
+                    code = '''
+                    for (int i=0; i<N; i++) {
+                        summed[postsynaptic[i]] += s_state[i];
+                    }
+                    '''
+                    summed = zeros_like(selfarr)
+                    postsynaptic = S.postsynaptic.data
+                    N = len(postsynaptic)
+                    weave.inline(code, ['summed', 'N', 's_state',
+                                        'postsynaptic'],
+                                 type_converters=weave.converters.blitz,
+                                 compiler=compiler,
+                                 extra_compile_args=extra_args)
+                    selfarr[:] = summed
+            else:
+                @network.network_operation(clock=S.clock)
+                def update_link_var():
+                    s_state = S.state_(s_name)
+                    selfarr[:] = array([sum(s_state[post_syns.data]) for
+                                        post_syns in S.synapses_post])
+
             self._owner.contained_objects.append(update_link_var)
         else:
             Group.__setattr__(self, name, val)

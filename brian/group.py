@@ -63,11 +63,11 @@ class Group(object):
             # should have worked, this is important because the next line looks for var_index
             # and if we haven't got a var_index we don't want to get stuck in an infinite
             # loop
-            raise AttributeError
+            raise AttributeError('var_index')
         if not hasattr(self, 'var_index'):
             # only provide lookup of variable names if we have some variable names, i.e.
             # if the var_index attribute exists
-            raise AttributeError
+            raise AttributeError('var_index')
         try:
             return self.state(name)
         except KeyError:
@@ -76,8 +76,8 @@ class Group(object):
                     origname = name[:-1]
                     return self.state_(origname)
                 except KeyError:
-                    raise AttributeError
-            raise AttributeError
+                    raise AttributeError(origname)
+            raise AttributeError(name)
 
     def __setattr__(self, name, val):
         origname = name
