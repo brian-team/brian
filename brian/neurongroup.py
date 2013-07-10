@@ -678,7 +678,6 @@ class NeuronGroup(magic.InstanceTracker, ObjectContainer, Group):
                     N = len(postsynaptic)
                     weave.inline(code, ['summed', 'N', 's_state',
                                         'postsynaptic'],
-                                 type_converters=weave.converters.blitz,
                                  compiler=compiler,
                                  extra_compile_args=extra_args)
                     selfarr[:] = summed
