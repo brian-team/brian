@@ -589,7 +589,7 @@ class DynamicConnectionMatrix(ConnectionMatrix):
     def remove(self, i, j):
         n = searchsorted(self.rowj[i], j)
         if n >= len(self.rowj[i]) or self.rowj[i][n] != j:
-            raise ValueError('No element to remove at position ' + str(i, j))
+            raise ValueError('No element to remove at position ' + str((i, j)))
         oldind = self.rowdataind[i][n]
         self.unusedinds.append(oldind)
         self.nnz -= 1
