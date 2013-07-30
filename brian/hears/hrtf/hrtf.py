@@ -138,6 +138,7 @@ class HRTFSet(object):
     
     .. automethod:: subset
     .. automethod:: filterbank
+    .. automethod:: get_index
     
     You can access an HRTF by index via ``hrtfset[index]``, or
     by its coordinates via ``hrtfset(coord1=val1, coord2=val2)``.
@@ -167,7 +168,10 @@ class HRTFSet(object):
     def __getitem__(self, key):
         return self.hrtf[key]
     
-    def __call__(self, **kwds):
+    def get_index(self, **kwds):
+        '''
+        Return the index of the HRTF with the coords specified by keyword.
+        '''
         I = ones(self.num_indices, dtype=bool)
         for key, value in kwds.items():
             I = logical_and(I, abs(self.coordinates[key]-value)<1e-10)
@@ -176,7 +180,10 @@ class HRTFSet(object):
             raise IndexError('No HRTF exists with those coordinates')
         if len(indices)>1:
             raise IndexError('More than one HRTF exists with those coordinates')
-        return self.hrtf[indices[0]]
+        return indices[0]
+    
+    def __call__(self, **kwds):
+        return self.hrtf[self.get_index(**kwds)]
 
     def subset(self, condition):
         '''
