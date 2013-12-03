@@ -1432,6 +1432,8 @@ def _check_nounits(**au):
         return f
     return dont_check_units
 
+if 'sphinx' in sys.modules:
+    check_units = _check_nounits
 
 def scalar_representation(x):
     if isinstance(x, Unit):
