@@ -75,6 +75,18 @@ class SparseConnectionVector(ConnectionVector, numpy.ndarray):
             pass
         return self
 
+    def __reduce__(self):
+        object_state = list(numpy.ndarray.__reduce__(self))
+        object_state[2] = (object_state[2], self.n, self.ind)
+        return tuple(object_state)
+
+    def __setstate__(self, state):
+        nd_state, n, ind = state
+
+        numpy.ndarray.__setstate__(self, nd_state)
+        self.n = n
+        self.ind = ind
+
     def todense(self):
         x = zeros(self.n)
         x[self.ind] = self
