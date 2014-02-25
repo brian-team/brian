@@ -143,7 +143,7 @@ class ProgressReporter(object):
     def update(self, complete):
         cur_time = time.time()
         totalcomplete = self.subtask_complete + complete * self.subtask_size
-        if cur_time > self.first_time:
+        if cur_time > self.first_time or complete==1:
             if self.report is None:
                 self.report = get_reporter(self.report_option)
             if cur_time > self.next_report_time or totalcomplete == 1.0 or totalcomplete == 1:
