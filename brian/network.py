@@ -259,6 +259,14 @@ class Network(object):
         for obj in objs:
             if isinstance(obj, (NeuronGroup, Connection, NetworkOperation)):
                 self._added_objects = [o for o in self._added_objects if o is not obj]
+                if isinstance(obj, NeuronGroup):
+                    self.groups = [o for o in self.groups if o is not obj]
+                if isinstance(obj, Connection):
+                    self.connections = [o for o in self.connections if o is not obj]
+                if isinstance(obj, NetworkOperation):
+                    self._all_operations = [o for o in self._all_operations if o is not obj]
+                    self._operations_dict[obj.when] = [o for o in self._operations_dict[obj.when]
+                                                       if o is not obj]
             elif isSequenceType(obj):
                 for o in obj:
                     self.remove(o, unprepare=False)
