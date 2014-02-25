@@ -4,6 +4,7 @@ The Synapses class - see BEP-21
 import re
 import warnings
 from operator import isSequenceType
+import copy
 
 import numpy as np
 from numpy.random import binomial
@@ -30,6 +31,14 @@ except:
     use_sympy = False
 
 __all__ = ['Synapses','invert_array']
+
+
+def _binomial_wrapper(n, p):
+    '''
+    A simple wrapper around numpy's binomial function for use in synaptic code.
+    '''
+    return np.random.binomial(np.array(n, dtype=int), p)
+
 
 class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
     '''Set of synapses between two neuron groups
@@ -310,7 +319,7 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         self.synapses_post=[DynamicArray1D(0,dtype=smallest_inttype(max_synapses)) for _ in range(len(self.target))]
 
         # Code generation
-        self._binomial = lambda n,p:np.random.binomial(np.array(n,dtype=int),p)
+        self._binomial = _binomial_wrapper
 
         self.contained_objects = []
         self.codes=[]
@@ -333,10 +342,6 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             self.codes.append(code)
             self.namespaces.append(_namespace)
             self.queues.append(SpikeQueue(self.target, self.synapses_post, self._delay_post, max_delay = max_delay))
-
-        self.queues_namespaces_codes = zip(self.queues,
-                                           self.namespaces,
-                                           self.codes)
 
         self.contained_objects+=self.queues
       
@@ -519,6 +524,30 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         _namespace['_original_code_string'] = code_str
         
         return compiled_code,_namespace
+
+    # Pickling support
+    def __getstate__(self):
+        # code objects cannot be pickled, we therefore delete them and later
+        # reconstruct them from the code strings (stored in the namespace)
+        state = copy.copy(self.__dict__)
+        state['codes'] = [None] * len(self.codes)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        # Reconstruct the codes from the code string
+        for idx, namespace in enumerate(self.namespaces):
+            self.codes[idx] = compile(namespace['_original_code_string'],
+                                      "Synaptic code", "exec")
+            # I"m not quite sure why, but this seems to be necessary
+            for postsyn_var in self.target.var_index:
+                if isinstance(postsyn_var, str):
+                    namespace['_target_' + postsyn_var] = self.target.state_(postsyn_var)
+
+            # Replace presynaptic variables by their value
+            for presyn_var in self.source.var_index: # static variables are not included here
+                if isinstance(presyn_var, str):
+                    namespace['_source_' + presyn_var] = self.source.state_(presyn_var)
 
     def __setitem__(self, key, value):
         '''

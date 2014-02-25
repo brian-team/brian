@@ -1,4 +1,5 @@
 import pickle
+import itertools
 
 from numpy.testing import assert_equal
 
@@ -50,8 +51,37 @@ def test_linearstateupdater_pickling():
     assert_equal(G._state_updater.A, unpickled._state_updater.A)
     assert G._state_updater.B == unpickled._state_updater.B
 
+def test_synapses_pickling():
+    # Test pickling a Network with a Synapses object
+    G1 = NeuronGroup(42, model='v:1', threshold='v>1', reset='v=0')
+    G1.name = 'G1'
+    G2 = NeuronGroup(42, model='v:1')
+    G2.name = 'G2'
+    G1.v = 1.1
+    S = Synapses(G1, G2, model='w:1', pre='v+=w')
+    S[:, :] = 'i==j'
+    S.w = 'i'
+    net = Network(G1, G2, S)
+    pickled = pickle.dumps(net)
+    net.run(defaultclock.dt)
+    assert_equal(G2.v[:], np.arange(len(G1)))
+    unpickled_net = pickle.loads(pickled)
+    unpickled_G1 = next(group for group in unpickled_net.groups
+                        if getattr(group, 'name', None) == 'G1')
+    unpickled_G2 = next(group for group in unpickled_net.groups
+                        if getattr(group, 'name', None) == 'G2')
+    unpickled_S = next(group for group in unpickled_net.groups
+                        if isinstance(group, Synapses))
+    defaultclock.t = 0*ms
+    assert len(unpickled_S) == len(S)
+    assert len(unpickled_G1) == len(G1)
+    assert len(unpickled_G2) == len(G2)
+    unpickled_net.run(defaultclock.dt)
+    assert_equal(unpickled_G2.v[:], np.arange(len(unpickled_G1)))
+
+
 if __name__ == '__main__':
     test_timed_array_pickling()
     test_neurongroup_pickling()
     test_linearstateupdater_pickling()
-    
+    test_synapses_pickling()
