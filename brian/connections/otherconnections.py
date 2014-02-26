@@ -76,4 +76,9 @@ class MultiConnection(Connection):
         for C in self.connections:
             # this does nothing for normal connections but is important for
             # SpikeMonitors
-            C.reinit()   
+            C.reinit()
+
+    def __repr__(self):
+        return '<%s, containing %d connections from %s>' % (self.__class__.__name__,
+                                                            len(self.connections),
+                                                            repr(self.source))
