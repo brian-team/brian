@@ -378,6 +378,11 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         _namespace = namespace(code, level = level + 1)
         if code_namespace is not None:
             _namespace.update(code_namespace)
+        # Explicitly set builtins to prevent adding all the builtins to the
+        # namespace (which leads to problems with pickling)
+        _namespace['__builtins__'] = {}
+        _namespace['len'] = len
+        _namespace['bool'] = np.bool
         _namespace['target'] = self.target # maybe we could save one indirection here
         _namespace['unique'] = np.unique
         _namespace['nonzero'] = np.nonzero
@@ -531,23 +536,34 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
         # reconstruct them from the code strings (stored in the namespace)
         state = copy.copy(self.__dict__)
         state['codes'] = [None] * len(self.codes)
+        # We cannot pickle module objects and numpy is included as 'np'
+        for ns in state['namespaces']:
+            for k, v in ns.iteritems():
+                if v is np:
+                    ns[k] = None
         return state
 
     def __setstate__(self, state):
         self.__dict__ = state
         # Reconstruct the codes from the code string
-        for idx, namespace in enumerate(self.namespaces):
+        for idx, (queue, namespace) in enumerate(zip(self.queues, self.namespaces)):
             self.codes[idx] = compile(namespace['_original_code_string'],
                                       "Synaptic code", "exec")
             # I"m not quite sure why, but this seems to be necessary
             for postsyn_var in self.target.var_index:
                 if isinstance(postsyn_var, str):
                     namespace['_target_' + postsyn_var] = self.target.state_(postsyn_var)
-
-            # Replace presynaptic variables by their value
-            for presyn_var in self.source.var_index: # static variables are not included here
+            for presyn_var in self.source.var_index:
                 if isinstance(presyn_var, str):
                     namespace['_source_' + presyn_var] = self.source.state_(presyn_var)
+            namespace['target'] = self.target
+
+            # numpy array views don't survive pickling
+            queue.X_flat = queue.X.reshape(queue.X.size, )
+
+        # Re-compress the Synapses object (this also adds "np" to the namespaces)
+        self._iscompressed = False
+        self.compress()
 
     def __setitem__(self, key, value):
         '''
