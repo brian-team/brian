@@ -999,6 +999,7 @@ def _load_Equations_from_pickle(eqs, cls):
                 replaceufunc(v)
     replaceufunc(eqs.__dict__)
     eqs.__class__ = cls
+    eqs._prepared = False
     eqs.prepare()
     return eqs
 
