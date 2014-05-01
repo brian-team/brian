@@ -16,7 +16,7 @@ def firing_rate(spikes):
     '''
     Rate of the spike train.
     '''
-    if spikes==[]:
+    if len(spikes)<2:
         return NaN
     return (len(spikes) - 1) / (spikes[-1] - spikes[0])
 
