@@ -327,6 +327,8 @@ class Connection(magic.InstanceTracker, ObjectContainer):
         Q = target or self.target
         if sparseness is not None: p = sparseness # synonym
         if seed is not None:
+            random_state = numpy.random.get_state()
+            pyrandom_state = pyrandom.getstate()
             numpy.random.seed(seed) # numpy's random number seed
             pyrandom.seed(seed) # Python's random number seed
         if fixed:
@@ -351,6 +353,12 @@ class Connection(magic.InstanceTracker, ObjectContainer):
             except DimensionMismatchError, inst:
                 raise DimensionMismatchError("Incorrects unit for the synaptic weights.", *inst._dims)
             self.connect(P, Q, random_matrix_function(len(P), len(Q), p, value=float(weight)))
+
+        # Reset the random generator state after connection matrix was generated
+        if seed is not None:
+            numpy.random.set_state(random_state)
+            pyrandom.setstate(pyrandom_state)
+
 
     def connect_full(self, source=None, target=None, weight=1.):
         '''

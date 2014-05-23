@@ -1,3 +1,5 @@
+from numpy.testing.utils import assert_equal
+
 from brian import *
 
 def test_delay_connect_with_subgroups():
@@ -62,6 +64,28 @@ def test_delay_connect_with_subgroups():
                                             [4, 0, 0, 0],
                                             [0, 4, 0, 11]], dtype=int)).all(), 'Problem with connection C' + str(i + 1)
 
+
+def test_connect_with_seed():
+    G1 = NeuronGroup(10, 'v:1')
+    G2 = NeuronGroup(10, 'v:1')
+    C1 = Connection(G1, G2, 'v')
+    C2 = Connection(G1, G2, 'v')
+    # We check two things:
+    # 1. Providing a seed to connect_random should produce exactly the same
+    #    connection pattern every time
+    # 2. This seed argument does not affect the general random number generation
+    np.random.seed(12345)
+    numbers = np.random.rand(5)
+    np.random.seed(12345)
+    C1.connect_random(p=0.5, seed=54321)
+    C2.connect_random(p=0.5, seed=54321)
+    assert_equal(C1.W.todense(), C2.W.todense())
+    # The general random number generation should be unaffected and use the seed
+    # specified above
+    new_numbers = np.random.rand(5)
+    assert_equal(numbers, new_numbers)
+
+
 def test_connect_with_subgroups():
     G = NeuronGroup(4, 'V:1')
     # test connect method
@@ -116,4 +140,5 @@ def test_connect_with_subgroups():
 
 if __name__ == '__main__':
     test_delay_connect_with_subgroups()
+    test_connect_with_seed()
     test_connect_with_subgroups()
