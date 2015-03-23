@@ -225,14 +225,14 @@ def raster_plot(*monitors, **additionalplotoptions):
             monitors[0].contained_objects.append(refresh_raster_plot)
 
 
-def raster_plot_spiketimes(spiketimes):
+def raster_plot_spiketimes(spiketimes, **plotoptions):
     """
     Raster plot of a list of spike times
     """
     m = Monitor()
     m.source = []
     m.spikes = spiketimes
-    raster_plot(m)
+    raster_plot(m, **plotoptions)
     t = array(spiketimes)[:,1]
 
 
