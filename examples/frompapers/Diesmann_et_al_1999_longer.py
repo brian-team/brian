@@ -166,7 +166,7 @@ def estimate_params(mon, time_est):
     times = times[abs(times - time_est) < 5 * ms]
     if len(times) == 0:
         return (0, 0 * ms)
-    return (len(times), times.std())
+    return (len(times), times.std()*second)
 
 def single_sfc():
     net = DefaultNetwork(default_params)
