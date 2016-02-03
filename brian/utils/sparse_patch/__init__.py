@@ -37,7 +37,6 @@ else:
             break
     else:
         modulename = default
-        warnings.warn("Couldn't find matching sparse matrix patch for scipy version %s, but in most cases this shouldn't be a problem." % scipy.__version__)
 
 module = __import__(modulename, globals(), locals(), [], -1)
 lil_matrix = module.lil_matrix
