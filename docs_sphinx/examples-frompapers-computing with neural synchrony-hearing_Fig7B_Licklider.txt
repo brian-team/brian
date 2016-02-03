@@ -4,10 +4,14 @@
    pair: example usage; NeuronGroup
    pair: example usage; run
    pair: example usage; log
+   pair: example usage; show
    pair: example usage; raster_plot
+   pair: example usage; yticks
    pair: example usage; Connection
    pair: example usage; SpikeMonitor
+   pair: example usage; linspace
    pair: example usage; exp
+   pair: example usage; ylabel
    pair: example usage; StateMonitor
 
 .. _example-frompapers-computing with neural synchrony-hearing_Fig7B_Licklider:

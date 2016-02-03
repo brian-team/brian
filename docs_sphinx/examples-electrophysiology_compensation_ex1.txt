@@ -1,5 +1,12 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; load
+   pair: example usage; plot
+   pair: example usage; subplot
+   pair: example usage; linspace
+   pair: example usage; show
+
 .. _example-electrophysiology_compensation_ex1:
 
 Example: compensation_ex1 (electrophysiology)

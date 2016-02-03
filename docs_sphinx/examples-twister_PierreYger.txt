@@ -1,15 +1,34 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
-   pair: example usage; run
+   pair: example usage; figure
    pair: example usage; Clock
-   pair: example usage; Connection
+   pair: example usage; savefig
+   pair: example usage; text
+   pair: example usage; imread
+   pair: example usage; close
+   pair: example usage; size
+   pair: example usage; gca
+   pair: example usage; get_current_fig_manager
+   pair: example usage; sum
+   pair: example usage; cla
    pair: example usage; sqrt
    pair: example usage; PoissonGroup
    pair: example usage; RecentStateMonitor
    pair: example usage; Equations
    pair: example usage; SpikeCounter
+   pair: example usage; subplot
+   pair: example usage; draw
+   pair: example usage; run
+   pair: example usage; flipud
+   pair: example usage; ion
+   pair: example usage; Connection
+   pair: example usage; NeuronGroup
+   pair: example usage; ioff
+   pair: example usage; colorbar
+   pair: example usage; setp
+   pair: example usage; scatter
+   pair: example usage; mean
 
 .. _example-twister_PierreYger:
 

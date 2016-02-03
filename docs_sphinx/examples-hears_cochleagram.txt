@@ -2,8 +2,10 @@
 
 .. index::
    pair: example usage; tone
-   pair: example usage; FunctionFilterbank
    pair: example usage; Gammatone
+   pair: example usage; FunctionFilterbank
+   pair: example usage; show
+   pair: example usage; imshow
    pair: example usage; erbspace
    pair: example usage; LowPass
    pair: example usage; whitenoise

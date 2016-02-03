@@ -1,9 +1,12 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; whitenoise
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; play
    pair: example usage; tone
+   pair: example usage; show
+   pair: example usage; whitenoise
 
 .. _example-hears_sounds:
 

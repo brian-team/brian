@@ -1,12 +1,19 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; run
+   pair: example usage; figure
+   pair: example usage; show
    pair: example usage; network_operation
    pair: example usage; correlogram
    pair: example usage; sqrt
    pair: example usage; SpikeMonitor
+   pair: example usage; ylabel
+   pair: example usage; xlabel
+   pair: example usage; NeuronGroup
+   pair: example usage; ylim
 
 .. _example-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig6_shared_variability:
 

@@ -1,11 +1,14 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
-   pair: example usage; Connection
+   pair: example usage; plot
    pair: example usage; run
-   pair: example usage; STDP
    pair: example usage; PopulationRateMonitor
+   pair: example usage; NeuronGroup
+   pair: example usage; show
+   pair: example usage; rate
+   pair: example usage; Connection
+   pair: example usage; STDP
 
 .. _example-twister_PeterDiehl:
 

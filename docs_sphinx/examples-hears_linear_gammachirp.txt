@@ -1,9 +1,14 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; plot
+   pair: example usage; figure
+   pair: example usage; show
+   pair: example usage; imshow
    pair: example usage; erbspace
-   pair: example usage; LinearGammachirp
+   pair: example usage; linspace
    pair: example usage; whitenoise
+   pair: example usage; LinearGammachirp
 
 .. _example-hears_linear_gammachirp:
 

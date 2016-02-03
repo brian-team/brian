@@ -2,12 +2,17 @@
 
 .. index::
    pair: example usage; IdentityConnection
-   pair: example usage; NeuronGroup
+   pair: example usage; polar
    pair: example usage; cos
    pair: example usage; run
+   pair: example usage; show
+   pair: example usage; sum
    pair: example usage; arctan
    pair: example usage; Connection
    pair: example usage; exp
+   pair: example usage; real
+   pair: example usage; NeuronGroup
+   pair: example usage; imag
    pair: example usage; SpikeCounter
 
 .. _example-frompapers_Sturzl_et_al_2000:

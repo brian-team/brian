@@ -1,5 +1,10 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; plot
+   pair: example usage; linspace
+   pair: example usage; show
+
 .. _example-multiprocessing_multiple_runs_simple:
 
 Example: multiple_runs_simple (multiprocessing)

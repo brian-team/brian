@@ -1,7 +1,17 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; subplot
+   pair: example usage; plot
+   pair: example usage; loadtxt
    pair: example usage; log
+   pair: example usage; figure
+   pair: example usage; show
+   pair: example usage; savefig
+   pair: example usage; rc
+   pair: example usage; xlabel
+   pair: example usage; ylabel
+   pair: example usage; ylim
 
 .. _example-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig1C:
 

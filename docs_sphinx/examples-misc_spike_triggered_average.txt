@@ -1,11 +1,20 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; plot
    pair: example usage; run
-   pair: example usage; PoissonGroup
+   pair: example usage; figure
+   pair: example usage; show
    pair: example usage; spike_triggered_average
+   pair: example usage; PoissonGroup
    pair: example usage; SpikeMonitor
+   pair: example usage; linspace
    pair: example usage; exp
+   pair: example usage; ylabel
+   pair: example usage; convolve
+   pair: example usage; xlabel
+   pair: example usage; legend
+   pair: example usage; norm
 
 .. _example-misc_spike_triggered_average:
 

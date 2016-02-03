@@ -1,11 +1,16 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; run
    pair: example usage; PopulationRateMonitor
+   pair: example usage; show
    pair: example usage; Connection
+   pair: example usage; hist
    pair: example usage; PoissonGroup
+   pair: example usage; NeuronGroup
+   pair: example usage; rate
    pair: example usage; STDP
 
 .. _example-plasticity_STDP1:

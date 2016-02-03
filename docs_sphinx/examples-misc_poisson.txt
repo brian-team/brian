@@ -5,6 +5,7 @@
    pair: example usage; SpikeMonitor
    pair: example usage; PoissonGroup
    pair: example usage; run
+   pair: example usage; show
 
 .. _example-misc_poisson:
 

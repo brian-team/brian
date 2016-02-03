@@ -1,13 +1,28 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
+   pair: example usage; figure
+   pair: example usage; show
+   pair: example usage; flatten
+   pair: example usage; plot
+   pair: example usage; imshow
+   pair: example usage; hist
+   pair: example usage; PoissonGroup
+   pair: example usage; real
    pair: example usage; run
-   pair: example usage; network_operation
+   pair: example usage; around
+   pair: example usage; imag
    pair: example usage; ExponentialSTDP
    pair: example usage; Connection
-   pair: example usage; PoissonGroup
+   pair: example usage; ones
+   pair: example usage; hsv
+   pair: example usage; linspace
+   pair: example usage; NeuronGroup
+   pair: example usage; network_operation
+   pair: example usage; colorbar
+   pair: example usage; meshgrid
    pair: example usage; exp
+   pair: example usage; mean
 
 .. _example-frompapers_Kremer_et_al_2011:
 

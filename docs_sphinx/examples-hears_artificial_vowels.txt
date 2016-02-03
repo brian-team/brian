@@ -1,9 +1,13 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; Sound
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; play
+   pair: example usage; show
    pair: example usage; set_default_samplerate
+   pair: example usage; Sound
+   pair: example usage; save
 
 .. _example-hears_artificial_vowels:
 

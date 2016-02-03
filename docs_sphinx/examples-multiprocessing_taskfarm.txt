@@ -1,5 +1,11 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; plot
+   pair: example usage; ylabel
+   pair: example usage; xlabel
+   pair: example usage; show
+
 .. _example-multiprocessing_taskfarm:
 
 Example: taskfarm (multiprocessing)

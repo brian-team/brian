@@ -1,9 +1,16 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; run
+   pair: example usage; trace
+   pair: example usage; title
+   pair: example usage; show
+   pair: example usage; rate
    pair: example usage; Synapses
+   pair: example usage; linspace
+   pair: example usage; NeuronGroup
    pair: example usage; StateMonitor
 
 .. _example-synapses_short_term_plasticity2:

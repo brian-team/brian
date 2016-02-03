@@ -1,11 +1,17 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; MultiStateMonitor
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; run
-   pair: example usage; sin
    pair: example usage; TimedArray
+   pair: example usage; clip
+   pair: example usage; show
+   pair: example usage; linspace
+   pair: example usage; ylabel
+   pair: example usage; MultiStateMonitor
    pair: example usage; NeuronGroup
+   pair: example usage; sin
 
 .. _example-misc_timed_array:
 

@@ -4,6 +4,7 @@
    pair: example usage; tone
    pair: example usage; Gammatone
    pair: example usage; FunctionFilterbank
+   pair: example usage; show
    pair: example usage; raster_plot
    pair: example usage; erbspace
    pair: example usage; FilterbankGroup

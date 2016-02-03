@@ -1,10 +1,17 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; Current
-   pair: example usage; IdentityConnection
-   pair: example usage; NeuronGroup
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; run
+   pair: example usage; trace
+   pair: example usage; show
+   pair: example usage; IdentityConnection
+   pair: example usage; Current
+   pair: example usage; xlabel
+   pair: example usage; linspace
+   pair: example usage; ylabel
+   pair: example usage; NeuronGroup
    pair: example usage; StateMonitor
 
 .. _example-misc_I-F_curve:

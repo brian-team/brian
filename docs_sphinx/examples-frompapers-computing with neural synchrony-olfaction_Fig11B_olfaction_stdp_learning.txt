@@ -8,6 +8,7 @@
    pair: example usage; Connection
    pair: example usage; SpikeMonitor
    pair: example usage; exp
+   pair: example usage; save
    pair: example usage; STDP
 
 .. _example-frompapers-computing with neural synchrony-olfaction_Fig11B_olfaction_stdp_learning:

@@ -3,6 +3,9 @@
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
+   pair: example usage; plot
+   pair: example usage; show
+   pair: example usage; linspace
    pair: example usage; SpikeCounter
 
 .. _example-misc_I-F_curve2:

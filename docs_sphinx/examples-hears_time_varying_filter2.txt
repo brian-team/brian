@@ -2,12 +2,18 @@
 
 .. index::
    pair: example usage; cos
+   pair: example usage; LinearFilterbank
    pair: example usage; log
-   pair: example usage; ControlFilterbank
    pair: example usage; FunctionFilterbank
+   pair: example usage; show
+   pair: example usage; flipud
+   pair: example usage; imshow
+   pair: example usage; specgram
    pair: example usage; sinh
    pair: example usage; whitenoise
-   pair: example usage; LinearFilterbank
+   pair: example usage; ControlFilterbank
+   pair: example usage; figure
+   pair: example usage; squeeze
    pair: example usage; sin
    pair: example usage; arcsinh
 

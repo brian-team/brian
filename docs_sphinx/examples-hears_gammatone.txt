@@ -1,8 +1,15 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; erbspace
    pair: example usage; Gammatone
+   pair: example usage; figure
+   pair: example usage; title
+   pair: example usage; imshow
+   pair: example usage; erbspace
+   pair: example usage; yscale
+   pair: example usage; ylabel
+   pair: example usage; show
+   pair: example usage; xlabel
    pair: example usage; whitenoise
 
 .. _example-hears_gammatone:

@@ -1,10 +1,13 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
+   pair: example usage; plot
    pair: example usage; run
+   pair: example usage; trace
+   pair: example usage; show
    pair: example usage; Connection
    pair: example usage; EmpiricalThreshold
+   pair: example usage; NeuronGroup
    pair: example usage; Equations
    pair: example usage; StateMonitor
 

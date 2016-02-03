@@ -1,7 +1,17 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; std
+   pair: example usage; xlim
+   pair: example usage; title
+   pair: example usage; show
+   pair: example usage; errorbar
    pair: example usage; sqrt
+   pair: example usage; xlabel
+   pair: example usage; linspace
+   pair: example usage; ylabel
+   pair: example usage; ylim
+   pair: example usage; mean
 
 .. _example-frompapers_Muller_et_al_2011:
 

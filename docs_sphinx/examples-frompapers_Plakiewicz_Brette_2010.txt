@@ -1,9 +1,19 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; subplot
    pair: example usage; NeuronGroup
    pair: example usage; run
    pair: example usage; log
+   pair: example usage; xlim
+   pair: example usage; show
+   pair: example usage; plot
+   pair: example usage; xticks
+   pair: example usage; hist
+   pair: example usage; xlabel
+   pair: example usage; flatten
+   pair: example usage; ylabel
+   pair: example usage; ylim
    pair: example usage; StateMonitor
 
 .. _example-frompapers_Plakiewicz_Brette_2010:

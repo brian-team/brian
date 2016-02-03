@@ -3,6 +3,9 @@
 .. index::
    pair: example usage; NeuronGroup
    pair: example usage; run
+   pair: example usage; trace
+   pair: example usage; plot
+   pair: example usage; show
    pair: example usage; SpikeMonitor
    pair: example usage; StateMonitor
 

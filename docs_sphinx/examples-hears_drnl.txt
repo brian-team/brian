@@ -2,12 +2,16 @@
 
 .. index::
    pair: example usage; FunctionFilterbank
-   pair: example usage; Cascade
+   pair: example usage; figure
+   pair: example usage; show
+   pair: example usage; flipud
+   pair: example usage; imshow
    pair: example usage; erbspace
    pair: example usage; gain
    pair: example usage; LowPass
    pair: example usage; ApproximateGammatone
    pair: example usage; whitenoise
+   pair: example usage; Cascade
 
 .. _example-hears_drnl:
 

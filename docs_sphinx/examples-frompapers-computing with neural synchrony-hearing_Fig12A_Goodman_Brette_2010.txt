@@ -1,19 +1,31 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; Sound
-   pair: example usage; NeuronGroup
-   pair: example usage; Repeat
-   pair: example usage; run
-   pair: example usage; Gammatone
-   pair: example usage; FunctionFilterbank
-   pair: example usage; RestructureFilterbank
-   pair: example usage; Connection
+   pair: example usage; xlim
+   pair: example usage; show
+   pair: example usage; argmax
    pair: example usage; erbspace
+   pair: example usage; shape
+   pair: example usage; ylim
+   pair: example usage; plot
+   pair: example usage; Repeat
+   pair: example usage; FunctionFilterbank
+   pair: example usage; sum
    pair: example usage; FilterbankGroup
-   pair: example usage; whitenoise
-   pair: example usage; IRCAM_LISTEN
+   pair: example usage; ylabel
+   pair: example usage; tile
    pair: example usage; SpikeCounter
+   pair: example usage; Sound
+   pair: example usage; run
+   pair: example usage; Connection
+   pair: example usage; IRCAM_LISTEN
+   pair: example usage; amax
+   pair: example usage; NeuronGroup
+   pair: example usage; Gammatone
+   pair: example usage; RestructureFilterbank
+   pair: example usage; xlabel
+   pair: example usage; whitenoise
+   pair: example usage; scatter
 
 .. _example-frompapers-computing with neural synchrony-hearing_Fig12A_Goodman_Brette_2010:
 

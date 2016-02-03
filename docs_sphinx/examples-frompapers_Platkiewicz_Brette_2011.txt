@@ -1,10 +1,18 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; run
-   pair: example usage; SpikeMonitor
+   pair: example usage; xlim
+   pair: example usage; show
    pair: example usage; sqrt
+   pair: example usage; SpikeMonitor
+   pair: example usage; linspace
+   pair: example usage; ylabel
+   pair: example usage; xlabel
+   pair: example usage; NeuronGroup
+   pair: example usage; append
    pair: example usage; StateMonitor
 
 .. _example-frompapers_Platkiewicz_Brette_2011:

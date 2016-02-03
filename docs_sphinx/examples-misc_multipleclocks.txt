@@ -1,11 +1,13 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; network_operation
    pair: example usage; NeuronGroup
    pair: example usage; run
-   pair: example usage; StateMonitor
+   pair: example usage; show
+   pair: example usage; network_operation
    pair: example usage; Clock
+   pair: example usage; plot
+   pair: example usage; StateMonitor
 
 .. _example-misc_multipleclocks:
 

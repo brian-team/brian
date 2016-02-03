@@ -1,10 +1,14 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; erbspace
-   pair: example usage; whitenoise
+   pair: example usage; figure
+   pair: example usage; show
+   pair: example usage; flipud
+   pair: example usage; imshow
    pair: example usage; TanCarney
+   pair: example usage; erbspace
    pair: example usage; set_default_samplerate
+   pair: example usage; whitenoise
 
 .. _example-hears_cochlear_models:
 

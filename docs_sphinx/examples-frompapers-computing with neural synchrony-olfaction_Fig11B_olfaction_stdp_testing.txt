@@ -1,13 +1,22 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
+   pair: example usage; load
+   pair: example usage; plot
    pair: example usage; run
    pair: example usage; log
+   pair: example usage; show
    pair: example usage; network_operation
+   pair: example usage; sum
+   pair: example usage; semilogy
+   pair: example usage; argsort
    pair: example usage; Connection
+   pair: example usage; subplot
    pair: example usage; SpikeMonitor
+   pair: example usage; linspace
    pair: example usage; exp
+   pair: example usage; NeuronGroup
+   pair: example usage; nonzero
 
 .. _example-frompapers-computing with neural synchrony-olfaction_Fig11B_olfaction_stdp_testing:
 

@@ -1,6 +1,13 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; subplot
+   pair: example usage; title
+   pair: example usage; imshow
+   pair: example usage; shape
+   pair: example usage; xlabel
+   pair: example usage; ylabel
+   pair: example usage; show
    pair: example usage; whitenoise
    pair: example usage; IRCAM_LISTEN
 

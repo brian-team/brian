@@ -1,5 +1,11 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; load
+   pair: example usage; plot
+   pair: example usage; subplot
+   pair: example usage; show
+
 .. _example-electrophysiology_threshold_analysis:
 
 Example: threshold_analysis (electrophysiology)

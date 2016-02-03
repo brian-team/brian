@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.5dev
+Version: 1.4.2
 Authors:
 	Romain Brette
 		http://audition.ens.fr/brette/
@@ -12,7 +12,6 @@ Team:
 	Cyrille Rossant
 		http://cyrille.rossant.net/
 	Bertrand Fontaine
-		http://lpp.psycho.univ-paris5.fr/person.php?name=BertrandF
 	Victor Benichoux
 	Marcel Stimberg
 	Jonathan Laudanski
@@ -28,10 +27,7 @@ Requirements: Python (version 2.5-7), the following modules:
 
 All operating systems: run 'python setup.py install' from the download folder.
 
-Windows: You can run the installer exe file, but note that this is a pure
-         Python version without compiled C extensions. You can manually
-         compile them by following the instructions in the documentation
-         (see "Advanced concepts/Compiled code").
+Windows: You can run the installer exe file.
 
 ==== Extras ================================================================
 
@@ -42,10 +38,10 @@ docs
 
 examples
 	Examples of using Brian, these serve as supplementary documentation.
-	
+
 tutorials
 	Fully worked through tutorials on using Brian. These can be read
-	through in the documentation too.	
+	through in the documentation too.
 
 ==== Usage and Documentation ===============================================
 
@@ -54,6 +50,14 @@ See the documentation in the extras download, or online:
 	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.4.1 to 1.4.2
+----------------------
+This is a bugfix release that does not add any major features. See the commit
+log at http://neuralensemble.org/trac/brian/log/ for details. Note that our
+development efforts are now entirely focused on Brian 2
+(https://github.com/brian-team/brian2), this will most likely be the last
+release in the 1.x series.
 
 Version 1.4.0 to 1.4.1
 ----------------------

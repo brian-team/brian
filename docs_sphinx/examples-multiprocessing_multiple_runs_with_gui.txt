@@ -1,5 +1,8 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; ion
+
 .. _example-multiprocessing_multiple_runs_with_gui:
 
 Example: multiple_runs_with_gui (multiprocessing)

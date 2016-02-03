@@ -2,9 +2,19 @@
 
 .. index::
    pair: example usage; IdentityConnection
-   pair: example usage; NeuronGroup
+   pair: example usage; plot
    pair: example usage; run
+   pair: example usage; xlim
+   pair: example usage; show
+   pair: example usage; rate
+   pair: example usage; subplot
+   pair: example usage; xlabel
+   pair: example usage; linspace
    pair: example usage; exp
+   pair: example usage; ylabel
+   pair: example usage; mean
+   pair: example usage; NeuronGroup
+   pair: example usage; ylim
    pair: example usage; SpikeCounter
    pair: example usage; StateMonitor
 

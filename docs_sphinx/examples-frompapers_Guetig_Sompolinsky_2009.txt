@@ -1,7 +1,18 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; run
+   pair: example usage; figure
+   pair: example usage; show
+   pair: example usage; title
+   pair: example usage; xticks
+   pair: example usage; colors
+   pair: example usage; xlabel
+   pair: example usage; yticks
+   pair: example usage; append
+   pair: example usage; axis
 
 .. _example-frompapers_Guetig_Sompolinsky_2009:
 

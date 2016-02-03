@@ -1,9 +1,15 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
-   pair: example usage; StateSpikeMonitor
+   pair: example usage; plot
    pair: example usage; run
+   pair: example usage; figure
+   pair: example usage; show
+   pair: example usage; StateSpikeMonitor
+   pair: example usage; xlabel
+   pair: example usage; linspace
+   pair: example usage; ylabel
+   pair: example usage; NeuronGroup
 
 .. _example-frompapers_Touboul_Brette_2008:
 

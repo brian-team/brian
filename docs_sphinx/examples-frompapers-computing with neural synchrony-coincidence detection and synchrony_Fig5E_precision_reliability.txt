@@ -1,5 +1,13 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; subplot
+   pair: example usage; plot
+   pair: example usage; show
+   pair: example usage; xlabel
+   pair: example usage; linspace
+   pair: example usage; ylabel
+
 .. _example-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig5E_precision_reliability:
 
 Example: Fig5E_precision_reliability (frompapers/computing with neural synchrony/coincidence detection and synchrony)

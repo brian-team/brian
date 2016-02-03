@@ -1,11 +1,17 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; erbspace
+   pair: example usage; plot
    pair: example usage; tone
    pair: example usage; Gammatone
+   pair: example usage; show
+   pair: example usage; axhline
    pair: example usage; sqrt
+   pair: example usage; erbspace
+   pair: example usage; xlabel
+   pair: example usage; ylabel
    pair: example usage; whitenoise
+   pair: example usage; mean
 
 .. _example-hears_online_computation:
 

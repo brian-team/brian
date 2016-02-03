@@ -1,12 +1,18 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; run
+   pair: example usage; show
    pair: example usage; PoissonThreshold
+   pair: example usage; xlabel
+   pair: example usage; linspace
+   pair: example usage; ylabel
    pair: example usage; SpikeMonitor
-   pair: example usage; gain
+   pair: example usage; NeuronGroup
    pair: example usage; SpikeCounter
+   pair: example usage; gain
 
 .. _example-audition_filterbank:
 

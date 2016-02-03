@@ -2,9 +2,22 @@
 
 .. index::
    pair: example usage; Sound
-   pair: example usage; MiddleEar
-   pair: example usage; sqrt
+   pair: example usage; plot
+   pair: example usage; product
+   pair: example usage; xlim
+   pair: example usage; show
+   pair: example usage; reshape
+   pair: example usage; yscale
    pair: example usage; set_default_samplerate
+   pair: example usage; sqrt
+   pair: example usage; legend
+   pair: example usage; xlabel
+   pair: example usage; flatten
+   pair: example usage; ylabel
+   pair: example usage; MiddleEar
+   pair: example usage; mean
+   pair: example usage; ylim
+   pair: example usage; linspace
 
 .. _example-hears-tan_carney_2003_tan_carney_Fig7:
 
@@ -22,8 +35,6 @@ Tan, Q., and L. H. Carney.
 ::
 
     
-    import itertools
-    
     import numpy as np
     import matplotlib.pyplot as plt
     from scipy.interpolate import interp1d
@@ -36,6 +47,16 @@ Tan, Q., and L. H. Carney.
     samplerate = 50*kHz
     set_default_samplerate(samplerate)
     duration = 50*ms
+    
+    def product(*args):
+        # Simple (and inefficient) variant of itertools.product that works for
+        # Python 2.5 (directly returns a list instead of yielding one item at a
+        # time)
+        pools = map(tuple, args)
+        result = [[]]
+        for pool in pools:
+            result = [x+[y] for x in result for y in pool]
+        return result
     
     def gen_tone(freq, level):
         ''' 
@@ -51,7 +72,7 @@ Tan, Q., and L. H. Carney.
     
     freqs = [500, 1100, 2000, 4000]
     levels = np.arange(-10, 100.1, 5)
-    cf_level = list(itertools.product(freqs, levels))
+    cf_level = product(freqs, levels)
     
     # steady-state
     start = 10*ms*samplerate
@@ -68,7 +89,7 @@ Tan, Q., and L. H. Carney.
                                np.mean(F_out_reference[start:end]))**2))
     
     gains = np.linspace(0.1, 1, 50) # for higher CFs we need lower gains
-    cf_gains = list(itertools.product(freqs[1:], gains))
+    cf_gains = product(freqs[1:], gains)
     tones = Sound([gen_tone(freq, levels[0]) for freq, _ in cf_gains])
     F_out_test = TanCarneySignal(MiddleEar(tones, gain=np.array([g for _, g in cf_gains])),
                                  [cf for cf,_  in cf_gains], update_interval=1).process()
@@ -98,7 +119,7 @@ Tan, Q., and L. H. Carney.
     
     # This should more or less reproduce Fig. 7
     plt.plot(levels, rms.T)
-    plt.legend(['%.0f Hz' % cf for cf in freqs], 0)
+    plt.legend(['%.0f Hz' % cf for cf in freqs], loc='best')
     plt.xlim(-20, 100)
     plt.ylim(1e-6, 1)
     plt.yscale('log')

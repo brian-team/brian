@@ -1,10 +1,15 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; subplot
    pair: example usage; NeuronGroup
    pair: example usage; run
+   pair: example usage; xlim
+   pair: example usage; title
    pair: example usage; raster_plot
+   pair: example usage; show
    pair: example usage; Connection
+   pair: example usage; xlabel
    pair: example usage; SpikeMonitor
    pair: example usage; STDP
 
@@ -119,11 +124,11 @@ Science (November 10, 2011).
     raster_plot(sm,ms=1.)
     title("Before")
     xlabel("")
-    xlim(0.8*1e3,1*1e3)
+    xlim(float(0.8*second/ms), float(1*second/ms))
     subplot(212)
     raster_plot(sm,ms=1.)
     title("After")
-    xlim((simtime-0.2*second)*1e3,simtime*1e3)
+    xlim(float((simtime-0.2*second)/ms), float(simtime/ms))
     show()
     
 

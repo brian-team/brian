@@ -1,6 +1,7 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; loadtxt
    pair: example usage; Equations
 
 .. _example-modelfitting_modelfitting_groups:

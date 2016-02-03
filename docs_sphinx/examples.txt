@@ -13,6 +13,80 @@ in the extras package.
    :maxdepth: 1
 
 
+.. _examples-electrophysiology:
+
+electrophysiology
+-----------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-electrophysiology_voltageclamp
+   examples-electrophysiology_compensation_ex3_quality
+   examples-electrophysiology_compensation_ex2_spikes
+   examples-electrophysiology_threshold_analysis
+   examples-electrophysiology_AEC
+   examples-electrophysiology_SEVC
+   examples-electrophysiology_bridge
+   examples-electrophysiology_DCC
+   examples-electrophysiology_compensation_ex1
+
+.. _examples-misc:
+
+misc
+----
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-misc_cable
+   examples-misc_stopping
+   examples-misc_topographic_map2
+   examples-misc_transient_sync
+   examples-misc_pulsepacket
+   examples-misc_mirollo_strogatz
+   examples-misc_CUBA
+   examples-misc_current_clamp
+   examples-misc_phase_locking
+   examples-misc_correlated_inputs2
+   examples-misc_rate_model
+   examples-misc_timed_array
+   examples-misc_noisy_ring
+   examples-misc_delays
+   examples-misc_after_potential
+   examples-misc_named_threshold
+   examples-misc_ring
+   examples-misc_I-F_curve2
+   examples-misc_adaptive_threshold
+   examples-misc_spike_triggered_average
+   examples-misc_leaky_if
+   examples-misc_I-F_curve
+   examples-misc_heterogeneous_delays
+   examples-misc_spikes_io
+   examples-misc_COBAHH
+   examples-misc_poissongroup
+   examples-misc_two_neurons
+   examples-misc_multipleclocks
+   examples-misc_HodgkinHuxley
+   examples-misc_stim2d
+   examples-misc_reliability
+   examples-misc_minimalexample
+   examples-misc_using_classes
+   examples-misc_poisson
+   examples-misc_adaptive
+   examples-misc_van_rossum_metric
+   examples-misc_realtime_plotting
+   examples-misc_topographic_map
+   examples-misc_if
+   examples-misc_remotecontrolclient
+   examples-misc_linked_var
+   examples-misc_gap_junctions
+   examples-misc_remotecontrolserver
+   examples-misc_non_reliability
+   examples-misc_correlated_inputs
+   examples-misc_expIF_network
+   examples-misc_COBA
+
 .. _examples-audition:
 
 audition
@@ -22,20 +96,40 @@ audition
    :maxdepth: 1
 
    examples-audition_licklider
-   examples-audition_jeffress
    examples-audition_filterbank
+   examples-audition_jeffress
 
-.. _examples-multiprocessing:
+.. _examples-synapses:
 
-multiprocessing
----------------
+synapses
+--------
 
 .. toctree::
    :maxdepth: 1
 
-   examples-multiprocessing_multiple_runs_with_gui
-   examples-multiprocessing_multiple_runs_simple
-   examples-multiprocessing_taskfarm
+   examples-synapses_licklider
+   examples-synapses_two_synapses
+   examples-synapses_transient_sync
+   examples-synapses_synapse_construction
+   examples-synapses_CUBA
+   examples-synapses_poisson_synapses
+   examples-synapses_noisy_ring
+   examples-synapses_barrelcortex
+   examples-synapses_short_term_plasticity2
+   examples-synapses_one_synapse
+   examples-synapses_one_synapse_bis
+   examples-synapses_STDP1_bis
+   examples-synapses_delayed_stdp
+   examples-synapses_nonlinear_synapses
+   examples-synapses_STDP1
+   examples-synapses_short_term_plasticity
+   examples-synapses_gapjunctions
+   examples-synapses_jeffress
+   examples-synapses_probabilistic_synapses2
+   examples-synapses_Diesmann_et_al_1999
+   examples-synapses_multiple_delays
+   examples-synapses_probabilistic_synapses
+   examples-synapses_weightmonitor
 
 .. _examples-plasticity:
 
@@ -45,67 +139,20 @@ plasticity
 .. toctree::
    :maxdepth: 1
 
+   examples-plasticity_STDP2
    examples-plasticity_short_term_plasticity2
    examples-plasticity_STDP1
-   examples-plasticity_STDP2
    examples-plasticity_short_term_plasticity
 
-.. _examples-hears:
+.. _examples-interface:
 
-hears
------
-
-.. toctree::
-   :maxdepth: 1
-
-   examples-hears_sounds
-   examples-hears_ircam_hrtf
-   examples-hears_butterworth
-   examples-hears_time_varying_filter2
-   examples-hears_time_varying_filter1
-   examples-hears_dcgc
-   examples-hears_artificial_vowels
-   examples-hears_IIRfilterbank
-   examples-hears_gammatone
-   examples-hears_cochleagram
-   examples-hears_simple_anf
-   examples-hears_sound_localisation_model
-   examples-hears_linear_gammachirp
-   examples-hears_online_computation
-   examples-hears_log_gammachirp
-   examples-hears_drnl
-   examples-hears_cochlear_models
-   examples-hears_approximate_gammatone
-
-.. _examples-hears-tan_carney_2003:
-
-hears/tan_carney_2003
----------------------
+interface
+---------
 
 .. toctree::
    :maxdepth: 1
 
-   examples-hears-tan_carney_2003_tan_carney_Fig11
-   examples-hears-tan_carney_2003_tan_carney_Fig7
-   examples-hears-tan_carney_2003_tan_carney_simple_test
-
-.. _examples-electrophysiology:
-
-electrophysiology
------------------
-
-.. toctree::
-   :maxdepth: 1
-
-   examples-electrophysiology_compensation_ex2_spikes
-   examples-electrophysiology_bridge
-   examples-electrophysiology_SEVC
-   examples-electrophysiology_threshold_analysis
-   examples-electrophysiology_AEC
-   examples-electrophysiology_compensation_ex1
-   examples-electrophysiology_DCC
-   examples-electrophysiology_compensation_ex3_quality
-   examples-electrophysiology_voltageclamp
+   examples-interface_interface
 
 .. _examples-twister:
 
@@ -117,66 +164,61 @@ twister
 
    examples-twister_PeterDiehl
    examples-twister_FriedemannZenke
-   examples-twister_PierreYger
-   examples-twister_anonymous
-   examples-twister_MicheleGiugliano
    examples-twister_QuentinPauluis
+   examples-twister_anonymous
+   examples-twister_PierreYger
+   examples-twister_MicheleGiugliano
 
-.. _examples-misc:
+.. _examples-multiprocessing:
 
-misc
-----
+multiprocessing
+---------------
 
 .. toctree::
    :maxdepth: 1
 
-   examples-misc_rate_model
-   examples-misc_I-F_curve
-   examples-misc_COBAHH
-   examples-misc_timed_array
-   examples-misc_pulsepacket
-   examples-misc_stim2d
-   examples-misc_I-F_curve2
-   examples-misc_current_clamp
-   examples-misc_CUBA
-   examples-misc_spikes_io
-   examples-misc_non_reliability
-   examples-misc_poisson
-   examples-misc_multipleclocks
-   examples-misc_two_neurons
-   examples-misc_phase_locking
-   examples-misc_realtime_plotting
-   examples-misc_van_rossum_metric
-   examples-misc_remotecontrolclient
-   examples-misc_adaptive_threshold
-   examples-misc_delays
-   examples-misc_heterogeneous_delays
-   examples-misc_expIF_network
-   examples-misc_spike_triggered_average
-   examples-misc_noisy_ring
-   examples-misc_correlated_inputs
-   examples-misc_HodgkinHuxley
-   examples-misc_correlated_inputs2
-   examples-misc_gap_junctions
-   examples-misc_transient_sync
-   examples-misc_adaptive
-   examples-misc_topographic_map
-   examples-misc_linked_var
-   examples-misc_named_threshold
-   examples-misc_minimalexample
-   examples-misc_stopping
-   examples-misc_using_classes
-   examples-misc_poissongroup
-   examples-misc_topographic_map2
-   examples-misc_leaky_if
-   examples-misc_mirollo_strogatz
-   examples-misc_COBA
-   examples-misc_ring
-   examples-misc_after_potential
-   examples-misc_cable
-   examples-misc_reliability
-   examples-misc_if
-   examples-misc_remotecontrolserver
+   examples-multiprocessing_taskfarm
+   examples-multiprocessing_multiple_runs_simple
+   examples-multiprocessing_multiple_runs_with_gui
+
+.. _examples-hears:
+
+hears
+-----
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-hears_online_computation
+   examples-hears_sound_localisation_model
+   examples-hears_dcgc
+   examples-hears_butterworth
+   examples-hears_time_varying_filter2
+   examples-hears_log_gammachirp
+   examples-hears_drnl
+   examples-hears_simple_anf
+   examples-hears_time_varying_filter1
+   examples-hears_gammatone
+   examples-hears_cochlear_models
+   examples-hears_approximate_gammatone
+   examples-hears_artificial_vowels
+   examples-hears_linear_gammachirp
+   examples-hears_IIRfilterbank
+   examples-hears_ircam_hrtf
+   examples-hears_cochleagram
+   examples-hears_sounds
+
+.. _examples-hears-tan_carney_2003:
+
+hears/tan_carney_2003
+---------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-hears-tan_carney_2003_tan_carney_Fig7
+   examples-hears-tan_carney_2003_tan_carney_simple_test
+   examples-hears-tan_carney_2003_tan_carney_Fig11
 
 .. _examples-modelfitting:
 
@@ -186,9 +228,9 @@ modelfitting
 .. toctree::
    :maxdepth: 1
 
+   examples-modelfitting_modelfitting
    examples-modelfitting_modelfitting_groups
    examples-modelfitting_modelfitting_machines
-   examples-modelfitting_modelfitting
 
 .. _examples-frompapers:
 
@@ -198,25 +240,25 @@ frompapers
 .. toctree::
    :maxdepth: 1
 
-   examples-frompapers_Brunel_Hakim_1999
-   examples-frompapers_Brette_Gerstner_2005
-   examples-frompapers_Rothman_Manis_2003
-   examples-frompapers_Plakiewicz_Brette_2010
-   examples-frompapers_Goodman_Brette_2010
-   examples-frompapers_Brette_2004
-   examples-frompapers_Rossant_et_al_2011
-   examples-frompapers_Wang_Buszaki_1996
-   examples-frompapers_Vogels_et_al_2011
-   examples-frompapers_Diesmann_et_al_1999_longer
-   examples-frompapers_Diesmann_et_al_1999
-   examples-frompapers_Platkiewicz_Brette_2011
-   examples-frompapers_Sturzl_et_al_2000
-   examples-frompapers_Guetig_Sompolinsky_2009
-   examples-frompapers_Brette_Guigon_2003
-   examples-frompapers_Muller_et_al_2011
-   examples-frompapers_Rossant_et_al_2011bis
    examples-frompapers_Touboul_Brette_2008
+   examples-frompapers_Platkiewicz_Brette_2011
+   examples-frompapers_Brette_2004
+   examples-frompapers_Plakiewicz_Brette_2010
+   examples-frompapers_Guetig_Sompolinsky_2009
+   examples-frompapers_Diesmann_et_al_1999_longer
    examples-frompapers_Kremer_et_al_2011
+   examples-frompapers_Rossant_et_al_2011bis
+   examples-frompapers_Rossant_et_al_2011
+   examples-frompapers_Brunel_Hakim_1999
+   examples-frompapers_Vogels_et_al_2011
+   examples-frompapers_Rothman_Manis_2003
+   examples-frompapers_Brette_Guigon_2003
+   examples-frompapers_Sturzl_et_al_2000
+   examples-frompapers_Wang_Buszaki_1996
+   examples-frompapers_Goodman_Brette_2010
+   examples-frompapers_Muller_et_al_2011
+   examples-frompapers_Diesmann_et_al_1999
+   examples-frompapers_Brette_Gerstner_2005
 
 .. _examples-frompapers-computing with neural synchrony-coincidence detection and synchrony:
 
@@ -227,10 +269,10 @@ frompapers/computing with neural synchrony/coincidence detection and synchrony
    :maxdepth: 1
 
    examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig6_shared_variability
-   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig5E_precision_reliability
-   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig5D_reproducibility
-   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig1C
    examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig1F_ROC
+   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig5D_reproducibility
+   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig5E_precision_reliability
+   examples-frompapers-computing with neural synchrony-coincidence detection and synchrony_Fig1C
 
 .. _examples-frompapers-computing with neural synchrony-hearing:
 
@@ -252,12 +294,12 @@ frompapers/computing with neural synchrony/duration selectivity
 .. toctree::
    :maxdepth: 1
 
-   examples-frompapers-computing with neural synchrony-duration selectivity_Fig2A_synchrony_partition
-   examples-frompapers-computing with neural synchrony-duration selectivity_Fig1A_rebound_neurons
-   examples-frompapers-computing with neural synchrony-duration selectivity_Fig2C_decoding_synchrony
-   examples-frompapers-computing with neural synchrony-duration selectivity_Fig4_duration_stdp
    examples-frompapers-computing with neural synchrony-duration selectivity_params
+   examples-frompapers-computing with neural synchrony-duration selectivity_Fig2C_decoding_synchrony
+   examples-frompapers-computing with neural synchrony-duration selectivity_Fig1A_rebound_neurons
+   examples-frompapers-computing with neural synchrony-duration selectivity_Fig4_duration_stdp
    examples-frompapers-computing with neural synchrony-duration selectivity_Fig1D_duration_selectivity
+   examples-frompapers-computing with neural synchrony-duration selectivity_Fig2A_synchrony_partition
 
 .. _examples-frompapers-computing with neural synchrony-olfaction:
 
@@ -267,49 +309,7 @@ frompapers/computing with neural synchrony/olfaction
 .. toctree::
    :maxdepth: 1
 
-   examples-frompapers-computing with neural synchrony-olfaction_Fig11B_olfaction_stdp_testing
+   examples-frompapers-computing with neural synchrony-olfaction_params
    examples-frompapers-computing with neural synchrony-olfaction_Fig11B_olfaction_stdp_learning
    examples-frompapers-computing with neural synchrony-olfaction_Fig9B_olfaction
-   examples-frompapers-computing with neural synchrony-olfaction_params
-
-.. _examples-interface:
-
-interface
----------
-
-.. toctree::
-   :maxdepth: 1
-
-   examples-interface_interface
-
-.. _examples-synapses:
-
-synapses
---------
-
-.. toctree::
-   :maxdepth: 1
-
-   examples-synapses_licklider
-   examples-synapses_probabilistic_synapses
-   examples-synapses_CUBA
-   examples-synapses_delayed_stdp
-   examples-synapses_jeffress
-   examples-synapses_poisson_synapses
-   examples-synapses_gapjunctions
-   examples-synapses_probabilistic_synapses2
-   examples-synapses_multiple_delays
-   examples-synapses_one_synapse_bis
-   examples-synapses_two_synapses
-   examples-synapses_noisy_ring
-   examples-synapses_nonlinear_synapses
-   examples-synapses_short_term_plasticity2
-   examples-synapses_one_synapse
-   examples-synapses_STDP1
-   examples-synapses_transient_sync
-   examples-synapses_synapse_construction
-   examples-synapses_Diesmann_et_al_1999
-   examples-synapses_barrelcortex
-   examples-synapses_short_term_plasticity
-   examples-synapses_STDP1_bis
-   examples-synapses_weightmonitor
+   examples-frompapers-computing with neural synchrony-olfaction_Fig11B_olfaction_stdp_testing

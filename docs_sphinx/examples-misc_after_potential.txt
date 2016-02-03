@@ -2,8 +2,10 @@
 
 .. index::
    pair: example usage; NeuronGroup
+   pair: example usage; show
    pair: example usage; run
    pair: example usage; StateMonitor
+   pair: example usage; plot
 
 .. _example-misc_after_potential:
 

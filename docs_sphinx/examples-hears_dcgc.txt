@@ -1,14 +1,20 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; log
-   pair: example usage; ControlFilterbank
    pair: example usage; RestructureFilterbank
+   pair: example usage; figure
+   pair: example usage; AsymmetricCompensation
+   pair: example usage; show
+   pair: example usage; flipud
+   pair: example usage; imshow
    pair: example usage; erbspace
    pair: example usage; exp
    pair: example usage; whitenoise
-   pair: example usage; AsymmetricCompensation
+   pair: example usage; ControlFilterbank
+   pair: example usage; diff
+   pair: example usage; mean
    pair: example usage; LogGammachirp
+   pair: example usage; log
 
 .. _example-hears_dcgc:
 

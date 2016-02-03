@@ -1,15 +1,3 @@
-New features since 1.4.1
-------------------------
-Major features:
-
-Minor features:
-
-Improvements:
-
-Bug fixes:
-
-Experimental features:
-
 New features since 1.4.0
 ------------------------
 

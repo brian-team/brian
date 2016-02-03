@@ -1,10 +1,12 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
-   pair: example usage; PoissonGroup
+   pair: example usage; plot
    pair: example usage; run
+   pair: example usage; show
    pair: example usage; Connection
+   pair: example usage; PoissonGroup
+   pair: example usage; NeuronGroup
    pair: example usage; StateMonitor
 
 .. _example-misc_adaptive_threshold:

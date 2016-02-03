@@ -1,8 +1,11 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; stop
+   pair: example usage; subplot
+   pair: example usage; plot
    pair: example usage; RemoteControlClient
+   pair: example usage; stop
+   pair: example usage; show
 
 .. _example-misc_remotecontrolclient:
 

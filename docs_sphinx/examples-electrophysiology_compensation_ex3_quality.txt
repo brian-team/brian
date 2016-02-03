@@ -1,5 +1,11 @@
 .. currentmodule:: brian
 
+.. index::
+   pair: example usage; load
+   pair: example usage; plot
+   pair: example usage; linspace
+   pair: example usage; show
+
 .. _example-electrophysiology_compensation_ex3_quality:
 
 Example: compensation_ex3_quality (electrophysiology)

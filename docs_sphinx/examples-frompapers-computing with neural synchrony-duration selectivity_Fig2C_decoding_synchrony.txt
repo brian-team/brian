@@ -1,11 +1,23 @@
 .. currentmodule:: brian
 
 .. index::
-   pair: example usage; NeuronGroup
-   pair: example usage; Connection
+   pair: example usage; plot
    pair: example usage; run
-   pair: example usage; SpikeCounter
+   pair: example usage; xlim
+   pair: example usage; NeuronGroup
+   pair: example usage; show
+   pair: example usage; rate
+   pair: example usage; Connection
+   pair: example usage; xlabel
+   pair: example usage; split
    pair: example usage; exp
+   pair: example usage; ylabel
+   pair: example usage; close
+   pair: example usage; SpikeCounter
+   pair: example usage; linspace
+   pair: example usage; ylim
+   pair: example usage; append
+   pair: example usage; mean
 
 .. _example-frompapers-computing with neural synchrony-duration selectivity_Fig2C_decoding_synchrony:
 

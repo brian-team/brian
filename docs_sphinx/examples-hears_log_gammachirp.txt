@@ -1,6 +1,10 @@
 .. currentmodule:: brian
 
 .. index::
+   pair: example usage; figure
+   pair: example usage; show
+   pair: example usage; flipud
+   pair: example usage; imshow
    pair: example usage; erbspace
    pair: example usage; LogGammachirp
    pair: example usage; whitenoise
