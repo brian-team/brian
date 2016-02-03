@@ -327,12 +327,13 @@ class Network(object):
 
         # Gather connections with identical subgroups
         # 'subgroups' maps subgroups to connections (initialize with immutable object (not [])!)
-        subgroups = dict.fromkeys([(C.source, C.delay) for C in self.connections], None)
+        # Use ids of the objects here, to avoid hashing problems
+        subgroups = dict.fromkeys([(id(C.source), id(C.delay)) for C in self.connections], None)
         for C in self.connections:
-            if subgroups[(C.source, C.delay)] == None:
-                subgroups[(C.source, C.delay)] = [C]
+            if subgroups[(id(C.source), id(C.delay))] is None:
+                subgroups[(id(C.source), id(C.delay))] = [C]
             else:
-                subgroups[(C.source, C.delay)].append(C)
+                subgroups[(id(C.source), id(C.delay))].append(C)
         self.connections = subgroups.values()
         cons = self.connections # just for readability
         for i in range(len(cons)):
