@@ -92,7 +92,7 @@ rms = np.sqrt(np.mean((reshaped_Fout[:, :, start:end].T -
 
 # This should more or less reproduce Fig. 7
 plt.plot(levels, rms.T)
-plt.legend(['%.0f Hz' % cf for cf in freqs], 0)
+plt.legend(['%.0f Hz' % cf for cf in freqs], loc='best')
 plt.xlim(-20, 100)
 plt.ylim(1e-6, 1)
 plt.yscale('log')
