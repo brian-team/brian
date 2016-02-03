@@ -256,7 +256,7 @@ class SpikeQueue(SpikeMonitor):
         A = np.hstack((0, np.cumsum(J)))
         #B = np.hstack((0, np.cumsum(K)))
         B = np.hstack((0, np.cumsum(-J)))
-        BJ = np.hstack((0, B[J]))
+        BJ = np.hstack((0, B[:-1][J]))
         ei = B-BJ[A]
         ofs = np.zeros_like(delay)
         ofs[I] = np.array(ei,dtype=ofs.dtype) # maybe types should be signed?
