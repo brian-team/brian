@@ -524,10 +524,7 @@ class DynamicConnectionMatrix(ConnectionMatrix):
         self.coli = []
         self.coldataind = []
         # counts the number of nonzero elements in each column
-        if numpy.__version__ >= '1.3.0':
-            counts = numpy.histogram(allj, numpy.arange(val.shape[1] + 1, dtype=int))[0]
-        else:
-            counts = numpy.histogram(allj, numpy.arange(val.shape[1] + 1, dtype=int), new=True)[0]
+        counts = numpy.histogram(allj, numpy.arange(val.shape[1] + 1, dtype=int))[0]
         # now we have to go through one by one unfortunately, and so we keep curcdi, the
         # current column data index for each column
         curcdi = numpy.zeros(val.shape[1], dtype=int)
