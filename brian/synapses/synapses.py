@@ -428,7 +428,22 @@ class Synapses(NeuronGroup): # This way we inherit a lot of useful stuff
             res = re.sub(r'\bn\b','len('+indices+')', res)
  
             return res
- 
+        # Check whether the pre/post-code writes to a pre-synaptic variable
+        # (which is not supported in general, with possibly several synapses
+        # sharing the same pre-synaptic cell)
+        for line in code.split('\n'):
+            split_line = line.split('=')
+            if len(split_line) > 1:
+                lhs = split_line[0]
+                if '_pre' in lhs:
+                    raise ValueError(('The synaptic code "%s" changes the '
+                                      'value of a pre-synaptic variable. This '
+                                      'is not allowed, since it can lead to '
+                                      'incorrect results if a pre-synaptic '
+                                      'neuron has more than one outgoing '
+                                      'connection. Please upgrade to Brian 2 '
+                                      'to get this functionality or re-write '
+                                      'your model.') % line)
         if direct: # direct update code, not caring about multiple accesses to postsynaptic variables
             code_str = '_post_neurons = _post[_synapses]\n'+update_code(code, '_synapses', '_post_neurons') + "\n"            
         else:

@@ -450,7 +450,17 @@ def test_max_delay():
     # spike should arrive at 5 + 1 ms
     assert (mon[0][mon.times >= 6 * ms] == 2).all()
     assert (mon[0][mon.times < 6 * ms] == 0).all()    
-    
+
+def test_incorrect_pre_reference():
+    G = NeuronGroup(1, '''v : 1
+                          x : 1''', threshold='v>1', reset='v=0')
+    G.v = 1.1  # spikes
+    G2 = NeuronGroup(10, '')
+    # The pre-synaptic x variable should be 10 in the end, because 10 synapses
+    # were created and all of them increase the pre-synaptic variable by 1.
+    # This does not work in Brian 1 (but it does work in Brian 2), we therefore
+    # only throw an error to avoid this problem.
+    assert_raises(ValueError, lambda: Synapses(G, G2, pre='x_pre += 1'))
 
 ################################################################################
 # Low level unit tests, test single helper functions
@@ -554,6 +564,7 @@ if __name__ == '__main__':
     test_construction_multiple_synapses()
     test_construction_and_access()
     test_model_definition()
+    test_incorrect_pre_reference()
     test_slice_to_array()
     test_slice_to_test()
     test_smallest_inttype()
