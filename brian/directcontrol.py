@@ -343,6 +343,12 @@ class SpikeGeneratorThreshold(Threshold):
                 self.nextspiketime = None
         return where(firing)[0]
 
+    def __repr__(self):
+        return '<SpikeGeneratorThreshold>'
+
+    def __str__(self):
+        return 'Threshold mechanism for the SpikeGenerator group'
+
 # The output of this function is fed into SpikeGeneratorGroup, consisting of
 # time sorted pairs (t,i) where t is when neuron i fires
 @check_units(t=second, n=1, sigma=second)

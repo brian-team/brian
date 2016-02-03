@@ -63,6 +63,10 @@ class PythonThreshold(Threshold):
         self._ns['t'] = P.clock._t
         return eval(self._compiled_code, self._ns).nonzero()[0]
 
+    def __repr__(self):
+        return 'PythonThreshold(%r)' % self._inputcode
+
+    __str__ = __repr__
 
 class CThreshold(Threshold):
     def __init__(self, inputcode, level=0):
@@ -100,3 +104,7 @@ class CThreshold(Threshold):
             return self.__call__(P)
         return _spikes[0:_numspikes]
 
+    def __repr__(self):
+        return 'CThreshold(%r)' % self._inputcode
+
+    __str__ = __repr__
