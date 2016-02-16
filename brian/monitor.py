@@ -1366,8 +1366,8 @@ class CoincidenceCounter(SpikeCounter):
 
             if self.coincidence_count_algorithm == 'exclusive':
                 near_both_allowed = (near_last_spike & last_spike_allowed) & (near_next_spike & next_spike_allowed)
-                self.last_spike_allowed[spiking_neurons] = last_spike_allowed & -near_last_spike
-                self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & -near_next_spike) | near_both_allowed
+                self.last_spike_allowed[spiking_neurons] = last_spike_allowed & ~near_last_spike
+                self.next_spike_allowed[spiking_neurons] = (next_spike_allowed & ~near_next_spike) | near_both_allowed
 
 class VanRossumMetric(StateMonitor):
     """

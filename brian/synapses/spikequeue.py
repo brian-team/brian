@@ -251,15 +251,14 @@ class SpikeQueue(SpikeMonitor):
         # elements in the sorted output
         I = np.argsort(delay,kind='mergesort')
         xs = delay[I]
-        J = xs[1:]!=xs[:-1]
+        J = xs[1:] != xs[:-1]
         #K = xs[1:]==xs[:-1]
         A = np.hstack((0, np.cumsum(J)))
-        #B = np.hstack((0, np.cumsum(K)))
-        B = np.hstack((0, np.cumsum(-J)))
+        B = np.hstack((0, np.cumsum(np.logical_not(J))))
         BJ = np.hstack((0, B[:-1][J]))
         ei = B-BJ[A]
         ofs = np.zeros_like(delay)
-        ofs[I] = np.array(ei,dtype=ofs.dtype) # maybe types should be signed?
+        ofs[I] = np.array(ei, dtype=ofs.dtype)  # maybe types should be signed?
         return ofs
            
     def insert(self, delay, target, offset=None):

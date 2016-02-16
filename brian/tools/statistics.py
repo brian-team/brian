@@ -195,7 +195,7 @@ def group_correlations(spikes, delta=None):
     delta is the length of the time window, 10*ms by default.
     """
     aspikes = array(spikes)
-    N = aspikes[:, 0].max() + 1 # neuron count
+    N = int(aspikes[:, 0].max()) + 1 # neuron count
     T = aspikes[:, 1].max() # total duration
     spikecount = zeros(N)
     tauc = zeros((N, N))

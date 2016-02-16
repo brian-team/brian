@@ -812,7 +812,7 @@ class Sound(BaseSound, numpy.ndarray):
         # Little MA et al. (2007), "Exploiting nonlinear recurrence and fractal
         # scaling properties for voice disorder detection", Biomed Eng Online, 6:23
         n=duration
-        n2=floor(n/2)
+        n2=int(n/2)
         
         f=array(fftfreq(n,d=1.0/samplerate), dtype=complex)
         f.shape=(len(f),1)
