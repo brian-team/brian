@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.4.2
+Version: 1.4.3
 Authors:
 	Romain Brette
 		http://audition.ens.fr/brette/
@@ -50,6 +50,12 @@ See the documentation in the extras download, or online:
 	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.4.2 to 1.4.3
+----------------------
+A minor bugfix release to fix incompatibilities with the upcoming numpy
+release. Also prepares for the removal of the `scipy.weave` package (replaced
+by the `weave` package).
 
 Version 1.4.1 to 1.4.2
 ----------------------
