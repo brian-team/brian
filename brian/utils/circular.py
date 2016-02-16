@@ -38,7 +38,10 @@ Circular arrays
 Ideas for speed improvements: use put, putmask and take with mode='wrap' and out=...
 '''
 from numpy import *
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 import bisect
 import os
 import warnings

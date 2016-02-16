@@ -44,7 +44,10 @@ __all__ = ['StateUpdater', 'LinearStateUpdater', 'NonlinearStateUpdater',
 from numpy import *
 from scipy import linalg
 from scipy.linalg import LinAlgError
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 from scipy.optimize import fsolve
 import copy
 from operator import isSequenceType

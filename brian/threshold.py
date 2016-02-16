@@ -41,7 +41,11 @@ from random import sample # Python standard random module (sample is different)
 
 from numpy import clip, Inf
 from numpy.random import rand, randn
-from scipy import random, weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
+from scipy import random
 
 from brian.clock import guess_clock
 from brian.globalprefs import get_global_preference

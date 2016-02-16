@@ -39,7 +39,11 @@ Neuron groups
 __all__ = ['NeuronGroup', 'linked_var']
 
 from numpy import *
-from scipy import rand, linalg, random, weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
+from scipy import rand, linalg, random
 from numpy.random import exponential, randint
 import copy
 from units import *

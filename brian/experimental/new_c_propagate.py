@@ -98,7 +98,10 @@ else:
     from ..globalprefs import get_global_preference
     from codegen.c_support_code import *
 import numpy
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 import new
 
 __all__ = ['make_new_connection',

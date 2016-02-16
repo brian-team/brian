@@ -7,7 +7,10 @@ from ...equations import Equations
 from ...globalprefs import get_global_preference
 from ...log import log_warn
 from expressions import *
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 from c_support_code import *
 
 __all__ = ['generate_c_threshold', 'generate_python_threshold',

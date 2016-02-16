@@ -8,7 +8,11 @@ import types
 from .. import magic
 from ..log import log_warn, log_info, log_debug
 from numpy import *
-from scipy import sparse, stats, rand, weave, linalg
+try:
+    import weave
+except ImportError:
+    from scipy import weave
+from scipy import sparse, stats, rand, linalg
 import scipy
 import scipy.sparse
 import numpy

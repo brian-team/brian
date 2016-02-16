@@ -1,7 +1,10 @@
 #import brian_no_units
 from brian import *
 from brian import optimiser
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 try:
     import pycuda
     import pycuda.autoinit as autoinit

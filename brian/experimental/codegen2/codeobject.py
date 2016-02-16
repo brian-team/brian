@@ -3,7 +3,10 @@ The basic Code object
 """
 from brian import *
 from brian.globalprefs import get_global_preference
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 from formatting import *
 
 __all__ = ['Code',

@@ -19,7 +19,10 @@ from brian.equations import Equations
 import functools
 import warnings
 from math import ceil, log
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 from time import time
 import trace
 import numpy

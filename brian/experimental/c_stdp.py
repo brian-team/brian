@@ -22,7 +22,10 @@ else:
     from ..optimiser import freeze
     from ..utils.separate_equations import separate_equations
     from codegen.c_support_code import *
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 import re
 
 __all__ = ['CSTDP']

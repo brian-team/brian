@@ -68,7 +68,10 @@ except:
 
 
 from globalprefs import *
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 
 
 class Monitor(object):

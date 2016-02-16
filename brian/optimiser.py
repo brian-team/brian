@@ -35,7 +35,6 @@
 '''
 Optimizations for Brian.
 '''
-from scipy.weave import blitz
 import re
 import warnings
 import parser

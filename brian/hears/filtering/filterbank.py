@@ -1,5 +1,9 @@
 from brian import *
-from scipy import signal, weave, random
+try:
+    import weave
+except ImportError:
+    from scipy import weave
+from scipy import signal, random
 from ..bufferable import Bufferable
 from operator import isSequenceType
 from __builtin__ import all

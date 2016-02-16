@@ -35,14 +35,16 @@
 '''
 Differential equations for Brian models.
 '''
-#from scipy.weave import blitz
 from operator import isSequenceType
 import types
 from units import *
 from stdunits import *
 from inspection import *
 from scipy import exp
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 from globalprefs import *
 import re
 import inspect

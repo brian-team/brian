@@ -2,7 +2,10 @@ from brian import *
 from brian.library.ionic_currents import *
 from brian.experimental.codegen import *
 import time
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 
 N = 1000
 record_and_plot = N == 1

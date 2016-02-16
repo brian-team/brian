@@ -1,6 +1,10 @@
 from brian import *
 from brian.stateupdater import get_linear_equations_solution_numerically, get_linear_equations
-from scipy import linalg, weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
+from scipy import linalg
 import numpy
 import inspect
 from itertools import count

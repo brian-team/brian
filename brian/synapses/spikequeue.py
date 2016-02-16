@@ -49,7 +49,10 @@ try:
     import pylab
 except:
     pass
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 
 from brian.globalprefs import get_global_preference, exists_global_preference, define_global_preference
 from brian.monitor import SpikeMonitor

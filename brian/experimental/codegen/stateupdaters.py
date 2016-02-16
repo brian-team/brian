@@ -6,7 +6,10 @@ from codegen_c import *
 from codegen_python import *
 from integration_schemes import *
 import time
-from scipy import weave
+try:
+    import weave
+except ImportError:
+    from scipy import weave
 import numpy, scipy
 import re
 from c_support_code import *
