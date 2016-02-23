@@ -186,23 +186,28 @@ def raster_plot(*monitors, **additionalplotoptions):
             return st, sn, nmax
         st, sn, nmax = get_plot_coords()
         if myopts['newfigure']:
-            pylab.figure()
-        if myopts['refresh'] is None:
-            line, = pylab.plot(st, sn, '.', **plotoptions)
+            fig = pylab.figure()
+            ax = fig.add_subplot(1, 1, 1)
         else:
-            line, = pylab.plot([], [], '.', **plotoptions)
+            fig = pylab.gcf()
+            ax = fig.gca()
+           
+        if myopts['refresh'] is None:
+            line, = ax.plot(st, sn, '.', **plotoptions)
+        else:
+            line, = ax.plot([], [], '.', **plotoptions)
         if myopts['refresh'] is not None:
-            pylab.axis(ymin=0, ymax=nmax)
+            ax.set_ylim(0, nmax)
             if myopts['showlast'] is not None:
-                pylab.axis(xmin= -myopts['showlast'] / ms, xmax=0)
-        ax = pylab.gca()
+                ax.set_xlim(-myopts['showlast'] / ms, 0)
+
         if myopts['showgrouplines']:
             for i in range(len(monitors)):
-                pylab.axhline(i, color=myopts['grouplinecol'])
-                pylab.axhline(i + (1 - spacebetween), color=myopts['grouplinecol'])
-        pylab.ylabel(myopts['ylabel'])
-        pylab.xlabel(myopts['xlabel'])
-        pylab.title(myopts["title"])
+                ax.axhline(i, color=myopts['grouplinecol'])
+                ax.axhline(i + (1 - spacebetween), color=myopts['grouplinecol'])
+        ax.set_ylabel(myopts['ylabel'])
+        ax.set_xlabel(myopts['xlabel'])
+        ax.set_title(myopts["title"])
         if myopts["showplot"]:
             pylab.show()
         if myopts['refresh'] is not None:
@@ -220,8 +225,8 @@ def raster_plot(*monitors, **additionalplotoptions):
                         line.set_xdata(array(st))
                         line.set_ydata(sn)
                     if myopts['redraw']:
-                        pylab.draw()
-                        pylab.get_current_fig_manager().canvas.flush_events()
+                        fig.canvas.draw()
+                        fig.canvas.flush_events()
             monitors[0].contained_objects.append(refresh_raster_plot)
 
 
