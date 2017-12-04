@@ -303,6 +303,7 @@ class Refractoriness(Reset):
     def __init__(self, resetvalue=0 * mvolt, period=5 * msecond, state=0):
         self.period = period
         self.resetvalue = resetvalue
+        self.scalar_resetvalue = numpy.isscalar(self.resetvalue)
         self.state = state
         self._periods = {} # a dictionary mapping group IDs to periods
         self.statevectors = {}
@@ -325,7 +326,10 @@ class Refractoriness(Reset):
         neuronindices = P.LS[0:period]
         if P._variable_refractory_time:
             neuronindices = neuronindices[P._next_allowed_spiketime[neuronindices] > (P.clock._t - P.clock._dt * 0.25)]
-        V[neuronindices] = self.resetvalue
+        if self.scalar_resetvalue:
+            V[neuronindices] = self.resetvalue
+        else:
+            V[neuronindices] = self.resetvalue[neuronindices]
 
     def __repr__(self):
         return 'Refractory period, ' + str(self.period)
