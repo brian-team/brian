@@ -91,16 +91,16 @@ print "Building synapses, please wait..."
 # Feedforward connections
 feedforward=Synapses(layer4,layer23exc,
                      model='''w:volt
-                     A_pre:1
-                     A_post:1''',
+                     Apre:1
+                     Apost:1''',
                      pre='''ge+=w
-                     A_pre=A_pre*exp((lastupdate-t)/taup)+Ap
-                     A_post=A_post*exp((lastupdate-t)/taud)
-                     w=clip(w+A_post,0,EPSC)''',
+                     Apre=Apre*exp((lastupdate-t)/taup)+Ap
+                     Apost=Apost*exp((lastupdate-t)/taud)
+                     w=clip(w+Apost,0,EPSC)''',
                      post='''
-                     A_pre=A_pre*exp((lastupdate-t)/taup)
-                     A_post=A_post*exp((lastupdate-t)/taud)+Ad
-                     w=clip(w+A_pre,0,EPSC)''')
+                     Apre=Apre*exp((lastupdate-t)/taup)
+                     Apost=Apost*exp((lastupdate-t)/taud)+Ad
+                     w=clip(w+Apre,0,EPSC)''')
 for i in range(barrelarraysize):
     for j in range(barrelarraysize):
         feedforward[barrels4[i,j],barrels23[i,j]]=.5
