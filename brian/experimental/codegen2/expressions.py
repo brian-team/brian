@@ -1,6 +1,9 @@
 from brian import *
 from brian.optimiser import symbolic_eval
-from sympy.printing.ccode import CCodePrinter
+try:
+    from sympy.printing.ccode import C99CodePrinter as CCodePrinter
+except ImportError:
+    from sympy.printing.ccode import CCodePrinter
 import sympy
 from formatting import *
 from dependencies import *

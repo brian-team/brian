@@ -1,5 +1,8 @@
 try:
-    from sympy.printing.ccode import CCodePrinter
+    try:
+        from sympy.printing.ccode import C99CodePrinter as CCodePrinter
+    except ImportError:
+        from sympy.printing.ccode import CCodePrinter
     from sympy.printing.precedence import precedence
     import sympy
 except ImportError:
