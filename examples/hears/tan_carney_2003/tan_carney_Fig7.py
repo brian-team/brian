@@ -48,8 +48,8 @@ levels = np.arange(-10, 100.1, 5)
 cf_level = product(freqs, levels)
 
 # steady-state
-start = 10*ms*samplerate
-end = 45*ms*samplerate
+start = int(10*ms*samplerate)
+end = int(45*ms*samplerate)
 
 # For Figure 7 we have manually adjusts the gain for different CFs -- otherwise
 # the RMS values wouldn't be identical for low CFs. Therefore, try to estimate

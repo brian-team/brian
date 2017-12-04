@@ -108,7 +108,7 @@ for i in [0,1]:
     ax = subplot(211+i)
     histo(prM.times, r, ax)
     plot([0,dur],[m,m],'--r')
-    title("%.2f extra spikes" % sum(r[t1/bin:(t2+20*ms)/bin]-m))
+    title("%.2f extra spikes" % sum(r[int(t1/bin):int((t2+20*ms)/bin)]-m))
     xlim(.05, .2)
     ylim(0, .125)
 
