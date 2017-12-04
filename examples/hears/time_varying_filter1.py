@@ -89,7 +89,7 @@ time_varying_filter_mon = control.process()
 
 figure(1)
 pxx, freqs, bins, im = specgram(squeeze(time_varying_filter_mon),
-                                NFFT=256, Fs=samplerate, noverlap=240) 
+                                NFFT=256, Fs=float(samplerate), noverlap=240)
 imshow(flipud(pxx), aspect='auto')
 
 show()
