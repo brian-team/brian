@@ -74,8 +74,8 @@ from timedarray import *
 from deprecated.multiplespikegeneratorgroup import *
 from tests.simpletest import *
 
-__version__ = '1.4.3'
-__release_date__ = '2016-02-16'
+__version__ = '1.4.4dev'
+__release_date__ = '2017-12-04'
 
 ### Define global preferences which are not defined anywhere else
 

@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.4.3
+Version: 1.4.4dev
 Authors:
 	Romain Brette
 		http://audition.ens.fr/brette/
