@@ -5,9 +5,9 @@ A clock-driven simulator for spiking neural networks
 Version: 1.4.4dev
 Authors:
 	Romain Brette
-		http://audition.ens.fr/brette/
+		http://romainbrette.fr
 	Dan Goodman
-		http://thesamovar.net/neuroscience
+		http://neural-reckoning.org
 Team:
 	Cyrille Rossant
 		http://cyrille.rossant.net/
@@ -50,6 +50,11 @@ See the documentation in the extras download, or online:
 	http://www.briansimulator.org/docs
 
 ==== Changes ===============================================================
+
+Version 1.4.3 to 1.4.4
+----------------------
+A minor bugfix release to fix incompatibilities with recent numpy versions
+(>= 1.13), and to prepare for the removal of deprecated sympy features.
 
 Version 1.4.2 to 1.4.3
 ----------------------
