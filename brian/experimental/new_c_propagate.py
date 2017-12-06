@@ -101,7 +101,10 @@ import numpy
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 import new
 
 __all__ = ['make_new_connection',

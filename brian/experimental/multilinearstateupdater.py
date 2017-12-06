@@ -3,7 +3,10 @@ from brian.stateupdater import get_linear_equations_solution_numerically, get_li
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 from scipy import linalg
 import numpy
 import inspect

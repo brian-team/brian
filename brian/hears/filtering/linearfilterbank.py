@@ -2,7 +2,10 @@ from brian import *
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 from scipy import signal, random
 from filterbank import Filterbank, RestructureFilterbank
 from ..bufferable import Bufferable

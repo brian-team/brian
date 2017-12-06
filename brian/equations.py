@@ -44,7 +44,10 @@ from scipy import exp
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 from globalprefs import *
 import re
 import inspect

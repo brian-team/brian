@@ -71,7 +71,10 @@ from globalprefs import *
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 
 
 class Monitor(object):

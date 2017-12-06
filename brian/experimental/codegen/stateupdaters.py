@@ -9,7 +9,10 @@ import time
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 import numpy, scipy
 import re
 from c_support_code import *

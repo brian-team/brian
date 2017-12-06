@@ -44,7 +44,10 @@ from numpy.random import rand, randn
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 from scipy import random
 
 from brian.clock import guess_clock

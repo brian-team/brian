@@ -41,7 +41,10 @@ from numpy import *
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 import bisect
 import os
 import warnings

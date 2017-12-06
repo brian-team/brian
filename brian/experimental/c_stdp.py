@@ -25,7 +25,10 @@ else:
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 import re
 
 __all__ = ['CSTDP']

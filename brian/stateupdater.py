@@ -47,7 +47,10 @@ from scipy.linalg import LinAlgError
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 from scipy.optimize import fsolve
 import copy
 from operator import isSequenceType

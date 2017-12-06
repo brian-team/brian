@@ -42,7 +42,10 @@ from numpy import *
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 from scipy import rand, linalg, random
 from numpy.random import exponential, randint
 import copy

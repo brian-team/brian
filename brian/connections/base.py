@@ -11,7 +11,10 @@ from numpy import *
 try:
     import weave
 except ImportError:
-    from scipy import weave
+    try:
+        from scipy import weave
+    except ImportError:
+        weave = None
 from scipy import sparse, stats, rand, linalg
 import scipy
 import scipy.sparse
