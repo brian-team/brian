@@ -2,7 +2,7 @@
 A clock-driven simulator for spiking neural networks
 ====================================================
 
-Version: 1.4.4dev
+Version: 1.4.4
 Authors:
 	Romain Brette
 		http://romainbrette.fr
@@ -54,7 +54,9 @@ See the documentation in the extras download, or online:
 Version 1.4.3 to 1.4.4
 ----------------------
 A minor bugfix release to fix incompatibilities with recent numpy versions
-(>= 1.13), and to prepare for the removal of deprecated sympy features.
+(>= 1.13), and to prepare for the removal of deprecated sympy features. Also
+fixes a potential matplotlib issue with realtime plotting (contributed by
+Pedro Machado)
 
 Version 1.4.2 to 1.4.3
 ----------------------

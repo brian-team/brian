@@ -1,4 +1,4 @@
-version = '1.4.4dev'
+version = '1.4.4'
 
 # the create_extras.py script will automatically generate an extras files
 # containing the following files
