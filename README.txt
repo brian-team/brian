@@ -8,7 +8,7 @@ more difficult. For convenience, we provide a Docker image that you can use
 to run existing Brian 1 code. It is based on a Debian image, and provides
 Brian 1.4.3, as packaged by the NeuroDebian team (https://neuro.debian.net/).
 To use these images, you either need to have docker (https://docker.com),
-podman (https://podman.io/) or singularity (https://https://sylabs.io/singularity/)
+podman (https://podman.io/) or singularity (https://sylabs.io/singularity/)
 installed – the commands below are shown for the `docker` command, but you can
 simply replace them by `podman` if necessary. For singularity, the basic workflow
 is similar but the commands are slightly different, please see the documentation.
